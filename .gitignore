@@ -1,0 +1,254 @@
+# Root .gitignore for Django React LMS Project
+
+# ===================================
+# ENVIRONMENT & CONFIGURATION FILES
+# ===================================
+.env
+.env.local
+.env.*.local
+*.env
+.vscode/settings.json
+.idea/
+
+# ===================================
+# PYTHON / DJANGO
+# ===================================
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+.venv/
+
+# Django specific
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Database backups
+db_backup_*/
+*.sql.backup
+*.db.backup
+
+# ===================================
+# NODE / REACT
+# ===================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+dist-ssr/
+*.local
+
+# Editor directories
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ===================================
+# MEDIA & UPLOADS
+# ===================================
+# Uploaded files (uncommit if needed in production)
+backend/media/
+!backend/media/.gitkeep
+
+# Course files
+backend/media/course-file/
+backend/media/user_folder/
+
+# Specific large files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.pdf
+
+# Images (keep some for testing, uncomment if needed)
+# *.png
+# *.jpg
+# *.jpeg
+# *.gif
+
+# ===================================
+# TEMPORARY & TEST FILES
+# ===================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+pip-log.txt
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+
+# Temp folders
+temp_uploads/
+test_env/
+tmp/
+temp/
+
+# ===================================
+# DOCUMENTATION (temporary/draft)
+# ===================================
+# Keep committed docs, ignore drafts
+DRAFT_*.md
+TODO_*.md
+NOTES_*.md
+
+# Test scripts
+test_*.py
+check_*.py
+debug_*.py
+verify_*.py
+
+# ===================================
+# PRODUCTION & DEPLOYMENT
+# ===================================
+# Production scripts (keep in separate repo)
+migrate_to_postgresql.py
+setup_production_*.sh
+setup_production_*.bat
+requirements_production.txt
+
+# SSL Certificates
+*.pem
+*.key
+*.crt
+
+# ===================================
+# BACKUP FILES
+# ===================================
+*.bak
+*.backup
+*.old
+*_backup_*
+backup_*/
+
+# ===================================
+# OPERATING SYSTEM
+# ===================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.directory
+
+# ===================================
+# IDEs & EDITORS
+# ===================================
+# PyCharm
+.idea/
+*.iml
+*.iws
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ===================================
+# SECURITY
+# ===================================
+# Never commit sensitive data
+*.pem
+*.key
+*.crt
+.env
+secrets.json
+credentials.json
+service-account.json
+
+# ===================================
+# REPORTS (keep generated reports)
+# ===================================
+# Keep reports/ folder but ignore temp files
+reports/*.tmp
+reports/draft_*
+
+# ===================================
+# MISCELLANEOUS
+# ===================================
+# Compiled source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Archives
+*.tgz
+*.bz2

@@ -1,0 +1,782 @@
+import React, { useState, useEffect, useContext, useRef } from "react";
+import BaseHeader from "../partials/BaseHeader";
+import Footer from "../partials/Footer";
+import Sidebar from "./Partials/Sidebar";
+import Header from "./Partials/Header";
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+
+import useAxios from "../../utils/useAxios";
+import UserData from "../plugin/UserData";
+import Toast from "../plugin/Toast";
+import { ProfileContext } from "../plugin/Context";
+import "./Profile.css";
+
+// Constants
+const AVATAR_SIZE = {
+    DESKTOP: {
+        width: "120px",
+        height: "120px"
+    },
+    MOBILE: {
+        width: "100px", 
+        height: "100px"
+    }
+};
+
+const IMAGE_CONFIG = {
+    QUALITY: 0.8,
+    FORMAT: 'image/jpeg',
+    MAX_SIZE: '5MB'
+};
+
+const CROP_CONFIG = {
+    INITIAL: {
+        unit: 'px',
+        width: 200,
+        height: 200,
+        x: 50,
+        y: 50,
+        aspect: 1
+    }
+};
+
+const VALIDATION_MESSAGES = {
+    PROFILE_LOAD_ERROR: "Failed to load profile",
+    PROFILE_UPDATE_SUCCESS: "Profile updated successfully!",
+    PROFILE_UPDATE_ERROR: "Failed to update profile",
+    IMAGE_CROP_SUCCESS: "Image cropped successfully!",
+    IMAGE_CROP_ERROR: "Failed to crop image",
+    PICTURE_REMOVED: "Profile picture removed!",
+    CANVAS_EMPTY: "Canvas is empty"
+};
+
+const SOCIAL_PLATFORMS = {
+    FACEBOOK: 'facebook',
+    TWITTER: 'twitter',
+    LINKEDIN: 'linkedin'
+};
+
+// Utility Functions
+const validateUrl = (url) => {
+    const urlPattern = /^https?:\/\/.+/;
+    return urlPattern.test(url);
+};
+
+const formatUrl = (url) => {
+    if (!url) return url;
+    if (validateUrl(url)) return url;
+    return url.startsWith('www.') || url.includes('.') ? `https://${url}` : url;
+};
+
+const createFormData = (profileData, croppedImageBlob, fileName, originalImage) => {
+    const formdata = new FormData();
+    
+    // Handle image upload/deletion logic
+    if (profileData.image === null) {
+        formdata.append("image", "");
+    } else if (croppedImageBlob) {
+        formdata.append("image", croppedImageBlob, fileName);
+    } else if (profileData.image && profileData.image !== originalImage) {
+        formdata.append("image", profileData.image);
+    }
+
+    // Profile fields
+    formdata.append("full_name", profileData.full_name || "");
+    formdata.append("about", profileData.about || "");
+    formdata.append("country", profileData.country || "");
+    
+    // Employee information fields
+    formdata.append("nip", profileData.nip || "");
+    formdata.append("golongan", profileData.golongan || "");
+    formdata.append("kelas_jabatan", profileData.kelas_jabatan || "");
+    formdata.append("jenis_jabatan", profileData.jenis_jabatan || "");
+    formdata.append("organization_unit_name", profileData.organization_unit_name || "");
+    formdata.append("position_name", profileData.position_name || "");
+    
+    // Add social media fields
+    formdata.append("bio", profileData.bio || "");
+    formdata.append("facebook", profileData.facebook || "");
+    formdata.append("twitter", profileData.twitter || "");
+    formdata.append("linkedin", profileData.linkedin || "");
+
+    return formdata;
+};
+
+const extractFileName = (imagePath) => {
+    if (!imagePath) return "";
+    return imagePath.split('/').pop() || "profile-picture";
+};
+
+const getCroppedImage = (image, crop, fileName) => {
+    const canvas = document.createElement('canvas');
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    canvas.width = crop.width;
+    canvas.height = crop.height;
+    const ctx = canvas.getContext('2d');
+
+    ctx.drawImage(
+        image,
+        crop.x * scaleX,
+        crop.y * scaleY,
+        crop.width * scaleX,
+        crop.height * scaleY,
+        0,
+        0,
+        crop.width,
+        crop.height,
+    );
+
+    return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                console.error(VALIDATION_MESSAGES.CANVAS_EMPTY);
+                return;
+            }
+            blob.name = fileName;
+            resolve(blob);
+        }, IMAGE_CONFIG.FORMAT, IMAGE_CONFIG.QUALITY);
+    });
+};
+
+const createImagePreview = (file) => {
+    const reader = new FileReader();
+    return new Promise((resolve) => {
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+    });
+};
+
+function Profile() {
+    // Context and State Management
+    const profileContext = useContext(ProfileContext);
+    const [profile, setProfile] = profileContext || [null, () => {}];
+    
+    const [profileData, setProfileData] = useState({
+        image: "",
+        full_name: "",
+        about: "",
+        country: "",
+        // Student social media fields
+        bio: "",
+        facebook: "",
+        twitter: "",
+        linkedin: "",
+    });
+    
+    const [uiState, setUiState] = useState({
+        loading: false,
+        imagePreview: "",
+        showCropModal: false
+    });
+    
+    const [imageState, setImageState] = useState({
+        selected: null,
+        croppedBlob: null,
+        fileName: ""
+    });
+    
+    const [cropState, setCropState] = useState({
+        crop: CROP_CONFIG.INITIAL,
+        completedCrop: null
+    });
+    
+    const imgRef = useRef(null);
+
+    // API Functions
+    const fetchProfile = async () => {
+        setUiState(prev => ({ ...prev, loading: true }));
+        
+        try {
+            const profileRes = await useAxios.get(`user/profile/${UserData()?.user_id}/`);
+            setProfile(profileRes.data);
+            setProfileData(profileRes.data);
+            setUiState(prev => ({ ...prev, imagePreview: profileRes.data.image }));
+            setImageState(prev => ({
+                ...prev,
+                fileName: extractFileName(profileRes.data.image)
+            }));
+        } catch (error) {
+            console.error("Error fetching profile:", error);
+            Toast().fire({
+                icon: "error",
+                title: VALIDATION_MESSAGES.PROFILE_LOAD_ERROR
+            });
+        } finally {
+            setUiState(prev => ({ ...prev, loading: false }));
+        }
+    };
+
+    const submitProfile = async (e) => {
+        e.preventDefault();
+        setUiState(prev => ({ ...prev, loading: true }));
+
+        try {
+            const res = await useAxios.get(`user/profile/${UserData()?.user_id}/`);
+            const formdata = createFormData(
+                profileData, 
+                imageState.croppedBlob, 
+                imageState.fileName, 
+                res.data.image
+            );
+
+            const updateRes = await useAxios.patch(`user/profile/${UserData()?.user_id}/`, formdata, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            setProfile(updateRes.data);
+            
+            Toast().fire({
+                icon: "success",
+                title: VALIDATION_MESSAGES.PROFILE_UPDATE_SUCCESS
+            });
+
+            fetchProfile();
+            
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            Toast().fire({
+                icon: "error",
+                title: error.response?.data?.message || VALIDATION_MESSAGES.PROFILE_UPDATE_ERROR
+            });
+        } finally {
+            setUiState(prev => ({ ...prev, loading: false }));
+        }
+    };
+
+    // Event Handlers
+    const handleProfileChange = (event) => {
+        const { name, value } = event.target;
+        
+        // Validate URL fields for social media
+        if (Object.values(SOCIAL_PLATFORMS).includes(name) && value) {
+            const formattedValue = formatUrl(value);
+            setProfileData(prev => ({
+                ...prev,
+                [name]: formattedValue,
+            }));
+            return;
+        }
+
+        setProfileData(prev => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleFileChange = (event) => {
+        const selectedFile = event.target.files[0];
+        if (!selectedFile) return;
+        
+        // Clean up previous object URL to prevent memory leaks
+        if (imageState.selected) {
+            URL.revokeObjectURL(imageState.selected);
+        }
+        
+        const newImageUrl = URL.createObjectURL(selectedFile);
+        
+        setProfileData(prev => ({
+            ...prev,
+            [event.target.name]: selectedFile,
+        }));
+
+        setImageState(prev => ({
+            ...prev,
+            fileName: selectedFile.name,
+            selected: newImageUrl
+        }));
+        
+        // Reset crop state for new image
+        setCropState({
+            crop: CROP_CONFIG.INITIAL,
+            completedCrop: null
+        });
+        
+        setUiState(prev => ({ ...prev, showCropModal: true }));
+    };
+
+    const handleCropComplete = async () => {
+        if (!cropState.completedCrop || !imgRef.current) return;
+
+        try {
+            const croppedBlob = await getCroppedImage(
+                imgRef.current,
+                cropState.completedCrop,
+                imageState.fileName
+            );
+            
+            setImageState(prev => ({
+                ...prev,
+                croppedBlob,
+            }));
+            
+            setUiState(prev => ({ 
+                ...prev, 
+                imagePreview: URL.createObjectURL(croppedBlob),
+                showCropModal: false 
+            }));
+            
+            setProfileData(prev => ({
+                ...prev,
+                image: croppedBlob,
+            }));
+            
+            Toast().fire({
+                icon: "success",
+                title: VALIDATION_MESSAGES.IMAGE_CROP_SUCCESS
+            });
+        } catch (error) {
+            console.error('Error cropping image:', error);
+            Toast().fire({
+                icon: "error",
+                title: VALIDATION_MESSAGES.IMAGE_CROP_ERROR
+            });
+        }
+    };
+
+    const handleDeleteProfilePicture = () => {
+        setProfileData(prev => ({ ...prev, image: null }));
+        setUiState(prev => ({ ...prev, imagePreview: "" }));
+        setImageState({
+            selected: null,
+            croppedBlob: null,
+            fileName: ""
+        });
+        
+        Toast().fire({
+            icon: "success",
+            title: VALIDATION_MESSAGES.PICTURE_REMOVED
+        });
+    };
+
+    const handleCropCancel = () => {
+        // Clean up object URL to prevent memory leaks
+        if (imageState.selected) {
+            URL.revokeObjectURL(imageState.selected);
+        }
+        
+        // Reset all crop-related states
+        setUiState(prev => ({ ...prev, showCropModal: false }));
+        setImageState({
+            selected: null,
+            croppedBlob: null,
+            fileName: ""
+        });
+        setCropState({
+            crop: CROP_CONFIG.INITIAL,
+            completedCrop: null
+        });
+        
+        // Reset file input to allow selecting the same file again
+        const fileInput = document.getElementById('profileImage');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    };
+
+    // Effects
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    // Component Rendering Functions
+    const renderLoadingAvatar = () => (
+        <div className="loading-avatar">
+            <div className="spinner-border text-purple" role="status">
+                <span className="visually-hidden">Loading...</span>
+            </div>
+            <small className="loading-text">Loading...</small>
+        </div>
+    );
+
+    const renderDefaultAvatar = () => (
+        <div className="default-avatar-modern">
+            <i className="fas fa-user default-avatar-icon"></i>
+        </div>
+    );
+
+    const renderProfileAvatar = () => (
+        <div style={{ position: 'relative' }}>
+            <img
+                src={uiState.imagePreview}
+                className="modern-avatar"
+                alt="Profile"
+                onError={(e) => {
+                    e.target.style.display = 'none';
+                    setUiState(prev => ({ ...prev, imagePreview: "" }));
+                }}
+            />
+            <div className="avatar-badge">
+                <i className="fas fa-check avatar-badge-icon"></i>
+            </div>
+        </div>
+    );
+
+    const renderAvatarSection = () => (
+        <div className="modern-form-section">
+            <h4 className="form-section-title">
+                <i className="fas fa-camera form-section-icon"></i>
+                Profile Picture
+            </h4>
+            
+            <div className="d-flex align-items-center">
+                <div className="modern-avatar-container">
+                    {uiState.loading ? renderLoadingAvatar() : 
+                     uiState.imagePreview ? renderProfileAvatar() : renderDefaultAvatar()}
+                </div>
+                
+                <div className="avatar-content-section">
+                    <h5 className="avatar-section-title">Choose Your Avatar</h5>
+                    <p className="avatar-section-description">
+                        Upload a professional photo for your student profile
+                    </p>
+                    <div className="modern-file-upload">
+                        <input 
+                            type="file" 
+                            className="form-control modern-file-input" 
+                            name="image" 
+                            id="profileImage"
+                            onChange={handleFileChange} 
+                            accept="image/*"
+                            disabled={uiState.loading}
+                        />
+                        <small className="file-help-text">PNG or JPG, max {IMAGE_CONFIG.MAX_SIZE}</small>
+                    </div>
+                    
+                    {(imageState.fileName || uiState.imagePreview) && (
+                        <div className="file-info">
+                            <p className="file-info-text">
+                                <i className="fas fa-image file-info-icon"></i>
+                                <strong>Current Picture:</strong> {imageState.fileName || "Existing profile picture"}
+                            </p>
+                        </div>
+                    )}
+                    
+                    {uiState.imagePreview && (
+                        <div className="profile-picture-actions">
+                            <button 
+                                type="button"
+                                className="btn btn-delete-picture"
+                                onClick={handleDeleteProfilePicture}
+                                disabled={uiState.loading}
+                            >
+                                <i className="fas fa-trash-alt me-1"></i>
+                                Remove Picture
+                            </button>
+                            <small className="picture-action-text">
+                                This will remove your current profile picture
+                            </small>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderFormField = (name, label, icon, type = "text", placeholder = "", rows = null, required = true) => (
+        <div className="col-12 mb-3">
+            <label className="form-label modern-label" htmlFor={name}>
+                <i className={`${icon} form-label-icon`}></i>
+                {label} {required && <span className="required-asterisk">*</span>}
+            </label>
+            {type === "textarea" ? (
+                <textarea 
+                    id={name}
+                    name={name} 
+                    className="form-control modern-input modern-textarea" 
+                    rows={rows || 4} 
+                    value={profileData[name] || ""}
+                    placeholder={placeholder}
+                    onChange={handleProfileChange}
+                    disabled={uiState.loading}
+                />
+            ) : (
+                <input 
+                    type={type} 
+                    id={name} 
+                    name={name}
+                    className="form-control modern-input" 
+                    placeholder={placeholder} 
+                    required={required}
+                    value={profileData[name] || ""} 
+                    onChange={handleProfileChange} 
+                    disabled={uiState.loading}
+                />
+            )}
+        </div>
+    );
+
+    const renderSocialField = (name, label, icon, placeholder, platform) => (
+        <div className="col-md-4 col-12">
+            <label className="form-label modern-label" htmlFor={name}>
+                <i className={`${icon} social-icon-${platform}`}></i> {label}
+            </label>
+            <input 
+                type="url" 
+                id={name} 
+                name={name}
+                className={`form-control modern-input social-input-${platform}`}
+                placeholder={placeholder} 
+                value={profileData[name] || ""} 
+                onChange={handleProfileChange} 
+                disabled={uiState.loading}
+            />
+        </div>
+    );
+
+    const renderPersonalDetails = () => (
+        <div className="modern-form-section">
+            <h4 className="form-section-title">
+                <i className="fas fa-info-circle form-section-icon"></i>
+                Personal Information
+            </h4>
+            
+            <div className="row g-3">
+                {renderFormField("full_name", "Full Name", "fas fa-user", "text", "Enter your full name")}
+                {renderFormField("about", "About Me", "fas fa-edit", "textarea", "Tell us about yourself and your background...", 4)}
+                {renderFormField("country", "Country", "fas fa-map-marker-alt", "text", "Enter your country")}
+            </div>
+        </div>
+    );
+
+    const renderEmployeeSection = () => (
+        <div className="modern-form-section">
+            <h4 className="form-section-title">
+                <i className="fas fa-briefcase form-section-icon"></i>
+                Employee Information
+                <small className="text-muted ms-2">(Organization Details)</small>
+            </h4>
+            
+            <div className="row g-3">
+                <div className="col-md-6">
+                    {renderFormField("nip", "NIP (Employee ID)", "fas fa-id-card", "text", "Enter your NIP", null, false)}
+                </div>
+                <div className="col-md-6">
+                    {renderFormField("golongan", "Golongan", "fas fa-layer-group", "text", "Enter your golongan", null, false)}
+                </div>
+                <div className="col-md-6">
+                    {renderFormField("kelas_jabatan", "Kelas Jabatan", "fas fa-star", "text", "Enter your kelas jabatan", null, false)}
+                </div>
+                <div className="col-md-6">
+                    {renderFormField("jenis_jabatan", "Jenis Jabatan", "fas fa-tags", "text", "Enter your jenis jabatan", null, false)}
+                </div>
+                <div className="col-md-6">
+                    {renderFormField("organization_unit_name", "Organization Unit", "fas fa-building", "text", "Organization unit name", null, false)}
+                </div>
+                <div className="col-md-6">
+                    {renderFormField("position_name", "Position", "fas fa-user-tie", "text", "Position title", null, false)}
+                </div>
+            </div>
+            <small className="field-help-text">Employee information is automatically synchronized from the organization system</small>
+        </div>
+    );
+
+    const renderStudentDetails = () => (
+        <div className="modern-form-section">
+            <h4 className="form-section-title">
+                <i className="fas fa-graduation-cap form-section-icon"></i>
+                Student Profile
+            </h4>
+            
+            <div className="row g-3">
+                {renderFormField("bio", "Bio", false, "textarea", "Share your learning goals, interests, and academic background...", 4)}
+            </div>
+            <small className="field-help-text">Help instructors understand your learning journey and goals</small>
+        </div>
+    );
+
+    const renderSocialMediaSection = () => (
+        <div className="modern-form-section">
+            <h4 className="form-section-title">
+                <i className="fas fa-share-alt form-section-icon"></i>
+                Social Media Links
+                <small className="text-muted ms-2">(Optional)</small>
+            </h4>
+            
+            <div className="row g-3">
+                {renderSocialField("facebook", "Facebook", "fab fa-facebook", "https://facebook.com/yourprofile", "facebook")}
+                {renderSocialField("twitter", "Twitter", "fab fa-twitter", "https://twitter.com/yourhandle", "twitter")}
+                {renderSocialField("linkedin", "LinkedIn", "fab fa-linkedin", "https://linkedin.com/in/yourprofile", "linkedin")}
+            </div>
+        </div>
+    );
+
+    const renderSubmitButton = () => (
+        <div className="form-actions">
+            <button 
+                className="btn modern-submit-btn" 
+                type="submit"
+                disabled={uiState.loading}
+            >
+                {uiState.loading ? (
+                    <>
+                        <span className="spinner-border spinner-border-sm text-purple loading-spinner-sm" role="status" aria-hidden="true"></span>
+                        Updating Profile...
+                    </>
+                ) : (
+                    <>
+                        <i className="fas fa-save submit-icon"></i>
+                        Update Profile
+                    </>
+                )}
+            </button>
+        </div>
+    );
+
+    const renderCropModal = () => (
+        <div className="crop-modal" onClick={handleCropCancel}>
+            <div className="crop-container" onClick={(e) => e.stopPropagation()}>
+                <h4 className="crop-title">
+                    <i className="fas fa-crop-alt crop-title-icon"></i>
+                    Crop Your Profile Picture
+                </h4>
+                <p className="crop-description">
+                    Drag to reposition, resize corners to adjust the crop area. The circular preview shows how your profile picture will look.
+                </p>
+                
+                <div className="crop-image-container">
+                    <ReactCrop
+                        crop={cropState.crop}
+                        onChange={(c) => {
+                            if (c.width && c.height) {
+                                setCropState(prev => ({ ...prev, crop: c }));
+                            }
+                        }}
+                        onComplete={(c) => {
+                            if (c.width && c.height) {
+                                setCropState(prev => ({ ...prev, completedCrop: c }));
+                            }
+                        }}
+                        aspect={1}
+                        circularCrop
+                        minWidth={50}
+                        minHeight={50}
+                        keepSelection
+                    >
+                        <img
+                            ref={imgRef}
+                            src={imageState.selected}
+                            alt="Crop preview"
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '70vh',
+                                width: 'auto',
+                                height: 'auto',
+                                display: 'block'
+                            }}
+                            onLoad={(e) => {
+                                // Calculate centered crop area based on actual rendered dimensions
+                                const img = e.currentTarget;
+                                const { width, height } = img;
+                                const size = Math.min(width, height);
+                                const cropSize = size * 0.7;
+                                const x = (width - cropSize) / 2;
+                                const y = (height - cropSize) / 2;
+                                
+                                const initialCrop = {
+                                    unit: 'px',
+                                    width: cropSize,
+                                    height: cropSize,
+                                    x: x,
+                                    y: y
+                                };
+                                
+                                setCropState({
+                                    crop: initialCrop,
+                                    completedCrop: initialCrop
+                                });
+                            }}
+                        />
+                    </ReactCrop>
+                </div>
+                
+                <div className="crop-info-text">
+                    <small>
+                        <i className="fas fa-info-circle me-1"></i>
+                        Tip: Drag the circle to move, drag corners to resize. You can move the crop area anywhere on the image.
+                    </small>
+                </div>
+                
+                <div className="crop-buttons">
+                    <button 
+                        type="button"
+                        className="btn btn-crop-cancel"
+                        onClick={handleCropCancel}
+                    >
+                        <i className="fas fa-times me-2"></i>
+                        Cancel
+                    </button>
+                    <button 
+                        type="button"
+                        className="btn btn-modern"
+                        onClick={handleCropComplete}
+                        disabled={!cropState.completedCrop || !cropState.completedCrop.width || !cropState.completedCrop.height}
+                    >
+                        <i className="fas fa-check me-2"></i>
+                        Apply Crop
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        <>
+            <BaseHeader />
+
+            <section className="student-profile-page modern-profile-page pt-5 pb-5">
+                <div className="container">
+                    <Header />
+                    <div className="row mt-0 mt-md-4">
+                        <Sidebar />
+                        <div className="col-lg-9 col-md-8 col-12">
+                            {/* Modern Header Section */}
+                            <div className="modern-header-section">
+                                <div className="header-decoration"></div>
+                                <div className="header-content">
+                                    <h1 className="page-header-title">
+                                        <i className="fas fa-user-edit page-header-title-icon"></i>
+                                        Profile Settings
+                                    </h1>
+                                    <p className="page-header-subtitle">
+                                        Manage your account information and student profile
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Modern Profile Form */}
+                            <form onSubmit={submitProfile}>
+                                {/* Avatar Section */}
+                                {renderAvatarSection()}
+
+                                {/* Personal Details Section */}
+                                {renderPersonalDetails()}
+
+                                {/* Employee Information Section */}
+                                {renderEmployeeSection()}
+
+                                {/* Student Details Section */}
+                                {renderStudentDetails()}
+
+                                {/* Social Media Section */}
+                                {renderSocialMediaSection()}
+
+                                {/* Submit Section */}
+                                {renderSubmitButton()}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Image Cropping Modal */}
+            {uiState.showCropModal && imageState.selected && renderCropModal()}
+
+            <Footer />
+        </>
+    );
+}
+
+export default Profile;

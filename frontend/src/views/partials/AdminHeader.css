@@ -1,0 +1,432 @@
+/* Admin Header Styles */
+.admin-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border-bottom: 2px solid #f39c12;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1030;
+    min-height: 60px;
+    padding: 0.45rem 0;
+    user-select: none;
+}
+
+/* Body padding for admin header */
+body {
+    padding-top: 80px !important;
+}
+
+/* Admin Brand Styles */
+.admin-brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    user-select: none;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+}
+
+.admin-brand:hover {
+    transform: translateY(-1px);
+}
+
+.brand-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.brand-icon {
+    font-size: 2rem;
+    color: #f39c12;
+    background: linear-gradient(45deg, #f39c12, #e67e22);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.brand-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.brand-subtitle {
+    font-size: 0.85rem;
+    color: #f39c12;
+    font-weight: 500;
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Quick Stats */
+.admin-quick-stats {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+}
+
+.quick-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #ffffff;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-label {
+    font-weight: 500;
+}
+
+/* Notifications */
+.admin-notifications {
+    position: relative;
+    margin-right: 1rem;
+}
+
+.notification-btn {
+    background: none !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-size: 1.2rem;
+    padding: 0.75rem !important;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.notification-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: scale(1.05);
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    background: #e74c3c;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.4rem;
+    border-radius: 10px;
+    min-width: 1.2rem;
+    text-align: center;
+    line-height: 1;
+}
+
+.notification-dropdown {
+    min-width: 280px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    border-radius: 12px;
+    padding: 0;
+    background: white;
+    margin-top: 0.5rem;
+}
+
+.notification-dropdown .dropdown-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.notification-dropdown .dropdown-item:hover {
+    background: #f8f9fa;
+}
+
+/* Admin Profile Dropdown */
+.admin-profile-dropdown {
+    position: relative;
+}
+
+.admin-profile-btn {
+    background: none !important;
+    border: none !important;
+    color: #ffffff !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 25px !important;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 200px;
+}
+
+.admin-profile-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: translateY(-1px);
+}
+
+.admin-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #f39c12, #e67e22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.admin-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    line-height: 1.2;
+}
+
+.admin-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #ffffff;
+    margin: 0;
+}
+
+.admin-role {
+    font-size: 0.8rem;
+    color: #f39c12;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Admin Dropdown Menu */
+.admin-dropdown {
+    min-width: 280px;
+    border: none;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+    border-radius: 15px;
+    padding: 0.5rem 0;
+    background: white;
+    margin-top: 0.75rem;
+    backdrop-filter: blur(20px);
+}
+
+.admin-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid white;
+}
+
+.admin-dropdown .dropdown-header {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: #f39c12;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 1rem 1.25rem;
+    margin: -0.5rem 0 0.5rem 0;
+    border-radius: 15px 15px 0 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-dropdown .dropdown-item {
+    padding: 0.85rem 1.25rem;
+    font-size: 0.95rem;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.admin-dropdown .dropdown-item:hover {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    color: #1a1a2e;
+    padding-left: 1.5rem;
+    transform: translateX(5px);
+}
+
+.admin-dropdown .dropdown-item i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+    color: #f39c12;
+}
+
+.admin-dropdown .dropdown-item.active-item {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+    font-weight: 600;
+}
+
+.admin-dropdown .dropdown-item.active-item i {
+    color: white;
+}
+
+.admin-dropdown .dropdown-item.logout-item {
+    color: #e74c3c;
+    border-top: 1px solid #f8f9fa;
+    margin-top: 0.5rem;
+}
+
+.admin-dropdown .dropdown-item.logout-item:hover {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+.admin-dropdown .dropdown-item.logout-item i {
+    color: inherit;
+}
+
+/* System Status */
+.admin-status {
+    display: flex;
+    align-items: center;
+    margin-left: 1rem;
+    padding-left: 1rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.system-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #27ae60;
+    box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+    animation: pulse 2s infinite;
+}
+
+.system-status.offline .status-dot {
+    background: #e74c3c;
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+}
+
+.system-status.warning .status-dot {
+    background: #f39c12;
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Dropdown animations */
+@keyframes adminDropdownFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.admin-dropdown.show {
+    animation: adminDropdownFadeIn 0.3s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-header {
+        min-height: 60px;
+    }
+    
+    body {
+        padding-top: 70px !important;
+    }
+    
+    .brand-title {
+        font-size: 1.2rem;
+    }
+    
+    .brand-subtitle {
+        font-size: 0.75rem;
+    }
+    
+    .admin-quick-stats,
+    .admin-status {
+        display: none;
+    }
+    
+    .admin-profile-btn {
+        min-width: auto;
+    }
+    
+    .admin-info {
+        display: none;
+    }
+    
+    .notification-dropdown,
+    .admin-dropdown {
+        min-width: 250px;
+        margin-right: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .admin-header .container-fluid {
+        padding: 0 0.75rem;
+    }
+    
+    .brand-content {
+        gap: 0.5rem;
+    }
+    
+    .brand-icon {
+        font-size: 1.5rem;
+    }
+    
+    .notification-dropdown,
+    .admin-dropdown {
+        min-width: 200px;
+        left: auto !important;
+        right: 0 !important;
+        margin-right: 0.5rem;
+    }
+}

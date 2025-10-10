@@ -1,0 +1,434 @@
+.modern-course-page {
+    background: linear-gradient(135deg, #fafafa 0%, #f8f4ff 50%, #f0ebff 100%) !important;
+    min-height: 100vh;
+}
+
+.page-header-card {
+    background: var(--theme-gradient) !important;
+    border-radius: 20px;
+    color: white !important;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 15px 35px var(--theme-shadow-color) !important;
+}
+
+.page-header-card::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -15%;
+    width: 30%;
+    height: 160%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(15deg);
+    z-index: 1;
+}
+
+.page-header-content {
+    position: relative;
+    z-index: 2;
+}
+
+.search-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e9ecef;
+    margin-bottom: 1.5rem;
+}
+
+.search-input {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.search-input:focus {
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 0.2rem var(--theme-shadow-color);
+    background: white;
+}
+
+.search-icon {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.stats-row {
+    text-align: center;
+}
+
+.stat-item {
+    padding: 1rem;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.15);
+    margin-bottom: 0.5rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.course-stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+    text-align: right;
+}
+
+.stat-label {
+    font-size: 0.85rem !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500 !important;
+    margin-top: 0.25rem !important;
+}
+
+/* More specific selector to ensure font-size changes take effect */
+.page-header-card .stats-row .stat-label {
+    font-size: 0.85rem !important;
+}
+
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.2rem;
+    margin-top: 0.8rem;
+}
+
+.course-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+    position: relative;
+    z-index: 1;
+}
+
+/* Remove problematic hover effects - you can comment out or modify these */
+/* 
+.course-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    z-index: 2;
+}
+*/
+
+.course-image {
+    width: 100%;
+    height: 120px;
+    border-radius: 12px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.course-image-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.course-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, var(--theme-gradient-start), var(--theme-gradient-end));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+/* Show overlay on hover */
+.course-image-wrapper:hover .course-image-overlay {
+    opacity: 0.9;
+}
+
+.play-icon {
+    color: white;
+    font-size: 2rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.course-content {
+    padding: 1.5rem;
+}
+
+.course-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2d3748;
+    line-height: 1.3;
+    margin-bottom: 0.8rem;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 3.6rem;
+}
+
+.course-instructor {
+    color: var(--theme-primary);
+    font-weight: 500;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.course-instructor i {
+    margin-right: 0.5rem;
+    color: var(--theme-primary-dark);
+}
+
+.course-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.course-date {
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.course-date i {
+    margin-right: 0.3rem;
+    color: #667eea;
+}
+
+.progress-section {
+    margin: 1.5rem 0;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.progress-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.progress-percentage {
+    font-size: 0.85rem;
+    color: #667eea;
+    font-weight: 600;
+}
+
+.progress-bar-container {
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--theme-gradient);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.course-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.btn-continue-course {
+    background: var(--theme-gradient);
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    color: white;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    box-shadow: var(--theme-card-shadow);
+}
+
+.btn-continue-course:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--theme-hover-shadow);
+    color: white;
+}
+
+.badge-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: none;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    height: 32px;
+    min-width: fit-content;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.badge-level {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: white !important;
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: none;
+    box-shadow: 0 2px 8px rgba(245, 87, 108, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    height: 32px;
+    min-width: fit-content;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.btn-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    color: white;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+}
+
+.btn-modern:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: #e9ecef;
+    margin-bottom: 1rem;
+}
+
+.loading-spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .page-header-card {
+        padding: 0.8rem;
+        border-radius: 10px;
+        margin-bottom: 0.8rem;
+    }
+
+    .course-title {
+        font-size: 1.1rem;
+    }
+
+    .courses-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .course-content {
+        padding: 1.2rem;
+    }
+
+    .course-actions {
+        flex-direction: column;
+    }
+
+    .btn-continue-course {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .course-card {
+        margin-bottom: 1rem;
+    }
+
+    .course-image {
+        width: 100px;
+        height: 75px;
+    }
+}
+
+/* Fix text selection and cursor issues */
+.page-header-card h1,
+.page-header-card p,
+.stat-number,
+.stat-label,
+.course-card h5,
+.course-card p,
+.course-card span,
+.course-card small,
+.search-card h4,
+.search-card p,
+.empty-state h4,
+.empty-state p {
+    cursor: default !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    outline: none !important;
+    caret-color: transparent !important;
+}
+
+/* Ensure links still have pointer cursor */
+a, .btn, button {
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+/* Ensure input fields can still be selected */
+input, textarea, .form-control {
+    cursor: text !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+}

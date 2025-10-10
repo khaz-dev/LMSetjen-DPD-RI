@@ -1,0 +1,895 @@
+/* ========================================
+   INSTRUCTOR PROFILE STYLES
+   ======================================== */
+
+/* Main Page Layout */
+.instructor-profile-page.modern-profile-page {
+    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #ebebeb 100%);
+    min-height: 100vh;
+}
+
+/* ========================================
+   HEADER SECTION
+   ======================================== */
+.instructor-profile-page .modern-header-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.instructor-profile-page .header-decoration {
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(45deg, #3498db20, #2980b920);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.instructor-profile-page .header-content {
+    position: relative;
+    z-index: 2;
+}
+
+.instructor-profile-page .page-header-title {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.instructor-profile-page .page-header-title-icon {
+    margin-right: 1rem;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.instructor-profile-page .page-header-subtitle {
+    margin-bottom: 0;
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* ========================================
+   FORM SECTIONS
+   ======================================== */
+.instructor-profile-page .modern-form-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.instructor-profile-page .modern-form-section .d-flex {
+    gap: 1.5rem;
+    align-items: flex-start; /* Prevent vertical compression */
+}
+
+.instructor-profile-page .modern-form-section .d-flex.align-items-center {
+    gap: 6rem;
+    justify-content: left;
+    align-items: center;
+    padding-left: 5rem;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+/* Ensure avatar section children don't compress */
+.instructor-profile-page .modern-form-section .d-flex.align-items-center > * {
+    flex-shrink: 0;
+}
+
+.instructor-profile-page .form-section-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.instructor-profile-page .form-section-icon {
+    color: #3498db;
+    margin-right: 0.5rem;
+}
+
+/* ========================================
+   AVATAR SECTION
+   ======================================== */
+.instructor-profile-page .modern-avatar-container {
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.instructor-profile-page .modern-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid white;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.instructor-profile-page .modern-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+}
+
+.instructor-profile-page .default-avatar-modern {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid white;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.instructor-profile-page .default-avatar-modern:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+}
+
+.instructor-profile-page .default-avatar-icon {
+    font-size: 40px;
+    color: white;
+}
+
+.instructor-profile-page .loading-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid white;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    flex-direction: column;
+    gap: 0.5rem; /* Space between spinner and text */
+    padding: 1rem; /* Prevent edge compression */
+    flex-shrink: 0; /* Prevent parent flex compression */
+}
+
+/* Loading Spinner - Perfectly Round */
+.instructor-profile-page .loading-spinner {
+    width: 3rem !important;
+    height: 3rem !important;
+    flex-shrink: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    border-width: 0.3rem;
+    min-width: 3rem !important; /* Prevent shrinking below this */
+    min-height: 3rem !important; /* Prevent shrinking below this */
+    max-width: 3rem !important; /* Prevent growing above this */
+    max-height: 3rem !important; /* Prevent growing above this */
+}
+
+/* CUSTOM SPINNER - GUARANTEED PERFECT CIRCLE */
+.instructor-profile-page .custom-spinner-wrapper {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    max-width: 48px;
+    max-height: 48px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.instructor-profile-page .custom-spinner {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    max-width: 48px;
+    max-height: 48px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: custom-spin 1s linear infinite;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+}
+
+@keyframes custom-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.instructor-profile-page .loading-text {
+    font-size: 10px;
+    color: #6c757d;
+    margin-top: 0.5rem;
+}
+
+.instructor-profile-page .avatar-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-radius: 50%;
+    border: 3px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.instructor-profile-page .avatar-badge-icon {
+    font-size: 12px;
+    color: white;
+}
+
+.instructor-profile-page .avatar-section-title {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.instructor-profile-page .avatar-section-description {
+    color: #6c757d;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.instructor-profile-page .avatar-content-section {
+    flex: 1;
+    max-width: 450px;
+    min-width: 300px;
+}
+
+.instructor-profile-page .modern-file-upload {
+    position: relative;
+}
+
+.instructor-profile-page .modern-file-input {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 12px;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.instructor-profile-page .modern-file-input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    outline: none;
+}
+
+.instructor-profile-page .file-help-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* ========================================
+   FORM INPUTS
+   ======================================== */
+.instructor-profile-page .modern-label {
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.instructor-profile-page .form-field-container {
+    margin-bottom: 0.75rem !important;
+}
+
+.instructor-profile-page .form-field-container:last-child {
+    margin-bottom: 0.5rem !important;
+}
+
+.instructor-profile-page .form-label-icon {
+    color: #3498db;
+    margin-right: 0.25rem;
+}
+
+.instructor-profile-page .modern-input {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #fafafa;
+}
+
+.instructor-profile-page .modern-input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    background: white;
+    outline: none;
+}
+
+.instructor-profile-page .modern-input:disabled {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.instructor-profile-page .modern-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.instructor-profile-page .required-asterisk {
+    color: #dc3545;
+}
+
+.instructor-profile-page .field-help-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-top: -0.5rem;
+    margin-bottom: 0;
+    text-align: right;
+    display: block;
+    width: 100%;
+}
+
+/* ========================================
+   SOCIAL MEDIA INPUTS
+   ======================================== */
+.instructor-profile-page .social-input-facebook:focus {
+    border-color: #1877f2 !important;
+    box-shadow: 0 0 0 0.2rem rgba(24, 119, 242, 0.25) !important;
+}
+
+.instructor-profile-page .social-input-twitter:focus {
+    border-color: #1da1f2 !important;
+    box-shadow: 0 0 0 0.2rem rgba(29, 161, 242, 0.25) !important;
+}
+
+.instructor-profile-page .social-input-linkedin:focus {
+    border-color: #0077b5 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 119, 181, 0.25) !important;
+}
+
+.instructor-profile-page .social-icon-facebook {
+    color: #1877f2;
+}
+
+.instructor-profile-page .social-icon-twitter {
+    color: #1da1f2;
+}
+
+.instructor-profile-page .social-icon-linkedin {
+    color: #0077b5;
+}
+
+/* ========================================
+   SUBMIT BUTTON
+   ======================================== */
+.instructor-profile-page .modern-submit-btn {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border: none;
+    color: white;
+    border-radius: 12px;
+    padding: 15px 40px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.instructor-profile-page .modern-submit-btn:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+}
+
+.instructor-profile-page .modern-submit-btn:disabled {
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
+
+.instructor-profile-page .btn-modern {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border: none;
+    border-radius: 12px;
+    padding: 0.875rem 2rem;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.instructor-profile-page .btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+    color: white;
+}
+
+.instructor-profile-page .btn-modern:disabled {
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
+
+.instructor-profile-page .submit-icon {
+    margin-right: 0.5rem;
+}
+
+/* Small Loading Spinner - Perfectly Round */
+.instructor-profile-page .loading-spinner-sm {
+    width: 1rem !important;
+    height: 1rem !important;
+    margin-right: 0.5rem;
+    flex-shrink: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    border-width: 0.15rem !important;
+}
+
+/* ========================================
+   FILE UPLOAD FEATURES
+   ======================================== */
+.instructor-profile-page .file-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+    border-left: 4px solid #3498db;
+}
+
+.instructor-profile-page .file-info-text {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #495057;
+}
+
+.instructor-profile-page .file-info-icon {
+    margin-right: 0.5rem;
+    color: #3498db;
+}
+
+.instructor-profile-page .profile-picture-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.instructor-profile-page .btn-delete-picture {
+    background: #dc3545;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.instructor-profile-page .btn-delete-picture:hover {
+    background: #c82333;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.instructor-profile-page .picture-action-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* ========================================
+   IMAGE CROPPING MODAL
+   ======================================== */
+.instructor-profile-page .crop-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.instructor-profile-page .crop-container {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.instructor-profile-page .crop-title {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.instructor-profile-page .crop-title-icon {
+    margin-right: 0.5rem;
+    color: #3498db;
+}
+
+.instructor-profile-page .crop-description {
+    text-align: center;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.instructor-profile-page .crop-image-container {
+    max-height: 400px;
+    overflow: hidden;
+    border-radius: 12px;
+    margin: 1rem 0;
+}
+
+.instructor-profile-page .crop-image {
+    max-width: 100%;
+    max-height: 400px;
+    width: auto;
+    height: auto;
+}
+
+.instructor-profile-page .crop-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.instructor-profile-page .btn-crop-cancel {
+    background: #6c757d;
+    border: none;
+    border-radius: 12px;
+    padding: 0.875rem 2rem;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.instructor-profile-page .btn-crop-cancel:hover {
+    background: #5a6268;
+    color: white;
+}
+
+/* ========================================
+   FORM LAYOUT
+   ======================================== */
+.instructor-profile-page .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -0.75rem;
+}
+
+.instructor-profile-page .form-col {
+    padding: 0 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.instructor-profile-page .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+.instructor-profile-page .text-instructor-primary {
+    color: #3498db;
+}
+
+.instructor-profile-page .text-instructor-secondary {
+    color: #2980b9;
+}
+
+.instructor-profile-page .bg-instructor-gradient {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.instructor-profile-page .border-instructor-primary {
+    border-color: #3498db;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 768px) {
+    .instructor-profile-page .modern-header-section {
+        padding: 20px;
+    }
+    
+    .instructor-profile-page .page-header-title {
+        font-size: 2rem;
+    }
+    
+    .instructor-profile-page .page-header-subtitle {
+        font-size: 1rem;
+    }
+    
+    .instructor-profile-page .modern-form-section {
+        padding: 20px;
+        margin-bottom: 1.25rem;
+    }
+    
+    .instructor-profile-page .form-field-container {
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .instructor-profile-page .modern-avatar,
+    .instructor-profile-page .default-avatar-modern,
+    .instructor-profile-page .loading-avatar {
+        width: 100px;
+        height: 100px;
+    }
+    
+    /* Adjust spinner size for mobile */
+    .instructor-profile-page .loading-spinner {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        min-width: 2.5rem !important;
+        min-height: 2.5rem !important;
+        max-width: 2.5rem !important;
+        max-height: 2.5rem !important;
+    }
+    
+    /* Custom spinner mobile size */
+    .instructor-profile-page .custom-spinner-wrapper {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        max-width: 40px;
+        max-height: 40px;
+    }
+    
+    .instructor-profile-page .custom-spinner {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        max-width: 40px;
+        max-height: 40px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+    }
+    
+    .instructor-profile-page .default-avatar-icon {
+        font-size: 35px;
+    }
+    
+    .instructor-profile-page .modern-avatar-container {
+        margin-right: 15px;
+        margin-bottom: 1rem;
+    }
+    
+    .instructor-profile-page .avatar-section-mobile {
+        text-align: center;
+    }
+    
+    .instructor-profile-page .form-actions {
+        flex-direction: column;
+    }
+    
+    .instructor-profile-page .modern-submit-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .instructor-profile-page .crop-container {
+        padding: 1.5rem;
+        width: 95%;
+    }
+    
+    .instructor-profile-page .profile-picture-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .instructor-profile-page .page-header-title {
+        font-size: 1.75rem;
+    }
+    
+    .instructor-profile-page .form-field-container {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .instructor-profile-page .modern-form-section {
+        margin-bottom: 1rem;
+    }
+    
+    .instructor-profile-page .modern-input {
+        padding: 12px;
+    }
+    
+    .instructor-profile-page .modern-submit-btn {
+        padding: 12px 30px;
+        font-size: 0.95rem;
+    }
+    
+    .instructor-profile-page .header-decoration {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .instructor-profile-page .crop-container {
+        padding: 1rem;
+        width: 98%;
+    }
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.instructor-profile-page .fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.instructor-profile-page .slide-in {
+    animation: slideIn 0.5s ease-out;
+}
+
+.instructor-profile-page .pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+/* ========================================
+   FOCUS MANAGEMENT
+   ======================================== */
+.instructor-profile-page .focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+.instructor-profile-page .sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .instructor-profile-page .modern-input,
+    .instructor-profile-page .modern-file-input {
+        border-width: 3px;
+    }
+    
+    .instructor-profile-page .modern-submit-btn {
+        border: 2px solid #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .instructor-profile-page .modern-avatar,
+    .instructor-profile-page .default-avatar-modern,
+    .instructor-profile-page .modern-submit-btn,
+    .instructor-profile-page .modern-input {
+        transition: none;
+    }
+    
+    .instructor-profile-page .fade-in,
+    .instructor-profile-page .slide-in,
+    .instructor-profile-page .pulse-animation {
+        animation: none;
+    }
+}
+
+/* ========================================
+   GLOBAL SPINNER FIX - PERFECTLY ROUND
+   ======================================== */
+/* Apply to all spinners in this page to prevent oval distortion */
+.instructor-profile-page .spinner-border,
+.instructor-profile-page .spinner-border-sm {
+    flex-shrink: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    min-width: fit-content !important;
+    min-height: fit-content !important;
+}
+
+/* Ensure specific sizes stay round with min/max constraints */
+.instructor-profile-page .spinner-border {
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    min-height: 2rem !important;
+    max-width: 2rem !important;
+    max-height: 2rem !important;
+}
+
+.instructor-profile-page .spinner-border-sm {
+    width: 1rem !important;
+    height: 1rem !important;
+    min-width: 1rem !important;
+    min-height: 1rem !important;
+    max-width: 1rem !important;
+    max-height: 1rem !important;
+}
+
+/* Extra protection: Prevent any parent flex container from compressing spinners */
+.instructor-profile-page .spinner-border::before,
+.instructor-profile-page .spinner-border::after,
+.instructor-profile-page .spinner-border-sm::before,
+.instructor-profile-page .spinner-border-sm::after {
+    flex-shrink: 0 !important;
+}
+
+/* Ensure spinner stays round in all contexts */
+.instructor-profile-page div:has(> .spinner-border),
+.instructor-profile-page div:has(> .spinner-border-sm),
+.instructor-profile-page span:has(> .spinner-border),
+.instructor-profile-page span:has(> .spinner-border-sm) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}

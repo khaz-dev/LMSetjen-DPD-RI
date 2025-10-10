@@ -1,0 +1,274 @@
+/* Login Component Styles */
+.login-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding-top: 30px;
+    padding-bottom: 120px;
+    user-select: none; /* Prevent text selection */
+}
+
+/* Allow text selection only for input fields and links */
+.login-input,
+.login-password-input,
+.login-register-link,
+.login-forgot-link,
+.login-help-link {
+    user-select: text;
+}
+
+.login-card {
+    border-radius: 20px;
+    background: white;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    user-select: none; /* Prevent text selection on card */
+}
+
+.login-card-body {
+    padding: 3rem;
+    user-select: none; /* Prevent text selection on body */
+}
+
+.login-logo-container {
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-logo {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+}
+
+.login-title {
+    font-weight: bold;
+    color: #343a40;
+    margin-bottom: 0.5rem;
+    user-select: none; /* Prevent text selection */
+    cursor: default; /* Default cursor */
+}
+
+.login-subtitle {
+    color: #6c757d;
+    margin-bottom: 0;
+    user-select: none; /* Prevent text selection */
+    cursor: default; /* Default cursor */
+}
+
+.login-register-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: bold;
+    user-select: text; /* Allow text selection for links */
+    cursor: pointer; /* Pointer cursor for links */
+}
+
+.login-register-link:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+}
+
+.login-form-label {
+    font-weight: 500;
+    color: #343a40;
+    user-select: none; /* Prevent text selection */
+    cursor: default; /* Default cursor */
+}
+
+.login-form-icon {
+    color: #667eea;
+    margin-right: 0.5rem;
+}
+
+.login-input {
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    padding: 12px 16px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    user-select: text; /* Allow text selection in inputs */
+    cursor: text; /* Text cursor for inputs */
+}
+
+.login-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    outline: none; /* Remove default outline */
+}
+
+.login-password-input {
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    padding: 12px 50px 12px 16px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    user-select: text; /* Allow text selection in inputs */
+    cursor: text; /* Text cursor for inputs */
+}
+
+.login-password-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    outline: none; /* Remove default outline */
+}
+
+.login-password-toggle {
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    padding-right: 8px;
+    user-select: none; /* Prevent text selection */
+    cursor: pointer; /* Pointer cursor for buttons */
+}
+
+.login-password-toggle:hover {
+    color: #667eea;
+}
+
+.login-error-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    user-select: none; /* Prevent text selection */
+    cursor: default; /* Default cursor */
+}
+
+.login-valid-feedback {
+    color: #198754;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    user-select: none; /* Prevent text selection */
+    cursor: default; /* Default cursor */
+}
+
+.login-checkbox {
+    border-color: #667eea;
+    user-select: none; /* Prevent text selection */
+    cursor: pointer; /* Pointer cursor for checkboxes */
+}
+
+.login-checkbox:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+/* Checkbox label styling */
+.form-check-label {
+    user-select: none; /* Prevent text selection on labels */
+    cursor: pointer; /* Pointer cursor for labels */
+}
+
+.login-forgot-link {
+    color: #667eea;
+    font-size: 14px;
+    text-decoration: none;
+    user-select: text; /* Allow text selection for links */
+    cursor: pointer; /* Pointer cursor for links */
+}
+
+.login-forgot-link:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+}
+
+.login-submit-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    transform: scale(1);
+    user-select: none; /* Prevent text selection */
+    cursor: pointer; /* Pointer cursor for buttons */
+}
+
+.login-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.login-submit-btn:active {
+    transform: scale(0.98);
+}
+
+.login-submit-btn:disabled {
+    transform: scale(0.98);
+    opacity: 0.8;
+    cursor: not-allowed; /* Not-allowed cursor for disabled buttons */
+}
+
+.login-help-link {
+    color: #667eea;
+    text-decoration: none;
+    user-select: text; /* Allow text selection for links */
+    cursor: pointer; /* Pointer cursor for links */
+}
+
+.login-help-link:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+}
+
+.login-spinner {
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+}
+
+/* Additional text selection prevention */
+.text-center {
+    user-select: none; /* Prevent text selection on centered text */
+}
+
+.text-muted {
+    user-select: none; /* Prevent text selection on muted text */
+    cursor: default; /* Default cursor */
+}
+
+/* Logo styling */
+.login-logo {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    user-select: none; /* Prevent selection of logo */
+    pointer-events: none; /* Prevent any interaction with logo */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .login-card-body {
+        padding: 2rem;
+    }
+    
+    .login-logo {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .login-section {
+        padding-top: 20px;
+        padding-bottom: 80px;
+    }
+}
+
+@media (max-width: 576px) {
+    .login-card-body {
+        padding: 1.5rem;
+    }
+    
+    .login-logo {
+        width: 100px;
+        height: 100px;
+    }
+}

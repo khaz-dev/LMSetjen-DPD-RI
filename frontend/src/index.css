@@ -1,0 +1,294 @@
+/* Global Theme Variables */
+:root {
+  /* Student Theme (Purple) - Default */
+  --theme-primary: #667eea;
+  --theme-primary-dark: #764ba2;
+  --theme-primary-light: #8b5cf6;
+  --theme-primary-lighter: #a78bfa;
+  --theme-secondary: #9333ea;
+  --theme-accent: #c084fc;
+  --theme-gradient-start: #667eea;
+  --theme-gradient-end: #764ba2;
+  --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
+  --theme-gradient-light: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+  --theme-shadow-color: rgba(102, 126, 234, 0.3);
+  --theme-hover-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  --theme-card-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  --theme-text-on-primary: #ffffff;
+  --theme-border-color: rgba(102, 126, 234, 0.2);
+}
+
+/* Instructor Theme (Blue) */
+body.instructor-theme {
+  --theme-primary: #3498db;
+  --theme-primary-dark: #2980b9;
+  --theme-primary-light: #3b82f6;
+  --theme-primary-lighter: #60a5fa;
+  --theme-secondary: #2563eb;
+  --theme-accent: #6366f1;
+  --theme-gradient-start: #3498db;
+  --theme-gradient-end: #2980b9;
+  --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
+  --theme-gradient-light: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(41, 128, 185, 0.1));
+  --theme-shadow-color: rgba(52, 152, 219, 0.3);
+  --theme-hover-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+  --theme-card-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  --theme-text-on-primary: #ffffff;
+  --theme-border-color: rgba(52, 152, 219, 0.2);
+}
+
+/* Student Theme (Purple) - Explicit class for clarity */
+body.student-theme {
+  --theme-primary: #667eea;
+  --theme-primary-dark: #764ba2;
+  --theme-primary-light: #8b5cf6;
+  --theme-primary-lighter: #a78bfa;
+  --theme-secondary: #9333ea;
+  --theme-accent: #c084fc;
+  --theme-gradient-start: #667eea;
+  --theme-gradient-end: #764ba2;
+  --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
+  --theme-gradient-light: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+  --theme-shadow-color: rgba(102, 126, 234, 0.3);
+  --theme-hover-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  --theme-card-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  --theme-text-on-primary: #ffffff;
+  --theme-border-color: rgba(102, 126, 234, 0.2);
+}
+
+/* Global text selection prevention for all non-interactive elements */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on all elements by default */
+body, div, span, h1, h2, h3, h4, h5, h6, p, a, img, strong, em, small,
+.card, .card-body, .card-title, .card-text,
+.badge, .btn-text, .nav-link,
+.modal-title, .modal-body, .modal-header,
+.list-group-item, .dropdown-item,
+.alert, .toast, .tooltip, .popover {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  cursor: default !important;
+  caret-color: transparent !important;
+}
+
+/* Allow text selection only for input elements */
+input, textarea, .form-control, .form-select, 
+[contenteditable="true"], [contenteditable=""], 
+.editable-text {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+  caret-color: auto !important;
+}
+
+/* Global Cursor Management - Fix cursor pointer inheritance issues */
+button, 
+.btn, 
+a[href], 
+.clickable, 
+[role="button"], 
+[onclick], 
+.dropdown-toggle {
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+/* Critical Fix: Ensure all children of clickable elements inherit pointer cursor */
+button *:not(input):not(textarea):not(select):not([contenteditable]),
+.btn *:not(input):not(textarea):not(select):not([contenteditable]),
+a[href] *:not(input):not(textarea):not(select):not([contenteditable]),
+.clickable *:not(input):not(textarea):not(select):not([contenteditable]),
+[role="button"] *:not(input):not(textarea):not(select):not([contenteditable]),
+[onclick] *:not(input):not(textarea):not(select):not([contenteditable]),
+.dropdown-toggle *:not(input):not(textarea):not(select):not([contenteditable]) {
+  cursor: inherit !important;
+}
+
+/* Specific override for text elements inside clickable containers */
+button span,
+button i,
+button div,
+button p,
+.btn span,
+.btn i,
+.btn div,
+.btn p,
+a[href] span:not(.form-control),
+a[href] i,
+a[href] div,
+.clickable span,
+.clickable i,
+.clickable div {
+  cursor: pointer !important;
+}
+
+/* Prevent text cursor on labels unless they're for inputs */
+label {
+  cursor: default !important;
+}
+
+/* Allow selection on specific content areas where users might need to copy text */
+.selectable-content, 
+.code-block, 
+pre, 
+code {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+}
+
+/* :root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+} */
+
+/* ========================================
+   GLOBAL SPINNER FIX - Prevent Oval/Distorted Spinners
+   ======================================== */
+
+/* Ensure all Bootstrap spinners remain perfectly circular */
+.spinner-border,
+.spinner-border-sm,
+.loading-spinner {
+  flex-shrink: 0 !important;
+  /* Prevent flex containers from squishing the spinner */
+  min-width: fit-content !important;
+  min-height: fit-content !important;
+  /* Maintain aspect ratio */
+  aspect-ratio: 1 / 1 !important;
+  /* Ensure border width doesn't affect dimensions */
+  box-sizing: border-box !important;
+}
+
+/* Fix for custom loading spinners */
+.loading-spinner,
+.curriculum-loading-spinner,
+.instructor-spinner,
+.qa-loading-spinner,
+.student-loading-spinner {
+  width: 3rem !important;
+  height: 3rem !important;
+  min-width: 3rem !important;
+  min-height: 3rem !important;
+  flex-shrink: 0 !important;
+  border-radius: 50% !important;
+  border: 3px solid rgba(0, 0, 0, 0.1) !important;
+  border-top-color: currentColor !important;
+  animation: spinner-rotation 1s linear infinite !important;
+}
+
+/* Spinner animation */
+@keyframes spinner-rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Ensure parent containers don't distort spinners */
+.upload-loading,
+.loading-overlay,
+.loading-content,
+.upload-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Fix for spinners inside flex containers */
+div:has(> .spinner-border),
+div:has(> .loading-spinner),
+span:has(> .spinner-border) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Small spinner specific fix */
+.spinner-border-sm {
+  width: 1rem !important;
+  height: 1rem !important;
+  min-width: 1rem !important;
+  min-height: 1rem !important;
+  border-width: 0.2em !important;
+}
+
+/* Video completing spinner fix */
+.video-completing-spinner {
+  width: 3rem !important;
+  height: 3rem !important;
+  flex-shrink: 0 !important;
+  border-radius: 50% !important;
+}

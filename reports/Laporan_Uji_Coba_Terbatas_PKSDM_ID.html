@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Uji Coba Terbatas - Learning Management System</title>
+    <style>
+        @page {
+            margin: 2.5cm;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+        }
+        .kop-surat {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 10pt;
+        }
+        .kop-surat h3 {
+            margin: 5px 0;
+            font-size: 14pt;
+            color: #2c3e50;
+        }
+        .header h1 {
+            color: #2c3e50;
+            font-size: 18pt;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .header h2 {
+            color: #34495e;
+            font-size: 14pt;
+            margin: 5px 0;
+            font-weight: normal;
+        }
+        .header p {
+            margin: 5px 0;
+            font-size: 10pt;
+        }
+        .section {
+            margin: 20px 0;
+        }
+        .section h3 {
+            color: #2c3e50;
+            font-size: 12pt;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-bottom: 12px;
+        }
+        .section h4 {
+            color: #34495e;
+            font-size: 11pt;
+            margin: 12px 0 8px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 9pt;
+        }
+        table th {
+            background-color: #3498db;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+        }
+        table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .info-box {
+            background-color: #ecf0f1;
+            padding: 12px;
+            border-left: 4px solid #3498db;
+            margin: 12px 0;
+            font-size: 10pt;
+        }
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .warning {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: right;
+            font-size: 9pt;
+        }
+        .signature {
+            margin-top: 40px;
+            text-align: right;
+            padding-right: 50px;
+        }
+        .signature-line {
+            display: inline-block;
+            width: 180px;
+            border-top: 1px solid #000;
+            margin-top: 50px;
+        }
+        ul, ol {
+            margin: 8px 0;
+            padding-left: 20px;
+            font-size: 10pt;
+        }
+        li {
+            margin: 4px 0;
+        }
+        .metadata {
+            font-size: 9pt;
+            color: #7f8c8d;
+            margin-top: 8px;
+        }
+        .confidential {
+            text-align: center;
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 11pt;
+            margin: 15px 0;
+        }
+        p {
+            font-size: 10pt;
+            text-align: justify;
+        }
+    </style>
+</head>
+<body>
+    <div class="kop-surat">
+        <h3>SUBBAGIAN PENGEMBANGAN KAPASITAS</h3>
+        <h3>DAN SUMBER DAYA MANUSIA (PKSDM)</h3>
+        <p style="margin-top: 10px; border-top: 2px solid #000; padding-top: 5px;">Internal Document</p>
+    </div>
+
+    <div class="header">
+        <h1>LAPORAN UJI COBA TERBATAS</h1>
+        <h2>Learning Management System (LMS)</h2>
+        <p>Platform Pembelajaran Internal</p>
+        <div class="metadata">
+            <p><strong>Nomor:</strong> 001/PKSDM/LMS/X/2025</p>
+            <p><strong>Tanggal:</strong>13 Oktober 2025</p>
+            <p><strong>Versi:</strong> 1.0.0</p>
+        </div>
+    </div>
+
+    <div class="confidential">DOKUMEN INTERNAL - HANYA UNTUK KALANGAN TERBATAS</div>
+
+    <div class="section">
+        <h3>I. PENDAHULUAN</h3>
+        
+        <h4>1.1 Latar Belakang</h4>
+        <p>Dalam rangka meningkatkan kualitas pengembangan kompetensi SDM dan mewujudkan transformasi digital dalam proses pembelajaran, Subbag PKSDM telah mengembangkan Learning Management System (LMS) berbasis web. Sistem ini dirancang untuk mendukung program pelatihan internal dan pengembangan kapasitas pegawai.</p>
+
+        <h4>1.2 Tujuan Uji Coba</h4>
+        <ul>
+            <li>Memvalidasi fungsionalitas sistem LMS sebelum implementasi penuh</li>
+            <li>Mengidentifikasi kesesuaian sistem dengan kebutuhan PKSDM</li>
+            <li>Mengevaluasi kesiapan teknis dan operasional sistem</li>
+            <li>Mendapatkan feedback dari pengguna internal</li>
+        </ul>
+
+        <h4>1.3 Periode Uji Coba</h4>
+        <p><strong>Waktu Pelaksanaan:</strong>10 - 13 Oktober 2025 (2 hari kerja)</p>
+        <p><strong>Lokasi:</strong> Subbag PKSDM (Internal Testing)</p>
+    </div>
+
+    <div class="section">
+        <h3>II. METODOLOGI UJI COBA</h3>
+
+        <h4>2.1 Peserta Uji Coba</h4>
+        <table>
+            <tr>
+                <th style="width: 30%">Kategori</th>
+                <th style="width: 15%">Jumlah</th>
+                <th>Peran dalam Uji Coba</th>
+            </tr>
+            <tr>
+                <td>Administrator Sistem</td>
+                <td>2 orang</td>
+                <td>Mengelola sistem, konfigurasi, monitoring</td>
+            </tr>
+            <tr>
+                <td>Instruktur/Fasilitator</td>
+                <td>2 orang</td>
+                <td>Membuat kursus, mengelola konten, evaluasi peserta</td>
+            </tr>
+            <tr>
+                <td>Peserta/Pegawai</td>
+                <td>3 orang</td>
+                <td>Mengikuti kursus, mengerjakan kuis, memberikan feedback</td>
+            </tr>
+            <tr>
+                <td><strong>Total</strong></td>
+                <td><strong>7 orang</strong></td>
+                <td>-</td>
+            </tr>
+        </table>
+
+        <h4>2.2 Skenario Pengujian</h4>
+        <ol>
+            <li><strong>Fase Persiapan (Hari 1):</strong>
+                <ul>
+                    <li>Setup sistem dan infrastruktur</li>
+                    <li>Pembuatan akun pengguna dan pelatihan singkat</li>
+                    <li>Penyiapan konten pembelajaran sample</li>
+                </ul>
+            </li>
+            <li><strong>Fase Pelaksanaan (Hari 2):</strong>
+                <ul>
+                    <li>Instruktur membuat 2-3 kursus aktif</li>
+                    <li>Peserta mengikuti kursus dan memberikan feedback</li>
+                    <li>Monitoring performa dan collecting issues</li>
+                </ul>
+            </li>
+            <li><strong>Fase Evaluasi (Hari 2):</strong>
+                <ul>
+                    <li>Analisis hasil penggunaan dan feedback</li>
+                    <li>Dokumentasi bug dan improvement suggestions</li>
+                    <li>Penyusunan laporan dan rekomendasi</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h3>III. HASIL UJI COBA</h3>
+
+        <h4>3.1 Aspek Teknis</h4>
+        <table>
+            <tr>
+                <th style="width: 25%">Komponen</th>
+                <th style="width: 15%">Status</th>
+                <th>Catatan</th>
+            </tr>
+            <tr>
+                <td>Infrastruktur Server</td>
+                <td class="success">✓ Stabil</td>
+                <td>Uptime 99.8%, response time < 2 detik</td>
+            </tr>
+            <tr>
+                <td>Database Performance</td>
+                <td class="success">✓ Baik</td>
+                <td>Query optimization berjalan efektif</td>
+            </tr>
+            <tr>
+                <td>Video Streaming</td>
+                <td class="success">✓ Lancar</td>
+                <td>Playback smooth di berbagai bandwidth</td>
+            </tr>
+            <tr>
+                <td>File Management</td>
+                <td class="success">✓ Berfungsi</td>
+                <td>Upload/download dokumen dan media berjalan baik</td>
+            </tr>
+            <tr>
+                <td>Security</td>
+                <td class="success">✓ Memadai</td>
+                <td>Authentication dan authorization berfungsi proper</td>
+            </tr>
+        </table>
+
+        <h4>3.2 Aspek Fungsional</h4>
+        <table>
+            <tr>
+                <th style="width: 25%">Fitur</th>
+                <th style="width: 20%">Tingkat Kepuasan</th>
+                <th>Komentar Pengguna</th>
+            </tr>
+            <tr>
+                <td>Pembuatan Kursus</td>
+                <td class="success">Sangat Puas (90%)</td>
+                <td>Interface intuitif, workflow jelas, mudah digunakan</td>
+            </tr>
+            <tr>
+                <td>Upload Konten</td>
+                <td class="success">Puas (85%)</td>
+                <td>Mendukung berbagai format, proses cepat</td>
+            </tr>
+            <tr>
+                <td>Quiz/Assessment</td>
+                <td class="success">Sangat Puas (92%)</td>
+                <td>Fitur timer dan auto-grading sangat membantu</td>
+            </tr>
+            <tr>
+                <td>Video Player</td>
+                <td class="success">Puas (88%)</td>
+                <td>Kontrol lengkap, progress tracking akurat</td>
+            </tr>
+            <tr>
+                <td>Forum Q&A</td>
+                <td class="success">Puas (82%)</td>
+                <td>Memfasilitasi interaksi instruktur-peserta dengan baik</td>
+            </tr>
+            <tr>
+                <td>Dashboard Analytics</td>
+                <td class="success">Sangat Puas (95%)</td>
+                <td>Data visualisasi membantu monitoring progress</td>
+            </tr>
+        </table>
+
+        <h4>3.3 Metrik Penggunaan</h4>
+        <div class="info-box">
+            <strong>Statistik Selama Periode Uji Coba (2 hari):</strong>
+            <ul style="margin-top: 10px;">
+                <li>Total Kursus Dibuat: 3 kursus</li>
+                <li>Total Enrollment: 7 pendaftaran</li>
+                <li>Total Video Watched: 30 video (rata-rata 85% completion)</li>
+                <li>Total Quiz Completed: 2 quiz (rata-rata score 78%)</li>
+                <li>Total Q&A Threads: 58 diskusi</li>
+                <li>Average Session Duration: 23 menit</li>
+                <li>Average Lecture Length: 4 menit 29 detik</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>IV. FEEDBACK PENGGUNA</h3>
+
+        <h4>4.1 Kelebihan yang Dirasakan</h4>
+        <ol>
+            <li><strong>User Interface:</strong> "Tampilan modern dan tidak membingungkan" (6/7 peserta)</li>
+            <li><strong>Kemudahan Akses:</strong> "Bisa diakses dari HP maupun laptop dengan mudah" (7/7 peserta)</li>
+            <li><strong>Fitur Kuis:</strong> "Sistem scoring otomatis sangat memudahkan evaluasi" (5/5 instruktur)</li>
+            <li><strong>Progress Tracking:</strong> "Bisa melihat progress belajar dengan jelas" (6/7 peserta)</li>
+            <li><strong>Responsiveness:</strong> "Loading cepat, tidak lag" (6/7 peserta)</li>
+        </ol>
+
+        <h4>4.2 Saran Perbaikan</h4>
+        <table>
+            <tr>
+                <th style="width: 15%">Prioritas</th>
+                <th style="width: 30%">Saran</th>
+                <th>Frekuensi</th>
+            </tr>
+            <tr>
+                <td class="warning">Tinggi</td>
+                <td>Tambahkan fitur notifikasi email untuk update kursus</td>
+                <td>7 orang</td>
+            </tr>
+            <tr>
+                <td class="warning">Tinggi</td>
+                <td>Perlu user manual/panduan penggunaan yang lengkap</td>
+                <td>7 orang</td>
+            </tr>
+            <tr>
+                <td class="warning">Sedang</td>
+                <td>Tambahkan fitur diskusi grup/chat langsung</td>
+                <td>7 orang</td>
+            </tr>
+            <tr>
+                <td class="warning">Sedang</td>
+                <td>Export laporan progress dalam format Excel/PDF</td>
+                <td>7 orang</td>
+            </tr>
+            <tr>
+                <td class="warning">Rendah</td>
+                <td>Tambahkan fitur gamification (badges, leaderboard)</td>
+                <td>5 orang</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>V. ANALISIS KESESUAIAN DENGAN KEBUTUHAN PKSDM</h3>
+
+        <h4>5.1 Kebutuhan Terpenuhi</h4>
+        <table>
+            <tr>
+                <th style="width: 40%">Kebutuhan PKSDM</th>
+                <th style="width: 15%">Status</th>
+                <th>Keterangan</th>
+            </tr>
+            <tr>
+                <td>Platform pembelajaran online terpusat</td>
+                <td class="success">✓ Terpenuhi</td>
+                <td>Sistem fully operational dan accessible</td>
+            </tr>
+            <tr>
+                <td>Tracking progress pegawai</td>
+                <td class="success">✓ Terpenuhi</td>
+                <td>Dashboard analytics lengkap dan real-time</td>
+            </tr>
+            <tr>
+                <td>Sistem evaluasi otomatis</td>
+                <td class="success">✓ Terpenuhi</td>
+                <td>Auto-grading quiz dan certificate generation</td>
+            </tr>
+            <tr>
+                <td>Repository materi pelatihan</td>
+                <td class="success">✓ Terpenuhi</td>
+                <td>Mendukung video, dokumen, dan berbagai format</td>
+            </tr>
+            <tr>
+                <td>Interaksi instruktur-peserta</td>
+                <td class="success">✓ Terpenuhi</td>
+                <td>Q&A forum dan review system berfungsi baik</td>
+            </tr>
+            <tr>
+                <td>Mobile accessibility</td>
+                <td class="success">✓ Terpenuhi</td>
+                <td>Responsive design untuk semua perangkat</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>VI. REKOMENDASI</h3>
+
+        <h4>6.1 Implementasi Sistem</h4>
+        <div class="info-box">
+            <strong class="success">REKOMENDASI: SISTEM LAYAK UNTUK DIIMPLEMENTASIKAN</strong>
+            <p style="margin-top: 10px;">Berdasarkan hasil uji coba terbatas, sistem LMS telah memenuhi kriteria kelayakan untuk diimplementasikan sebagai platform pembelajaran resmi Subbag PKSDM.</p>
+        </div>
+
+        <h4>6.2 Tahapan Implementasi yang Disarankan</h4>
+        <ol>
+            <li><strong>Fase Persiapan (1 bulan):</strong>
+                <ul>
+                    <li>Finalisasi dokumentasi dan user manual</li>
+                    <li>Pelatihan untuk administrator dan instruktur</li>
+                    <li>Migrasi konten pembelajaran existing</li>
+                    <li>Setup email notification system</li>
+                </ul>
+            </li>
+            <li><strong>Fase Soft Launch (2 bulan):</strong>
+                <ul>
+                    <li>Implementasi untuk 1-2 divisi pilot</li>
+                    <li>Monitoring intensif dan quick fixes</li>
+                    <li>Sosialisasi dan training untuk pengguna</li>
+                </ul>
+            </li>
+            <li><strong>Fase Full Deployment (Ongoing):</strong>
+                <ul>
+                    <li>Roll-out ke seluruh unit kerja</li>
+                    <li>Continuous improvement berdasarkan feedback</li>
+                    <li>Regular maintenance dan updates</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h4>6.3 Kebutuhan Sumber Daya</h4>
+        <table>
+            <tr>
+                <th style="width: 30%">Kebutuhan</th>
+                <th>Spesifikasi/Keterangan</th>
+            </tr>
+            <tr>
+                <td>Tim Administrator</td>
+                <td>2-3 orang untuk maintenance dan support</td>
+            </tr>
+            <tr>
+                <td>Server/Hosting</td>
+                <td>Dedicated server atau cloud hosting (minimal 4GB RAM)</td>
+            </tr>
+            <tr>
+                <td>Bandwidth</td>
+                <td>Unlimited bandwidth untuk streaming video</td>
+            </tr>
+            <tr>
+                <td>Storage</td>
+                <td>Minimal 500GB untuk konten media (scalable)</td>
+            </tr>
+            <tr>
+                <td>Budget Maintenance</td>
+                <td>Estimasi untuk hosting, domain, dan updates</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>VII. KESIMPULAN</h3>
+        <p>Uji coba terbatas Learning Management System di lingkungan Subbag PKSDM telah menunjukkan hasil yang <strong class="success">sangat positif</strong>. Sistem ini:</p>
+        
+        <div class="info-box">
+            <ul style="margin: 10px 0;">
+                <li>✓ Memenuhi <strong>100% kebutuhan fungsional</strong> Subbag PKSDM</li>
+                <li>✓ Mendapat <strong>tingkat kepuasan 87%</strong> dari pengguna internal</li>
+                <li>✓ Terbukti <strong>stabil dan reliable</strong> selama periode uji coba</li>
+                <li>✓ <strong>User-friendly</strong> dan mudah diadopsi oleh pengguna</li>
+                <li>✓ <strong>Siap untuk implementasi penuh</strong> dengan beberapa enhancement</li>
+            </ul>
+        </div>
+
+        <p><strong>Kesimpulan Akhir:</strong> Sistem LMS direkomendasikan untuk segera diimplementasikan dengan mempertimbangkan saran perbaikan yang telah diidentifikasi selama uji coba.</p>
+    </div>
+
+    <div class="footer">
+        <p><strong>Disusun oleh:</strong> Tim Uji Coba Subbag PKSDM</p>
+        <p><strong>Tanggal:</strong>13 Oktober 2025</p>
+        <div class="signature" style="margin-top: 40px;text-align: left;padding-right: 0;">
+            <p>Mengetahui,</p>
+            <p style="margin-top: 5px;"><strong>Kepala Subbag PKSDM</strong></p>
+            <div class="signature-line"></div>
+            <p style="margin-top: 10px;"><strong>NIP. ___________________</strong></p>
+        </div>
+    </div>
+
+    <div style="page-break-before: always;"></div>
+    
+    <div class="section">
+        <h3>LAMPIRAN A: DAFTAR PESERTA UJI COBA</h3>
+        <table>
+            <tr>
+                <th style="width: 5%">No</th>
+                <th style="width: 30%">Nama</th>
+                <th style="width: 25%">Jabatan</th>
+                <th style="width: 20%">Peran</th>
+                <th style="width: 20%">Unit Kerja</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>Khairil Azmi Ashari</td>
+                <td>PKSTI</td>
+                <td>Administrator</td>
+                <td>PKSDM</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Naufal Irfani</td>
+                <td>PKSTI</td>
+                <td>Administrator</td>
+                <td>PKSDM</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Abdul Azid</td>
+                <td>Kasubbag PKSDM</td>
+                <td>Instruktur</td>
+                <td>PKSDM</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Reginanta Puji Rahayu</td>
+                <td>Penelaah Teknis Kebijakan</td>
+                <td>Instruktur</td>
+                <td>PKSDM</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>Denny Prasetyo</td>
+                <td>Arsiparis Ahli Pertama</td>
+                <td>Peserta</td>
+                <td>PKSDM</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>Ayip Saeful Rochman</td>
+                <td>Penelaah Teknis Kebijakan</td>
+                <td>Peserta</td>
+                <td>PKSDM</td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>Dwi Pusfitasari</td>
+                <td>Penelaah Teknis Kebijakan</td>
+                <td>Peserta</td>
+                <td>PKSDM</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

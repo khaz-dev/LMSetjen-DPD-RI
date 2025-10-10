@@ -1,0 +1,591 @@
+/* ============================================
+   COURSE EDIT CURRICULUM - ENHANCED UI/UX
+   ============================================ */
+
+/* ============================================
+   SECTION STYLING - Enhanced Visual Hierarchy
+   ============================================ */
+
+.form-section-enhanced {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    overflow: hidden;
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.form-section-enhanced:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    border-color: #4a90e2;
+}
+
+.form-subsection-enhanced {
+    display: block; /* Placeholder for potential future styling */
+}
+
+/* Section Header - Gradient Background */
+.subsection-header-enhanced {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 14px 20px;
+    border-bottom: 2px solid #5a67d8;
+}
+
+.subsection-header-enhanced h5 {
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0;
+}
+
+.section-number-badge {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+}
+
+.section-title-text {
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Section Content Area */
+.subsection-content-enhanced {
+    padding: 16px 20px;
+    background: #f8f9fa;
+}
+
+/* ============================================
+   LESSONS CONTAINER - Clear Hierarchy
+   ============================================ */
+
+.lessons-container {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 12px;
+    border: 2px solid #e0e0e0;
+}
+
+.lessons-header {
+    color: #2d3748;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+/* ============================================
+   LESSON CARD STYLING - Compact & Distinct
+   ============================================ */
+
+.curriculum-item-card-enhanced {
+    background: #ffffff;
+    border: 2px solid #cbd5e0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.curriculum-item-card-enhanced:hover {
+    border-color: #4299e1;
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
+    transform: translateY(-2px);
+}
+
+.curriculum-item-card-enhanced:last-child {
+    margin-bottom: 0;
+}
+
+/* Lesson Header - Compact */
+.curriculum-item-header-enhanced {
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    padding: 10px 14px;
+    border-bottom: 2px solid #2c5282;
+}
+
+.curriculum-item-header-enhanced h6 {
+    color: #ffffff !important;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.lesson-number-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.lesson-title-preview {
+    color: #ffffff !important;
+    font-weight: 500;
+    font-size: 0.85rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0;
+}
+
+/* Lesson Body - Compact Padding */
+.curriculum-item-body-enhanced {
+    padding: 12px 14px;
+    background: #f7fafc;
+}
+
+.curriculum-item-body-enhanced .row {
+    margin-left: -8px;
+    margin-right: -8px;
+}
+
+.curriculum-item-body-enhanced .col-md-6 {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.curriculum-item-body-enhanced .mb-3 {
+    margin-bottom: 10px !important;
+}
+
+/* ============================================
+   FORM CONTROLS - Consistent Styling
+   ============================================ */
+
+.curriculum-form-control {
+    border: 2px solid #cbd5e0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.curriculum-form-control:focus {
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    outline: none;
+}
+
+.curriculum-form-control.is-invalid {
+    border-color: #fc8181;
+}
+
+.curriculum-form-control.is-warning {
+    border-color: #f6ad55;
+}
+
+.curriculum-form-label {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.curriculum-invalid-feedback {
+    color: #e53e3e;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    display: block;
+}
+
+.curriculum-character-count {
+    font-size: 0.8rem;
+    color: #718096;
+    text-align: right;
+    margin-top: 4px;
+}
+
+/* ============================================
+   FILE UPLOAD STATUS - Visual Feedback
+   ============================================ */
+
+.curriculum-file-status {
+    margin-top: 8px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.curriculum-file-status.compressing {
+    background: #fef5e7;
+    border: 1px solid #f39c12;
+}
+
+.curriculum-file-status.uploading {
+    background: #ebf8ff;
+    border: 1px solid #4299e1;
+}
+
+.curriculum-file-status.success {
+    background: #f0fff4;
+    border: 1px solid #48bb78;
+}
+
+.curriculum-file-status.error {
+    background: #fff5f5;
+    border: 1px solid #fc8181;
+}
+
+.curriculum-preview-link {
+    color: #4299e1;
+    text-decoration: underline;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.curriculum-preview-link:hover {
+    color: #2c5282;
+}
+
+/* ============================================
+   PREVIEW SETTINGS - Checkbox Styling
+   ============================================ */
+
+.curriculum-preview-settings {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: #edf2f7;
+    border-radius: 6px;
+    border: 1px solid #cbd5e0;
+}
+
+.curriculum-preview-settings .form-check-input {
+    width: 20px;
+    height: 20px;
+    margin-top: 0;
+    cursor: pointer;
+}
+
+.curriculum-preview-settings .form-check-label {
+    color: #2d3748;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding-left: 8px;
+}
+
+/* ============================================
+   BUTTONS - Action Styling
+   ============================================ */
+
+.btn-update-course {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-update-course:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    color: #ffffff;
+}
+
+.btn-update-course:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .form-section-enhanced {
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+
+    .subsection-header-enhanced {
+        padding: 16px 20px;
+    }
+
+    .subsection-content-enhanced {
+        padding: 20px 16px;
+    }
+
+    .lessons-container {
+        padding: 16px;
+    }
+
+    .curriculum-item-body-enhanced {
+        padding: 12px;
+    }
+
+    .section-number-badge {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+
+    .lesson-number-badge {
+        font-size: 0.75rem;
+        padding: 3px 10px;
+    }
+
+    .subsection-header-enhanced h5 {
+        font-size: 1rem;
+    }
+
+    .lessons-header {
+        font-size: 1rem;
+    }
+}
+
+/* ============================================
+   DRAG & DROP FUNCTIONALITY
+   ============================================ */
+
+.drag-handle {
+    cursor: grab;
+    color: #a0aec0;
+    padding: 6px 8px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+.drag-handle:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.dragging {
+    opacity: 0.6;
+    transform: scale(0.98);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.drag-placeholder {
+    background: #e0e0e0;
+    border: 2px dashed #9ca3af;
+    border-radius: 8px;
+    min-height: 60px;
+}
+
+/* Section being dragged */
+.form-section-enhanced.is-dragging {
+    opacity: 0.5;
+    border: 2px dashed #4a90e2;
+}
+
+/* Lesson being dragged */
+.curriculum-item-card-enhanced.is-dragging {
+    opacity: 0.5;
+    border: 2px dashed #4299e1;
+}
+
+/* Drop indicator */
+.drop-indicator {
+    height: 4px;
+    background: #4a90e2;
+    border-radius: 2px;
+    margin: 8px 0;
+    box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+}
+
+/* ============================================
+   DRAG & DROP PLACEHOLDER (Future Feature)
+   ============================================ */
+
+.drag-handle {
+    cursor: grab;
+    color: #a0aec0;
+    padding: 4px;
+    transition: color 0.2s ease;
+}
+
+.drag-handle:hover {
+    color: #4a5568;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+/* ============================================
+   VALIDATION SUMMARY STYLING
+   ============================================ */
+
+.validation-summary {
+    background: #fff5f5;
+    border: 2px solid #fc8181;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.validation-errors {
+    color: #742a2a;
+}
+
+.validation-errors ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.validation-errors ul li {
+    padding: 6px 0;
+    padding-left: 24px;
+    position: relative;
+}
+
+.validation-errors ul li:before {
+    content: "•";
+    position: absolute;
+    left: 8px;
+    color: #e53e3e;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* ============================================
+   STATUS MESSAGE STYLING
+   ============================================ */
+
+.status-message {
+    padding: 14px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    border: 2px solid;
+}
+
+.status-message.success {
+    background: #f0fff4;
+    border-color: #48bb78;
+    color: #22543d;
+}
+
+.status-message.error {
+    background: #fff5f5;
+    border-color: #fc8181;
+    color: #742a2a;
+}
+
+.status-message.submitting {
+    background: #ebf8ff;
+    border-color: #4299e1;
+    color: #2c5282;
+}
+
+/* ============================================
+   FILE INFO DISPLAY
+   ============================================ */
+
+.file-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.file-info i {
+    font-size: 1.1rem;
+}
+
+.file-info .badge {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+}
+
+.file-info a {
+    font-size: 0.9rem;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+    .file-info a {
+        max-width: 150px;
+    }
+}
+
+/* ============================================
+   IMPROVED SPACING & VISUAL HIERARCHY
+   ============================================ */
+
+.form-label.fw-bold {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #2d3748;
+    margin-bottom: 8px;
+}
+
+.form-label.fw-bold i {
+    font-size: 0.9rem;
+}
+
+/* Distinct visual separation between sections */
+.form-section-enhanced + .form-section-enhanced {
+    margin-top: 20px;
+}
+
+/* Add breathing room to lesson cards */
+.curriculum-item-card-enhanced + .curriculum-item-card-enhanced {
+    margin-top: 12px;
+}
+
+/* ============================================
+   PRINT STYLES (Optional)
+   ============================================ */
+
+@media print {
+    .subsection-header-enhanced,
+    .curriculum-item-header-enhanced {
+        background: #ffffff !important;
+        border: 2px solid #000000;
+        color: #000000 !important;
+    }
+
+    .form-section-enhanced,
+    .curriculum-item-card-enhanced {
+        page-break-inside: avoid;
+    }
+
+    button {
+        display: none;
+    }
+}

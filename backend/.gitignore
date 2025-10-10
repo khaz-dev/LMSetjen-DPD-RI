@@ -1,0 +1,158 @@
+# Backend .gitignore for Django REST Framework
+
+# ===================================
+# PYTHON
+# ===================================
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ===================================
+# DJANGO
+# ===================================
+# Local development database
+db.sqlite3
+db.sqlite3-journal
+
+# Django secret keys and settings
+.env
+local_settings.py
+secrets.py
+
+# Django logs
+*.log
+logs/
+*.log.*
+
+# Static files (collected, not source)
+staticfiles/
+static_root/
+
+# ===================================
+# MEDIA & UPLOADS
+# ===================================
+# User uploaded files (keep structure)
+media/
+!media/.gitkeep
+
+# Specific uploads
+media/course-file/
+media/user_folder/
+media/*.mp4
+media/*.pdf
+media/*.png
+media/*.jpg
+
+# ===================================
+# VIRTUAL ENVIRONMENT
+# ===================================
+venv/
+env/
+ENV/
+.venv/
+env.bak/
+venv.bak/
+
+# ===================================
+# DATABASE
+# ===================================
+# SQLite databases
+*.sqlite3
+*.db
+
+# Database backups
+db_backup_*/
+*.sql
+*.sql.backup
+*.dump
+
+# PostgreSQL
+*.psql
+
+# ===================================
+# TESTING & COVERAGE
+# ===================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# Test databases
+test_*.sqlite3
+
+# ===================================
+# CELERY & REDIS
+# ===================================
+celerybeat-schedule
+celerybeat.pid
+
+# ===================================
+# EMAIL TEMPLATES (drafts)
+# ===================================
+templates/email/draft_*
+templates/email/*.tmp
+
+# ===================================
+# TEMPORARY FILES
+# ===================================
+temp_uploads/
+test_env/
+*.tmp
+*.temp
+*~
+
+# Test scripts
+test_*.py
+check_*.py
+debug_*.py
+verify_*.py
+
+# ===================================
+# MIGRATIONS (optional)
+# ===================================
+# Uncomment if you want to ignore migration files
+# */migrations/[0-9]*.py
+# */migrations/__pycache__/
+
+# ===================================
+# SECURITY
+# ===================================
+# Never commit secrets
+.env
+.env.local
+.env.production
+*.pem
+*.key
+*.crt
+secrets.json
+
+# ===================================
+# PRODUCTION
+# ===================================
+# Production-specific files
+setup_production_*.sh
+setup_production_*.bat
+migrate_to_postgresql.py
+requirements_production.txt
+gunicorn.conf.py
+
+# ===================================
+# IDE & EDITORS
+# ===================================
+.vscode/
+.idea/
+*.sublime-*
+*.swp
+*.swo
+
+# ===================================
+# OPERATING SYSTEM
+# ===================================
+.DS_Store
+Thumbs.db
+Desktop.ini

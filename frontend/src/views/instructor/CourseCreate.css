@@ -1,0 +1,891 @@
+/* Course Create Page Styles - Modern UI/UX Design */
+
+/* ================================
+   DESIGN SYSTEM VARIABLES
+   ================================ */
+:root {
+    /* Instructor Color Palette - Matching Header Theme */
+    --instructor-primary: #3498db;
+    --instructor-primary-dark: #2980b9;
+    --instructor-primary-light: #34495e;
+    --instructor-gradient: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
+    --instructor-gradient-hover: linear-gradient(135deg, #2980b9 0%, #1e3c72 100%);
+    
+    /* Semantic Colors */
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --info-color: #3b82f6;
+    
+    /* Neutral Colors */
+    --neutral-50: #f9fafb;
+    --neutral-100: #f3f4f6;
+    --neutral-200: #e5e7eb;
+    --neutral-300: #d1d5db;
+    --neutral-400: #9ca3af;
+    --neutral-500: #6b7280;
+    --neutral-600: #4b5563;
+    --neutral-700: #374151;
+    --neutral-800: #1f2937;
+    --neutral-900: #111827;
+    
+    /* Spacing System */
+    --space-xs: 0.5rem;
+    --space-sm: 0.75rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    --space-3xl: 4rem;
+    
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 15px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-instructor: 0 10px 30px rgba(52, 152, 219, 0.15);
+    
+    /* Transitions */
+    --transition-fast: 0.15s ease-out;
+    --transition-normal: 0.3s ease-out;
+    --transition-slow: 0.5s ease-out;
+}
+
+/* ================================
+   CONTAINER & LAYOUT
+   ================================ */
+.course-create-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: var(--space-xl) 0;
+}
+
+/* Modern Header Design */
+.create-header-modern {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(52, 152, 219, 0.3);
+}
+
+.create-header-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+    z-index: 0;
+}
+
+.create-header-modern > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Modern Form Card */
+.form-card-modern {
+    background: white;
+    border-radius: var(--radius-xl);
+    border: none;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    position: relative;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 2rem;
+}
+
+.form-card-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3498db, #2980b9, #3498db);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Modern Form Body */
+.form-body-modern {
+    padding: 2rem;
+}
+
+/* Enhanced Section Styling */
+.form-section {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(52, 152, 219, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.form-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    border-color: rgba(52, 152, 219, 0.2);
+}
+
+.form-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(52, 152, 219, 0.3), transparent);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.form-section:hover::before {
+    transform: scaleX(1);
+}
+
+/* Enhanced Section Titles */
+.section-title {
+    color: var(--neutral-700);
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-sm);
+    position: relative;
+    display: inline-block;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border-radius: 2px;
+}
+
+.section-title i {
+    color: var(--instructor-primary);
+    font-size: 1.2rem;
+}
+
+/* ================================
+   FORM ELEMENTS
+   ================================ */
+.form-label {
+    font-weight: 600;
+    color: var(--neutral-700);
+    margin-bottom: var(--space-sm);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.form-control,
+.form-select {
+    border: 2px solid var(--neutral-200);
+    border-radius: var(--radius-md);
+    padding: var(--space-md) var(--space-lg);
+    font-size: 1rem;
+    line-height: 1.5;
+    transition: all var(--transition-normal);
+    background: white;
+    font-weight: 500;
+    color: var(--neutral-700);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--instructor-primary);
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+    background: rgba(255, 255, 255, 1);
+}
+
+.form-control::placeholder {
+    color: var(--neutral-400);
+    font-weight: 400;
+}
+
+/* Validation States */
+.form-control.is-valid,
+.form-select.is-valid {
+    border-color: var(--success-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2310b981' d='m2.3 6.73.94-.94 4.94-4.94'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right var(--space-sm) center;
+    background-size: 1rem;
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: var(--error-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23ef4444'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m6 3v3.75'/%3e%3cpath d='m6 8.25h.007'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right var(--space-sm) center;
+    background-size: 1rem;
+    animation: shake 0.4s ease-in-out;
+}
+
+.form-control.is-warning,
+.form-select.is-warning {
+    border-color: var(--warning-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23f59e0b'%3e%3cpath d='m6 3v3.75'/%3e%3cpath d='m6 8.25h.007'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right var(--space-sm) center;
+    background-size: 1rem;
+}
+
+/* ================================
+   VALIDATION FEEDBACK
+   ================================ */
+.invalid-feedback {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+    font-size: 0.875rem;
+    color: var(--error-color);
+    font-weight: 500;
+    animation: slideInDown var(--transition-fast);
+}
+
+.warning-feedback {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+    font-size: 0.875rem;
+    color: var(--warning-color);
+    font-weight: 500;
+    animation: slideInDown var(--transition-fast);
+}
+
+.valid-feedback {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+    font-size: 0.875rem;
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+/* ================================
+   IMAGE & MEDIA COMPONENTS
+   ================================ */
+.image-preview-container {
+    position: relative;
+    margin-bottom: var(--space-lg);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.image-preview {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    border: 3px solid var(--neutral-200);
+    transition: all var(--transition-normal);
+    background: var(--neutral-100);
+    display: block;
+}
+
+.image-preview.valid {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.image-preview.invalid {
+    border-color: var(--error-color);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.image-preview.warning {
+    border-color: var(--warning-color);
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+}
+
+/* File Upload Area */
+.file-upload-area {
+    border: 2px dashed var(--neutral-300);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2xl);
+    text-align: center;
+    background: var(--neutral-50);
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.file-upload-area::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(52, 152, 219, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.file-upload-area:hover {
+    border-color: var(--instructor-primary);
+    background: rgba(52, 152, 219, 0.05);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.file-upload-area:hover::before {
+    left: 100%;
+}
+
+.file-upload-area.dragover {
+    border-color: var(--instructor-primary);
+    background: rgba(52, 152, 219, 0.1);
+    transform: scale(1.02);
+}
+
+.file-upload-area.uploading {
+    border-color: var(--info-color);
+    background: rgba(59, 130, 246, 0.05);
+    cursor: not-allowed;
+}
+
+.file-upload-area.has-file {
+    border-color: var(--success-color);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+/* ================================
+   CKEDITOR STYLING
+   ================================ */
+.ckeditor-container {
+    border: 2px solid var(--neutral-200);
+    border-radius: var(--radius-md);
+    overflow: visible !important;
+    transition: all var(--transition-normal);
+    background: white;
+    position: relative;
+    z-index: 1;
+}
+
+.ckeditor-container.focused {
+    border-color: var(--instructor-primary);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    transform: translateY(-1px);
+}
+
+.ckeditor-container.invalid {
+    border-color: var(--error-color);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.ckeditor-container.warning {
+    border-color: var(--warning-color);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.ckeditor-container.valid {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Fix CKEditor cursor and pointer issues - ENHANCED */
+.ckeditor-container * {
+    pointer-events: auto !important;
+}
+
+.ckeditor-container .ck-editor {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: auto;
+}
+
+.ckeditor-container .ck-editor__editable {
+    min-height: 200px;
+    max-height: 500px;
+    overflow-y: auto !important;
+    cursor: text !important;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: auto;
+}
+
+.ckeditor-container .ck-editor__editable * {
+    cursor: text !important;
+    pointer-events: auto !important;
+}
+
+.ckeditor-container .ck-editor__editable:not(.ck-focused) {
+    cursor: text !important;
+}
+
+.ckeditor-container .ck-editor__editable.ck-focused {
+    border: none !important;
+    box-shadow: none !important;
+    cursor: text !important;
+    outline: none !important;
+}
+
+/* Make sure the editing area is always interactive */
+.ckeditor-container .ck-editor__editable.ck-editor__editable_inline {
+    cursor: text !important;
+    pointer-events: auto !important;
+}
+
+.ckeditor-container .ck-toolbar {
+    pointer-events: auto !important;
+    border: none !important;
+    background: var(--neutral-50) !important;
+    z-index: 2;
+}
+
+.ckeditor-container .ck-toolbar * {
+    pointer-events: auto !important;
+}
+
+.ckeditor-container .ck-toolbar__items {
+    pointer-events: auto !important;
+}
+
+.ckeditor-container .ck-button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+.ckeditor-container .ck-button:not(.ck-disabled) {
+    cursor: pointer !important;
+}
+
+/* Ensure proper text selection and cursor visibility */
+.ckeditor-container .ck-content,
+.ckeditor-container .ck-content *,
+.ckeditor-container .ck-content p,
+.ckeditor-container .ck-content h1,
+.ckeditor-container .ck-content h2,
+.ckeditor-container .ck-content h3,
+.ckeditor-container .ck-content h4,
+.ckeditor-container .ck-content h5,
+.ckeditor-container .ck-content h6,
+.ckeditor-container .ck-content ul,
+.ckeditor-container .ck-content ol,
+.ckeditor-container .ck-content li,
+.ckeditor-container .ck-content span,
+.ckeditor-container .ck-content strong,
+.ckeditor-container .ck-content em,
+.ckeditor-container .ck-content a {
+    cursor: text !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    pointer-events: auto !important;
+}
+
+/* Improve caret visibility - ENHANCED */
+.ckeditor-container .ck-editor__editable.ck-focused,
+.ckeditor-container .ck-editor__editable.ck-focused *,
+.ckeditor-container .ck-editor__editable {
+    caret-color: #3498db !important;
+}
+
+/* Force caret to be visible */
+.ckeditor-container .ck-editor__editable::selection {
+    background: rgba(52, 152, 219, 0.3);
+}
+
+.ckeditor-container .ck-editor__editable::-moz-selection {
+    background: rgba(52, 152, 219, 0.3);
+}
+
+/* Ensure placeholder doesn't interfere */
+.ckeditor-container .ck-editor__editable.ck-placeholder::before {
+    cursor: text !important;
+    pointer-events: none !important;
+}
+
+/* Remove any transforms that might affect cursor position */
+.ckeditor-container .ck-editor__editable,
+.ckeditor-container .ck-editor__editable * {
+    transform: none !important;
+    will-change: auto !important;
+}
+
+/* Ensure content is editable */
+.ckeditor-container .ck-editor__editable[contenteditable="true"] {
+    -webkit-user-modify: read-write !important;
+}
+
+/* ================================
+   BUTTONS
+   ================================ */
+.btn-create-course {
+    background: var(--instructor-gradient);
+    border: none;
+    padding: var(--space-md) var(--space-2xl);
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: var(--radius-full);
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-instructor);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-create-course::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.btn-create-course:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(52, 152, 219, 0.4);
+    background: var(--instructor-gradient-hover);
+    color: white;
+}
+
+.btn-create-course:hover::before {
+    left: 100%;
+}
+
+.btn-create-course:active {
+    transform: translateY(-1px);
+}
+
+.btn-create-course:disabled {
+    opacity: 0.6;
+    transform: none;
+    box-shadow: var(--shadow-md);
+    cursor: not-allowed;
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--instructor-primary);
+    color: var(--instructor-primary);
+    background: transparent;
+    padding: var(--space-md) var(--space-xl);
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    transition: all var(--transition-normal);
+}
+
+.btn-outline-primary:hover {
+    background: var(--instructor-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ================================
+   LOADING STATES
+   ================================ */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(248, 250, 252, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    z-index: 10;
+    backdrop-filter: blur(4px);
+}
+
+.loading-content {
+    text-align: center;
+    color: var(--neutral-600);
+}
+
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid var(--neutral-200);
+    border-top-color: var(--instructor-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto var(--space-md);
+}
+
+/* ================================
+   ANIMATIONS & KEYFRAMES
+   ================================ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+@media (max-width: 768px) {
+    .create-header-modern {
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-body-modern {
+        padding: 1.5rem;
+    }
+    
+    .form-section {
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .image-preview {
+        height: 200px;
+    }
+    
+    .file-upload-area {
+        padding: 1.5rem;
+    }
+    
+    .btn-create-course {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .create-header-modern {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-body-modern {
+        padding: 1rem;
+    }
+    
+    .form-section {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-create-course {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.9rem;
+    }
+    
+    .image-preview {
+        height: 180px;
+    }
+    
+    .file-upload-area {
+        padding: 1rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+    }
+}
+
+/* ================================
+   IMAGE CROP MODAL STYLES
+   ================================ */
+.crop-container {
+    position: relative;
+    width: 100%;
+}
+
+.crop-container .ReactCrop {
+    max-width: 100%;
+}
+
+.ReactCrop__crop-selection {
+    border: 2px solid var(--instructor-primary);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+}
+
+.ReactCrop__drag-handle {
+    background-color: var(--instructor-primary);
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    width: 12px;
+    height: 12px;
+}
+
+.ReactCrop__drag-handle:hover {
+    background-color: var(--instructor-primary-dark);
+    transform: scale(1.2);
+}
+
+/* Modal backdrop overlay */
+.modal.show {
+    backdrop-filter: blur(4px);
+}
+
+.modal-xl {
+    max-width: 1200px;
+}
+
+/* Crop modal specific styles */
+.modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header.bg-primary {
+    background: var(--instructor-gradient) !important;
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Loading state for crop button */
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Crop guide overlay */
+.crop-guide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+}
+
+/* Aspect ratio indicator */
+.aspect-ratio-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    z-index: 10;
+}
+
+/* Smooth animations */
+.modal.show .modal-dialog {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Crop area highlight effect */
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(52, 152, 219, 0);
+    }
+}
+
+.ReactCrop__crop-selection.active {
+    animation: pulseGlow 2s infinite;
+}
+
+/* Better mobile responsiveness for crop modal */
+@media (max-width: 768px) {
+    .modal-xl {
+        max-width: 95%;
+        margin: 1rem auto;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+        max-height: 60vh;
+    }
+    
+    .crop-container {
+        padding: 10px;
+    }
+    
+    .ReactCrop__drag-handle {
+        width: 16px;
+        height: 16px;
+    }
+}
