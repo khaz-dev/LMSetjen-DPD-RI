@@ -1,9 +1,208 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { validateFileType } from "../../../utils/courseValidation";
 import useAxios from "../../../utils/useAxios";
 import Toast from "../../plugin/Toast";
+
+// Separate CropModal component for portal rendering
+const CropModal = ({ 
+  modalVisible, 
+  handleCloseCrop, 
+  imageSrc, 
+  crop, 
+  setCrop, 
+  completedCrop, 
+  setCompletedCrop, 
+  imgRef, 
+  previewCanvasRef, 
+  handleCropComplete, 
+  isLoading, 
+  cropError, 
+  imageLoadError,
+  aspect = 16 / 9 
+}) => (
+  <div className={`crop-modal-backdrop ${modalVisible ? 'show' : ''}`}>
+    <div className="crop-modal-dialog">
+      {/* Enhanced Modal Header */}
+      <div className="crop-modal-header">
+        <h5 className="crop-modal-title">
+          <i className="fas fa-crop me-2"></i>
+          Crop Your Course Thumbnail
+        </h5>
+        <button 
+          type="button" 
+          className="crop-modal-close" 
+          onClick={handleCloseCrop}
+          disabled={isLoading}
+          aria-label="Close modal"
+        >
+          <i className="fas fa-times"></i>
+        </button>
+      </div>
+
+      {/* Modal Body */}
+      <div className="crop-modal-body">
+        {/* Error States */}
+        {cropError && (
+          <div className="alert alert-danger crop-error-alert" role="alert">
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            <strong>Crop Error:</strong> {cropError}
+            <button 
+              type="button" 
+              className="btn-close" 
+              onClick={() => {}} 
+              aria-label="Close error"
+            ></button>
+          </div>
+        )}
+
+        {imageLoadError && (
+          <div className="alert alert-warning crop-error-alert" role="alert">
+            <i className="fas fa-exclamation-circle me-2"></i>
+            <strong>Image Load Error:</strong> {imageLoadError}
+            <div className="mt-2">
+              <small>Try uploading a different image or check your internet connection.</small>
+            </div>
+          </div>
+        )}
+        
+        {/* Aspect Ratio Badge */}
+        <div className="crop-aspect-badge">
+          16:9 Aspect Ratio
+        </div>
+        
+        {/* Enhanced Crop Container */}
+        <div className="crop-container">
+          
+          {/* Loading Overlay */}
+          {isLoading && (
+            <div className="crop-loading-overlay">
+              <div className="crop-spinner"></div>
+              <div className="mt-3 text-center">
+                <strong>Processing your thumbnail...</strong>
+                <br />
+                <small>Cropping and optimizing image quality</small>
+              </div>
+            </div>
+          )}
+          
+          {imageSrc && !imageLoadError && (
+            <ReactCrop
+              crop={crop}
+              onChange={(_, percentCrop) => setCrop(percentCrop)}
+              onComplete={(c) => setCompletedCrop(c)}
+              aspect={aspect}
+              minWidth={100}
+              minHeight={56}
+              circularCrop={false}
+              ruleOfThirds={true}
+              className="enhanced-react-crop"
+            >
+              <img
+                ref={imgRef}
+                alt="Crop preview"
+                src={imageSrc}
+                className="crop-preview-image"
+                onLoad={(e) => {
+                  const { width, height } = e.currentTarget;
+                  const crop = centerCrop(
+                    makeAspectCrop(
+                      {
+                        unit: '%',
+                        width: 90,
+                      },
+                      aspect,
+                      width,
+                      height,
+                    ),
+                    width,
+                    height,
+                  );
+                  setCrop(crop);
+                }}
+                onError={() => {
+                  // Handle image load error
+                }}
+              />
+            </ReactCrop>
+          )}
+        </div>
+
+        {/* Enhanced Instructions */}
+        {!imageLoadError && (
+          <div className="crop-instructions">
+            <small>
+              <i className="fas fa-hand-pointer me-1"></i>
+              <strong>How to crop:</strong> Drag corners to resize • Drag center to move • Use handles for precise control
+              <br />
+              <i className="fas fa-magic me-1"></i>
+              <strong>Pro tip:</strong> Follow the rule of thirds for the most appealing thumbnail composition
+            </small>
+          </div>
+        )}
+
+        {/* Live Preview of Cropped Result */}
+        {completedCrop && completedCrop.width > 0 && completedCrop.height > 0 && (
+          <div className="crop-preview-section mt-4">
+            <div className="d-flex align-items-center justify-content-between mb-2">
+              <h6 className="mb-0">
+                <i className="fas fa-eye me-2"></i>
+                Live Preview (1920x1080)
+              </h6>
+              <span className="badge bg-info">
+                16:9 Aspect Ratio
+              </span>
+            </div>
+            <div className="crop-preview-result">
+              <canvas
+                ref={previewCanvasRef}
+                className="crop-result-canvas"
+                style={{
+                  maxWidth: '100%',
+                  height: 'auto',
+                  border: '2px solid #667eea',
+                  borderRadius: '8px',
+                  backgroundColor: '#000'
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modal Footer */}
+      <div className="crop-modal-footer">
+        <button 
+          type="button" 
+          className="btn btn-secondary" 
+          onClick={handleCloseCrop}
+          disabled={isLoading}
+        >
+          <i className="fas fa-times me-1"></i>Cancel
+        </button>
+        <button 
+          type="button" 
+          className="btn btn-success" 
+          onClick={handleCropComplete}
+          disabled={isLoading || imageLoadError || !crop?.width || !crop?.height}
+        >
+          {isLoading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Processing...
+            </>
+          ) : (
+            <>
+              <i className="fas fa-check me-1"></i>Crop & Save
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 const ImageUpload = ({ 
   imagePreview, 
@@ -17,11 +216,74 @@ const ImageUpload = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [showCropModal, setShowCropModal] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [crop, setCrop] = useState();
   const [completedCrop, setCompletedCrop] = useState(null);
+  const [cropError, setCropError] = useState(null);
+  const [imageLoadError, setImageLoadError] = useState(false);
   const imgRef = useRef(null);
+  const previewCanvasRef = useRef(null);
+
+  // Generate live preview of crop
+  useEffect(() => {
+    if (!completedCrop || !previewCanvasRef.current || !imgRef.current) {
+      return;
+    }
+
+    const image = imgRef.current;
+    const canvas = previewCanvasRef.current;
+    const crop = completedCrop;
+
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+
+    // Set canvas to exact output size
+    canvas.width = 1920;
+    canvas.height = 1080;
+
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // Fill with black background
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw the cropped image
+    ctx.drawImage(
+      image,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+  }, [completedCrop]);
+
+  // Effect to manage modal visibility and prevent body scroll
+  useEffect(() => {
+    if (showCropModal) {
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+      // Add smooth animation delay
+      const timer = setTimeout(() => setModalVisible(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      // Restore body scroll when modal is closed
+      document.body.style.overflow = 'unset';
+      setModalVisible(false);
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showCropModal]);
 
   // Center crop with 16:9 aspect ratio (ideal for course thumbnails)
   function centerAspectCrop(mediaWidth, mediaHeight, aspect) {
@@ -67,6 +329,8 @@ const ImageUpload = ({
     reader.addEventListener('load', () => {
       setImageSrc(reader.result);
       setSelectedFile(file);
+      setCropError(null);
+      setImageLoadError(false);
       setShowCropModal(true);
     });
     reader.readAsDataURL(file);
@@ -75,10 +339,21 @@ const ImageUpload = ({
     event.target.value = '';
   };
 
-  const getCroppedImg = (image, crop, fileName) => {
+  const getCroppedImg = (image, pixelCrop, fileName) => {
+    // pixelCrop contains x, y, width, height in pixels relative to the displayed image
+    if (!pixelCrop || !image) {
+      return Promise.reject(new Error('Invalid crop or image'));
+    }
+
     const canvas = document.createElement('canvas');
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
+    
+    // Calculate the actual crop dimensions in the source image
+    const sourceX = pixelCrop.x * scaleX;
+    const sourceY = pixelCrop.y * scaleY;
+    const sourceWidth = pixelCrop.width * scaleX;
+    const sourceHeight = pixelCrop.height * scaleY;
     
     // Set canvas size to match desired output (1920x1080 for 16:9)
     const targetWidth = 1920;
@@ -87,17 +362,26 @@ const ImageUpload = ({
     canvas.height = targetHeight;
     
     const ctx = canvas.getContext('2d');
+    
+    // Enable high-quality image rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Fill with black background for letterboxing if needed
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
 
+    // Draw the cropped portion of the image
     ctx.drawImage(
       image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      targetWidth,
-      targetHeight
+      sourceX,        // Source x
+      sourceY,        // Source y
+      sourceWidth,    // Source width
+      sourceHeight,   // Source height
+      0,              // Destination x
+      0,              // Destination y
+      targetWidth,    // Destination width
+      targetHeight    // Destination height
     );
 
     return new Promise((resolve, reject) => {
@@ -108,7 +392,9 @@ const ImageUpload = ({
             return;
           }
           blob.name = fileName;
-          resolve(blob);
+          // Also return the canvas data URL for immediate preview
+          const previewUrl = canvas.toDataURL('image/jpeg', 0.95);
+          resolve({ blob, previewUrl });
         },
         'image/jpeg',
         0.95
@@ -118,6 +404,7 @@ const ImageUpload = ({
 
   const handleCropComplete = async () => {
     if (!completedCrop || !imgRef.current) {
+      setCropError("Please select an area to crop by dragging the corners of the selection area.");
       Toast().fire({
         icon: "error",
         title: "No Crop Selected",
@@ -126,15 +413,23 @@ const ImageUpload = ({
       return;
     }
 
+    if (completedCrop.width < 100 || completedCrop.height < 56) {
+      setCropError("Crop area is too small. Please select a larger area for better thumbnail quality.");
+      return;
+    }
+
     setLoading(true);
-    setShowCropModal(false);
+    setCropError(null);
 
     try {
-      const croppedBlob = await getCroppedImg(
+      const { blob: croppedBlob, previewUrl } = await getCroppedImg(
         imgRef.current,
         completedCrop,
         selectedFile.name
       );
+
+      // Show immediate preview of the cropped image
+      setImagePreview(previewUrl);
 
       const formData = new FormData();
       formData.append("file", croppedBlob, selectedFile.name);
@@ -146,6 +441,7 @@ const ImageUpload = ({
       });
 
       if (response?.data?.url) {
+        // Update with the uploaded URL (keep the preview until upload completes)
         setImagePreview(response.data.url);
         setCourseData(prevData => ({
           ...prevData,
@@ -160,9 +456,16 @@ const ImageUpload = ({
           timer: 2000,
           showConfirmButton: false
         });
+
+        // Close modal with smooth animation
+        handleCancelCrop();
       }
     } catch (error) {
       console.error("Error uploading image:", error);
+      setCropError(
+        error.response?.data?.message || 
+        "Failed to upload cropped image. Please check your connection and try again."
+      );
       Toast().fire({
         icon: "error",
         title: "Upload Failed",
@@ -170,18 +473,23 @@ const ImageUpload = ({
       });
     } finally {
       setLoading(false);
-      setImageSrc(null);
-      setSelectedFile(null);
-      setCompletedCrop(null);
     }
   };
 
   const handleCancelCrop = () => {
-    setShowCropModal(false);
-    setImageSrc(null);
-    setSelectedFile(null);
-    setCompletedCrop(null);
+    // Smooth close animation
+    setModalVisible(false);
+    setTimeout(() => {
+      setShowCropModal(false);
+      setImageSrc(null);
+      setSelectedFile(null);
+      setCompletedCrop(null);
+      setCropError(null);
+      setImageLoadError(false);
+    }, 300); // Match CSS transition duration
   };
+
+  const aspect = 16 / 9;
 
   const getInputClass = () => {
     if (errors.image?.length > 0) return "form-control is-invalid";
@@ -199,102 +507,25 @@ const ImageUpload = ({
 
   return (
     <>
-      {/* Crop Modal */}
-      {showCropModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }} tabIndex="-1">
-          <div className="modal-dialog modal-xl modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header bg-primary text-white">
-                <h5 className="modal-title">
-                  <i className="fas fa-crop me-2"></i>
-                  Crop Your Course Thumbnail
-                </h5>
-                <button 
-                  type="button" 
-                  className="btn-close btn-close-white" 
-                  onClick={handleCancelCrop}
-                  disabled={loading}
-                ></button>
-              </div>
-              <div className="modal-body p-4">
-                <div className="alert alert-info mb-4">
-                  <i className="fas fa-info-circle me-2"></i>
-                  <strong>Pro Tip:</strong> Drag the selection area to choose what will be visible as your course thumbnail. 
-                  The image will be optimized to 16:9 aspect ratio (1920x1080px) - perfect for course displays!
-                </div>
-                
-                <div className="crop-container" style={{ 
-                  maxHeight: '60vh', 
-                  overflow: 'auto',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '8px',
-                  padding: '20px'
-                }}>
-                  {imageSrc && (
-                    <ReactCrop
-                      crop={crop}
-                      onChange={(c) => setCrop(c)}
-                      onComplete={(c) => setCompletedCrop(c)}
-                      aspect={16 / 9}
-                      minWidth={100}
-                    >
-                      <img
-                        ref={imgRef}
-                        src={imageSrc}
-                        alt="Crop preview"
-                        onLoad={onImageLoad}
-                        style={{ 
-                          maxWidth: '100%',
-                          maxHeight: '60vh',
-                          objectFit: 'contain'
-                        }}
-                      />
-                    </ReactCrop>
-                  )}
-                </div>
-
-                <div className="mt-3 text-center">
-                  <small className="text-muted">
-                    <i className="fas fa-arrows-alt me-1"></i>
-                    Drag the corners to adjust the crop area. The selected area will be your course thumbnail.
-                  </small>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
-                  onClick={handleCancelCrop}
-                  disabled={loading}
-                >
-                  <i className="fas fa-times me-2"></i>
-                  Cancel
-                </button>
-                <button 
-                  type="button" 
-                  className="btn btn-primary" 
-                  onClick={handleCropComplete}
-                  disabled={loading || !completedCrop}
-                >
-                  {loading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-check me-2"></i>
-                      Crop & Upload
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Portal-based Crop Modal */}
+      {showCropModal && createPortal(
+        <CropModal 
+          modalVisible={modalVisible}
+          handleCloseCrop={handleCancelCrop}
+          imageSrc={imageSrc}
+          crop={crop}
+          setCrop={setCrop}
+          completedCrop={completedCrop}
+          setCompletedCrop={setCompletedCrop}
+          imgRef={imgRef}
+          previewCanvasRef={previewCanvasRef}
+          handleCropComplete={handleCropComplete}
+          isLoading={loading}
+          cropError={cropError}
+          imageLoadError={imageLoadError}
+          aspect={aspect}
+        />, 
+        document.body
       )}
 
       {/* Image Preview Section */}
@@ -374,8 +605,8 @@ const ImageUpload = ({
                       />
                       <div className="position-absolute top-0 end-0 m-2">
                         <span className="badge bg-success">
-                          <i className="fas fa-check me-1"></i>
-                          New
+                          <i className="fas fa-crop me-1"></i>
+                          Cropped (16:9)
                         </span>
                       </div>
                     </div>
@@ -396,8 +627,8 @@ const ImageUpload = ({
                 {(imagePreview || courseData?.image) && (
                   <div className="position-absolute top-0 end-0 m-2">
                     <span className="badge bg-success">
-                      <i className="fas fa-check me-1"></i>
-                      Uploaded
+                      <i className="fas fa-crop me-1"></i>
+                      {imagePreview ? 'Cropped (16:9)' : 'Uploaded'}
                     </span>
                   </div>
                 )}
@@ -461,16 +692,8 @@ const ImageUpload = ({
 
         {/* Warning Messages */}
         {warnings.image?.map((warning, index) => (
-          <div key={index} className="warning-feedback d-block">
+          <div key={index} className="warning-feedback d-block text-warning small mt-1">
             <i className="fas fa-exclamation-triangle me-1"></i>
-            {warning}
-          </div>
-        ))}
-        
-        {/* Warning Messages */}
-        {warnings.image?.map((warning, index) => (
-          <div key={index} className="feedback-modern warning">
-            <i className="fas fa-exclamation-triangle me-2"></i>
             {warning}
           </div>
         ))}

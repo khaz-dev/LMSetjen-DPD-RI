@@ -97,12 +97,31 @@ export const validateFileType = (file, type = 'image') => {
     };
   }
 
-  if (file.size > rules.maxSize) {
-    const maxSizeMB = rules.maxSize / (1024 * 1024);
-    return {
-      isValid: false,
-      error: `Please upload a ${type} smaller than ${maxSizeMB}MB`,
-    };
+  // For videos, be more lenient since we have compression
+  if (type === 'video') {
+    const maxReasonableSize = 500 * 1024 * 1024; // 500MB reasonable limit
+    if (file.size > maxReasonableSize) {
+      return {
+        isValid: false,
+        error: `Video file is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Maximum reasonable size is 500MB.`,
+      };
+    }
+    // For videos over 100MB, show a warning but allow upload (compression will handle it)
+    if (file.size > rules.maxSize) {
+      return {
+        isValid: true,
+        warning: `Video is ${(file.size / (1024 * 1024)).toFixed(1)}MB and will be automatically compressed during upload.`,
+      };
+    }
+  } else {
+    // For non-video files, keep original size validation
+    if (file.size > rules.maxSize) {
+      const maxSizeMB = rules.maxSize / (1024 * 1024);
+      return {
+        isValid: false,
+        error: `Please upload a ${type} smaller than ${maxSizeMB}MB`,
+      };
+    }
   }
 
   return { isValid: true, error: null };

@@ -1,12 +1,28 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { validateFileType } from "../../../utils/courseValidation";
+import { VideoCompressionUtils } from "../../../utils/videoCompression";
 import useAxios from "../../../utils/useAxios";
 import Toast from "../../plugin/Toast";
 
 const VideoUpload = ({ courseData, setCourseData }) => {
   const [fileLoading, setFileLoading] = useState(false);
+  const [compressionStatus, setCompressionStatus] = useState({
+    isCompressing: false,
+    progress: 0,
+    message: ""
+  });
+  const [compressionController, setCompressionController] = useState(null);
+  const [pendingFile, setPendingFile] = useState(null);
+  const [showCompressionConfirm, setShowCompressionConfirm] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(false);
+  const [videoError, setVideoError] = useState(null);
+  const [videoReady, setVideoReady] = useState(false);
+  
+  // Video refs for better control
+  const videoRef = useRef(null);
+  const containerRef = useRef(null);
 
-  const handleFileUpload = async (event) => {
+  const handleFileUpload = (event) => {
     const file = event.target.files[0];
     
     if (!file) return;
@@ -22,14 +38,437 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       event.target.value = '';
       return;
     }
+    
+    // Check if file needs compression and ask for confirmation
+    if (VideoCompressionUtils.needsCompression(file)) {
+      const fileSizeMB = VideoCompressionUtils.getFileSizeMB(file);
+      setPendingFile(file);
+      setShowCompressionConfirm(true);
+      
+      // Show file size warning
+      Toast().fire({
+        icon: "warning",
+        title: "Large File Detected",
+        text: `Video size: ${fileSizeMB.toFixed(1)}MB. Compression confirmation required.`,
+        timer: 3000,
+        showConfirmButton: false
+      });
+    } else {
+      // File is small enough, upload directly
+      uploadFile(file);
+    }
+    
+    // Clear input value to allow re-selecting same file
+    event.target.value = '';
+  };
 
+  const handleCompressionConfirm = async () => {
+    setShowCompressionConfirm(false);
+    
+    if (!pendingFile) return;
+    
+    // Always compress for files over 100MB - no option to skip
+    await uploadFile(pendingFile, true);
+    
+    setPendingFile(null);
+  };
+
+  const cancelCompression = () => {
+    if (compressionController) {
+      compressionController.abort();
+      setCompressionController(null);
+    }
+    
+    setCompressionStatus({
+      isCompressing: false,
+      progress: 0,
+      message: ""
+    });
+    
+    setFileLoading(false);
+    
+    Toast().fire({
+      icon: "info",
+      title: "Compression Cancelled",
+      text: "Video compression has been cancelled.",
+      timer: 2000,
+      showConfirmButton: false
+    });
+  };
+
+  // Enhanced video event handlers with comprehensive seeking support
+  const initializeVideo = (videoElement) => {
+    if (!videoElement) return;
+    
+    // Set optimal video attributes for seeking
+    videoElement.preload = 'auto';
+    videoElement.crossOrigin = 'anonymous';
+    videoElement.playsInline = true;
+    
+    // Log video URL and format for debugging
+    console.log('[VideoPreview] Initializing video:', {
+      url: courseData.file,
+      detected_format: getVideoFormat(courseData.file)
+    });
+    
+    // Force browser to load metadata immediately
+    videoElement.load();
+  };
+
+  // Helper function to detect video format from URL or filename
+  const getVideoFormat = (url) => {
+    if (!url) return 'unknown';
+    
+    const urlLower = url.toLowerCase();
+    
+    // Check for compressed video indicators
+    if (urlLower.includes('_compressed')) {
+      if (urlLower.includes('.mp4')) return 'compressed_mp4';
+      if (urlLower.includes('.webm')) return 'compressed_webm';
+      return 'compressed_unknown';
+    }
+    
+    // Check for standard formats
+    if (urlLower.endsWith('.mp4')) return 'mp4';
+    if (urlLower.endsWith('.webm')) return 'webm';
+    if (urlLower.endsWith('.mov')) return 'mov';
+    if (urlLower.endsWith('.avi')) return 'avi';
+    
+    return 'unknown';
+  };
+
+  // Generate appropriate source elements based on detected format
+  const generateVideoSources = (videoUrl) => {
+    const format = getVideoFormat(videoUrl);
+    const sources = [];
+    
+    // Prioritize sources based on detected format
+    if (format.includes('mp4') || format === 'unknown') {
+      // MP4 or unknown - try MP4 variants first
+      sources.push(
+        { src: videoUrl, type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"' },
+        { src: videoUrl, type: 'video/mp4' }
+      );
+    }
+    
+    if (format.includes('webm')) {
+      // WebM - try WebM variants first
+      sources.push(
+        { src: videoUrl, type: 'video/webm; codecs="vp9, opus"' },
+        { src: videoUrl, type: 'video/webm; codecs="vp8, vorbis"' },
+        { src: videoUrl, type: 'video/webm' }
+      );
+    }
+    
+    // Always add fallback sources for maximum compatibility
+    if (!format.includes('mp4')) {
+      sources.push(
+        { src: videoUrl, type: 'video/mp4' },
+        { src: videoUrl, type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"' }
+      );
+    }
+    
+    if (!format.includes('webm')) {
+      sources.push(
+        { src: videoUrl, type: 'video/webm; codecs="vp9, opus"' },
+        { src: videoUrl, type: 'video/webm' }
+      );
+    }
+    
+    // Add other format fallbacks
+    sources.push(
+      { src: videoUrl, type: 'video/quicktime' },
+      { src: videoUrl, type: 'video/x-msvideo' }
+    );
+    
+    return sources;
+  };
+
+  const handleVideoLoadStart = () => {
+    console.log('[VideoPreview] Starting to load video...');
+    setVideoLoading(true);
+    setVideoError(null);
+    setVideoReady(false);
+  };
+
+  const handleVideoLoadedMetadata = (e) => {
+    const video = e.target;
+    console.log('[VideoPreview] Metadata loaded:', {
+      duration: video.duration,
+      videoWidth: video.videoWidth,
+      videoHeight: video.videoHeight,
+      readyState: video.readyState,
+      networkState: video.networkState,
+      seekable: video.seekable.length > 0 ? 
+        `${video.seekable.start(0).toFixed(2)}s - ${video.seekable.end(0).toFixed(2)}s` : 
+        'No seekable ranges yet'
+    });
+    
+    // Enable seeking by setting current time
+    if (video.duration && video.duration > 0 && !isNaN(video.duration)) {
+      try {
+        video.currentTime = 0.1; // Small offset to enable seeking
+        setTimeout(() => {
+          video.currentTime = 0; // Reset to start
+        }, 100);
+      } catch (e) {
+        console.warn('[VideoPreview] Could not set initial time:', e);
+      }
+    }
+  };
+
+  const handleVideoLoadedData = (e) => {
+    const video = e.target;
+    console.log('[VideoPreview] Video data loaded - ready for playback');
+    setVideoLoading(false);
+    setVideoReady(true);
+    
+    // Final check for seeking capability
+    if (video.seekable.length > 0) {
+      console.log('[VideoPreview] Video is seekable from', 
+        video.seekable.start(0).toFixed(2), 'to', video.seekable.end(0).toFixed(2));
+    }
+  };
+
+  const handleVideoCanPlay = () => {
+    console.log('[VideoPreview] Video can start playing');
+    setVideoLoading(false);
+  };
+
+  const handleVideoCanPlayThrough = () => {
+    console.log('[VideoPreview] Video can play through without buffering');
+    setVideoLoading(false);
+    setVideoReady(true);
+  };
+
+  const handleVideoProgress = (e) => {
+    const video = e.target;
+    if (video.buffered.length > 0) {
+      const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+      const duration = video.duration;
+      if (duration > 0) {
+        const bufferedPercent = (bufferedEnd / duration) * 100;
+        console.log(`[VideoPreview] Buffered: ${bufferedPercent.toFixed(1)}%`);
+      }
+    }
+  };
+
+  const handleVideoSeeking = (e) => {
+    console.log('[VideoPreview] Seeking to:', e.target.currentTime.toFixed(2));
+  };
+
+  const handleVideoSeeked = (e) => {
+    console.log('[VideoPreview] Seeked to:', e.target.currentTime.toFixed(2));
+  };
+
+  const handleVideoError = (e) => {
+    const video = e.target;
+    const format = getVideoFormat(video.src);
+    const isCompressed = format.includes('compressed');
+    
+    console.error('[VideoPreview] Video error:', {
+      error: video.error,
+      networkState: video.networkState,
+      readyState: video.readyState,
+      src: video.src,
+      detectedFormat: format,
+      isCompressed: isCompressed,
+      currentSource: video.currentSrc,
+      sourcesAttempted: Array.from(video.children).map(source => ({
+        src: source.src,
+        type: source.type
+      }))
+    });
+    
+    setVideoLoading(false);
+    setVideoReady(false);
+    
+    let errorMessage = 'Unable to load video.';
+    let suggestions = [];
+    
+    if (video.error) {
+      switch (video.error.code) {
+        case video.error.MEDIA_ERR_ABORTED:
+          errorMessage = 'Video loading was aborted. Please try again.';
+          suggestions.push('Click retry to attempt loading again');
+          break;
+        case video.error.MEDIA_ERR_NETWORK:
+          errorMessage = 'Network error while loading video. Check your connection.';
+          suggestions.push('Verify your internet connection');
+          suggestions.push('Try refreshing the page');
+          break;
+        case video.error.MEDIA_ERR_DECODE:
+          if (isCompressed) {
+            errorMessage = 'Compressed video format has playback issues.';
+            suggestions.push('Try uploading the original video again');
+            suggestions.push('The compression may have created an incompatible format');
+            suggestions.push('Click "Upload Original" to replace with a new video');
+          } else {
+            errorMessage = 'Video format is corrupted or not supported.';
+            suggestions.push('Try converting to MP4 format');
+          }
+          break;
+        case video.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+          if (isCompressed) {
+            errorMessage = 'Compressed video format is not supported by your browser.';
+            suggestions.push('Your browser may not support the compressed format');
+            suggestions.push('Click "Upload Original" to use a different video');
+            suggestions.push('Try a different browser (Chrome recommended for compressed videos)');
+          } else {
+            errorMessage = 'Video format is not supported by your browser.';
+            suggestions.push('Convert video to MP4 format for better compatibility');
+            suggestions.push('Try using Chrome or Firefox browser');
+          }
+          break;
+        default:
+          errorMessage = 'Unknown error occurred while loading video.';
+          if (isCompressed) {
+            suggestions.push('Compressed video may have compatibility issues');
+            suggestions.push('Try uploading the original video');
+            suggestions.push('Use Chrome browser for better compressed video support');
+          }
+      }
+    }
+    
+    // Show user-friendly notification for compressed video issues
+    if (isCompressed) {
+      Toast().fire({
+        icon: "warning",
+        title: "Compressed Video Issue",
+        text: "This compressed video may not be compatible with your browser. Consider uploading the original video.",
+        timer: 4000,
+        showConfirmButton: false
+      });
+    }
+    
+    // Store suggestions for display in error overlay
+    setVideoError({
+      message: errorMessage,
+      format: format,
+      isCompressed: isCompressed,
+      suggestions: suggestions
+    });
+  };
+
+  // Initialize video when URL changes
+  useEffect(() => {
+    if (courseData.file && videoRef.current) {
+      console.log('[VideoPreview] Initializing video with URL:', courseData.file);
+      initializeVideo(videoRef.current);
+      
+      // Reset states
+      setVideoError(null);
+      setVideoReady(false);
+    }
+  }, [courseData.file]);
+
+  const uploadFile = async (file, shouldCompress = null) => {
     setFileLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      let fileToUpload = file;
+      const fileSizeMB = VideoCompressionUtils.getFileSizeMB(file);
+      const needsCompression = VideoCompressionUtils.needsCompression(file);
+      
+      // Check if file needs compression - compression is mandatory for files over 100MB
+      if (needsCompression && shouldCompress === true) {
+        // Create AbortController for cancellation
+        const controller = new AbortController();
+        setCompressionController(controller);
+        
+        setCompressionStatus({
+          isCompressing: true,
+          progress: 0,
+          message: `Video is ${fileSizeMB.toFixed(1)}MB. Starting mandatory compression...`
+        });
 
-      const response = await useAxios.post("/file-upload/", formData, {
+        Toast().fire({
+          icon: "info",
+          title: "Compressing Video",
+          text: `File size is ${fileSizeMB.toFixed(1)}MB. Compression is required and may take several minutes...`,
+          timer: 3000,
+          showConfirmButton: false
+        });
+
+        try {
+          // Compress the video with cancellation support
+          fileToUpload = await VideoCompressionUtils.compressVideo(
+            file,
+            undefined, // Use default target size
+            (progress) => {
+              // Check if compression was cancelled
+              if (controller.signal.aborted) {
+                throw new Error('Compression cancelled by user');
+              }
+              
+              setCompressionStatus(prev => ({
+                ...prev,
+                progress: progress,
+                message: `Compressing video: ${progress}% (This may take several minutes...)`
+              }));
+            },
+            controller.signal
+          );
+
+          // Check one more time if cancelled
+          if (controller.signal.aborted) {
+            throw new Error('Compression cancelled by user');
+          }
+
+          const compressedSizeMB = VideoCompressionUtils.getFileSizeMB(fileToUpload);
+          
+          setCompressionStatus({
+            isCompressing: false,
+            progress: 100,
+            message: `Compression complete! Reduced from ${fileSizeMB.toFixed(1)}MB to ${compressedSizeMB.toFixed(1)}MB`
+          });
+
+          Toast().fire({
+            icon: "success",
+            title: "Compression Complete",
+            text: `Video compressed from ${fileSizeMB.toFixed(1)}MB to ${compressedSizeMB.toFixed(1)}MB`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+          
+        } catch (compressionError) {
+          if (compressionError.message === 'Compression cancelled by user') {
+            return; // Exit early for user cancellation
+          }
+          
+          console.error("Video compression failed:", compressionError);
+          
+          Toast().fire({
+            icon: "error",
+            title: "Compression Failed",
+            text: "Video compression failed. Please try with a different file or contact support.",
+            timer: 4000,
+            showConfirmButton: false
+          });
+
+          // Don't upload original large file if compression fails
+          return;
+        }
+        
+        setCompressionController(null);
+      } else if (needsCompression && shouldCompress !== true) {
+        // Large file without compression is not allowed
+        Toast().fire({
+          icon: "error",
+          title: "File Too Large",
+          text: "Files over 100MB must be compressed. Please use the compression option or choose a smaller file.",
+          timer: 4000,
+          showConfirmButton: false
+        });
+        return;
+      }
+
+      // Upload the file (compressed or original)
+      const formData = new FormData();
+      formData.append("file", fileToUpload);
+      formData.append("context", "course"); // Add context for enhanced API
+
+      const response = await useAxios.post("/upload/enhanced/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -40,11 +479,16 @@ const VideoUpload = ({ courseData, setCourseData }) => {
           ...prevData,
           file: response.data.url,
         }));
+
+        // Reset video states for new upload
+        setVideoLoading(false);
+        setVideoError(null);
+        setVideoReady(false);
         
         Toast().fire({
           icon: "success",
           title: "Video Uploaded",
-          text: "Intro video uploaded successfully!",
+          text: "Course intro video uploaded successfully!",
           timer: 2000,
           showConfirmButton: false
         });
@@ -58,6 +502,12 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       });
     } finally {
       setFileLoading(false);
+      setCompressionStatus({
+        isCompressing: false,
+        progress: 0,
+        message: ""
+      });
+      setCompressionController(null);
     }
   };
 
@@ -69,25 +519,266 @@ const VideoUpload = ({ courseData, setCourseData }) => {
         <span className="text-muted ms-1">(Optional)</span>
       </label>
       
-      {/* Video Thumbnail - Show at top when video exists */}
+      {/* Enhanced Video Preview with Better Seeking Support */}
       {courseData.file && !fileLoading && (
-        <div className="video-preview mb-3" style={{ height: '350px' }}>
+        <div 
+          ref={containerRef}
+          className="video-preview mb-3" 
+          style={{ 
+            height: '400px', 
+            position: 'relative',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+          }}
+        >
+          {/* Video Loading Overlay - Only shows when loading, doesn't interfere with controls */}
+          {videoLoading && (
+            <div 
+              className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
+              style={{ 
+                backgroundColor: 'rgba(0,0,0,0.8)', 
+                zIndex: 100,
+                backdropFilter: 'blur(4px)',
+                pointerEvents: 'auto'
+              }}
+            >
+              <div className="text-center text-white">
+                <div className="spinner-border mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
+                  <span className="visually-hidden">Loading video...</span>
+                </div>
+                <h6 className="mb-2">Loading Video Preview</h6>
+                <p className="small mb-0 opacity-75">Preparing video for playback...</p>
+              </div>
+            </div>
+          )}
+          
+          {/* Video Error Overlay - Enhanced with format-specific troubleshooting */}
+          {videoError && (
+            <div 
+              className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
+              style={{ 
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                border: '3px solid #dc3545',
+                zIndex: 100,
+                pointerEvents: 'auto'
+              }}
+            >
+              <div className="text-center p-4" style={{ maxWidth: '400px' }}>
+                <i className="fas fa-exclamation-triangle text-danger mb-3" style={{ fontSize: '3rem' }}></i>
+                
+                <h6 className="text-danger mb-2">Video Preview Error</h6>
+                
+                <p className="text-danger mb-2 small">
+                  {typeof videoError === 'string' ? videoError : videoError.message}
+                </p>
+                
+                {/* Show format information for troubleshooting */}
+                {typeof videoError === 'object' && (
+                  <div className="mb-3">
+                    <div className="badge bg-secondary mb-2">
+                      Format: {videoError.format}
+                      {videoError.isCompressed && ' (Compressed)'}
+                    </div>
+                    
+                    {/* Show suggestions if available */}
+                    {videoError.suggestions && videoError.suggestions.length > 0 && (
+                      <div className="text-start">
+                        <small className="text-muted d-block mb-2">
+                          <strong>Troubleshooting suggestions:</strong>
+                        </small>
+                        <ul className="text-muted small text-start" style={{ paddingLeft: '1.2rem' }}>
+                          {videoError.suggestions.map((suggestion, index) => (
+                            <li key={index}>{suggestion}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                <div className="d-flex gap-2 justify-content-center">
+                  <button 
+                    className="btn btn-outline-danger btn-sm"
+                    onClick={() => {
+                      if (videoRef.current) {
+                        setVideoError(null);
+                        initializeVideo(videoRef.current);
+                      }
+                    }}
+                  >
+                    <i className="fas fa-redo me-1"></i>
+                    Retry
+                  </button>
+                  
+                  {/* Show re-upload option for compressed videos */}
+                  {typeof videoError === 'object' && videoError.isCompressed && (
+                    <button 
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => {
+                        setVideoError(null);
+                        setCourseData(prev => ({ ...prev, file: null }));
+                        Toast().fire({
+                          icon: "info",
+                          title: "Upload New Video",
+                          text: "Please upload your original video file again.",
+                        });
+                      }}
+                    >
+                      <i className="fas fa-upload me-1"></i>
+                      Upload Original
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Status Badge - Non-interfering position */}
+          {videoReady && !videoLoading && !videoError && (
+            <div 
+              className="position-absolute"
+              style={{ 
+                top: '10px',
+                right: '10px', 
+                zIndex: 5,
+                backgroundColor: 'rgba(40, 167, 69, 0.9)',
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                pointerEvents: 'none'
+              }}
+            >
+              <i className="fas fa-check-circle me-1"></i>
+              Ready
+            </div>
+          )}
+          
+          {/* Main Video Element with Enhanced Configuration and Dynamic Sources */}
           <video 
-            src={courseData.file} 
-            className="video-thumbnail"
+            ref={videoRef}
+            key={`video-${courseData.file}-${getVideoFormat(courseData.file)}`}
+            className="video-player"
             controls
-            preload="metadata"
+            controlsList="nodownload noremoteplayback"
+            disablePictureInPicture={false}
+            playsInline
+            preload="auto"
+            crossOrigin="anonymous"
+            onLoadStart={handleVideoLoadStart}
+            onLoadedMetadata={handleVideoLoadedMetadata}
+            onLoadedData={handleVideoLoadedData}
+            onCanPlay={handleVideoCanPlay}
+            onCanPlayThrough={handleVideoCanPlayThrough}
+            onProgress={handleVideoProgress}
+            onSeeking={handleVideoSeeking}
+            onSeeked={handleVideoSeeked}
+            onError={handleVideoError}
             style={{
               width: '100%',
               height: '100%',
               objectFit: 'contain',
-              borderRadius: '8px',
-              border: '3px solid #28a745',
-              backgroundColor: '#000'
+              backgroundColor: '#000',
+              border: videoError ? '3px solid #dc3545' : 
+                      videoReady ? '3px solid #28a745' : 
+                      '3px solid #6c757d',
+              position: 'relative',
+              zIndex: 1
             }}
           >
-            Your browser does not support the video tag.
+            {/* Dynamic source generation based on detected format */}
+            {generateVideoSources(courseData.file).map((source, index) => (
+              <source
+                key={`${courseData.file}-source-${index}`}
+                src={source.src}
+                type={source.type}
+              />
+            ))}
+            
+            {/* Fallback message for unsupported browsers */}
+            <div className="d-flex align-items-center justify-content-center h-100 text-muted">
+              <div className="text-center">
+                <i className="fas fa-video-slash mb-2" style={{ fontSize: '2rem' }}></i>
+                <div className="mb-2">
+                  <strong>Video Playback Not Supported</strong>
+                </div>
+                <p className="small mb-2">
+                  Your browser cannot play this video format.
+                </p>
+                <small className="text-muted">
+                  Detected format: <code>{getVideoFormat(courseData.file)}</code>
+                  <br />
+                  Try using a modern browser like Chrome, Firefox, or Safari.
+                </small>
+              </div>
+            </div>
           </video>
+        </div>
+      )}
+
+      {/* Video Status Display - Enhanced with format detection */}
+      {courseData.file && !fileLoading && (
+        <div className="video-status-info mb-3 p-2 bg-light border rounded">
+          <div className="d-flex align-items-center justify-content-between">
+            <div className="d-flex align-items-center">
+              <i className="fas fa-info-circle text-primary me-2"></i>
+              <div className="small">
+                {videoLoading && (
+                  <span className="text-muted">Loading video preview...</span>
+                )}
+                {videoError && (
+                  <div>
+                    <span className="text-danger">
+                      Video preview error - {typeof videoError === 'string' ? 'see details above' : videoError.isCompressed ? 'compressed video issue' : 'format compatibility issue'}
+                    </span>
+                    {typeof videoError === 'object' && (
+                      <div className="mt-1">
+                        <span className="badge bg-warning text-dark">
+                          {videoError.format}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {videoReady && !videoLoading && !videoError && (
+                  <div>
+                    <span className="text-success">✓ Video preview ready - Timeline seeking enabled</span>
+                    <div className="mt-1">
+                      <span className="badge bg-info">
+                        {getVideoFormat(courseData.file)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {!videoLoading && !videoError && !videoReady && (
+                  <div>
+                    <span className="text-muted">Video initializing...</span>
+                    <div className="mt-1">
+                      <span className="badge bg-secondary">
+                        {getVideoFormat(courseData.file)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="d-flex flex-column align-items-end gap-1">
+              {videoReady && !videoLoading && !videoError && (
+                <span className="badge bg-success">
+                  <i className="fas fa-video me-1"></i>
+                  Seekable
+                </span>
+              )}
+              {getVideoFormat(courseData.file).includes('compressed') && (
+                <span className="badge bg-warning text-dark">
+                  <i className="fas fa-compress-arrows-alt me-1"></i>
+                  Compressed
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -137,7 +828,33 @@ const VideoUpload = ({ courseData, setCourseData }) => {
               >
                 <span className="visually-hidden">Loading...</span>
               </div>
-              <p className="small mb-0">Uploading Video...</p>
+              
+              {compressionStatus.isCompressing ? (
+                <>
+                  <div className="progress mt-2 mb-2" style={{ height: '4px' }}>
+                    <div 
+                      className="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                      style={{ width: `${compressionStatus.progress}%` }}
+                    ></div>
+                  </div>
+                  <p className="small mb-2 text-info">
+                    <i className="fas fa-compress-arrows-alt me-1"></i>
+                    {compressionStatus.message}
+                  </p>
+                  <button 
+                    className="btn btn-outline-danger btn-sm"
+                    onClick={cancelCompression}
+                    style={{ fontSize: '0.7rem', padding: '0.2rem 0.4rem' }}
+                  >
+                    <i className="fas fa-times me-1"></i>
+                    Cancel Compression
+                  </button>
+                </>
+              ) : (
+                <p className="small mb-0">
+                  {compressionStatus.message || "Uploading Video..."}
+                </p>
+              )}
             </div>
           ) : courseData.file ? (
             <div className="upload-success text-center">
@@ -170,9 +887,82 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       <div className="file-help">
         <small className="text-muted">
           <i className="fas fa-info-circle me-1"></i>
-          Supported formats: MP4, WebM, MOV • Maximum size: 100MB
+          Supported formats: MP4, WebM, MOV • Files under 100MB upload directly
+          <br />
+          <i className="fas fa-compress-arrows-alt me-1 text-warning"></i>
+          <strong>Compression mandatory</strong> - Files over 100MB must be compressed to save storage space!
         </small>
       </div>
+
+      {/* Compression Confirmation Modal */}
+      {showCompressionConfirm && pendingFile && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header bg-warning text-dark">
+                <h5 className="modal-title">
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  Large Video File Detected
+                </h5>
+              </div>
+              <div className="modal-body">
+                <div className="text-center mb-3">
+                  <i className="fas fa-file-video text-warning" style={{ fontSize: '3rem' }}></i>
+                </div>
+                
+                <div className="alert alert-info">
+                  <h6><i className="fas fa-info-circle me-1"></i>File Information:</h6>
+                  <ul className="mb-0">
+                    <li><strong>File Size:</strong> {VideoCompressionUtils.getFileSizeMB(pendingFile).toFixed(1)}MB</li>
+                    <li><strong>File Name:</strong> {pendingFile.name}</li>
+                    <li><strong>File Type:</strong> {pendingFile.type}</li>
+                  </ul>
+                </div>
+
+                <div className="alert alert-warning">
+                  <h6><i className="fas fa-clock me-1"></i>Compression Required:</h6>
+                  <ul className="mb-0">
+                    <li><strong>Files over 100MB must be compressed</strong> to save storage space</li>
+                    <li><strong>This process may take 3-10 minutes</strong> depending on video length</li>
+                    <li>You can cancel compression at any time</li>
+                    <li>Original quality will be preserved as much as possible</li>
+                  </ul>
+                </div>
+
+                <div className="alert alert-danger">
+                  <h6><i className="fas fa-exclamation-circle me-1"></i>Storage Policy:</h6>
+                  <p className="mb-0">
+                    <strong>Compression is mandatory for files over 100MB</strong> to manage server storage efficiently. 
+                    This ensures optimal performance and prevents storage overflow.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-primary"
+                  onClick={() => handleCompressionConfirm()}
+                >
+                  <i className="fas fa-compress-arrows-alt me-1"></i>
+                  Proceed with Compression
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-outline-secondary"
+                  onClick={() => {
+                    setShowCompressionConfirm(false);
+                    setPendingFile(null);
+                  }}
+                >
+                  <i className="fas fa-times me-1"></i>
+                  Cancel & Choose Different File
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

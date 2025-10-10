@@ -1,4 +1,5 @@
 from api import views as api_views
+from api import enhanced_upload_views
 from django.urls import path
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -83,7 +84,13 @@ urlpatterns = [
     path("quiz/choice/list-create/", api_views.QuizChoiceListCreateAPIView.as_view()),
     path("quiz/choice/detail/<choice_id>/", api_views.QuizChoiceDetailAPIView.as_view()),
 
-    path("file-upload/", api_views.FileUploadAPIView.as_view()),
+    # File Upload APIs - Original and Enhanced
+    path("file-upload/", api_views.FileUploadAPIView.as_view()),  # Keep original for compatibility
+    
+    # Enhanced Local Storage APIs
+    path("upload/enhanced/", enhanced_upload_views.EnhancedFileUploadAPIView.as_view()),
+    path("upload/bulk/", enhanced_upload_views.BulkFileUploadAPIView.as_view()),
+    path("storage/info/", enhanced_upload_views.FileInfoAPIView.as_view()),
     
     # Admin API URLs
     path("admin/dashboard-summary/", api_views.AdminSummaryAPIView.as_view()),

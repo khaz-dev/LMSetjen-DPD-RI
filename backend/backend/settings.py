@@ -170,12 +170,21 @@ AUTH_USER_MODEL = 'userauths.User'
 FRONTEND_SITE_URL = env("FRONTEND_SITE_URL")
 
 
-ANYMAIL = {
-    "SENDGRID_API_KEY": env("SENDGRID_API_KEY"),
-}
-
 FROM_EMAIL = env("FROM_EMAIL")
+
+# Use console email backend for development, SendGrid for production
+ANYMAIL = {
+        "SENDGRID_API_KEY": env("SENDGRID_API_KEY"),
+    }
 EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+
+# if DEBUG:
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# else:
+#     ANYMAIL = {
+#         "SENDGRID_API_KEY": env("SENDGRID_API_KEY"),
+#     }
+#     EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -301,49 +310,79 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-# Redis Configuration for Caching and Session Storage
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('REDIS_URL', default='redis://localhost:6379/1'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'PARSER_CLASS': 'redis.connection.HiredisParser',
-            'CONNECTION_POOL_KWARGS': {
-                'max_connections': 50,
-                'retry_on_timeout': True,
+# Cache Configuration - Redis for production, local memory for development
+try:
+    # Try to use Redis if available
+    import redis
+    redis_client = redis.Redis.from_url(env('REDIS_URL', default='redis://localhost:6379/1'))
+    redis_client.ping()
+    
+    # Redis is available, use Redis caching
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': env('REDIS_URL', default='redis://localhost:6379/1'),
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'PARSER_CLASS': 'redis.connection.HiredisParser',
+                'CONNECTION_POOL_KWARGS': {
+                    'max_connections': 50,
+                    'retry_on_timeout': True,
+                },
+                'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+                'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
             },
-            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
-            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+            'KEY_PREFIX': 'lms',
+            'TIMEOUT': 300,  # 5 minutes default timeout
         },
-        'KEY_PREFIX': 'lms',
-        'TIMEOUT': 300,  # 5 minutes default timeout
-    },
-    # Separate cache for sessions
-    'sessions': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('REDIS_URL', default='redis://localhost:6379/2'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        # Separate cache for sessions
+        'sessions': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': env('REDIS_URL', default='redis://localhost:6379/2'),
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'lms_session',
+            'TIMEOUT': 86400,  # 24 hours for sessions
         },
-        'KEY_PREFIX': 'lms_session',
-        'TIMEOUT': 86400,  # 24 hours for sessions
-    },
-    # Cache for course data and heavy queries
-    'course_cache': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('REDIS_URL', default='redis://localhost:6379/3'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-        'KEY_PREFIX': 'lms_course',
-        'TIMEOUT': 3600,  # 1 hour for course data
+        # Cache for course data and heavy queries
+        'course_cache': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': env('REDIS_URL', default='redis://localhost:6379/3'),
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'lms_course',
+            'TIMEOUT': 3600,  # 1 hour for course data
+        }
     }
-}
-
-# Use Redis for session storage
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'sessions'
+    # Use Redis for session storage
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'sessions'
+    print("Using Redis for caching and sessions")
+    
+except (ImportError, redis.ConnectionError, redis.TimeoutError, Exception):
+    # Redis not available, fallback to local memory cache for development
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'lms-cache',
+            'TIMEOUT': 300,
+        },
+        'sessions': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'lms-sessions',
+            'TIMEOUT': 86400,
+        },
+        'course_cache': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'lms-course-cache',
+            'TIMEOUT': 3600,
+        }
+    }
+    # Use database sessions as fallback
+    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+    print("Redis not available, using local memory cache and database sessions")
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = False
 
@@ -423,11 +462,46 @@ if DEBUG:
     
     INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
-# File Upload Optimization
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+# Enhanced Local File Storage Configuration
+FILE_UPLOAD_MAX_MEMORY_SIZE = env.int('FILE_UPLOAD_MAX_MEMORY_SIZE', default=104857600)  # 100MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = env.int('DATA_UPLOAD_MAX_MEMORY_SIZE', default=104857600)  # 100MB
 FILE_UPLOAD_TEMP_DIR = os.path.join(BASE_DIR, 'temp_uploads')
 os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
+
+# Organized Media Storage Structure
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+# Create organized media subdirectories
+MEDIA_SUBDIRS = {
+    'courses': os.path.join(MEDIA_ROOT, 'courses'),
+    'profiles': os.path.join(MEDIA_ROOT, 'profiles'),
+    'certificates': os.path.join(MEDIA_ROOT, 'certificates'),
+    'thumbnails': os.path.join(MEDIA_ROOT, 'thumbnails'),
+    'documents': os.path.join(MEDIA_ROOT, 'documents'),
+    'videos': os.path.join(MEDIA_ROOT, 'videos'),
+    'images': os.path.join(MEDIA_ROOT, 'images'),
+    'backups': os.path.join(BASE_DIR, 'backups', 'media')
+}
+
+# Create directories if they don't exist
+for dir_path in MEDIA_SUBDIRS.values():
+    os.makedirs(dir_path, exist_ok=True)
+
+# File Size Limits by Type
+MAX_FILE_SIZES = {
+    'video': env.int('MAX_VIDEO_FILE_SIZE', default=524288000),    # 500MB
+    'image': env.int('MAX_IMAGE_FILE_SIZE', default=52428800),     # 50MB
+    'document': env.int('MAX_DOCUMENT_FILE_SIZE', default=104857600), # 100MB
+    'audio': env.int('MAX_AUDIO_FILE_SIZE', default=104857600),    # 100MB
+}
+
+# Local Storage Optimization Settings
+USE_LOCAL_OPTIMIZATION = env.bool('USE_LOCAL_OPTIMIZATION', default=True)
+ENABLE_FILE_COMPRESSION = env.bool('ENABLE_FILE_COMPRESSION', default=True)
+ENABLE_IMAGE_OPTIMIZATION = env.bool('ENABLE_IMAGE_OPTIMIZATION', default=True)
+STORE_THUMBNAILS_IN_DB = env.bool('STORE_THUMBNAILS_IN_DB', default=True)
+MEDIA_CACHE_DURATION = env.int('MEDIA_CACHE_DURATION', default=3600)
 
 # Security Enhancements for Production
 if not DEBUG:
