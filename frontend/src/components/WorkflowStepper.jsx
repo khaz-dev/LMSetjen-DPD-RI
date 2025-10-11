@@ -6,30 +6,66 @@ const WorkflowStepper = ({ currentStep, courseId, courseData }) => {
     // Ensure courseData is always an object (handle null, undefined, etc.)
     const course = courseData || {};
     
+    // Helper function to check if basic info is complete
+    const hasBasicInfo = () => {
+        // Check essential fields: title, description, category
+        const hasTitle = course.title && course.title.trim().length > 0;
+        const hasDescription = course.description && course.description.trim().length > 0;
+        
+        // Handle both category object and category ID
+        const hasCategory = !!(
+            (course.category && typeof course.category === 'object' && course.category.id) ||
+            (course.category && typeof course.category === 'number' && course.category > 0) ||
+            (course.category && typeof course.category === 'string' && course.category !== '')
+        );
+        
+        return hasTitle && hasDescription && hasCategory;
+    };
+    
     // Helper function to check if curriculum has content
     const hasCurriculumContent = () => {
-        if (!course.curriculum || !Array.isArray(course.curriculum)) return false;
+        // Handle null/undefined curriculum
+        if (!course.curriculum) return false;
         
-        // Check if there's at least one section with at least one lesson
-        return course.curriculum.some(variant => {
-            return variant.variant_items && 
-                   Array.isArray(variant.variant_items) && 
-                   variant.variant_items.length > 0;
-        });
+        // Handle array format (from API)
+        if (Array.isArray(course.curriculum)) {
+            if (course.curriculum.length === 0) return false;
+            
+            // Check if there's at least one section with at least one lesson
+            return course.curriculum.some(variant => {
+                // Check variant_items (from API) or items (from local state)
+                const items = variant.variant_items || variant.items;
+                return items && Array.isArray(items) && items.length > 0;
+            });
+        }
+        
+        // Handle object format
+        if (typeof course.curriculum === 'object') {
+            const sections = Object.values(course.curriculum);
+            if (sections.length === 0) return false;
+            
+            return sections.some(variant => {
+                const items = variant.variant_items || variant.items;
+                return items && Array.isArray(items) && items.length > 0;
+            });
+        }
+        
+        return false;
     };
     
     // Helper function to check if quizzes exist
     const hasQuizzes = () => {
         if (!course.quizzes) return false;
         
-        // Handle both array and object formats
+        // Handle array format
         if (Array.isArray(course.quizzes)) {
             return course.quizzes.length > 0;
         }
         
-        // If it's an object (from serializer), check if it has any items
+        // Handle object format (from serializer)
         if (typeof course.quizzes === 'object') {
-            return Object.keys(course.quizzes).length > 0;
+            const quizList = Object.values(course.quizzes);
+            return quizList.length > 0;
         }
         
         return false;
@@ -42,7 +78,7 @@ const WorkflowStepper = ({ currentStep, courseId, courseData }) => {
             icon: 'fa-info-circle',
             path: `/instructor/edit-course/${courseId}/`,
             description: 'Course details',
-            isComplete: !!(course.title && course.description && course.category)
+            isComplete: hasBasicInfo()
         },
         {
             id: 2,
@@ -66,7 +102,7 @@ const WorkflowStepper = ({ currentStep, courseId, courseData }) => {
             icon: 'fa-rocket',
             path: `/instructor/edit-course/${courseId}/`,
             description: 'Go live',
-            isComplete: course.teacher_course_status === 'Published'
+            isComplete: course.teacher_course_status === 'Published' || course.platform_status === 'Published'
         }
     ];
 
@@ -76,6 +112,7 @@ const WorkflowStepper = ({ currentStep, courseId, courseData }) => {
                 {steps.map((step, index) => {
                     const isActive = step.id === currentStep;
                     const isPast = step.id < currentStep;
+                    // Allow access if: it's a past step, current step, or previous step is complete
                     const isAccessible = isPast || isActive || (index > 0 && steps[index - 1].isComplete);
                     
                     return (

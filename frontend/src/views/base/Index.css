@@ -8,6 +8,32 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Remove body padding on landing page */
+body:has(.landing-page-container) {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* === FIXED HEADER FOR LANDING PAGE === */
+/* Always visible header that stays on top */
+.landing-fixed-header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 1050 !important;
+    background: transparent !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure BaseHeader works properly when fixed */
+.landing-fixed-header .base-header {
+    position: relative !important;
+    width: 100% !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
 /* Hide scrollbar for landing page only */
 .landing-page-container::-webkit-scrollbar {
     display: none !important;
@@ -16,43 +42,71 @@ html {
 .landing-page-container {
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
+    background: transparent !important;
 }
 
-/* === SCROLL SNAP CONTAINER === */
-/* Comprehensive fix for footer accessibility */
+/* === SCROLL SNAP CONTAINER - ULTRA SMOOTH EXPERIENCE === */
+/* Optimized for professional, buttery-smooth scrolling */
 .landing-page-container {
-    scroll-snap-type: y proximity !important; /* Changed to proximity for easier footer access */
-    overflow-y: auto !important; /* Changed to auto for better scroll control */
+    scroll-snap-type: y mandatory !important; /* Mandatory for precise snapping */
+    overflow-y: scroll !important;
     height: 100vh !important;
     height: 100dvh !important;
     scroll-behavior: smooth !important;
-    scroll-padding-top: 0 !important;
-    scroll-padding-bottom: 0 !important; /* Added for footer */
-    padding-bottom: 0 !important;
-    margin-bottom: 0 !important;
+    scroll-padding-top: 0px !important; /* No padding to ensure perfect snap alignment */
+    scroll-padding-bottom: 0px !important; /* Clean bottom snap */
+    padding: 0 !important;
+    margin: 0 !important;
     position: relative;
-    -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
 }
 
-/* Snap Sections - More relaxed snapping */
+.landing-page-container .snap-section,
+.landing-page-container .cta-section,
+.landing-page-container .about-section,
+.landing-page-container .statistics-section {
+    background: rgba(255,255,255,0.7); /* or adjust alpha as needed */
+}
+
+/* Snap Sections - Ultra smooth and natural snapping both directions */
 .landing-page-container .snap-section {
-    scroll-snap-align: start !important;
-    scroll-snap-stop: normal !important; /* Allow skipping through sections */
-    min-height: 95vh !important;
+    scroll-snap-align: start !important; /* Start alignment for consistent behavior */
+    scroll-snap-stop: always !important; /* Ensure sections don't skip */
+    min-height: 100vh !important; /* Full viewport height */
     max-height: none !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
-    padding: 2rem 0 !important; /* Reduced padding */
+    justify-content: flex-start !important; /* Start instead of center for predictable snap */
+    padding: 0 !important; /* Remove padding to avoid offset */
     box-sizing: border-box !important;
     overflow: visible !important;
-    margin-bottom: 0 !important;
+    margin: 0 !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important; /* Smooth cubic bezier transition */
 }
 
-/* First section (Hero) */
+/* Add internal padding to content instead of section padding */
+.landing-page-container .snap-section > .container,
+.landing-page-container .snap-section > .position-relative {
+    padding-top: 100px !important; /* Space for header + content spacing */
+    padding-bottom: 50px !important;
+    flex: 1 !important; /* Allow container to grow and fill space */
+    display: flex !important; /* Enable flexbox */
+    flex-direction: column !important; /* Stack content vertically */
+    justify-content: center !important; /* Center content vertically */
+}
+
+/* First section (Hero) - Account for fixed header */
 .landing-page-container .snap-section:first-child {
-    padding-top: 5rem !important;
-    padding-bottom: 2rem !important;
+    padding: 0 !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+}
+
+/* Hero container gets the padding */
+.landing-page-container .hero-container {
+    padding-top: 100px !important; /* Header + spacing */
+    padding-bottom: 50px !important;
 }
 
 /* CTA Section */
@@ -81,25 +135,45 @@ html {
     z-index: 3 !important;
 }
 
-/* Last section (Testimonials) - Critical footer fix */
+/* Last section (Testimonials) - Enable proper snapping with footer, no bottom gap */
 .landing-page-container .snap-section:last-child {
-    height: auto !important;
-    min-height: auto !important; /* Remove min-height constraint */
+    min-height: 100vh !important; /* Ensure full viewport height for snapping */
     max-height: none !important;
-    scroll-snap-align: none !important; /* Disable snap on last section */
-    scroll-snap-stop: normal !important;
+    scroll-snap-align: start !important; /* Enable snapping to last section */
+    scroll-snap-stop: always !important; /* Ensure it doesn't get skipped */
     justify-content: flex-start !important;
-    padding-top: 3rem !important;
-    padding-bottom: 0 !important; /* Remove bottom padding to eliminate gap */
+    padding-top: 5rem !important;
+    padding-bottom: 0 !important; /* No bottom padding to eliminate gap */
     margin-bottom: 0 !important;
     overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
-/* Footer wrapper - Ensure footer is fully visible */
-.landing-page-container .snap-section:last-child > div:last-child {
-    margin-top: 3rem !important;
+/* Ensure BaseFooter inside wrapper has no bottom gaps */
+.landing-page-container .footer-wrapper footer {
+    margin-top: 10rem;
+    margin-bottom: 0rem !important;
+    padding-bottom: 1rem !important;
+}
+
+/* Remove any container padding/margin inside footer at the bottom */
+.landing-page-container .footer-wrapper footer > .container {
     margin-bottom: 0 !important;
-    padding-bottom: 0 !important; /* Remove padding to eliminate gap */
+    padding-bottom: 0 !important;
+}
+
+/* Remove any row/col padding at the very bottom */
+.landing-page-container .footer-wrapper footer .row:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Legacy selector - kept for backwards compatibility */
+.landing-page-container .snap-section:last-child > div:last-child {
+    margin-top: auto !important; /* Push footer to bottom if needed */
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 /* === SECTION NAVIGATION INDICATOR === */
@@ -357,25 +431,36 @@ html {
 /* === HERO SECTION STYLES === */
 /* Scoped to landing page for isolation */
 .landing-page-container .hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    min-height: 95vh !important; /* Changed to min-height for flexibility */
+    background: linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%);
+    min-height: 100vh !important;
     display: flex !important;
-    align-items: center !important; /* Center for hero */
-    justify-content: center !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important; /* Start for proper snap alignment */
     position: relative !important;
-    overflow: visible !important; /* Changed to visible for better display */
-    padding: 5rem 0 1.5rem 0 !important; /* Account for header */
+    overflow: visible !important;
+    padding: 0 !important;
 }
 
 .landing-page-container .hero-background-pattern {
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 1;
+    pointer-events: none;
 }
 
 .landing-page-container .hero-container {
+    position: relative;
     z-index: 2;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding-top: 100px !important; /* Header height + spacing */
+    padding-bottom: 50px !important;
 }
 
 .landing-page-container .hero-badge {
@@ -393,8 +478,8 @@ html {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.landing-page-container .hero-title-accent {
-    color: #ffd700;
+.hero-title-accent {
+    color: #ffeb3b !important; /* Bright yellow */
 }
 
 .landing-page-container .hero-description {
@@ -453,6 +538,13 @@ html {
     background-clip: text;
 }
 
+/* Override for accent span - Make it solid yellow */
+.landing-page-container .hero-main-title .hero-title-accent {
+    background: none !important;
+    -webkit-text-fill-color: #ffeb3b !important;
+    color: #ffeb3b !important;
+}
+
 /* Hero Button Primary (White) - Landing page specific */
 .landing-page-container .hero-btn-primary {
     background: white;
@@ -476,11 +568,17 @@ html {
     border: 2px solid rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
+    color: white !important;
 }
 
 .landing-page-container .hero-btn-secondary-outline:hover {
     border-color: white;
     background: rgba(255, 255, 255, 0.2);
+    color: white !important;
+}
+
+.landing-page-container .hero-btn-secondary-outline:hover i {
+    color: white !important;
 }
 
 /* Hero Right Image - Landing page specific */

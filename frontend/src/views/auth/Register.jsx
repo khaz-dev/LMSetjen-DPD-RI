@@ -9,6 +9,7 @@ import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Toast from '../plugin/Toast';
 import logo from "../../assets/logo/logo-180.png";
+import "./Register.css";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -179,54 +180,29 @@ function Register() {
     <>
       <BaseHeader />
 
-      <section className="min-vh-100 d-flex align-items-center" 
-               style={{ 
-                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                 paddingTop: '30px',
-                 paddingBottom: '120px'
-               }}>
+      <section className="register-section">
         <div className="container">
           <div className="row justify-content-center">
             <div className="col-lg-5 col-md-7">
-              <div className="card shadow border-0" 
-                   style={{ 
-                     borderRadius: '20px',
-                     background: 'white',
-                     border: '1px solid #e9ecef',
-                     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)'
-                   }}>
-                <div className="card-body p-5">
+              <div className="register-card shadow border-0">
+                <div className="register-card-body">
                   {/* Header */}
                   <div className="text-center mb-4">
                     <div className="mb-3">
                       <div className="d-inline-flex align-items-center justify-content-center">
-                        <div style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'white',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
+                        <div className="register-logo-container">
                           <img 
                             src={logo} 
                             alt="LMSetjen DPD RI Logo" 
-                            style={{
-                              width: '180px',
-                              height: '180px',
-                              objectFit: 'contain'
-                            }}
+                            className="register-logo"
                           />
                         </div>
                       </div>
                     </div>
-                    <h3 className="fw-bold text-dark mb-2">Bergabung dengan Kami</h3>
-                    <p className="text-muted mb-0">
+                    <h3 className="register-title">Bergabung dengan Kami</h3>
+                    <p className="register-subtitle">
                       Sudah memiliki akun?{' '}
-                      <Link to="/login/" 
-                            className="text-decoration-none fw-bold"
-                            style={{ color: '#667eea' }}>
+                      <Link to="/login/" className="register-login-link">
                         Masuk di sini
                       </Link>
                     </p>
@@ -235,27 +211,20 @@ function Register() {
                   {/* Form */}
                   <form onSubmit={handleSubmit} noValidate>
                     {/* Full Name Field */}
-                    <div className="mb-4">
-                      <label htmlFor="fullName" className="form-label fw-medium text-dark">
-                        <i className="fas fa-user me-2" style={{ color: '#667eea' }}></i>
+                    <div className="mb-3">
+                      <label htmlFor="fullName" className="register-form-label form-label">
+                        <i className="register-form-icon fas fa-user"></i>
                         Nama Lengkap
                       </label>
                       <input
                         type="text"
                         id="fullName"
                         name="fullName"
-                        className={getInputClass('fullName')}
+                        className={`${getInputClass('fullName')} register-input`}
                         placeholder="Masukkan nama lengkap Anda"
                         value={formData.fullName}
                         onChange={handleInputChange}
                         onBlur={handleBlur}
-                        style={{ 
-                          borderRadius: '12px',
-                          border: '2px solid #e9ecef',
-                          padding: '12px 16px',
-                          fontSize: '15px',
-                          transition: 'all 0.3s ease'
-                        }}
                       />
                       {touched.fullName && errors.fullName && (
                         <div className="invalid-feedback d-block">
@@ -272,28 +241,21 @@ function Register() {
                     </div>
 
                     {/* Email Field */}
-                    <div className="mb-4">
-                      <label htmlFor="email" className="form-label fw-medium text-dark">
-                        <i className="fas fa-envelope me-2" style={{ color: '#667eea' }}></i>
+                    <div className="mb-3">
+                      <label htmlFor="email" className="register-form-label form-label">
+                        <i className="register-form-icon fas fa-envelope"></i>
                         Alamat Email
                       </label>
                       <input
                         type="email"
                         id="email"
                         name="email"
-                        className={getInputClass('email')}
+                        className={`${getInputClass('email')} register-input`}
                         placeholder="contoh@email.com"
                         value={formData.email}
                         onChange={handleInputChange}
                         onBlur={handleBlur}
                         autoComplete="off"
-                        style={{ 
-                          borderRadius: '12px',
-                          border: '2px solid #e9ecef',
-                          padding: '12px 16px',
-                          fontSize: '15px',
-                          transition: 'all 0.3s ease'
-                        }}
                       />
                       {touched.email && errors.email && (
                         <div className="invalid-feedback d-block">
@@ -310,9 +272,9 @@ function Register() {
                     </div>
 
                     {/* Password Field */}
-                    <div className="mb-4">
-                      <label htmlFor="password" className="form-label fw-medium text-dark">
-                        <i className="fas fa-lock me-2" style={{ color: '#667eea' }}></i>
+                    <div className="mb-3">
+                      <label htmlFor="password" className="register-form-label form-label">
+                        <i className="register-form-icon fas fa-lock"></i>
                         Password
                       </label>
                       <div className="position-relative">
@@ -320,24 +282,16 @@ function Register() {
                           type={showPassword ? "text" : "password"}
                           id="password"
                           name="password"
-                          className={getInputClass('password')}
+                          className={`${getInputClass('password')} register-password-input`}
                           placeholder="Buat password yang kuat"
                           value={formData.password}
                           onChange={handleInputChange}
                           onBlur={handleBlur}
                           autoComplete="new-password"
-                          style={{ 
-                            borderRadius: '12px',
-                            border: '2px solid #e9ecef',
-                            padding: '12px 50px 12px 16px',
-                            fontSize: '15px',
-                            transition: 'all 0.3s ease'
-                          }}
                         />
                         <button
                           type="button"
-                          className="btn position-absolute end-0 top-50 translate-middle-y me-2"
-                          style={{ border: 'none', background: 'transparent', color: '#6c757d', paddingRight: '30px' }}
+                          className="register-password-toggle btn position-absolute end-0 top-50 translate-middle-y me-2"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
@@ -357,23 +311,23 @@ function Register() {
                       )}
                       {/* Password Requirements */}
                       {formData.password && (
-                        <div className="mt-2">
+                        <div className="register-password-requirements">
                           <small className="text-muted">
                             <div className="d-flex flex-wrap gap-2">
-                              <span className={formData.password.length >= 8 ? 'text-success' : 'text-danger'}>
-                                <i className={`fas ${formData.password.length >= 8 ? 'fa-check' : 'fa-times'} me-1`}></i>
+                              <span className={`register-requirement-item ${formData.password.length >= 8 ? 'valid' : 'invalid'}`}>
+                                <i className={`fas ${formData.password.length >= 8 ? 'fa-check' : 'fa-times'}`}></i>
                                 8+ karakter
                               </span>
-                              <span className={/(?=.*[a-z])/.test(formData.password) ? 'text-success' : 'text-danger'}>
-                                <i className={`fas ${/(?=.*[a-z])/.test(formData.password) ? 'fa-check' : 'fa-times'} me-1`}></i>
+                              <span className={`register-requirement-item ${/(?=.*[a-z])/.test(formData.password) ? 'valid' : 'invalid'}`}>
+                                <i className={`fas ${/(?=.*[a-z])/.test(formData.password) ? 'fa-check' : 'fa-times'}`}></i>
                                 Huruf kecil
                               </span>
-                              <span className={/(?=.*[A-Z])/.test(formData.password) ? 'text-success' : 'text-danger'}>
-                                <i className={`fas ${/(?=.*[A-Z])/.test(formData.password) ? 'fa-check' : 'fa-times'} me-1`}></i>
+                              <span className={`register-requirement-item ${/(?=.*[A-Z])/.test(formData.password) ? 'valid' : 'invalid'}`}>
+                                <i className={`fas ${/(?=.*[A-Z])/.test(formData.password) ? 'fa-check' : 'fa-times'}`}></i>
                                 Huruf besar
                               </span>
-                              <span className={/(?=.*\d)/.test(formData.password) ? 'text-success' : 'text-danger'}>
-                                <i className={`fas ${/(?=.*\d)/.test(formData.password) ? 'fa-check' : 'fa-times'} me-1`}></i>
+                              <span className={`register-requirement-item ${/(?=.*\d)/.test(formData.password) ? 'valid' : 'invalid'}`}>
+                                <i className={`fas ${/(?=.*\d)/.test(formData.password) ? 'fa-check' : 'fa-times'}`}></i>
                                 Angka
                               </span>
                             </div>
@@ -383,9 +337,9 @@ function Register() {
                     </div>
 
                     {/* Confirm Password Field */}
-                    <div className="mb-4">
-                      <label htmlFor="password2" className="form-label fw-medium text-dark">
-                        <i className="fas fa-lock me-2" style={{ color: '#667eea' }}></i>
+                    <div className="mb-3">
+                      <label htmlFor="password2" className="register-form-label form-label">
+                        <i className="register-form-icon fas fa-lock"></i>
                         Konfirmasi Password
                       </label>
                       <div className="position-relative">
@@ -393,24 +347,16 @@ function Register() {
                           type={showPassword2 ? "text" : "password"}
                           id="password2"
                           name="password2"
-                          className={getInputClass('password2')}
+                          className={`${getInputClass('password2')} register-password-input`}
                           placeholder="Ulangi password Anda"
                           value={formData.password2}
                           onChange={handleInputChange}
                           onBlur={handleBlur}
                           autoComplete="new-password"
-                          style={{ 
-                            borderRadius: '12px',
-                            border: '2px solid #e9ecef',
-                            padding: '12px 50px 12px 16px',
-                            fontSize: '15px',
-                            transition: 'all 0.3s ease'
-                          }}
                         />
                         <button
                           type="button"
-                          className="btn position-absolute end-0 top-50 translate-middle-y me-2"
-                          style={{ border: 'none', background: 'transparent', color: '#6c757d', paddingRight: '30px' }}
+                          className="register-password-toggle btn position-absolute end-0 top-50 translate-middle-y me-2"
                           onClick={() => setShowPassword2(!showPassword2)}
                         >
                           <i className={`fas ${showPassword2 ? 'fa-eye-slash' : 'fa-eye'}`}></i>
@@ -434,18 +380,8 @@ function Register() {
                     <div className="d-grid mb-3">
                       <button 
                         type="submit" 
-                        className="btn btn-lg fw-bold"
+                        className="register-submit-btn btn btn-lg fw-bold"
                         disabled={isLoading || Object.keys(errors).some(key => errors[key])}
-                        style={{
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                          border: 'none',
-                          borderRadius: '12px',
-                          color: 'white',
-                          padding: '14px',
-                          fontSize: '16px',
-                          transition: 'all 0.3s ease',
-                          transform: isLoading ? 'scale(0.98)' : 'scale(1)'
-                        }}
                       >
                         {isLoading ? (
                           <>
@@ -465,11 +401,11 @@ function Register() {
                     <div className="text-center">
                       <small className="text-muted">
                         Dengan mendaftar, Anda menyetujui{' '}
-                        <a href="#" className="text-decoration-none" style={{ color: '#667eea' }}>
+                        <a href="#" className="register-terms-link text-decoration-none">
                           Syarat & Ketentuan
                         </a>{' '}
                         dan{' '}
-                        <a href="#" className="text-decoration-none" style={{ color: '#667eea' }}>
+                        <a href="#" className="register-terms-link text-decoration-none">
                           Kebijakan Privasi
                         </a>
                       </small>

@@ -1,0 +1,341 @@
+/* NotFound Component Styles */
+.notfound-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%);
+    padding-top: 20px;
+    margin-top: -5px;
+    padding-bottom: 80px;
+    user-select: none;
+}
+
+.notfound-content {
+    position: relative;
+    z-index: 1;
+}
+
+.notfound-card {
+    border-radius: 20px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    user-select: none;
+}
+
+.notfound-card-body {
+    padding: 2rem;
+    text-align: center;
+}
+
+/* 404 Illustration */
+.notfound-404-text {
+    font-size: 80px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+    text-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+    user-select: none;
+}
+
+/* Icon Circle */
+.notfound-icon-circle {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 1.25rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.notfound-icon {
+    font-size: 2rem;
+    color: white;
+}
+
+/* Heading */
+.notfound-title {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    user-select: none;
+}
+
+/* Description */
+.notfound-description {
+    color: #6c757d;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+    user-select: none;
+}
+
+/* Info Box */
+.notfound-info-box {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    user-select: none;
+}
+
+.notfound-info-content {
+    display: flex;
+    align-items: start;
+    text-align: left;
+}
+
+.notfound-info-icon {
+    font-size: 1.25rem;
+    color: #667eea;
+    margin-right: 0.75rem;
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+}
+
+.notfound-info-title {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 0.875rem;
+    margin-bottom: 0.4rem;
+}
+
+.notfound-info-list {
+    margin-bottom: 0;
+    color: #6c757d;
+    font-size: 0.8125rem;
+    padding-left: 1.1rem;
+    line-height: 1.5;
+}
+
+.notfound-info-list li {
+    margin-bottom: 0.2rem;
+}
+
+/* Action Buttons */
+.notfound-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.notfound-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+    cursor: pointer;
+}
+
+.notfound-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.notfound-btn-secondary {
+    background: transparent;
+    color: #6c757d;
+    border: 2px solid #6c757d;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+    cursor: pointer;
+}
+
+.notfound-btn-secondary:hover {
+    transform: translateY(-2px);
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+
+.notfound-btn-outline {
+    background: transparent;
+    color: #667eea;
+    border: 2px solid #667eea;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+    cursor: pointer;
+}
+
+.notfound-btn-outline:hover {
+    transform: translateY(-2px);
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.notfound-btn-icon {
+    margin-right: 0.4rem;
+    font-size: 0.875rem;
+}
+
+/* Help Section */
+.notfound-help-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.notfound-help-text {
+    color: #6c757d;
+    font-size: 0.8125rem;
+    margin-bottom: 0.6rem;
+    user-select: none;
+}
+
+.notfound-help-links {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.notfound-help-link {
+    color: #667eea;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    user-select: text;
+}
+
+.notfound-help-link:hover {
+    color: #764ba2;
+}
+
+.notfound-help-separator {
+    color: #dee2e6;
+    user-select: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .notfound-card-body {
+        padding: 1.75rem;
+    }
+    
+    .notfound-404-text {
+        font-size: 65px;
+    }
+    
+    .notfound-icon-circle {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 1rem;
+    }
+    
+    .notfound-icon {
+        font-size: 1.75rem;
+    }
+    
+    .notfound-title {
+        font-size: 1.35rem;
+    }
+    
+    .notfound-description {
+        font-size: 0.9rem;
+    }
+    
+    .notfound-buttons {
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+    
+    .notfound-btn-primary,
+    .notfound-btn-secondary,
+    .notfound-btn-outline {
+        width: 100%;
+        justify-content: center;
+        font-size: 0.85rem;
+        padding: 9px 18px;
+    }
+}
+
+@media (max-width: 576px) {
+    .notfound-section {
+        padding: 1rem 0.75rem;
+    }
+    
+    .notfound-card-body {
+        padding: 1.5rem;
+    }
+    
+    .notfound-404-text {
+        font-size: 50px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .notfound-icon-circle {
+        width: 55px;
+        height: 55px;
+        margin-bottom: 0.85rem;
+    }
+    
+    .notfound-icon {
+        font-size: 1.5rem;
+    }
+    
+    .notfound-title {
+        font-size: 1.2rem;
+        margin-bottom: 0.65rem;
+    }
+    
+    .notfound-description {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+    
+    .notfound-info-box {
+        padding: 0.85rem;
+        margin-bottom: 1rem;
+    }
+    
+    .notfound-info-icon {
+        font-size: 1.1rem;
+        margin-right: 0.65rem;
+    }
+    
+    .notfound-info-title {
+        font-size: 0.8125rem;
+    }
+    
+    .notfound-info-list {
+        font-size: 0.75rem;
+    }
+}

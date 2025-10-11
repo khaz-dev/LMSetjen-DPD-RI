@@ -169,9 +169,20 @@ storybook-static/
 # ===================================
 DRAFT_*.md
 TODO_*.md
+
+# Internal documentation (keep final docs)
 FIXES_APPLIED.md
 QUICK_FIX_REFERENCE.md
 VIDEO_COMPRESSION_GUIDE.md
+
+# ===================================
+# DEVELOPMENT / TESTING
+# ===================================
+# Test files (if you want to exclude test directory)
+# src/views/test/
+# src/**/cursor-test.css
+# src/**/*.test.{js,jsx}
+# src/**/*.spec.{js,jsx}
 
 # ===================================
 # SECURITY

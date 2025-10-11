@@ -11,7 +11,7 @@ function QADetail() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5">
+            <section className="pt-5 pb-5 instructor-qa-detail-page" style={{ minHeight: '100vh' }}>
                 <div className="container">
                     {/* Header Here */}
                     <Header />

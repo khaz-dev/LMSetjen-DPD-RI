@@ -2,8 +2,9 @@
 
 /* Background Section */
 .qa-bg-section {
-    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #ebebeb 100%);
     min-height: 100vh;
+    background: transparent;
+    padding: var(--space-xl) 0;
 }
 
 /* Header Section */
@@ -63,7 +64,18 @@
     border-radius: 15px;
     padding: 25px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ================================
+   SHARED INSTRUCTOR PAGE STYLES
+   ================================ */
+.instructor-review-page,
+.instructor-notification-page,
+.instructor-qa-detail-page {
+    background: transparent;
+    min-height: 100vh;
+    padding: 2rem 0;
 }
 
 .qa-search-container {

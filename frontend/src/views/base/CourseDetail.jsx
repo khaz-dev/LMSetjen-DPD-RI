@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+import Footer from "../partials/Footer";
 
 // Import enhanced components
 import CourseHero from "./components/CourseHero";
@@ -144,7 +144,7 @@ function CourseDetail() {
         window.scrollTo(0, 0);
     }, []);
 
-    // Handle video event listeners
+    // Handle video event listeners and modal close events
     useEffect(() => {
         const videoElement = videoRef.current;
         
@@ -170,6 +170,50 @@ function CourseDetail() {
             videoElement.removeEventListener('timeupdate', handleTimeUpdate);
         };
     }, [course?.file]); // Re-run when video source changes
+
+    // Add modal event listeners to pause videos when modals close
+    useEffect(() => {
+        const coursePreviewModalElement = document.getElementById('coursePreviewModal');
+        const lessonPreviewModalElement = document.getElementById('lessonPreviewModal');
+        
+        const handleCourseModalHidden = () => {
+            const videoElement = videoRef.current;
+            if (videoElement) {
+                videoElement.pause();
+                videoElement.currentTime = 0; // Reset to start
+            }
+        };
+        
+        const handleLessonModalHidden = () => {
+            // Find lesson video element and pause it
+            const lessonVideo = document.querySelector('#lessonPreviewModal video');
+            if (lessonVideo) {
+                lessonVideo.pause();
+                lessonVideo.currentTime = 0; // Reset to start
+            }
+            // Reset preview video state
+            setPreviewVideo(null);
+        };
+        
+        // Add Bootstrap modal hidden event listeners
+        if (coursePreviewModalElement) {
+            coursePreviewModalElement.addEventListener('hidden.bs.modal', handleCourseModalHidden);
+        }
+        
+        if (lessonPreviewModalElement) {
+            lessonPreviewModalElement.addEventListener('hidden.bs.modal', handleLessonModalHidden);
+        }
+        
+        // Cleanup
+        return () => {
+            if (coursePreviewModalElement) {
+                coursePreviewModalElement.removeEventListener('hidden.bs.modal', handleCourseModalHidden);
+            }
+            if (lessonPreviewModalElement) {
+                lessonPreviewModalElement.removeEventListener('hidden.bs.modal', handleLessonModalHidden);
+            }
+        };
+    }, [previewVideo]); // Re-run when previewVideo changes
 
     const getTabContent = () => {
         switch (activeTab) {
@@ -446,7 +490,7 @@ function CourseDetail() {
             <>
                 <BaseHeader />
                 <CourseDetailLoading />
-                <BaseFooter />
+                <Footer />
             </>
         );
     }
@@ -485,7 +529,7 @@ function CourseDetail() {
                 </div>
             </section>
             
-            {/* Course Preview Modal */}
+            {/* Course Preview Modal - Compact Design */}
             {course?.file && (
                 <div className="modal fade" id="coursePreviewModal" tabIndex={-1} aria-labelledby="coursePreviewModalLabel" aria-hidden="true">
                     <div className="modal-dialog modal-xl">
@@ -494,43 +538,29 @@ function CourseDetail() {
                                 className="modal-header border-0 text-white position-relative"
                                 style={{
                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                    padding: '1.5rem 2rem'
+                                    padding: '0.75rem 1.25rem'
                                 }}
                             >
-                                {/* Decorative background elements */}
-                                <div 
-                                    style={{
-                                        position: 'absolute',
-                                        top: '-50%',
-                                        right: '-20%',
-                                        width: '40%',
-                                        height: '200%',
-                                        background: 'rgba(255, 255, 255, 0.1)',
-                                        transform: 'rotate(15deg)',
-                                        zIndex: 1
-                                    }}
-                                ></div>
-                                
                                 <div className="d-flex align-items-center" style={{ zIndex: 2, position: 'relative' }}>
                                     <div 
-                                        className="me-3"
+                                        className="me-2"
                                         style={{
-                                            width: '50px',
-                                            height: '50px',
+                                            width: '32px',
+                                            height: '32px',
                                             background: 'rgba(255, 255, 255, 0.2)',
-                                            borderRadius: '15px',
+                                            borderRadius: '8px',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center'
                                         }}
                                     >
-                                        <i className="fas fa-play text-white" style={{ fontSize: '1.2rem' }}></i>
+                                        <i className="fas fa-play text-white" style={{ fontSize: '0.9rem' }}></i>
                                     </div>
                                     <div>
-                                        <h1 className="modal-title fs-4 mb-0 fw-bold" id="coursePreviewModalLabel">
+                                        <h6 className="mb-0 fw-bold" style={{ fontSize: '0.95rem' }}>
                                             Preview Kursus
-                                        </h1>
-                                        <small className="opacity-90">
+                                        </h6>
+                                        <small style={{ fontSize: '0.75rem', opacity: 0.9 }}>
                                             {course.title}
                                         </small>
                                     </div>
@@ -544,17 +574,16 @@ function CourseDetail() {
                                     style={{ 
                                         zIndex: 3, 
                                         position: 'relative',
-                                        width: '40px',
-                                        height: '40px',
+                                        width: '32px',
+                                        height: '32px',
                                         borderRadius: '50%',
                                         background: 'rgba(255, 255, 255, 0.2)',
-                                        border: '2px solid rgba(255, 255, 255, 0.5)',
+                                        border: '2px solid rgba(255, 255, 255, 0.3)',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         padding: 0,
-                                        transition: 'all 0.3s ease',
-                                        backdropFilter: 'blur(10px)'
+                                        transition: 'all 0.3s ease'
                                     }}
                                     onMouseEnter={(e) => {
                                         e.target.style.background = 'rgba(255, 255, 255, 0.3)';
@@ -565,61 +594,32 @@ function CourseDetail() {
                                         e.target.style.transform = 'scale(1)';
                                     }}
                                 >
-                                    <i className="fas fa-times text-white" style={{ fontSize: '1.2rem' }}></i>
+                                    <i className="fas fa-times text-white" style={{ fontSize: '1rem' }}></i>
                                 </button>
                             </div>
-                            <div className="modal-body p-0 bg-dark position-relative">
-                                {/* Video container with aspect ratio */}
-                                <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
-                                    <video 
-                                        ref={videoRef}
-                                        src={course.file} 
-                                        style={{ 
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                            borderRadius: '0',
-                                            objectFit: 'cover'
-                                        }}
-                                        controls 
-                                        onError={(e) => {
-                                            console.error('Video failed to load:', course.file);
-                                        }}
-                                    />
-                                </div>
-                                
-                                {/* Video info overlay */}
-                                <div 
-                                    className="position-absolute bottom-0 start-0 end-0 text-white p-3"
-                                    style={{
-                                        background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
-                                        zIndex: 1
+                            <div className="modal-body p-0 bg-dark d-flex align-items-center justify-content-center" style={{ minHeight: '400px', maxHeight: 'calc(100vh - 100px)' }}>
+                                {/* Video with natural aspect ratio */}
+                                <video 
+                                    ref={videoRef}
+                                    src={course.file} 
+                                    style={{ 
+                                        width: '100%',
+                                        height: 'auto',
+                                        maxHeight: 'calc(100vh - 100px)',
+                                        objectFit: 'contain'
                                     }}
-                                >
-                                    <div className="d-flex justify-content-between align-items-end">
-                                        <div>
-                                            <h6 className="mb-1 fw-bold">Preview Video</h6>
-                                            <small className="opacity-75">
-                                                Tonton preview untuk melihat isi kursus
-                                            </small>
-                                        </div>
-                                        <div className="text-end">
-                                            <div className="badge bg-primary px-3 py-2 rounded-pill">
-                                                <i className="fas fa-eye me-1"></i>
-                                                Preview
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                    controls 
+                                    onError={(e) => {
+                                        console.error('Video failed to load:', course.file);
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Lesson Preview Modal - For individual lesson previews */}
+            {/* Lesson Preview Modal - Compact Design */}
             {previewVideo && (
                 <div className="modal fade" id="lessonPreviewModal" tabIndex={-1} aria-labelledby="lessonPreviewModalLabel" aria-hidden="true">
                     <div className="modal-dialog modal-xl">
@@ -628,67 +628,57 @@ function CourseDetail() {
                                 className="modal-header border-0 text-white position-relative"
                                 style={{
                                     background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                                    padding: '1.5rem 2rem'
+                                    padding: '0.75rem 1.25rem'
                                 }}
                             >
-                                {/* Decorative background elements */}
-                                <div 
-                                    style={{
-                                        position: 'absolute',
-                                        top: '-50%',
-                                        right: '-20%',
-                                        width: '40%',
-                                        height: '200%',
-                                        background: 'rgba(255, 255, 255, 0.1)',
-                                        transform: 'rotate(15deg)',
-                                        zIndex: 1
-                                    }}
-                                ></div>
-                                
-                                <div className="d-flex align-items-center" style={{ zIndex: 2, position: 'relative' }}>
+                                <div className="d-flex align-items-center flex-grow-1" style={{ zIndex: 2, position: 'relative' }}>
                                     <div 
-                                        className="me-3"
+                                        className="me-2"
                                         style={{
-                                            width: '50px',
-                                            height: '50px',
+                                            width: '32px',
+                                            height: '32px',
                                             background: 'rgba(255, 255, 255, 0.2)',
-                                            borderRadius: '15px',
+                                            borderRadius: '8px',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center'
                                         }}
                                     >
-                                        <i className="fas fa-play text-white" style={{ fontSize: '1.2rem' }}></i>
+                                        <i className="fas fa-play text-white" style={{ fontSize: '0.9rem' }}></i>
                                     </div>
-                                    <div>
-                                        <h1 className="modal-title fs-4 mb-0 fw-bold" id="lessonPreviewModalLabel">
-                                            Preview Materi
-                                        </h1>
-                                        <small className="opacity-90">
+                                    <div className="flex-grow-1">
+                                        <h6 className="mb-0 fw-bold" style={{ fontSize: '0.95rem' }}>
                                             {previewVideo.title}
+                                        </h6>
+                                        <small style={{ fontSize: '0.75rem', opacity: 0.9 }}>
+                                            <i className="fas fa-clock me-1"></i>
+                                            {previewVideo.content_duration || 'N/A'}
                                         </small>
                                     </div>
+                                    <span className="badge bg-light text-success ms-2" style={{ fontSize: '0.7rem' }}>
+                                        <i className="fas fa-eye me-1"></i>
+                                        Gratis Preview
+                                    </span>
                                 </div>
                                 
                                 <button 
                                     type="button" 
-                                    className="btn btn-sm"
+                                    className="btn btn-sm ms-2"
                                     data-bs-dismiss="modal" 
                                     aria-label="Close"
                                     style={{ 
                                         zIndex: 3, 
                                         position: 'relative',
-                                        width: '40px',
-                                        height: '40px',
+                                        width: '32px',
+                                        height: '32px',
                                         borderRadius: '50%',
                                         background: 'rgba(255, 255, 255, 0.2)',
-                                        border: '2px solid rgba(255, 255, 255, 0.5)',
+                                        border: '2px solid rgba(255, 255, 255, 0.3)',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         padding: 0,
-                                        transition: 'all 0.3s ease',
-                                        backdropFilter: 'blur(10px)'
+                                        transition: 'all 0.3s ease'
                                     }}
                                     onMouseEnter={(e) => {
                                         e.target.style.background = 'rgba(255, 255, 255, 0.3)';
@@ -700,81 +690,36 @@ function CourseDetail() {
                                     }}
                                     onClick={() => setPreviewVideo(null)}
                                 >
-                                    <i className="fas fa-times text-white" style={{ fontSize: '1.2rem' }}></i>
+                                    <i className="fas fa-times text-white" style={{ fontSize: '1rem' }}></i>
                                 </button>
                             </div>
-                            <div className="modal-body p-0 bg-dark position-relative">
-                                {/* Video container with aspect ratio */}
-                                <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
-                                    <video 
-                                        key={previewVideo.file || previewVideo.video_url}
-                                        src={previewVideo.file || previewVideo.video_url} 
-                                        style={{ 
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                            borderRadius: '0',
-                                            objectFit: 'cover'
-                                        }}
-                                        controls 
-                                        autoPlay
-                                        onError={(e) => {
-                                            console.error('Video failed to load:', previewVideo.file || previewVideo.video_url);
-                                        }}
-                                        onLoadedData={(e) => {
-                                            e.target.play().catch(err => console.error('Auto-play blocked:', err));
-                                        }}
-                                    />
-                                </div>
-                                
-                                {/* Video info overlay */}
-                                <div 
-                                    className="position-absolute bottom-0 start-0 end-0 text-white p-3"
-                                    style={{
-                                        background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
-                                        zIndex: 1
+                            <div className="modal-body p-0 bg-dark d-flex align-items-center justify-content-center" style={{ minHeight: '400px', maxHeight: 'calc(100vh - 150px)' }}>
+                                {/* Video with natural aspect ratio */}
+                                <video 
+                                    key={previewVideo.file || previewVideo.video_url}
+                                    src={previewVideo.file || previewVideo.video_url} 
+                                    style={{ 
+                                        width: '100%',
+                                        height: 'auto',
+                                        maxHeight: 'calc(100vh - 150px)',
+                                        objectFit: 'contain'
                                     }}
-                                >
-                                    <div className="d-flex justify-content-between align-items-end">
-                                        <div>
-                                            <h6 className="mb-1 fw-bold">{previewVideo.title}</h6>
-                                            <small className="opacity-75">
-                                                <i className="fas fa-clock me-2"></i>
-                                                {previewVideo.content_duration || 'N/A'}
-                                            </small>
-                                        </div>
-                                        <div className="text-end">
-                                            <div className="badge bg-success px-3 py-2 rounded-pill">
-                                                <i className="fas fa-eye me-1"></i>
-                                                Gratis Preview
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                    controls 
+                                    autoPlay
+                                    onError={(e) => {
+                                        console.error('Video failed to load:', previewVideo.file || previewVideo.video_url);
+                                    }}
+                                    onLoadedData={(e) => {
+                                        e.target.play().catch(err => console.error('Auto-play blocked:', err));
+                                    }}
+                                />
                             </div>
-                            <div className="modal-footer border-0 bg-light">
+                            <div className="modal-footer border-0 bg-light py-2">
                                 <div className="w-100 text-center">
-                                    <p className="mb-2 text-muted small">
+                                    <small className="text-muted">
                                         <i className="fas fa-info-circle me-1"></i>
                                         Ini adalah preview gratis. Daftar sekarang untuk mengakses seluruh kursus!
-                                    </p>
-                                    <button 
-                                        className="btn"
-                                        style={{
-                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '10px',
-                                            padding: '0.5rem 2rem'
-                                        }}
-                                        data-bs-dismiss="modal"
-                                        onClick={() => setPreviewVideo(null)}
-                                    >
-                                        <i className="fas fa-graduation-cap me-2"></i>
-                                        Daftar Kursus Ini
-                                    </button>
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -870,7 +815,9 @@ function CourseDetail() {
                 </div>
             )}
             
-            <BaseFooter />
+            <div className="footer-wrapper">
+                <Footer />
+            </div>
         </div>
     );
 }

@@ -430,7 +430,7 @@ function CourseQuiz() {
         <>
             <BaseHeader />
 
-            <div className="pt-5 pb-5 modern-dashboard">
+            <div className="modern-dashboard">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 mt-md-4">
@@ -473,7 +473,7 @@ function CourseQuiz() {
                             </div>
 
                             {/* Stats Overview */}
-                            <div className="row g-4 mb-4">
+                            <div className="row g-3 mb-4">
                                 <div className="col-md-3">
                                     <div className="quiz-stat-card">
                                         <div className="stat-icon">

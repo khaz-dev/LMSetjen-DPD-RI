@@ -127,7 +127,7 @@ function ForgotPassword() {
                   )}
 
                   <form onSubmit={handleEmailSubmit} noValidate>
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <label htmlFor="email" className="form-label forgot-password-form-label">
                         <i className="fas fa-envelope forgot-password-form-icon"></i>
                         Alamat Email

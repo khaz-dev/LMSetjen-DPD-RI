@@ -196,7 +196,7 @@ function Login() {
                   </div>
 
                   <form onSubmit={handleSubmit} noValidate>
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <label htmlFor="email" className="form-label login-form-label">
                         <i className="fas fa-envelope login-form-icon"></i>
                         Alamat Email
@@ -225,7 +225,7 @@ function Login() {
                       )}
                     </div>
 
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <label htmlFor="password" className="form-label login-form-label">
                         <i className="fas fa-lock login-form-icon"></i>
                         Password
@@ -264,7 +264,7 @@ function Login() {
                       )}
                     </div>
 
-                    <div className="d-flex justify-content-between align-items-center mb-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
                       <div className="form-check">
                         <input
                           type="checkbox"

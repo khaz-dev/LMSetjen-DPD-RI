@@ -3,10 +3,11 @@
     min-height: 100vh;
     display: flex;
     align-items: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding-top: 30px;
-    padding-bottom: 120px;
-    user-select: none; /* Prevent text selection */
+    background: linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%);
+    padding-top: 20px;
+    margin-top: -5px;
+    padding-bottom: 80px;
+    user-select: none;
 }
 
 /* Allow text selection only for input fields and links */
@@ -27,7 +28,7 @@
 }
 
 .login-card-body {
-    padding: 3rem;
+    padding: 2rem;
     user-select: none; /* Prevent text selection on body */
 }
 
@@ -42,15 +43,16 @@
 }
 
 .login-logo {
-    width: 180px;
-    height: 180px;
+    width: 120px;
+    height: 120px;
     object-fit: contain;
 }
 
 .login-title {
     font-weight: bold;
     color: #343a40;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
+    font-size: 1.5rem;
     user-select: none; /* Prevent text selection */
     cursor: default; /* Default cursor */
 }
@@ -58,6 +60,7 @@
 .login-subtitle {
     color: #6c757d;
     margin-bottom: 0;
+    font-size: 0.9rem;
     user-select: none; /* Prevent text selection */
     cursor: default; /* Default cursor */
 }
@@ -78,6 +81,7 @@
 .login-form-label {
     font-weight: 500;
     color: #343a40;
+    margin-bottom: 0.5rem;
     user-select: none; /* Prevent text selection */
     cursor: default; /* Default cursor */
 }
@@ -87,36 +91,52 @@
     margin-right: 0.5rem;
 }
 
-.login-input {
+/* Input styles with higher specificity to override global styles */
+.login-card input.form-control.login-input {
     border-radius: 12px;
     border: 2px solid #e9ecef;
-    padding: 12px 16px;
+    padding: 10px 14px;
     font-size: 15px;
-    transition: all 0.3s ease;
-    user-select: text; /* Allow text selection in inputs */
-    cursor: text; /* Text cursor for inputs */
+    transition: all 0.2s ease-in-out;
+    user-select: text;
+    cursor: text;
+    background-color: white;
 }
 
-.login-input:focus {
+.login-card input.form-control.login-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd;
+    background-color: #f8f9fa;
+}
+
+.login-card input.form-control.login-input:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-    outline: none; /* Remove default outline */
+    background-color: white;
+    outline: none;
 }
 
-.login-password-input {
+/* Password input styles */
+.login-card input.form-control.login-password-input {
     border-radius: 12px;
     border: 2px solid #e9ecef;
-    padding: 12px 50px 12px 16px;
+    padding: 10px 50px 10px 14px;
     font-size: 15px;
-    transition: all 0.3s ease;
-    user-select: text; /* Allow text selection in inputs */
-    cursor: text; /* Text cursor for inputs */
+    transition: all 0.2s ease-in-out;
+    user-select: text;
+    cursor: text;
+    background-color: white;
 }
 
-.login-password-input:focus {
+.login-card input.form-control.login-password-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd;
+    background-color: #f8f9fa;
+}
+
+.login-card input.form-control.login-password-input:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-    outline: none; /* Remove default outline */
+    background-color: white;
+    outline: none;
 }
 
 .login-password-toggle {

@@ -190,7 +190,7 @@ function QA() {
         <>
             <BaseHeader />
             <section className="qa-bg-section">
-                <div className="container mt-5">
+                <div className="container">
                     <Header />
                     <div className="row mt-0 mt-md-4">
                         <Sidebar />

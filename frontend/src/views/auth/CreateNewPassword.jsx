@@ -177,7 +177,7 @@ function CreateNewPassword() {
                   </div>
 
                   <form onSubmit={handleCreatePassword} noValidate>
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <label htmlFor="password" className="form-label create-password-form-label">
                         <i className="fas fa-lock create-password-form-icon"></i>
                         Password Baru
@@ -250,7 +250,7 @@ function CreateNewPassword() {
                       )}
                     </div>
 
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <label htmlFor="confirmPassword" className="form-label create-password-form-label">
                         <i className="fas fa-lock create-password-form-icon"></i>
                         Konfirmasi Password

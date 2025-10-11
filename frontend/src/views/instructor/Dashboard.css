@@ -2,8 +2,9 @@
 
 /* Main Dashboard Background */
 .modern-dashboard {
-  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #ebebeb 100%);
   min-height: 100vh;
+  background: transparent;
+  padding: var(--space-xl) 0;
 }
 
 /* Dashboard Header */

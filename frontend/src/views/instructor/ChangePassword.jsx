@@ -357,7 +357,7 @@ function ChangePassword() {
     return (
         <>
             <BaseHeader />
-            <section className="instructor-password-page pt-5 pb-5">
+            <section className="instructor-password-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 mt-md-4">

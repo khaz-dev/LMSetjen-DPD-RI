@@ -46,7 +46,7 @@ function TeacherNotification() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5" style={{ background: 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #ebebeb 100%)', minHeight: '100vh' }}>
+            <section className="instructor-notification-page" style={{ minHeight: '100vh' }}>
                 <div className="container">
                     {/* Header Here */}
                     <Header />

@@ -125,7 +125,7 @@ button div,
    ================================ */
 .course-edit-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background: transparent;
     padding: var(--space-xl) 0;
 }
 

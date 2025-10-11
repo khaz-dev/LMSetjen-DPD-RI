@@ -105,9 +105,15 @@
     gap: 0.5rem;
 }
 
+.course-detail{
+    background: rgba(255,255,255,0.50); /* 75% opaque white, adjust as needed */
+    min-height: calc(100vh - 200px);
+    margin-top: -5px;
+}
+
 /* Base Course Detail Section */
 .base-course-detail-content {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: 'transparent' !important;
     padding-bottom: 6rem !important; /* More gap on top of footer */
 }
 

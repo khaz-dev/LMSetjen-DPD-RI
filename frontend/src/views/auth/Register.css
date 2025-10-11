@@ -1,0 +1,275 @@
+/* Register Component Styles */
+.register-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%);
+    padding-top: 20px;
+    margin-top: -5px;
+    padding-bottom: 80px;
+    user-select: none;
+}
+
+/* Allow text selection only for input fields and links */
+.register-input,
+.register-password-input,
+.register-login-link,
+.register-terms-link {
+    user-select: text;
+}
+
+.register-card {
+    border-radius: 20px;
+    background: white;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    user-select: none;
+}
+
+.register-card-body {
+    padding: 2rem;
+    user-select: none;
+}
+
+.register-logo-container {
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.register-logo {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none;
+}
+
+.register-title {
+    font-weight: bold;
+    color: #343a40;
+    margin-bottom: 0.25rem;
+    font-size: 1.5rem;
+    user-select: none;
+    cursor: default;
+}
+
+.register-subtitle {
+    color: #6c757d;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    user-select: none;
+    cursor: default;
+}
+
+.register-login-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: bold;
+    user-select: text;
+    cursor: pointer;
+}
+
+.register-login-link:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+}
+
+.register-form-label {
+    font-weight: 500;
+    color: #343a40;
+    margin-bottom: 0.5rem;
+    user-select: none;
+    cursor: default;
+}
+
+.register-form-icon {
+    color: #667eea;
+    margin-right: 0.5rem;
+}
+
+/* Input styles with higher specificity to override global styles */
+.register-card input.form-control.register-input {
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    padding: 10px 14px;
+    font-size: 15px;
+    transition: all 0.2s ease-in-out;
+    user-select: text;
+    cursor: text;
+    background-color: white;
+}
+
+.register-card input.form-control.register-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd;
+    background-color: #f8f9fa;
+}
+
+.register-card input.form-control.register-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    background-color: white;
+    outline: none;
+}
+
+/* Password input styles */
+.register-card input.form-control.register-password-input {
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    padding: 10px 50px 10px 14px;
+    font-size: 15px;
+    transition: all 0.2s ease-in-out;
+    user-select: text;
+    cursor: text;
+    background-color: white;
+}
+
+.register-card input.form-control.register-password-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd;
+    background-color: #f8f9fa;
+}
+
+.register-card input.form-control.register-password-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    background-color: white;
+    outline: none;
+}
+
+.register-password-toggle {
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    padding-right: 30px;
+    user-select: none;
+    cursor: pointer;
+}
+
+.register-password-toggle:hover {
+    color: #667eea;
+}
+
+.register-error-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    user-select: none;
+    cursor: default;
+}
+
+.register-valid-feedback {
+    color: #198754;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    user-select: none;
+    cursor: default;
+}
+
+.register-password-requirements {
+    margin-top: 0.5rem;
+}
+
+.register-requirement-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.register-requirement-item.valid {
+    color: #198754;
+}
+
+.register-requirement-item.invalid {
+    color: #dc3545;
+}
+
+.register-submit-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    transform: scale(1);
+    user-select: none;
+    cursor: pointer;
+}
+
+.register-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.register-submit-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.register-submit-btn:disabled {
+    transform: scale(0.98);
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.register-terms-link {
+    color: #667eea;
+    text-decoration: none;
+    user-select: text;
+    cursor: pointer;
+}
+
+.register-terms-link:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+}
+
+.register-spinner {
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+}
+
+/* Additional text selection prevention */
+.register-section .text-center {
+    user-select: none;
+}
+
+.register-section .text-muted {
+    user-select: none;
+    cursor: default;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .register-card-body {
+        padding: 2rem;
+    }
+    
+    .register-logo {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .register-section {
+        padding-top: 20px;
+        padding-bottom: 80px;
+    }
+}
+
+@media (max-width: 576px) {
+    .register-card-body {
+        padding: 1.5rem;
+    }
+    
+    .register-logo {
+        width: 100px;
+        height: 100px;
+    }
+}

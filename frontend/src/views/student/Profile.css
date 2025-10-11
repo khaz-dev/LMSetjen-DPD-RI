@@ -269,6 +269,11 @@
     background: #fafafa;
 }
 
+.student-profile-page .modern-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd;
+    background-color: #f0f1f3;
+}
+
 .student-profile-page .modern-input:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);

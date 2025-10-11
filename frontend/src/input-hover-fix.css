@@ -1,0 +1,402 @@
+/* ============================================
+   GLOBAL INPUT HOVER BEHAVIOR FIX
+   ============================================
+   This file provides consistent hover behavior
+   for all input elements across the application.
+   ============================================ */
+
+/* ============================================
+   BASE INPUT HOVER STYLES
+   ============================================ */
+
+/* Standard text inputs */
+input[type="text"]:hover:not(:disabled):not(:focus),
+input[type="email"]:hover:not(:disabled):not(:focus),
+input[type="password"]:hover:not(:disabled):not(:focus),
+input[type="number"]:hover:not(:disabled):not(:focus),
+input[type="tel"]:hover:not(:disabled):not(:focus),
+input[type="url"]:hover:not(:disabled):not(:focus),
+input[type="search"]:hover:not(:disabled):not(:focus),
+input[type="date"]:hover:not(:disabled):not(:focus),
+input[type="time"]:hover:not(:disabled):not(:focus),
+input[type="datetime-local"]:hover:not(:disabled):not(:focus),
+input[type="month"]:hover:not(:disabled):not(:focus),
+input[type="week"]:hover:not(:disabled):not(:focus),
+textarea:hover:not(:disabled):not(:focus),
+select:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* File inputs */
+input[type="file"]:hover:not(:disabled) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    cursor: pointer !important;
+}
+
+/* ============================================
+   FORM-CONTROL CLASS HOVER STYLES
+   ============================================ */
+
+.form-control:hover:not(:disabled):not(:focus),
+.form-select:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   CUSTOM INPUT CLASS HOVER STYLES
+   ============================================ */
+
+/* Login & Register inputs */
+.login-input:hover:not(:disabled):not(:focus),
+.login-password-input:hover:not(:disabled):not(:focus),
+.register-input:hover:not(:disabled):not(:focus),
+.register-password-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Forgot Password & Create New Password inputs */
+.forgot-password-input:hover:not(:disabled):not(:focus),
+.create-password-password-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Instructor password inputs */
+.instructor-password-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Student password inputs */
+.student-password-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Profile inputs */
+.modern-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Modern form inputs */
+.form-input-modern:hover:not(:disabled):not(:focus),
+.form-textarea-modern:hover:not(:disabled):not(:focus),
+.form-control-modern:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Search inputs */
+.modern-search-input:hover:not(:disabled):not(:focus),
+.qa-search-input:hover:not(:disabled):not(:focus),
+.form-control-search:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Curriculum form controls */
+.curriculum-form-control:hover:not(:disabled):not(:focus),
+.curriculum-form-select:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Message textarea */
+.message-textarea-qa:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Admin form inputs */
+.form-input-modern:hover:not(:disabled):not(:focus),
+.form-select-modern:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   TEXTAREA SPECIFIC HOVER STYLES
+   ============================================ */
+
+.modern-textarea:hover:not(:disabled):not(:focus),
+textarea.form-control:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   SELECT DROPDOWN HOVER STYLES
+   ============================================ */
+
+select.form-control:hover:not(:disabled):not(:focus),
+select.form-select:hover:not(:disabled):not(:focus),
+.form-select-modern:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   FILE INPUT HOVER STYLES
+   ============================================ */
+
+.modern-file-input:hover:not(:disabled),
+input[type="file"].form-control:hover:not(:disabled) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   VALIDATION STATE HOVER OVERRIDES
+   ============================================ */
+
+/* Valid state hover */
+input.is-valid:hover:not(:disabled):not(:focus),
+select.is-valid:hover:not(:disabled):not(:focus),
+textarea.is-valid:hover:not(:disabled):not(:focus),
+.form-control.is-valid:hover:not(:disabled):not(:focus) {
+    border-color: #198754 !important;
+    background-color: rgba(25, 135, 84, 0.05) !important;
+}
+
+/* Invalid state hover */
+input.is-invalid:hover:not(:disabled):not(:focus),
+select.is-invalid:hover:not(:disabled):not(:focus),
+textarea.is-invalid:hover:not(:disabled):not(:focus),
+.form-control.is-invalid:hover:not(:disabled):not(:focus) {
+    border-color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.05) !important;
+}
+
+/* ============================================
+   DISABLED STATE (NO HOVER EFFECT)
+   ============================================ */
+
+input:disabled,
+select:disabled,
+textarea:disabled,
+.form-control:disabled,
+.form-select:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+/* ============================================
+   FOCUS STATE (ALWAYS TAKES PRIORITY)
+   ============================================ */
+
+/* Ensure focus styles are always visible over hover */
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus,
+.form-select:focus {
+    z-index: 2 !important;
+}
+
+/* ============================================
+   CHECKBOX & RADIO HOVER STYLES
+   ============================================ */
+
+input[type="checkbox"]:hover:not(:disabled),
+input[type="radio"]:hover:not(:disabled) {
+    cursor: pointer !important;
+    transform: scale(1.05) !important;
+    transition: transform 0.2s ease-in-out !important;
+}
+
+.form-check-input:hover:not(:disabled) {
+    cursor: pointer !important;
+    transform: scale(1.05) !important;
+    transition: transform 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   RANGE INPUT HOVER STYLES
+   ============================================ */
+
+input[type="range"]:hover:not(:disabled) {
+    cursor: pointer !important;
+}
+
+input[type="range"]:hover:not(:disabled)::-webkit-slider-thumb {
+    transform: scale(1.1) !important;
+    transition: transform 0.2s ease-in-out !important;
+}
+
+input[type="range"]:hover:not(:disabled)::-moz-range-thumb {
+    transform: scale(1.1) !important;
+    transition: transform 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   COURSE QUIZ SPECIFIC INPUTS
+   ============================================ */
+
+.quiz-input:hover:not(:disabled):not(:focus),
+.choice-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   SMOOTH CURSOR TRANSITIONS
+   ============================================ */
+
+input,
+select,
+textarea,
+.form-control,
+.form-select {
+    cursor: text !important;
+}
+
+input[type="file"],
+select,
+.form-select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"],
+button {
+    cursor: pointer !important;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled,
+button:disabled {
+    cursor: not-allowed !important;
+}
+
+/* ============================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================ */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    input:hover:not(:disabled):not(:focus),
+    select:hover:not(:disabled):not(:focus),
+    textarea:hover:not(:disabled):not(:focus) {
+        border-width: 3px !important;
+        border-color: #495057 !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    input:hover,
+    select:hover,
+    textarea:hover,
+    .form-control:hover,
+    .form-select:hover {
+        transition: none !important;
+    }
+}
+
+/* ============================================
+   MOBILE TOUCH DEVICE OPTIMIZATION
+   ============================================ */
+
+@media (hover: none) and (pointer: coarse) {
+    /* On touch devices, show hover effect on tap/touch */
+    input:active:not(:disabled):not(:focus),
+    select:active:not(:disabled):not(:focus),
+    textarea:active:not(:disabled):not(:focus) {
+        border-color: #adb5bd !important;
+        background-color: #f8f9fa !important;
+    }
+}
+
+/* ============================================
+   SPECIFIC COMPONENT OVERRIDES
+   ============================================ */
+
+/* CKEditor container hover */
+.ckeditor-container:hover:not(.focused) {
+    border-color: #adb5bd !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Message form hover */
+.message-form-qa:hover:not(:focus-within) {
+    border-color: #adb5bd !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   ADDITIONAL FORM ELEMENT HOVERS
+   ============================================ */
+
+/* Color picker */
+input[type="color"]:hover:not(:disabled) {
+    cursor: pointer !important;
+    transform: scale(1.05) !important;
+    transition: transform 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   SPECIFIC PAGE INPUT CORRECTIONS
+   ============================================ */
+
+/* Dashboard search bars */
+.dashboard-search-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Course filter inputs */
+.filter-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Modal form inputs */
+.modal input:hover:not(:disabled):not(:focus),
+.modal select:hover:not(:disabled):not(:focus),
+.modal textarea:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* ============================================
+   ENSURE PROPER Z-INDEX STACKING
+   ============================================ */
+
+input:hover:not(:focus) {
+    position: relative;
+    z-index: 1;
+}
+
+input:focus {
+    position: relative;
+    z-index: 2;
+}
+
+/* ============================================
+   END OF INPUT HOVER FIX
+   ============================================ */

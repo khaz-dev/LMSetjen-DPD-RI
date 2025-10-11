@@ -207,7 +207,7 @@ function Dashboard() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5 modern-dashboard">
+            <section className="modern-dashboard">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 mt-md-4">

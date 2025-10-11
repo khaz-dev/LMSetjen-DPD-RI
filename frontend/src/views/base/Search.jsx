@@ -4,7 +4,7 @@ import { Rating } from "react-simple-star-rating";
 import Swal from "sweetalert2";
 
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+import Footer from "../partials/Footer";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { WishlistContext } from "../plugin/Context";
@@ -638,7 +638,7 @@ Best regards`;
                     </div>
                 </section>
             </div>
-        <BaseFooter />
+        <Footer />
         </>
     );
 }

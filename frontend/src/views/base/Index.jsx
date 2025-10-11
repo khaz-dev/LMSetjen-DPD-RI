@@ -162,19 +162,24 @@ function Index() {
         const container = document.querySelector('.landing-page-container');
         if (!container) return;
 
+        let scrollTimeout;
         const handleScroll = () => {
-            const sections = document.querySelectorAll('.snap-section');
-            const scrollPosition = container.scrollTop + window.innerHeight / 2;
+            // Debounce scroll events for better performance
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const sections = document.querySelectorAll('.snap-section');
+                const scrollPosition = container.scrollTop + window.innerHeight / 2;
 
-            // Update active section for navigation dots
-            sections.forEach((section, index) => {
-                const sectionTop = section.offsetTop;
-                const sectionBottom = sectionTop + section.offsetHeight;
+                // Update active section for navigation dots
+                sections.forEach((section, index) => {
+                    const sectionTop = section.offsetTop;
+                    const sectionBottom = sectionTop + section.offsetHeight;
 
-                if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
-                    setActiveSection(index);
-                }
-            });
+                    if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                        setActiveSection(index);
+                    }
+                });
+            }, 50); // 50ms debounce for smooth performance
         };
         
         // Add scroll listener with passive for better performance
@@ -185,21 +190,29 @@ function Index() {
 
         return () => {
             container.removeEventListener('scroll', handleScroll);
+            clearTimeout(scrollTimeout);
         };
     }, []);
 
-    // Scroll to section
+    // Scroll to section with enhanced smooth behavior
     const scrollToSection = (index) => {
         const sections = document.querySelectorAll('.snap-section');
         if (sections[index]) {
-            sections[index].scrollIntoView({ behavior: 'smooth' });
+            sections[index].scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start', // Start alignment works better with scroll-snap
+                inline: 'nearest'
+            });
         }
     };
 
     return (
         <>
-            <BaseHeader />
-            
+            {/* Fixed Header - Always on top */}
+            <div className="landing-fixed-header">
+                <BaseHeader />
+            </div>
+
             {/* Section Navigation Indicator */}
             <div className="section-navigation">
                 {sections.map((section, index) => (
@@ -238,7 +251,7 @@ function Index() {
                                 <h1 
                                     className="display-4 fw-bold mb-4 hero-main-title"
                                 >
-                                    LMS<span className="hero-title-highlight">etjen</span> DPD RI
+                                    LMS<span className="hero-title-accent">etjen</span> DPD RI
                                 </h1>
                                 
                                 <h2 className="h3 mb-4 opacity-90">
@@ -368,7 +381,7 @@ function Index() {
             </section>
 
             {/* About DPD RI Section */}
-            <section className="py-5 about-section snap-section">
+            <section className="py-5 about-section snap-section" style={{ background: 'rgba(255,255,255,0.70)' }}>
                 <div className="container">
                     <div className="row align-items-center">
                         <div className="col-lg-6 mb-5 mb-lg-0">
@@ -476,7 +489,7 @@ function Index() {
             </section>
 
             {/* Statistics Section */}
-            <section className="py-5 statistics-section snap-section">
+            <section className="py-5 statistics-section snap-section" style={{ background: 'rgba(255,255,255,0.2)' }}>
                 <div className="container">
                     <div className="text-center mb-5">
                         <div 
@@ -775,7 +788,7 @@ function Index() {
             </section>
 
             {/* Course Categories Section */}
-            <section className="py-5 snap-section" style={{ background: 'white' }}>
+            <section className="py-5 snap-section" style={{ background: 'rgba(255,255,255,0.70)' }}>
                 <div className="container">
                     <div className="text-center mb-4">
                         <div 
@@ -930,7 +943,7 @@ function Index() {
             </section>
 
             {/* Featured Courses Section */}
-            <section id="courses-section" className="py-5 snap-section" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
+            <section id="courses-section" className="py-5 snap-section" style={{ background: 'rgba(255,255,255,0.2)' }}>
                 <div className="container">
                     <div className="text-center mb-5">
                         <div 
@@ -1244,8 +1257,7 @@ function Index() {
 
             {/* CTA Section */}
             <section className="py-5 snap-section cta-section" style={{ 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white'
+                background: 'linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%)',
             }}>
                 <div className="container">
                     <div className="row align-items-center">
@@ -1286,7 +1298,7 @@ function Index() {
             </section>
 
             {/* Testimonials Section */}
-            <section className="py-5 snap-section" style={{ background: 'white' }}>
+            <section className="py-5 snap-section" style={{ background: 'rgba(255,255,255,0.2)' }}>
                 <div className="container">
                     <div className="text-center mb-5">
                         <div 
@@ -1477,13 +1489,8 @@ function Index() {
                     </div>
                 </div>
                 
-                {/* Footer integrated into last section - Zero spacing */}
-                <div style={{ 
-                    // marginTop: '10rem',
-                    paddingTop: '10rem', 
-                    marginBottom: '0', 
-                    paddingBottom: '0' 
-                }}>
+                {/* Footer integrated into last section - No gap at bottom */}
+                <div className="footer-wrapper pt-5 mt-5">
                     <BaseFooter />
                 </div>
             </section>

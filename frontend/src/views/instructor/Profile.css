@@ -4,8 +4,9 @@
 
 /* Main Page Layout */
 .instructor-profile-page.modern-profile-page {
-    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #ebebeb 100%);
+    background: transparent;
     min-height: 100vh;
+    padding: 2rem 0;
 }
 
 /* ========================================
@@ -317,6 +318,11 @@
     font-size: 1rem;
     transition: all 0.3s ease;
     background: #fafafa;
+}
+
+.instructor-profile-page .modern-input:hover:not(:disabled):not(:focus) {
+    border-color: #adb5bd;
+    background-color: #f0f1f3;
 }
 
 .instructor-profile-page .modern-input:focus {

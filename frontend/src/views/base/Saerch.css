@@ -4,8 +4,9 @@
 
 /* Main Page Container */
 .modern-search-page {
-    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #ebebeb 100%);
+    background: transparent;
     min-height: calc(100vh - 200px);
+    margin-top: -5px;
     padding-bottom: 0rem; /* Removed bottom padding for tighter layout */
 }
 
