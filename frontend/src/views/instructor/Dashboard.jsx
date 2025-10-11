@@ -231,7 +231,7 @@ function Dashboard() {
                             {/* Enhanced Statistics Grid */}
                             <div className="row">
                                 {/* Primary Stats */}
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-4">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
                                     <div className="stat-card-enhanced" style={{'--card-accent': '#3498db', '--icon-bg': '#3498db'}}>
                                         <div className="stat-icon-enhanced">
                                             <i className="fas fa-book-open"></i>
@@ -246,7 +246,7 @@ function Dashboard() {
                                     </div>
                                 </div>
 
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-4">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
                                     <div className="stat-card-enhanced" style={{'--card-accent': '#10b981', '--icon-bg': '#10b981'}}>
                                         <div className="stat-icon-enhanced">
                                             <i className="fas fa-users"></i>
@@ -261,7 +261,7 @@ function Dashboard() {
                                     </div>
                                 </div>
 
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-4">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
                                     <div className="stat-card-enhanced" style={{'--card-accent': '#2980b9', '--icon-bg': '#2980b9'}}>
                                         <div className="stat-icon-enhanced">
                                             <i className="fas fa-star"></i>
@@ -279,7 +279,7 @@ function Dashboard() {
 
                             {/* Secondary Stats Row */}
                             <div className="row">
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-3">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-4">
                                     <div className="mini-stat-card">
                                         <div className="mini-stat-icon text-warning">
                                             <i className="fas fa-bell"></i>
@@ -291,7 +291,7 @@ function Dashboard() {
                                     </div>
                                 </div>
 
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-3">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-4">
                                     <div className="mini-stat-card">
                                         <div className="mini-stat-icon text-info">
                                             <i className="fas fa-question-circle"></i>
@@ -303,7 +303,7 @@ function Dashboard() {
                                     </div>
                                 </div>
 
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-3">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-4">
                                     <div className="mini-stat-card">
                                         <div className="mini-stat-icon" >
                                             <i className="fas fa-chart-line"></i>

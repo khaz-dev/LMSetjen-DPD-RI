@@ -4,6 +4,7 @@ import moment from "moment";
 import { ProfileContext } from "../../plugin/Context";
 import UserData from "../../plugin/UserData";
 import useAxios from "../../../utils/useAxios";
+import { isValidImageUrl } from "../../../utils/imageUtils";
 import "./Header.css";
 
 function Header() {
@@ -88,6 +89,14 @@ function Header() {
     if (userData?.user_id) {
       setImageError(false); // Reset image error state when profile changes
       
+      // Force refresh if profile context has been updated (e.g., from Profile page)
+      // This happens when user updates their profile
+      if (profile && profile.image) {
+        // Profile context was updated, clear cache and use new data
+        setLastFetchTime(Date.now());
+        return;
+      }
+      
       // Only fetch if profile context is empty OR we're on profile page
       if (!profile || location.pathname === '/student/profile/') {
         fetchProfile();
@@ -95,7 +104,14 @@ function Header() {
     } else {
       setError("User not authenticated");
     }
-  }, [userData?.user_id, location.pathname]); // React to route changes
+  }, [userData?.user_id, location.pathname, profile]); // Added profile to dependencies
+
+  // Separate effect to reset image error when profile image URL changes
+  useEffect(() => {
+    if (profile?.image) {
+      setImageError(false); // Reset image error when new image is available
+    }
+  }, [profile?.image]); // React specifically to image URL changes
 
   // Calculate profile-related info
   const getMemberSince = () => {
@@ -127,13 +143,18 @@ function Header() {
                         <span className="visually-hidden">Loading...</span>
                       </div>
                     </div>
-                  ) : profile?.image && profile.image !== "/media/default-user.jpg" && profile.image !== "default-user.jpg" && !imageError ? (
+                  ) : (isValidImageUrl(profile?.image) && !imageError) ? (
                     <img
+                      key={profile.image} // Force re-render when image URL changes
                       src={profile.image}
                       className="profile-avatar"
                       alt={`${profile.full_name || 'User'} avatar`}
                       onError={() => {
+                        console.warn('[Header] Profile image failed to load:', profile.image);
                         setImageError(true);
+                      }}
+                      onLoad={() => {
+                        console.log('[Header] Profile image loaded successfully:', profile.image);
                       }}
                     />
                   ) : (

@@ -3,13 +3,13 @@ import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
-import ReactCrop from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
+import ProfilePictureCropModal from "../../components/ProfilePictureCropModal/ProfilePictureCropModal";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { ProfileContext } from "../plugin/Context";
+import { getValidProfileImageUrl } from "../../utils/imageUtils";
 import "./Profile.css";
 
 // Constants
@@ -192,7 +192,11 @@ function Profile() {
             const profileRes = await useAxios.get(`user/profile/${UserData()?.user_id}/`);
             setProfile(profileRes.data);
             setProfileData(profileRes.data);
-            setUiState(prev => ({ ...prev, imagePreview: profileRes.data.image }));
+            
+            // ✅ FIX: Validate image URL before setting (handles null, invalid strings)
+            const validImageUrl = getValidProfileImageUrl(profileRes.data.image, "");
+            setUiState(prev => ({ ...prev, imagePreview: validImageUrl }));
+            
             setImageState(prev => ({
                 ...prev,
                 fileName: extractFileName(profileRes.data.image)
@@ -226,14 +230,30 @@ function Profile() {
                     "Content-Type": "multipart/form-data",
                 },
             });
+            
+            // ✅ CRITICAL: Update context IMMEDIATELY with fresh data
             setProfile(updateRes.data);
+            
+            // ✅ Update local state with fresh data
+            setProfileData(updateRes.data);
+            
+            // ✅ Update image preview with the new image URL
+            const validImageUrl = getValidProfileImageUrl(updateRes.data.image, "");
+            setUiState(prev => ({ ...prev, imagePreview: validImageUrl }));
+            
+            // ✅ Update filename
+            setImageState(prev => ({
+                ...prev,
+                fileName: extractFileName(updateRes.data.image),
+                croppedBlob: null // Clear cropped blob after successful upload
+            }));
             
             Toast().fire({
                 icon: "success",
                 title: VALIDATION_MESSAGES.PROFILE_UPDATE_SUCCESS
             });
 
-            fetchProfile();
+            // Note: fetchProfile() call removed - we already have fresh data from updateRes
             
         } catch (error) {
             console.error("Error updating profile:", error);
@@ -625,108 +645,11 @@ function Profile() {
         </div>
     );
 
-    const renderCropModal = () => (
-        <div className="crop-modal" onClick={handleCropCancel}>
-            <div className="crop-container" onClick={(e) => e.stopPropagation()}>
-                <h4 className="crop-title">
-                    <i className="fas fa-crop-alt crop-title-icon"></i>
-                    Crop Your Profile Picture
-                </h4>
-                <p className="crop-description">
-                    Drag to reposition, resize corners to adjust the crop area. The circular preview shows how your profile picture will look.
-                </p>
-                
-                <div className="crop-image-container">
-                    <ReactCrop
-                        crop={cropState.crop}
-                        onChange={(c) => {
-                            if (c.width && c.height) {
-                                setCropState(prev => ({ ...prev, crop: c }));
-                            }
-                        }}
-                        onComplete={(c) => {
-                            if (c.width && c.height) {
-                                setCropState(prev => ({ ...prev, completedCrop: c }));
-                            }
-                        }}
-                        aspect={1}
-                        circularCrop
-                        minWidth={50}
-                        minHeight={50}
-                        keepSelection
-                    >
-                        <img
-                            ref={imgRef}
-                            src={imageState.selected}
-                            alt="Crop preview"
-                            style={{
-                                maxWidth: '100%',
-                                maxHeight: '70vh',
-                                width: 'auto',
-                                height: 'auto',
-                                display: 'block'
-                            }}
-                            onLoad={(e) => {
-                                // Calculate centered crop area based on actual rendered dimensions
-                                const img = e.currentTarget;
-                                const { width, height } = img;
-                                const size = Math.min(width, height);
-                                const cropSize = size * 0.7;
-                                const x = (width - cropSize) / 2;
-                                const y = (height - cropSize) / 2;
-                                
-                                const initialCrop = {
-                                    unit: 'px',
-                                    width: cropSize,
-                                    height: cropSize,
-                                    x: x,
-                                    y: y
-                                };
-                                
-                                setCropState({
-                                    crop: initialCrop,
-                                    completedCrop: initialCrop
-                                });
-                            }}
-                        />
-                    </ReactCrop>
-                </div>
-                
-                <div className="crop-info-text">
-                    <small>
-                        <i className="fas fa-info-circle me-1"></i>
-                        Tip: Drag the circle to move, drag corners to resize. You can move the crop area anywhere on the image.
-                    </small>
-                </div>
-                
-                <div className="crop-buttons">
-                    <button 
-                        type="button"
-                        className="btn btn-crop-cancel"
-                        onClick={handleCropCancel}
-                    >
-                        <i className="fas fa-times me-2"></i>
-                        Cancel
-                    </button>
-                    <button 
-                        type="button"
-                        className="btn btn-modern"
-                        onClick={handleCropComplete}
-                        disabled={!cropState.completedCrop || !cropState.completedCrop.width || !cropState.completedCrop.height}
-                    >
-                        <i className="fas fa-check me-2"></i>
-                        Apply Crop
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-
     return (
         <>
             <BaseHeader />
 
-            <section className="student-profile-page modern-profile-page pt-5 pb-5">
+            <section className="student-profile-page modern-profile-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 mt-md-4">
@@ -735,7 +658,7 @@ function Profile() {
                             {/* Modern Header Section */}
                             <div className="modern-header-section">
                                 <div className="header-decoration"></div>
-                                <div className="header-content">
+                                <div className="student-header-content">
                                     <h1 className="page-header-title">
                                         <i className="fas fa-user-edit page-header-title-icon"></i>
                                         Profile Settings
@@ -771,8 +694,41 @@ function Profile() {
                 </div>
             </section>
 
-            {/* Image Cropping Modal */}
-            {uiState.showCropModal && imageState.selected && renderCropModal()}
+            {/* Image Cropping Modal - Reusable Component */}
+            <ProfilePictureCropModal
+                show={uiState.showCropModal}
+                imageSrc={imageState.selected}
+                crop={cropState.crop}
+                completedCrop={cropState.completedCrop}
+                onCropChange={(c) => setCropState(prev => ({ ...prev, crop: c }))}
+                onCropComplete={(c) => setCropState(prev => ({ ...prev, completedCrop: c }))}
+                onApplyCrop={handleCropComplete}
+                onCancel={handleCropCancel}
+                imgRef={imgRef}
+                onImageLoad={(e) => {
+                    // Calculate centered crop area based on actual rendered dimensions
+                    const img = e.currentTarget;
+                    const { width, height } = img;
+                    const size = Math.min(width, height);
+                    const cropSize = size * 0.7;
+                    const x = (width - cropSize) / 2;
+                    const y = (height - cropSize) / 2;
+                    
+                    const initialCrop = {
+                        unit: 'px',
+                        width: cropSize,
+                        height: cropSize,
+                        x: x,
+                        y: y
+                    };
+                    
+                    setCropState({
+                        crop: initialCrop,
+                        completedCrop: initialCrop
+                    });
+                }}
+                variant="student"
+            />
 
             <Footer />
         </>

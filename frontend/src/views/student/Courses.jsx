@@ -53,7 +53,7 @@ function Courses() {
         <>
             <BaseHeader />
 
-            <section className="modern-course-page pt-5 pb-5">
+            <section className="modern-course-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 mt-md-4">
@@ -242,8 +242,8 @@ function Courses() {
                                             <p className="text-muted mb-4">
                                                 You haven't enrolled in any courses yet. Start your learning journey today!
                                             </p>
-                                            <Link to="/" className="btn btn-modern">
-                                                <i className="fas fa-search me-2"></i>
+                                            <Link to="/search" className="btn btn-modern-primary">
+                                                <i className="fas fa-search me-2" style={{ verticalAlign: 'middle', fontSize: '1rem', lineHeight: 1 }}></i>
                                                 Browse Courses
                                             </Link>
                                         </div>

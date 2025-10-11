@@ -87,7 +87,7 @@ function Wishlist() {
         <>
             <BaseHeader />
 
-            <section className="modern-wishlist-page pt-5 pb-5">
+            <section className="modern-wishlist-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 mt-md-4">

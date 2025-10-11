@@ -1,6 +1,7 @@
 .modern-course-page {
-    background: linear-gradient(135deg, #fafafa 0%, #f8f4ff 50%, #f0ebff 100%) !important;
     min-height: 100vh;
+    background: transparent;
+    padding: var(--space-xl) 0;
 }
 
 .page-header-card {
@@ -8,7 +9,7 @@
     border-radius: 20px;
     color: white !important;
     padding: 2.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem !important;
     position: relative;
     overflow: hidden;
     box-shadow: 0 15px 35px var(--theme-shadow-color) !important;
@@ -37,7 +38,7 @@
     padding: 1.5rem;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
     border: 1px solid #e9ecef;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem !important;
 }
 
 .search-input {
@@ -253,6 +254,12 @@
     display: flex;
     gap: 0.75rem;
     align-items: center;
+}
+
+.btn .fa-search {
+    vertical-align: middle;
+    font-size: 1rem;
+    line-height: 1;
 }
 
 .btn-continue-course {

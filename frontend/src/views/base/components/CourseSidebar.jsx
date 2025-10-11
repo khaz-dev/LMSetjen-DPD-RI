@@ -177,7 +177,8 @@ const CourseSidebar = ({
 
     // Check if user is instructor and owns this course
     const isInstructorCourse = userData?.teacher_id && course?.teacher?.id === userData.teacher_id;
-    const isInstructor = userData?.teacher_id !== undefined;
+    // Fix: Check if teacher_id is a valid positive number (students have teacher_id = 0)
+    const isInstructor = userData?.teacher_id && userData.teacher_id > 0;
 
     // ✅ ALL HARDCODED DATA REMOVED - Now using backend data:
     // - course.features (replaces courseFeatures)

@@ -209,6 +209,45 @@ export const getImageSource = ({ primary, secondary, fallback }) => {
   return getFirstValidImageUrl(primary, secondary, fallback);
 };
 
+/**
+ * Get valid profile image URL with comprehensive validation
+ * Specifically for user profile/avatar images from backend
+ * @param {*} imageUrl - Image URL from backend (can be null, string, or invalid)
+ * @param {string} fallback - Fallback value (default: empty string for default avatar)
+ * @returns {string} Valid image URL or fallback
+ */
+export const getValidProfileImageUrl = (imageUrl, fallback = "") => {
+  // Handle null/undefined
+  if (imageUrl == null) {
+    return fallback;
+  }
+  
+  // Type check
+  if (typeof imageUrl !== 'string') {
+    return fallback;
+  }
+  
+  // Trim and check empty
+  const trimmedUrl = imageUrl.trim();
+  if (trimmedUrl === '') {
+    return fallback;
+  }
+  
+  // Check against invalid placeholders
+  if (INVALID_PLACEHOLDERS.includes(trimmedUrl) ||
+      trimmedUrl === '/media/default-user.jpg' ||
+      trimmedUrl === 'media/default-user.jpg') {
+    return fallback;
+  }
+  
+  // Validate URL pattern
+  if (isValidImageUrl(trimmedUrl)) {
+    return trimmedUrl;
+  }
+  
+  return fallback;
+};
+
 export default {
   isValidImageUrl,
   getSafeImageUrl,
@@ -219,5 +258,7 @@ export default {
   getFallbackIcon,
   createImageErrorHandler,
   getImageSource,
+  getValidProfileImageUrl,
   FALLBACK_ICONS,
+  INVALID_PLACEHOLDERS,
 };

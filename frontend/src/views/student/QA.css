@@ -1382,13 +1382,11 @@
         height: 50px;
     }
 }
+/* ===== MODERN Q&A PAGE STYLES ===== */
 .modern-qa-page {
-    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #ebebeb 100%);
     min-height: 100vh;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+    background: transparent !important;
+    padding: var(--space-xl) 0;
 }
 
 /* Conversation Card Styles */

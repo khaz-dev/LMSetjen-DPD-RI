@@ -3,8 +3,7 @@ import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
-import ReactCrop from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
+import ProfilePictureCropModal from "../../components/ProfilePictureCropModal/ProfilePictureCropModal";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
@@ -327,6 +326,13 @@ function Profile() {
         const selectedFile = event.target.files[0];
         if (!selectedFile) return;
         
+        // Clean up previous object URL to prevent memory leaks
+        if (imageState.selected) {
+            URL.revokeObjectURL(imageState.selected);
+        }
+        
+        const newImageUrl = URL.createObjectURL(selectedFile);
+        
         setProfileData(prev => ({
             ...prev,
             [event.target.name]: selectedFile,
@@ -335,8 +341,15 @@ function Profile() {
         setImageState(prev => ({
             ...prev,
             fileName: selectedFile.name,
-            selected: URL.createObjectURL(selectedFile)
+            selected: newImageUrl
         }));
+        
+        // Reset crop state for new image
+        setCropState({
+            crop: CROP_CONFIG.INITIAL,
+            completedCrop: null
+        });
+        
         setUiState(prev => ({ ...prev, showCropModal: true }));
     };
 
@@ -397,12 +410,28 @@ function Profile() {
     };
 
     const handleCropCancel = () => {
+        // Clean up object URL to prevent memory leaks
+        if (imageState.selected) {
+            URL.revokeObjectURL(imageState.selected);
+        }
+        
+        // Reset all crop-related states
         setUiState(prev => ({ ...prev, showCropModal: false }));
-        setImageState(prev => ({
-            ...prev,
+        setImageState({
             selected: null,
+            croppedBlob: null,
             fileName: ""
-        }));
+        });
+        setCropState({
+            crop: CROP_CONFIG.INITIAL,
+            completedCrop: null
+        });
+        
+        // Reset file input to allow selecting the same file again
+        const fileInput = document.getElementById('profileImage');
+        if (fileInput) {
+            fileInput.value = '';
+        }
     };
 
     // Effects
@@ -592,7 +621,7 @@ function Profile() {
                 <small className="text-muted ms-2">(Optional)</small>
             </h4>
             
-            <div className="row g-4">
+            <div className="row g-3">
                 {renderSocialField("facebook", "Facebook", "fab fa-facebook", "https://facebook.com/yourprofile", "facebook")}
                 {renderSocialField("twitter", "Twitter", "fab fa-twitter", "https://twitter.com/yourhandle", "twitter")}
                 {renderSocialField("linkedin", "LinkedIn", "fab fa-linkedin", "https://linkedin.com/in/yourprofile", "linkedin")}
@@ -630,57 +659,6 @@ function Profile() {
         </div>
     );
 
-    const renderCropModal = () => (
-        <div className="crop-modal">
-            <div className="crop-container">
-                <h4 className="crop-title">
-                    <i className="fas fa-crop-alt crop-title-icon"></i>
-                    Crop Your Profile Picture
-                </h4>
-                <p className="crop-description">
-                    Adjust the crop area to select the part of the image you want to use as your profile picture.
-                </p>
-                
-                <div className="crop-image-container">
-                    <ReactCrop
-                        crop={cropState.crop}
-                        onChange={(c) => setCropState(prev => ({ ...prev, crop: c }))}
-                        onComplete={(c) => setCropState(prev => ({ ...prev, completedCrop: c }))}
-                        aspect={1}
-                        circularCrop
-                    >
-                        <img
-                            ref={imgRef}
-                            src={imageState.selected}
-                            alt="Crop me"
-                            className="crop-image"
-                        />
-                    </ReactCrop>
-                </div>
-                
-                <div className="crop-buttons">
-                    <button 
-                        type="button"
-                        className="btn btn-crop-cancel"
-                        onClick={handleCropCancel}
-                    >
-                        <i className="fas fa-times me-2"></i>
-                        Cancel
-                    </button>
-                    <button 
-                        type="button"
-                        className="btn btn-modern"
-                        onClick={handleCropComplete}
-                        disabled={!cropState.completedCrop}
-                    >
-                        <i className="fas fa-check me-2"></i>
-                        Apply Crop
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-
     return (
         <>
             <BaseHeader />
@@ -694,7 +672,7 @@ function Profile() {
                             {/* Modern Header Section */}
                             <div className="modern-header-section">
                                 <div className="header-decoration"></div>
-                                <div className="header-content">
+                                <div className="instructor-header-content">
                                     <h1 className="page-header-title">
                                         <i className="fas fa-user-edit page-header-title-icon"></i>
                                         Profile Settings
@@ -727,8 +705,41 @@ function Profile() {
                 </div>
             </section>
 
-            {/* Image Cropping Modal */}
-            {uiState.showCropModal && imageState.selected && renderCropModal()}
+            {/* Image Cropping Modal - Reusable Component */}
+            <ProfilePictureCropModal
+                show={uiState.showCropModal}
+                imageSrc={imageState.selected}
+                crop={cropState.crop}
+                completedCrop={cropState.completedCrop}
+                onCropChange={(c) => setCropState(prev => ({ ...prev, crop: c }))}
+                onCropComplete={(c) => setCropState(prev => ({ ...prev, completedCrop: c }))}
+                onApplyCrop={handleCropComplete}
+                onCancel={handleCropCancel}
+                imgRef={imgRef}
+                onImageLoad={(e) => {
+                    // Calculate centered crop area based on actual rendered dimensions
+                    const img = e.currentTarget;
+                    const { width, height } = img;
+                    const size = Math.min(width, height);
+                    const cropSize = size * 0.7;
+                    const x = (width - cropSize) / 2;
+                    const y = (height - cropSize) / 2;
+                    
+                    const initialCrop = {
+                        unit: 'px',
+                        width: cropSize,
+                        height: cropSize,
+                        x: x,
+                        y: y
+                    };
+                    
+                    setCropState({
+                        crop: initialCrop,
+                        completedCrop: initialCrop
+                    });
+                }}
+                variant="instructor"
+            />
 
             <Footer />
         </>

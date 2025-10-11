@@ -159,7 +159,7 @@ function Dashboard() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5 dashboard-page">
+            <section className="dashboard-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 mt-md-4">
@@ -311,7 +311,7 @@ function Dashboard() {
                             <div className="row">
                                 {/* Recent Activity */}
                                 <div className="col-lg-4 mb-4">
-                                    <div className="dashboard-card h-50">
+                                    <div className="dashboard-card">
                                         <div className="card-header bg-transparent border-0">
                                             <h5 className="mb-0 fw-bold">
                                                 <i className="fas fa-clock"></i>

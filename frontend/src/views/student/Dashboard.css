@@ -2,8 +2,9 @@
 
 /* Page Background */
 .dashboard-page {
-    background: linear-gradient(135deg, #fafafa 0%, #f8f4ff 50%, #f0ebff 100%);
     min-height: 100vh;
+  background: transparent;
+  padding: var(--space-xl) 0;
 }
 
 /* Dashboard Cards */
