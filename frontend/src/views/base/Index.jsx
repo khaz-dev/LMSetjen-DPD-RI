@@ -827,7 +827,7 @@ function Index() {
                             categories.slice(0, 8).map((category, index) => (
                                 <div key={category.id} className="col-lg-3 col-md-6">
                                     <Link 
-                                        to={`/course-list?category=${category.slug}`}
+                                        to={`/search/?category=${encodeURIComponent(category.title)}`}
                                         className="text-decoration-none"
                                     >
                                         <div 
@@ -836,7 +836,16 @@ function Index() {
                                                 borderRadius: '16px',
                                                 background: 'white',
                                                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                                transition: 'all 0.3s ease'
+                                                transition: 'all 0.3s ease',
+                                                cursor: 'pointer'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.transform = 'translateY(-5px)';
+                                                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.12)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.transform = 'translateY(0)';
+                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.06)';
                                             }}
                                         >
                                             <div className="card-body p-3 text-center">
@@ -903,7 +912,7 @@ function Index() {
                     {categories.length > 6 && (
                         <div className="text-center mt-5">
                             <Link 
-                                to="/course-list"
+                                to="/search/"
                                 className="btn btn-lg px-4"
                                 style={{
                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -1216,7 +1225,7 @@ function Index() {
                     {courses.length > 6 && (
                         <div className="text-center mt-5">
                             <Link 
-                                to="/course-list"
+                                to="/search/"
                                 className="btn btn-lg px-4"
                                 style={{
                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',

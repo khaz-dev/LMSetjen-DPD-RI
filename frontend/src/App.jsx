@@ -14,6 +14,7 @@ import "./views/plugin/toast-mobile.css";
 
 import MainWrapper from "./layouts/MainWrapper";
 import PrivateRoute from "./layouts/PrivateRoute";
+import RoleRoute from "./layouts/RoleRoute";
 
 import Register from "../src/views/auth/Register";
 import Login from "../src/views/auth/Login";
@@ -23,6 +24,7 @@ import CreateNewPassword from "./views/auth/CreateNewPassword";
 import Index from "./views/base/Index";
 import CourseDetail from "./views/base/CourseDetail";
 import Search from "./views/base/Search";
+import NotFound from "./views/base/NotFound";
 
 import StudentDashboard from "./views/student/Dashboard";
 import StudentCourses from "./views/student/Courses";
@@ -114,7 +116,9 @@ function App() {
                                 path="/student/dashboard/"
                                 element={
                                     <PrivateRoute>
-                                        <StudentDashboard />
+                                        <RoleRoute allowedRoles={['student']}>
+                                            <StudentDashboard />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -122,7 +126,9 @@ function App() {
                                 path="/student/courses/"
                                 element={
                                     <PrivateRoute>
-                                        <StudentCourses />
+                                        <RoleRoute allowedRoles={['student']}>
+                                            <StudentCourses />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -130,7 +136,9 @@ function App() {
                                 path="/student/courses/:enrollment_id/"
                                 element={
                                     <PrivateRoute>
-                                        <StudentCourseDetail />
+                                        <RoleRoute allowedRoles={['student']}>
+                                            <StudentCourseDetail />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -138,7 +146,9 @@ function App() {
                                 path="/student/wishlist/"
                                 element={
                                     <PrivateRoute>
-                                        <Wishlist />
+                                        <RoleRoute allowedRoles={['student']}>
+                                            <Wishlist />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -146,7 +156,9 @@ function App() {
                                 path="/student/question-answer/"
                                 element={
                                     <PrivateRoute>
-                                        <StudentQA />
+                                        <RoleRoute allowedRoles={['student']}>
+                                            <StudentQA />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -154,7 +166,9 @@ function App() {
                                 path="/student/profile/"
                                 element={
                                     <PrivateRoute>
-                                        <StudentProfile />
+                                        <RoleRoute allowedRoles={['student']}>
+                                            <StudentProfile />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -162,7 +176,9 @@ function App() {
                                 path="/student/change-password/"
                                 element={
                                     <PrivateRoute>
-                                        <StudentChangePassword />
+                                        <RoleRoute allowedRoles={['student']}>
+                                            <StudentChangePassword />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -173,7 +189,9 @@ function App() {
                                 path="/instructor/dashboard/"
                                 element={
                                     <PrivateRoute>
-                                        <Dashboard />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <Dashboard />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -182,7 +200,9 @@ function App() {
                                 path="/instructor/courses/"
                                 element={
                                     <PrivateRoute>
-                                        <Courses />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <Courses />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -190,7 +210,9 @@ function App() {
                                 path="/instructor/reviews/"
                                 element={
                                     <PrivateRoute>
-                                        <Review />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <Review />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -198,7 +220,9 @@ function App() {
                                 path="/instructor/students/"
                                 element={
                                     <PrivateRoute>
-                                        <Students />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <Students />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -206,7 +230,9 @@ function App() {
                                 path="/instructor/notifications/"
                                 element={
                                     <PrivateRoute>
-                                        <TeacherNotification />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <TeacherNotification />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -214,7 +240,9 @@ function App() {
                                 path="/instructor/question-answer/"
                                 element={
                                     <PrivateRoute>
-                                        <QA />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <QA />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -222,7 +250,9 @@ function App() {
                                 path="/instructor/change-password/"
                                 element={
                                     <PrivateRoute>
-                                        <ChangePassword />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <ChangePassword />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -230,7 +260,9 @@ function App() {
                                 path="/instructor/profile/"
                                 element={
                                     <PrivateRoute>
-                                        <Profile />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <Profile />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -238,7 +270,9 @@ function App() {
                                 path="/instructor/create-course/"
                                 element={
                                     <PrivateRoute>
-                                        <CourseCreate />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <CourseCreate />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -246,7 +280,9 @@ function App() {
                                 path="/instructor/edit-course/:course_id/"
                                 element={
                                     <PrivateRoute>
-                                        <CourseEdit />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <CourseEdit />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -254,7 +290,9 @@ function App() {
                                 path="/instructor/edit-course/:course_id/curriculum/"
                                 element={
                                     <PrivateRoute>
-                                        <CourseEditCurriculum />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <CourseEditCurriculum />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -262,7 +300,9 @@ function App() {
                                 path="/instructor/edit-course/:course_id/quiz/"
                                 element={
                                     <PrivateRoute>
-                                        <CourseQuiz />
+                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                            <CourseQuiz />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -272,7 +312,9 @@ function App() {
                                 path="/admin/dashboard/"
                                 element={
                                     <PrivateRoute>
-                                        <DashboardAdmin />
+                                        <RoleRoute allowedRoles={['admin']}>
+                                            <DashboardAdmin />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
@@ -280,10 +322,15 @@ function App() {
                                 path="/admin/users/"
                                 element={
                                     <PrivateRoute>
-                                        <UsersAdmin />
+                                        <RoleRoute allowedRoles={['admin']}>
+                                            <UsersAdmin />
+                                        </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
+
+                            {/* 404 Not Found - Must be last */}
+                            <Route path="*" element={<NotFound />} />
                         </Routes>
                     </MainWrapper>
                 </ThemeProvider>

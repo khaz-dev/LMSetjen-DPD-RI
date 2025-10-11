@@ -319,24 +319,46 @@ Best regards`;
 
     // Effects
     useEffect(() => {
-        fetchCourse();
-        if (userId) {
-            fetchWishlistItems();
-        }
+        const loadInitialData = async () => {
+            await fetchCourse();
+            if (userId) {
+                await fetchWishlistItems();
+            }
+        };
         
-        // Set initial search query from URL params
-        const searchParam = searchParams.get('search');
-        if (searchParam) {
-            setSearchQuery(searchParam);
-        }
+        loadInitialData();
     }, [userId]);
 
     useEffect(() => {
+        // Set initial search query and category from URL params
+        const searchParam = searchParams.get('search');
+        const categoryParam = searchParams.get('category');
+        
+        if (searchParam) {
+            setSearchQuery(searchParam);
+        }
+        
+        if (categoryParam && allCourses.length > 0) {
+            // Find category title from courses
+            const matchedCourse = allCourses.find(course => 
+                course.category?.title?.toLowerCase() === categoryParam.toLowerCase() ||
+                course.category?.slug?.toLowerCase() === categoryParam.toLowerCase()
+            );
+            
+            if (matchedCourse) {
+                const categoryTitle = matchedCourse.category.title;
+                setSelectedCategory(categoryTitle);
+                filterCourses(searchParam || "", categoryTitle);
+            }
+        } else if (searchParam) {
+            filterCourses(searchParam, "all");
+        }
+        
         // Focus search input when component mounts
         if (searchInputRef.current) {
             searchInputRef.current.focus();
         }
-    }, []);
+    }, [searchParams, allCourses]);
 
     return (
         <>
