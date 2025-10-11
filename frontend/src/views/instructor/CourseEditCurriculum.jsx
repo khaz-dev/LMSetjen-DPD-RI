@@ -8,6 +8,24 @@ import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import Cookie from "js-cookie";
 import Swal from "sweetalert2";
 
+// Modern drag-and-drop library (replaces react-beautiful-dnd)
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 // Local component imports
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
@@ -498,6 +516,476 @@ const SUBMIT_STATUS = {
 };
 
 /**
+ * Sortable Section Component for @dnd-kit
+ * Wraps each section to make it draggable and sortable
+ */
+function SortableSection({
+    id,
+    variant,
+    variantIndex,
+    variants,
+    moveSectionUp,
+    moveSectionDown,
+    removeCurriculumSection,
+    handleSectionChange,
+    getValidationClass,
+    validationState,
+    uiState,
+    collapsedSections,
+    toggleSectionCollapse,
+    addLesson,
+    children
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.7 : 1,
+        marginBottom: '1.5rem',
+    };
+
+    const isCollapsed = collapsedSections[variantIndex] !== false;
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`form-section-enhanced ${isDragging ? 'dragging' : ''} ${isCollapsed ? 'section-collapsed' : ''}`}
+        >
+            <div className="subsection-header-enhanced">
+                <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center gap-3">
+                        {/* Drag Handle for Section */}
+                        <div
+                            {...listeners}
+                            {...attributes}
+                            className="drag-handle drag-handle-section"
+                            title="Drag to reorder sections"
+                            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+                        >
+                            <i className="fas fa-grip-vertical"></i>
+                        </div>
+                        
+                        {/* Collapse/Expand Button */}
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-link text-white p-0"
+                            style={{ textDecoration: 'none', fontSize: '1.2rem', pointerEvents: 'auto' }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSectionCollapse(variantIndex);
+                            }}
+                        >
+                            <i className={`fas fa-chevron-${isCollapsed ? 'down' : 'up'}`}></i>
+                        </button>
+                        
+                        {/* Divider */}
+                        <div style={{ width: '1px', height: '24px', backgroundColor: 'rgba(255,255,255,0.3)' }}></div>
+                        
+                        {/* UP/DOWN Buttons for Sections */}
+                        <div className="btn-group btn-group-sm" role="group">
+                            <button
+                                type="button"
+                                className="btn btn-outline-light"
+                                onClick={() => moveSectionUp(variantIndex)}
+                                disabled={variantIndex === 0 || uiState.isSubmitting}
+                                title="Move section up"
+                                style={{ 
+                                    fontSize: '0.75rem',
+                                    padding: '2px 8px',
+                                    opacity: variantIndex === 0 ? 0.3 : 1
+                                }}
+                            >
+                                <i className="fas fa-arrow-up"></i>
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-outline-light"
+                                onClick={() => moveSectionDown(variantIndex)}
+                                disabled={variantIndex === variants.length - 1 || uiState.isSubmitting}
+                                title="Move section down"
+                                style={{ 
+                                    fontSize: '0.75rem',
+                                    padding: '2px 8px',
+                                    opacity: variantIndex === variants.length - 1 ? 0.3 : 1
+                                }}
+                            >
+                                <i className="fas fa-arrow-down"></i>
+                            </button>
+                        </div>
+                        
+                        {/* Section Badge and Title */}
+                        <div className="section-number-badge">
+                            <i className="fas fa-folder-open me-2"></i>
+                            Section {variantIndex + 1}
+                        </div>
+                        <h5 className="mb-0 section-title-text">
+                            {variant?.title || "Untitled Section"}
+                        </h5>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                        <span className="badge bg-light text-dark">
+                            {variant?.items?.length || 0} Lesson{(variant?.items?.length || 0) !== 1 ? 's' : ''}
+                        </span>
+                        {variants.length > 1 && (
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeCurriculumSection(variantIndex, variant?.variant_id);
+                                }}
+                                disabled={uiState.isSubmitting}
+                            >
+                                <i className="fas fa-trash me-1"></i>
+                                Delete
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Section Content - Only show if not collapsed */}
+            {!isCollapsed && (
+                <div className="subsection-content-enhanced">
+                    <div className="mb-4">
+                        <label className="form-label fw-bold">
+                            <i className="fas fa-heading me-2 text-primary"></i>
+                            Section Title
+                        </label>
+                        <input
+                            type="text"
+                            className={`curriculum-form-control ${getValidationClass(
+                                validationState.errors[`variant_${variantIndex}_title`],
+                                validationState.warnings[`variant_${variantIndex}_title`]
+                            )}`}
+                            value={variant?.title || ""}
+                            onChange={(e) => handleSectionChange(variantIndex, "title", e.target.value)}
+                            placeholder="e.g., Introduction to Programming"
+                        />
+                        {validationState.errors[`variant_${variantIndex}_title`] && (
+                            <div className="curriculum-invalid-feedback">
+                                {validationState.errors[`variant_${variantIndex}_title`]}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Lessons Container */}
+                    {children}
+
+                    <div className="text-start mt-3">
+                        <button
+                            type="button"
+                            className="btn btn-success btn-sm"
+                            onClick={() => addLesson(variantIndex)}
+                            disabled={uiState.isSubmitting}
+                        >
+                            <i className="fas fa-plus me-2"></i>
+                            Add New Lesson
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+/**
+ * Sortable Lesson Item Component for @dnd-kit
+ * Wraps each lesson to make it draggable and sortable
+ */
+function SortableLessonItem({ 
+    id, 
+    item, 
+    itemIndex, 
+    variantIndex, 
+    variant,
+    moveLessonUp, 
+    moveLessonDown, 
+    removeLesson, 
+    handleLessonChange,
+    getValidationClass,
+    validationState,
+    fileUploadStates,
+    getFileIcon,
+    getFileTypeLabel,
+    getFileCategory,
+    getFileName,
+    uiState 
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        marginBottom: '1rem',
+    };
+
+    const uploadState = fileUploadStates[`${variantIndex}_${itemIndex}`] || {};
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`curriculum-item-card-enhanced ${isDragging ? 'dragging' : ''}`}
+        >
+            <div className="curriculum-item-header-enhanced">
+                <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center gap-2">
+                        {/* Drag Handle for Lesson */}
+                        <div
+                            {...listeners}
+                            {...attributes}
+                            className="drag-handle drag-handle-lesson"
+                            title="Drag to reorder lessons"
+                            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+                        >
+                            <i className="fas fa-grip-vertical"></i>
+                        </div>
+                        
+                        {/* UP/DOWN Buttons for Lessons */}
+                        <div className="btn-group btn-group-sm" role="group">
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary"
+                                onClick={() => moveLessonUp(variantIndex, itemIndex)}
+                                disabled={itemIndex === 0 || uiState.isSubmitting}
+                                title="Move lesson up"
+                                style={{ 
+                                    fontSize: '0.7rem',
+                                    padding: '1px 6px',
+                                    opacity: itemIndex === 0 ? 0.3 : 1
+                                }}
+                            >
+                                <i className="fas fa-arrow-up"></i>
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary"
+                                onClick={() => moveLessonDown(variantIndex, itemIndex)}
+                                disabled={itemIndex === variant.items.length - 1 || uiState.isSubmitting}
+                                title="Move lesson down"
+                                style={{ 
+                                    fontSize: '0.7rem',
+                                    padding: '1px 6px',
+                                    opacity: itemIndex === variant.items.length - 1 ? 0.3 : 1
+                                }}
+                            >
+                                <i className="fas fa-arrow-down"></i>
+                            </button>
+                        </div>
+                        
+                        <span className="lesson-number-badge">
+                            <i className="fas fa-play-circle me-1"></i>
+                            Lesson {itemIndex + 1}
+                        </span>
+                        <h6 className="mb-0 lesson-title-preview">
+                            {item?.title || "Untitled Lesson"}
+                        </h6>
+                    </div>
+                    {variant.items.length > 1 && (
+                        <button
+                            type="button"
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => removeLesson(variantIndex, itemIndex, variant?.variant_id, item?.variant_item_id)}
+                            disabled={uiState.isSubmitting}
+                        >
+                            <i className="fas fa-times me-1"></i>
+                            Remove
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="curriculum-item-content-enhanced p-3">
+                {/* Lesson Title - Full Width */}
+                <div className="mb-3">
+                    <label className="form-label fw-bold">
+                        <i className="fas fa-heading me-2 text-primary"></i>
+                        Lesson Title
+                    </label>
+                    <input
+                        type="text"
+                        className={`curriculum-form-control ${getValidationClass(
+                            validationState.errors[`item_${variantIndex}_${itemIndex}_title`],
+                            validationState.warnings[`item_${variantIndex}_${itemIndex}_title`]
+                        )}`}
+                        value={item?.title || ""}
+                        onChange={(e) => handleLessonChange(variantIndex, itemIndex, "title", e.target.value)}
+                        placeholder="e.g., Introduction to Variables"
+                    />
+                    {validationState.errors[`item_${variantIndex}_${itemIndex}_title`] && (
+                        <div className="curriculum-invalid-feedback">
+                            {validationState.errors[`item_${variantIndex}_${itemIndex}_title`]}
+                        </div>
+                    )}
+                </div>
+
+                {/* Two Column Layout: Description/Preview on Left, File Upload on Right */}
+                <div className="row">
+                    {/* Left Column: Description and Preview Checkbox */}
+                    <div className="col-md-6 mb-3">
+                        <div className="mb-3">
+                            <label className="form-label fw-bold">
+                                <i className="fas fa-align-left me-2 text-primary"></i>
+                                Lesson Description (Optional)
+                            </label>
+                            <textarea
+                                className={`curriculum-form-control ${getValidationClass(
+                                    validationState.errors[`item_${variantIndex}_${itemIndex}_description`],
+                                    validationState.warnings[`item_${variantIndex}_${itemIndex}_description`]
+                                )}`}
+                                value={item?.description || ""}
+                                onChange={(e) => handleLessonChange(variantIndex, itemIndex, "description", e.target.value)}
+                                rows="8"
+                                placeholder="Describe what students will learn in this lesson..."
+                            />
+                            {validationState.errors[`item_${variantIndex}_${itemIndex}_description`] && (
+                                <div className="curriculum-invalid-feedback">
+                                    {validationState.errors[`item_${variantIndex}_${itemIndex}_description`]}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="form-check">
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                id={`preview-${variantIndex}-${itemIndex}`}
+                                checked={item?.preview || false}
+                                onChange={(e) => handleLessonChange(variantIndex, itemIndex, "preview", e.target.checked)}
+                            />
+                            <label className="form-check-label" htmlFor={`preview-${variantIndex}-${itemIndex}`}>
+                                <i className="fas fa-eye me-2"></i>
+                                Allow preview (Students can view this lesson before enrolling)
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Right Column: File Upload and Preview */}
+                    <div className="col-md-6 mb-3">
+                        <label className="form-label fw-bold">
+                            <i className="fas fa-file-upload me-2 text-primary"></i>
+                            Lesson File
+                        </label>
+                        <input
+                            type="file"
+                            className="curriculum-form-control"
+                            onChange={(e) => handleLessonChange(variantIndex, itemIndex, "file", e.target.files[0], "file")}
+                            accept="video/*,application/pdf,.doc,.docx,.ppt,.pptx"
+                        />
+                        
+                        {uploadState.status === 'uploading' && (
+                            <div className="upload-progress mt-2">
+                                <div className="progress" style={{ height: '20px' }}>
+                                    <div 
+                                        className="progress-bar progress-bar-striped progress-bar-animated"
+                                        role="progressbar"
+                                        style={{ width: `${uploadState.progress}%` }}
+                                    >
+                                        {Math.round(uploadState.progress)}%
+                                    </div>
+                                </div>
+                                <small className="text-muted d-block mt-1">
+                                    {uploadState.message || 'Uploading...'}
+                                </small>
+                            </div>
+                        )}
+                        
+                        {item?.file && (
+                            <div className="file-preview-card">
+                                <div className="file-preview-header">
+                                    <div className={`file-preview-icon ${getFileCategory(item.file)}`}>
+                                        <i className={getFileIcon(item.file)}></i>
+                                    </div>
+                                    <div className="file-preview-info">
+                                        <div className="file-preview-name">
+                                            {getFileName(item.file)}
+                                        </div>
+                                        <div className="file-preview-meta">
+                                            <span className={`file-type-badge ${getFileCategory(item.file)}`}>
+                                                {getFileTypeLabel(item.file)}
+                                            </span>
+                                            <span className="file-meta-item">
+                                                <i className="fas fa-link"></i>
+                                                Uploaded
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Thumbnail preview for videos and images */}
+                                {(getFileCategory(item.file) === 'video' || getFileCategory(item.file) === 'image') && (
+                                    <div className="file-preview-thumbnail">
+                                        {getFileCategory(item.file) === 'video' ? (
+                                            <video 
+                                                src={item.file} 
+                                                controls 
+                                                preload="metadata"
+                                                style={{ width: '100%', maxHeight: '200px' }}
+                                            >
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        ) : (
+                                            <img 
+                                                src={item.file} 
+                                                alt="File preview"
+                                                style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
+                                            />
+                                        )}
+                                    </div>
+                                )}
+                                
+                                <div className="file-preview-actions">
+                                    <a 
+                                        href={item.file} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="btn btn-sm btn-outline-primary"
+                                    >
+                                        <i className="fas fa-external-link-alt me-1"></i>
+                                        View File
+                                    </a>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() => {
+                                            if (window.confirm('Are you sure you want to remove this file?')) {
+                                                handleLessonChange(variantIndex, itemIndex, "file", "");
+                                            }
+                                        }}
+                                        disabled={uiState.isSubmitting}
+                                    >
+                                        <i className="fas fa-trash me-1"></i>
+                                        Remove File
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
  * Course Edit Curriculum Component
  * Manages the editing of course curriculum including sections and lessons
  */
@@ -509,6 +997,18 @@ function CourseEditCurriculum() {
     // Refs for form management
     const formRef = useRef(null);
     const submitButtonRef = useRef(null);
+
+    // Configure drag sensors for @dnd-kit
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8, // 8px movement required before drag starts (prevents accidental drags)
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     // Core data state
     const [course, setCourse] = useState({ 
@@ -552,6 +1052,17 @@ function CourseEditCurriculum() {
 
     // File upload states
     const [fileUploadStates, setFileUploadStates] = useState({});
+
+    // Collapsed sections state - track which sections are collapsed (default: all collapsed)
+    const [collapsedSections, setCollapsedSections] = useState({});
+
+    // Toggle section collapse/expand
+    const toggleSectionCollapse = (variantIndex) => {
+        setCollapsedSections(prev => ({
+            ...prev,
+            [variantIndex]: !prev[variantIndex]
+        }));
+    };
 
     // Helper functions for file handling
     const getFileIcon = (fileUrl) => {
@@ -597,6 +1108,35 @@ function CourseEditCurriculum() {
         };
         
         return labelMap[extension] || 'File';
+    };
+
+    /**
+     * Get file category for styling
+     */
+    const getFileCategory = (fileUrl) => {
+        if (!fileUrl) return 'file';
+        
+        const extension = fileUrl.toLowerCase().split('.').pop().split('?')[0];
+        if (['mp4', 'avi', 'mov', 'mkv', 'webm', 'ogg'].includes(extension)) return 'video';
+        if (['pdf', 'doc', 'docx', 'txt'].includes(extension)) return 'document';
+        if (['ppt', 'pptx'].includes(extension)) return 'document';
+        if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(extension)) return 'image';
+        return 'file';
+    };
+
+    /**
+     * Get file name from URL
+     */
+    const getFileName = (fileUrl) => {
+        if (!fileUrl) return 'Unknown file';
+        try {
+            const url = new URL(fileUrl);
+            const pathParts = url.pathname.split('/');
+            return decodeURIComponent(pathParts[pathParts.length - 1]) || 'file';
+        } catch {
+            const parts = fileUrl.split('/');
+            return parts[parts.length - 1] || 'file';
+        }
     };
 
     // Enhanced validation functions
@@ -742,26 +1282,36 @@ function CourseEditCurriculum() {
             // Set variants with proper mapping from backend Variant/VariantItem structure
             const curriculumData = courseResponse.data.curriculum || [];
             
-            // ✅ FIX: Sort sections by order/sort_order field to maintain consistent ordering
+            // ✅ FIX: Sort sections by order field to maintain consistent ordering
+            // Backend now includes order field and sorts by it, but we ensure it here too
             const sortedCurriculumData = [...curriculumData].sort((a, b) => {
-                const orderA = a.order || a.sort_order || 0;
-                const orderB = b.order || b.sort_order || 0;
+                const orderA = a.order !== undefined ? a.order : 999999;
+                const orderB = b.order !== undefined ? b.order : 999999;
                 return orderA - orderB;
             });
             
-            const formattedVariants = sortedCurriculumData.length > 0 ? sortedCurriculumData.map((variant, index) => ({
-                title: variant.title || "",
-                variant_id: variant.variant_id || variant.id, // Use variant_id or fallback to id
-                order: variant.order || variant.sort_order || index, // ✅ Preserve order field
-                items: (variant.variant_items || variant.items || []).map((item, itemIndex) => ({
-                    title: item.title || "",
-                    description: item.description || "",
-                    file: item.file || "",
-                    preview: item.preview || false,
-                    variant_item_id: item.variant_item_id || item.id, // Preserve variant_item_id
-                    order: item.order || item.sort_order || itemIndex // ✅ Preserve lesson order
-                }))
-            })) : [
+            const formattedVariants = sortedCurriculumData.length > 0 ? sortedCurriculumData.map((variant, index) => {
+                // Sort variant items (lessons) by order field
+                const sortedItems = (variant.variant_items || variant.items || []).sort((a, b) => {
+                    const orderA = a.order !== undefined ? a.order : 999999;
+                    const orderB = b.order !== undefined ? b.order : 999999;
+                    return orderA - orderB;
+                });
+                
+                return {
+                    title: variant.title || "",
+                    variant_id: variant.variant_id || variant.id, // Use variant_id or fallback to id
+                    order: variant.order !== undefined ? variant.order : index, // ✅ Preserve order field
+                    items: sortedItems.map((item, itemIndex) => ({
+                        title: item.title || "",
+                        description: item.description || "",
+                        file: item.file || "",
+                        preview: item.preview || false,
+                        variant_item_id: item.variant_item_id || item.id, // Preserve variant_item_id
+                        order: item.order !== undefined ? item.order : itemIndex // ✅ Preserve lesson order
+                    }))
+                };
+            }) : [
                 {
                     title: "",
                     order: 0,
@@ -1186,43 +1736,130 @@ function CourseEditCurriculum() {
 
             // For videos and images, offer compression
             if (isVideo || isImage) {
+                // Calculate estimated compression time (rough estimate)
+                const estimatedMinutes = Math.ceil(fileSizeMB / 20); // ~20MB per minute for video
+                const timeWarning = isVideo 
+                    ? `<p class="text-warning"><i class="fas fa-clock me-1"></i> <strong>Estimated time: ${estimatedMinutes} ${estimatedMinutes === 1 ? 'minute' : 'minutes'}</strong></p>`
+                    : `<p class="text-info"><i class="fas fa-clock me-1"></i> <strong>This should only take a few seconds</strong></p>`;
+
                 const result = await Swal.fire({
                     title: 'File Size Too Large',
                     html: `
-                        <p>Your file is <strong>${fileSizeMB}MB</strong>, which exceeds the <strong>${maxSizeMB}MB</strong> limit.</p>
-                        <p>Would you like to automatically compress it before uploading?</p>
-                        <small class="text-muted">Compression may take a few moments depending on file size.</small>
+                        <div class="text-start">
+                            <p>Your ${isVideo ? 'video' : 'image'} file is <strong>${fileSizeMB}MB</strong>, which exceeds the <strong>${maxSizeMB}MB</strong> limit.</p>
+                            <p>Would you like to automatically compress it before uploading?</p>
+                            ${timeWarning}
+                            <div class="alert alert-info mt-3" style="font-size: 0.9rem;">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <strong>Note:</strong> You can cancel the compression at any time during the process.
+                            </div>
+                        </div>
                     `,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, compress it!',
-                    cancelButtonText: 'Cancel upload',
-                    allowOutsideClick: false
+                    confirmButtonText: '<i class="fas fa-compress-alt me-2"></i>Yes, compress it!',
+                    cancelButtonText: '<i class="fas fa-times me-2"></i>Cancel upload',
+                    allowOutsideClick: false,
+                    customClass: {
+                        confirmButton: 'btn btn-primary btn-lg',
+                        cancelButton: 'btn btn-secondary btn-lg'
+                    }
                 });
 
                 if (!result.isConfirmed) {
                     return false;
                 }
 
-                // Show compression progress
+                // Variable to track if compression was cancelled
+                let compressionCancelled = false;
+
+                // Show compression progress with cancel button
+                const compressionDialog = Swal.fire({
+                    title: isVideo ? 'Compressing Video...' : 'Compressing Image...',
+                    html: `
+                        <div class="text-center">
+                            <div class="mb-3">
+                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Compressing...</span>
+                                </div>
+                            </div>
+                            <p id="compression-progress" class="mb-3">Starting compression...</p>
+                            <div class="progress mb-3" style="height: 25px;">
+                                <div id="compression-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%">0%</div>
+                            </div>
+                            <small class="text-muted">This may take a few moments. Please wait...</small>
+                        </div>
+                    `,
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Running...',
+                    cancelButtonText: '<i class="fas fa-stop-circle me-2"></i>Cancel Compression',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    customClass: {
+                        cancelButton: 'btn btn-danger'
+                    },
+                    didOpen: () => {
+                        // Handle cancel button click
+                        const cancelButton = Swal.getCancelButton();
+                        cancelButton.addEventListener('click', () => {
+                            compressionCancelled = true;
+                            Swal.close();
+                            
+                            Toast().fire({
+                                icon: 'info',
+                                title: 'Compression cancelled by user',
+                            });
+
+                            // Reset file upload state
+                            setFileUploadStates(prevStates => ({
+                                ...prevStates,
+                                [fileUploadKey]: { status: 'cancelled', progress: 0 }
+                            }));
+                        });
+                    }
+                });
+
+                // Update progress UI
+                const updateCompressionProgress = (progress, message) => {
+                    const progressElement = document.getElementById('compression-progress');
+                    const progressBar = document.getElementById('compression-progress-bar');
+                    
+                    if (progressElement && progressBar) {
+                        progressElement.textContent = message || `Compressing: ${progress}%`;
+                        progressBar.style.width = `${progress}%`;
+                        progressBar.textContent = `${progress}%`;
+                    }
+                };
+
+                // Set upload state
                 setFileUploadStates(prevStates => ({
                     ...prevStates,
                     [fileUploadKey]: { 
                         status: 'compressing', 
                         progress: 0,
-                        message: 'Compressing file...'
+                        message: 'Starting compression...'
                     }
                 }));
 
                 try {
                     if (isVideo) {
-                        // Compress video
+                        // Compress video with cancel check
                         fileToUpload = await VideoCompressionUtils.compressVideo(
                             file,
                             FILE_UPLOAD_CONFIG.TARGET_COMPRESSED_SIZE,
                             (progress) => {
+                                // Check if compression was cancelled
+                                if (compressionCancelled) {
+                                    throw new Error('Compression cancelled by user');
+                                }
+
+                                updateCompressionProgress(progress, `Compressing video: ${progress}%`);
+                                
                                 setFileUploadStates(prevStates => ({
                                     ...prevStates,
                                     [fileUploadKey]: { 
@@ -1235,6 +1872,8 @@ function CourseEditCurriculum() {
                         );
                     } else if (isImage) {
                         // Compress image
+                        updateCompressionProgress(50, 'Compressing image...');
+                        
                         setFileUploadStates(prevStates => ({
                             ...prevStates,
                             [fileUploadKey]: { 
@@ -1245,7 +1884,17 @@ function CourseEditCurriculum() {
                         }));
                         
                         fileToUpload = await VideoCompressionUtils.compressImage(file, maxSize);
+                        
+                        // Check if cancelled during image compression
+                        if (compressionCancelled) {
+                            throw new Error('Compression cancelled by user');
+                        }
+
+                        updateCompressionProgress(100, 'Image compressed!');
                     }
+
+                    // Close compression dialog
+                    Swal.close();
 
                     wasCompressed = true;
                     const compressedSizeMB = Math.round(fileToUpload.size / (1024 * 1024));
@@ -1253,8 +1902,14 @@ function CourseEditCurriculum() {
 
                     Toast().fire({
                         icon: 'success',
-                        title: `File compressed successfully! (${compressionRatio}% smaller)`,
-                        timer: 3000
+                        title: `File compressed successfully!`,
+                        html: `
+                            <div>
+                                <p class="mb-1"><strong>${compressionRatio}% reduction</strong></p>
+                                <p class="mb-0"><small>From ${fileSizeMB}MB to ${compressedSizeMB}MB</small></p>
+                            </div>
+                        `,
+                        timer: 4000
                     });
 
                     // Check if compressed file still exceeds limit
@@ -1273,14 +1928,25 @@ function CourseEditCurriculum() {
                     }
 
                 } catch (compressionError) {
+                    // Close compression dialog if still open
+                    Swal.close();
+
+                    // Check if error was due to cancellation
+                    if (compressionError.message === 'Compression cancelled by user' || compressionCancelled) {
+                        return false; // User cancelled, just return
+                    }
+
                     setFileUploadStates(prevStates => ({
                         ...prevStates,
                         [fileUploadKey]: { status: 'error', progress: 0 }
                     }));
                     
+                    console.error('Compression error:', compressionError);
+                    
                     Toast().fire({
                         icon: 'error',
-                        title: 'Failed to compress file. Please try a smaller file or different format.',
+                        title: 'Compression Failed',
+                        text: 'Failed to compress file. Please try a smaller file or different format.',
                     });
                     return false;
                 }
@@ -1665,6 +2331,51 @@ function CourseEditCurriculum() {
     };
 
     /**
+     * Handle drag end event for lessons using @dnd-kit
+     */
+    const handleLessonDragEnd = (event, sectionIndex) => {
+        const { active, over } = event;
+
+        if (!over || active.id === over.id) {
+            return;
+        }
+
+        const variant = variants[sectionIndex];
+        const oldIndex = variant.items.findIndex(item => 
+            `lesson-${item.variant_item_id || `${sectionIndex}-${variant.items.indexOf(item)}`}` === active.id
+        );
+        const newIndex = variant.items.findIndex(item => 
+            `lesson-${item.variant_item_id || `${sectionIndex}-${variant.items.indexOf(item)}`}` === over.id
+        );
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+            reorderLessons(sectionIndex, oldIndex, newIndex);
+        }
+    };
+
+    /**
+     * Handle drag end event for sections using @dnd-kit
+     */
+    const handleSectionDragEnd = (event) => {
+        const { active, over } = event;
+
+        if (!over || active.id === over.id) {
+            return;
+        }
+
+        const oldIndex = variants.findIndex(variant => 
+            `section-${variant.variant_id || variants.indexOf(variant)}` === active.id
+        );
+        const newIndex = variants.findIndex(variant => 
+            `section-${variant.variant_id || variants.indexOf(variant)}` === over.id
+        );
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+            reorderSections(oldIndex, newIndex);
+        }
+    };
+
+    /**
      * Move section up in order
      */
     const moveSectionUp = (index) => {
@@ -2046,301 +2757,100 @@ function CourseEditCurriculum() {
                                     </div>
                                 )}
 
-                                
-                                {variants.map((variant, variantIndex) => {
-                                    // ✅ FIX: Use stable unique key instead of just variantIndex
-                                    // This prevents React from incorrectly re-rendering when order changes
-                                    const variantKey = variant.variant_id || `temp-variant-${variantIndex}-${variant.title?.substring(0, 10)}`;
-                                    
-                                    return (
-                                    <div key={variantKey} className="form-section-enhanced">
-                                        <div className="form-subsection-enhanced">
-                                            {/* Section Header with gradient background */}
-                                            <div className="subsection-header-enhanced">
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <div className="d-flex align-items-center gap-3">
-                                                        <div className="section-number-badge">
-                                                            <i className="fas fa-folder-open me-2"></i>
-                                                            Section {variantIndex + 1}
-                                                        </div>
-                                                        <h5 className="mb-0 section-title-text">
-                                                            {variant?.title || "Untitled Section"}
-                                                        </h5>
-                                                    </div>
-                                                    <div className="d-flex align-items-center gap-2">
-                                                        <span className="badge bg-light text-dark">
-                                                            {variant?.items?.length || 0} Lesson{(variant?.items?.length || 0) !== 1 ? 's' : ''}
-                                                        </span>
-                                                        {variants.length > 1 && (
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-sm btn-outline-danger"
-                                                                onClick={() => removeCurriculumSection(variantIndex, variant?.variant_id)}
-                                                                disabled={uiState.isSubmitting}
-                                                            >
-                                                                <i className="fas fa-trash me-1"></i>
-                                                                Delete
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="subsection-content-enhanced">
-                                                <div className="mb-4">
-                                                    <label className="form-label fw-bold">
-                                                        <i className="fas fa-heading me-2 text-primary"></i>
-                                                        Section Title
-                                                    </label>
-                                                    <input
-                                                                    type="text"
-                                                                    className={`curriculum-form-control ${getValidationClass(
-                                                                        validationState.errors[`variant_${variantIndex}_title`],
-                                                                        validationState.warnings[`variant_${variantIndex}_title`]
-                                                                    )}`}
-                                                                    value={variant?.title || ""}
-                                                                    onChange={(e) => handleSectionChange(variantIndex, "title", e.target.value)}
-                                                                    placeholder="e.g., Introduction to Programming"
-                                                                />
-                                                                {validationState.errors[`variant_${variantIndex}_title`] && (
-                                                                    <div className="curriculum-invalid-feedback">
-                                                                        {validationState.errors[`variant_${variantIndex}_title`]}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-
-                                                            {/* Lessons Container */}
-                                                            <div className="lessons-container">
-                                                                <h6 className="lessons-header">
-                                                                    <i className="fas fa-book-reader me-2"></i>
-                                                                    Lessons
-                                                                </h6>
-                                                                
-                                                            {/* Section Items */}
-                                                            {variant?.items?.map((item, itemIndex) => {
-                                                                // ✅ FIX: Use stable unique key for lessons too
-                                                                const itemKey = item.variant_item_id || `temp-item-${variantIndex}-${itemIndex}-${item.title?.substring(0, 10)}`;
-                                                                
-                                                                return (
-                                                                <div key={itemKey} className="curriculum-item-card-enhanced">
-                                                                    <div className="curriculum-item-header-enhanced">
-                                                                        <div className="d-flex align-items-center justify-content-between">
-                                                                            <div className="d-flex align-items-center gap-2">
-                                                                                <span className="lesson-number-badge">
-                                                                                    <i className="fas fa-play-circle me-1"></i>
-                                                                                    Lesson {itemIndex + 1}
-                                                                                </span>
-                                                                                <h6 className="mb-0 lesson-title-preview">
-                                                                                    {item?.title || "Untitled Lesson"}
-                                                                                </h6>
-                                                                            </div>
-                                                                            {variant.items.length > 1 && (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    className="btn btn-outline-danger btn-sm"
-                                                                                    onClick={() => removeLesson(variantIndex, itemIndex, variant?.variant_id, item?.variant_item_id)}
-                                                                                    disabled={uiState.isSubmitting}
-                                                                                >
-                                                                                    <i className="fas fa-times me-1"></i>
-                                                                                    Remove
-                                                                                </button>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="curriculum-item-body-enhanced">
-                                                                        <div className="row">
-                                                                            <div className="col-md-6 mb-3">
-                                                                                <label className="curriculum-form-label">Lesson Title</label>
-                                                                                <input
-                                                                                    type="text"
-                                                                                    className={`curriculum-form-control ${getValidationClass(
-                                                                                        validationState.errors[`item_${variantIndex}_${itemIndex}_title`],
-                                                                                        validationState.warnings[`item_${variantIndex}_${itemIndex}_title`]
-                                                                                    )}`}
-                                                                                    value={item?.title || ""}
-                                                                                    onChange={(e) => handleLessonChange(variantIndex, itemIndex, "title", e.target.value)}
-                                                                                    placeholder="Enter lesson title"
-                                                                                />
-                                                                                {validationState.errors[`item_${variantIndex}_${itemIndex}_title`] && (
-                                                                                    <div className="curriculum-invalid-feedback">
-                                                                                        {validationState.errors[`item_${variantIndex}_${itemIndex}_title`]}
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                            <div className="col-md-6 mb-3">
-                                                                                <label className="curriculum-form-label">Lesson File</label>
-                                                                                <input
-                                                                                    type="file"
-                                                                                    className="curriculum-form-control"
-                                                                                    onChange={(e) => handleLessonChange(variantIndex, itemIndex, "file", e.target.files[0], "file")}
-                                                                                    accept="video/*,.pdf,.doc,.docx,.ppt,.pptx,.txt"
-                                                                                />
-                                                                                
-                                                                                {/* Show current file name and info if uploaded */}
-                                                                                {item.file && typeof item.file === "string" && (
-                                                                                    <div className="form-text mt-2">
-                                                                                        <div className="d-flex align-items-center gap-2 p-2 border rounded bg-light">
-                                                                                            <div className="file-info">
-                                                                                                <i className={`${getFileIcon(item.file)} text-primary me-2`}></i>
-                                                                                                <span className="badge bg-primary me-2" style={{ fontWeight: 500 }}>
-                                                                                                    {getFileTypeLabel(item.file)}
-                                                                                                </span>
-                                                                                                <a
-                                                                                                    href={item.file}
-                                                                                                    target="_blank"
-                                                                                                    rel="noopener noreferrer"
-                                                                                                    className="text-primary"
-                                                                                                    style={{ textDecoration: "underline", fontWeight: 500 }}
-                                                                                                >
-                                                                                                    {item.file_name || item.file.split('/').pop().split('?')[0] || 'View File'}
-                                                                                                </a>
-                                                                                            </div>
-                                                                                            {fileUploadStates[`${variantIndex}_${itemIndex}`]?.duration && (
-                                                                                                <div className="ms-auto">
-                                                                                                    <span className="badge bg-success">
-                                                                                                        <i className="fas fa-clock me-1"></i>
-                                                                                                        {fileUploadStates[`${variantIndex}_${itemIndex}`].duration}
-                                                                                                    </span>
-                                                                                                </div>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </div>
-                                                                                )}
-
-                                                                                {fileUploadStates[`${variantIndex}_${itemIndex}`] && (
-                                                                                    <div className={`curriculum-file-status ${fileUploadStates[`${variantIndex}_${itemIndex}`].status}`}>
-                                                                                        {fileUploadStates[`${variantIndex}_${itemIndex}`].status === 'compressing' && (
-                                                                                            <>
-                                                                                                <div 
-                                                                                                    className="spinner-border spinner-border-sm text-warning" 
-                                                                                                    role="status"
-                                                                                                    style={{ 
-                                                                                                        width: '1.25rem', 
-                                                                                                        height: '1.25rem',
-                                                                                                        flexShrink: 0,
-                                                                                                        borderWidth: '0.2em'
-                                                                                                    }}
-                                                                                                >
-                                                                                                    <span className="visually-hidden">Compressing...</span>
-                                                                                                </div>
-                                                                                                <span className="text-warning fw-bold">
-                                                                                                    {fileUploadStates[`${variantIndex}_${itemIndex}`].message || 'Compressing...'}
-                                                                                                </span>
-                                                                                            </>
-                                                                                        )}
-                                                                                        {fileUploadStates[`${variantIndex}_${itemIndex}`].status === 'uploading' && (
-                                                                                            <>
-                                                                                                <div 
-                                                                                                    className="spinner-border spinner-border-sm text-primary" 
-                                                                                                    role="status"
-                                                                                                    style={{ 
-                                                                                                        width: '1.25rem', 
-                                                                                                        height: '1.25rem',
-                                                                                                        flexShrink: 0,
-                                                                                                        borderWidth: '0.2em'
-                                                                                                    }}
-                                                                                                >
-                                                                                                    <span className="visually-hidden">Uploading...</span>
-                                                                                                </div>
-                                                                                                <span>
-                                                                                                    {fileUploadStates[`${variantIndex}_${itemIndex}`].message || 
-                                                                                                     `Uploading... ${fileUploadStates[`${variantIndex}_${itemIndex}`].progress}%`
-                                                                                                    }
-                                                                                                </span>
-                                                                                            </>
-                                                                                        )}
-                                                                                        {fileUploadStates[`${variantIndex}_${itemIndex}`].status === 'success' && (
-                                                                                            <>
-                                                                                                <span className="text-success">
-                                                                                                    <i className="fas fa-check-circle me-1"></i>
-                                                                                                    Upload successful!
-                                                                                                    {fileUploadStates[`${variantIndex}_${itemIndex}`].wasCompressed && (
-                                                                                                        <span className="badge bg-success ms-2">
-                                                                                                            <i className="fas fa-compress-alt me-1"></i>
-                                                                                                            Compressed
-                                                                                                        </span>
-                                                                                                    )}
-                                                                                                </span>
-                                                                                                <a
-                                                                                                    href={fileUploadStates[`${variantIndex}_${itemIndex}`].url}
-                                                                                                    target="_blank"
-                                                                                                    rel="noopener noreferrer"
-                                                                                                    className="curriculum-preview-link ms-2"
-                                                                                                >
-                                                                                                    Preview
-                                                                                                </a>
-                                                                                            </>
-                                                                                        )}
-                                                                                        {fileUploadStates[`${variantIndex}_${itemIndex}`].status === 'error' && (
-                                                                                            <span className="text-danger">
-                                                                                                <i className="fas fa-exclamation-circle me-1"></i>
-                                                                                                Upload failed. Please try again.
-                                                                                            </span>
-                                                                                        )}
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <div className="mb-3">
-                                                                            <label className="curriculum-form-label">Lesson Description</label>
-                                                                            <textarea
-                                                                                className={`curriculum-form-control ${getValidationClass(
-                                                                                    validationState.errors[`item_${variantIndex}_${itemIndex}_description`],
-                                                                                    validationState.warnings[`item_${variantIndex}_${itemIndex}_description`]
-                                                                                )}`}
-                                                                                rows="3"
-                                                                                value={item?.description || ""}
-                                                                                onChange={(e) => handleLessonChange(variantIndex, itemIndex, "description", e.target.value)}
-                                                                                placeholder="Enter lesson description"
-                                                                            />
-                                                                            <div className="curriculum-character-count">
-                                                                                {item?.description?.length || 0} characters
-                                                                            </div>
-                                                                            {validationState.errors[`item_${variantIndex}_${itemIndex}_description`] && (
-                                                                                <div className="curriculum-invalid-feedback">
-                                                                                    {validationState.errors[`item_${variantIndex}_${itemIndex}_description`]}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-
-                                                                        <div className="curriculum-preview-settings">
-                                                                            <div className="form-check">
-                                                                                <input
-                                                                                    className="form-check-input"
-                                                                                    type="checkbox"
-                                                                                    id={`preview_${variantIndex}_${itemIndex}`}
-                                                                                    checked={item?.preview || false}
-                                                                                    onChange={(e) => handleLessonChange(variantIndex, itemIndex, "preview", e.target.checked)}
-                                                                                />
-                                                                                <label className="form-check-label" htmlFor={`preview_${variantIndex}_${itemIndex}`}>
-                                                                                    Allow preview (students can view this lesson for free)
-                                                                                </label>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            );})}
-                                                            
-                                                            </div>{/* End of lessons-container */}
-
-                                                <div className="text-start mt-3">
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-success btn-sm"
-                                                        onClick={() => addLesson(variantIndex)}
-                                                        disabled={uiState.isSubmitting}
+                                {/* Sections Container - Modern Drag and Drop with @dnd-kit */}
+                                <div className="sections-container">
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={handleSectionDragEnd}
+                                    >
+                                        <SortableContext
+                                            items={variants.map((variant, idx) => 
+                                                `section-${variant.variant_id || idx}`
+                                            )}
+                                            strategy={verticalListSortingStrategy}
+                                        >
+                                            {variants.map((variant, variantIndex) => {
+                                                const variantKey = `section-${variant.variant_id || variantIndex}`;
+                                                
+                                                return (
+                                                    <SortableSection
+                                                        key={variantKey}
+                                                        id={variantKey}
+                                                        variant={variant}
+                                                        variantIndex={variantIndex}
+                                                        variants={variants}
+                                                        moveSectionUp={moveSectionUp}
+                                                        moveSectionDown={moveSectionDown}
+                                                        removeCurriculumSection={removeCurriculumSection}
+                                                        handleSectionChange={handleSectionChange}
+                                                        getValidationClass={getValidationClass}
+                                                        validationState={validationState}
+                                                        uiState={uiState}
+                                                        collapsedSections={collapsedSections}
+                                                        toggleSectionCollapse={toggleSectionCollapse}
+                                                        addLesson={addLesson}
                                                     >
-                                                        <i className="fas fa-plus me-2"></i>
-                                                        Add New Lesson
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    );
-                                })}
+                                                        {/* Lessons Container */}
+                                                        <div className="lessons-container">
+                                                            <h6 className="lessons-header">
+                                                                <i className="fas fa-book-reader me-2"></i>
+                                                                Lessons
+                                                            </h6>
+                                                            
+                                                            {/* Drag and Drop for Lessons */}
+                                                            <DndContext
+                                                                sensors={sensors}
+                                                                collisionDetection={closestCenter}
+                                                                onDragEnd={(event) => handleLessonDragEnd(event, variantIndex)}
+                                                            >
+                                                                <SortableContext
+                                                                    items={variant?.items?.map((item, idx) => 
+                                                                        `lesson-${item.variant_item_id || `${variantIndex}-${idx}`}`
+                                                                    ) || []}
+                                                                    strategy={verticalListSortingStrategy}
+                                                                >
+                                                                    <div style={{
+                                                                        minHeight: '50px',
+                                                                        padding: '8px',
+                                                                        borderRadius: '8px'
+                                                                    }}>
+                                                                        {variant?.items?.map((item, itemIndex) => {
+                                                                            const itemKey = `lesson-${item.variant_item_id || `${variantIndex}-${itemIndex}`}`;
+                                                                            
+                                                                            return (
+                                                                                <SortableLessonItem
+                                                                                    key={itemKey}
+                                                                                    id={itemKey}
+                                                                                    item={item}
+                                                                                    itemIndex={itemIndex}
+                                                                                    variantIndex={variantIndex}
+                                                                                    variant={variant}
+                                                                                    moveLessonUp={moveLessonUp}
+                                                                                    moveLessonDown={moveLessonDown}
+                                                                                    removeLesson={removeLesson}
+                                                                                    handleLessonChange={handleLessonChange}
+                                                                                    getValidationClass={getValidationClass}
+                                                                                    validationState={validationState}
+                                                                                    fileUploadStates={fileUploadStates}
+                                                                                    getFileIcon={getFileIcon}
+                                                                                    getFileTypeLabel={getFileTypeLabel}
+                                                                                    getFileCategory={getFileCategory}
+                                                                                    getFileName={getFileName}
+                                                                                    uiState={uiState}
+                                                                                />
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </SortableContext>
+                                                            </DndContext>
+                                                        </div>
+                                                    </SortableSection>
+                                                );
+                                            })}
+                                        </SortableContext>
+                                    </DndContext>
+                                </div>
 
                                 <div className="d-flex justify-content-end mt-3 mb-3">
                                     <button
@@ -2426,3 +2936,4 @@ function CourseEditCurriculum() {
 }
 
 export default CourseEditCurriculum;
+

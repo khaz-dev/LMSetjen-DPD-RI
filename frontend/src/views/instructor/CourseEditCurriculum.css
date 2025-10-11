@@ -8,12 +8,13 @@
 
 .form-section-enhanced {
     background: #ffffff;
-    border-radius: 12px;
+    border-radius: 15px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     margin-bottom: 20px;
-    overflow: hidden;
+    overflow: visible; /* ✅ Changed from hidden to allow drag to work */
     border: 2px solid #e0e0e0;
     transition: all 0.3s ease;
+    position: relative; /* ✅ Ensure proper stacking context */
 }
 
 .form-section-enhanced:hover {
@@ -27,9 +28,17 @@
 
 /* Section Header - Gradient Background */
 .subsection-header-enhanced {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
     padding: 14px 20px;
-    border-bottom: 2px solid #5a67d8;
+    border-radius: 15px 15px 0 0;
+    border-bottom: none;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+    transition: border-radius 0.3s ease;
+}
+
+/* When section is collapsed (no content showing), round all corners */
+.form-section-enhanced.section-collapsed .subsection-header-enhanced {
+    border-radius: 15px;
 }
 
 .subsection-header-enhanced h5 {
@@ -59,10 +68,47 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Drag Handle Styles */
+.drag-handle {
+    cursor: grab;
+    padding: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    user-select: none;
+}
+
+.drag-handle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.drag-handle-section {
+    color: #ffffff;
+    font-size: 1.3rem;
+}
+
+.drag-handle-lesson {
+    color: #718096;
+    font-size: 1rem;
+}
+
+.drag-handle-lesson:hover {
+    background: rgba(113, 128, 150, 0.1);
+    color: #2d3748;
+}
+
 /* Section Content Area */
 .subsection-content-enhanced {
     padding: 16px 20px;
     background: #f8f9fa;
+    border-radius: 0 0 15px 15px;
 }
 
 /* ============================================
@@ -175,6 +221,8 @@
     padding: 8px 12px;
     font-size: 0.9rem;
     transition: all 0.3s ease;
+    width: 100%; /* ✅ FIX: Ensure full width */
+    box-sizing: border-box; /* ✅ FIX: Include padding in width calculation */
 }
 
 .curriculum-form-control:focus {
@@ -256,6 +304,154 @@
 
 .curriculum-preview-link:hover {
     color: #2c5282;
+}
+
+/* ============================================
+   FILE PREVIEW BOX - Enhanced with details
+   ============================================ */
+
+.file-preview-card {
+    margin-top: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    border: 2px solid #cbd5e0;
+    transition: all 0.3s ease;
+}
+
+.file-preview-card:hover {
+    border-color: #4299e1;
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
+}
+
+.file-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.file-preview-icon {
+    font-size: 2rem;
+    color: #4299e1;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ebf8ff;
+    border-radius: 10px;
+    border: 2px solid #4299e1;
+}
+
+.file-preview-icon.video {
+    color: #9f7aea;
+    background: #faf5ff;
+    border-color: #9f7aea;
+}
+
+.file-preview-icon.document {
+    color: #ed8936;
+    background: #fffaf0;
+    border-color: #ed8936;
+}
+
+.file-preview-icon.image {
+    color: #48bb78;
+    background: #f0fff4;
+    border-color: #48bb78;
+}
+
+.file-preview-info {
+    flex: 1;
+}
+
+.file-preview-name {
+    font-weight: 700;
+    color: #2d3748;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+.file-preview-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.file-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: #718096;
+    background: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.file-meta-item i {
+    font-size: 0.75rem;
+}
+
+.file-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #4299e1;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.file-type-badge.video {
+    background: #9f7aea;
+}
+
+.file-type-badge.document {
+    background: #ed8936;
+}
+
+.file-type-badge.image {
+    background: #48bb78;
+}
+
+.file-preview-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.file-preview-actions .btn {
+    flex: 1;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+}
+
+/* Thumbnail preview for images and videos */
+.file-preview-thumbnail {
+    margin-top: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #e2e8f0;
+    max-width: 100%;
+}
+
+.file-preview-thumbnail img,
+.file-preview-thumbnail video {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
 }
 
 /* ============================================
@@ -398,14 +594,17 @@
 
 /* Section being dragged */
 .form-section-enhanced.is-dragging {
-    opacity: 0.5;
-    border: 2px dashed #4a90e2;
+    opacity: 0.8;
+    background-color: #e3f2fd !important;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+    transform: rotate(2deg);
 }
 
 /* Lesson being dragged */
 .curriculum-item-card-enhanced.is-dragging {
-    opacity: 0.5;
-    border: 2px dashed #4299e1;
+    opacity: 0.7;
+    background-color: #e3f2fd !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
 }
 
 /* Drop indicator */

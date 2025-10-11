@@ -178,84 +178,85 @@ function CourseDetail() {
                     <>
                     {/* Modern Course Description Card */}
                     <div
-                        className="card border-0 shadow-sm mb-4"
+                        className="card border-0 shadow-sm mb-3"
                         style={{ borderRadius: '20px' }}
                     >
-                            <div className="card-body p-4">
-                                <div className="d-flex align-items-center mb-4">
-                                    <div 
-                                        className="me-3"
-                                        style={{
-                                            width: '50px',
-                                            height: '50px',
-                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                            borderRadius: '15px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        <i className="fas fa-info-circle text-white" style={{ fontSize: '1.2rem' }}></i>
-                                    </div>
-                                    <h3 className="h4 mb-0" style={{ color: '#2c3e50' }}>
-                                        Tentang Kursus Ini
-                                    </h3>
+                        <div className="card-body p-3 p-md-4">
+                            <div className="d-flex align-items-center mb-3">
+                                <div 
+                                    className="me-3"
+                                    style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    <i className="fas fa-info-circle text-white"></i>
                                 </div>
-                                
-                                <div className="course-description">
-                                    <div 
-                                        className="text-muted mb-4" 
-                                        style={{ lineHeight: '1.7' }}
-                                        dangerouslySetInnerHTML={{ __html: course?.description || "Deskripsi kursus tidak tersedia." }}
-                                    />
-                                    
-                                    {/* Show curriculum overview if available */}
-                                    {course?.curriculum && course.curriculum.length > 0 && (
-                                        <>
-                                            <h5 className="fw-bold mb-3 mt-4" style={{ color: '#2c3e50' }}>
-                                                Materi Pembelajaran:
-                                            </h5>
-                                            
-                                            <div className="row g-3">
-                                                {course.curriculum.slice(0, 6).map((variant, index) => (
-                                                    <div key={variant.variant_id || index} className="col-md-6">
-                                                        <div className="d-flex align-items-start">
-                                                            <div 
-                                                                className="me-3 mt-1"
-                                                                style={{
-                                                                    width: '20px',
-                                                                    height: '20px',
-                                                                    background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                                                                    borderRadius: '50%',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    flexShrink: 0
-                                                                }}
-                                                            >
-                                                                <i className="fas fa-check text-white" style={{ fontSize: '0.7rem' }}></i>
-                                                            </div>
-                                                            <span className="text-muted">{variant.title}</span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            
-                                            {course.curriculum.length > 6 && (
-                                                <div className="mt-3">
-                                                    <small className="text-muted">
-                                                        <i className="fas fa-plus-circle me-1"></i>
-                                                        Dan {course.curriculum.length - 6} modul lainnya...
-                                                    </small>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
+                                <h3 className="h5 mb-0" style={{ color: '#2c3e50' }}>
+                                    Tentang Kursus Ini
+                                </h3>
                             </div>
-                            {/* Modern Statistics Card */}
-                            <CourseStatistics course={course} />
+                            
+                            <div className="course-description">
+                                <div 
+                                    className="text-muted mb-3" 
+                                    style={{ lineHeight: '1.6', fontSize: '0.95rem' }}
+                                    dangerouslySetInnerHTML={{ __html: course?.description || "Deskripsi kursus tidak tersedia." }}
+                                />
+                                
+                                {/* Show curriculum overview if available */}
+                                {course?.curriculum && course.curriculum.length > 0 && (
+                                    <>
+                                        <h5 className="fw-bold mb-3 mt-3" style={{ color: '#2c3e50', fontSize: '1rem' }}>
+                                            Materi Pembelajaran:
+                                        </h5>
+                                        
+                                        <div className="row g-3">
+                                            {course.curriculum.slice(0, 6).map((variant, index) => (
+                                                <div key={variant.variant_id || index} className="col-md-6">
+                                                    <div className="d-flex align-items-start">
+                                                        <div 
+                                                            className="me-3 mt-1"
+                                                            style={{
+                                                                width: '20px',
+                                                                height: '20px',
+                                                                background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                                                                borderRadius: '50%',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                flexShrink: 0
+                                                            }}
+                                                        >
+                                                            <i className="fas fa-check text-white" style={{ fontSize: '0.7rem' }}></i>
+                                                        </div>
+                                                        <span className="text-muted">{variant.title}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        
+                                        {course.curriculum.length > 6 && (
+                                            <div className="mt-3">
+                                                <small className="text-muted">
+                                                    <i className="fas fa-plus-circle me-1"></i>
+                                                    Dan {course.curriculum.length - 6} modul lainnya...
+                                                </small>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
                         </div>
+                    </div>
+                    
+                    {/* Course Analytics & Statistics - Separate Card Below Description */}
+                    <CourseStatistics course={course} />
                     </>
 
                 );
@@ -265,68 +266,68 @@ function CourseDetail() {
                         className="card border-0 shadow-sm"
                         style={{ borderRadius: '20px' }}
                     >
-                        <div className="card-body p-4">
-                            <div className="d-flex align-items-center mb-4">
+                        <div className="card-body p-3 p-md-4">
+                            <div className="d-flex align-items-center mb-3">
                                 <div 
                                     className="me-3"
                                     style={{
-                                        width: '50px',
-                                        height: '50px',
+                                        width: '40px',
+                                        height: '40px',
                                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                        borderRadius: '15px',
+                                        borderRadius: '12px',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center'
                                     }}
                                 >
-                                    <i className="fas fa-list text-white" style={{ fontSize: '1.2rem' }}></i>
+                                    <i className="fas fa-list text-white"></i>
                                 </div>
-                                <h3 className="h4 mb-0" style={{ color: '#2c3e50' }}>
+                                <h3 className="h5 mb-0" style={{ color: '#2c3e50' }}>
                                     Kurikulum Kursus
                                 </h3>
                             </div>
                             
-                            <div className="row g-3 mb-4">
+                            <div className="row g-2 mb-3">
                                 <div className="col-md-4">
                                     <div 
-                                        className="text-center p-3"
+                                        className="text-center p-2 p-md-3"
                                         style={{
                                             background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-                                            borderRadius: '15px'
+                                            borderRadius: '12px'
                                         }}
                                     >
-                                        <h6 className="fw-bold mb-1" style={{ color: '#667eea' }}>
+                                        <h6 className="fw-bold mb-1" style={{ color: '#667eea', fontSize: '0.95rem' }}>
                                             {course?.curriculum?.length || 0} Modul
                                         </h6>
-                                        <small className="text-muted">Materi pembelajaran</small>
+                                        <small className="text-muted" style={{ fontSize: '0.8rem' }}>Materi pembelajaran</small>
                                     </div>
                                 </div>
                                 <div className="col-md-4">
                                     <div 
-                                        className="text-center p-3"
+                                        className="text-center p-2 p-md-3"
                                         style={{
                                             background: 'linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.1) 100%)',
-                                            borderRadius: '15px'
+                                            borderRadius: '12px'
                                         }}
                                     >
-                                        <h6 className="fw-bold mb-1" style={{ color: '#28a745' }}>
+                                        <h6 className="fw-bold mb-1" style={{ color: '#28a745', fontSize: '0.95rem' }}>
                                             {course?.lectures?.length || 0} Video
                                         </h6>
-                                        <small className="text-muted">Video pembelajaran</small>
+                                        <small className="text-muted" style={{ fontSize: '0.8rem' }}>Video pembelajaran</small>
                                     </div>
                                 </div>
                                 <div className="col-md-4">
                                     <div 
-                                        className="text-center p-3"
+                                        className="text-center p-2 p-md-3"
                                         style={{
                                             background: 'linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 140, 0, 0.1) 100%)',
-                                            borderRadius: '15px'
+                                            borderRadius: '12px'
                                         }}
                                     >
-                                        <h6 className="fw-bold mb-1" style={{ color: '#ffc107' }}>
+                                        <h6 className="fw-bold mb-1" style={{ color: '#ffc107', fontSize: '0.95rem' }}>
                                             {calculateTotalDuration(course?.lectures || [])}
                                         </h6>
-                                        <small className="text-muted">Total durasi</small>
+                                        <small className="text-muted" style={{ fontSize: '0.8rem' }}>Total durasi</small>
                                     </div>
                                 </div>
                             </div>
@@ -456,9 +457,9 @@ function CourseDetail() {
             
             <CourseHero course={course} />
             
-            <section className="py-5">
+            <section className="py-4 base-course-detail-content">
                 <div className="container">
-                    <div className="row g-4">
+                    <div className="row g-3 g-md-4">
                         {/* Main Content */}
                         <div className="col-lg-8">
                             <CourseTabNavigation 
@@ -466,7 +467,7 @@ function CourseDetail() {
                                 setActiveTab={setActiveTab} 
                             />
                             
-                            <div className="mt-4">
+                            <div>
                                 {getTabContent()}
                             </div>
                         </div>
@@ -783,19 +784,24 @@ function CourseDetail() {
             
             {/* Floating Wishlist Button - Hidden for teachers/instructors */}
             {course && !isLoading && !isTeacher && (
-                <div style={{
-                    position: 'fixed',
-                    top: '50%',
-                    right: '80px',
-                    transform: 'translateY(-50%)',
-                    zIndex: 1000,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px'
-                }}>
+                <div 
+                    className="floating-wishlist-container"
+                    style={{
+                        position: 'fixed',
+                        top: '50%',
+                        right: '80px',
+                        transform: 'translateY(-50%)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        pointerEvents: 'auto'
+                    }}
+                >
                     {/* Text label (shows when in wishlist) */}
                     {isInWishlist && (
                         <div 
+                            className="floating-wishlist-label"
                             style={{
                                 background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)',
                                 color: 'white',
@@ -803,11 +809,11 @@ function CourseDetail() {
                                 borderRadius: '30px',
                                 fontWeight: '600',
                                 fontSize: '0.9rem',
-                                zIndex: 1000,
                                 boxShadow: '0 4px 15px rgba(255, 107, 107, 0.4)',
                                 border: '2px solid rgba(255, 255, 255, 0.3)',
                                 whiteSpace: 'nowrap',
-                                animation: 'fadeInRight 0.3s ease'
+                                animation: 'fadeInRight 0.3s ease',
+                                zIndex: 9999
                             }}
                         >
                             Click to Remove
@@ -817,7 +823,7 @@ function CourseDetail() {
                     <button
                         onClick={handleWishlist}
                         disabled={isLoadingWishlist}
-                        className="btn"
+                        className="btn floating-wishlist-button"
                         style={{
                             width: '60px',
                             height: '60px',
@@ -833,7 +839,9 @@ function CourseDetail() {
                             cursor: isLoadingWishlist ? 'not-allowed' : 'pointer',
                             transition: 'all 0.3s ease',
                             padding: 0,
-                            flexShrink: 0
+                            flexShrink: 0,
+                            zIndex: 9999,
+                            position: 'relative'
                         }}
                         onMouseEnter={(e) => {
                             if (!isLoadingWishlist) {

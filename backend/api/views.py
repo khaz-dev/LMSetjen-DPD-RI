@@ -1334,9 +1334,11 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
             # Get variant data
             title_key = f"variants[{index}][variant_title]"
             id_key = f"variants[{index}][variant_id]"
+            order_key = f"variants[{index}][order]"
             
             title = request_data.get(title_key, '')
             variant_id = request_data.get(id_key)
+            order = request_data.get(order_key, index)  # Use index as fallback
             
             # Skip empty sections
             if not title or title.strip() == '':
@@ -1368,6 +1370,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
             if existing_variant:
                 print(f"[Curriculum Update] Updating existing variant {existing_variant.variant_id}: {title}")
                 existing_variant.title = title
+                existing_variant.order = int(order) if order else 0
                 existing_variant.save()
                 variant = existing_variant
                 updated_variant_ids.add(variant.variant_id)
@@ -1375,7 +1378,8 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                 print(f"[Curriculum Update] Creating new variant: {title}")
                 variant = api_models.Variant.objects.create(
                     course=course, 
-                    title=title
+                    title=title,
+                    order=int(order) if order else 0
                 )
                 updated_variant_ids.add(variant.variant_id)
             
@@ -1389,6 +1393,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                 preview_value = item_data.get("preview", "false")
                 variant_item_id = item_data.get("variant_item_id")
                 duration_seconds = item_data.get("duration_seconds")  # Get duration from file upload
+                item_order = item_data.get("order", item_index)  # Get order or use index as fallback
                 
                 # Skip empty items
                 if not item_title or item_title.strip() == '':
@@ -1425,6 +1430,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                         variant_item.title = item_title
                         variant_item.description = item_description
                         variant_item.preview = preview
+                        variant_item.order = int(item_order) if item_order else 0
                         if file:
                             variant_item.file = file
                         if duration is not None:
@@ -1439,7 +1445,8 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                             description=item_description,
                             file=file,
                             duration=duration,
-                            preview=preview
+                            preview=preview,
+                            order=int(item_order) if item_order else 0
                         )
                         updated_item_ids.add(variant_item.variant_item_id)
                 else:
@@ -1450,7 +1457,8 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                         description=item_description,
                         file=file,
                         duration=duration,
-                        preview=preview
+                        preview=preview,
+                        order=int(item_order) if item_order else 0
                     )
                     updated_item_ids.add(variant_item.variant_item_id)
         

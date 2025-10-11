@@ -1007,7 +1007,7 @@ button div,
 /* Modern Header Design */
 .create-header-modern {
     background: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
-    padding: 2rem;
+    padding: 1.25rem 1.5rem;
     margin-bottom: 1.5rem;
     border-radius: 15px;
     /* position: sticky; */

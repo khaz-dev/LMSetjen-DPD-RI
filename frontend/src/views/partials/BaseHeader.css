@@ -149,6 +149,7 @@
     border: 1px solid #e9ecef;
     user-select: none; /* Prevent text selection on container */
     height: 48px; /* Increased height for better proportions */
+    gap: 0.5rem;
 }
 
 .search-input {

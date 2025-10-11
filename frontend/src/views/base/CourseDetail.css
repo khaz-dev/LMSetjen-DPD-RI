@@ -105,6 +105,101 @@
     gap: 0.5rem;
 }
 
+/* Base Course Detail Section */
+.base-course-detail-content {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding-bottom: 6rem !important; /* More gap on top of footer */
+}
+
+/* Course Tab Navigation - Sticky with floating effect */
+.course-tab-navigation {
+    position: sticky;
+    top: 90px; /* Match sidebar: 70px header + 10px gap + 10px offset */
+    z-index: 999; /* Below header but above content */
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+    border-radius: 20px !important;
+    background: #ffffff !important;
+    padding: 1rem 1rem !important;
+
+}
+
+.course-tab-navigation.scrolled {
+    transform: translateY(0);
+    border-radius: 20px !important;
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+}
+
+/* Enhanced Tab Navigation Styling - Force override Bootstrap defaults */
+.course-tab-navigation.card {
+    /* background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important; */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+    border: 2px solid rgba(102, 126, 234, 0.1) !important;
+    border-radius: 20px !important;
+    backdrop-filter: blur(10px);
+    overflow: hidden !important; /* Ensure corners are properly clipped */
+}
+
+.course-tab-navigation .card-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%) !important;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.1) !important;
+    padding: 1rem 1rem !important;
+    border-radius: 20px 20px 0 0 !important; /* Match parent border radius */
+}
+
+/* Force remove any Bootstrap default backgrounds */
+.course-tab-navigation .card-header.bg-light {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%) !important;
+}
+
+/* Enhanced Tab Buttons */
+.course-tab-navigation .nav-link {
+    font-weight: 600 !important;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.course-tab-navigation .nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    transition: left 0.3s ease;
+    z-index: -1;
+}
+
+.course-tab-navigation .nav-link:hover::before {
+    left: 0;
+}
+
+.course-tab-navigation .nav-link:hover {
+    color: #667eea;
+    transform: translateY(-2px);
+    border-color: rgba(102, 126, 234, 0.2);
+}
+
+.course-tab-navigation .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    /* color: white !important; */
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    border-color: transparent;
+    transform: scale(1.05);
+}
+
+.course-tab-navigation .nav-link.active i {
+    animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
 /* ======================
    COMMENT SECTION STYLES
    ====================== */
@@ -407,4 +502,83 @@
 .course-detail span[style*="fontSize: 12px"] {
     font-size: 12px !important;
     color: gray !important;
+}
+
+/* ======================
+   FLOATING WISHLIST BUTTON
+   ====================== */
+
+/* Main Container - Highest z-index to be on top of everything */
+.floating-wishlist-container {
+    position: fixed !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure button is always on top */
+.floating-wishlist-button {
+    position: relative !important;
+    z-index: 9999 !important;
+}
+
+/* Label styling */
+.floating-wishlist-label {
+    z-index: 9999 !important;
+}
+
+/* Ensure it's above Bootstrap modals */
+.floating-wishlist-container,
+.floating-wishlist-button,
+.floating-wishlist-label {
+    isolation: isolate;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 991px) {
+    .floating-wishlist-container {
+        right: 40px !important;
+        top: auto !important;
+        bottom: 80px !important;
+        transform: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .floating-wishlist-container {
+        right: 20px !important;
+        bottom: 70px !important;
+        gap: 8px !important;
+    }
+    
+    .floating-wishlist-button {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .floating-wishlist-label {
+        padding: 8px 16px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .floating-wishlist-container {
+        right: 15px !important;
+        bottom: 60px !important;
+    }
+    
+    .floating-wishlist-button {
+        width: 45px !important;
+        height: 45px !important;
+        border-width: 2px !important;
+    }
+    
+    .floating-wishlist-button i {
+        font-size: 1.2rem !important;
+    }
+    
+    /* Hide label on very small screens to save space */
+    .floating-wishlist-label {
+        display: none !important;
+    }
 }

@@ -187,11 +187,11 @@ const CourseSidebar = ({
     // - No more courseIncludes array - can be derived from course data
 
     return (
-        <div className="sticky-top" style={{ top: '20px' }}>
+        <div className="sticky-top" style={{ top: '90px' }}> {/* Match CourseTabNavigation: 70px header + 10px gap + 10px offset */}
             {/* Modern Course Preview Card */}
             <div 
-                className="card border-0 shadow-lg mb-4"
-                style={{ borderRadius: '20px' }}
+                className="card border-0 shadow-lg mb-3"
+                style={{ borderRadius: '15px' }}
             >
                 {/* Video Preview */}
                 <div className="position-relative">
@@ -200,8 +200,8 @@ const CourseSidebar = ({
                         alt={course?.title}
                         className="card-img-top"
                         style={{ 
-                            borderRadius: '20px 20px 0 0',
-                            height: '200px',
+                            borderRadius: '15px 15px 0 0',
+                            height: '160px',
                             objectFit: 'cover'
                         }}
                     />
@@ -211,24 +211,24 @@ const CourseSidebar = ({
                             data-bs-toggle="modal"
                             data-bs-target="#coursePreviewModal"
                             style={{ 
-                                width: '60px', 
-                                height: '60px',
+                                width: '50px', 
+                                height: '50px',
                                 background: 'rgba(255, 255, 255, 0.9)',
-                                boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
+                                boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
                                 border: 'none'
                             }}
                         >
-                            <i className="fas fa-play" style={{ color: '#667eea', fontSize: '1.2rem' }}></i>
+                            <i className="fas fa-play" style={{ color: '#667eea', fontSize: '1rem' }}></i>
                         </button>
                     </div>
                     <div 
-                        className="position-absolute top-0 end-0 m-3"
+                        className="position-absolute top-0 end-0 m-2"
                         style={{
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             color: 'white',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '15px',
-                            fontSize: '0.9rem',
+                            padding: '0.4rem 0.8rem',
+                            borderRadius: '12px',
+                            fontSize: '0.8rem',
                             fontWeight: '600'
                         }}
                     >
@@ -237,31 +237,32 @@ const CourseSidebar = ({
                 </div>
 
                 {/* Card Body */}
-                <div className="card-body p-4">
+                <div className="card-body p-3">
                     {/* Course Price */}
-                    <div className="text-center mb-4">
-                        <h3 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
+                    <div className="text-center mb-3">
+                        <h3 className="fw-bold mb-1 h5" style={{ color: '#2c3e50' }}>
                             Kursus Gratis
                         </h3>
-                        <p className="text-muted mb-0">
-                            Khusus untuk pegawai Setjen DPD RI
+                        <p className="text-muted mb-0" style={{ fontSize: '0.85rem' }}>
+                            Untuk siapa saja terkhusus untuk pegawai Setjen DPD RI
                         </p>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="d-grid gap-3 mb-4">
+                    <div className="d-grid gap-2 mb-3">
                         {/* Show Edit Course button if instructor owns this course */}
                         {isInstructorCourse ? (
                             <button 
                                 onClick={() => navigate(`/instructor/edit-course/${course.course_id}/`)}
-                                className="btn btn-lg"
+                                className="btn"
                                 style={{
                                     background: 'linear-gradient(135deg, #ffc107 0%, #ff8c00 100%)',
                                     color: 'white',
                                     border: 'none',
-                                    borderRadius: '15px',
+                                    borderRadius: '12px',
                                     fontWeight: '600',
-                                    padding: '0.8rem 1.5rem'
+                                    padding: '0.6rem 1rem',
+                                    fontSize: '0.9rem'
                                 }}
                             >
                                 <i className="fas fa-edit me-2"></i>
@@ -271,14 +272,15 @@ const CourseSidebar = ({
                             /* Show Continue Learning if already enrolled */
                             <button 
                                 onClick={() => navigate('/student/courses/')}
-                                className="btn btn-lg"
+                                className="btn"
                                 style={{
                                     background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
                                     color: 'white',
                                     border: 'none',
-                                    borderRadius: '15px',
+                                    borderRadius: '12px',
                                     fontWeight: '600',
-                                    padding: '0.8rem 1.5rem'
+                                    padding: '0.6rem 1rem',
+                                    fontSize: '0.9rem'
                                 }}
                             >
                                 <i className="fas fa-play me-2"></i>
@@ -289,14 +291,15 @@ const CourseSidebar = ({
                             <button 
                                 onClick={handleEnrollment}
                                 disabled={loading}
-                                className="btn btn-lg"
+                                className="btn"
                                 style={{
                                     background: loading ? '#cccccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                     color: 'white',
                                     border: 'none',
-                                    borderRadius: '15px',
+                                    borderRadius: '12px',
                                     fontWeight: '600',
-                                    padding: '0.8rem 1.5rem',
+                                    padding: '0.6rem 1rem',
+                                    fontSize: '0.9rem',
                                     cursor: loading ? 'not-allowed' : 'pointer'
                                 }}
                             >
@@ -319,14 +322,15 @@ const CourseSidebar = ({
                             <button 
                                 onClick={handleWishlist}
                                 disabled={isLoadingWishlist}
-                                className="btn btn-lg"
+                                className="btn"
                                 style={{
                                     background: isInWishlist ? 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)' : 'transparent',
                                     color: isInWishlist ? 'white' : '#667eea',
                                     border: isInWishlist ? 'none' : '2px solid #667eea',
-                                    borderRadius: '15px',
+                                    borderRadius: '12px',
                                     fontWeight: '600',
-                                    padding: '0.8rem 1.5rem',
+                                    padding: '0.6rem 1rem',
+                                    fontSize: '0.9rem',
                                     cursor: isLoadingWishlist ? 'not-allowed' : 'pointer',
                                     transition: 'all 0.3s ease'
                                 }}
@@ -346,7 +350,7 @@ const CourseSidebar = ({
                         )}
                         
                         <button 
-                            className="btn btn-lg"
+                            className="btn"
                             onClick={() => {
                                 if (navigator.share) {
                                     navigator.share({
@@ -370,72 +374,41 @@ const CourseSidebar = ({
                                 background: 'transparent',
                                 color: '#28a745',
                                 border: '2px solid #28a745',
-                                borderRadius: '15px',
+                                borderRadius: '12px',
                                 fontWeight: '600',
-                                padding: '0.8rem 1.5rem'
+                                padding: '0.6rem 1rem',
+                                fontSize: '0.9rem'
                             }}
                         >
                             <i className="fas fa-share me-2"></i>
                             Bagikan Kursus
                         </button>
                     </div>
-
-                    {/* Quick Stats */}
-                    <div className="row g-2 text-center mb-4">
-                        <div className="col-6">
-                            <div 
-                                className="p-3"
-                                style={{
-                                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-                                    borderRadius: '12px'
-                                }}
-                            >
-                                <h6 className="fw-bold mb-1" style={{ color: '#667eea' }}>
-                                    {course?.students?.length || 0}
-                                </h6>
-                                <small className="text-muted">Siswa</small>
-                            </div>
-                        </div>
-                        <div className="col-6">
-                            <div 
-                                className="p-3"
-                                style={{
-                                    background: 'linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.1) 100%)',
-                                    borderRadius: '12px'
-                                }}
-                            >
-                                <h6 className="fw-bold mb-1" style={{ color: '#28a745' }}>
-                                    {course?.average_rating?.toFixed(1) || 0}
-                                </h6>
-                                <small className="text-muted">Rating</small>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
             {/* Modern Course Includes */}
             <div 
-                className="card border-0 shadow-sm mb-4"
-                style={{ borderRadius: '20px' }}
+                className="card border-0 shadow-sm mb-3"
+                style={{ borderRadius: '15px' }}
             >
-                <div className="card-body p-4">
-                    <div className="d-flex align-items-center mb-4">
+                <div className="card-body p-3">
+                    <div className="d-flex align-items-center mb-3">
                         <div 
-                            className="me-3"
+                            className="me-2"
                             style={{
-                                width: '40px',
-                                height: '40px',
+                                width: '35px',
+                                height: '35px',
                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                borderRadius: '12px',
+                                borderRadius: '10px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}
                         >
-                            <i className="fas fa-gift text-white"></i>
+                            <i className="fas fa-gift text-white" style={{ fontSize: '0.9rem' }}></i>
                         </div>
-                        <h5 className="mb-0 fw-bold" style={{ color: '#2c3e50' }}>
+                        <h5 className="mb-0 fw-bold" style={{ color: '#2c3e50', fontSize: '0.95rem' }}>
                             Kursus Ini Termasuk
                         </h5>
                     </div>

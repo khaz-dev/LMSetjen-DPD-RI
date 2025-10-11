@@ -17,6 +17,7 @@ function Index() {
     const [featuredCourses, setFeaturedCourses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [wishlistItems, setWishlistItems] = useState([]);
+    const [activeSection, setActiveSection] = useState(0);
     const [stats, setStats] = useState({
         total_courses: 0,
         total_teachers: 0,
@@ -145,16 +146,84 @@ function Index() {
         }
     }, [userId, isAdminOrTeacher, refreshWishlistCount, fetchWishlistItems]);
 
+    // Section navigation configuration
+    const sections = [
+        { id: 'hero', label: 'Beranda', icon: 'home' },
+        { id: 'about', label: 'Tentang', icon: 'building' },
+        { id: 'statistics', label: 'Statistik', icon: 'chart-bar' },
+        { id: 'categories', label: 'Kategori', icon: 'th-large' },
+        { id: 'courses', label: 'Kursus', icon: 'graduation-cap' },
+        { id: 'cta', label: 'Daftar', icon: 'rocket' },
+        { id: 'testimonials', label: 'Testimoni', icon: 'quote-left' }
+    ];
+
+    // Handle scroll to track active section
+    useEffect(() => {
+        const container = document.querySelector('.landing-page-container');
+        if (!container) return;
+
+        const handleScroll = () => {
+            const sections = document.querySelectorAll('.snap-section');
+            const scrollPosition = container.scrollTop + window.innerHeight / 2;
+
+            // Update active section for navigation dots
+            sections.forEach((section, index) => {
+                const sectionTop = section.offsetTop;
+                const sectionBottom = sectionTop + section.offsetHeight;
+
+                if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                    setActiveSection(index);
+                }
+            });
+        };
+        
+        // Add scroll listener with passive for better performance
+        container.addEventListener('scroll', handleScroll, { passive: true });
+        
+        // Initial check
+        handleScroll();
+
+        return () => {
+            container.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
+    // Scroll to section
+    const scrollToSection = (index) => {
+        const sections = document.querySelectorAll('.snap-section');
+        if (sections[index]) {
+            sections[index].scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     return (
         <>
             <BaseHeader />
             
-            {/* Hero Section */}
-            <section className="hero-section">
-                {/* Background Pattern */}
-                <div className="position-absolute w-100 h-100 hero-background-pattern"></div>
+            {/* Section Navigation Indicator */}
+            <div className="section-navigation">
+                {sections.map((section, index) => (
+                    <div
+                        key={section.id}
+                        className={`section-nav-item ${activeSection === index ? 'active' : ''}`}
+                        onClick={() => scrollToSection(index)}
+                    >
+                        <div className="section-nav-dot"></div>
+                        <div className="section-nav-label">
+                            <i className={`fas fa-${section.icon} me-2`}></i>
+                            {section.label}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            
+            <div className="landing-page-container">
+                {/* Hero Section */}
+                <section className="hero-section snap-section">
+                    {/* Background Pattern */}
+                    <div className="position-absolute w-100 h-100 hero-background-pattern"></div>
 
-                <div className="container position-relative hero-container">
+                    <div className="container position-relative hero-container">
                     <div className="row align-items-center">
                         {/* Hero Content */}
                         <div className="col-lg-6 mb-5 mb-lg-0">
@@ -204,24 +273,24 @@ function Index() {
                                     </button>
                                 </div>
 
-                                {/* Stats Preview */}
-                                <div className="row g-4">
+                                {/* Stats Preview - Compact for single line */}
+                                <div className="row g-2">
                                     <div className="col-4">
                                         <div className="text-center">
-                                            <h3 className="fw-bold mb-1">{stats.total_courses}+</h3>
-                                            <small className="opacity-75">Kursus</small>
+                                            <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.total_courses}+</h3>
+                                            <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Kursus</small>
                                         </div>
                                     </div>
                                     <div className="col-4">
                                         <div className="text-center">
-                                            <h3 className="fw-bold mb-1">{stats.total_students}+</h3>
-                                            <small className="opacity-75">Peserta</small>
+                                            <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.total_students}+</h3>
+                                            <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Peserta</small>
                                         </div>
                                     </div>
                                     <div className="col-4">
                                         <div className="text-center">
-                                            <h3 className="fw-bold mb-1">{stats.completion_rate}%</h3>
-                                            <small className="opacity-75">Tingkat Selesai</small>
+                                            <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.completion_rate}%</h3>
+                                            <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Tingkat Selesai</small>
                                         </div>
                                     </div>
                                 </div>
@@ -299,7 +368,7 @@ function Index() {
             </section>
 
             {/* About DPD RI Section */}
-            <section className="py-5 about-section">
+            <section className="py-5 about-section snap-section">
                 <div className="container">
                     <div className="row align-items-center">
                         <div className="col-lg-6 mb-5 mb-lg-0">
@@ -407,7 +476,7 @@ function Index() {
             </section>
 
             {/* Statistics Section */}
-            <section className="py-5 statistics-section">
+            <section className="py-5 statistics-section snap-section">
                 <div className="container">
                     <div className="text-center mb-5">
                         <div 
@@ -426,28 +495,38 @@ function Index() {
                         </p>
                     </div>
 
-                    <div className="row g-4">
+                    {/* Changed to 2x4 layout (2 rows, 4 cards - compact design) */}
+                    <div className="row g-3 justify-content-center">
+                        {/* Row 1 - All 4 stats */}
                         <div className="col-lg-3 col-md-6">
                             <div 
                                 className="card border-0 h-100 text-center"
                                 style={{
-                                    borderRadius: '20px',
+                                    borderRadius: '16px',
                                     background: 'white',
-                                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
                                     transition: 'all 0.3s ease'
                                 }}
                             >
-                                <div className="card-body p-4">
+                                <div className="card-body p-3">
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-3 stats-card-icon"
+                                        className="d-inline-flex align-items-center justify-content-center mb-2"
+                                        style={{
+                                            width: '50px',
+                                            height: '50px',
+                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            borderRadius: '12px',
+                                            color: 'white',
+                                            fontSize: '1.3rem'
+                                        }}
                                     >
                                         <i className="fas fa-book-open"></i>
                                     </div>
-                                    <h3 className="fw-bold mb-2 card-heading-text">{stats.total_courses}+</h3>
-                                    <p className="text-muted mb-0">Kursus Tersedia</p>
-                                    <small className="text-success">
+                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_courses}+</h4>
+                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Kursus Tersedia</p>
+                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
                                         <i className="fas fa-arrow-up me-1"></i>
-                                        +5 kursus baru bulan ini
+                                        +5 kursus baru
                                     </small>
                                 </div>
                             </div>
@@ -457,31 +536,31 @@ function Index() {
                             <div 
                                 className="card border-0 h-100 text-center"
                                 style={{
-                                    borderRadius: '20px',
+                                    borderRadius: '16px',
                                     background: 'white',
-                                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
                                     transition: 'all 0.3s ease'
                                 }}
                             >
-                                <div className="card-body p-4">
+                                <div className="card-body p-3">
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-3"
+                                        className="d-inline-flex align-items-center justify-content-center mb-2"
                                         style={{
-                                            width: '70px',
-                                            height: '70px',
+                                            width: '50px',
+                                            height: '50px',
                                             background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                                            borderRadius: '20px',
+                                            borderRadius: '12px',
                                             color: 'white',
-                                            fontSize: '1.8rem'
+                                            fontSize: '1.3rem'
                                         }}
                                     >
                                         <i className="fas fa-users"></i>
                                     </div>
-                                    <h3 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>{stats.total_students}+</h3>
-                                    <p className="text-muted mb-0">Peserta Aktif</p>
-                                    <small className="text-success">
+                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_students}+</h4>
+                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Peserta Aktif</p>
+                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
                                         <i className="fas fa-arrow-up me-1"></i>
-                                        +12 peserta minggu ini
+                                        +12 peserta baru
                                     </small>
                                 </div>
                             </div>
@@ -491,31 +570,31 @@ function Index() {
                             <div 
                                 className="card border-0 h-100 text-center"
                                 style={{
-                                    borderRadius: '20px',
+                                    borderRadius: '16px',
                                     background: 'white',
-                                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
                                     transition: 'all 0.3s ease'
                                 }}
                             >
-                                <div className="card-body p-4">
+                                <div className="card-body p-3">
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-3"
+                                        className="d-inline-flex align-items-center justify-content-center mb-2"
                                         style={{
-                                            width: '70px',
-                                            height: '70px',
+                                            width: '50px',
+                                            height: '50px',
                                             background: 'linear-gradient(135deg, #ffc107 0%, #ff8800 100%)',
-                                            borderRadius: '20px',
+                                            borderRadius: '12px',
                                             color: 'white',
-                                            fontSize: '1.8rem'
+                                            fontSize: '1.3rem'
                                         }}
                                     >
                                         <i className="fas fa-chalkboard-teacher"></i>
                                     </div>
-                                    <h3 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>{stats.total_teachers}+</h3>
-                                    <p className="text-muted mb-0">Instruktur Ahli</p>
-                                    <small className="text-success">
-                                        <i className="fas fa-arrow-up me-1"></i>
-                                        Berpengalaman & Tersertifikasi
+                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_teachers}+</h4>
+                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Instruktur Ahli</p>
+                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <i className="fas fa-certificate me-1"></i>
+                                        Tersertifikasi
                                     </small>
                                 </div>
                             </div>
@@ -525,31 +604,168 @@ function Index() {
                             <div 
                                 className="card border-0 h-100 text-center"
                                 style={{
-                                    borderRadius: '20px',
+                                    borderRadius: '16px',
                                     background: 'white',
-                                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
                                     transition: 'all 0.3s ease'
                                 }}
                             >
-                                <div className="card-body p-4">
+                                <div className="card-body p-3">
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-3"
+                                        className="d-inline-flex align-items-center justify-content-center mb-2"
                                         style={{
-                                            width: '70px',
-                                            height: '70px',
+                                            width: '50px',
+                                            height: '50px',
                                             background: 'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)',
-                                            borderRadius: '20px',
+                                            borderRadius: '12px',
                                             color: 'white',
-                                            fontSize: '1.8rem'
+                                            fontSize: '1.3rem'
                                         }}
                                     >
                                         <i className="fas fa-chart-line"></i>
                                     </div>
-                                    <h3 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>{stats.completion_rate}%</h3>
-                                    <p className="text-muted mb-0">Tingkat Kelulusan</p>
-                                    <small className="text-success">
-                                        <i className="fas fa-arrow-up me-1"></i>
+                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.completion_rate}%</h4>
+                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Tingkat Kelulusan</p>
+                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <i className="fas fa-trophy me-1"></i>
                                         Rata-rata tinggi
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Row 2 - Additional stats for 2x4 visual layout */}
+                        <div className="col-lg-3 col-md-6">
+                            <div 
+                                className="card border-0 h-100 text-center"
+                                style={{
+                                    borderRadius: '16px',
+                                    background: 'white',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                <div className="card-body p-3">
+                                    <div 
+                                        className="d-inline-flex align-items-center justify-content-center mb-2"
+                                        style={{
+                                            width: '50px',
+                                            height: '50px',
+                                            background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
+                                            borderRadius: '12px',
+                                            color: 'white',
+                                            fontSize: '1.3rem'
+                                        }}
+                                    >
+                                        <i className="fas fa-certificate"></i>
+                                    </div>
+                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>1000+</h4>
+                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Sertifikat Diterbitkan</p>
+                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <i className="fas fa-arrow-up me-1"></i>
+                                        Terus meningkat
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-lg-3 col-md-6">
+                            <div 
+                                className="card border-0 h-100 text-center"
+                                style={{
+                                    borderRadius: '16px',
+                                    background: 'white',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                <div className="card-body p-3">
+                                    <div 
+                                        className="d-inline-flex align-items-center justify-content-center mb-2"
+                                        style={{
+                                            width: '50px',
+                                            height: '50px',
+                                            background: 'linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)',
+                                            borderRadius: '12px',
+                                            color: 'white',
+                                            fontSize: '1.3rem'
+                                        }}
+                                    >
+                                        <i className="fas fa-clock"></i>
+                                    </div>
+                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>24/7</h4>
+                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Akses Kapan Saja</p>
+                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <i className="fas fa-check me-1"></i>
+                                        Fleksibel
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-lg-3 col-md-6">
+                            <div 
+                                className="card border-0 h-100 text-center"
+                                style={{
+                                    borderRadius: '16px',
+                                    background: 'white',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                <div className="card-body p-3">
+                                    <div 
+                                        className="d-inline-flex align-items-center justify-content-center mb-2"
+                                        style={{
+                                            width: '50px',
+                                            height: '50px',
+                                            background: 'linear-gradient(135deg, #fd7e14 0%, #dc3545 100%)',
+                                            borderRadius: '12px',
+                                            color: 'white',
+                                            fontSize: '1.3rem'
+                                        }}
+                                    >
+                                        <i className="fas fa-video"></i>
+                                    </div>
+                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>500+</h4>
+                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Video Pembelajaran</p>
+                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <i className="fas fa-play me-1"></i>
+                                        HD Quality
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-lg-3 col-md-6">
+                            <div 
+                                className="card border-0 h-100 text-center"
+                                style={{
+                                    borderRadius: '16px',
+                                    background: 'white',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                <div className="card-body p-3">
+                                    <div 
+                                        className="d-inline-flex align-items-center justify-content-center mb-2"
+                                        style={{
+                                            width: '50px',
+                                            height: '50px',
+                                            background: 'linear-gradient(135deg, #20c997 0%, #28a745 100%)',
+                                            borderRadius: '12px',
+                                            color: 'white',
+                                            fontSize: '1.3rem'
+                                        }}
+                                    >
+                                        <i className="fas fa-star"></i>
+                                    </div>
+                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>4.8/5</h4>
+                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Rating Platform</p>
+                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <i className="fas fa-thumbs-up me-1"></i>
+                                        Sangat memuaskan
                                     </small>
                                 </div>
                             </div>
@@ -559,9 +775,9 @@ function Index() {
             </section>
 
             {/* Course Categories Section */}
-            <section className="py-5" style={{ background: 'white' }}>
+            <section className="py-5 snap-section" style={{ background: 'white' }}>
                 <div className="container">
-                    <div className="text-center mb-5">
+                    <div className="text-center mb-4">
                         <div 
                             className="badge mb-3"
                             style={{
@@ -585,17 +801,18 @@ function Index() {
                         </p>
                     </div>
 
-                    <div className="row g-4">
+                    {/* Changed to 2x4 layout (2 rows, 4 cards each - compact) */}
+                    <div className="row g-3 justify-content-center">
                         {isLoading ? (
-                            // Loading skeleton
-                            [...Array(6)].map((_, index) => (
-                                <div key={index} className="col-lg-4 col-md-6">
+                            // Loading skeleton - 8 cards
+                            [...Array(8)].map((_, index) => (
+                                <div key={index} className="col-lg-3 col-md-6">
                                     <div 
                                         className="card border-0"
                                         style={{
-                                            borderRadius: '20px',
+                                            borderRadius: '16px',
                                             background: '#f8f9fa',
-                                            height: '200px'
+                                            height: '160px'
                                         }}
                                     >
                                         <div className="card-body d-flex align-items-center justify-content-center">
@@ -607,8 +824,8 @@ function Index() {
                                 </div>
                             ))
                         ) : categories.length > 0 ? (
-                            categories.slice(0, 6).map((category, index) => (
-                                <div key={category.id} className="col-lg-4 col-md-6">
+                            categories.slice(0, 8).map((category, index) => (
+                                <div key={category.id} className="col-lg-3 col-md-6">
                                     <Link 
                                         to={`/course-list?category=${category.slug}`}
                                         className="text-decoration-none"
@@ -616,51 +833,45 @@ function Index() {
                                         <div 
                                             className="card border-0 h-100"
                                             style={{
-                                                borderRadius: '20px',
+                                                borderRadius: '16px',
                                                 background: 'white',
-                                                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+                                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
                                                 transition: 'all 0.3s ease'
                                             }}
                                         >
-                                            <div className="card-body p-4 text-center">
+                                            <div className="card-body p-3 text-center">
                                                 <div 
-                                                    className="category-icon mx-auto mb-3"
+                                                    className="category-icon mx-auto mb-2"
                                                     style={{
-                                                        width: '80px',
-                                                        height: '80px',
+                                                        width: '50px',
+                                                        height: '50px',
                                                         background: `linear-gradient(135deg, ${
-                                                            ['#667eea, #764ba2', '#28a745, #20c997', '#ffc107, #ff8800', '#dc3545, #e83e8c', '#6f42c1, #e83e8c', '#17a2b8, #138496'][index % 6]
+                                                            ['#667eea, #764ba2', '#28a745, #20c997', '#ffc107, #ff8800', '#dc3545, #e83e8c', '#17a2b8, #138496', '#6f42c1, #e83e8c', '#fd7e14, #dc3545', '#20c997, #28a745'][index % 8]
                                                         })`,
-                                                        borderRadius: '20px',
+                                                        borderRadius: '12px',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         color: 'white',
-                                                        fontSize: '2rem'
+                                                        fontSize: '1.5rem'
                                                     }}
                                                 >
                                                     <i 
                                                         className={`fas ${
-                                                            ['fa-globe', 'fa-chart-line', 'fa-paint-brush', 'fa-code', 'fa-tools', 'fa-globe'][index % 6]
+                                                            ['fa-globe', 'fa-chart-line', 'fa-paint-brush', 'fa-code', 'fa-database', 'fa-tools', 'fa-brain', 'fa-graduation-cap'][index % 8]
                                                         }`}
                                                         style={{
-                                                            fontSize: '2rem',
-                                                            lineHeight: '1',
-                                                            display: 'inline-block',
-                                                            width: 'auto',
-                                                            height: 'auto',
-                                                            minWidth: '32px',
-                                                            minHeight: '32px'
+                                                            fontSize: '1.3rem'
                                                         }}
                                                     ></i>
                                                 </div>
                                                 
-                                                <h5 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
+                                                <h6 className="fw-bold mb-1" style={{ color: '#2c3e50', fontSize: '0.95rem' }}>
                                                     {category.title}
-                                                </h5>
+                                                </h6>
                                                 
-                                                <p className="text-muted mb-3">
-                                                    {category.course_count} kursus tersedia
+                                                <p className="text-muted mb-2" style={{ fontSize: '0.8rem' }}>
+                                                    {category.course_count} kursus
                                                 </p>
                                                 
                                                 <div 
@@ -669,8 +880,10 @@ function Index() {
                                                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                                         color: 'white',
                                                         border: 'none',
-                                                        borderRadius: '10px',
-                                                        fontWeight: '500'
+                                                        borderRadius: '8px',
+                                                        fontWeight: '500',
+                                                        fontSize: '0.75rem',
+                                                        padding: '0.3rem 0.8rem'
                                                     }}
                                                 >
                                                     Lihat Kursus
@@ -708,7 +921,7 @@ function Index() {
             </section>
 
             {/* Featured Courses Section */}
-            <section id="courses-section" className="py-5" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
+            <section id="courses-section" className="py-5 snap-section" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
                 <div className="container">
                     <div className="text-center mb-5">
                         <div 
@@ -734,17 +947,18 @@ function Index() {
                         </p>
                     </div>
 
-                    <div className="row g-4">
+                    {/* Changed to 3x1 layout (1 row, 3 cards - compact) */}
+                    <div className="row g-3 justify-content-center">
                         {isLoading ? (
-                            // Loading skeleton
-                            [...Array(6)].map((_, index) => (
+                            // Loading skeleton - 3 cards
+                            [...Array(3)].map((_, index) => (
                                 <div key={index} className="col-lg-4 col-md-6">
                                     <div 
                                         className="card border-0"
                                         style={{
-                                            borderRadius: '20px',
+                                            borderRadius: '16px',
                                             background: '#f8f9fa',
-                                            height: '400px'
+                                            height: '380px'
                                         }}
                                     >
                                         <div className="card-body d-flex align-items-center justify-content-center">
@@ -756,27 +970,46 @@ function Index() {
                                 </div>
                             ))
                         ) : featuredCourses.length > 0 ? (
-                            featuredCourses.map((course) => (
+                            featuredCourses.slice(0, 3).map((course, index) => (
                                 <div key={course.id} className="col-lg-4 col-md-6">
                                     <div 
-                                        className="card border-0 h-100"
+                                        className="card border-0 h-100 course-card"
                                         style={{
-                                            borderRadius: '20px',
+                                            borderRadius: '16px',
                                             background: 'white',
-                                            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
                                             transition: 'all 0.3s ease',
-                                            overflow: 'hidden'
+                                            overflow: 'hidden',
+                                            position: 'relative'
                                         }}
                                     >
+                                        {/* Gradient Overlay on Hover */}
+                                        <div 
+                                            className="card-gradient-overlay"
+                                            style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+                                                opacity: 0,
+                                                transition: 'opacity 0.3s ease',
+                                                pointerEvents: 'none',
+                                                zIndex: 1
+                                            }}
+                                        />
+                                        
                                         {/* Course Image */}
-                                        <div className="position-relative">
+                                        <div className="position-relative" style={{ overflow: 'hidden' }}>
                                             <img 
                                                 src={getImageUrl(course.image) || "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png"} 
                                                 alt={course.title}
-                                                className="card-img-top"
+                                                className="card-img-top course-card-image"
                                                 style={{ 
-                                                    height: '200px',
-                                                    objectFit: 'cover'
+                                                    height: '180px',
+                                                    objectFit: 'cover',
+                                                    transition: 'transform 0.3s ease'
                                                 }}
                                                 onError={(e) => {
                                                     e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
@@ -787,25 +1020,33 @@ function Index() {
                                             {!isAdminOrTeacher && (
                                                 <button 
                                                     onClick={() => addToWishlist(course.id)}
-                                                    className="btn position-absolute"
+                                                    className="btn position-absolute wishlist-btn"
                                                     title={isCourseInWishlist(course.id) ? "Hapus dari wishlist" : "Tambahkan ke wishlist"}
                                                     disabled={!userId}
                                                     style={{
-                                                        top: '15px',
-                                                        right: '15px',
-                                                        width: '40px',
-                                                        height: '40px',
+                                                        top: '10px',
+                                                        right: '10px',
+                                                        width: '36px',
+                                                        height: '36px',
                                                         borderRadius: '50%',
-                                                        background: 'white',
-                                                        border: '1px solid #e9ecef',
-                                                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+                                                        background: 'rgba(255, 255, 255, 0.95)',
+                                                        backdropFilter: 'blur(10px)',
+                                                        border: 'none',
+                                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
-                                                        transition: 'all 0.3s ease'
+                                                        transition: 'all 0.3s ease',
+                                                        zIndex: 2
                                                     }}
                                                 >
-                                                    <i className={`${isCourseInWishlist(course.id) ? 'fas' : 'far'} fa-heart text-danger`} />
+                                                    <i 
+                                                        className={`${isCourseInWishlist(course.id) ? 'fas' : 'far'} fa-heart`}
+                                                        style={{
+                                                            color: isCourseInWishlist(course.id) ? '#dc3545' : '#6c757d',
+                                                            fontSize: '0.95rem'
+                                                        }}
+                                                    />
                                                 </button>
                                             )}
 
@@ -813,108 +1054,153 @@ function Index() {
                                             <div 
                                                 className="position-absolute"
                                                 style={{
-                                                    bottom: '15px',
-                                                    left: '15px'
+                                                    bottom: '10px',
+                                                    left: '10px',
+                                                    zIndex: 2
                                                 }}
                                             >
                                                 <span 
                                                     className="badge"
                                                     style={{
-                                                        background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                                         color: 'white',
-                                                        padding: '0.4rem 0.8rem',
-                                                        borderRadius: '10px',
-                                                        fontSize: '0.8rem'
+                                                        padding: '0.35rem 0.75rem',
+                                                        borderRadius: '8px',
+                                                        fontSize: '0.7rem',
+                                                        fontWeight: '600',
+                                                        boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
                                                     }}
                                                 >
+                                                    <i className="fas fa-signal me-1"></i>
                                                     {course.level}
                                                 </span>
                                             </div>
                                         </div>
 
                                         {/* Card Body */}
-                                        <div className="card-body p-4">
+                                        <div className="card-body p-3" style={{ position: 'relative', zIndex: 2 }}>
                                             {/* Category */}
                                             <div className="mb-2">
                                                 <span 
                                                     className="badge"
                                                     style={{
-                                                        background: 'rgba(102, 126, 234, 0.1)',
+                                                        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
                                                         color: '#667eea',
                                                         border: '1px solid rgba(102, 126, 234, 0.2)',
                                                         borderRadius: '8px',
-                                                        fontSize: '0.7rem',
-                                                        fontWeight: '500'
+                                                        fontSize: '0.65rem',
+                                                        fontWeight: '600',
+                                                        padding: '0.3rem 0.6rem'
                                                     }}
                                                 >
+                                                    <i className="fas fa-folder me-1"></i>
                                                     {course.category?.title || 'General'}
                                                 </span>
                                             </div>
 
                                             {/* Course Title */}
-                                            <h5 className="fw-bold mb-3">
+                                            <h6 className="fw-bold mb-2" style={{ minHeight: '42px', fontSize: '0.95rem' }}>
                                                 <Link 
                                                     to={`/course-detail/${course.slug}/`}
-                                                    className="text-decoration-none"
+                                                    className="text-decoration-none course-title-link"
                                                     style={{ 
                                                         color: '#2c3e50',
                                                         display: '-webkit-box',
                                                         WebkitLineClamp: '2',
                                                         WebkitBoxOrient: 'vertical',
-                                                        overflow: 'hidden'
+                                                        overflow: 'hidden',
+                                                        lineHeight: '1.4',
+                                                        transition: 'color 0.3s ease'
                                                     }}
                                                 >
                                                     {course.title}
                                                 </Link>
-                                            </h5>
+                                            </h6>
 
                                             {/* Instructor */}
-                                            <div className="mb-3">
-                                                <small className="text-muted d-block">
-                                                    <i className="fas fa-user me-1" style={{ color: '#667eea' }}></i>
-                                                    Oleh: {course.teacher?.full_name || 'Instruktur'}
+                                            <div className="mb-2 d-flex align-items-center">
+                                                <div 
+                                                    style={{
+                                                        width: '28px',
+                                                        height: '28px',
+                                                        borderRadius: '50%',
+                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        marginRight: '8px'
+                                                    }}
+                                                >
+                                                    <i className="fas fa-user-tie" style={{ color: 'white', fontSize: '0.7rem' }}></i>
+                                                </div>
+                                                <small className="text-muted" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                                                    {course.teacher?.full_name || 'Instruktur'}
                                                 </small>
                                             </div>
 
-                                            {/* Rating */}
-                                            <div className="d-flex align-items-center mb-3">
-                                                <div className="me-2">
+                                            {/* Rating & Stats */}
+                                            <div 
+                                                className="d-flex align-items-center justify-content-between mb-2 p-2"
+                                                style={{
+                                                    background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                                                    borderRadius: '8px'
+                                                }}
+                                            >
+                                                <div className="d-flex align-items-center">
                                                     <Rating
                                                         initialValue={course.average_rating || 0}
                                                         readonly={true}
-                                                        size={16}
+                                                        size={14}
                                                         fillColor="#ffc107"
                                                         emptyColor="#e4e5e9"
                                                     />
+                                                    <span className="text-warning fw-bold ms-1" style={{ fontSize: '0.8rem' }}>
+                                                        {course.average_rating || 0}
+                                                    </span>
                                                 </div>
-                                                <span className="text-warning fw-medium me-1">{course.average_rating || 0}</span>
-                                                <small className="text-muted">({course.reviews?.length || 0} ulasan)</small>
+                                                <small className="text-muted" style={{ fontSize: '0.7rem' }}>
+                                                    ({course.reviews?.length || 0})
+                                                </small>
                                             </div>
 
                                             {/* Students Count */}
-                                            <div className="mb-3">
-                                                <small className="text-muted">
-                                                    <i className="fas fa-users me-1" style={{ color: '#28a745' }}></i>
-                                                    {course.students?.length || 0} siswa terdaftar
+                                            <div 
+                                                className="d-flex align-items-center justify-content-between p-2 mb-2"
+                                                style={{
+                                                    background: 'rgba(40, 167, 69, 0.05)',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid rgba(40, 167, 69, 0.1)'
+                                                }}
+                                            >
+                                                <small className="text-success fw-medium" style={{ fontSize: '0.8rem' }}>
+                                                    <i className="fas fa-users me-1"></i>
+                                                    {course.students?.length || 0} siswa
+                                                </small>
+                                                <small className="text-muted" style={{ fontSize: '0.7rem' }}>
+                                                    <i className="fas fa-book-open me-1"></i>
+                                                    Aktif
                                                 </small>
                                             </div>
                                         </div>
 
                                         {/* Card Footer */}
-                                        <div className="card-footer bg-transparent border-0 p-4 pt-0">
+                                        <div className="card-footer bg-transparent border-0 p-3 pt-0" style={{ position: 'relative', zIndex: 2 }}>
                                             <Link 
                                                 to={`/course-detail/${course.slug}/`} 
-                                                className="btn btn-lg w-100 fw-medium"
+                                                className="btn w-100 fw-semibold course-detail-btn"
                                                 style={{
                                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                                     border: 'none',
-                                                    borderRadius: '12px',
+                                                    borderRadius: '10px',
                                                     color: 'white',
-                                                    transition: 'all 0.3s ease'
+                                                    transition: 'all 0.3s ease',
+                                                    padding: '0.6rem 1rem',
+                                                    fontSize: '0.85rem',
+                                                    boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
                                                 }}
                                             >
-                                                <i className="fas fa-eye me-2"></i>
-                                                Lihat Detail
+                                                <i className="fas fa-arrow-right me-2"></i>
+                                                Mulai Belajar
                                             </Link>
                                         </div>
                                     </div>
@@ -948,7 +1234,7 @@ function Index() {
             </section>
 
             {/* CTA Section */}
-            <section className="py-5" style={{ 
+            <section className="py-5 snap-section cta-section" style={{ 
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white'
             }}>
@@ -973,7 +1259,13 @@ function Index() {
                                     border: 'none',
                                     borderRadius: '15px',
                                     fontWeight: '600',
-                                    boxShadow: '0 8px 25px rgba(255, 255, 255, 0.2)'
+                                    boxShadow: '0 8px 25px rgba(255, 255, 255, 0.2)',
+                                    cursor: 'pointer',
+                                    pointerEvents: 'auto',
+                                    position: 'relative',
+                                    zIndex: 10,
+                                    textDecoration: 'none',
+                                    display: 'inline-block'
                                 }}
                             >
                                 <i className="fas fa-rocket me-2"></i>
@@ -985,7 +1277,7 @@ function Index() {
             </section>
 
             {/* Testimonials Section */}
-            <section className="py-5" style={{ background: 'white' }}>
+            <section className="py-5 snap-section" style={{ background: 'white' }}>
                 <div className="container">
                     <div className="text-center mb-5">
                         <div 
@@ -1002,16 +1294,16 @@ function Index() {
                             Testimoni
                         </div>
                         
-                        <h2 className="display-6 fw-bold mb-3" style={{ color: '#2c3e50' }}>
+                        <h2 className="display-6 fw-bold mb-3" style={{ color: '#2c3e50', fontSize: '2.2rem' }}>
                             Apa Kata Mereka?
                         </h2>
                         
-                        <p className="lead text-muted">
+                        <p className="lead text-muted mb-0" style={{ fontSize: '1.1rem' }}>
                             Pengalaman nyata dari para peserta yang telah merasakan manfaat LMSetjen DPD RI
                         </p>
                     </div>
 
-                    <div className="row g-4">
+                    <div className="row g-3">
                         {/* Testimonial 1 */}
                         <div className="col-lg-4">
                             <div 
@@ -1019,17 +1311,17 @@ function Index() {
                                 style={{
                                     borderRadius: '20px',
                                     background: 'white',
-                                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+                                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
                                     border: '1px solid #e9ecef'
                                 }}
                             >
-                                <div className="card-body text-center p-5">
+                                <div className="card-body text-center p-4">
                                     {/* Avatar */}
                                     <div 
-                                        className="mx-auto mb-4"
+                                        className="mx-auto mb-3"
                                         style={{
-                                            width: '80px',
-                                            height: '80px',
+                                            width: '70px',
+                                            height: '70px',
                                             borderRadius: '50%',
                                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                             display: 'flex',
@@ -1043,7 +1335,7 @@ function Index() {
                                     </div>
                                     
                                     {/* Quote */}
-                                    <p className="mb-4 fst-italic" style={{ lineHeight: '1.6', color: '#6c757d' }}>
+                                    <p className="mb-3 fst-italic" style={{ lineHeight: '1.7', color: '#6c757d', fontSize: '0.95rem' }}>
                                         "Platform yang sangat membantu dalam pengembangan skill. 
                                         Materi yang disajikan berkualitas dan mudah dipahami. Saya berhasil 
                                         meningkatkan kemampuan analisis data dengan mengikuti kursus di sini."
@@ -1051,17 +1343,17 @@ function Index() {
                                     
                                     {/* Rating */}
                                     <div className="mb-3">
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <span className="text-warning fw-medium ms-2">5.0</span>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <span className="text-warning fw-medium ms-2" style={{ fontSize: '0.95rem' }}>5.0</span>
                                     </div>
                                     
                                     {/* User Info */}
-                                    <h6 className="fw-bold mb-1" style={{ color: '#343a40' }}>Siti Rahayu, S.E.</h6>
-                                    <small className="text-muted">Staff Keuangan Setjen DPD RI Provinsi Jawa Barat</small>
+                                    <h6 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Siti Rahayu, S.E.</h6>
+                                    <small className="text-muted" style={{ fontSize: '0.85rem' }}>Staff Keuangan Setjen DPD RI</small>
                                 </div>
                             </div>
                         </div>
@@ -1073,17 +1365,17 @@ function Index() {
                                 style={{
                                     borderRadius: '20px',
                                     background: 'white',
-                                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+                                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
                                     border: '1px solid #e9ecef'
                                 }}
                             >
-                                <div className="card-body text-center p-5">
+                                <div className="card-body text-center p-4">
                                     {/* Avatar */}
                                     <div 
-                                        className="mx-auto mb-4"
+                                        className="mx-auto mb-3"
                                         style={{
-                                            width: '80px',
-                                            height: '80px',
+                                            width: '70px',
+                                            height: '70px',
                                             borderRadius: '50%',
                                             background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
                                             display: 'flex',
@@ -1097,7 +1389,7 @@ function Index() {
                                     </div>
                                     
                                     {/* Quote */}
-                                    <p className="mb-4 fst-italic" style={{ lineHeight: '1.6', color: '#6c757d' }}>
+                                    <p className="mb-3 fst-italic" style={{ lineHeight: '1.7', color: '#6c757d', fontSize: '0.95rem' }}>
                                         "Sistem pembelajaran yang user-friendly dan instruktur yang kompeten. 
                                         Sangat recommended untuk pengembangan karir. Kursus manajemen proyek 
                                         membantu saya dalam mengorganisir pekerjaan dengan lebih efektif."
@@ -1105,17 +1397,17 @@ function Index() {
                                     
                                     {/* Rating */}
                                     <div className="mb-3">
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <span className="text-warning fw-medium ms-2">5.0</span>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <span className="text-warning fw-medium ms-2" style={{ fontSize: '0.95rem' }}>5.0</span>
                                     </div>
                                     
                                     {/* User Info */}
-                                    <h6 className="fw-bold mb-1" style={{ color: '#343a40' }}>Ahmad Fauzi, S.H.</h6>
-                                    <small className="text-muted">Analis Kebijakan Setjen DPD RI Pusat</small>
+                                    <h6 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Ahmad Fauzi, S.H.</h6>
+                                    <small className="text-muted" style={{ fontSize: '0.85rem' }}>Analis Kebijakan Setjen DPD RI</small>
                                 </div>
                             </div>
                         </div>
@@ -1127,17 +1419,17 @@ function Index() {
                                 style={{
                                     borderRadius: '20px',
                                     background: 'white',
-                                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+                                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
                                     border: '1px solid #e9ecef'
                                 }}
                             >
-                                <div className="card-body text-center p-5">
+                                <div className="card-body text-center p-4">
                                     {/* Avatar */}
                                     <div 
-                                        className="mx-auto mb-4"
+                                        className="mx-auto mb-3"
                                         style={{
-                                            width: '80px',
-                                            height: '80px',
+                                            width: '70px',
+                                            height: '70px',
                                             borderRadius: '50%',
                                             background: 'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)',
                                             display: 'flex',
@@ -1151,7 +1443,7 @@ function Index() {
                                     </div>
                                     
                                     {/* Quote */}
-                                    <p className="mb-4 fst-italic" style={{ lineHeight: '1.6', color: '#6c757d' }}>
+                                    <p className="mb-3 fst-italic" style={{ lineHeight: '1.7', color: '#6c757d', fontSize: '0.95rem' }}>
                                         "Fitur-fitur pembelajaran yang lengkap dan user-friendly. Platform ini benar-benar 
                                         membantu dalam meningkatkan efektivitas proses pembelajaran di institusi. 
                                         Interface yang intuitif memudahkan navigasi untuk semua kalangan usia."
@@ -1159,27 +1451,34 @@ function Index() {
                                     
                                     {/* Rating */}
                                     <div className="mb-3">
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <i className="fas fa-star text-warning me-1"></i>
-                                        <span className="text-warning fw-medium ms-2">5.0</span>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
+                                        <span className="text-warning fw-medium ms-2" style={{ fontSize: '0.95rem' }}>5.0</span>
                                     </div>
                                     
                                     {/* User Info */}
-                                    <h6 className="fw-bold mb-1" style={{ color: '#343a40' }}>Dr. Muhammad Sadli</h6>
-                                    <small className="text-muted">Kepala Biro Umum Setjen DPD RI</small>
+                                    <h6 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Dr. Muhammad Sadli</h6>
+                                    <small className="text-muted" style={{ fontSize: '0.85rem' }}>Kepala Biro Umum Setjen DPD RI</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                {/* Footer integrated into last section - Zero spacing */}
+                <div style={{ 
+                    // marginTop: '10rem',
+                    paddingTop: '10rem', 
+                    marginBottom: '0', 
+                    paddingBottom: '0' 
+                }}>
+                    <BaseFooter />
+                </div>
             </section>
-
-
-
-            <BaseFooter />
+            </div>
         </>
     );
 }

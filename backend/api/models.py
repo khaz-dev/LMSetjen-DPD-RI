@@ -170,16 +170,20 @@ class Variant(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     title = models.CharField(max_length=1000)
     variant_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    order = models.IntegerField(default=0, db_index=True)  # For consistent ordering
     date = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['order', 'date']  # Ensure consistent retrieval order
 
     def __str__(self):
         return self.title
     
     def variant_items(self):
-        return VariantItem.objects.filter(variant=self)
+        return VariantItem.objects.filter(variant=self).order_by('order', 'date')
     
     def items(self):
-        return VariantItem.objects.filter(variant=self)
+        return VariantItem.objects.filter(variant=self).order_by('order', 'date')
     
     
 class VariantItem(models.Model):
@@ -190,7 +194,11 @@ class VariantItem(models.Model):
     duration = models.DurationField(null=True, blank=True)  # Store precise duration for videos
     preview = models.BooleanField(default=False)
     variant_item_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    order = models.IntegerField(default=0, db_index=True)  # For consistent ordering
     date = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['order', 'date']  # Ensure consistent retrieval order
 
     def __str__(self):
         return f"{self.variant.title} - {self.title}"

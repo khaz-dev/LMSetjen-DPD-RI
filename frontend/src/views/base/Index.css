@@ -1,6 +1,259 @@
-/* Index Page Animations and Styles */
+/* ==========================================
+   INDEX PAGE - LANDING PAGE STYLES
+   Isolated with .landing-page-container scope to prevent conflicts
+   ========================================== */
 
-@keyframes float {
+/* Smooth scrolling for the entire document */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Hide scrollbar for landing page only */
+.landing-page-container::-webkit-scrollbar {
+    display: none !important;
+}
+
+.landing-page-container {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+/* === SCROLL SNAP CONTAINER === */
+/* Comprehensive fix for footer accessibility */
+.landing-page-container {
+    scroll-snap-type: y proximity !important; /* Changed to proximity for easier footer access */
+    overflow-y: auto !important; /* Changed to auto for better scroll control */
+    height: 100vh !important;
+    height: 100dvh !important;
+    scroll-behavior: smooth !important;
+    scroll-padding-top: 0 !important;
+    scroll-padding-bottom: 0 !important; /* Added for footer */
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+    position: relative;
+    -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+}
+
+/* Snap Sections - More relaxed snapping */
+.landing-page-container .snap-section {
+    scroll-snap-align: start !important;
+    scroll-snap-stop: normal !important; /* Allow skipping through sections */
+    min-height: 95vh !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    padding: 2rem 0 !important; /* Reduced padding */
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    margin-bottom: 0 !important;
+}
+
+/* First section (Hero) */
+.landing-page-container .snap-section:first-child {
+    padding-top: 5rem !important;
+    padding-bottom: 2rem !important;
+}
+
+/* CTA Section */
+.landing-page-container .cta-section {
+    justify-content: center !important;
+    padding: 4rem 0 !important;
+    min-height: 100vh !important; /* Full viewport height for complete section */
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Ensure CTA section content is clickable */
+.landing-page-container .cta-section .container {
+    position: relative !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure all links and buttons in CTA section are clickable */
+.landing-page-container .cta-section a,
+.landing-page-container .cta-section button,
+.landing-page-container .cta-section .btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 3 !important;
+}
+
+/* Last section (Testimonials) - Critical footer fix */
+.landing-page-container .snap-section:last-child {
+    height: auto !important;
+    min-height: auto !important; /* Remove min-height constraint */
+    max-height: none !important;
+    scroll-snap-align: none !important; /* Disable snap on last section */
+    scroll-snap-stop: normal !important;
+    justify-content: flex-start !important;
+    padding-top: 3rem !important;
+    padding-bottom: 0 !important; /* Remove bottom padding to eliminate gap */
+    margin-bottom: 0 !important;
+    overflow: visible !important;
+}
+
+/* Footer wrapper - Ensure footer is fully visible */
+.landing-page-container .snap-section:last-child > div:last-child {
+    margin-top: 3rem !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important; /* Remove padding to eliminate gap */
+}
+
+/* === SECTION NAVIGATION INDICATOR === */
+/* Fixed navigation dots - Scoped and cursor pointer added */
+.section-navigation {
+    position: fixed !important;
+    right: 2rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+}
+
+.section-nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer !important; /* Added cursor pointer for better UX */
+    transition: all 0.3s ease;
+}
+
+.section-nav-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9); /* More opaque white */
+    border: 2px solid rgba(255, 255, 255, 1); /* Solid white border */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Stronger shadow for contrast */
+    transition: all 0.3s ease;
+    position: relative;
+    backdrop-filter: blur(4px); /* Subtle blur effect */
+    cursor: pointer !important; /* Added cursor pointer */
+}
+
+.section-nav-item.active .section-nav-dot {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: white; /* White border for better contrast */
+    transform: scale(1.3);
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.8), 0 4px 15px rgba(0, 0, 0, 0.4); /* Stronger glow */
+}
+
+.section-nav-label {
+    position: absolute;
+    right: 30px;
+    background: white;
+    color: #2c3e50;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.section-nav-item:hover .section-nav-label,
+.section-nav-item.active .section-nav-label {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.section-nav-item.active .section-nav-label {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+/* Pulse animation for active dot */
+.section-nav-item.active .section-nav-dot::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #667eea;
+    animation: pulse-landing 2s infinite;
+}
+
+@keyframes pulse-landing {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
+}
+
+/* Section fade-in animation - Scoped to landing page */
+@keyframes fadeInUpLanding {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.landing-page-container .snap-section > * {
+    animation: fadeInUpLanding 0.8s ease-out;
+}
+
+/* Disable scroll snap on small screens for better UX */
+@media (max-width: 768px) {
+    .landing-page-container {
+        scroll-snap-type: none !important;
+        height: auto !important; /* Changed to auto for mobile */
+        min-height: 100vh !important;
+        margin-top: 60px !important; /* Smaller header on mobile */
+        overflow-y: auto !important; /* Ensure scrolling works */
+    }
+    
+    .landing-page-container .snap-section {
+        min-height: auto !important; /* Auto height on mobile */
+        max-height: none !important; /* Allow scrolling */
+        padding: 3rem 0 !important;
+        scroll-snap-align: none !important; /* Disable snap on mobile */
+        overflow: visible !important; /* Show all content */
+    }
+    
+    .section-navigation {
+        display: none !important; /* Hide navigation on mobile */
+    }
+    
+    footer.footer-hidden {
+        transform: translateY(0) !important; /* Always show footer on mobile */
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+    
+    .landing-page-container .hero-section {
+        min-height: auto !important;
+        padding: 80px 0 !important;
+    }
+    
+    .landing-page-container .hero-btn-primary,
+    .landing-page-container .hero-btn-secondary {
+        padding: 12px 25px !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+/* Landing Page Animations - Scoped with unique names */
+@keyframes floatLanding {
     0%, 100% { 
         transform: translateY(0); 
     }
@@ -9,7 +262,7 @@
     }
 }
 
-@keyframes bounce {
+@keyframes bounceLanding {
     0%, 20%, 53%, 80%, 100% { 
         transform: translateY(0); 
     }
@@ -24,30 +277,75 @@
     }
 }
 
-/* Card Hover Effects */
-.card:hover {
-    transform: translateY(-8px);
+/* Card Hover Effects - Scoped to landing page */
+.landing-page-container .card:hover {
+    transform: translateY(-8px) !important;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease !important;
 }
 
-/* Animation Classes */
-.animate-bounce {
-    animation: bounce 2s infinite;
+/* Course Card Enhanced Hover Effects - Scoped to landing page */
+.landing-page-container .course-card:hover {
+    transform: translateY(-12px) scale(1.02) !important;
+    box-shadow: 0 20px 50px rgba(102, 126, 234, 0.25) !important;
 }
 
-.animate-float {
-    animation: float 3s ease-in-out infinite;
+.landing-page-container .course-card:hover .card-gradient-overlay {
+    opacity: 1 !important;
 }
 
-/* Loading States */
-.loading-shimmer {
+.landing-page-container .course-card:hover .course-card-image {
+    transform: scale(1.1) !important;
+}
+
+.landing-page-container .course-card:hover .course-title-link {
+    color: #667eea !important;
+}
+
+.landing-page-container .wishlist-btn:hover {
+    transform: scale(1.15) !important;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2) !important;
+}
+
+.landing-page-container .course-detail-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.45) !important;
+}
+
+/* Staggered animation for course cards - Landing page specific */
+@keyframes fadeInUpCard {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.landing-page-container .col-lg-4.col-md-6 {
+    animation: fadeInUpCard 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+/* Animation Classes - Landing page specific */
+.landing-page-container .animate-bounce {
+    animation: bounceLanding 2s infinite;
+}
+
+.landing-page-container .animate-float {
+    animation: floatLanding 3s ease-in-out infinite;
+}
+
+/* Loading States - Landing page specific */
+.landing-page-container .loading-shimmer {
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    animation: shimmerLanding 1.5s infinite;
 }
 
-@keyframes shimmer {
+@keyframes shimmerLanding {
     0% {
         background-position: -200% 0;
     }
@@ -57,34 +355,37 @@
 }
 
 /* === HERO SECTION STYLES === */
-.hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    position: relative;
-    overflow: hidden;
+/* Scoped to landing page for isolation */
+.landing-page-container .hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    min-height: 95vh !important; /* Changed to min-height for flexibility */
+    display: flex !important;
+    align-items: center !important; /* Center for hero */
+    justify-content: center !important;
+    position: relative !important;
+    overflow: visible !important; /* Changed to visible for better display */
+    padding: 5rem 0 1.5rem 0 !important; /* Account for header */
 }
 
-.hero-background-pattern {
+.landing-page-container .hero-background-pattern {
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     top: 0;
     left: 0;
     z-index: 1;
 }
 
-.hero-container {
+.landing-page-container .hero-container {
     z-index: 2;
 }
 
-.hero-badge {
+.landing-page-container .hero-badge {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 50px;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.hero-title {
+.landing-page-container .hero-title {
     background: linear-gradient(45deg, #ffffff, #f8f9fa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -92,16 +393,16 @@
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.hero-title-accent {
+.landing-page-container .hero-title-accent {
     color: #ffd700;
 }
 
-.hero-description {
+.landing-page-container .hero-description {
     line-height: 1.6;
     font-size: 1.1rem;
 }
 
-.hero-btn-primary {
+.landing-page-container .hero-btn-primary {
     background: linear-gradient(45deg, #ff6b6b, #ee5a24);
     border: none;
     padding: 15px 35px;
@@ -110,7 +411,7 @@
     transition: all 0.3s ease;
 }
 
-.hero-btn-secondary {
+.landing-page-container .hero-btn-secondary {
     background: rgba(255, 255, 255, 0.15);
     border: 2px solid rgba(255, 255, 255, 0.3);
     padding: 13px 35px;
@@ -119,7 +420,7 @@
     transition: all 0.3s ease;
 }
 
-.hero-stats-card {
+.landing-page-container .hero-stats-card {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     backdrop-filter: blur(15px);
@@ -127,7 +428,7 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.hero-stats-icon {
+.landing-page-container .hero-stats-icon {
     background: linear-gradient(45deg, #ffd700, #ffed4e);
     width: 50px;
     height: 50px;
@@ -139,19 +440,21 @@
     font-size: 1.2rem;
 }
 
-/* Hero Title Highlight */
-.hero-title-highlight {
+/* Hero Title Highlight - Landing page specific */
+.landing-page-container .hero-title-highlight {
     color: #ffd700;
 }
 
-/* Hero Description */
-.hero-description {
-    line-height: 1.6;
-    font-size: 1.1rem;
+/* Hero Main Title - Landing page specific */
+.landing-page-container .hero-main-title {
+    background: linear-gradient(45deg, #ffffff, #f8f9fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-/* Hero Button Primary (White) */
-.hero-btn-primary {
+/* Hero Button Primary (White) - Landing page specific */
+.landing-page-container .hero-btn-primary {
     background: white;
     color: #667eea;
     border-radius: 15px;
@@ -161,8 +464,13 @@
     transition: all 0.3s ease;
 }
 
-/* Hero Button Secondary (Outline) */
-.hero-btn-secondary-outline {
+.landing-page-container .hero-btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(255, 255, 255, 0.35);
+}
+
+/* Hero Button Secondary (Outline) - Landing page specific */
+.landing-page-container .hero-btn-secondary-outline {
     border-radius: 15px;
     font-weight: 600;
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -170,15 +478,20 @@
     transition: all 0.3s ease;
 }
 
-/* Hero Right Image */
-.hero-right-image {
+.landing-page-container .hero-btn-secondary-outline:hover {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Hero Right Image - Landing page specific */
+.landing-page-container .hero-right-image {
     border-radius: 20px;
     max-height: 500px;
     object-fit: cover;
 }
 
-/* Floating Stats Card */
-.floating-stats-card {
+/* Floating Stats Card - Landing page specific */
+.landing-page-container .floating-stats-card {
     top: 10%;
     right: -5%;
     background: white;
@@ -186,11 +499,11 @@
     padding: 1rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     border: 1px solid #e9ecef;
-    animation: float 3s ease-in-out infinite;
+    animation: floatLanding 3s ease-in-out infinite;
 }
 
-/* Floating Card Icon */
-.floating-card-icon {
+/* Floating Card Icon - Landing page specific */
+.landing-page-container .floating-card-icon {
     width: 50px;
     height: 50px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -201,13 +514,13 @@
     color: white;
 }
 
-/* Card Heading Text */
-.card-heading-text {
+/* Card Heading Text - Landing page specific */
+.landing-page-container .card-heading-text {
     color: #2c3e50;
 }
 
-/* Floating Stats Card Bottom */
-.floating-stats-card-bottom {
+/* Floating Stats Card Bottom - Landing page specific */
+.landing-page-container .floating-stats-card-bottom {
     bottom: 20%;
     left: -10%;
     background: white;
@@ -215,11 +528,11 @@
     padding: 1rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     border: 1px solid #e9ecef;
-    animation: float 3s ease-in-out infinite reverse;
+    animation: floatLanding 3s ease-in-out infinite reverse;
 }
 
-/* Floating Card Icon Green */
-.floating-card-icon-green {
+/* Floating Card Icon Green - Landing page specific */
+.landing-page-container .floating-card-icon-green {
     width: 50px;
     height: 50px;
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
@@ -230,8 +543,8 @@
     color: white;
 }
 
-/* Scroll Indicator */
-.hero-scroll-indicator {
+/* Scroll Indicator - Landing page specific */
+.landing-page-container .hero-scroll-indicator {
     bottom: 2rem;
     left: 0;
     z-index: 2;
@@ -315,7 +628,8 @@
     color: #2c3e50;
 }
 
-.hero-progress-card {
+/* Hero Progress Card - Landing page specific */
+.landing-page-container .hero-progress-card {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     backdrop-filter: blur(15px);
@@ -323,7 +637,7 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.hero-progress-icon {
+.landing-page-container .hero-progress-icon {
     background: linear-gradient(45deg, #74b9ff, #0984e3);
     width: 50px;
     height: 50px;
@@ -335,22 +649,23 @@
     font-size: 1.2rem;
 }
 
-.hero-progress-title {
+.landing-page-container .hero-progress-title {
     color: #2c3e50;
 }
 
-.hero-wave {
+.landing-page-container .hero-wave {
     bottom: 2rem;
     left: 0;
     z-index: 2;
 }
 
 /* === STATS SECTION === */
-.stats-section {
-    background: white;
+/* Landing page specific styling */
+.landing-page-container .stats-section {
+    background: white !important;
 }
 
-.stats-card {
+.landing-page-container .stats-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 20px;
     transition: all 0.3s ease;
@@ -358,34 +673,27 @@
     box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
 }
 
-.stats-title {
+.landing-page-container .stats-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+}
+
+.landing-page-container .stats-title {
     color: #2c3e50;
 }
 
 /* === TEXT COLORS === */
-.text-primary-custom {
-    color: #2c3e50;
+/* Landing page specific text colors */
+.landing-page-container .text-primary-custom {
+    color: #2c3e50 !important;
 }
 
-.text-accent {
-    color: #ffd700;
+.landing-page-container .text-accent {
+    color: #ffd700 !important;
 }
 
-/* === RESPONSIVE OPTIMIZATIONS === */
-@media (max-width: 768px) {
-    .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-    }
-    
-    .hero-section {
-        min-height: auto;
-        padding: 80px 0;
-    }
-    
-    .hero-btn-primary,
-    .hero-btn-secondary {
-        padding: 12px 25px;
-        font-size: 0.9rem;
-    }
-}
+/* ==========================================
+   END OF INDEX PAGE SCOPED STYLES
+   All styles are now isolated to .landing-page-container
+   This prevents conflicts with other pages
+   ========================================== */

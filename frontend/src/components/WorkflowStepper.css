@@ -1,9 +1,11 @@
 .workflow-stepper-container {
-    background: var(--instructor-gradient);
-    border-radius: 12px;
-    padding: 25px 30px;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-    margin-bottom: 30px;
+    background: var(--theme-gradient);
+    border-radius: 25px;
+    padding: 18px 24px;
+    box-shadow: 0 25px 50px var(--theme-shadow-color);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
 }
 
 .workflow-stepper {

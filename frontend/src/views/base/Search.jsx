@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Rating } from "react-simple-star-rating";
+import Swal from "sweetalert2";
 
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
@@ -18,6 +19,8 @@ function Search() {
     const [wishlistItems, setWishlistItems] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState("all");
     
     const userData = UserData();
     const userId = userData?.user_id;
@@ -48,6 +51,10 @@ function Search() {
             const response = await useAxios.get(`course/course-list/`);
             setCourses(response.data);
             setAllCourses(response.data);
+            
+            // Extract unique categories from courses
+            const uniqueCategories = [...new Set(response.data.map(course => course.category?.title).filter(Boolean))];
+            setCategories(uniqueCategories);
         } catch (error) {
             console.error("Error fetching courses:", error);
             Toast().fire({
@@ -145,27 +152,159 @@ function Search() {
     const handleSearch = (e) => {
         const query = e.target.value;
         setSearchQuery(query);
-        const lowerQuery = query.toLowerCase();
+        filterCourses(query, selectedCategory);
+    };
 
-        if (lowerQuery === "") {
-            setCourses(allCourses);
-        } else {
-            const filteredCourses = allCourses.filter((course) => 
-                course.title.toLowerCase().includes(lowerQuery)
+    // Category filter handler
+    const handleCategoryChange = (category) => {
+        setSelectedCategory(category);
+        filterCourses(searchQuery, category);
+        setCurrentPage(1);
+    };
+
+    // Combined filter function
+    const filterCourses = (query, category) => {
+        let filtered = [...allCourses];
+
+        // Filter by search query
+        if (query) {
+            const lowerQuery = query.toLowerCase();
+            filtered = filtered.filter((course) => 
+                course.title.toLowerCase().includes(lowerQuery) ||
+                course.teacher?.full_name?.toLowerCase().includes(lowerQuery)
             );
-            setCourses(filteredCourses);
-            setCurrentPage(1);
         }
+
+        // Filter by category
+        if (category && category !== "all") {
+            filtered = filtered.filter((course) => 
+                course.category?.title === category
+            );
+        }
+
+        setCourses(filtered);
+        setCurrentPage(1);
     };
 
     // Clear search
     const handleClearSearch = () => {
         setSearchQuery("");
+        setSelectedCategory("all");
         setCourses(allCourses);
         setCurrentPage(1);
         if (searchInputRef.current) {
             searchInputRef.current.focus();
         }
+    };
+
+    // Handle instructor application email
+    const handleStartTeaching = () => {
+        const email = "sdm@dpd.go.id";
+        const subject = "Application to Become an Instructor";
+        const emailBody = `Hello,
+
+I would like to apply to become an instructor on the LMS DPD RI platform.
+
+Name: [Your Full Name]
+Email: [Your Email]
+Phone: [Your Phone Number]
+Expertise Area: [Your Expertise]
+
+Thank you for considering my application.
+
+Best regards`;
+
+        Swal.fire({
+            title: '<strong>Become an Instructor</strong>',
+            html: `
+                <div style="text-align: left; padding: 20px;">
+                    <p style="margin-bottom: 15px; color: #555;">
+                        To apply as an instructor, please send an email with the following details:
+                    </p>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #667eea; display: block; margin-bottom: 5px;">
+                                📧 Email To:
+                            </strong>
+                            <code style="background: white; padding: 8px 12px; border-radius: 6px; display: inline-block; font-size: 14px;">
+                                ${email}
+                            </code>
+                            <button onclick="navigator.clipboard.writeText('${email}'); 
+                                this.innerHTML='✓ Copied!'; 
+                                this.style.background='#28a745';
+                                setTimeout(() => { this.innerHTML='Copy'; this.style.background='#667eea'; }, 2000);"
+                                style="margin-left: 10px; padding: 5px 15px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                Copy
+                            </button>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #667eea; display: block; margin-bottom: 5px;">
+                                📋 Subject:
+                            </strong>
+                            <code style="background: white; padding: 8px 12px; border-radius: 6px; display: block; font-size: 14px;">
+                                ${subject}
+                            </code>
+                        </div>
+                        
+                        <div>
+                            <strong style="color: #667eea; display: block; margin-bottom: 5px;">
+                                ✉️ Email Template:
+                            </strong>
+                            <textarea readonly
+                                style="width: 100%; height: 200px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 13px; resize: vertical;"
+                                onclick="this.select();"
+                            >${emailBody}</textarea>
+                            <button onclick="navigator.clipboard.writeText(\`${emailBody.replace(/`/g, '\\`')}\`); 
+                                this.innerHTML='✓ Template Copied!'; 
+                                this.style.background='#28a745';
+                                setTimeout(() => { this.innerHTML='Copy Template'; this.style.background='#667eea'; }, 2000);"
+                                style="width: 100%; margin-top: 10px; padding: 10px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                Copy Template
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196f3;">
+                        <strong style="color: #1976d2; display: block; margin-bottom: 5px;">
+                            💡 How to Apply:
+                        </strong>
+                        <ol style="margin: 5px 0; padding-left: 20px; color: #555; font-size: 14px;">
+                            <li>Copy the email address and template above</li>
+                            <li>Open your email client (Gmail, Outlook, etc.)</li>
+                            <li>Paste the email address in the "To" field</li>
+                            <li>Paste the subject line</li>
+                            <li>Paste the template and fill in your details</li>
+                            <li>Click "Send Email" button below for quick access</li>
+                        </ol>
+                    </div>
+                </div>
+            `,
+            icon: 'info',
+            width: '700px',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-envelope"></i> Send Email',
+            cancelButtonText: 'Close',
+            confirmButtonColor: '#667eea',
+            cancelButtonColor: '#6c757d',
+            customClass: {
+                confirmButton: 'btn-lg',
+                cancelButton: 'btn-lg'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Try to open email client with mailto
+                const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+                window.open(mailtoLink, '_blank');
+                
+                Toast().fire({
+                    icon: "success",
+                    title: "Opening your email client...",
+                    timer: 3000
+                });
+            }
+        });
     };
 
     // Pagination calculations
@@ -217,34 +356,16 @@ function Search() {
                                         Find the perfect course to advance your skills and achieve your learning goals
                                     </p>
                                     
-                                    <div className="modern-search-card">
-                                        <div className="search-input-container">
-                                            <input
-                                                ref={searchInputRef}
-                                                type="text"
-                                                className="form-control form-control-search"
-                                                placeholder="Search for courses, topics, or instructors..."
-                                                value={searchQuery}
-                                                onChange={handleSearch}
-                                            />
-                                            <i className="fas fa-search search-icon"></i>
-                                        </div>
-                                        
-                                        {searchQuery && (
-                                            <div className="mt-3 d-flex justify-content-between align-items-center">
-                                                <small className="text-muted">
-                                                    Found {courses.length} course{courses.length !== 1 ? 's' : ''} 
-                                                    {searchQuery && ` for "${searchQuery}"`}
-                                                </small>
-                                                <button 
-                                                    className="btn btn-outline-secondary btn-sm"
-                                                    onClick={handleClearSearch}
-                                                >
-                                                    <i className="fas fa-times me-1"></i>
-                                                    Clear
-                                                </button>
-                                            </div>
-                                        )}
+                                    <div className="search-input-container">
+                                        <input
+                                            ref={searchInputRef}
+                                            type="text"
+                                            className="form-control form-control-search"
+                                            placeholder="Search for courses, topics, or instructors..."
+                                            value={searchQuery}
+                                            onChange={handleSearch}
+                                        />
+                                        <i className="fas fa-search search-icon"></i>
                                     </div>
                                 </div>
                             </div>
@@ -253,11 +374,11 @@ function Search() {
                 </section>
 
                 {/* Results Section */}
-                <section className="py-3">
+                <section className="py-2">
                     <div className="container">
                         {/* Results Header */}
                         <div className="results-header-card">
-                            <div className="row align-items-center">
+                            <div className="row align-items-center mb-3">
                                 <div className="col-md-6">
                                     <h3 className="mb-0 fw-bold text-dark">
                                         {searchQuery ? `Search Results` : `All Courses`}
@@ -265,6 +386,7 @@ function Search() {
                                     <p className="text-muted mb-0">
                                         {courses.length} course{courses.length !== 1 ? 's' : ''} available
                                         {searchQuery && ` matching "${searchQuery}"`}
+                                        {selectedCategory !== "all" && ` in ${selectedCategory}`}
                                     </p>
                                 </div>
                                 <div className="col-md-6 text-md-end">
@@ -276,6 +398,32 @@ function Search() {
                                             {courses.length} Results
                                         </span>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Category Filter */}
+                            <div className="category-filter-section">
+                                <div className="d-flex align-items-center gap-2 flex-wrap">
+                                    <span className="filter-label">
+                                        <i className="fas fa-filter me-2"></i>
+                                        Filter by Category:
+                                    </span>
+                                    <button
+                                        className={`category-filter-btn ${selectedCategory === "all" ? "active" : ""}`}
+                                        onClick={() => handleCategoryChange("all")}
+                                    >
+                                        <i className="fas fa-th-large me-1"></i>
+                                        All Categories
+                                    </button>
+                                    {categories.map((category, index) => (
+                                        <button
+                                            key={index}
+                                            className={`category-filter-btn ${selectedCategory === category ? "active" : ""}`}
+                                            onClick={() => handleCategoryChange(category)}
+                                        >
+                                            {category}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -367,17 +515,17 @@ function Search() {
                                                         </Link>
                                                     </h4>
                                                     
-                                                    <div className="course-meta">
+                                                    <div className="course-meta-search">
                                                         <i className="fas fa-user me-1"></i>
                                                         <span>{c.teacher?.full_name || 'Unknown Instructor'}</span>
                                                     </div>
                                                     
-                                                    <div className="course-meta">
+                                                    <div className="course-meta-search">
                                                         <i className="fas fa-users me-1"></i>
                                                         <span>{c.students?.length || 0} Student{(c.students?.length || 0) !== 1 ? 's' : ''}</span>
                                                     </div>
 
-                                                    <div className="course-meta mb-2">
+                                                    <div className="course-meta-search mb-2">
                                                         <span className="badge bg-info me-1">{c.level}</span>
                                                         <span className="badge bg-success">{c.category?.title || 'General'}</span>
                                                     </div>
@@ -442,7 +590,7 @@ function Search() {
                 </section>
 
                 {/* Call to Action Section */}
-                <section className="container mb-2 mt-3">
+                <section className="container" style={{ paddingTop: '6rem', paddingBottom: '4rem' }}>
                     <div className="cta-section">
                         <div className="cta-content">
                             <div className="row align-items-center">
@@ -454,18 +602,21 @@ function Search() {
                                     </p>
                                 </div>
                                 <div className="col-lg-4 text-lg-end mt-4 mt-lg-0">
-                                    <Link to="/instructor/dashboard" className="btn-cta">
+                                    <button 
+                                        onClick={handleStartTeaching}
+                                        className="btn-cta"
+                                        style={{ border: 'none', cursor: 'pointer' }}
+                                    >
                                         <span>Start Teaching</span>
                                         <i className="fas fa-arrow-right"></i>
-                                    </Link>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
             </div>
-
-            <BaseFooter />
+        <BaseFooter />
         </>
     );
 }
