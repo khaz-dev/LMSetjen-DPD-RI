@@ -43,8 +43,8 @@ logs/
 Dockerfile
 docker-compose*.yml
 .dockerignore
-nginx.conf
-docker-entrypoint.sh
+# nginx.conf - NEEDED for Docker build
+# docker-entrypoint.sh - NEEDED for Docker build
 
 # Temporary files
 *.tmp
