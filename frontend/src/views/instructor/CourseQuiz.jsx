@@ -447,14 +447,14 @@ function CourseQuiz() {
                             <div className="create-header-modern">
                                 <div className="d-lg-flex align-items-center justify-content-between">
                                     <div className="mb-4 mb-lg-0">
-                                        <h1 className="text-white mb-2">
+                                        <h3 className="text-white mb-2">
                                             <i className="fas fa-question-circle me-3"></i>
                                             Quiz Management
-                                        </h1>
+                                        </h3>
                                         
-                                        <h1 className="text-white mb-2 fw-bold">
+                                        <h3 className="text-white mb-2 fw-bold">
                                             {course?.title || 'Course Quiz Management'}
-                                        </h1>
+                                        </h3>
 
                                         <p className="mb-0 text-white opacity-90">
                                             Create and manage quizzes for your course

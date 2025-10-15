@@ -143,18 +143,14 @@ function Header() {
                         <span className="visually-hidden">Loading...</span>
                       </div>
                     </div>
-                  ) : (isValidImageUrl(profile?.image) && !imageError) ? (
+                  ) : profile.image && !imageError ? (
                     <img
                       key={profile.image} // Force re-render when image URL changes
                       src={profile.image}
                       className="profile-avatar"
                       alt={`${profile.full_name || 'User'} avatar`}
                       onError={() => {
-                        console.warn('[Header] Profile image failed to load:', profile.image);
                         setImageError(true);
-                      }}
-                      onLoad={() => {
-                        console.log('[Header] Profile image loaded successfully:', profile.image);
                       }}
                     />
                   ) : (
