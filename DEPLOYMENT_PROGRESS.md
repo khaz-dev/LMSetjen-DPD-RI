@@ -24,40 +24,75 @@
 
 ---
 
-## 📋 Phase 2: Backend Deployment to Render (IN PROGRESS)
+## 📋 Phase 2: Backend Deployment (IN PROGRESS)
 
-### Step 2.1: Deploy with Blueprint
-- [ ] Open https://dashboard.render.com/
-- [ ] Click "New" → "Blueprint"
-- [ ] Connect GitHub account
+**Platform Choice:**
+- Option A: **Railway** (Recommended - No credit card required, $5 free credit)
+- Option B: **Render** (Need credit card, free forever)
+
+**We're using: Railway** ✅ (No card needed!)
+
+### Step 2.1: Create Railway Account & Deploy
+- [ ] Open https://railway.app/
+- [ ] Sign up with GitHub (instant $5 credit)
+- [ ] Click "New Project" → "Deploy from GitHub repo"
+- [ ] Connect GitHub account if needed
 - [ ] Select repository: khaz-dev/LMSetjen-DPD-RI
-- [ ] Render detects render.yaml
-- [ ] Click "Apply"
-- [ ] Wait for deployment (5-10 minutes)
+- [ ] Railway will start initial deployment
 
-### Step 2.2: Add SECRET_KEY
-After deployment completes:
-- [ ] Go to your service in Render dashboard
-- [ ] Click "Environment" tab
-- [ ] Click "Add Environment Variable"
-- [ ] Add:
-  ```
-  Key: SECRET_KEY
-  Value: django-insecure-6ghjc7M1&q!NKIWIPR3*#rck)&H4%jp2)!!oF9ltPG$10jHJsA
-  ```
-- [ ] Click "Save Changes" (service will redeploy)
+### Step 2.2: Configure Root Directory
+- [ ] Click on your service
+- [ ] Go to "Settings" tab
+- [ ] Find "Root Directory" setting
+- [ ] Set to: `backend`
+- [ ] Click "Save"
 
-### Step 2.3: Get Backend URL
-- [ ] Wait for deployment to show "Live" status
-- [ ] Copy your backend URL (e.g., https://lms-backend.onrender.com)
+### Step 2.3: Add PostgreSQL Database
+- [ ] In your project, click "New" button
+- [ ] Select "Database" → "PostgreSQL"
+- [ ] Railway creates database and provides DATABASE_URL automatically
+- [ ] Services will auto-link
+
+### Step 2.4: Add Environment Variables
+- [ ] Click on your service → "Variables" tab
+- [ ] Add these variables (copy from backend/RAILWAY_DEPLOYMENT_GUIDE.md):
+  ```
+  SECRET_KEY=django-insecure-6ghjc7M1&q!NKIWIPR3*#rck)&H4%jp2)!!oF9ltPG$10jHJsA
+  DEBUG=False
+  ALLOWED_HOSTS=.railway.app,.vercel.app
+  FRONTEND_SITE_URL=https://frontend-mtmk2t9bk-khazs-projects.vercel.app
+  CORS_ALLOWED_ORIGINS=https://frontend-mtmk2t9bk-khazs-projects.vercel.app
+  ```
+- [ ] Click "Add" for each variable
+
+### Step 2.5: Configure Build & Start Commands
+- [ ] Go to "Settings" tab
+- [ ] Find "Build Command" section
+- [ ] Set Build Command:
+  ```
+  pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+  ```
+- [ ] Find "Start Command" section  
+- [ ] Set Start Command:
+  ```
+  gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 4
+  ```
+- [ ] Click "Save"
+
+### Step 2.6: Deploy & Wait
+- [ ] Deployment starts automatically
+- [ ] Watch logs in Railway dashboard
+- [ ] Wait for status "Success" (~5-10 minutes)
+- [ ] Copy your backend URL (e.g., https://your-app.railway.app)
 - [ ] Save URL here: _______________________________________
 
-### Step 2.4: Test Backend
-- [ ] Test health endpoint: curl https://YOUR-BACKEND-URL/api/health/
+### Step 2.7: Test Backend
+- [ ] Test health endpoint: curl https://YOUR-RAILWAY-URL/api/health/
 - [ ] Should return: {"status":"healthy","service":"LMS Backend API",...}
 
 **Estimated Time**: 15 minutes
 **Status**: ⏳ IN PROGRESS
+**Cost**: $0 (using free $5 credit)
 
 ---
 
