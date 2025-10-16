@@ -2,20 +2,18 @@
 # Render Blueprint Configuration
 # Django Backend Deployment for LMSetjen DPD RI
 # ============================================
-# NOTE: This file is in the root directory, but points to backend/ folder
 
-services:
-  # PostgreSQL Database
-  - type: pserv
-    name: lms-database
+databases:
+  - name: lms-database
     plan: free
 
+services:
   # Django Backend Web Service
   - type: web
     name: lms-backend
-    env: python
     plan: free
     region: singapore
+    env: python
     buildCommand: cd backend && pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
     startCommand: cd backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120 --access-logfile - --error-logfile -
     
