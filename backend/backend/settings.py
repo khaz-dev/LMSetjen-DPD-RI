@@ -368,7 +368,7 @@ try:
     SESSION_CACHE_ALIAS = 'sessions'
     print("Using Redis for caching and sessions")
     
-except (ImportError, redis.ConnectionError, redis.TimeoutError, Exception):
+except Exception as e:
     # Redis not available, fallback to local memory cache for development
     CACHES = {
         'default': {
