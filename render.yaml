@@ -9,19 +9,22 @@ services:
   - type: pserv
     name: lms-database
     plan: free
-    ipAllowList: []
 
   # Django Backend Web Service
   - type: web
     name: lms-backend
-    runtime: docker
+    runtime: python
     region: singapore
     plan: free
+    buildCommand: cd backend && pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: cd backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120 --access-logfile - --error-logfile -
     healthCheckPath: /api/health/
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
     
     envVars:
+      # Python Version
+      - key: PYTHON_VERSION
+        value: 3.11.4
+      
       # Django Core Settings
       - key: SECRET_KEY
         generateValue: true
@@ -120,13 +123,3 @@ services:
       
       - key: ENABLE_VIDEO_COMPRESSION
         value: False
-    
-    # Build & Deploy Settings
-    buildCommand: cd backend && pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
-    startCommand: cd backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --threads 2 --timeout 120 --access-logfile - --error-logfile -
-    
-    # Disk Storage for Media Files
-    disk:
-      name: media-files
-      mountPath: /app/backend/media
-      sizeGB: 1
