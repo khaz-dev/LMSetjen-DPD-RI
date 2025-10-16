@@ -1,0 +1,72 @@
+# Railway Deployment Configuration
+# Free tier: $5 credit (no card required initially)
+
+version: 2
+
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    healthcheck:
+      path: /api/health/
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    env:
+      # Django Core
+      SECRET_KEY: ${{SECRET_KEY}}
+      DEBUG: false
+      DJANGO_LOG_LEVEL: INFO
+      ALLOWED_HOSTS: .railway.app,.vercel.app
+      
+      # Database (Railway PostgreSQL)
+      DATABASE_URL: ${{DATABASE_URL}}
+      USE_SQLITE_FALLBACK: false
+      
+      # Frontend
+      FRONTEND_SITE_URL: https://frontend-mtmk2t9bk-khazs-projects.vercel.app
+      
+      # CORS
+      CORS_ALLOW_ALL_ORIGINS: false
+      CORS_ALLOWED_ORIGINS: https://frontend-mtmk2t9bk-khazs-projects.vercel.app,http://localhost:5173
+      
+      # Email
+      FROM_EMAIL: sdm@dpd.go.id
+      SENDGRID_API_KEY: ${{SENDGRID_API_KEY}}
+      
+      # Security (Production)
+      SECURE_SSL_REDIRECT: true
+      SECURE_HSTS_SECONDS: 31536000
+      SESSION_COOKIE_SECURE: true
+      CSRF_COOKIE_SECURE: true
+      
+      # Performance
+      DATABASE_QUERY_CACHE_TIMEOUT: 300
+      CACHE_MIDDLEWARE_SECONDS: 300
+      
+      # File Upload
+      FILE_UPLOAD_MAX_MEMORY_SIZE: 104857600
+      DATA_UPLOAD_MAX_MEMORY_SIZE: 104857600
+      
+      # Storage
+      USE_LOCAL_OPTIMIZATION: true
+      ENABLE_FILE_COMPRESSION: true
+      ENABLE_IMAGE_OPTIMIZATION: true
+      ENABLE_VIDEO_COMPRESSION: false
+    
+    # Persistent storage for media files
+    volumes:
+      - /app/media
+
+  database:
+    image: postgres:15
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    env:
+      POSTGRES_DB: django_lms_db
+      POSTGRES_USER: lms_user
+      POSTGRES_PASSWORD: ${{POSTGRES_PASSWORD}}
+
+volumes:
+  pgdata:
