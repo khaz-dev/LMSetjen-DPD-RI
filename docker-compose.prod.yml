@@ -4,8 +4,6 @@
 # Optimized for AWS Free Tier (EC2 t2.micro + RDS)
 # ============================================
 
-version: '3.9'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -81,6 +79,8 @@ services:
       - media_files:/app/media
       - static_files:/app/static
       - backend_logs:/app/logs
+    ports:
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,10 +90,14 @@ services:
       - lms_network
     command: >
       sh -c "
-        python manage.py wait_for_db &&
+        echo 'Waiting for database...' &&
+        sleep 5 &&
+        echo 'Running migrations...' &&
         python manage.py migrate --noinput &&
+        echo 'Collecting static files...' &&
         python manage.py collectstatic --noinput --clear &&
-        gunicorn --bind 0.0.0.0:8000 --workers 4 --threads 4 --timeout 120 --max-requests 1000 --max-requests-jitter 50 --access-logfile - --error-logfile - backend.wsgi:application
+        echo 'Starting Gunicorn server...' &&
+        gunicorn --bind 0.0.0.0:8000 --workers 2 --threads 2 --timeout 120 --access-logfile - --error-logfile - --log-level info backend.wsgi:application
       "
     logging:
       driver: "json-file"
