@@ -1,10 +1,11 @@
 // React imports
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
-// Third-party imports
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+// Third-party imports - Lazy load CKEditor (1.24 MB)
+const CKEditor = lazy(() => import("@ckeditor/ckeditor5-react").then(m => ({ default: m.CKEditor })));
+const ClassicEditor = lazy(() => import("@ckeditor/ckeditor5-build-classic"));
+
 import Cookie from "js-cookie";
 import Swal from "sweetalert2";
 
@@ -2935,5 +2936,5 @@ function CourseEditCurriculum() {
     );
 }
 
-export default CourseEditCurriculum;
+export default React.memo(CourseEditCurriculum);
 

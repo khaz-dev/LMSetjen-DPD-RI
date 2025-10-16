@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import moment from "moment";
+import dayjs from "../../../utils/dayjs";
 import { ProfileContext } from "../../plugin/Context";
 import UserData from "../../plugin/UserData";
 import useAxios from "../../../utils/useAxios";
@@ -287,4 +287,4 @@ function Header() {
   );
 }
 
-export default Header;
+export default React.memo(Header);

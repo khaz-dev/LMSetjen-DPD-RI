@@ -548,7 +548,7 @@ body:has(.landing-page-container) {
 /* Hero Button Primary (White) - Landing page specific */
 .landing-page-container .hero-btn-primary {
     background: white;
-    color: #667eea;
+    color: #5641d4;
     border-radius: 15px;
     font-weight: 600;
     border: none;

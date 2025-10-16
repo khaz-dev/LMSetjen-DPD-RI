@@ -1,0 +1,133 @@
+# ============================================
+# Render Blueprint Configuration
+# Django Backend Deployment for LMSetjen DPD RI
+# ============================================
+
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: lms-database
+    plan: free
+    databaseName: django_lms_db
+    databaseUser: lms_user
+    ipAllowList: []
+
+  # Django Backend Web Service
+  - type: web
+    name: lms-backend
+    runtime: docker
+    region: singapore
+    plan: free
+    healthCheckPath: /api/health/
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    
+    envVars:
+      # Django Core Settings
+      - key: SECRET_KEY
+        generateValue: true
+      
+      - key: DEBUG
+        value: False
+      
+      - key: DJANGO_LOG_LEVEL
+        value: INFO
+      
+      # Database Configuration (auto-populated from database service)
+      - key: DB_NAME
+        fromDatabase:
+          name: lms-database
+          property: database
+      
+      - key: DB_USER
+        fromDatabase:
+          name: lms-database
+          property: user
+      
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: lms-database
+          property: password
+      
+      - key: DB_HOST
+        fromDatabase:
+          name: lms-database
+          property: host
+      
+      - key: DB_PORT
+        fromDatabase:
+          name: lms-database
+          property: port
+      
+      # Database URL (alternative format)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lms-database
+          property: connectionString
+      
+      - key: USE_SQLITE_FALLBACK
+        value: False
+      
+      # Frontend Configuration
+      - key: FRONTEND_SITE_URL
+        value: https://frontend-mtmk2t9bk-khazs-projects.vercel.app
+      
+      - key: BACKEND_SITE_URL
+        sync: false  # Will be auto-populated by Render
+      
+      # Email Configuration (SendGrid)
+      - key: SENDGRID_API_KEY
+        sync: false  # Add manually in Render dashboard
+      
+      - key: FROM_EMAIL
+        value: sdm@dpd.go.id
+      
+      # Security Settings for Production
+      - key: SECURE_SSL_REDIRECT
+        value: True
+      
+      - key: SECURE_HSTS_SECONDS
+        value: 31536000
+      
+      - key: SESSION_COOKIE_SECURE
+        value: True
+      
+      - key: CSRF_COOKIE_SECURE
+        value: True
+      
+      # Performance Settings
+      - key: DATABASE_QUERY_CACHE_TIMEOUT
+        value: 300
+      
+      - key: CACHE_MIDDLEWARE_SECONDS
+        value: 300
+      
+      # File Upload Settings
+      - key: FILE_UPLOAD_MAX_MEMORY_SIZE
+        value: 104857600
+      
+      - key: DATA_UPLOAD_MAX_MEMORY_SIZE
+        value: 104857600
+      
+      # Local Storage Strategy
+      - key: USE_LOCAL_OPTIMIZATION
+        value: True
+      
+      - key: ENABLE_FILE_COMPRESSION
+        value: True
+      
+      - key: ENABLE_IMAGE_OPTIMIZATION
+        value: True
+      
+      - key: ENABLE_VIDEO_COMPRESSION
+        value: False
+    
+    # Build & Deploy Settings
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --threads 2 --timeout 120 --access-logfile - --error-logfile -
+    
+    # Disk Storage for Media Files
+    disk:
+      name: media-files
+      mountPath: /app/media
+      sizeGB: 1

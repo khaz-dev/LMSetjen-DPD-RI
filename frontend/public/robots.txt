@@ -1,0 +1,15 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /admin/
+Disallow: /instructor-dashboard/
+Disallow: /student-dashboard/
+Disallow: /api/
+
+# Crawl delay (optional - helps prevent server overload)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://lmsetjen-dpd.go.id/sitemap.xml

@@ -8,7 +8,8 @@ import { useAuthStore } from "../../store/auth";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Toast from '../plugin/Toast';
-import logo from "../../assets/logo/logo-180.png";
+import logoWebP from "../../assets/logo/logo-180.webp";
+import logoPNG from "../../assets/logo/logo-180.png";
 import "./Register.css";
 
 function Register() {

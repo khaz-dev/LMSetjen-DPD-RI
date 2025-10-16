@@ -1,9 +1,10 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, memo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { WishlistContext } from '../plugin/Context';
 import { useAuthStore } from "../../store/auth";
 import UserData from "../plugin/UserData";
-import logo from "../../assets/logo/logo-192.png";
+import logoWebP from "../../assets/logo/logo-192.webp";
+import logoPNG from "../../assets/logo/logo-192.png";
 import { logout } from "../../utils/auth";
 import Toast, { LogoutConfirmation } from "../plugin/Toast";
 import './BaseHeader.css';
@@ -160,19 +161,26 @@ function BaseHeader() {
     );
 
     return (
-        <nav className="base-header navbar navbar-expand-lg">
-            <div className="container">
-                {/* Brand */}
-                <Link 
-                    className="navbar-brand" 
-                    to="/"
-                    onMouseEnter={handleBrandHover}
+        <header role="banner">
+            <nav className="base-header navbar navbar-expand-lg" role="navigation" aria-label="Main navigation">
+                <div className="container">
+                    {/* Brand */}
+                    <Link 
+                        className="navbar-brand" 
+                        to="/"
+                        onMouseEnter={handleBrandHover}
                 >
-                    <img 
-                        src={logo} 
-                        alt="LMSetjen DPD RI Logo" 
-                        className="brand-logo"
-                    />
+                    <picture>
+                        <source srcSet={logoWebP} type="image/webp" />
+                        <img 
+                            src={logoPNG} 
+                            alt="LMSetjen DPD RI Logo" 
+                            className="brand-logo"
+                            width="56"
+                            height="56"
+                            loading="eager"
+                        />
+                    </picture>
                     <div className="brand-text d-none d-sm-inline">
                         <span className={`typing-text ${typingComplete || animationSkipped ? 'animation-complete' : ''}`}>
                             LMSetjen DPD RI
@@ -260,7 +268,8 @@ function BaseHeader() {
                 </div>
             </div>
         </nav>
+    </header>
     );
 }
 
-export default BaseHeader;
+export default memo(BaseHeader);

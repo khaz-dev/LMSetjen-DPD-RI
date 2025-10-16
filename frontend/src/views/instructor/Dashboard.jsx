@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import moment from "moment";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import dayjs from "../../utils/dayjs";
 import "./Dashboard.css";
 
 import Sidebar from "./Partials/Sidebar";
@@ -157,8 +157,12 @@ function Dashboard() {
         setRecentActivity(activities.slice(0, 6));
     };
 
-    // Calculate enhanced statistics
-    const getEnhancedStats = () => {
+    useEffect(() => {
+        fetchCourseData();
+    }, []);
+
+    // Memoize enhanced statistics calculation
+    const enhancedStats = useMemo(() => {
         const averageRating = reviews.length > 0 
             ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
             : 0;
@@ -172,26 +176,23 @@ function Dashboard() {
             totalReviews: reviews.length,
             totalQuestions: questions.length
         };
-    };
+    }, [reviews, notifications, questions]);
 
-    // Calculate total content created
-    const getTotalContentDuration = () => {
+    // Memoize total content duration calculation
+    const totalContentDuration = useMemo(() => {
         if (courses.length === 0) return "0m";
         const allLectures = courses.flatMap(course => course.lectures || []);
         return calculateTotalDuration(allLectures);
-    };
+    }, [courses]);
 
-    // Get duration statistics across all courses
-    const getCourseDurationStats = () => {
+    // Memoize duration statistics
+    const courseDurationStats = useMemo(() => {
         const allLectures = courses.flatMap(course => course.lectures || []);
         return getDurationStats(allLectures);
-    };
+    }, [courses]);
 
-    useEffect(() => {
-        fetchCourseData();
-    }, []);
-
-    const handleSearch = (event) => {
+    // Memoize search handler
+    const handleSearch = useCallback((event) => {
         const query = event.target.value.toLowerCase();
         if (query === "") {
             setCourses(originalCourses); // Reset to original courses
@@ -201,7 +202,7 @@ function Dashboard() {
             });
             setCourses(filtered);
         }
-    };
+    }, [originalCourses]);
 
     return (
         <>
@@ -267,10 +268,10 @@ function Dashboard() {
                                             <i className="fas fa-star"></i>
                                         </div>
                                         <div className="stat-content">
-                                            <div className="stat-number-enhanced">{getEnhancedStats().averageRating}</div>
+                                            <div className="stat-number-enhanced">{enhancedStats.averageRating}</div>
                                             <div className="stat-label-enhanced">Avg Rating</div>
                                             <div className="stat-change neutral">
-                                                <i className="fas fa-star"></i> {getEnhancedStats().totalReviews} reviews
+                                                <i className="fas fa-star"></i> {enhancedStats.totalReviews} reviews
                                             </div>
                                         </div>
                                     </div>
@@ -285,7 +286,7 @@ function Dashboard() {
                                             <i className="fas fa-bell"></i>
                                         </div>
                                         <div className="mini-stat-content">
-                                            <div className="mini-stat-number">{getEnhancedStats().unreadNotifications}</div>
+                                            <div className="mini-stat-number">{enhancedStats.unreadNotifications}</div>
                                             <div className="mini-stat-label">Unread Notifications</div>
                                         </div>
                                     </div>
@@ -297,7 +298,7 @@ function Dashboard() {
                                             <i className="fas fa-question-circle"></i>
                                         </div>
                                         <div className="mini-stat-content">
-                                            <div className="mini-stat-number">{getEnhancedStats().pendingQuestions}</div>
+                                            <div className="mini-stat-number">{enhancedStats.pendingQuestions}</div>
                                             <div className="mini-stat-label">Pending Questions</div>
                                         </div>
                                     </div>
@@ -329,28 +330,28 @@ function Dashboard() {
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-hourglass-half text-primary mb-2" style={{fontSize: '2rem'}}></i>
-                                                        <div className="h5 fw-bold mb-0">{getTotalContentDuration()}</div>
+                                                        <div className="h5 fw-bold mb-0">{totalContentDuration}</div>
                                                         <small className="text-muted">Total Content Created</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-film text-info mb-2" style={{fontSize: '2rem'}}></i>
-                                                        <div className="h5 fw-bold mb-0">{getCourseDurationStats().count || 0}</div>
+                                                        <div className="h5 fw-bold mb-0">{courseDurationStats.count || 0}</div>
                                                         <small className="text-muted">Total Lectures</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-chart-line text-success mb-2" style={{fontSize: '2rem'}}></i>
-                                                        <div className="h5 fw-bold mb-0">{getCourseDurationStats().average || "0m"}</div>
+                                                        <div className="h5 fw-bold mb-0">{courseDurationStats.average || "0m"}</div>
                                                         <small className="text-muted">Avg Lecture Length</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-fire text-danger mb-2" style={{fontSize: '2rem'}}></i>
-                                                        <div className="h5 fw-bold mb-0">{getCourseDurationStats().max || "0m"}</div>
+                                                        <div className="h5 fw-bold mb-0">{courseDurationStats.max || "0m"}</div>
                                                         <small className="text-muted">Longest Lecture</small>
                                                     </div>
                                                 </div>

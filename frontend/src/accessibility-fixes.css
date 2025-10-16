@@ -1,0 +1,372 @@
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   - Color contrast fixes (WCAG AA 4.5:1)
+   - Touch target sizes (48x48px minimum)
+   - Font loading optimization
+   ======================================== */
+
+/* ========================================
+   FONT LOADING OPTIMIZATION
+   Add font-display: swap for better performance
+   ======================================== */
+
+/* Bootstrap and system fonts already use swap behavior by default */
+/* If custom fonts are added, use this pattern: */
+@font-face {
+  font-family: 'CustomFont';
+  src: url('/fonts/custom-font.woff2') format('woff2');
+  font-display: swap; /* Show fallback immediately, swap when loaded */
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* ========================================
+   COLOR CONTRAST FIXES
+   Ensure minimum 4.5:1 contrast ratio for normal text
+   Ensure minimum 3:1 contrast ratio for large text (18px+ or 14px+ bold)
+   ======================================== */
+
+/* Fix secondary text colors that are too light */
+.text-muted,
+.secondary-text,
+.text-secondary {
+  color: #666 !important; /* Changed from #999 - Contrast: 5.7:1 ✅ */
+}
+
+/* Fix subtle text in cards and panels */
+.card-text.text-muted,
+.panel-text.text-muted {
+  color: #555 !important; /* Contrast: 7.2:1 ✅ */
+}
+
+/* Fix placeholder text */
+::placeholder {
+  color: #666 !important; /* Contrast: 5.7:1 ✅ */
+  opacity: 1;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #666 !important;
+}
+
+/* Fix disabled text */
+.text-disabled,
+input:disabled,
+textarea:disabled,
+select:disabled,
+button:disabled {
+  color: #767676 !important; /* Contrast: 4.5:1 exactly ✅ */
+}
+
+/* Fix link colors on light backgrounds */
+a.text-muted:hover,
+a.text-secondary:hover {
+  color: #444 !important; /* Contrast: 9.7:1 ✅ */
+}
+
+/* Fix light badge text */
+.badge.bg-secondary {
+  background-color: #555 !important;
+  color: #fff !important;
+}
+
+.badge.bg-light {
+  background-color: #e0e0e0 !important;
+  color: #333 !important; /* Contrast: 12.6:1 ✅ */
+}
+
+/* Fix subtle borders */
+.border-light {
+  border-color: #ccc !important; /* Changed from #e0e0e0 for better visibility */
+}
+
+/* Fix table text in alternating rows */
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.table-striped tbody tr:nth-of-type(odd) .text-muted {
+  color: #555 !important;
+}
+
+/* Fix dropdown menu text */
+.dropdown-menu .dropdown-item {
+  color: #333 !important;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: #f0f0f0;
+  color: #000 !important;
+}
+
+/* Fix navbar text */
+.navbar-light .navbar-text {
+  color: #333 !important;
+}
+
+.navbar-light .navbar-nav .nav-link {
+  color: #444 !important;
+}
+
+.navbar-light .navbar-nav .nav-link:hover {
+  color: #000 !important;
+}
+
+/* ========================================
+   TOUCH TARGET SIZE FIXES
+   Ensure all interactive elements meet 48x48px minimum
+   ======================================== */
+
+/* Button minimum sizes */
+.btn,
+button:not(.btn-link),
+a.btn {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 12px 16px;
+}
+
+/* Small buttons - still meet minimum */
+.btn-sm {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 10px 14px;
+}
+
+/* Icon-only buttons */
+.btn-icon,
+button[aria-label]:not([aria-label=""]) {
+  min-width: 48px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Link buttons that look like text */
+.btn-link {
+  min-height: 48px;
+  padding: 12px 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Form controls */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+input[type="url"],
+select,
+textarea {
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 16px; /* Prevents iOS zoom on focus */
+}
+
+/* Checkboxes and radio buttons */
+input[type="checkbox"],
+input[type="radio"] {
+  min-width: 24px;
+  min-height: 24px;
+  margin: 12px; /* Total touch target: 48x48px */
+}
+
+/* Custom checkbox/radio labels (expand clickable area) */
+.form-check {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.form-check-input {
+  margin-top: 0;
+}
+
+.form-check-label {
+  padding-left: 8px;
+  cursor: pointer;
+  flex: 1;
+}
+
+/* Pagination */
+.pagination .page-link {
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+}
+
+/* Dropdown items */
+.dropdown-item {
+  min-height: 48px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* Nav tabs and pills */
+.nav-link {
+  min-height: 48px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* Close buttons */
+.btn-close,
+button[aria-label*="Close"],
+button[aria-label*="close"] {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 16px;
+}
+
+/* Card clickable areas */
+.card.clickable,
+.card-link {
+  min-height: 48px;
+}
+
+/* List items that are clickable */
+.list-group-item-action {
+  min-height: 48px;
+  padding: 12px 16px;
+}
+
+/* Breadcrumb links */
+.breadcrumb-item a {
+  min-height: 48px;
+  padding: 12px 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Rating stars (if clickable) */
+.rating-star,
+button[role="radio"] {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 8px;
+}
+
+/* ========================================
+   MOBILE OPTIMIZATIONS
+   Additional spacing for mobile devices
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Increase spacing between interactive elements */
+  .btn + .btn,
+  .form-control + .form-control,
+  .nav-link + .nav-link {
+    margin-top: 8px;
+  }
+  
+  /* Increase touch target padding on mobile */
+  .btn,
+  .form-control,
+  .nav-link {
+    min-height: 52px; /* Slightly larger on mobile */
+  }
+  
+  /* Ensure dropdown items are easy to tap */
+  .dropdown-item {
+    min-height: 52px;
+    padding: 14px 16px;
+  }
+}
+
+/* ========================================
+   FOCUS INDICATORS
+   Ensure visible focus for keyboard navigation
+   ======================================== */
+
+/* Enhanced focus styles for better visibility */
+*:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Don't show focus outline on mouse click, only keyboard */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Specific focus styles for form controls */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 2px;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+}
+
+/* Button focus styles */
+.btn:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.2);
+}
+
+/* Link focus styles */
+a:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 2px;
+  background-color: rgba(0, 102, 204, 0.1);
+  border-radius: 2px;
+}
+
+/* ========================================
+   LOADING STATES
+   Optimize perceived performance
+   ======================================== */
+
+/* Add skeleton screens for better perceived performance */
+.skeleton {
+  animation: skeleton-loading 1s linear infinite alternate;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ========================================
+   PRINT OPTIMIZATION
+   Ensure accessibility in printed documents
+   ======================================== */
+
+@media print {
+  /* Ensure sufficient contrast in print */
+  .text-muted,
+  .text-secondary {
+    color: #333 !important;
+  }
+  
+  /* Show link URLs in print */
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.9em;
+    color: #666;
+  }
+  
+  /* Don't print focus indicators */
+  *:focus-visible {
+    outline: none;
+  }
+}

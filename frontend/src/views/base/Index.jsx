@@ -9,6 +9,7 @@ import Toast from "../plugin/Toast";
 import { WishlistContext } from "../plugin/Context";
 import apiInstance from "../../utils/axios";
 import { getImageUrl } from "../../utils/fileUtils";
+import SEO from "../../components/SEO";
 import "./Index.css";
 
 function Index() {
@@ -208,20 +209,27 @@ function Index() {
 
     return (
         <>
+            <SEO 
+                title="Beranda - LMSetjen DPD RI | Learning Management System"
+                description="Platform pembelajaran online Setjen DPD RI. Akses ribuan kursus, pelatihan, dan program sertifikasi untuk meningkatkan kompetensi pegawai DPD RI."
+                keywords="LMS DPD RI, e-learning Setjen, pelatihan online, kursus pegawai, sertifikasi DPD RI"
+            />
             {/* Fixed Header - Always on top */}
             <div className="landing-fixed-header">
                 <BaseHeader />
             </div>
 
-            {/* Section Navigation Indicator */}
-            <div className="section-navigation">
-                {sections.map((section, index) => (
-                    <div
-                        key={section.id}
-                        className={`section-nav-item ${activeSection === index ? 'active' : ''}`}
-                        onClick={() => scrollToSection(index)}
-                    >
-                        <div className="section-nav-dot"></div>
+            {/* Main Content */}
+            <main id="main-content" role="main">
+                {/* Section Navigation Indicator */}
+                <div className="section-navigation">
+                    {sections.map((section, index) => (
+                        <div
+                            key={section.id}
+                            className={`section-nav-item ${activeSection === index ? 'active' : ''}`}
+                            onClick={() => scrollToSection(index)}
+                        >
+                            <div className="section-nav-dot"></div>
                         <div className="section-nav-label">
                             <i className={`fas fa-${section.icon} me-2`}></i>
                             {section.label}
@@ -327,6 +335,8 @@ function Index() {
                                         src="http://127.0.0.1:8000/static/LMSetjen-DPD-RI.jpg" 
                                         alt="LMS DPD RI" 
                                         className="img-fluid hero-right-image"
+                                        fetchpriority="high"
+                                        loading="eager"
                                     />
                                 </div>
 
@@ -341,7 +351,7 @@ function Index() {
                                             <i className="fas fa-certificate"></i>
                                         </div>
                                         <div>
-                                            <h6 className="mb-0 fw-bold card-heading-text">Sertifikat</h6>
+                                            <h4 className="mb-0 fw-bold card-heading-text">Sertifikat</h4>
                                             <small className="text-muted">Resmi & Diakui</small>
                                         </div>
                                     </div>
@@ -357,7 +367,7 @@ function Index() {
                                             <i className="fas fa-chart-line"></i>
                                         </div>
                                         <div>
-                                            <h6 className="mb-0 fw-bold card-heading-text">Progress</h6>
+                                            <h4 className="mb-0 fw-bold card-heading-text">Progress</h4>
                                             <small className="text-muted">Real-time Tracking</small>
                                         </div>
                                     </div>
@@ -413,7 +423,7 @@ function Index() {
                                                 <i className="fas fa-users"></i>
                                             </div>
                                             <div>
-                                                <h6 className="fw-bold mb-1">Pengembangan SDM</h6>
+                                                <h3 className="fw-bold mb-1">Pengembangan SDM</h3>
                                                 <small className="text-muted">Peningkatan kompetensi pegawai</small>
                                             </div>
                                         </div>
@@ -427,7 +437,7 @@ function Index() {
                                                 <i className="fas fa-graduation-cap"></i>
                                             </div>
                                             <div>
-                                                <h6 className="fw-bold mb-1">Pembelajaran Digital</h6>
+                                                <h3 className="fw-bold mb-1">Pembelajaran Digital</h3>
                                                 <small className="text-muted">Transformasi digital pendidikan</small>
                                             </div>
                                         </div>
@@ -888,9 +898,9 @@ function Index() {
                                                     ></i>
                                                 </div>
                                                 
-                                                <h6 className="fw-bold mb-1" style={{ color: '#2c3e50', fontSize: '0.95rem' }}>
+                                                <h3 className="fw-bold mb-1" style={{ color: '#2c3e50', fontSize: '0.95rem' }}>
                                                     {category.title}
-                                                </h6>
+                                                </h3>
                                                 
                                                 <p className="text-muted mb-2" style={{ fontSize: '0.8rem' }}>
                                                     {category.course_count} kursus
@@ -1121,7 +1131,7 @@ function Index() {
                                             </div>
 
                                             {/* Course Title */}
-                                            <h6 className="fw-bold mb-2" style={{ minHeight: '42px', fontSize: '0.95rem' }}>
+                                            <h3 className="fw-bold mb-2" style={{ minHeight: '42px', fontSize: '0.95rem' }}>
                                                 <Link 
                                                     to={`/course-detail/${course.slug}/`}
                                                     className="text-decoration-none course-title-link"
@@ -1137,7 +1147,7 @@ function Index() {
                                                 >
                                                     {course.title}
                                                 </Link>
-                                            </h6>
+                                            </h3>
 
                                             {/* Instructor */}
                                             <div className="mb-2 d-flex align-items-center">
@@ -1194,7 +1204,7 @@ function Index() {
                                                     border: '1px solid rgba(40, 167, 69, 0.1)'
                                                 }}
                                             >
-                                                <small className="text-success fw-medium" style={{ fontSize: '0.8rem' }}>
+                                                <small className="fw-medium" style={{ fontSize: '0.8rem', color: '#146c43' }}>
                                                     <i className="fas fa-users me-1"></i>
                                                     {course.students?.length || 0} siswa
                                                 </small>
@@ -1373,7 +1383,7 @@ function Index() {
                                     </div>
                                     
                                     {/* User Info */}
-                                    <h6 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Siti Rahayu, S.E.</h6>
+                                    <h3 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Siti Rahayu, S.E.</h3>
                                     <small className="text-muted" style={{ fontSize: '0.85rem' }}>Staff Keuangan Setjen DPD RI</small>
                                 </div>
                             </div>
@@ -1427,7 +1437,7 @@ function Index() {
                                     </div>
                                     
                                     {/* User Info */}
-                                    <h6 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Ahmad Fauzi, S.H.</h6>
+                                    <h3 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Ahmad Fauzi, S.H.</h3>
                                     <small className="text-muted" style={{ fontSize: '0.85rem' }}>Analis Kebijakan Setjen DPD RI</small>
                                 </div>
                             </div>
@@ -1481,7 +1491,7 @@ function Index() {
                                     </div>
                                     
                                     {/* User Info */}
-                                    <h6 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Dr. Muhammad Sadli</h6>
+                                    <h3 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Dr. Muhammad Sadli</h3>
                                     <small className="text-muted" style={{ fontSize: '0.85rem' }}>Kepala Biro Umum Setjen DPD RI</small>
                                 </div>
                             </div>
@@ -1489,11 +1499,13 @@ function Index() {
                     </div>
                 </div>
                 
-                {/* Footer integrated into last section - No gap at bottom */}
-                <div className="footer-wrapper pt-5 mt-5">
-                    <BaseFooter />
-                </div>
             </section>
+            </div>
+            </main>
+            
+            {/* Footer integrated into last section - No gap at bottom */}
+            <div className="footer-wrapper pt-5 mt-5">
+                <BaseFooter />
             </div>
         </>
     );

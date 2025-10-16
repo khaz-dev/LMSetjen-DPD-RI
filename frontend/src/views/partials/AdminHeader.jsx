@@ -209,4 +209,4 @@ function AdminHeader() {
     );
 }
 
-export default AdminHeader;
+export default React.memo(AdminHeader);

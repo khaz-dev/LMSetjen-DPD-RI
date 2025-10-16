@@ -7,7 +7,8 @@ import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Toast from "../plugin/Toast";
 import UserData from "../plugin/UserData";
-import logo from "../../assets/logo/logo-180.png";
+import logoWebP from "../../assets/logo/logo-180.webp";
+import logoPNG from "../../assets/logo/logo-180.png";
 import './Login.css';
 
 function Login() {

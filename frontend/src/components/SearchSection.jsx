@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 const SearchSection = ({ onSearch }) => {
     return (
@@ -16,4 +16,4 @@ const SearchSection = ({ onSearch }) => {
     );
 };
 
-export default SearchSection;
+export default memo(SearchSection);

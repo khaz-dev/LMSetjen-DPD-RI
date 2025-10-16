@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Rating } from "react-simple-star-rating";
-import moment from "moment";
+import dayjs from "../../../utils/dayjs";
 
 const CourseReviews = ({ reviews = [], averageRating = 0, totalReviews = 0 }) => {
     const [filter, setFilter] = useState("all");

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import moment from "moment";
+import dayjs from "../../utils/dayjs";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
@@ -225,4 +225,4 @@ function Students() {
     );
 }
 
-export default Students;
+export default React.memo(Students);

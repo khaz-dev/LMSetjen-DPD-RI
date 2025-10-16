@@ -1,6 +1,8 @@
-import React, { forwardRef } from "react";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import React, { forwardRef, lazy, Suspense } from "react";
+
+// Lazy load CKEditor (1.24 MB)
+const CKEditor = lazy(() => import("@ckeditor/ckeditor5-react").then(m => ({ default: m.CKEditor })));
+const ClassicEditor = lazy(() => import("@ckeditor/ckeditor5-build-classic"));
 
 const CurriculumBasicInfo = forwardRef(({ 
     courseData, 
@@ -172,25 +174,34 @@ const CurriculumBasicInfo = forwardRef(({
                 </label>
                 
                 <div className={getEditorClass()}>
-                    <CKEditor
-                        editor={ClassicEditor}
-                        data={courseData?.description || ''}
-                        onChange={handleDescriptionChange}
-                        config={{
-                            toolbar: [
-                                "heading",
-                                "|",
-                                "bold", "italic",
-                                "|", 
-                                "bulletedList", "numberedList",
-                                "|",
-                                "link", "blockQuote",
-                                "|",
-                                "undo", "redo"
-                            ],
-                            placeholder: "Write a brief summary of your course..."
-                        }}
-                    />
+                    <Suspense fallback={
+                        <div className="text-center py-4">
+                            <div className="spinner-border text-primary spinner-border-sm" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                            <span className="ms-2 text-muted">Loading editor...</span>
+                        </div>
+                    }>
+                        <CKEditor
+                            editor={ClassicEditor}
+                            data={courseData?.description || ''}
+                            onChange={handleDescriptionChange}
+                            config={{
+                                toolbar: [
+                                    "heading",
+                                    "|",
+                                    "bold", "italic",
+                                    "|", 
+                                    "bulletedList", "numberedList",
+                                    "|",
+                                    "link", "blockQuote",
+                                    "|",
+                                    "undo", "redo"
+                                ],
+                                placeholder: "Write a brief summary of your course..."
+                            }}
+                        />
+                    </Suspense>
                 </div>
                 
                 {/* Character count */}

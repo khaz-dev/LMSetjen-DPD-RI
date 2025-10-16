@@ -945,4 +945,4 @@ function CourseQuiz() {
     );
 }
 
-export default CourseQuiz;
+export default React.memo(CourseQuiz);

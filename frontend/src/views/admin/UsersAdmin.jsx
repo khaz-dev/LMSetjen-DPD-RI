@@ -12,10 +12,10 @@ import AdminHeader from '../partials/AdminHeader';
 import Footer from '../partials/Footer';
 import useAxios from '../../utils/useAxios';
 import Toast, { DeleteConfirmation } from "../plugin/Toast";
-import moment from 'moment';
+import dayjs from '../../utils/dayjs';
 import './UsersAdmin.css';
 
-export default function UsersAdmin() {
+function UsersAdmin() {
     const [users, setUsers] = useState([]);
     const [filteredUsers, setFilteredUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -943,3 +943,5 @@ export default function UsersAdmin() {
         </>
     );
 }
+
+export default React.memo(UsersAdmin);

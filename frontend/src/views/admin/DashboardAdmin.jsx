@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import AdminHeader from '../partials/AdminHeader';
 import Footer from '../partials/Footer';
 import apiInstance from '../../utils/axios';
 import UserData from '../plugin/UserData';
 import Toast from '../plugin/Toast';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+
+// Lazy load Chart.js components (516 KB)
+const Line = lazy(() => import('react-chartjs-2').then(m => ({ default: m.Line })));
+const Bar = lazy(() => import('react-chartjs-2').then(m => ({ default: m.Bar })));
+const Doughnut = lazy(() => import('react-chartjs-2').then(m => ({ default: m.Doughnut })));
+
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -448,6 +453,14 @@ function DashboardAdmin() {
                         {/* Analytics Tab */}
                         {activeTab === 'analytics' && (
                             <div className="tab-pane fade show active">
+                                <Suspense fallback={
+                                    <div className="text-center py-5">
+                                        <div className="spinner-border text-primary" role="status">
+                                            <span className="visually-hidden">Loading charts...</span>
+                                        </div>
+                                        <p className="mt-3 text-muted">Loading analytics...</p>
+                                    </div>
+                                }>
                                 <div className="row">
                                     {/* Enrollment Trend */}
                                     <div className="col-lg-8 mb-4">
@@ -529,6 +542,7 @@ function DashboardAdmin() {
                                         </div>
                                     </div>
                                 </div>
+                                </Suspense>
                             </div>
                         )}
 
@@ -671,4 +685,4 @@ function DashboardAdmin() {
     );
 }
 
-export default DashboardAdmin;
+export default React.memo(DashboardAdmin);

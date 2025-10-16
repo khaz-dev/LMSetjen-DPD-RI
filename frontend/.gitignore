@@ -194,3 +194,4 @@ VIDEO_COMPRESSION_GUIDE.md
 secrets.json
 credentials.json
 service-account-key.json
+.vercel

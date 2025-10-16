@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import './WorkflowStepper.css';
 
@@ -155,4 +155,4 @@ const WorkflowStepper = ({ currentStep, courseId, courseData }) => {
     );
 };
 
-export default WorkflowStepper;
+export default memo(WorkflowStepper);

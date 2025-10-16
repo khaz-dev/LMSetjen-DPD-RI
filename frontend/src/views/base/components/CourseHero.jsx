@@ -1,5 +1,5 @@
 import React from "react";
-import moment from "moment";
+import dayjs from "../../../utils/dayjs";
 import { Rating } from "react-simple-star-rating";
 
 const CourseHero = ({ course }) => {

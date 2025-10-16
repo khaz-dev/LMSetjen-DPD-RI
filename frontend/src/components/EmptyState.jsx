@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 
 const EmptyState = () => {
@@ -21,4 +21,4 @@ const EmptyState = () => {
     );
 };
 
-export default EmptyState;
+export default memo(EmptyState);

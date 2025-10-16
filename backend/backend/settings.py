@@ -25,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-+c@7t#q96f*r#f-@ss1$2r5a3!xi59@8(o21u-8x%s%vmh4#tc'
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-+c@7t#q96f*r#f-@ss1$2r5a3!xi59@8(o21u-8x%s%vmh4#tc')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '.onrender.com', '.vercel.app'])
 
 
 # Application definition
@@ -280,13 +280,14 @@ SIMPLE_JWT = {
 
 
 # CORS Configuration for Frontend Integration
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
+CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-]
+    "https://frontend-mtmk2t9bk-khazs-projects.vercel.app",  # Production frontend
+])
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [

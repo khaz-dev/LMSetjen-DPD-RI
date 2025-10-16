@@ -44,6 +44,18 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 
+# Health Check API (no authentication required)
+class HealthCheckAPIView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        """Simple health check endpoint for monitoring"""
+        return Response({
+            'status': 'healthy',
+            'service': 'LMS Backend API',
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_200_OK)
+
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = api_serializer.MyTokenObtainPairSerializer

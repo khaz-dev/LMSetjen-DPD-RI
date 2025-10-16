@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTheme } from "../utils/themeUtils";
 
 // Theme provider component that applies themes based on current route
@@ -6,4 +7,4 @@ const ThemeProvider = ({ children }) => {
     return children;
 };
 
-export default ThemeProvider;
+export default memo(ThemeProvider);

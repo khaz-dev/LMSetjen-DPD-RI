@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import moment from "moment";
+import dayjs from "../../utils/dayjs";
 
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
@@ -104,30 +104,28 @@ function Dashboard() {
         }
     };
 
-    // Calculate additional stats
-    const getAverageProgress = () => {
+    // Memoized calculations for better performance
+    const averageProgress = useMemo(() => {
         if (progressData.length === 0) return 0;
         const totalProgress = progressData.reduce((sum, course) => sum + course.progressPercentage, 0);
         return Math.round(totalProgress / progressData.length);
-    };
+    }, [progressData]);
 
-    const getActiveCoursesCount = () => {
+    const activeCoursesCount = useMemo(() => {
         return progressData.filter(course => course.progressPercentage > 0 && course.progressPercentage < 100).length;
-    };
+    }, [progressData]);
 
-    const getCompletedCoursesCount = () => {
+    const completedCoursesCount = useMemo(() => {
         return progressData.filter(course => course.progressPercentage === 100).length;
-    };
+    }, [progressData]);
 
-    // Calculate total learning time
-    const getTotalLearningTime = () => {
+    const totalLearningTime = useMemo(() => {
         if (courses.length === 0) return "0m";
         const allLectures = courses.flatMap(course => course.lectures || []);
         return calculateTotalDuration(allLectures);
-    };
+    }, [courses]);
 
-    // Calculate completed learning time
-    const getCompletedLearningTime = () => {
+    const completedLearningTime = useMemo(() => {
         if (courses.length === 0) return "0m";
         let totalSeconds = 0;
         
@@ -149,11 +147,18 @@ function Dashboard() {
         
         let result = "";
         if (hours > 0) result += `${hours}h `;
-        if (minutes > 0 || hours > 0) result += `${minutes}m `;
-        if (seconds > 0 || (hours === 0 && minutes === 0)) result += `${seconds}s`;
+        if (minutes > 0) result += `${minutes}m `;
+        if (seconds > 0 && hours === 0) result += `${seconds}s`;
         
-        return result.trim();
-    };
+        return result.trim() || "0m";
+    }, [courses]);
+
+    // Legacy function wrappers (for backward compatibility)
+    const getAverageProgress = () => averageProgress;
+    const getActiveCoursesCount = () => activeCoursesCount;
+    const getCompletedCoursesCount = () => completedCoursesCount;
+    const getTotalLearningTime = () => totalLearningTime;
+    const getCompletedLearningTime = () => completedLearningTime;
 
     return (
         <>

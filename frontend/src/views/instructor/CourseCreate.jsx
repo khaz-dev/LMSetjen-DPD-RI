@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Sidebar from "./Partials/Sidebar";
@@ -8,7 +8,9 @@ import Footer from "../partials/Footer";
 import ImageUpload from "./components/ImageUpload";
 import VideoUpload from "./components/VideoUpload";
 import FormField from "./components/FormField";
-import RichTextEditor from "./components/RichTextEditor";
+
+// Lazy load CKEditor component (1.24 MB)
+const RichTextEditor = lazy(() => import("./components/RichTextEditor"));
 
 import useAxios from "../../utils/useAxios";
 import Toast from "../plugin/Toast";
@@ -428,17 +430,26 @@ function CourseCreate() {
                                         Course Description
                                     </h5>
                                     
-                                    <RichTextEditor
-                                        ref={ckeditorRef}
-                                        label="Course Description"
-                                        value={courseData.description || ""}
-                                        onChange={handleCKEditorChange}
-                                        errors={errors.description || []}
-                                        warnings={warnings.description || []}
-                                        required
-                                        placeholder="Describe what students will learn in this course..."
-                                        helpText="Provide a comprehensive overview of your course content and learning outcomes"
-                                    />
+                                    <Suspense fallback={
+                                        <div className="text-center py-4">
+                                            <div className="spinner-border text-primary" role="status">
+                                                <span className="visually-hidden">Loading editor...</span>
+                                            </div>
+                                            <p className="mt-2 text-muted">Loading rich text editor...</p>
+                                        </div>
+                                    }>
+                                        <RichTextEditor
+                                            ref={ckeditorRef}
+                                            label="Course Description"
+                                            value={courseData.description || ""}
+                                            onChange={handleCKEditorChange}
+                                            errors={errors.description || []}
+                                            warnings={warnings.description || []}
+                                            required
+                                            placeholder="Describe what students will learn in this course..."
+                                            helpText="Provide a comprehensive overview of your course content and learning outcomes"
+                                        />
+                                    </Suspense>
                                 </div>
 
                                 {/* Action Buttons Section */}
@@ -478,4 +489,4 @@ function CourseCreate() {
     );
 }
 
-export default CourseCreate;
+export default React.memo(CourseCreate);

@@ -4,7 +4,8 @@ import Footer from '../partials/Footer';
 import apiInstance from '../../utils/axios';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Toast from '../plugin/Toast';
-import logo from "../../assets/logo/logo-180.png";
+import logoWebP from "../../assets/logo/logo-180.webp";
+import logoPNG from "../../assets/logo/logo-180.png";
 import './CreateNewPassword.css';
 
 function CreateNewPassword() {

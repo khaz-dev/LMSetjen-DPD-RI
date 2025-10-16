@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import moment from 'moment';
+import dayjs from '../../utils/dayjs';
 import apiInstance from '../../utils/axios';
 import UserData from '../../views/plugin/UserData';
 import Toast from '../../views/plugin/Toast';
-import certificateBackground from '../../assets/certificate-bg.png';
+import certificateBackgroundWebP from '../../assets/certificate-bg.webp';
+import certificateBackgroundPNG from '../../assets/certificate-bg.png';
 import './CertificateTab.css';
 
 function CertificateTab({ course, enrollmentId, completionPercentage }) {

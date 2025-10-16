@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { Route, Routes, BrowserRouter } from "react-router-dom";
+import { HelmetProvider } from 'react-helmet-async';
 
 import { ProfileContext, WishlistContext } from "./views/plugin/Context";
 import apiInstance from "./utils/axios";
@@ -16,38 +17,54 @@ import MainWrapper from "./layouts/MainWrapper";
 import PrivateRoute from "./layouts/PrivateRoute";
 import RoleRoute from "./layouts/RoleRoute";
 
-import Register from "../src/views/auth/Register";
-import Login from "../src/views/auth/Login";
-import ForgotPassword from "./views/auth/ForgotPassword";
-import CreateNewPassword from "./views/auth/CreateNewPassword";
+// Lazy load all route components for better performance
+// Auth Routes
+const Register = lazy(() => import("./views/auth/Register"));
+const Login = lazy(() => import("./views/auth/Login"));
+const ForgotPassword = lazy(() => import("./views/auth/ForgotPassword"));
+const CreateNewPassword = lazy(() => import("./views/auth/CreateNewPassword"));
 
-import Index from "./views/base/Index";
-import CourseDetail from "./views/base/CourseDetail";
-import Search from "./views/base/Search";
-import NotFound from "./views/base/NotFound";
+// Base Routes
+const Index = lazy(() => import("./views/base/Index"));
+const CourseDetail = lazy(() => import("./views/base/CourseDetail"));
+const Search = lazy(() => import("./views/base/Search"));
+const NotFound = lazy(() => import("./views/base/NotFound"));
 
-import StudentDashboard from "./views/student/Dashboard";
-import StudentCourses from "./views/student/Courses";
-import StudentCourseDetail from "./views/student/CourseDetail";
-import Wishlist from "./views/student/Wishlist";
-import StudentQA from "./views/student/QA";
-import StudentProfile from "./views/student/Profile";
-import StudentChangePassword from "./views/student/ChangePassword";
-import Dashboard from "./views/instructor/Dashboard";
-import Courses from "./views/instructor/Courses";
-import Review from "./views/instructor/Review";
-import Students from "./views/instructor/Students";
-import TeacherNotification from "./views/instructor/TeacherNotification";
-import QA from "./views/instructor/QA";
-import ChangePassword from "./views/instructor/ChangePassword";
-import Profile from "./views/instructor/Profile";
-import CourseCreate from "./views/instructor/CourseCreate";
-import CourseEdit from "./views/instructor/CourseEdit";
-import CourseEditCurriculum from "./views/instructor/CourseEditCurriculum";
-import CourseQuiz from "./views/instructor/CourseQuiz";
+// Student Routes
+const StudentDashboard = lazy(() => import("./views/student/Dashboard"));
+const StudentCourses = lazy(() => import("./views/student/Courses"));
+const StudentCourseDetail = lazy(() => import("./views/student/CourseDetail"));
+const Wishlist = lazy(() => import("./views/student/Wishlist"));
+const StudentQA = lazy(() => import("./views/student/QA"));
+const StudentProfile = lazy(() => import("./views/student/Profile"));
+const StudentChangePassword = lazy(() => import("./views/student/ChangePassword"));
 
-import DashboardAdmin from "./views/admin/DashboardAdmin";
-import UsersAdmin from "./views/admin/UsersAdmin";
+// Instructor Routes
+const Dashboard = lazy(() => import("./views/instructor/Dashboard"));
+const Courses = lazy(() => import("./views/instructor/Courses"));
+const Review = lazy(() => import("./views/instructor/Review"));
+const Students = lazy(() => import("./views/instructor/Students"));
+const TeacherNotification = lazy(() => import("./views/instructor/TeacherNotification"));
+const QA = lazy(() => import("./views/instructor/QA"));
+const ChangePassword = lazy(() => import("./views/instructor/ChangePassword"));
+const Profile = lazy(() => import("./views/instructor/Profile"));
+const CourseCreate = lazy(() => import("./views/instructor/CourseCreate"));
+const CourseEdit = lazy(() => import("./views/instructor/CourseEdit"));
+const CourseEditCurriculum = lazy(() => import("./views/instructor/CourseEditCurriculum"));
+const CourseQuiz = lazy(() => import("./views/instructor/CourseQuiz"));
+
+// Admin Routes
+const DashboardAdmin = lazy(() => import("./views/admin/DashboardAdmin"));
+const UsersAdmin = lazy(() => import("./views/admin/UsersAdmin"));
+
+// Loading component for Suspense fallback
+const LoadingFallback = () => (
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+        <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+        </div>
+    </div>
+);
 
 function App() {
     const [wishlistCount, setWishlistCount] = useState(0);
@@ -79,7 +96,9 @@ function App() {
                 useAxios.get(`user/profile/${userData.user_id}/`).then((res) => {
                     setProfile(res.data);
                 }).catch((error) => {
-                    console.error("App.jsx: Error fetching profile:", error);
+                    if (process.env.NODE_ENV === 'development') {
+                        console.error("App.jsx: Error fetching profile:", error);
+                    }
                     setProfile(null);
                 });
             } else {
@@ -88,60 +107,75 @@ function App() {
                 setProfile(null);
             }
         } catch (error) {
-            console.error("App.jsx: Error in useEffect:", error);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("App.jsx: Error in useEffect:", error);
+            }
             setWishlistCount(0);
             setProfile(null);
         }
     }, []);
 
+    // Memoize context values to prevent unnecessary re-renders
+    const wishlistContextValue = useMemo(
+        () => [wishlistCount, setWishlistCount, refreshWishlistCount],
+        [wishlistCount]
+    );
+
+    const profileContextValue = useMemo(
+        () => [profile, setProfile],
+        [profile]
+    );
+
     return (
-        <WishlistContext.Provider value={[wishlistCount, setWishlistCount, refreshWishlistCount]}>
-            <ProfileContext.Provider value={[profile, setProfile]}>
-            <BrowserRouter>
-                <ThemeProvider>
-                    <MainWrapper>
-                        <Routes>
-                            <Route path="/register/" element={<Register />} />
-                            <Route path="/login/" element={<Login />} />
-                            <Route path="/forgot-password/" element={<ForgotPassword />} />
-                            <Route path="/create-new-password/" element={<CreateNewPassword />} />
+        <HelmetProvider>
+            <WishlistContext.Provider value={wishlistContextValue}>
+                <ProfileContext.Provider value={profileContextValue}>
+                <BrowserRouter>
+                    <ThemeProvider>
+                        <MainWrapper>
+                            <Suspense fallback={<LoadingFallback />}>
+                                <Routes>
+                                    <Route path="/register/" element={<Register />} />
+                                    <Route path="/login/" element={<Login />} />
+                                    <Route path="/forgot-password/" element={<ForgotPassword />} />
+                                    <Route path="/create-new-password/" element={<CreateNewPassword />} />
 
-                            {/* Base Routes */}
-                            <Route path="/" element={<Index />} />
-                            <Route path="/course-detail/:slug/" element={<CourseDetail />} />
-                            <Route path="/search/" element={<Search />} />
+                                {/* Base Routes */}
+                                <Route path="/" element={<Index />} />
+                                <Route path="/course-detail/:slug/" element={<CourseDetail />} />
+                                <Route path="/search/" element={<Search />} />
 
-                            {/* Student Routes */}
-                            <Route
-                                path="/student/dashboard/"
-                                element={
-                                    <PrivateRoute>
-                                        <RoleRoute allowedRoles={['student']}>
-                                            <StudentDashboard />
-                                        </RoleRoute>
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
-                                path="/student/courses/"
-                                element={
-                                    <PrivateRoute>
-                                        <RoleRoute allowedRoles={['student']}>
-                                            <StudentCourses />
-                                        </RoleRoute>
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
-                                path="/student/courses/:enrollment_id/"
-                                element={
-                                    <PrivateRoute>
-                                        <RoleRoute allowedRoles={['student']}>
-                                            <StudentCourseDetail />
-                                        </RoleRoute>
-                                    </PrivateRoute>
-                                }
-                            />
+                                {/* Student Routes */}
+                                <Route
+                                    path="/student/dashboard/"
+                                    element={
+                                        <PrivateRoute>
+                                            <RoleRoute allowedRoles={['student']}>
+                                                <StudentDashboard />
+                                            </RoleRoute>
+                                        </PrivateRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/student/courses/"
+                                    element={
+                                        <PrivateRoute>
+                                            <RoleRoute allowedRoles={['student']}>
+                                                <StudentCourses />
+                                            </RoleRoute>
+                                        </PrivateRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/student/courses/:enrollment_id/"
+                                    element={
+                                        <PrivateRoute>
+                                            <RoleRoute allowedRoles={['student']}>
+                                                <StudentCourseDetail />
+                                            </RoleRoute>
+                                        </PrivateRoute>
+                                    }
+                                />
                             <Route
                                 path="/student/wishlist/"
                                 element={
@@ -332,11 +366,13 @@ function App() {
                             {/* 404 Not Found - Must be last */}
                             <Route path="*" element={<NotFound />} />
                         </Routes>
+                        </Suspense>
                     </MainWrapper>
                 </ThemeProvider>
                 </BrowserRouter>
             </ProfileContext.Provider>
         </WishlistContext.Provider>
+        </HelmetProvider>
     );
 }
 

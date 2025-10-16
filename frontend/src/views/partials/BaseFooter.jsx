@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 
 function BaseFooter() {
   const currentYear = new Date().getFullYear();
@@ -28,6 +28,7 @@ function BaseFooter() {
 
   return (
     <footer 
+      role="contentinfo"
       className="pt-5 pb-4"
       style={{
         background: 'white',
@@ -496,4 +497,4 @@ function BaseFooter() {
   )
 }
 
-export default BaseFooter
+export default memo(BaseFooter)

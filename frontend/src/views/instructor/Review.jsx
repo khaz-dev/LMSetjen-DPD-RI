@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import moment from "moment";
+import dayjs from "../../utils/dayjs";
 import { Rating } from 'react-simple-star-rating';
 
 import Sidebar from "./Partials/Sidebar";
@@ -588,4 +588,4 @@ function Review() {
     );
 }
 
-export default Review;
+export default React.memo(Review);

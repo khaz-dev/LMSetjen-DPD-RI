@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
-import moment from "moment";
+import dayjs from "../../utils/dayjs";
 
 // Components
 import Sidebar from "./Partials/Sidebar";
@@ -478,4 +478,4 @@ function QA() {
     );
 }
 
-export default QA;
+export default React.memo(QA);

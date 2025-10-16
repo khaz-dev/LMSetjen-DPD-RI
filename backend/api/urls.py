@@ -5,6 +5,9 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
+    # Health Check (no authentication required)
+    path("health/", api_views.HealthCheckAPIView.as_view()),
+    
     # Authentication Endpoints
 
     path("user/token/", api_views.MyTokenObtainPairView.as_view()),

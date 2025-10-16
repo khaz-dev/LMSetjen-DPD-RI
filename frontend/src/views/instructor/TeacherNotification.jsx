@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import moment from "moment";
+import dayjs from "../../utils/dayjs";
 
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
@@ -279,4 +279,4 @@ function TeacherNotification() {
     );
 }
 
-export default TeacherNotification;
+export default React.memo(TeacherNotification);
