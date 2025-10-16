@@ -77,7 +77,7 @@ services:
       BACKEND_SITE_URL: ${BACKEND_SITE_URL}
     volumes:
       - media_files:/app/media
-      - static_files:/app/static
+      - static_files:/app/staticfiles
       - backend_logs:/app/logs
     ports:
       - "8000:8000"
