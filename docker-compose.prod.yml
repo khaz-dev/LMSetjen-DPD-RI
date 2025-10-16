@@ -1,10 +1,10 @@
 # ============================================
-# Production Docker Compose Configuration
+# AWS Production Docker Compose Configuration
 # LMSetjen DPD RI - Learning Management System
-# For Production Deployment with SSL/TLS
+# Optimized for AWS Free Tier (EC2 t2.micro + RDS)
 # ============================================
 
-version: '3.8'
+version: '3.9'
 
 services:
   # PostgreSQL Database

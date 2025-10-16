@@ -90,45 +90,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 
-# Database Configuration - Production-Ready PostgreSQL Setup
+# Database Configuration
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-import dj_database_url
-
-# Check if DATABASE_URL is provided (Render/Railway/Heroku style)
-if env('DATABASE_URL', default=None):
-    # Use DATABASE_URL if provided (production deployment)
-    DATABASES = {
-        'default': dj_database_url.parse(
-            env('DATABASE_URL'),
-            conn_max_age=300,
-            conn_health_checks=True,
-        )
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME', default='lms_db'),
+        'USER': env('DB_USER', default='lms_user'),
+        'PASSWORD': env('DB_PASSWORD', default='secure_password'),
+        'HOST': env('DB_HOST', default='localhost'),
+        'PORT': env('DB_PORT', default='5432'),
+        'CONN_MAX_AGE': 600,  # 10 minutes connection persistence
+        'OPTIONS': {
+            'connect_timeout': 10,
+        },
     }
-else:
-    # Use individual environment variables (local development)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': env('DB_NAME', default='django_lms_db'),
-            'USER': env('DB_USER', default='lms_user'),
-            'PASSWORD': env('DB_PASSWORD', default='secure_password'),
-            'HOST': env('DB_HOST', default='localhost'),
-            'PORT': env('DB_PORT', default='5432'),
-            'OPTIONS': {
-                'application_name': 'Django_LMS',
-                'connect_timeout': 10,
-            },
-            'CONN_MAX_AGE': 300,  # Connection persistence (5 minutes)
-            'ATOMIC_REQUESTS': False,  # We'll handle transactions manually for better performance
-        }
-    }
-
-# Database connection health check
-DATABASE_CONNECTION_POOL_KWARGS = {
-    'max_overflow': 10,
-    'pool_pre_ping': True,
-    'pool_recycle': 300,
 }
 
 
