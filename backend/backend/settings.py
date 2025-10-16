@@ -500,11 +500,17 @@ MEDIA_CACHE_DURATION = env.int('MEDIA_CACHE_DURATION', default=3600)
 
 # Security Enhancements for Production
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    # SSL/HTTPS settings (optional - set USE_SSL=True when you have SSL certificate)
+    USE_SSL = env.bool('USE_SSL', default=False)
+    
+    if USE_SSL:
+        SECURE_SSL_REDIRECT = True
+        SECURE_HSTS_SECONDS = 31536000  # 1 year
+        SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+        SECURE_HSTS_PRELOAD = True
+        SESSION_COOKIE_SECURE = True
+        CSRF_COOKIE_SECURE = True
+    
+    # Always enable these security headers
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
