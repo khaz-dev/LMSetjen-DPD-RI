@@ -1,9 +1,12 @@
 import axios from "axios";
 import Cookie from "js-cookie";
 
+// Get API URL from environment variable, fallback to localhost for development
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 // Create an Axios instance with default settings
 const apiInstance = axios.create({
-    baseURL: "http://127.0.0.1:8000/api/v1/",
+    baseURL: `${API_BASE_URL}/api/v1/`,
     timeout: 10000,
     headers: {
         "Content-Type": "application/json",
@@ -46,4 +49,12 @@ apiInstance.interceptors.response.use(
     }
 );
 
+// Helper function to get media/static URLs
+export const getMediaURL = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    return `${API_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+};
+
+export { API_BASE_URL };
 export default apiInstance;

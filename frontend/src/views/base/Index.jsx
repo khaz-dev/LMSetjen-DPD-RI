@@ -7,7 +7,7 @@ import { Rating } from 'react-simple-star-rating';
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { WishlistContext } from "../plugin/Context";
-import apiInstance from "../../utils/axios";
+import apiInstance, { getMediaURL } from "../../utils/axios";
 import { getImageUrl } from "../../utils/fileUtils";
 import SEO from "../../components/SEO";
 import "./Index.css";
@@ -332,7 +332,7 @@ function Index() {
                                     }}
                                 >
                                     <img 
-                                        src="http://127.0.0.1:8000/static/LMSetjen-DPD-RI.jpg" 
+                                        src={getMediaURL("/static/LMSetjen-DPD-RI.jpg")}
                                         alt="LMS DPD RI" 
                                         className="img-fluid hero-right-image"
                                         fetchpriority="high"
@@ -458,7 +458,7 @@ function Index() {
                                     className="image-container about-image-container"
                                 >
                                     <img 
-                                        src="http://127.0.0.1:8000/static/region-indonesia-map.jpg" 
+                                        src={getMediaURL("/static/region-indonesia-map.jpg")}
                                         alt="Kantor Setjen DPD RI" 
                                         className="img-fluid"
                                         style={{ 
