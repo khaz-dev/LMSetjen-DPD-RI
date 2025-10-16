@@ -9,8 +9,6 @@ services:
   - type: pserv
     name: lms-database
     plan: free
-    databaseName: django_lms_db
-    databaseUser: lms_user
     ipAllowList: []
 
   # Django Backend Web Service
