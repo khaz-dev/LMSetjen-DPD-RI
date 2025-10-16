@@ -292,7 +292,9 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://frontend-mtmk2t9bk-khazs-projects.vercel.app",  # Production frontend
+    "https://frontend-mtmk2t9bk-khazs-projects.vercel.app",  # Old production frontend
+    "https://frontend-srfucwb9o-khazs-projects.vercel.app",  # New production frontend
+    "https://frontend-p26ir11fd-khazs-projects.vercel.app",  # Alternative production frontend
 ])
 
 CORS_ALLOW_CREDENTIALS = True
