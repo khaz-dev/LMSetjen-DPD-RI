@@ -167,16 +167,22 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = 'userauths.User'
 
-FRONTEND_SITE_URL = env("FRONTEND_SITE_URL")
+FRONTEND_SITE_URL = env("FRONTEND_SITE_URL", default="https://frontend-mtmk2t9bk-khazs-projects.vercel.app")
 
 
-FROM_EMAIL = env("FROM_EMAIL")
+FROM_EMAIL = env("FROM_EMAIL", default="sdm@dpd.go.id")
 
 # Use console email backend for development, SendGrid for production
-ANYMAIL = {
-        "SENDGRID_API_KEY": env("SENDGRID_API_KEY"),
+SENDGRID_API_KEY = env("SENDGRID_API_KEY", default="")
+
+if SENDGRID_API_KEY:
+    ANYMAIL = {
+        "SENDGRID_API_KEY": SENDGRID_API_KEY,
     }
-EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+    EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+else:
+    # Fallback to console backend if SendGrid is not configured
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # if DEBUG:
 #     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
