@@ -23,6 +23,12 @@ COPY . .
 ARG VITE_API_BASE_URL=http://localhost:8000
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
+# Debug: Show environment variable
+RUN echo "========================================" && \
+    echo "Building with VITE_API_BASE_URL: $VITE_API_BASE_URL" && \
+    echo "========================================" && \
+    env | grep VITE
+
 # Build application
 RUN npm run build
 
