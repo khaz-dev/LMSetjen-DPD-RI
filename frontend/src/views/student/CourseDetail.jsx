@@ -13,6 +13,7 @@ import CertificateTab from "../../components/CourseDetail/CertificateTab";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
+import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import "./CourseDetail.css";
 import "./CourseDetailEnhanced.css";
 import apiInstance from "../../utils/axios";
@@ -1503,7 +1504,7 @@ function CourseDetail() {
                                                                     <img
                                                                         src={q.profile.image.startsWith("http") 
                                                                             ? q.profile.image 
-                                                                            : `http://127.0.0.1:8000${q.profile.image}`
+                                                                            : getMediaUrl(q.profile.image)
                                                                         }
                                                                         className="avatar-modern"
                                                                         alt={`${q.profile?.full_name || 'User'} avatar`}
@@ -2289,9 +2290,9 @@ function CourseDetail() {
                                             {msg.profile?.image ? (
                                                 <img
                                                     className="message-avatar-qa"
-                                                    src={msg.profile.image.startsWith("http://127.0.0.1:8000") 
+                                                    src={msg.profile.image.startsWith("http") 
                                                         ? msg.profile.image 
-                                                        : `http://127.0.0.1:8000${msg.profile.image}`
+                                                        : getMediaUrl(msg.profile.image)
                                                     }
                                                     alt={`${msg.profile?.full_name || 'User'} avatar`}
                                                     onError={(e) => {

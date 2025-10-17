@@ -12,10 +12,11 @@ import Footer from "../partials/Footer";
 // Utils
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
+import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import './QA.css';
 
 // Constants
-const DEFAULT_AVATAR = '/default-avatar.png';
+const DEFAULT_AVATAR = DEFAULT_IMAGE_URL;
 
 function QA() {
     const [questions, setQuestions] = useState([]);
@@ -267,11 +268,11 @@ function QA() {
                                                         <div className="d-flex align-items-center">
                                                             <div className="qa-avatar-gradient">
                                                                 <img
-                                                                    src={q.profile?.image?.startsWith("http") ? q.profile.image : `http://127.0.0.1:8000${q.profile?.image || '/default-avatar.png'}`}
+                                                                    src={q.profile?.image?.startsWith("http") ? q.profile.image : getMediaUrl(q.profile?.image || DEFAULT_AVATAR)}
                                                                     className="rounded-circle qa-avatar-img"
                                                                     alt={`${q.profile?.full_name || 'User'} avatar`}
                                                                     onError={(e) => {
-                                                                        e.target.src = '/default-avatar.png';
+                                                                        e.target.src = DEFAULT_AVATAR;
                                                                     }}
                                                                 />
                                                                 <div className="qa-avatar-status">
@@ -397,9 +398,9 @@ function QA() {
                                             {m.profile?.image ? (
                                                 <img
                                                     className="message-avatar-qa"
-                                                    src={m.profile.image.startsWith("http://127.0.0.1:8000") 
+                                                    src={m.profile.image.startsWith("http") 
                                                         ? m.profile.image 
-                                                        : `http://127.0.0.1:8000${m.profile.image}`
+                                                        : getMediaUrl(m.profile.image)
                                                     }
                                                     alt={`${m.profile?.full_name || 'User'} avatar`}
                                                     onError={(e) => {

@@ -11,6 +11,7 @@ import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
+import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import "./QA.css";
 
 function QA() {
@@ -462,7 +463,7 @@ function QA() {
                                                                         <img 
                                                                             src={enrollment.course.image.startsWith("http") 
                                                                                 ? enrollment.course.image 
-                                                                                : `http://127.0.0.1:8000${enrollment.course.image}`
+                                                                                : `getMediaUrl(enrollment.course.image)`
                                                                             } 
                                                                             alt={enrollment.course?.title || 'Course'}
                                                                             className="course-image"
@@ -596,7 +597,7 @@ function QA() {
                                                                         <img
                                                                             src={q.profile.image.startsWith("http") 
                                                                                 ? q.profile.image 
-                                                                                : `http://127.0.0.1:8000${q.profile.image}`
+                                                                                : `getMediaUrl(q.profile.image)`
                                                                             }
                                                                             className="avatar-modern"
                                                                             alt={`${q.profile?.full_name || 'User'} avatar`}
@@ -722,9 +723,9 @@ function QA() {
                                             {m.profile?.image ? (
                                                 <img
                                                     className="message-avatar-qa"
-                                                    src={m.profile.image.startsWith("http://127.0.0.1:8000") 
+                                                    src={m.profile.image.startsWith("http") 
                                                         ? m.profile.image 
-                                                        : `http://127.0.0.1:8000${m.profile.image}`
+                                                        : `getMediaUrl(m.profile.image)`
                                                     }
                                                     alt={`${m.profile?.full_name || 'User'} avatar`}
                                                     onError={(e) => {

@@ -5,6 +5,7 @@ import useAxios from '../../utils/useAxios';
 import UserData from '../../views/plugin/UserData';
 import Toast from '../../views/plugin/Toast';
 import VideoProgressManager from '../../utils/VideoProgressManager';
+import { getMediaUrl, DEFAULT_IMAGE_URL } from '../../utils/constants';
 import './LecturesTabNew.css';
 
 const LecturesTabNew = ({
@@ -594,7 +595,7 @@ const LecturesTabNew = ({
                         <div className="video-player-container">
                             <ReactPlayer
                                 ref={playerRef}
-                                url={variantItem.file.startsWith("http") ? variantItem.file : `http://127.0.0.1:8000${variantItem.file}`}
+                                url={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
                                 width="100%"
                                 height="60vh"
                                 playing={playing}
@@ -711,7 +712,7 @@ const LecturesTabNew = ({
                                 <p className="text-muted">{getFileTypeLabel(variantItem?.file)}</p>
                                 {variantItem?.file && (
                                     <a 
-                                        href={variantItem.file.startsWith("http") ? variantItem.file : `http://127.0.0.1:8000${variantItem.file}`}
+                                        href={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         className="btn btn-primary"

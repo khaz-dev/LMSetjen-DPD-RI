@@ -5,6 +5,7 @@ import useAxios from '../../utils/useAxios';
 import apiInstance from '../../utils/axios';
 import UserData from '../../views/plugin/UserData';
 import Toast from '../../views/plugin/Toast';
+import { getMediaUrl, DEFAULT_IMAGE_URL } from '../../utils/constants';
 import './LecturesTab.css';
 
 const LecturesTab = ({
@@ -1147,7 +1148,7 @@ const LecturesTab = ({
                                     {Math.round(played * 100)}% watched
                                 </div>
                             )}                                    <ReactPlayer
-                                        url={variantItem.file.startsWith("http") ? variantItem.file : `http://127.0.0.1:8000${variantItem.file}`}
+                                        url={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
                                         controls={true}
                                         playing={playing}
                                         width="100%"
@@ -1231,7 +1232,7 @@ const LecturesTab = ({
                                         </p>
                                         <div className="d-flex gap-3 justify-content-center">
                                             <a
-                                                href={variantItem.file.startsWith("http") ? variantItem.file : `http://127.0.0.1:8000${variantItem.file}`}
+                                                href={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="btn btn-primary btn-lg"
@@ -1248,7 +1249,7 @@ const LecturesTab = ({
                                                 Open File
                                             </a>
                                             <a
-                                                href={variantItem.file.startsWith("http") ? variantItem.file : `http://127.0.0.1:8000${variantItem.file}`}
+                                                href={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
                                                 download
                                                 className="btn btn-outline-light btn-lg"
                                             >

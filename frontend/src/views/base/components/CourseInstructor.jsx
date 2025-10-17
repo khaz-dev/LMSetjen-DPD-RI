@@ -1,5 +1,6 @@
 import React from "react";
 import { Rating } from "react-simple-star-rating";
+import { getMediaUrl } from "../../../utils/constants";
 
 const CourseInstructor = ({ teacher, courseCount = 0 }) => {
     if (!teacher) return null;
@@ -15,18 +16,8 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
             return imageUrl;
         }
         
-        // If it starts with /media/, prepend the base URL
-        if (imageUrl.startsWith('/media/')) {
-            return `http://127.0.0.1:8000${imageUrl}`;
-        }
-        
-        // If it starts with media/, prepend the base URL with slash
-        if (imageUrl.startsWith('media/')) {
-            return `http://127.0.0.1:8000/${imageUrl}`;
-        }
-        
-        // Default case - construct the URL with /media/ prefix
-        return `http://127.0.0.1:8000/media/${imageUrl}`;
+        // Use the centralized helper function
+        return getMediaUrl(imageUrl);
     };
 
     return (

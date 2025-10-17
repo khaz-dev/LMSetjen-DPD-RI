@@ -10,6 +10,7 @@ import { calculateTotalDuration, getDurationStats } from "../../utils/durationUt
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
+import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 
 function Dashboard() {
     const [stats, setStats] = useState([]);
@@ -27,7 +28,7 @@ function Dashboard() {
     // Helper function to clean and format image URLs
     const getImageUrl = (imageUrl) => {
         if (!imageUrl) {
-            return "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+            return DEFAULT_IMAGE_URL;
         }
         
         // Clean the URL - remove any extra encoding or nested URLs
@@ -39,11 +40,11 @@ function Dashboard() {
         }
         
         // Extract just the filename if it's a nested URL structure
-        if (cleanUrl.includes('http://127.0.0.1:8000/media/')) {
+        if (cleanUrl.includes('/media/')) {
             const parts = cleanUrl.split('/media/');
             if (parts.length > 1) {
                 // Get the last part which should be the actual filename
-                cleanUrl = parts[parts.length - 1];
+                cleanUrl = '/media/' + parts[parts.length - 1];
             }
         }
         
@@ -52,18 +53,8 @@ function Dashboard() {
             return cleanUrl;
         }
         
-        // If it starts with /media/, prepend the base URL
-        if (cleanUrl.startsWith('/media/')) {
-            return `http://127.0.0.1:8000${cleanUrl}`;
-        }
-        
-        // If it starts with media/, prepend the base URL with slash
-        if (cleanUrl.startsWith('media/')) {
-            return `http://127.0.0.1:8000/${cleanUrl}`;
-        }
-        
-        // Default case - construct the URL with /media/ prefix
-        return `http://127.0.0.1:8000/media/${cleanUrl}`;
+        // Use the centralized helper
+        return getMediaUrl(cleanUrl);
     };
 
     const fetchCourseData = async () => {

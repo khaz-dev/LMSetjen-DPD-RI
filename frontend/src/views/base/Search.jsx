@@ -8,6 +8,7 @@ import Footer from "../partials/Footer";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { WishlistContext } from "../plugin/Context";
+import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import Toast from "../plugin/Toast";
 
 import "./Saerch.css";
@@ -39,9 +40,9 @@ function Search() {
 
     // Image URL helper function
     const getImageUrl = (imagePath) => {
-        if (!imagePath) return "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+        if (!imagePath) return DEFAULT_IMAGE_URL;
         if (imagePath.startsWith("http")) return imagePath;
-        return `http://127.0.0.1:8000${imagePath}`;
+        return getMediaUrl(imagePath);
     };
 
     // Fetch courses from API

@@ -8,6 +8,7 @@ import Footer from "../partials/Footer";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
+import { getMediaUrl } from "../../utils/constants";
 
 // Import Students specific styles
 import "./Students.css";
@@ -60,12 +61,8 @@ function Students() {
             if (student.image.startsWith('http://') || student.image.startsWith('https://')) {
                 return student.image;
             }
-            // Handle relative URLs
-            if (student.image.startsWith('/')) {
-                return `http://127.0.0.1:8000${student.image}`;
-            }
-            // Handle other formats
-            return `http://127.0.0.1:8000/${student.image}`;
+            // Use centralized helper for relative URLs
+            return getMediaUrl(student.image);
         }
         
         // Generate initials-based placeholder
