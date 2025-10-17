@@ -1,4 +1,5 @@
 // Utility functions for handling file URLs from the file-upload API
+import { getMediaUrl, DEFAULT_IMAGE_URL } from './constants';
 
 /**
  * Helper function to get proper image URL
@@ -6,7 +7,7 @@
  */
 export const getImageUrl = (imageUrl) => {
     if (!imageUrl) {
-        return "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+        return DEFAULT_IMAGE_URL;
     }
     
     // If it's already a complete URL from file-upload API, return as is
@@ -14,17 +15,8 @@ export const getImageUrl = (imageUrl) => {
         return imageUrl;
     }
     
-    // Legacy support for relative URLs
-    if (imageUrl.startsWith('/media/')) {
-        return `http://127.0.0.1:8000${imageUrl}`;
-    }
-    
-    if (imageUrl.startsWith('media/')) {
-        return `http://127.0.0.1:8000/${imageUrl}`;
-    }
-    
-    // Default case - construct the URL with /media/ prefix
-    return `http://127.0.0.1:8000/media/${imageUrl}`;
+    // Use getMediaUrl from constants.js for proper URL construction
+    return getMediaUrl(imageUrl);
 };
 
 /**
@@ -41,17 +33,8 @@ export const getVideoUrl = (videoUrl) => {
         return videoUrl;
     }
     
-    // Legacy support for relative URLs
-    if (videoUrl.startsWith('/media/')) {
-        return `http://127.0.0.1:8000${videoUrl}`;
-    }
-    
-    if (videoUrl.startsWith('media/')) {
-        return `http://127.0.0.1:8000/${videoUrl}`;
-    }
-    
-    // Default case - construct the URL with /media/ prefix
-    return `http://127.0.0.1:8000/media/${videoUrl}`;
+    // Use getMediaUrl from constants.js for proper URL construction
+    return getMediaUrl(videoUrl);
 };
 
 /**
@@ -67,20 +50,11 @@ export const getFileUrl = (fileUrl) => {
         return fileUrl;
     }
     
-    // Legacy support for relative URLs
-    if (fileUrl.startsWith('/media/')) {
-        return `http://127.0.0.1:8000${fileUrl}`;
-    }
-    
-    if (fileUrl.startsWith('media/')) {
-        return `http://127.0.0.1:8000/${fileUrl}`;
-    }
-    
-    // Default case - construct the URL with /media/ prefix
-    return `http://127.0.0.1:8000/media/${fileUrl}`;
+    // Use getMediaUrl from constants.js for proper URL construction
+    return getMediaUrl(fileUrl);
 };
 
 /**
  * Default image URL for fallback cases
  */
-export const DEFAULT_IMAGE_URL = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+export { DEFAULT_IMAGE_URL };

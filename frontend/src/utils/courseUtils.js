@@ -1,7 +1,9 @@
 // Course utilities
+import { getMediaUrl, DEFAULT_IMAGE_URL } from './constants';
+
 export const getImageUrl = (imageUrl) => {
     if (!imageUrl) {
-        return "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+        return DEFAULT_IMAGE_URL;
     }
     
     let cleanUrl = imageUrl;
@@ -12,7 +14,8 @@ export const getImageUrl = (imageUrl) => {
     }
     
     // Extract just the filename if it's a nested URL structure
-    if (cleanUrl.includes('http://127.0.0.1:8000/media/')) {
+    const mediaPattern = /\/media\//;
+    if (mediaPattern.test(cleanUrl)) {
         const parts = cleanUrl.split('/media/');
         if (parts.length > 1) {
             cleanUrl = parts[parts.length - 1];
@@ -24,18 +27,8 @@ export const getImageUrl = (imageUrl) => {
         return cleanUrl;
     }
     
-    // If it starts with /media/, prepend the base URL
-    if (cleanUrl.startsWith('/media/')) {
-        return `http://127.0.0.1:8000${cleanUrl}`;
-    }
-    
-    // If it starts with media/, prepend the base URL with slash
-    if (cleanUrl.startsWith('media/')) {
-        return `http://127.0.0.1:8000/${cleanUrl}`;
-    }
-    
-    // Default case - construct the URL with /media/ prefix
-    return `http://127.0.0.1:8000/media/${cleanUrl}`;
+    // Use getMediaUrl from constants.js for proper URL construction
+    return getMediaUrl(cleanUrl);
 };
 
 export const getStatusBadgeStyle = (status) => {
