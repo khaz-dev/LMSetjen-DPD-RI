@@ -265,14 +265,15 @@ export const setAuthUser = (access_token, refresh_token) => {
     }
     
     if (access_token && refresh_token) {
+        // Note: secure flag removed for HTTP deployment
         Cookie.set("access_token", access_token, {
             expires: 1,
-            secure: true,
+            sameSite: 'lax'
         });
 
         Cookie.set("refresh_token", refresh_token, {
             expires: 7,
-            secure: true,
+            sameSite: 'lax'
         });
 
         try {
