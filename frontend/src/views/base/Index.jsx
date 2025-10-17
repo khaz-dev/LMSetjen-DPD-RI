@@ -12,6 +12,10 @@ import { getImageUrl } from "../../utils/fileUtils";
 import SEO from "../../components/SEO";
 import "./Index.css";
 
+// Import frontend assets
+import heroImage from "../../assets/LMSetjen-DPD-RI.jpg";
+import regionMapImage from "../../assets/region-indonesia-map.jpg";
+
 function Index() {
     const [courses, setCourses] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -332,7 +336,7 @@ function Index() {
                                     }}
                                 >
                                     <img 
-                                        src={getMediaURL("/static/LMSetjen-DPD-RI.jpg")}
+                                        src={heroImage}
                                         alt="LMS DPD RI" 
                                         className="img-fluid hero-right-image"
                                         fetchpriority="high"
@@ -458,7 +462,7 @@ function Index() {
                                     className="image-container about-image-container"
                                 >
                                     <img 
-                                        src={getMediaURL("/static/region-indonesia-map.jpg")}
+                                        src={regionMapImage}
                                         alt="Kantor Setjen DPD RI" 
                                         className="img-fluid"
                                         style={{ 
