@@ -51,8 +51,8 @@ COPY --from=dependencies /usr/local/bin /usr/local/bin
 COPY --chown=appuser:appuser . .
 
 # Create necessary directories
-RUN mkdir -p /app/media /app/static /app/logs /app/temp_uploads && \
-    chown -R appuser:appuser /app/media /app/static /app/logs /app/temp_uploads
+RUN mkdir -p /app/media /app/static /app/staticfiles /app/logs /app/temp_uploads && \
+    chown -R appuser:appuser /app/media /app/static /app/staticfiles /app/logs /app/temp_uploads
 
 # Switch to non-root user
 USER appuser

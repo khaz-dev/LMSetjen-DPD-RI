@@ -81,6 +81,7 @@ services:
       - backend_logs:/app/logs
     ports:
       - "8000:8000"
+    user: root
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,14 +91,19 @@ services:
       - lms_network
     command: >
       sh -c "
-        echo 'Waiting for database...' &&
-        sleep 5 &&
-        echo 'Running migrations...' &&
-        python manage.py migrate --noinput &&
-        echo 'Collecting static files...' &&
-        python manage.py collectstatic --noinput --clear &&
-        echo 'Starting Gunicorn server...' &&
-        gunicorn --bind 0.0.0.0:8000 --workers 2 --threads 2 --timeout 120 --access-logfile - --error-logfile - --log-level info backend.wsgi:application
+        echo 'Fixing volume permissions...' &&
+        chown -R appuser:appuser /app/staticfiles /app/media /app/logs &&
+        echo 'Switching to appuser...' &&
+        su appuser -c '
+          echo Waiting for database... &&
+          sleep 5 &&
+          echo Running migrations... &&
+          python manage.py migrate --noinput &&
+          echo Collecting static files... &&
+          python manage.py collectstatic --noinput --clear &&
+          echo Starting Gunicorn server... &&
+          gunicorn --bind 0.0.0.0:8000 --workers 2 --threads 2 --timeout 120 --access-logfile - --error-logfile - --log-level info backend.wsgi:application
+        '
       "
     logging:
       driver: "json-file"
