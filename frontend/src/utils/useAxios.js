@@ -1,10 +1,11 @@
 import axios from "axios";
 import { setAuthUser, getRefreshToken, isAccessTokenExpired } from "./auth";
 import Cookie from "js-cookie";
+import { API_BASE_URL } from "./constants";
 
 // Create an Axios instance with default settings
 const useAxios = axios.create({
-    baseURL: "http://127.0.0.1:8000/api/v1/",
+    baseURL: API_BASE_URL,
     timeout: 10000000,
     headers: {
         "Content-Type": "application/json",
