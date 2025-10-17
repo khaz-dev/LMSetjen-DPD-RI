@@ -4,6 +4,9 @@ import UserData from "../views/plugin/UserData";
 const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 export const API_BASE_URL = `${BACKEND_URL}/api/v1/`;
 
+// Default image URL for fallback cases
+export const DEFAULT_IMAGE_URL = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+
 // Helper function to get full media URL
 export const getMediaUrl = (path) => {
     if (!path) return '';
