@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import dayjs, { moment } from "../../utils/dayjs";
 import { Rating } from 'react-simple-star-rating';
 

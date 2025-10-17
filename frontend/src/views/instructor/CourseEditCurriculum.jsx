@@ -1,5 +1,5 @@
 // React imports
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
 // Third-party imports - Lazy load CKEditor (1.24 MB)
