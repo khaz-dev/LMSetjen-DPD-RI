@@ -44,6 +44,41 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 
+# API Root View
+class APIRootView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        """
+        API Root - Welcome page for the LMS Backend API
+        """
+        return Response({
+            "message": "Welcome to LMSetjen DPD RI - Learning Management System API",
+            "version": "v1",
+            "status": "operational",
+            "documentation": {
+                "swagger": request.build_absolute_uri('/swagger/'),
+                "redoc": request.build_absolute_uri('/redoc/'),
+            },
+            "endpoints": {
+                "health": request.build_absolute_uri('/api/v1/health/'),
+                "authentication": {
+                    "login": request.build_absolute_uri('/api/v1/user/token/'),
+                    "refresh": request.build_absolute_uri('/api/v1/user/token/refresh/'),
+                    "register": request.build_absolute_uri('/api/v1/user/register/'),
+                },
+                "courses": {
+                    "list": request.build_absolute_uri('/api/v1/course/course-list/'),
+                    "categories": request.build_absolute_uri('/api/v1/course/category/'),
+                    "search": request.build_absolute_uri('/api/v1/course/search/'),
+                },
+            },
+            "support": {
+                "docs": "See /swagger/ or /redoc/ for complete API documentation",
+                "admin": request.build_absolute_uri('/admin/'),
+            }
+        })
+
 # Health Check API (no authentication required)
 class HealthCheckAPIView(APIView):
     permission_classes = [AllowAny]
