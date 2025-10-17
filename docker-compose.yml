@@ -120,8 +120,13 @@ services:
     restart: unless-stopped
     environment:
       BACKEND_URL: ${BACKEND_SITE_URL:-http://localhost:8000}
+    volumes:
+      # SSL certificates (read-only)
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
     networks:
