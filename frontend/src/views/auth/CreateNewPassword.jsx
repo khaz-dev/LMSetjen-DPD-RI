@@ -150,11 +150,14 @@ function CreateNewPassword() {
                     <div className="mb-3">
                       <div className="d-inline-flex align-items-center justify-content-center">
                         <div className="create-password-logo-container">
-                          <img 
-                            src={logo} 
-                            alt="LMSetjen DPD RI Logo" 
-                            className="create-password-logo"
-                          />
+                          <picture>
+                            <source srcSet={logoWebP} type="image/webp" />
+                            <img 
+                              src={logoPNG} 
+                              alt="LMSetjen DPD RI Logo" 
+                              className="create-password-logo"
+                            />
+                          </picture>
                         </div>
                       </div>
                     </div>
