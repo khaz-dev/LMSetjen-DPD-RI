@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
-import dayjs from "../../utils/dayjs";
+import dayjs, { moment } from "../../utils/dayjs";
 
 // Components
 import Sidebar from "./Partials/Sidebar";

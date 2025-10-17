@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import dayjs from "../../../utils/dayjs";
+import dayjs, { moment } from "../../../utils/dayjs";
 import { ProfileContext } from "../../plugin/Context";
 import UserData from "../../plugin/UserData";
 import useAxios from "../../../utils/useAxios";

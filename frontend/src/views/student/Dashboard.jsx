@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import dayjs from "../../utils/dayjs";
+import dayjs, { moment } from "../../utils/dayjs";
 
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";

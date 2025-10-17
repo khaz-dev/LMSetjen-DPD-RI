@@ -15,4 +15,9 @@ dayjs.extend(isBetween);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
+// Export dayjs as default
 export default dayjs;
+
+// Also export as 'moment' for backward compatibility with legacy code
+// This allows files that use moment() to work without changes
+export { dayjs as moment };

@@ -615,7 +615,7 @@ function UsersAdmin() {
                                         <td className="login-cell">
                                             <div className="login-info-modern">
                                                 <FaBell className="date-cell" />
-                                                <span className="date-info-modern">{user.last_login ? moment(user.last_login).format("DD MMM, YYYY") : "No Data"}</span>
+                                                <span className="date-info-modern">{user.last_login ? dayjs(user.last_login).format("DD MMM, YYYY") : "No Data"}</span>
                                             </div>
                                         </td>
                                         <td className="date-cell">

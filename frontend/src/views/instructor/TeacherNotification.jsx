@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import dayjs from "../../utils/dayjs";
+import dayjs, { moment } from "../../utils/dayjs";
 
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";

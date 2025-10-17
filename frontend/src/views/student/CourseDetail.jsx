@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
-import dayjs from "../../utils/dayjs";
+import dayjs, { moment } from "../../utils/dayjs";
 import Swal from "sweetalert2";
 
 import BaseHeader from "../partials/BaseHeader";
