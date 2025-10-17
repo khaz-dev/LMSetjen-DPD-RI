@@ -39,4 +39,4 @@ else:
     print(f"   Email: {EMAIL}")
     print(f"   Password: {PASSWORD}")
 
-print(f"\n🔗 Login at: http://16.79.83.21/admin/")
+print(f"\n🔗 Login at: https://lmsetjendpdri.duckdns.org/login/")

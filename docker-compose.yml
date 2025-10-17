@@ -102,7 +102,9 @@ services:
         python manage.py wait_for_db &&
         echo '📦 Running migrations...' &&
         python manage.py migrate --noinput &&
-        echo '📁 Collecting static files...' &&
+        echo '� Initializing default users...' &&
+        python manage.py init_db --skip-if-exists &&
+        echo '�📁 Collecting static files...' &&
         python manage.py collectstatic --noinput --clear &&
         echo '🚀 Starting Gunicorn server...' &&
         gunicorn --bind 0.0.0.0:8000 --workers 4 --threads 2 --timeout 120 --access-logfile - --error-logfile - backend.wsgi:application
