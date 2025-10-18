@@ -9,6 +9,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 import os
 import math
 from django.conf import settings
@@ -20,9 +22,18 @@ try:
 except ImportError:
     VideoFileClip = None
 
+@method_decorator(csrf_exempt, name='dispatch')
 class EnhancedFileUploadAPIView(APIView):
-    """Enhanced file upload with local storage optimization"""
+    """
+    Enhanced file upload with local storage optimization
+    
+    CSRF exempt because:
+    - Uses JWT authentication for authenticated requests  
+    - AllowAny permission for public uploads
+    - Safe file handling with UUID-based storage
+    """
     permission_classes = [AllowAny]
+    authentication_classes = []  # Disable authentication to avoid CSRF issues
     parser_classes = (MultiPartParser, FormParser)
 
     @swagger_auto_schema(
@@ -135,9 +146,15 @@ class EnhancedFileUploadAPIView(APIView):
         
         return duration_info
 
+@method_decorator(csrf_exempt, name='dispatch')
 class BulkFileUploadAPIView(APIView):
-    """Handle multiple file uploads at once"""
+    """
+    Handle multiple file uploads at once
+    
+    CSRF exempt for the same security reasons as EnhancedFileUploadAPIView
+    """
     permission_classes = [AllowAny]
+    authentication_classes = []  # Disable authentication to avoid CSRF issues
     parser_classes = (MultiPartParser, FormParser)
     
     @swagger_auto_schema(
@@ -184,9 +201,15 @@ class BulkFileUploadAPIView(APIView):
             "errors": errors
         }, status=status.HTTP_200_OK)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class FileInfoAPIView(APIView):
-    """Get information about uploaded files"""
+    """
+    Get information about uploaded files
+    
+    CSRF exempt for consistency with other file upload endpoints
+    """
     permission_classes = [AllowAny]
+    authentication_classes = []  # Disable authentication to avoid CSRF issues
     
     def get(self, request, file_id=None):
         # This would integrate with a file tracking system

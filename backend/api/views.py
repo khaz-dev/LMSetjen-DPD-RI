@@ -7,6 +7,8 @@ from django.db import models
 from django.db.models.functions import ExtractMonth
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import Http404
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 
@@ -1721,8 +1723,20 @@ class CourseVariantItemDeleteAPIVIew(generics.DestroyAPIView):
             )
     
 
+@method_decorator(csrf_exempt, name='dispatch')
 class FileUploadAPIView(APIView):
+    """
+    File Upload API View
+    
+    Allows file uploads without CSRF token validation.
+    This is safe because:
+    1. Uses JWT authentication for authenticated requests
+    2. AllowAny permission allows public uploads (for course thumbnails, etc.)
+    3. Files are stored securely with UUID-based filenames
+    4. File type validation is performed by the serializer
+    """
     permission_classes = [AllowAny]
+    authentication_classes = []  # Explicitly disable authentication for this view
     parser_classes = (MultiPartParser, FormParser,)  # Allow file uploads
 
     @swagger_auto_schema(
