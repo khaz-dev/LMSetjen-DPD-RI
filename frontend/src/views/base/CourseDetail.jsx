@@ -172,6 +172,7 @@ function CourseDetail() {
     }, [course?.file]); // Re-run when video source changes
 
     // Add modal event listeners to pause videos when modals close
+    // Enhanced with multiple event types for better reliability
     useEffect(() => {
         const coursePreviewModalElement = document.getElementById('coursePreviewModal');
         const lessonPreviewModalElement = document.getElementById('lessonPreviewModal');
@@ -195,23 +196,60 @@ function CourseDetail() {
             setPreviewVideo(null);
         };
         
+        // Handle backdrop clicks (clicking outside modal)
+        const handleBackdropClick = (e) => {
+            // Check if click is on the modal backdrop (not the modal content)
+            if (e.target.classList.contains('modal')) {
+                // Determine which modal and pause appropriate video
+                if (e.target.id === 'coursePreviewModal') {
+                    handleCourseModalHidden();
+                } else if (e.target.id === 'lessonPreviewModal') {
+                    handleLessonModalHidden();
+                }
+            }
+        };
+        
+        // Handle ESC key press
+        const handleEscKey = (e) => {
+            if (e.key === 'Escape') {
+                // Check which modal is open and pause video
+                const courseModal = document.getElementById('coursePreviewModal');
+                const lessonModal = document.getElementById('lessonPreviewModal');
+                
+                if (courseModal && courseModal.classList.contains('show')) {
+                    handleCourseModalHidden();
+                }
+                if (lessonModal && lessonModal.classList.contains('show')) {
+                    handleLessonModalHidden();
+                }
+            }
+        };
+        
         // Add Bootstrap modal hidden event listeners
         if (coursePreviewModalElement) {
             coursePreviewModalElement.addEventListener('hidden.bs.modal', handleCourseModalHidden);
+            coursePreviewModalElement.addEventListener('click', handleBackdropClick);
         }
         
         if (lessonPreviewModalElement) {
             lessonPreviewModalElement.addEventListener('hidden.bs.modal', handleLessonModalHidden);
+            lessonPreviewModalElement.addEventListener('click', handleBackdropClick);
         }
+        
+        // Add ESC key listener
+        document.addEventListener('keydown', handleEscKey);
         
         // Cleanup
         return () => {
             if (coursePreviewModalElement) {
                 coursePreviewModalElement.removeEventListener('hidden.bs.modal', handleCourseModalHidden);
+                coursePreviewModalElement.removeEventListener('click', handleBackdropClick);
             }
             if (lessonPreviewModalElement) {
                 lessonPreviewModalElement.removeEventListener('hidden.bs.modal', handleLessonModalHidden);
+                lessonPreviewModalElement.removeEventListener('click', handleBackdropClick);
             }
+            document.removeEventListener('keydown', handleEscKey);
         };
     }, [previewVideo]); // Re-run when previewVideo changes
 
@@ -585,6 +623,14 @@ function CourseDetail() {
                                         padding: 0,
                                         transition: 'all 0.3s ease'
                                     }}
+                                    onClick={() => {
+                                        // Immediately pause and reset the video
+                                        const videoElement = videoRef.current;
+                                        if (videoElement) {
+                                            videoElement.pause();
+                                            videoElement.currentTime = 0;
+                                        }
+                                    }}
                                     onMouseEnter={(e) => {
                                         e.target.style.background = 'rgba(255, 255, 255, 0.3)';
                                         e.target.style.transform = 'scale(1.1)';
@@ -680,6 +726,16 @@ function CourseDetail() {
                                         padding: 0,
                                         transition: 'all 0.3s ease'
                                     }}
+                                    onClick={() => {
+                                        // Immediately pause and reset the lesson video
+                                        const lessonVideo = document.querySelector('#lessonPreviewModal video');
+                                        if (lessonVideo) {
+                                            lessonVideo.pause();
+                                            lessonVideo.currentTime = 0;
+                                        }
+                                        // Reset preview state
+                                        setPreviewVideo(null);
+                                    }}
                                     onMouseEnter={(e) => {
                                         e.target.style.background = 'rgba(255, 255, 255, 0.3)';
                                         e.target.style.transform = 'scale(1.1)';
@@ -688,7 +744,6 @@ function CourseDetail() {
                                         e.target.style.background = 'rgba(255, 255, 255, 0.2)';
                                         e.target.style.transform = 'scale(1)';
                                     }}
-                                    onClick={() => setPreviewVideo(null)}
                                 >
                                     <i className="fas fa-times text-white" style={{ fontSize: '1rem' }}></i>
                                 </button>
