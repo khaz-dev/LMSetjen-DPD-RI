@@ -13,9 +13,22 @@ export const getMediaUrl = (path) => {
     if (path.startsWith('http://') || path.startsWith('https://')) {
         return path;
     }
-    // Remove leading slash if present
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${BACKEND_URL}${cleanPath}`;
+    
+    // Clean the path
+    let cleanPath = path;
+    
+    // If path already starts with /media/, use it as-is
+    if (cleanPath.startsWith('/media/')) {
+        return `${BACKEND_URL}${cleanPath}`;
+    }
+    
+    // If path starts with /, add /media prefix
+    if (cleanPath.startsWith('/')) {
+        return `${BACKEND_URL}/media${cleanPath}`;
+    }
+    
+    // Otherwise, add /media/ prefix
+    return `${BACKEND_URL}/media/${cleanPath}`;
 };
 
 export const userId = UserData()?.user_id;
