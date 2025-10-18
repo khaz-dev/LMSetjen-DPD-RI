@@ -173,85 +173,99 @@ function CourseDetail() {
 
     // Add modal event listeners to pause videos when modals close
     // Enhanced with multiple event types for better reliability
+    // This runs after modals are rendered (when course/previewVideo exist)
     useEffect(() => {
-        const coursePreviewModalElement = document.getElementById('coursePreviewModal');
-        const lessonPreviewModalElement = document.getElementById('lessonPreviewModal');
-        
-        const handleCourseModalHidden = () => {
-            const videoElement = videoRef.current;
-            if (videoElement) {
-                videoElement.pause();
-                videoElement.currentTime = 0; // Reset to start
-            }
-        };
-        
-        const handleLessonModalHidden = () => {
-            // Find lesson video element and pause it
-            const lessonVideo = document.querySelector('#lessonPreviewModal video');
-            if (lessonVideo) {
-                lessonVideo.pause();
-                lessonVideo.currentTime = 0; // Reset to start
-            }
-            // Reset preview video state
-            setPreviewVideo(null);
-        };
-        
-        // Handle backdrop clicks (clicking outside modal)
-        const handleBackdropClick = (e) => {
-            // Check if click is on the modal backdrop (not the modal content)
-            if (e.target.classList.contains('modal')) {
-                // Determine which modal and pause appropriate video
-                if (e.target.id === 'coursePreviewModal') {
-                    handleCourseModalHidden();
-                } else if (e.target.id === 'lessonPreviewModal') {
-                    handleLessonModalHidden();
+        // Wait for next tick to ensure modals are in DOM
+        const setupListeners = () => {
+            const coursePreviewModalElement = document.getElementById('coursePreviewModal');
+            const lessonPreviewModalElement = document.getElementById('lessonPreviewModal');
+            
+            const handleCourseModalHidden = () => {
+                const videoElement = videoRef.current;
+                if (videoElement) {
+                    videoElement.pause();
+                    videoElement.currentTime = 0; // Reset to start
+                    videoElement.blur(); // Remove focus to prevent aria-hidden warning
                 }
-            }
-        };
-        
-        // Handle ESC key press
-        const handleEscKey = (e) => {
-            if (e.key === 'Escape') {
-                // Check which modal is open and pause video
-                const courseModal = document.getElementById('coursePreviewModal');
-                const lessonModal = document.getElementById('lessonPreviewModal');
-                
-                if (courseModal && courseModal.classList.contains('show')) {
-                    handleCourseModalHidden();
+            };
+            
+            const handleLessonModalHidden = () => {
+                // Find lesson video element and pause it
+                const lessonVideo = document.querySelector('#lessonPreviewModal video');
+                if (lessonVideo) {
+                    lessonVideo.pause();
+                    lessonVideo.currentTime = 0; // Reset to start
+                    lessonVideo.blur(); // Remove focus to prevent aria-hidden warning
                 }
-                if (lessonModal && lessonModal.classList.contains('show')) {
-                    handleLessonModalHidden();
+                // Reset preview video state
+                setPreviewVideo(null);
+            };
+            
+            // Handle backdrop clicks (clicking outside modal)
+            const handleBackdropClick = (e) => {
+                // Check if click is on the modal backdrop (not the modal content)
+                if (e.target.classList.contains('modal')) {
+                    // Determine which modal and pause appropriate video
+                    if (e.target.id === 'coursePreviewModal') {
+                        handleCourseModalHidden();
+                    } else if (e.target.id === 'lessonPreviewModal') {
+                        handleLessonModalHidden();
+                    }
                 }
-            }
-        };
-        
-        // Add Bootstrap modal hidden event listeners
-        if (coursePreviewModalElement) {
-            coursePreviewModalElement.addEventListener('hidden.bs.modal', handleCourseModalHidden);
-            coursePreviewModalElement.addEventListener('click', handleBackdropClick);
-        }
-        
-        if (lessonPreviewModalElement) {
-            lessonPreviewModalElement.addEventListener('hidden.bs.modal', handleLessonModalHidden);
-            lessonPreviewModalElement.addEventListener('click', handleBackdropClick);
-        }
-        
-        // Add ESC key listener
-        document.addEventListener('keydown', handleEscKey);
-        
-        // Cleanup
-        return () => {
+            };
+            
+            // Handle ESC key press
+            const handleEscKey = (e) => {
+                if (e.key === 'Escape') {
+                    // Check which modal is open and pause video
+                    const courseModal = document.getElementById('coursePreviewModal');
+                    const lessonModal = document.getElementById('lessonPreviewModal');
+                    
+                    if (courseModal && courseModal.classList.contains('show')) {
+                        handleCourseModalHidden();
+                    }
+                    if (lessonModal && lessonModal.classList.contains('show')) {
+                        handleLessonModalHidden();
+                    }
+                }
+            };
+            
+            // Add Bootstrap modal hidden event listeners (this fires on ALL close methods)
             if (coursePreviewModalElement) {
-                coursePreviewModalElement.removeEventListener('hidden.bs.modal', handleCourseModalHidden);
-                coursePreviewModalElement.removeEventListener('click', handleBackdropClick);
+                coursePreviewModalElement.addEventListener('hidden.bs.modal', handleCourseModalHidden);
+                coursePreviewModalElement.addEventListener('click', handleBackdropClick);
             }
+            
             if (lessonPreviewModalElement) {
-                lessonPreviewModalElement.removeEventListener('hidden.bs.modal', handleLessonModalHidden);
-                lessonPreviewModalElement.removeEventListener('click', handleBackdropClick);
+                lessonPreviewModalElement.addEventListener('hidden.bs.modal', handleLessonModalHidden);
+                lessonPreviewModalElement.addEventListener('click', handleBackdropClick);
             }
-            document.removeEventListener('keydown', handleEscKey);
+            
+            // Add ESC key listener
+            document.addEventListener('keydown', handleEscKey);
+            
+            // Return cleanup function
+            return () => {
+                if (coursePreviewModalElement) {
+                    coursePreviewModalElement.removeEventListener('hidden.bs.modal', handleCourseModalHidden);
+                    coursePreviewModalElement.removeEventListener('click', handleBackdropClick);
+                }
+                if (lessonPreviewModalElement) {
+                    lessonPreviewModalElement.removeEventListener('hidden.bs.modal', handleLessonModalHidden);
+                    lessonPreviewModalElement.removeEventListener('click', handleBackdropClick);
+                }
+                document.removeEventListener('keydown', handleEscKey);
+            };
         };
-    }, [previewVideo]); // Re-run when previewVideo changes
+        
+        // Use setTimeout to ensure modals are rendered in DOM
+        const timeoutId = setTimeout(setupListeners, 100);
+        
+        // Cleanup timeout on unmount
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, [course?.file, previewVideo]); // Re-run when modals are rendered
 
     const getTabContent = () => {
         switch (activeTab) {
@@ -629,6 +643,7 @@ function CourseDetail() {
                                         if (videoElement) {
                                             videoElement.pause();
                                             videoElement.currentTime = 0;
+                                            videoElement.blur(); // Remove focus to prevent aria-hidden warning
                                         }
                                     }}
                                     onMouseEnter={(e) => {
@@ -732,6 +747,7 @@ function CourseDetail() {
                                         if (lessonVideo) {
                                             lessonVideo.pause();
                                             lessonVideo.currentTime = 0;
+                                            lessonVideo.blur(); // Remove focus to prevent aria-hidden warning
                                         }
                                         // Reset preview state
                                         setPreviewVideo(null);
