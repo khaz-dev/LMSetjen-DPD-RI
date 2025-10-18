@@ -291,31 +291,31 @@ function Header() {
                       </small>
                     </div>
                   </div>
-                  <button 
-                    className="instructor-header-toggle-btn-inline"
-                    onClick={toggleCollapse}
-                    title="Expand Header"
-                    aria-label="Expand Header"
-                  >
-                    <i className="fas fa-chevron-down"></i>
-                  </button>
-                </div>
-                <div className="d-flex gap-2">
-                  <Link
-                    to="/instructor/create-course/"
-                    className="btn btn-sm btn-light"
-                    title="Create Course"
-                  >
-                    <i className="fas fa-plus me-1"></i>
-                    Create
-                  </Link>
-                  <Link
-                    to="/instructor/profile/"
-                    className="btn btn-sm btn-outline-light"
-                    title="Profile"
-                  >
-                    <i className="fas fa-user-cog"></i>
-                  </Link>
+                  <div className="d-flex gap-2">
+                    <Link
+                      to="/instructor/create-course/"
+                      className="btn btn-sm btn-light"
+                      title="Create Course"
+                    >
+                      <i className="fas fa-plus me-1"></i>
+                      Create
+                    </Link>
+                    <Link
+                      to="/instructor/profile/"
+                      className="btn btn-sm btn-outline-light"
+                      title="Profile"
+                    >
+                      <i className="fas fa-user-cog"></i>
+                    </Link>
+                    <button 
+                      className="instructor-header-toggle-btn-inline"
+                      onClick={toggleCollapse}
+                      title="Expand Header"
+                      aria-label="Expand Header"
+                    >
+                      <i className="fas fa-chevron-down"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

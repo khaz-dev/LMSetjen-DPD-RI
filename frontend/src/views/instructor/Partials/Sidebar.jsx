@@ -438,10 +438,10 @@ function Sidebar() {
                         color: #4a5568;
                     }
                     
-                    /* Toggle button for sidebar */
+                    /* Toggle button for sidebar - Now inside sidebar-content */
                     .sidebar-toggle-btn {
                         position: absolute;
-                        top: 85px;
+                        top: 10px;
                         right: 10px;
                         width: 36px;
                         height: 36px;
@@ -458,8 +458,13 @@ function Sidebar() {
                         backdrop-filter: blur(10px);
                     }
                     
-                    /* Adjust toggle position when sidebar is collapsed - align with first nav title */
+                    /* Position toggle at top when collapsed (on top of nav section title) */
                     .instructor-sidebar.collapsed .sidebar-toggle-btn {
+                        top: 10px;
+                    }
+                    
+                    /* Position toggle aligned with header when expanded */
+                    .instructor-sidebar:not(.collapsed) .sidebar-toggle-btn {
                         top: 10px;
                     }
                     
@@ -504,15 +509,6 @@ function Sidebar() {
             
             <div className="col-lg-3 col-md-4 col-12">
                 <nav className={`instructor-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-                    {/* Collapse Toggle Button (Desktop only) */}
-                    <button 
-                        className="sidebar-toggle-btn d-none d-md-flex"
-                        onClick={toggleSidebarCollapse}
-                        title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                    >
-                        <i className="bi bi-chevron-left"></i>
-                    </button>
-
                     {/* Mobile Header */}
                     <div className="d-md-none">
                         <div className="instructor-sidebar-header">
@@ -542,6 +538,15 @@ function Sidebar() {
 
                     <div className="collapse navbar-collapse show" id="instructorSidenav">
                         <div className="sidebar-content">
+                            {/* Collapse Toggle Button (Desktop only) - Moved inside content */}
+                            <button 
+                                className="sidebar-toggle-btn d-none d-md-flex"
+                                onClick={toggleSidebarCollapse}
+                                title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                            >
+                                <i className="bi bi-chevron-left"></i>
+                            </button>
+
                             {/* Main Navigation */}
                             <div className="nav-section-title section-title">Course Management</div>
                             <div className="d-flex flex-column">
