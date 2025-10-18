@@ -15,11 +15,25 @@ function Header() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastFetchTime, setLastFetchTime] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    // Initialize from localStorage
+    const saved = localStorage.getItem('instructorHeaderCollapsed');
+    return saved === 'true';
+  });
   const userData = UserData();
   const location = useLocation();
 
   // Cache duration in milliseconds (5 minutes)
   const CACHE_DURATION = 5 * 60 * 1000;
+
+  // Toggle collapse state and save to localStorage
+  const toggleCollapse = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem('instructorHeaderCollapsed', newState.toString());
+    // Dispatch custom event for sidebar to listen
+    window.dispatchEvent(new CustomEvent('instructorHeaderToggle', { detail: { collapsed: newState } }));
+  };
 
   // Function to check if current page is active
   const isActivePage = (path) => location.pathname === path;
@@ -249,87 +263,137 @@ function Header() {
   return (
     <div className="row align-items-center">
       <div className="col-xl-12 col-lg-12 col-md-12 col-12">
-        <div className="instructor-header-card">
-          <div className="instructor-header-content p-3 p-md-4">
-            <div className="row align-items-center">
-              {/* Profile Avatar Section */}
-              <div className="col-lg-3 col-md-4 mb-4 mb-lg-0">
-                <div className="text-center position-relative">
+        <div className={`instructor-header-card ${isCollapsed ? 'collapsed' : ''}`}>
+          {/* Collapse Toggle Button */}
+          <button
+            className="instructor-header-toggle-btn"
+            onClick={toggleCollapse}
+            title={isCollapsed ? "Expand Header" : "Collapse Header"}
+            aria-label={isCollapsed ? "Expand Header" : "Collapse Header"}
+          >
+            <i className={`fas fa-chevron-${isCollapsed ? 'down' : 'up'}`}></i>
+          </button>
+
+          {/* Collapsed Mini Header */}
+          {isCollapsed && (
+            <div className="instructor-header-collapsed p-3">
+              <div className="d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center gap-3">
                   {renderProfileAvatar()}
-                  
-                  {/* Instructor Identity Badge */}
-                  <div className="instructor-badge">
-                    <i className="fas fa-chalkboard-user"></i>
+                  <div>
+                    <h5 className="mb-0 text-white">
+                      {teacher?.full_name || profile?.full_name || userData?.full_name || "Instructor Dashboard"}
+                    </h5>
+                    <small className="text-white-50">
+                      <i className="fas fa-chalkboard-user me-1"></i>
+                      Instructor
+                    </small>
                   </div>
                 </div>
-              </div>
-
-              {/* Profile Information Section */}
-              <div className="col-lg-6 col-md-5 mb-4 mb-lg-0">
-                <div>
-                  <h1 className="instructor-name">
-                    {teacher?.full_name || profile?.full_name || userData?.full_name || "Welcome Instructor!"}
-                  </h1>
-                  <p className="instructor-bio">
-                    {teacher?.bio || teacher?.about || profile?.about || "Welcome to your instructor dashboard! Create and manage your courses to educate students worldwide."}
-                  </p>
-                  
-                  <div className="d-flex flex-wrap gap-3 mb-3">
-                    <div className="badge-instructor">
-                      <i className="fas fa-calendar-alt"></i>
-                      Teaching since {getMemberSince()}
-                    </div>
-                    <div className="badge-instructor">
-                      <i className="fas fa-clock"></i>
-                      {getJoinedDaysAgo()}
-                    </div>
-                  </div>
-
-                  {(teacher?.country || profile?.country) ? (
-                    <div className="instructor-meta mb-3 d-flex justify-content-between align-items-center">
-                      <div className="d-flex align-items-center gap-2">
-                        <i className="fas fa-map-marker-alt"></i>
-                        <span>Based in {teacher?.country || profile?.country}</span>
-                      </div>
-                      {renderSocialLinks()}
-                    </div>
-                  ) : (
-                    <div className="instructor-meta mb-3 d-flex justify-content-end">
-                      {renderSocialLinks()}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons Section */}
-              <div className="col-lg-3 col-md-12">
-                <div className="text-center text-lg-end">
-                  <div className="d-flex flex-column flex-md-row flex-lg-column gap-3 justify-content-center justify-content-lg-end">
-                    <Link
-                      to="/instructor/create-course/"
-                      className={`btn-instructor-primary ${isActivePage('/instructor/create-course/') ? 'active' : ''}`}
-                      title="Create a new course"
-                    >
-                      <i className="fas fa-plus"></i>
-                      Create Course
-                    </Link>
-                    
-                    <Link
-                      to="/instructor/profile/"
-                      className={`btn-instructor-outline ${isActivePage('/instructor/profile/') ? 'active' : ''}`}
-                      title="Manage your instructor profile"
-                    >
-                      <i className="fas fa-user-cog"></i>
-                      Profile Settings
-                    </Link>
-                  </div>
+                <div className="d-flex gap-2">
+                  <Link
+                    to="/instructor/create-course/"
+                    className="btn btn-sm btn-light"
+                    title="Create Course"
+                  >
+                    <i className="fas fa-plus me-1"></i>
+                    Create
+                  </Link>
+                  <Link
+                    to="/instructor/profile/"
+                    className="btn btn-sm btn-outline-light"
+                    title="Profile"
+                  >
+                    <i className="fas fa-user-cog"></i>
+                  </Link>
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Additional Instructor Details */}
-            {renderInstructorDetails()}
-          </div>
+          {/* Full Header Content */}
+          {!isCollapsed && (
+            <div className="instructor-header-content p-3 p-md-4">
+              <div className="row align-items-center">
+                {/* Profile Avatar Section */}
+                <div className="col-lg-3 col-md-4 mb-4 mb-lg-0">
+                  <div className="text-center position-relative">
+                    {renderProfileAvatar()}
+                    
+                    {/* Instructor Identity Badge */}
+                    <div className="instructor-badge">
+                      <i className="fas fa-chalkboard-user"></i>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Profile Information Section */}
+                <div className="col-lg-6 col-md-5 mb-4 mb-lg-0">
+                  <div>
+                    <h1 className="instructor-name">
+                      {teacher?.full_name || profile?.full_name || userData?.full_name || "Welcome Instructor!"}
+                    </h1>
+                    <p className="instructor-bio">
+                      {teacher?.bio || teacher?.about || profile?.about || "Welcome to your instructor dashboard! Create and manage your courses to educate students worldwide."}
+                    </p>
+                    
+                    <div className="d-flex flex-wrap gap-3 mb-3">
+                      <div className="badge-instructor">
+                        <i className="fas fa-calendar-alt"></i>
+                        Teaching since {getMemberSince()}
+                      </div>
+                      <div className="badge-instructor">
+                        <i className="fas fa-clock"></i>
+                        {getJoinedDaysAgo()}
+                      </div>
+                    </div>
+
+                    {(teacher?.country || profile?.country) ? (
+                      <div className="instructor-meta mb-3 d-flex justify-content-between align-items-center">
+                        <div className="d-flex align-items-center gap-2">
+                          <i className="fas fa-map-marker-alt"></i>
+                          <span>Based in {teacher?.country || profile?.country}</span>
+                        </div>
+                        {renderSocialLinks()}
+                      </div>
+                    ) : (
+                      <div className="instructor-meta mb-3 d-flex justify-content-end">
+                        {renderSocialLinks()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons Section */}
+                <div className="col-lg-3 col-md-12">
+                  <div className="text-center text-lg-end">
+                    <div className="d-flex flex-column flex-md-row flex-lg-column gap-3 justify-content-center justify-content-lg-end">
+                      <Link
+                        to="/instructor/create-course/"
+                        className={`btn-instructor-primary ${isActivePage('/instructor/create-course/') ? 'active' : ''}`}
+                        title="Create a new course"
+                      >
+                        <i className="fas fa-plus"></i>
+                        Create Course
+                      </Link>
+                      
+                      <Link
+                        to="/instructor/profile/"
+                        className={`btn-instructor-outline ${isActivePage('/instructor/profile/') ? 'active' : ''}`}
+                        title="Manage your instructor profile"
+                      >
+                        <i className="fas fa-user-cog"></i>
+                        Profile Settings
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Instructor Details */}
+              {renderInstructorDetails()}
+            </div>
+          )}
         </div>
       </div>
     </div>

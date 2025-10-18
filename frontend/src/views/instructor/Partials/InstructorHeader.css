@@ -420,3 +420,116 @@
     font-size: 1.1rem;
   }
 }
+/* =========================================
+   COLLAPSIBLE HEADER STYLES
+   ========================================= */
+
+/* Toggle Button */
+.instructor-header-toggle-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.instructor-header-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.instructor-header-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.instructor-header-toggle-btn i {
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+}
+
+/* Collapsed State */
+.instructor-header-card.collapsed {
+  min-height: auto;
+  transition: all 0.3s ease;
+}
+
+.instructor-header-card.collapsed .instructor-header-content {
+  display: none;
+}
+
+/* Collapsed Mini Header */
+.instructor-header-collapsed {
+  position: relative;
+  z-index: 2;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.instructor-header-collapsed .instructor-profile-avatar,
+.instructor-header-collapsed .instructor-default-avatar {
+  width: 50px;
+  height: 50px;
+  border-width: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.instructor-header-collapsed .loading-shimmer-instructor {
+  width: 50px;
+  height: 50px;
+}
+
+.instructor-header-collapsed .spinner-border {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+.instructor-header-collapsed h5 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.instructor-header-collapsed small {
+  font-size: 0.85rem;
+}
+
+.instructor-header-collapsed .btn {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.instructor-header-collapsed .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Expanded State Animation */
+.instructor-header-card:not(.collapsed) .instructor-header-content {
+  animation: slideDown 0.3s ease;
+}

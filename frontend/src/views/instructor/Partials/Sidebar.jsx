@@ -1,10 +1,34 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { logout } from "../../../utils/auth";
 import Toast, { LogoutConfirmation } from "../../plugin/Toast";
 
 function Sidebar() {
     const location = useLocation();
+    
+    // Collapse state - synced with header via localStorage and events
+    const [isCollapsed, setIsCollapsed] = useState(() => {
+        const saved = localStorage.getItem('instructorHeaderCollapsed');
+        return saved === 'true';
+    });
+
+    // Listen for header toggle events to sync sidebar
+    useEffect(() => {
+        const handleHeaderToggle = (e) => {
+            setIsCollapsed(e.detail.collapsed);
+        };
+        window.addEventListener('instructorHeaderToggle', handleHeaderToggle);
+        return () => window.removeEventListener('instructorHeaderToggle', handleHeaderToggle);
+    }, []);
+
+    // Toggle sidebar collapse
+    const toggleSidebarCollapse = () => {
+        const newState = !isCollapsed;
+        setIsCollapsed(newState);
+        localStorage.setItem('instructorHeaderCollapsed', newState.toString());
+        // Notify header to sync
+        window.dispatchEvent(new CustomEvent('instructorHeaderToggle', { detail: { collapsed: newState } }));
+    };
     
     // Check if current path is active
     const isActive = (path) => {
@@ -306,11 +330,155 @@ function Sidebar() {
                             padding: 0.75rem 0.875rem;
                         }
                     }
+                    
+                    /* Sidebar Collapse Styles */
+                    .instructor-sidebar {
+                        transition: width 0.3s ease, padding 0.3s ease;
+                        position: relative;
+                    }
+                    
+                    .instructor-sidebar.collapsed {
+                        width: 85px !important;
+                        min-width: 85px;
+                    }
+                    
+                    .instructor-sidebar.collapsed .sidebar-content {
+                        padding: 0.5rem 0.25rem;
+                    }
+                    
+                    .instructor-sidebar.collapsed .instructor-nav-link {
+                        padding: 0.875rem 0.5rem;
+                        justify-content: center;
+                        text-align: center;
+                        position: relative;
+                    }
+                    
+                    .instructor-sidebar.collapsed .nav-text {
+                        display: none;
+                    }
+                    
+                    .instructor-sidebar.collapsed .nav-icon {
+                        margin: 0 auto;
+                        font-size: 1.25rem;
+                    }
+                    
+                    .instructor-sidebar.collapsed .section-title {
+                        font-size: 0;
+                        height: 2px;
+                        background: rgba(102, 126, 234, 0.1);
+                        margin: 1rem 0.5rem;
+                        padding: 0;
+                    }
+                    
+                    /* Tooltip for collapsed nav items */
+                    .instructor-sidebar.collapsed .instructor-nav-link::after {
+                        content: attr(data-tooltip);
+                        position: absolute;
+                        left: 100%;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        margin-left: 10px;
+                        padding: 8px 12px;
+                        background: #2d3748;
+                        color: white;
+                        border-radius: 8px;
+                        white-space: nowrap;
+                        font-size: 0.85rem;
+                        font-weight: 500;
+                        opacity: 0;
+                        pointer-events: none;
+                        transition: opacity 0.2s ease;
+                        z-index: 1000;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    }
+                    
+                    .instructor-sidebar.collapsed .instructor-nav-link::before {
+                        content: '';
+                        position: absolute;
+                        left: 100%;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        margin-left: 5px;
+                        border: 5px solid transparent;
+                        border-right-color: #2d3748;
+                        opacity: 0;
+                        transition: opacity 0.2s ease;
+                    }
+                    
+                    .instructor-sidebar.collapsed .instructor-nav-link:hover::after,
+                    .instructor-sidebar.collapsed .instructor-nav-link:hover::before {
+                        opacity: 1;
+                    }
+                    
+                    /* Toggle button for sidebar */
+                    .sidebar-toggle-btn {
+                        position: absolute;
+                        top: 20px;
+                        right: 10px;
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 50%;
+                        background: rgba(102, 126, 234, 0.1);
+                        border: 1.5px solid rgba(102, 126, 234, 0.3);
+                        color: #667eea;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: all 0.3s ease;
+                        z-index: 10;
+                        backdrop-filter: blur(10px);
+                    }
+                    
+                    .sidebar-toggle-btn:hover {
+                        background: rgba(102, 126, 234, 0.2);
+                        border-color: #667eea;
+                        transform: scale(1.1);
+                    }
+                    
+                    .sidebar-toggle-btn i {
+                        font-size: 1rem;
+                        transition: transform 0.3s ease;
+                    }
+                    
+                    .instructor-sidebar.collapsed .sidebar-toggle-btn i {
+                        transform: rotate(180deg);
+                    }
+                    
+                    /* Hide toggle on mobile */
+                    @media (max-width: 768px) {
+                        .sidebar-toggle-btn {
+                            display: none;
+                        }
+                        
+                        .instructor-sidebar.collapsed {
+                            width: 100% !important;
+                        }
+                    }
+                    
+                    /* Adjust logout button for collapsed state */
+                    .instructor-sidebar.collapsed .instructor-logout-btn {
+                        padding: 0.875rem 0.5rem;
+                        justify-content: center;
+                    }
+                    
+                    .instructor-sidebar.collapsed .instructor-logout-btn .nav-text {
+                        display: none;
+                    }
                 `}
             </style>
             
             <div className="col-lg-3 col-md-4 col-12">
-                <nav className="instructor-sidebar">
+                <nav className={`instructor-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+                    {/* Collapse Toggle Button (Desktop only) */}
+                    <button 
+                        className="sidebar-toggle-btn d-none d-md-flex"
+                        onClick={toggleSidebarCollapse}
+                        title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                        <i className="bi bi-chevron-left"></i>
+                    </button>
+
                     {/* Mobile Header */}
                     <div className="d-md-none">
                         <div className="instructor-sidebar-header">
@@ -331,110 +499,121 @@ function Sidebar() {
                     </div>
 
                     {/* Desktop Header */}
-                    <div className="d-none d-md-block instructor-sidebar-header">
-                        <h5 className="mb-1 fw-bold">Instructor Dashboard</h5>
-                        <p className="mb-0 opacity-90 small">Manage courses & students</p>
-                    </div>
+                    {!isCollapsed && (
+                        <div className="d-none d-md-block instructor-sidebar-header">
+                            <h5 className="mb-1 fw-bold">Instructor Dashboard</h5>
+                            <p className="mb-0 opacity-90 small">Manage courses & students</p>
+                        </div>
+                    )}
 
                     <div className="collapse navbar-collapse show" id="instructorSidenav">
                         <div className="sidebar-content">
                             {/* Main Navigation */}
-                            <div className="nav-section-title">Course Management</div>
+                            <div className="nav-section-title section-title">Course Management</div>
                             <div className="d-flex flex-column">
                                 <Link 
                                     className={`instructor-nav-link ${isActive('/instructor/dashboard') ? 'active' : ''}`} 
                                     to="/instructor/dashboard/"
+                                    data-tooltip="Dashboard"
                                 >
-                                    <div className="instructor-nav-icon">
+                                    <div className="instructor-nav-icon nav-icon">
                                         <i className="bi bi-grid-fill"></i>
                                     </div>
-                                    <span>Dashboard</span>
+                                    <span className="nav-text">Dashboard</span>
                                 </Link>
                                 
                                 <Link 
                                     className={`instructor-nav-link ${isActive('/instructor/courses') ? 'active' : ''}`} 
                                     to="/instructor/courses/"
+                                    data-tooltip="My Courses"
                                 >
-                                    <div className="instructor-nav-icon">
+                                    <div className="instructor-nav-icon nav-icon">
                                         <i className="fas fa-book-open"></i>
                                     </div>
-                                    <span>My Courses</span>
+                                    <span className="nav-text">My Courses</span>
                                 </Link>
                                 
                                 <Link 
                                     className={`instructor-nav-link ${isActive('/instructor/create-course') ? 'active' : ''}`} 
                                     to="/instructor/create-course/"
+                                    data-tooltip="Create Course"
                                 >
-                                    <div className="instructor-nav-icon">
+                                    <div className="instructor-nav-icon nav-icon">
                                         <i className="fas fa-plus-circle"></i>
                                     </div>
-                                    <span>Create Course</span>
+                                    <span className="nav-text">Create Course</span>
                                 </Link>
                                 
                                 <Link 
                                     className={`instructor-nav-link ${isActive('/instructor/students') ? 'active' : ''}`} 
                                     to="/instructor/students/"
+                                    data-tooltip="Students"
                                 >
-                                    <div className="instructor-nav-icon">
+                                    <div className="instructor-nav-icon nav-icon">
                                         <i className="fas fa-user-graduate"></i>
                                     </div>
-                                    <span>Students</span>
+                                    <span className="nav-text">Students</span>
                                 </Link>
                                 
                                 <Link 
                                     className={`instructor-nav-link ${isActive('/instructor/reviews') ? 'active' : ''}`} 
                                     to="/instructor/reviews/"
+                                    data-tooltip="Reviews"
                                 >
-                                    <div className="instructor-nav-icon">
+                                    <div className="instructor-nav-icon nav-icon">
                                         <i className="fas fa-star"></i>
                                     </div>
-                                    <span>Reviews</span>
+                                    <span className="nav-text">Reviews</span>
                                 </Link>
                                 
                                 <Link 
                                     className={`instructor-nav-link ${isActive('/instructor/question-answer') ? 'active' : ''}`} 
                                     to="/instructor/question-answer/"
+                                    data-tooltip="Q&A Forum"
                                 >
-                                    <div className="instructor-nav-icon">
+                                    <div className="instructor-nav-icon nav-icon">
                                         <i className="fas fa-comments"></i>
                                     </div>
-                                    <span>Q&A Forum</span>
+                                    <span className="nav-text">Q&A Forum</span>
                                 </Link>
                                 
                                 <Link 
                                     className={`instructor-nav-link ${isActive('/instructor/notifications') ? 'active' : ''}`} 
                                     to="/instructor/notifications/"
+                                    data-tooltip="Notifications"
                                 >
-                                    <div className="instructor-nav-icon">
+                                    <div className="instructor-nav-icon nav-icon">
                                         <i className="fas fa-bell"></i>
                                     </div>
-                                    <span>Notifications</span>
+                                    <span className="nav-text">Notifications</span>
                                 </Link>
                             </div>
 
                             <div className="instructor-divider"></div>
 
                             {/* Account Settings */}
-                            <div className="nav-section-title">Account Settings</div>
+                            <div className="nav-section-title section-title">Account Settings</div>
                             <div className="d-flex flex-column">
                                 <Link 
                                     className={`instructor-nav-link ${isActive('/instructor/profile') ? 'active' : ''}`} 
                                     to="/instructor/profile/"
+                                    data-tooltip="Edit Profile"
                                 >
-                                    <div className="instructor-nav-icon">
+                                    <div className="instructor-nav-icon nav-icon">
                                         <i className="fas fa-user-edit"></i>
                                     </div>
-                                    <span>Edit Profile</span>
+                                    <span className="nav-text">Edit Profile</span>
                                 </Link>
                                 
                                 <Link 
                                     className={`instructor-nav-link ${isActive('/instructor/change-password') ? 'active' : ''}`} 
                                     to="/instructor/change-password/"
+                                    data-tooltip="Change Password"
                                 >
-                                    <div className="instructor-nav-icon">
+                                    <div className="instructor-nav-icon nav-icon">
                                         <i className="fas fa-shield-alt"></i>
                                     </div>
-                                    <span>Change Password</span>
+                                    <span className="nav-text">Change Password</span>
                                 </Link>
                             </div>
 
@@ -442,11 +621,12 @@ function Sidebar() {
                             <button 
                                 onClick={handleLogout}
                                 className="instructor-logout-btn"
+                                data-tooltip="Sign Out"
                             >
-                                <div className="instructor-nav-icon" style={{ marginRight: '0.75rem' }}>
+                                <div className="instructor-nav-icon nav-icon" style={{ marginRight: isCollapsed ? '0' : '0.75rem' }}>
                                     <i className="fas fa-sign-out-alt"></i>
                                 </div>
-                                <span>Sign Out</span>
+                                <span className="nav-text">Sign Out</span>
                             </button>
                         </div>
                     </div>
