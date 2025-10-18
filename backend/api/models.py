@@ -143,8 +143,19 @@ class Course(models.Model):
         return self.title
     
     def save(self, *args, **kwargs):
-        if self.slug == "" or self.slug == None:
-            self.slug = slugify(self.title) + str(self.pk)
+        # Generate slug if it's empty or None
+        if not self.slug:
+            # First save to get pk if creating new instance
+            if not self.pk:
+                # Generate base slug from title
+                base_slug = slugify(self.title) if self.title else 'course'
+                # Save first to get pk
+                super(Course, self).save(*args, **kwargs)
+                # Now update slug with pk
+                self.slug = f"{base_slug}-{self.pk}"
+                # Update without calling save again
+                kwargs['force_insert'] = False
+        
         super(Course, self).save(*args, **kwargs)
 
     def students(self):

@@ -197,7 +197,7 @@ const CourseSidebar = ({
                 {/* Video Preview */}
                 <div className="position-relative">
                     <img 
-                        src={course?.image || 'https://via.placeholder.com/400x225'}
+                        src={course?.image || '/images/placeholders/default-course.svg'}
                         alt={course?.title}
                         className="card-img-top"
                         style={{ 

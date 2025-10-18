@@ -8,7 +8,7 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
     // Helper function to get proper image URL
     const getImageUrl = (imageUrl) => {
         if (!imageUrl) {
-            return "https://via.placeholder.com/150";
+            return "/images/placeholders/default-instructor.svg";
         }
         
         // If it's already a complete URL, return as is
@@ -71,7 +71,7 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
                                         borderRadius: '22px'
                                     }}
                                     onError={(e) => {
-                                        e.target.src = 'https://via.placeholder.com/150';
+                                        e.target.src = '/images/placeholders/default-instructor.svg';
                                     }}
                                 />
                             </div>
