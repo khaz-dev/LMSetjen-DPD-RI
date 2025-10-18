@@ -473,6 +473,11 @@
   display: none;
 }
 
+/* Hide main toggle button when collapsed */
+.instructor-header-card.collapsed .instructor-header-toggle-btn {
+  display: none;
+}
+
 /* Collapsed Mini Header */
 .instructor-header-collapsed {
   position: relative;

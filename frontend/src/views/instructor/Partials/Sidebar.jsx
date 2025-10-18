@@ -126,10 +126,10 @@ function Sidebar() {
                         border: 1px solid rgba(52, 152, 219, 0.08);
                         overflow: hidden;
                         position: sticky;
-                        top: 0;
+                        top: 75px;
                         z-index: 100;
                         transition: box-shadow 0.3s ease;
-                        max-height: calc(100vh - 20px);
+                        max-height: calc(100vh - 95px);
                         overflow-y: auto;
                         margin-top: 0;
                     }
@@ -215,8 +215,8 @@ function Sidebar() {
                     .instructor-nav-link:hover {
                         color: white;
                         transform: translateX(4px);
-                        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-                        background: rgba(52, 152, 219, 0.1);
+                        box-shadow: 0 6px 18px rgba(52, 152, 219, 0.5);
+                        background: rgba(52, 152, 219, 0.15);
                     }
                     
                     .instructor-nav-link:hover::before {
