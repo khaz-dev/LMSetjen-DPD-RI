@@ -144,6 +144,7 @@ function Sidebar() {
                         text-align: center;
                         position: relative;
                         overflow: hidden;
+                        z-index: 1;
                     }
                     
                     .instructor-sidebar-header::before {
@@ -159,6 +160,8 @@ function Sidebar() {
                     
                     .sidebar-content {
                         padding: 1.25rem;
+                        position: relative;
+                        z-index: 1;
                     }
                     
                     .nav-section-title {
@@ -410,6 +413,26 @@ function Sidebar() {
                         opacity: 1;
                     }
                     
+                    /* Fix icon visibility on collapsed hover */
+                    .instructor-sidebar.collapsed .instructor-nav-link:hover {
+                        color: white;
+                    }
+                    
+                    .instructor-sidebar.collapsed .instructor-nav-link:hover .nav-icon i,
+                    .instructor-sidebar.collapsed .instructor-nav-link:hover .instructor-nav-icon i {
+                        color: white !important;
+                    }
+                    
+                    .instructor-sidebar.collapsed .instructor-nav-link .nav-icon,
+                    .instructor-sidebar.collapsed .instructor-nav-link .instructor-nav-icon {
+                        color: inherit;
+                    }
+                    
+                    .instructor-sidebar.collapsed .instructor-nav-link .nav-icon i,
+                    .instructor-sidebar.collapsed .instructor-nav-link .instructor-nav-icon i {
+                        color: currentColor;
+                    }
+                    
                     /* Toggle button for sidebar */
                     .sidebar-toggle-btn {
                         position: absolute;
@@ -426,7 +449,7 @@ function Sidebar() {
                         align-items: center;
                         justify-content: center;
                         transition: all 0.3s ease;
-                        z-index: 10;
+                        z-index: 1000;
                         backdrop-filter: blur(10px);
                     }
                     
@@ -439,6 +462,7 @@ function Sidebar() {
                     .sidebar-toggle-btn i {
                         font-size: 1rem;
                         transition: transform 0.3s ease;
+                        color: #667eea;
                     }
                     
                     .instructor-sidebar.collapsed .sidebar-toggle-btn i {
