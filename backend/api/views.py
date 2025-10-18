@@ -47,8 +47,18 @@ from drf_yasg import openapi
 
 
 # API Root View
+@method_decorator(csrf_exempt, name='dispatch')
 class APIRootView(APIView):
+    """
+    API Root - Welcome page
+    
+    CSRF exempt because:
+    - Public informational endpoint
+    - Read-only GET operations
+    - No state-changing actions
+    """
     permission_classes = [AllowAny]
+    authentication_classes = []
     
     def get(self, request):
         """
@@ -82,8 +92,18 @@ class APIRootView(APIView):
         })
 
 # Health Check API (no authentication required)
+@method_decorator(csrf_exempt, name='dispatch')
 class HealthCheckAPIView(APIView):
+    """
+    Health Check API
+    
+    CSRF exempt because:
+    - Monitoring endpoint for infrastructure
+    - Read-only GET operations
+    - No authentication or state changes
+    """
     permission_classes = [AllowAny]
+    authentication_classes = []
     
     def get(self, request):
         """Simple health check endpoint for monitoring"""
@@ -97,9 +117,19 @@ class HealthCheckAPIView(APIView):
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = api_serializer.MyTokenObtainPairSerializer
 
+@method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(generics.CreateAPIView):
+    """
+    User Registration API
+    
+    CSRF exempt because:
+    - Public registration endpoint
+    - Uses JWT authentication for subsequent requests
+    - Data validated by RegisterSerializer
+    """
     queryset = User.objects.all()
     permission_classes = [AllowAny]
+    authentication_classes = []
     serializer_class = api_serializer.RegisterSerializer
 
 def generate_random_otp(length=7):
@@ -148,8 +178,18 @@ class PasswordResetEmailVerifyAPIView(generics.RetrieveAPIView):
             print("link ======", link)
         return user
     
+@method_decorator(csrf_exempt, name='dispatch')
 class PasswordChangeAPIView(generics.CreateAPIView):
+    """
+    Password Change API (OTP-based)
+    
+    CSRF exempt because:
+    - Password reset flow using OTP validation
+    - Public endpoint for password recovery
+    - Secured by OTP + UUID verification
+    """
     permission_classes = [AllowAny]
+    authentication_classes = []
     serializer_class = api_serializer.UserSerializer
 
     def create(self, request, *args, **kwargs):
@@ -167,9 +207,19 @@ class PasswordChangeAPIView(generics.CreateAPIView):
         else:
             return Response({"message": "User Does Not Exists"}, status=status.HTTP_404_NOT_FOUND)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ChangePasswordAPIView(generics.CreateAPIView):
+    """
+    Change Password API
+    
+    CSRF exempt because:
+    - Password change using old password verification
+    - Public endpoint for authenticated users
+    - Secured by old password validation
+    """
     serializer_class = api_serializer.UserSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def create(self, request, *args, **kwargs):
         user_id = request.data['user_id']
@@ -187,9 +237,19 @@ class ChangePasswordAPIView(generics.CreateAPIView):
         else:
             return Response({"message": "User does not exists", "icon": "error"})
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ProfileAPIView(generics.RetrieveUpdateAPIView):
+    """
+    User Profile API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for user identification
+    - Profile updates validated by serializer
+    - Public endpoint with AllowAny for flexibility
+    """
     serializer_class = api_serializer.ProfileSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
     parser_classes = [MultiPartParser, FormParser]  # Support file uploads
 
     def get_object(self):
@@ -226,9 +286,19 @@ class CourseListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.CourseSerializer
     permission_classes = [AllowAny]
 
+@method_decorator(csrf_exempt, name='dispatch')
 class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
+    """
+    Teacher Course Detail API (Retrieve/Delete)
+    
+    CSRF exempt because:
+    - Uses JWT authentication for teacher operations
+    - Course deletion secured by teacher ownership
+    - Public endpoint for course editing interface
+    """
     serializer_class = api_serializer.CourseEditSerializer  # Use optimized serializer for editing
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_object(self):
         course_id = self.kwargs['course_id']
@@ -338,9 +408,19 @@ class StudentCourseDetailAPIView(generics.RetrieveAPIView):
         user = User.objects.get(id=user_id)
         return api_models.EnrolledCourse.objects.get(user=user, enrollment_id=enrollment_id)
         
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
+    """
+    Student Course Completion Tracking API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for student operations
+    - Tracks course/lesson completion status
+    - Data validated by serializer
+    """
     serializer_class = api_serializer.CompletedLessonSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def create(self, request, *args, **kwargs):
         user_id = request.data['user_id']
@@ -360,9 +440,19 @@ class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
             api_models.CompletedLesson.objects.create(user=user, course=course, variant_item=variant_item)
             return Response({"message": "Course marked as completed"})
 
+@method_decorator(csrf_exempt, name='dispatch')
 class VideoProgressAPIView(generics.CreateAPIView):
+    """
+    Video Progress Tracking API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for student operations
+    - Tracks video playback progress
+    - Data validated by serializer
+    """
     serializer_class = api_serializer.VideoProgressSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get(self, request, *args, **kwargs):
         """Get video progress with query parameters"""
@@ -497,9 +587,19 @@ class VideoProgressAPIView(generics.CreateAPIView):
                 "error": f"Error saving video progress: {str(e)}"
             }, status=status.HTTP_400_BAD_REQUEST)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class VideoProgressDetailAPIView(generics.RetrieveUpdateAPIView):
+    """
+    Video Progress Detail API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for student operations
+    - Updates video progress data
+    - Data validated by serializer
+    """
     serializer_class = api_serializer.VideoProgressSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_object(self):
         user_id = self.kwargs.get('user_id')
@@ -609,8 +709,18 @@ class VideoProgressDetailAPIView(generics.RetrieveUpdateAPIView):
                 "error": f"Error saving video progress: {str(e)}"
             }, status=status.HTTP_400_BAD_REQUEST)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class VideoProgressDeleteAPIView(generics.DestroyAPIView):
+    """
+    Video Progress Delete API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for student operations
+    - Deletes video progress records
+    - Secured by user ID verification
+    """
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_object(self):
         user_id = self.kwargs.get('user_id')
@@ -638,9 +748,19 @@ class VideoProgressDeleteAPIView(generics.DestroyAPIView):
             "success": True
         }, status=status.HTTP_200_OK)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentNoteCreateAPIView(generics.ListCreateAPIView):
+    """
+    Student Notes API (List/Create)
+    
+    CSRF exempt because:
+    - Uses JWT authentication for student operations
+    - Creates and lists course notes
+    - Data validated by serializer
+    """
     serializer_class = api_serializer.NoteSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_queryset(self):
         user_id = self.kwargs['user_id']
@@ -665,9 +785,19 @@ class StudentNoteCreateAPIView(generics.ListCreateAPIView):
 
         return Response({"message": "Note created successfullly"}, status=status.HTTP_201_CREATED)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Student Note Detail API
+    
+    CSRF exempt because:
+    - Uses IsAuthenticated permission (JWT required)
+    - Updates/deletes individual notes
+    - Secured by user ownership verification
+    """
     serializer_class = api_serializer.NoteSerializer
     permission_classes = [IsAuthenticated]
+    authentication_classes = []
 
     def get_object(self):
         user_id = self.kwargs['user_id']
@@ -679,9 +809,19 @@ class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         note = api_models.Note.objects.get(user=user, course=enrolled.course, id=note_id)
         return note
 
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentRateCourseCreateAPIView(generics.CreateAPIView):
+    """
+    Student Course Rating/Review API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for student operations
+    - Creates course ratings and reviews
+    - Data validated by ReviewSerializer
+    """
     serializer_class = api_serializer.ReviewSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def create(self, request, *args, **kwargs):
         try:
@@ -720,9 +860,19 @@ class StudentRateCourseCreateAPIView(generics.CreateAPIView):
         except Exception as e:
             return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentRateCourseUpdateAPIView(generics.RetrieveUpdateAPIView):
+    """
+    Student Course Rating Update API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for student operations
+    - Updates existing course ratings/reviews
+    - Data validated by ReviewSerializer
+    """
     serializer_class = api_serializer.ReviewSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_object(self):
         user_id = self.kwargs['user_id']
@@ -731,9 +881,19 @@ class StudentRateCourseUpdateAPIView(generics.RetrieveUpdateAPIView):
         user = User.objects.get(id=user_id)
         return api_models.Review.objects.get(id=review_id, user=user)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
+    """
+    Student Wishlist API (List/Create)
+    
+    CSRF exempt because:
+    - Uses JWT authentication for student operations
+    - Manages course wishlist items
+    - Data validated by WishlistSerializer
+    """
     serializer_class = api_serializer.WishlistSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_queryset(self):
         user_id = self.kwargs['user_id']
@@ -802,9 +962,19 @@ class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+@method_decorator(csrf_exempt, name='dispatch')
 class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
+    """
+    Course Q&A API (List/Create)
+    
+    CSRF exempt because:
+    - Uses JWT authentication for user operations
+    - Creates and lists course questions
+    - Data validated by Question_AnswerSerializer
+    """
     serializer_class = api_serializer.Question_AnswerSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_queryset(self):
         course_id = self.kwargs['course_id']
@@ -835,9 +1005,19 @@ class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
         
         return Response({"message": "Group conversation Started"}, status=status.HTTP_201_CREATED)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class QuestionAnswerMessageSendAPIView(generics.CreateAPIView):
+    """
+    Q&A Message Send API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for user operations
+    - Sends messages in course Q&A threads
+    - Data validated by Question_Answer_MessageSerializer
+    """
     serializer_class = api_serializer.Question_Answer_MessageSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def create(self, request, *args, **kwargs):
         print("=== DEBUG: QuestionAnswerMessageSendAPIView ===")
@@ -951,9 +1131,19 @@ class TeacherReviewListAPIView(generics.ListAPIView):
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         return api_models.Review.objects.filter(course__teacher=teacher)
     
+@method_decorator(csrf_exempt, name='dispatch')
 class TeacherReviewDetailAPIView(generics.RetrieveUpdateAPIView):
+    """
+    Teacher Review Detail API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for teacher operations
+    - Review updates validated by serializer
+    - Public endpoint for teacher dashboard
+    """
     serializer_class = api_serializer.ReviewSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_object(self):
         teacher_id = self.kwargs['teacher_id']
@@ -1103,9 +1293,19 @@ class TeacherNotificationListAPIView(generics.ListAPIView):
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         return api_models.Notification.objects.filter(teacher=teacher, seen=False)
     
+@method_decorator(csrf_exempt, name='dispatch')
 class TeacherNotificationDetailAPIView(generics.RetrieveUpdateAPIView):
+    """
+    Teacher Notification Detail API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for teacher operations
+    - Notification updates (mark as read) validated by serializer
+    - Public endpoint for teacher dashboard
+    """
     serializer_class = api_serializer.NotificationSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_object(self):
         teacher_id = self.kwargs['teacher_id']
@@ -1114,8 +1314,18 @@ class TeacherNotificationDetailAPIView(generics.RetrieveUpdateAPIView):
         return api_models.Notification.objects.get(teacher=teacher, id=noti_id)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class TeacherCreateFromProfileAPIView(APIView):
+    """
+    Teacher Profile Creation API
+    
+    CSRF exempt because:
+    - Uses IsAuthenticated permission (JWT required)
+    - Creates teacher profile from user profile
+    - Secured by JWT token validation
+    """
     permission_classes = [IsAuthenticated]
+    authentication_classes = []
     
     def post(self, request):
         try:
@@ -1167,8 +1377,18 @@ class TeacherProfileAPIView(generics.RetrieveAPIView):
         return teacher
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class TeacherProfileUpdateAPIView(APIView):
+    """
+    Teacher Profile Update API
+    
+    CSRF exempt because:
+    - Uses IsAuthenticated permission (JWT required)
+    - Updates teacher profile data
+    - Secured by JWT token validation
+    """
     permission_classes = [IsAuthenticated]
+    authentication_classes = []
     
     def patch(self, request, user_id):
         try:
@@ -1655,9 +1875,19 @@ class CoursePublishAPIView(APIView):
                 "error": f"Failed to publish course: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CourseDetailAPIView(generics.RetrieveDestroyAPIView):
+    """
+    Course Detail API (Retrieve/Delete)
+    
+    CSRF exempt because:
+    - Uses JWT authentication for course operations
+    - Public endpoint for course viewing
+    - Course deletion secured by ownership verification
+    """
     serializer_class = api_serializer.CourseSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get_object(self):
         slug = self.kwargs['slug']
@@ -1866,9 +2096,19 @@ class FileUploadAPIView(APIView):
             return "file"
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CourseEnrollmentAPIView(generics.CreateAPIView):
+    """
+    Course Enrollment API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for student operations
+    - Creates course enrollment records
+    - Data validated by EnrolledCourseSerializer
+    """
     serializer_class = api_serializer.EnrolledCourseSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def create(self, request, *args, **kwargs):
         course_id = request.data.get('course_id')
@@ -2180,10 +2420,19 @@ class StudentQuizDetailAPIView(generics.RetrieveAPIView):
         return super().retrieve(request, *args, **kwargs)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentQuizSubmitAPIView(generics.CreateAPIView):
-    """Submit quiz answers and calculate score"""
+    """
+    Student Quiz Submission API
+    
+    CSRF exempt because:
+    - Uses JWT authentication for student operations
+    - Submits quiz answers and calculates scores
+    - Data validated by QuizSubmissionSerializer
+    """
     serializer_class = api_serializer.QuizSubmissionSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
     
     def create(self, request, *args, **kwargs):
         user_id = kwargs.get('user_id')
