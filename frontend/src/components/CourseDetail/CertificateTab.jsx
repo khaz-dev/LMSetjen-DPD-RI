@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import dayjs from '../../utils/dayjs';
+import dayjs, { moment } from '../../utils/dayjs';
 import apiInstance from '../../utils/axios';
 import UserData from '../../views/plugin/UserData';
 import Toast from '../../views/plugin/Toast';

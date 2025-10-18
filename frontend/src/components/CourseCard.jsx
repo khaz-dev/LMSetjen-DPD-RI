@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import dayjs from '../utils/dayjs';
+import dayjs, { moment } from '../utils/dayjs';
 import { Link } from 'react-router-dom';
 import { getImageUrl, getStatusBadgeStyle, getLevelBadgeStyle, getLevelText, handleDeleteCourse } from '../utils/courseUtils.js';
 import { calculateTotalDuration } from '../utils/durationUtils';

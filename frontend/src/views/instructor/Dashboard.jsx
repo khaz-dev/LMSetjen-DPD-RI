@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import dayjs from "../../utils/dayjs";
+import dayjs, { moment } from "../../utils/dayjs";
 import "./Dashboard.css";
 
 import Sidebar from "./Partials/Sidebar";
