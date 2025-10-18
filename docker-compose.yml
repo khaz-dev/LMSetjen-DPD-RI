@@ -85,7 +85,7 @@ services:
     volumes:
       - ./backend:/app
       - media_files:/app/media
-      - static_files:/app/static
+      - static_files:/app/staticfiles
       - backend_logs:/app/logs
     ports:
       - "8000:8000"
@@ -125,6 +125,10 @@ services:
       # SSL certificates (read-only)
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
+      # Django static files - served directly by nginx for performance
+      - static_files:/usr/share/nginx/html/static:ro
+      # Django media files - served directly by nginx for performance  
+      - media_files:/usr/share/nginx/html/media:ro
     ports:
       - "80:80"
       - "443:443"
