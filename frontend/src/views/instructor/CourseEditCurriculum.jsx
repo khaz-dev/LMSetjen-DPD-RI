@@ -1317,8 +1317,8 @@ function CourseEditCurriculum() {
 
             formData.append("variants", JSON.stringify(validVariants));
 
-            // Send auto-save request
-            await useAxios.patch(`teacher/course-detail/${param.course_id}/`, formData, {
+            // Send auto-save request to the correct update endpoint
+            await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
