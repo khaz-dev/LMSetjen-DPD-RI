@@ -48,6 +48,11 @@ The system creates default admin credentials automatically during deployment:
 2. Go to: `https://lmsetjendpdri.duckdns.org/admin/`
 3. You should see the Django administration login page
 
+> **✅ VERIFIED WORKING** (as of October 18, 2025)
+> - Admin URL properly proxied through nginx
+> - SSL/HTTPS fully functional
+> - Login page returns HTTP 200 OK
+
 ### Step 2: Login
 1. Enter email: `admin@lmsetjen.dpd.go.id`
 2. Enter password: `Admin@LMS2025!`
@@ -264,7 +269,29 @@ Consider installing Django 2FA package for enhanced security.
 
 ---
 
-## 📝 Quick Reference
+## � Additional Admin URLs
+
+### API Documentation (Swagger UI)
+- **URL**: `https://lmsetjendpdri.duckdns.org/swagger/`
+- **Purpose**: Interactive API documentation and testing
+- **Access**: No authentication required (public API docs)
+- **Features**:
+  - Try API endpoints directly from browser
+  - View request/response schemas
+  - Test authentication flows
+
+### API Documentation (Redoc)
+- **URL**: `https://lmsetjendpdri.duckdns.org/redoc/`
+- **Purpose**: Alternative API documentation (more readable)
+- **Access**: No authentication required (public API docs)
+- **Features**:
+  - Clean, organized API documentation
+  - Search functionality
+  - Better for reading/understanding API structure
+
+---
+
+## �📝 Quick Reference
 
 ### Common Admin Tasks
 
