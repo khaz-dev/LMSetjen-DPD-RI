@@ -159,7 +159,7 @@ function Sidebar() {
                     }
                     
                     .sidebar-content {
-                        padding: 1.25rem;
+                        padding: 0 1.25rem 1.25rem 1.25rem;
                         position: relative;
                         z-index: 1;
                     }
@@ -458,9 +458,9 @@ function Sidebar() {
                         backdrop-filter: blur(10px);
                     }
                     
-                    /* Adjust toggle position when sidebar is collapsed */
+                    /* Adjust toggle position when sidebar is collapsed - align with first nav title */
                     .instructor-sidebar.collapsed .sidebar-toggle-btn {
-                        top: 20px;
+                        top: 10px;
                     }
                     
                     .sidebar-toggle-btn:hover {
