@@ -1948,9 +1948,19 @@ class CheckEnrollmentStatusAPIView(generics.RetrieveAPIView):
 
 
 # Quiz Management API Views
+@method_decorator(csrf_exempt, name='dispatch')
 class QuizListCreateAPIView(generics.ListCreateAPIView):
+    """
+    Quiz List/Create API View
+    
+    CSRF exempt because:
+    - Uses JWT authentication for quiz creation
+    - AllowAny allows listing, JWT required for creation
+    - Quiz data validated by serializers
+    """
     serializer_class = api_serializer.QuizSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []  # Disable SessionAuthentication
 
     def get_queryset(self):
         course_id = self.request.query_params.get('course_id')
@@ -1981,9 +1991,19 @@ class QuizDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return api_models.Quiz.objects.all()
 
+@method_decorator(csrf_exempt, name='dispatch')
 class QuizQuestionListCreateAPIView(generics.ListCreateAPIView):
+    """
+    Quiz Question List/Create API View
+    
+    CSRF exempt because:
+    - Uses JWT authentication for question creation
+    - AllowAny allows listing, JWT required for creation
+    - Question data validated by serializers
+    """
     serializer_class = api_serializer.QuizQuestionSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []  # Disable SessionAuthentication
 
     def get_queryset(self):
         quiz_id = self.request.query_params.get('quiz_id')
@@ -2017,9 +2037,19 @@ class QuizQuestionDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return api_models.QuizQuestion.objects.all()
 
+@method_decorator(csrf_exempt, name='dispatch')
 class QuizChoiceListCreateAPIView(generics.ListCreateAPIView):
+    """
+    Quiz Choice List/Create API View
+    
+    CSRF exempt because:
+    - Uses JWT authentication for choice creation
+    - AllowAny allows listing, JWT required for creation
+    - Choice data validated by serializers
+    """
     serializer_class = api_serializer.QuizChoiceSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []  # Disable SessionAuthentication
 
     def get_queryset(self):
         question_id = self.request.query_params.get('question_id')
