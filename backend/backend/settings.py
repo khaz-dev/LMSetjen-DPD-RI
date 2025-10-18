@@ -469,8 +469,9 @@ if DEBUG:
     INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
 # Enhanced Local File Storage Configuration
-FILE_UPLOAD_MAX_MEMORY_SIZE = env.int('FILE_UPLOAD_MAX_MEMORY_SIZE', default=104857600)  # 100MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = env.int('DATA_UPLOAD_MAX_MEMORY_SIZE', default=104857600)  # 100MB
+# Increased to 500MB to support large video uploads (matches MAX_VIDEO_FILE_SIZE)
+FILE_UPLOAD_MAX_MEMORY_SIZE = env.int('FILE_UPLOAD_MAX_MEMORY_SIZE', default=524288000)  # 500MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = env.int('DATA_UPLOAD_MAX_MEMORY_SIZE', default=524288000)  # 500MB
 FILE_UPLOAD_TEMP_DIR = os.path.join(BASE_DIR, 'temp_uploads')
 os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
 
