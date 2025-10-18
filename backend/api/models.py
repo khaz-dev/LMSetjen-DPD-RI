@@ -13,7 +13,7 @@ import math
 
 LEVEL = (
     ("Beginner", "Beginner"),
-    ("Intemediate", "Intemediate"),
+    ("Intermediate", "Intermediate"),
     ("Advanced", "Advanced"),
 )
 
