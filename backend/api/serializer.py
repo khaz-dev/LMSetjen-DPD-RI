@@ -322,6 +322,31 @@ class VariantItemSerializer(serializers.ModelSerializer):
             self.Meta.depth = 0
         else:
             self.Meta.depth = 1  # Reduced from 3 to 1
+    
+    def to_representation(self, instance):
+        """Override to return full URL for file field"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        # Handle file field - convert relative paths to full URLs
+        if instance.file:
+            file_url = str(instance.file)
+            # If it's already a full URL, return as-is
+            if file_url.startswith('http://') or file_url.startswith('https://'):
+                representation['file'] = file_url
+            # Otherwise, construct full URL with /media/ prefix
+            elif request:
+                if not file_url.startswith('/'):
+                    file_url = f"/media/{file_url}"
+                representation['file'] = request.build_absolute_uri(file_url)
+            else:
+                # Fallback if no request context
+                if not file_url.startswith('/'):
+                    representation['file'] = f"/media/{file_url}"
+                else:
+                    representation['file'] = file_url
+        
+        return representation
 
 
 class VariantSerializer(serializers.ModelSerializer):
