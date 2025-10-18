@@ -553,7 +553,11 @@ function SortableSection({
         marginBottom: '1.5rem',
     };
 
-    const isCollapsed = collapsedSections[variantIndex] !== false;
+    // ✅ FIX: Proper collapsed state logic
+    // undefined = default state (will be set by useEffect based on section count)
+    // true = explicitly collapsed
+    // false = explicitly expanded
+    const isCollapsed = collapsedSections[variantIndex] === true;
 
     return (
         <div
@@ -1054,14 +1058,15 @@ function CourseEditCurriculum() {
     // File upload states
     const [fileUploadStates, setFileUploadStates] = useState({});
 
-    // Collapsed sections state - track which sections are collapsed (default: all collapsed)
+    // Collapsed sections state - track which sections are collapsed
+    // Default behavior: expand all sections if curriculum is empty or has only 1 section
     const [collapsedSections, setCollapsedSections] = useState({});
 
     // Toggle section collapse/expand
     const toggleSectionCollapse = (variantIndex) => {
         setCollapsedSections(prev => ({
             ...prev,
-            [variantIndex]: !prev[variantIndex]
+            [variantIndex]: prev[variantIndex] === false ? true : false // ✅ FIX: Explicit boolean toggle
         }));
     };
 
@@ -1350,6 +1355,38 @@ function CourseEditCurriculum() {
     useEffect(() => {
         fetchCourseDetail();
     }, []);
+
+    /**
+     * ✅ FIX: Initialize collapsed state based on curriculum content
+     * Auto-expand sections when:
+     * 1. Curriculum is empty (1 blank section)
+     * 2. Only 1 section exists
+     * This improves UX by showing content immediately for new/simple courses
+     */
+    useEffect(() => {
+        if (!variants || variants.length === 0) return;
+
+        // Check if curriculum is effectively empty (1 section with blank title and no lessons)
+        const isEmptyCurriculum = variants.length === 1 && 
+            (!variants[0].title || variants[0].title.trim() === '') &&
+            (!variants[0].items || variants[0].items.length <= 1) &&
+            (!variants[0].items?.[0]?.title || variants[0].items[0].title.trim() === '');
+
+        // Auto-expand if: empty curriculum OR only 1 section
+        const shouldAutoExpand = isEmptyCurriculum || variants.length === 1;
+
+        if (shouldAutoExpand) {
+            // Set all sections to expanded (false = not collapsed)
+            const initialCollapsedState = {};
+            variants.forEach((_, index) => {
+                initialCollapsedState[index] = false; // false = expanded
+            });
+            setCollapsedSections(initialCollapsedState);
+        } else {
+            // For multiple sections with content, keep default (collapsed)
+            // But we don't set anything - let user control via toggle
+        }
+    }, [variants.length]); // Re-run when section count changes
 
     /**
      * Handle course input field changes
