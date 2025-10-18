@@ -50,20 +50,23 @@ urlpatterns = [
 ]
 
 # Enhanced media serving with video streaming support
-if settings.DEBUG:
-    # Video files with streaming support
-    urlpatterns += [
-        re_path(r'^media/(?P<path>.*\.(mp4|webm|avi|mov|mkv|m4v|3gp|flv)$)', 
-                VideoStreamView.as_view(), name='video-stream'),
-        # Other media files
-        re_path(r'^media/(?P<path>.*)$', 
-                EnhancedMediaView.as_view(), name='enhanced-media'),
-    ]
-else:
-    # In production, use static serving
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Use EnhancedMediaView for both development and production
+# This ensures consistent behavior and proper media file serving
+urlpatterns += [
+    # Video files with streaming support (range requests for seeking)
+    re_path(r'^media/(?P<path>.*\.(mp4|webm|avi|mov|mkv|m4v|3gp|flv)$)', 
+            VideoStreamView.as_view(), name='video-stream'),
+    # All other media files (images, documents, etc.)
+    re_path(r'^media/(?P<path>.*)$', 
+            EnhancedMediaView.as_view(), name='enhanced-media'),
+]
 
-urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+# Static files serving
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+else:
+    # In production, static files are served by nginx or whitenoise
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # Add debug toolbar URLs in development
 if settings.DEBUG:
