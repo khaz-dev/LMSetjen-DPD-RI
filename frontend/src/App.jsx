@@ -59,7 +59,13 @@ const UsersAdmin = lazy(() => import("./views/admin/UsersAdmin"));
 
 // Loading component for Suspense fallback
 const LoadingFallback = () => (
-    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+    <div 
+        className="d-flex justify-content-center align-items-center" 
+        style={{ 
+            minHeight: '100vh',
+            paddingTop: '85px' // Account for fixed header
+        }}
+    >
         <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
         </div>

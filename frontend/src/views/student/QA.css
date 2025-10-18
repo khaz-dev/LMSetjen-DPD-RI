@@ -53,6 +53,7 @@
 .modern-qa-page {
     background: linear-gradient(135deg, #fafafa 0%, #f8f4ff 50%, #f0ebff 100%) !important;
     min-height: 100vh;
+    padding-top: 85px; /* Add top spacing for fixed header */
 }
 
 .qa-header-card {

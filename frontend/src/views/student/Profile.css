@@ -7,6 +7,7 @@
     min-height: 100vh;
     background: transparent;
     padding: var(--space-xl) 0;
+    padding-top: 85px; /* Add top spacing for fixed header */
 }
 
 /* ========================================
@@ -75,6 +76,14 @@
     border: 1px solid rgba(102, 126, 234, 0.1);
     box-shadow: 0 8px 32px rgba(102, 126, 234, 0.12);
     margin-bottom: 1.5rem;
+    position: relative; /* Create positioning context */
+    z-index: 1; /* Base z-index for form sections */
+}
+
+/* Ensure form section with dropdowns appears above other sections */
+.student-profile-page .modern-form-section:has(.country-selector-wrapper) {
+    z-index: 10; /* Higher z-index for section containing CountrySelector */
+    overflow: visible; /* Ensure dropdown isn't clipped */
 }
 
 .student-profile-page .modern-form-section .d-flex {

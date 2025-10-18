@@ -76,6 +76,14 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     margin-bottom: 1.5rem;
+    position: relative; /* Create positioning context */
+    z-index: 1; /* Base z-index for form sections */
+}
+
+/* Ensure form section with dropdowns appears above other sections */
+.instructor-profile-page .modern-form-section:has(.country-selector-wrapper) {
+    z-index: 10; /* Higher z-index for section containing CountrySelector */
+    overflow: visible; /* Ensure dropdown isn't clipped */
 }
 
 .instructor-profile-page .modern-form-section .d-flex {
