@@ -202,7 +202,7 @@ function Dashboard() {
             <section className="modern-dashboard">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row">
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
                             {/* Dashboard Header */}

@@ -126,12 +126,11 @@ function Sidebar() {
                         border: 1px solid rgba(52, 152, 219, 0.08);
                         overflow: hidden;
                         position: sticky;
-                        top: 70px;
+                        top: 76px;
                         z-index: 100;
                         transition: all 0.3s ease;
-                        max-height: calc(100vh - 90px);
+                        max-height: calc(100vh - 76px);
                         overflow-y: auto;
-                        margin-top: -10px;
                     }
                     
                     .instructor-sidebar:hover {
@@ -213,10 +212,10 @@ function Sidebar() {
                     }
                     
                     .instructor-nav-link:hover {
+                        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
                         color: white;
                         transform: translateX(4px);
                         box-shadow: 0 6px 18px rgba(52, 152, 219, 0.5);
-                        background: linear-gradient(135deg, rgba(52, 152, 219, 0.25) 0%, rgba(41, 128, 185, 0.25) 100%);
                     }
                     
                     .instructor-nav-link:hover::before {
