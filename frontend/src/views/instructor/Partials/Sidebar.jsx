@@ -126,10 +126,10 @@ function Sidebar() {
                         border: 1px solid rgba(52, 152, 219, 0.08);
                         overflow: visible;
                         position: sticky;
-                        top: 85px;
+                        top: 70px;
                         z-index: 100;
                         transition: all 0.3s ease;
-                        max-height: calc(100vh - 95px);
+                        max-height: calc(100vh - 80px);
                         align-self: flex-start;
                         display: flex;
                         flex-direction: column;
@@ -161,6 +161,17 @@ function Sidebar() {
                         height: 200%;
                         background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
                         transform: rotate(-15deg);
+                    }
+                    
+                    /* Collapsed Header */
+                    .instructor-sidebar-header-collapsed {
+                        background: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
+                        padding: 1rem;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        position: relative;
+                        overflow: hidden;
                     }
                     
                     .sidebar-content {
@@ -449,7 +460,8 @@ function Sidebar() {
                     }
                     
                     /* Toggle button for sidebar - Now inside sidebar-header */
-                    .sidebar-toggle-btn {
+                    .sidebar-toggle-btn,
+                    .sidebar-expand-btn {
                         width: 36px;
                         height: 36px;
                         border-radius: 50%;
@@ -466,10 +478,15 @@ function Sidebar() {
                         flex-shrink: 0;
                     }
                     
-                    .sidebar-toggle-btn:hover {
+                    .sidebar-toggle-btn:hover,
+                    .sidebar-expand-btn:hover {
                         background: rgba(255, 255, 255, 0.3);
                         border-color: rgba(255, 255, 255, 0.6);
                         transform: scale(1.1);
+                    }
+                    
+                    .sidebar-expand-btn {
+                        margin: 0 auto;
                     }
                     
                     .sidebar-toggle-btn i {
@@ -526,7 +543,7 @@ function Sidebar() {
                         </button>
                     </div>
 
-                    {/* Desktop Header */}
+                    {/* Desktop Header - Expanded State */}
                     {!isCollapsed && (
                         <div className="d-none d-md-block instructor-sidebar-header">
                             <div style={{ flex: 1 }}>
@@ -540,6 +557,19 @@ function Sidebar() {
                                 title="Collapse sidebar"
                             >
                                 <i className="bi bi-chevron-left"></i>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Desktop Header - Collapsed State - Show expand button */}
+                    {isCollapsed && (
+                        <div className="d-none d-md-flex instructor-sidebar-header-collapsed">
+                            <button 
+                                className="sidebar-expand-btn d-flex"
+                                onClick={toggleSidebarCollapse}
+                                title="Expand sidebar"
+                            >
+                                <i className="bi bi-chevron-right"></i>
                             </button>
                         </div>
                     )}

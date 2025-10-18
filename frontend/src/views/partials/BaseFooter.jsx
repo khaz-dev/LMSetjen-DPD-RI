@@ -31,6 +31,7 @@ function BaseFooter() {
       role="contentinfo"
       className="pt-5 pb-4"
       style={{
+        marginTop: '4rem',
         background: 'white',
         borderTop: `1px solid ${config.colors.border}`,
         boxShadow: '0 -4px 15px rgba(0, 0, 0, 0.08)'

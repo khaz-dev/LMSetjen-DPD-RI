@@ -5,7 +5,7 @@
   min-height: 100vh;
   background: transparent;
   padding: var(--space-xl) 0;
-  padding-top: 85px; /* Add top spacing for fixed header */
+  padding-top: 80px; /* Add top spacing for fixed header */
 }
 
 /* Ensure proper scroll context for sticky sidebar */
