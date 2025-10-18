@@ -4,6 +4,7 @@ import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import ProfilePictureCropModal from "../../components/ProfilePictureCropModal/ProfilePictureCropModal";
+import CountrySelector from "../../components/CountrySelector/CountrySelector";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
@@ -556,7 +557,22 @@ function Profile() {
             <div className="row g-3">
                 {renderFormField("full_name", "Full Name", "fas fa-user", "text", "Enter your full name")}
                 {renderFormField("about", "About Me", "fas fa-edit", "textarea", "Tell us about yourself and your background...", 4)}
-                {renderFormField("country", "Country", "fas fa-map-marker-alt", "text", "Enter your country")}
+                
+                {/* Country Selector with Search */}
+                <div className="col-12 form-field-container">
+                    <CountrySelector
+                        value={profileData.country || ""}
+                        onChange={handleProfileChange}
+                        onBlur={handleProfileChange}
+                        name="country"
+                        id="country"
+                        required={true}
+                        disabled={uiState.loading}
+                        placeholder="Search for your country..."
+                        label="Country"
+                        icon="fas fa-globe"
+                    />
+                </div>
             </div>
         </div>
     );
