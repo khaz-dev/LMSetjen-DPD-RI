@@ -558,7 +558,7 @@ class CourseSerializer(serializers.ModelSerializer):
         if instance.image:
             image_url = str(instance.image)
             # If it's already a full URL, return as-is
-            if image_url.startswith('http://') or image_url.startsWith('https://'):
+            if image_url.startswith('http://') or image_url.startswith('https://'):
                 representation['image'] = image_url
             # Otherwise, construct full URL with /media/ prefix
             elif request:
