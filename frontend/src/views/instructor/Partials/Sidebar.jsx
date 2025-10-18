@@ -315,6 +315,11 @@ function Sidebar() {
                         margin: 1rem 0;
                     }
                     
+                    /* Hide divider when sidebar is collapsed */
+                    .instructor-sidebar.collapsed .instructor-divider {
+                        display: none;
+                    }
+                    
                     @media (max-width: 768px) {
                         .instructor-sidebar {
                             border-radius: 12px;
@@ -420,7 +425,7 @@ function Sidebar() {
                     
                     .instructor-sidebar.collapsed .instructor-nav-link:hover .nav-icon i,
                     .instructor-sidebar.collapsed .instructor-nav-link:hover .instructor-nav-icon i {
-                        color: white !important;
+                        color: #f8fafc !important;
                     }
                     
                     .instructor-sidebar.collapsed .instructor-nav-link .nav-icon,
@@ -430,13 +435,13 @@ function Sidebar() {
                     
                     .instructor-sidebar.collapsed .instructor-nav-link .nav-icon i,
                     .instructor-sidebar.collapsed .instructor-nav-link .instructor-nav-icon i {
-                        color: currentColor;
+                        color: #4a5568;
                     }
                     
                     /* Toggle button for sidebar */
                     .sidebar-toggle-btn {
                         position: absolute;
-                        top: 20px;
+                        top: 85px;
                         right: 10px;
                         width: 36px;
                         height: 36px;
@@ -451,6 +456,11 @@ function Sidebar() {
                         transition: all 0.3s ease;
                         z-index: 1000;
                         backdrop-filter: blur(10px);
+                    }
+                    
+                    /* Adjust toggle position when sidebar is collapsed */
+                    .instructor-sidebar.collapsed .sidebar-toggle-btn {
+                        top: 20px;
                     }
                     
                     .sidebar-toggle-btn:hover {

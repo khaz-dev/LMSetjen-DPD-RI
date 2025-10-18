@@ -278,7 +278,7 @@ function Header() {
           {isCollapsed && (
             <div className="instructor-header-collapsed p-3">
               <div className="d-flex align-items-center justify-content-between">
-                <div className="d-flex align-items-center gap-3">
+                <div className="instructor-avatar-wrapper d-flex align-items-center gap-2">
                   {renderProfileAvatar()}
                   <div>
                     <h5 className="mb-0 text-white">
