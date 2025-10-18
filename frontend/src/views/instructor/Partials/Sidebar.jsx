@@ -126,11 +126,12 @@ function Sidebar() {
                         border: 1px solid rgba(52, 152, 219, 0.08);
                         overflow: hidden;
                         position: sticky;
-                        top: 90px;
+                        top: 0;
                         z-index: 100;
                         transition: box-shadow 0.3s ease;
-                        max-height: calc(100vh - 110px);
+                        max-height: calc(100vh - 20px);
                         overflow-y: auto;
+                        margin-top: 0;
                     }
                     
                     .instructor-sidebar:hover {
@@ -214,7 +215,8 @@ function Sidebar() {
                     .instructor-nav-link:hover {
                         color: white;
                         transform: translateX(4px);
-                        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+                        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+                        background: rgba(52, 152, 219, 0.1);
                     }
                     
                     .instructor-nav-link:hover::before {
@@ -460,7 +462,7 @@ function Sidebar() {
                     
                     /* Position toggle at top when collapsed (on top of nav section title) */
                     .instructor-sidebar.collapsed .sidebar-toggle-btn {
-                        top: 10px;
+                        top: 5px;
                     }
                     
                     /* Position toggle aligned with header when expanded */

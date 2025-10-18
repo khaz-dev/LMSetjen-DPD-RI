@@ -278,44 +278,42 @@ function Header() {
           {isCollapsed && (
             <div className="instructor-header-collapsed p-3">
               <div className="d-flex align-items-center justify-content-between">
-                <div className="d-flex align-items-center gap-2">
-                  <div className="instructor-avatar-wrapper d-flex align-items-center gap-2">
-                    {renderProfileAvatar()}
-                    <div>
-                      <h5 className="mb-0 text-white">
-                        {teacher?.full_name || profile?.full_name || userData?.full_name || "Instructor Dashboard"}
-                      </h5>
-                      <small className="text-white-50">
-                        <i className="fas fa-chalkboard-user me-1"></i>
-                        Instructor
-                      </small>
-                    </div>
+                <div className="instructor-avatar-wrapper d-flex align-items-center gap-2">
+                  {renderProfileAvatar()}
+                  <div>
+                    <h5 className="mb-0 text-white">
+                      {teacher?.full_name || profile?.full_name || userData?.full_name || "Instructor Dashboard"}
+                    </h5>
+                    <small className="text-white-50">
+                      <i className="fas fa-chalkboard-user me-1"></i>
+                      Instructor
+                    </small>
                   </div>
-                  <div className="d-flex gap-2">
-                    <Link
-                      to="/instructor/create-course/"
-                      className="btn btn-sm btn-light"
-                      title="Create Course"
-                    >
-                      <i className="fas fa-plus me-1"></i>
-                      Create
-                    </Link>
-                    <Link
-                      to="/instructor/profile/"
-                      className="btn btn-sm btn-outline-light"
-                      title="Profile"
-                    >
-                      <i className="fas fa-user-cog"></i>
-                    </Link>
-                    <button 
-                      className="instructor-header-toggle-btn-inline"
-                      onClick={toggleCollapse}
-                      title="Expand Header"
-                      aria-label="Expand Header"
-                    >
-                      <i className="fas fa-chevron-down"></i>
-                    </button>
-                  </div>
+                </div>
+                <div className="d-flex gap-2">
+                  <Link
+                    to="/instructor/create-course/"
+                    className="btn btn-sm btn-light"
+                    title="Create Course"
+                  >
+                    <i className="fas fa-plus me-1"></i>
+                    Create
+                  </Link>
+                  <Link
+                    to="/instructor/profile/"
+                    className="btn btn-sm btn-outline-light"
+                    title="Profile"
+                  >
+                    <i className="fas fa-user-cog"></i>
+                  </Link>
+                  <button 
+                    className="instructor-header-toggle-btn-inline"
+                    onClick={toggleCollapse}
+                    title="Expand Header"
+                    aria-label="Expand Header"
+                  >
+                    <i className="fas fa-chevron-down"></i>
+                  </button>
                 </div>
               </div>
             </div>
