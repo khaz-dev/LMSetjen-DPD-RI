@@ -7,6 +7,7 @@
     background: transparent;
     min-height: 100vh;
     padding: 2rem 0;
+    padding-top: 85px; /* Add top spacing for fixed header */
 }
 
 /* ========================================

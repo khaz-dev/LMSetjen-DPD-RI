@@ -74,6 +74,7 @@ button div,
 .course-quiz-container {
     min-height: 100vh;
     padding: 2rem;
+    padding-top: 85px; /* Add top spacing for fixed header */
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
