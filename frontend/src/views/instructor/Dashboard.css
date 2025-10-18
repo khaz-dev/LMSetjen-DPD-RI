@@ -8,6 +8,15 @@
   padding-top: 85px; /* Add top spacing for fixed header */
 }
 
+/* Ensure proper scroll context for sticky sidebar */
+.modern-dashboard .container {
+  position: relative;
+}
+
+.modern-dashboard .row {
+  position: relative;
+}
+
 /* Dashboard Header */
 .dashboard-header-modern {
   background: white;

@@ -126,11 +126,12 @@ function Sidebar() {
                         border: 1px solid rgba(52, 152, 219, 0.08);
                         overflow: hidden;
                         position: sticky;
-                        top: 76px;
+                        top: 85px;
                         z-index: 100;
                         transition: all 0.3s ease;
-                        max-height: calc(100vh - 76px);
+                        max-height: calc(100vh - 95px);
                         overflow-y: auto;
+                        align-self: flex-start;
                     }
                     
                     .instructor-sidebar:hover {
