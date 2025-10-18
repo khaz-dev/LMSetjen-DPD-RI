@@ -124,14 +124,15 @@ function Sidebar() {
                         border-radius: 16px;
                         box-shadow: 0 8px 30px rgba(52, 152, 219, 0.12);
                         border: 1px solid rgba(52, 152, 219, 0.08);
-                        overflow: hidden;
+                        overflow: visible;
                         position: sticky;
                         top: 85px;
                         z-index: 100;
                         transition: all 0.3s ease;
                         max-height: calc(100vh - 95px);
-                        overflow-y: auto;
                         align-self: flex-start;
+                        display: flex;
+                        flex-direction: column;
                     }
                     
                     .instructor-sidebar:hover {
@@ -142,7 +143,10 @@ function Sidebar() {
                         background: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
                         color: white;
                         padding: 1.5rem;
-                        text-align: center;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 1rem;
                         position: relative;
                         overflow: hidden;
                         z-index: 1;
@@ -163,6 +167,10 @@ function Sidebar() {
                         padding: 0 1.25rem 1.25rem 1.25rem;
                         position: relative;
                         z-index: 1;
+                        overflow-y: auto;
+                        overflow-x: hidden;
+                        flex: 1;
+                        min-height: 0;
                     }
                     
                     .nav-section-title {
@@ -440,39 +448,27 @@ function Sidebar() {
                         color: #4a5568;
                     }
                     
-                    /* Toggle button for sidebar - Now inside sidebar-content */
+                    /* Toggle button for sidebar - Now inside sidebar-header */
                     .sidebar-toggle-btn {
-                        position: absolute;
-                        top: 10px;
-                        right: 10px;
                         width: 36px;
                         height: 36px;
                         border-radius: 50%;
-                        background: rgba(102, 126, 234, 0.1);
-                        border: 1.5px solid rgba(102, 126, 234, 0.3);
-                        color: #667eea;
+                        background: rgba(255, 255, 255, 0.2);
+                        border: 1.5px solid rgba(255, 255, 255, 0.4);
+                        color: white;
                         cursor: pointer;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         transition: all 0.3s ease;
-                        z-index: 1000;
+                        z-index: 10;
                         backdrop-filter: blur(10px);
-                    }
-                    
-                    /* Position toggle at top when collapsed (on top of nav section title) */
-                    .instructor-sidebar.collapsed .sidebar-toggle-btn {
-                        top: 5px;
-                    }
-                    
-                    /* Position toggle aligned with header when expanded */
-                    .instructor-sidebar:not(.collapsed) .sidebar-toggle-btn {
-                        top: 10px;
+                        flex-shrink: 0;
                     }
                     
                     .sidebar-toggle-btn:hover {
-                        background: rgba(102, 126, 234, 0.2);
-                        border-color: #667eea;
+                        background: rgba(255, 255, 255, 0.3);
+                        border-color: rgba(255, 255, 255, 0.6);
                         transform: scale(1.1);
                     }
                     
@@ -533,22 +529,23 @@ function Sidebar() {
                     {/* Desktop Header */}
                     {!isCollapsed && (
                         <div className="d-none d-md-block instructor-sidebar-header">
-                            <h5 className="mb-1 fw-bold">Instructor Dashboard</h5>
-                            <p className="mb-0 opacity-90 small">Manage courses & students</p>
+                            <div style={{ flex: 1 }}>
+                                <h5 className="mb-1 fw-bold">Instructor Dashboard</h5>
+                                <p className="mb-0 opacity-90 small">Manage courses & students</p>
+                            </div>
+                            {/* Collapse Toggle Button (Desktop only) - Inside header */}
+                            <button 
+                                className="sidebar-toggle-btn d-flex"
+                                onClick={toggleSidebarCollapse}
+                                title="Collapse sidebar"
+                            >
+                                <i className="bi bi-chevron-left"></i>
+                            </button>
                         </div>
                     )}
 
                     <div className="collapse navbar-collapse show" id="instructorSidenav">
                         <div className="sidebar-content">
-                            {/* Collapse Toggle Button (Desktop only) - Moved inside content */}
-                            <button 
-                                className="sidebar-toggle-btn d-none d-md-flex"
-                                onClick={toggleSidebarCollapse}
-                                title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                            >
-                                <i className="bi bi-chevron-left"></i>
-                            </button>
-
                             {/* Main Navigation */}
                             <div className="nav-section-title section-title">Course Management</div>
                             <div className="d-flex flex-column">
