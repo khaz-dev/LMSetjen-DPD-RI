@@ -30,7 +30,15 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-+c@7t#q96f*r#f-@ss1$2r5a
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '.onrender.com', '.railway.app', '.vercel.app'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
+    'localhost',
+    '127.0.0.1',
+    '16.79.83.21',  # EC2 server IP
+    'lmsetjendpdri.duckdns.org',  # Production domain
+    '.onrender.com',
+    '.railway.app',
+    '.vercel.app'
+])
 
 
 # Application definition
@@ -278,7 +286,9 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://16.79.83.21",  # Production EC2 server (updated)
+    "http://16.79.83.21",  # EC2 server IP (HTTP)
+    "https://16.79.83.21",  # EC2 server IP (HTTPS)
+    "https://lmsetjendpdri.duckdns.org",  # Production domain (HTTPS)
     "https://frontend-mtmk2t9bk-khazs-projects.vercel.app",  # Old production frontend
     "https://frontend-srfucwb9o-khazs-projects.vercel.app",  # New production frontend
     "https://frontend-p26ir11fd-khazs-projects.vercel.app",  # Alternative production frontend
@@ -515,3 +525,12 @@ if not DEBUG:
     # Always enable these security headers
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
+
+# CRITICAL: Proxy SSL Header Configuration
+# This tells Django to trust the X-Forwarded-Proto header from nginx
+# Without this, build_absolute_uri() generates HTTP URLs even when accessed via HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Trust X-Forwarded-Host header from nginx
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
