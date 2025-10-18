@@ -6,6 +6,7 @@ import Toast from "../../plugin/Toast";
 
 const VideoUpload = ({ courseData, setCourseData }) => {
   const [fileLoading, setFileLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0); // NEW: Track upload progress
   const [compressionStatus, setCompressionStatus] = useState({
     isCompressing: false,
     progress: 0,
@@ -468,9 +469,25 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       formData.append("file", fileToUpload);
       formData.append("context", "course"); // Add context for enhanced API
 
+      // Reset upload progress
+      setUploadProgress(0);
+
       const response = await useAxios.post("/upload/enhanced/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (progressEvent) => {
+          // Calculate upload percentage
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+          
+          // Update compression status message to show upload progress
+          if (!compressionStatus.isCompressing) {
+            setCompressionStatus(prev => ({
+              ...prev,
+              message: `Uploading: ${percentCompleted}%`
+            }));
+          }
         },
       });
 
@@ -484,6 +501,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
         setVideoLoading(false);
         setVideoError(null);
         setVideoReady(false);
+        setUploadProgress(0);
         
         Toast().fire({
           icon: "success",
@@ -502,6 +520,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       });
     } finally {
       setFileLoading(false);
+      setUploadProgress(0);
       setCompressionStatus({
         isCompressing: false,
         progress: 0,
@@ -831,7 +850,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
               
               {compressionStatus.isCompressing ? (
                 <>
-                  <div className="progress mt-2 mb-2" style={{ height: '4px' }}>
+                  <div className="progress mt-2 mb-2" style={{ height: '6px' }}>
                     <div 
                       className="progress-bar progress-bar-striped progress-bar-animated bg-info" 
                       style={{ width: `${compressionStatus.progress}%` }}
@@ -849,6 +868,19 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                     <i className="fas fa-times me-1"></i>
                     Cancel Compression
                   </button>
+                </>
+              ) : uploadProgress > 0 ? (
+                <>
+                  <div className="progress mt-2 mb-2" style={{ height: '6px' }}>
+                    <div 
+                      className="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  <p className="small mb-0 text-success">
+                    <i className="fas fa-cloud-upload-alt me-1"></i>
+                    Uploading: {uploadProgress}%
+                  </p>
                 </>
               ) : (
                 <p className="small mb-0">
