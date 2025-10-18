@@ -1046,6 +1046,9 @@ function CourseEditCurriculum() {
         isDirty: false,
         uploadProgress: 0,
         imagePreview: "",
+        lastSaved: null, // Timestamp of last successful save
+        autoSaving: false, // Auto-save in progress
+        hasUnsavedChanges: false, // Track if there are unsaved changes
     });
 
     // Validation state consolidated  
@@ -1243,10 +1246,146 @@ function CourseEditCurriculum() {
         updateValidationSummary();
     }, [updateValidationSummary]);
 
-    // Track form changes for dirty state
+    // Track form changes for dirty state and auto-save
     const trackFormChanges = useCallback(() => {
-        setUiState(prev => ({ ...prev, isDirty: true }));
+        setUiState(prev => ({ 
+            ...prev, 
+            isDirty: true,
+            hasUnsavedChanges: true 
+        }));
     }, []);
+
+    // Auto-save functionality with debouncing
+    const autoSaveTimeoutRef = useRef(null);
+    
+    const performAutoSave = useCallback(async () => {
+        // Don't auto-save if already submitting or if no changes
+        if (uiState.isSubmitting || !uiState.hasUnsavedChanges) {
+            return;
+        }
+
+        try {
+            setUiState(prev => ({ ...prev, autoSaving: true }));
+
+            const formData = new FormData();
+            
+            // Add course basic fields
+            formData.append("title", course.title || "");
+            formData.append("category", course.category || "");
+            formData.append("description", ckEditorData || "");
+            formData.append("level", course.level || "");
+            formData.append("language", course.language || "");
+            formData.append("price", course.price || "");
+            formData.append("teacher_course_status", course.teacher_course_status || "");
+            
+            // Handle course image
+            if (course.image && typeof course.image !== "string") {
+                formData.append("image", course.image);
+            }
+            
+            // Handle intro video
+            if (course.file && typeof course.file !== "string") {
+                formData.append("file", course.file);
+            }
+
+            // Filter out empty variants and items (same logic as main submit)
+            const validVariants = variants.filter(variant => {
+                if (!variant.title || variant.title.trim() === "") return false;
+                const validItems = (variant.items || []).filter(item => 
+                    item.title && item.title.trim() !== ""
+                );
+                return validItems.length > 0;
+            }).map((variant, index) => {
+                const validItems = (variant.items || []).filter(item => 
+                    item.title && item.title.trim() !== ""
+                );
+                
+                return {
+                    title: variant.title.trim(),
+                    variant_id: variant.variant_id,
+                    order: index,
+                    items: validItems.map((item, itemIndex) => ({
+                        title: item.title.trim(),
+                        description: (item.description || "").trim(),
+                        file: typeof item.file === 'string' ? item.file : "",
+                        preview: item.preview || false,
+                        variant_item_id: item.variant_item_id,
+                        order: itemIndex
+                    }))
+                };
+            });
+
+            formData.append("variants", JSON.stringify(validVariants));
+
+            // Send auto-save request
+            await useAxios.patch(`teacher/course-detail/${param.course_id}/`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+
+            // Update last saved timestamp
+            setUiState(prev => ({ 
+                ...prev, 
+                autoSaving: false,
+                hasUnsavedChanges: false,
+                lastSaved: new Date(),
+                submitStatus: SUBMIT_STATUS.SUCCESS,
+            }));
+
+            // Clear auto-save success indicator after 3 seconds
+            setTimeout(() => {
+                setUiState(prev => ({
+                    ...prev,
+                    submitStatus: SUBMIT_STATUS.IDLE,
+                }));
+            }, 3000);
+
+        } catch (error) {
+            console.error("Auto-save error:", error);
+            setUiState(prev => ({ ...prev, autoSaving: false }));
+            // Don't show error message for auto-save failures to avoid annoying users
+        }
+    }, [course, ckEditorData, variants, param.course_id, uiState.isSubmitting, uiState.hasUnsavedChanges]);
+
+    // Debounced auto-save - triggers 3 seconds after last change
+    useEffect(() => {
+        if (uiState.hasUnsavedChanges && !uiState.isSubmitting) {
+            // Clear existing timeout
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
+
+            // Set new timeout for auto-save
+            autoSaveTimeoutRef.current = setTimeout(() => {
+                performAutoSave();
+            }, 3000); // 3 seconds debounce
+
+            // Cleanup
+            return () => {
+                if (autoSaveTimeoutRef.current) {
+                    clearTimeout(autoSaveTimeoutRef.current);
+                }
+            };
+        }
+    }, [uiState.hasUnsavedChanges, uiState.isSubmitting, performAutoSave]);
+
+    // Warning before leaving page with unsaved changes
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (uiState.hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [uiState.hasUnsavedChanges]);
 
     // Get validation class for form elements
     const getValidationClass = (hasError, hasWarning) => {
@@ -2650,25 +2789,45 @@ function CourseEditCurriculum() {
             
             setVariants(freshVariants);
 
+            // Count what was actually saved
+            const savedSectionsCount = freshVariants.length;
+            const savedLessonsCount = freshVariants.reduce((total, variant) => 
+                total + (variant.items?.length || 0), 0
+            );
+            const blankSectionsCount = variants.length - cleanedVariants.length;
+            const blankLessonsCount = variants.reduce((total, variant) => 
+                total + variant.items.length, 0
+            ) - savedLessonsCount;
+
+            // Create detailed success message
+            let successDetails = `✅ Successfully saved:\n`;
+            successDetails += `• ${savedSectionsCount} section${savedSectionsCount !== 1 ? 's' : ''}\n`;
+            successDetails += `• ${savedLessonsCount} lesson${savedLessonsCount !== 1 ? 's' : ''}`;
+            
+            if (blankSectionsCount > 0 || blankLessonsCount > 0) {
+                successDetails += `\n\n📝 Ignored (blank items):\n`;
+                if (blankSectionsCount > 0) {
+                    successDetails += `• ${blankSectionsCount} empty section${blankSectionsCount !== 1 ? 's' : ''}\n`;
+                }
+                if (blankLessonsCount > 0) {
+                    successDetails += `• ${blankLessonsCount} empty lesson${blankLessonsCount !== 1 ? 's' : ''}`;
+                }
+            }
+
             setUiState(prev => ({ 
                 ...prev, 
                 submitStatus: SUBMIT_STATUS.SUCCESS,
-                submitMessage: 'Curriculum updated successfully!',
+                submitMessage: successDetails,
                 isSubmitting: false,
-                isDirty: false
+                isDirty: false,
+                hasUnsavedChanges: false,
+                lastSaved: new Date(),
             }));
-
-            // Show info if blank sections were filtered out
-            const blankSectionsCount = variants.length - cleanedVariants.length;
-            let successMessage = "Course curriculum updated successfully!";
-            if (blankSectionsCount > 0) {
-                successMessage += ` (${blankSectionsCount} blank section${blankSectionsCount > 1 ? 's' : ''} ignored)`;
-            }
 
             Toast().fire({
                 icon: "success",
-                title: "Success!",
-                text: successMessage,
+                title: "Curriculum Updated!",
+                html: successDetails.replace(/\n/g, '<br>'),
             });
 
 
@@ -2780,17 +2939,97 @@ function CourseEditCurriculum() {
                                 </div>
                             </div>
 
+                            {/* Auto-save Status Bar */}
+                            <div className="auto-save-status-bar" style={{
+                                background: '#f8f9fa',
+                                border: '1px solid #dee2e6',
+                                borderRadius: '8px',
+                                padding: '12px 20px',
+                                marginBottom: '20px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                            }}>
+                                <div className="d-flex align-items-center gap-3">
+                                    {/* Auto-save indicator */}
+                                    {uiState.autoSaving && (
+                                        <div className="d-flex align-items-center text-primary">
+                                            <div className="spinner-border spinner-border-sm me-2" role="status">
+                                                <span className="visually-hidden">Auto-saving...</span>
+                                            </div>
+                                            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
+                                                Auto-saving...
+                                            </span>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Unsaved changes indicator */}
+                                    {!uiState.autoSaving && uiState.hasUnsavedChanges && (
+                                        <div className="d-flex align-items-center text-warning">
+                                            <i className="fas fa-exclamation-circle me-2"></i>
+                                            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
+                                                Unsaved changes (auto-save in {3} seconds)
+                                            </span>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Last saved timestamp */}
+                                    {!uiState.autoSaving && !uiState.hasUnsavedChanges && uiState.lastSaved && (
+                                        <div className="d-flex align-items-center text-success">
+                                            <i className="fas fa-check-circle me-2"></i>
+                                            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
+                                                All changes saved
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* Last saved timestamp - always visible when exists */}
+                                {uiState.lastSaved && (
+                                    <div className="text-muted" style={{ fontSize: '0.85rem' }}>
+                                        <i className="fas fa-clock me-1"></i>
+                                        Last saved: {new Date(uiState.lastSaved).toLocaleTimeString('en-US', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            second: '2-digit',
+                                            hour12: false
+                                        })}
+                                    </div>
+                                )}
+                                
+                                {/* No saves yet */}
+                                {!uiState.lastSaved && !uiState.hasUnsavedChanges && (
+                                    <div className="text-muted" style={{ fontSize: '0.85rem' }}>
+                                        <i className="fas fa-info-circle me-1"></i>
+                                        Changes will auto-save after 3 seconds
+                                    </div>
+                                )}
+                            </div>
+
                             <form onSubmit={handleSubmit} className="form-body-modern" ref={formRef}>
                                 {/* Submit Status Message */}
                                 {uiState.submitMessage && (
-                                    <div className={`status-message ${uiState.submitStatus}`}>
-                                        <div className="d-flex align-items-center">
+                                    <div className={`status-message ${uiState.submitStatus}`} style={{
+                                        background: uiState.submitStatus === 'success' ? '#d4edda' : 
+                                                   uiState.submitStatus === 'error' ? '#f8d7da' : '#d1ecf1',
+                                        border: `1px solid ${uiState.submitStatus === 'success' ? '#c3e6cb' : 
+                                                              uiState.submitStatus === 'error' ? '#f5c6cb' : '#bee5eb'}`,
+                                        color: uiState.submitStatus === 'success' ? '#155724' : 
+                                               uiState.submitStatus === 'error' ? '#721c24' : '#0c5460',
+                                        padding: '15px 20px',
+                                        borderRadius: '8px',
+                                        marginBottom: '20px'
+                                    }}>
+                                        <div className="d-flex align-items-start">
                                             <i className={`fas ${
-                                                uiState.submitStatus === 'success' ? 'fa-check-circle text-success' :
-                                                uiState.submitStatus === 'error' ? 'fa-exclamation-circle text-danger' :
-                                                'fa-info-circle text-info'
-                                            } me-2`}></i>
-                                            {uiState.submitMessage}
+                                                uiState.submitStatus === 'success' ? 'fa-check-circle' :
+                                                uiState.submitStatus === 'error' ? 'fa-exclamation-circle' :
+                                                'fa-info-circle'
+                                            } me-2 mt-1`} style={{ fontSize: '1.2rem' }}></i>
+                                            <div style={{ whiteSpace: 'pre-line', flex: 1 }}>
+                                                {uiState.submitMessage}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
