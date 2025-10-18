@@ -548,6 +548,47 @@ class CourseSerializer(serializers.ModelSerializer):
             self.Meta.depth = 0
         else:
             self.Meta.depth = 1  # Reduced from 3 to 1 to avoid circular references
+    
+    def to_representation(self, instance):
+        """Override to return full URL for image and file fields"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        # Handle image field - convert relative paths to full URLs
+        if instance.image:
+            image_url = str(instance.image)
+            # If it's already a full URL, return as-is
+            if image_url.startswith('http://') or image_url.startsWith('https://'):
+                representation['image'] = image_url
+            # Otherwise, construct full URL with /media/ prefix
+            elif request:
+                from django.conf import settings
+                if not image_url.startswith('/'):
+                    image_url = f"/media/{image_url}"
+                representation['image'] = request.build_absolute_uri(image_url)
+            else:
+                # Fallback if no request context
+                if not image_url.startswith('/'):
+                    representation['image'] = f"/media/{image_url}"
+                else:
+                    representation['image'] = image_url
+        
+        # Handle file field similarly
+        if instance.file:
+            file_url = str(instance.file)
+            if file_url.startswith('http://') or file_url.startswith('https://'):
+                representation['file'] = file_url
+            elif request:
+                if not file_url.startswith('/'):
+                    file_url = f"/media/{file_url}"
+                representation['file'] = request.build_absolute_uri(file_url)
+            else:
+                if not file_url.startswith('/'):
+                    representation['file'] = f"/media/{file_url}"
+                else:
+                    representation['file'] = file_url
+        
+        return representation
 
 class CourseEditSerializer(serializers.ModelSerializer):
     """
@@ -567,6 +608,43 @@ class CourseEditSerializer(serializers.ModelSerializer):
     def get_quizzes(self, obj):
         """Return lightweight quiz data for workflow stepper"""
         return obj.quizzes.values('quiz_id', 'title', 'is_active')
+    
+    def to_representation(self, instance):
+        """Override to return full URL for image and file fields"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        # Handle image field - convert relative paths to full URLs
+        if instance.image:
+            image_url = str(instance.image)
+            if image_url.startswith('http://') or image_url.startswith('https://'):
+                representation['image'] = image_url
+            elif request:
+                if not image_url.startswith('/'):
+                    image_url = f"/media/{image_url}"
+                representation['image'] = request.build_absolute_uri(image_url)
+            else:
+                if not image_url.startswith('/'):
+                    representation['image'] = f"/media/{image_url}"
+                else:
+                    representation['image'] = image_url
+        
+        # Handle file field similarly
+        if instance.file:
+            file_url = str(instance.file)
+            if file_url.startswith('http://') or file_url.startswith('https://'):
+                representation['file'] = file_url
+            elif request:
+                if not file_url.startswith('/'):
+                    file_url = f"/media/{file_url}"
+                representation['file'] = request.build_absolute_uri(file_url)
+            else:
+                if not file_url.startswith('/'):
+                    representation['file'] = f"/media/{file_url}"
+                else:
+                    representation['file'] = file_url
+        
+        return representation
 
 class WishlistSerializer(serializers.ModelSerializer):
     course = CourseSerializer()
