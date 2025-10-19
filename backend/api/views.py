@@ -18,6 +18,7 @@ from api import models as api_models
 from userauths.models import User, Profile, OrganizationUnit, Position
 
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -3283,10 +3284,11 @@ class SyncExternalUsersAPIView(APIView):
     API View to sync user data from external API
     
     CSRF exempt because:
-    - Uses JWT authentication
+    - Uses only JWT authentication (no session auth)
     - Admin-only endpoint with role verification
     - Protected by IsAuthenticated permission class
     """
+    authentication_classes = [JWTAuthentication]  # Only JWT, no SessionAuthentication
     permission_classes = [IsAuthenticated]
     
     def parse_datetime_safe(self, datetime_str):
