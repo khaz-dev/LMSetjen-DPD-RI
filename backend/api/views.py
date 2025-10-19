@@ -3309,6 +3309,13 @@ class SyncExternalUsersAPIView(APIView):
             return timezone.now()
     
     def post(self, request):
+        # Verify admin access
+        if not hasattr(request.user, 'role') or request.user.role != 'admin':
+            return Response(
+                {'error': 'Admin access required. Only admins can sync external users.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         try:
             # External API URL
             external_api_url = "https://cmb.tail91813a.ts.net/api/external/users"
