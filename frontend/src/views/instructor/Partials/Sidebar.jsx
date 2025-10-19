@@ -133,6 +133,7 @@ function Sidebar() {
                         align-self: flex-start;
                         display: flex;
                         flex-direction: column;
+                        margin-top: 0;
                     }
                     
                     .instructor-sidebar:hover {
@@ -150,6 +151,7 @@ function Sidebar() {
                         position: relative;
                         overflow: hidden;
                         z-index: 1;
+                        border-radius: 16px 16px 0 0;
                     }
                     
                     .instructor-sidebar-header::before {
@@ -172,6 +174,7 @@ function Sidebar() {
                         justify-content: center;
                         position: relative;
                         overflow: hidden;
+                        border-radius: 16px 16px 0 0;
                     }
                     
                     .sidebar-content {
@@ -345,10 +348,12 @@ function Sidebar() {
                         .instructor-sidebar {
                             border-radius: 12px;
                             margin-bottom: 1.5rem;
+                            margin-top: 0;
                         }
                         
                         .instructor-sidebar-header {
                             padding: 1.25rem;
+                            border-radius: 12px 12px 0 0;
                         }
                         
                         .sidebar-content {
@@ -489,10 +494,11 @@ function Sidebar() {
                         margin: 0 auto;
                     }
                     
-                    .sidebar-toggle-btn i {
+                    .sidebar-toggle-btn i,
+                    .sidebar-expand-btn i {
                         font-size: 1rem;
                         transition: transform 0.3s ease;
-                        color: #667eea;
+                        color: white;
                     }
                     
                     .instructor-sidebar.collapsed .sidebar-toggle-btn i {
@@ -518,6 +524,12 @@ function Sidebar() {
                     
                     .instructor-sidebar.collapsed .instructor-logout-btn .nav-text {
                         display: none;
+                    }
+                    
+                    /* Remove any top gap from sidebar column */
+                    .modern-dashboard .row > [class*="col-"] {
+                        padding-top: 0;
+                        margin-top: 0;
                     }
                 `}
             </style>
@@ -545,16 +557,17 @@ function Sidebar() {
 
                     {/* Desktop Header - Expanded State */}
                     {!isCollapsed && (
-                        <div className="d-none d-md-block instructor-sidebar-header">
+                        <div className="d-none d-md-flex instructor-sidebar-header">
                             <div style={{ flex: 1 }}>
                                 <h5 className="mb-1 fw-bold">Instructor Dashboard</h5>
                                 <p className="mb-0 opacity-90 small">Manage courses & students</p>
                             </div>
-                            {/* Collapse Toggle Button (Desktop only) - Inside header */}
+                            {/* Collapse Toggle Button (Desktop only) - Right end */}
                             <button 
                                 className="sidebar-toggle-btn d-flex"
                                 onClick={toggleSidebarCollapse}
                                 title="Collapse sidebar"
+                                style={{ marginLeft: 'auto' }}
                             >
                                 <i className="bi bi-chevron-left"></i>
                             </button>
