@@ -2713,6 +2713,7 @@ class AdminSummaryAPIView(generics.RetrieveAPIView):
     """
     Admin Dashboard Summary with comprehensive system statistics
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = api_serializer.AdminSummarySerializer
     
@@ -2862,6 +2863,7 @@ class AdminUserManagementAPIView(generics.ListAPIView):
     """
     Admin view to manage all users in the system
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = api_serializer.UserSerializer
     
@@ -2880,6 +2882,7 @@ class AdminCourseManagementAPIView(generics.ListAPIView):
     """
     Admin view to manage all courses in the system
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = api_serializer.CourseSerializer
     
@@ -2898,6 +2901,7 @@ class AdminEnrollmentAnalyticsAPIView(generics.RetrieveAPIView):
     """
     Admin enrollment analytics and trends
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -2974,6 +2978,7 @@ class AdminSystemHealthAPIView(generics.RetrieveAPIView):
     """
     System health monitoring for admins
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -3034,6 +3039,7 @@ class AdminUserDetailAPIView(generics.RetrieveAPIView):
     """
     Get detailed information about a specific user
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = api_serializer.UserSerializer
     
@@ -3090,6 +3096,7 @@ class AdminUserCreateAPIView(generics.CreateAPIView):
     """
     Create a new user account
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = api_serializer.RegisterSerializer
     
@@ -3130,6 +3137,7 @@ class AdminUserUpdateAPIView(generics.UpdateAPIView):
     """
     Update user information
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = api_serializer.UserSerializer
     
@@ -3192,6 +3200,7 @@ class AdminUserDeleteAPIView(generics.DestroyAPIView):
     """
     Delete a user account
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     
     def get_object(self):
@@ -3232,6 +3241,7 @@ class AdminUserBulkActionsAPIView(APIView):
     """
     Handle bulk actions on multiple users
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
