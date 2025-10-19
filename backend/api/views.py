@@ -3106,12 +3106,17 @@ class AdminUserCreateAPIView(generics.CreateAPIView):
             if not hasattr(request.user, 'role') or request.user.role != 'admin':
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
-            serializer = self.get_serializer(data=request.data)
+            # Extract role before validation (serializer doesn't accept it)
+            role = request.data.get('role', 'student')
+            
+            # Create a copy of data without the role field for serializer validation
+            serializer_data = {k: v for k, v in request.data.items() if k != 'role'}
+            
+            serializer = self.get_serializer(data=serializer_data)
             if serializer.is_valid():
                 user = serializer.save()
                 
-                # Set user role if provided
-                role = request.data.get('role', 'student')
+                # Set user role
                 user.role = role
                 user.save()
                 
@@ -3127,9 +3132,15 @@ class AdminUserCreateAPIView(generics.CreateAPIView):
                     'user': api_serializer.UserSerializer(user).data
                 }, status=status.HTTP_201_CREATED)
             
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # Return detailed validation errors
+            print(f"❌ Validation errors: {serializer.errors}")  # Debug log
+            return Response({
+                'error': 'Validation failed',
+                'details': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
             
         except Exception as e:
+            print(f"❌ Exception in user create: {str(e)}")  # Debug log
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
