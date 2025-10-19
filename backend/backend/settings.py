@@ -40,6 +40,10 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
     '.vercel.app'
 ])
 
+# Frontend and Backend URLs (for emails, redirects, etc.)
+FRONTEND_SITE_URL = env('FRONTEND_SITE_URL', default='https://lmsetjendpdri.duckdns.org')
+BACKEND_SITE_URL = env('BACKEND_SITE_URL', default='https://lmsetjendpdri.duckdns.org')
+
 
 # Application definition
 

@@ -155,7 +155,8 @@ class PasswordResetEmailVerifyAPIView(generics.RetrieveAPIView):
             user.otp = generate_random_otp()
             user.save()
 
-            link = f"http://localhost:5173/create-new-password/?otp={user.otp}&uuidb64={uuidb64}&refresh_token={refresh_token}"
+            # Use FRONTEND_SITE_URL from settings (defaults to production URL)
+            link = f"{settings.FRONTEND_SITE_URL}/create-new-password/?otp={user.otp}&uuidb64={uuidb64}&refresh_token={refresh_token}"
 
             context = {
                 "link": link,
