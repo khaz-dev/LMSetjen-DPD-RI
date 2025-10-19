@@ -138,57 +138,72 @@
         max-width: 3rem !important;
         max-height: 3rem !important;
       }
+
+      /* Critical Admin Styles - Prevent FOUC (Flash of Unstyled Content) */
+      .admin-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border-bottom: 2px solid #f39c12;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 1030;
+        min-height: 60px;
+        padding: 0.45rem 0;
+      }
+
+      body {
+        padding-top: 80px !important;
+      }
+
+      .admin-dashboard {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+      }
+
+      .admin-main-content {
+        padding: 100px 0 50px;
+      }
+
+      .dashboard-header {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        border: 1px solid #e3f2fd;
+      }
+
+      .dashboard-title {
+        color: #1e3a8a;
+        font-weight: 700;
+        font-size: 2.2rem;
+        margin-bottom: 5px;
+      }
     </style>
 
-    <!-- Preload Bootstrap CSS for faster loading -->
+    <!-- Bootstrap CSS with integrity check -->
     <link
-      rel="preload"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <noscript>
-      <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
-        crossorigin="anonymous"
-      />
-    </noscript>
-
-    <!-- Bootstrap CSS Link (fallback for browsers without preload support) -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
       crossorigin="anonymous"
     />
-    <!-- Fontawesome and Bootstrap Icons - preload for better performance -->
+    <!-- Font Awesome -->
     <link
-      rel="preload"
+      rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-      as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
+      crossorigin="anonymous"
     />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-      />
-    </noscript>
     
+    <!-- Bootstrap Icons -->
     <link
-      rel="preload"
+      rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-      as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
+      crossorigin="anonymous"
     />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-      />
-    </noscript>
   </head>
   <body>
     <!-- Skip to main content link for keyboard navigation -->
