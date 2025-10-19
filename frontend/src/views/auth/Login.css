@@ -3,9 +3,8 @@
     min-height: 100vh;
     display: flex;
     align-items: center;
-    background: linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%);
-    padding-top: 20px;
-    margin-top: -5px;
+    background: transparent;
+    padding-top: 100px;
     padding-bottom: 80px;
     user-select: none;
 }
@@ -21,8 +20,9 @@
 
 .login-card {
     border-radius: 20px;
-    background: white;
-    border: 1px solid #e9ecef;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     user-select: none; /* Prevent text selection on card */
 }
@@ -168,21 +168,41 @@
     cursor: default; /* Default cursor */
 }
 
-.login-checkbox {
+/* Checkbox alignment fix */
+.login-card .form-check {
+    display: flex;
+    align-items: center;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+}
+
+.login-card .form-check-input.login-checkbox {
     border-color: #667eea;
     user-select: none; /* Prevent text selection */
     cursor: pointer; /* Pointer cursor for checkboxes */
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    width: 1rem; /* Fixed width */
+    height: 1rem; /* Fixed height */
+    position: static;
+    float: none;
 }
 
-.login-checkbox:checked {
+.login-card .form-check-input.login-checkbox:checked {
     background-color: #667eea;
     border-color: #667eea;
 }
 
 /* Checkbox label styling */
-.form-check-label {
+.login-card .form-check-label {
     user-select: none; /* Prevent text selection on labels */
     cursor: pointer; /* Pointer cursor for labels */
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+    padding-left: 0 !important;
 }
 
 .login-forgot-link {

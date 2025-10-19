@@ -831,21 +831,50 @@ function Index() {
                     {/* Changed to 2x4 layout (2 rows, 4 cards each - compact) */}
                     <div className="row g-3 justify-content-center">
                         {isLoading ? (
-                            // Loading skeleton - 8 cards
+                            // Loading skeleton - 8 cards with placeholder content
                             [...Array(8)].map((_, index) => (
                                 <div key={index} className="col-lg-3 col-md-6">
                                     <div 
                                         className="card border-0"
                                         style={{
                                             borderRadius: '16px',
-                                            background: '#f8f9fa',
-                                            height: '160px'
+                                            background: 'white',
+                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                            height: '160px',
+                                            overflow: 'hidden'
                                         }}
                                     >
-                                        <div className="card-body d-flex align-items-center justify-content-center">
-                                            <div className="spinner-border text-primary" role="status">
-                                                <span className="visually-hidden">Loading...</span>
-                                            </div>
+                                        <div className="card-body p-3 text-center d-flex flex-column justify-content-center">
+                                            <div 
+                                                className="placeholder rounded-circle mx-auto mb-2"
+                                                style={{
+                                                    width: '50px',
+                                                    height: '50px',
+                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                                                    backgroundSize: '200% 100%',
+                                                    animation: 'shimmer 1.5s infinite'
+                                                }}
+                                            />
+                                            <div 
+                                                className="placeholder rounded mx-auto mb-2" 
+                                                style={{ 
+                                                    width: '70%', 
+                                                    height: '16px',
+                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                                                    backgroundSize: '200% 100%',
+                                                    animation: 'shimmer 1.5s infinite'
+                                                }}
+                                            />
+                                            <div 
+                                                className="placeholder rounded mx-auto" 
+                                                style={{ 
+                                                    width: '50%', 
+                                                    height: '12px',
+                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                                                    backgroundSize: '200% 100%',
+                                                    animation: 'shimmer 1.5s infinite'
+                                                }}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -986,21 +1015,91 @@ function Index() {
                     {/* Changed to 3x1 layout (1 row, 3 cards - compact) */}
                     <div className="row g-3 justify-content-center">
                         {isLoading ? (
-                            // Loading skeleton - 3 cards
+                            // Loading skeleton - 3 course cards with placeholder content
                             [...Array(3)].map((_, index) => (
                                 <div key={index} className="col-lg-4 col-md-6">
                                     <div 
                                         className="card border-0"
                                         style={{
                                             borderRadius: '16px',
-                                            background: '#f8f9fa',
-                                            height: '380px'
+                                            background: 'white',
+                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                            height: '380px',
+                                            overflow: 'hidden'
                                         }}
                                     >
-                                        <div className="card-body d-flex align-items-center justify-content-center">
-                                            <div className="spinner-border text-primary" role="status">
-                                                <span className="visually-hidden">Loading...</span>
+                                        <div 
+                                            className="placeholder" 
+                                            style={{ 
+                                                height: '180px', 
+                                                background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                                                backgroundSize: '200% 100%',
+                                                animation: 'shimmer 1.5s infinite'
+                                            }}
+                                        />
+                                        <div className="card-body p-3">
+                                            <div 
+                                                className="placeholder rounded mb-2" 
+                                                style={{ 
+                                                    width: '60%', 
+                                                    height: '12px',
+                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                                                    backgroundSize: '200% 100%',
+                                                    animation: 'shimmer 1.5s infinite'
+                                                }}
+                                            />
+                                            <div 
+                                                className="placeholder rounded mb-2" 
+                                                style={{ 
+                                                    width: '90%', 
+                                                    height: '18px',
+                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                                                    backgroundSize: '200% 100%',
+                                                    animation: 'shimmer 1.5s infinite'
+                                                }}
+                                            />
+                                            <div 
+                                                className="placeholder rounded mb-3" 
+                                                style={{ 
+                                                    width: '70%', 
+                                                    height: '18px',
+                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                                                    backgroundSize: '200% 100%',
+                                                    animation: 'shimmer 1.5s infinite'
+                                                }}
+                                            />
+                                            <div className="d-flex justify-content-between mb-2">
+                                                <div 
+                                                    className="placeholder rounded" 
+                                                    style={{ 
+                                                        width: '45%', 
+                                                        height: '14px',
+                                                        background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                                                        backgroundSize: '200% 100%',
+                                                        animation: 'shimmer 1.5s infinite'
+                                                    }}
+                                                />
+                                                <div 
+                                                    className="placeholder rounded" 
+                                                    style={{ 
+                                                        width: '45%', 
+                                                        height: '14px',
+                                                        background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                                                        backgroundSize: '200% 100%',
+                                                        animation: 'shimmer 1.5s infinite'
+                                                    }}
+                                                />
                                             </div>
+                                            <div 
+                                                className="placeholder rounded" 
+                                                style={{ 
+                                                    width: '100%', 
+                                                    height: '40px',
+                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                                                    backgroundSize: '200% 100%',
+                                                    animation: 'shimmer 1.5s infinite'
+                                                }}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -1276,10 +1375,10 @@ function Index() {
                 <div className="container">
                     <div className="row align-items-center">
                         <div className="col-lg-8">
-                            <h2 className="display-6 fw-bold mb-3">
+                            <h2 className="display-6 fw-bold mb-3" style={{ color: 'white' }}>
                                 Siap Memulai Perjalanan Pembelajaran Anda?
                             </h2>
-                            <p className="lead mb-0">
+                            <p className="lead mb-0" style={{ color: 'white' }}>
                                 Bergabunglah dengan ribuan pegawai Setjen DPD RI yang telah meningkatkan kompetensi mereka 
                                 melalui platform LMSetjen DPD RI. Daftar sekarang dan akses seluruh kursus secara gratis!
                             </p>
@@ -1503,14 +1602,13 @@ function Index() {
                     </div>
                 </div>
                 
+                {/* Footer integrated into last section */}
+                <div className="mt-5 pt-4">
+                    <BaseFooter />
+                </div>
             </section>
             </div>
             </main>
-            
-            {/* Footer integrated into last section - No gap at bottom */}
-            <div className="footer-wrapper pt-5 mt-5">
-                <BaseFooter />
-            </div>
         </>
     );
 }

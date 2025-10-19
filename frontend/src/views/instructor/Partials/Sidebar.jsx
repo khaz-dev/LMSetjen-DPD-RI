@@ -119,15 +119,16 @@ function Sidebar() {
                         border: 1px solid rgba(52, 152, 219, 0.08);
                         overflow: visible;
                         position: sticky;
-                        top: 70px;
+                        top: 0;
                         z-index: 100;
-                        transition: all 0.3s ease;
-                        max-height: calc(100vh - 80px);
+                        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+                        max-height: 100vh;
                         align-self: flex-start;
                         display: flex;
                         flex-direction: column;
                         margin-top: 0 !important;
                         margin-right: 0;
+                        padding-top: 0 !important;
                     }
                     
                     .instructor-sidebar:hover {
@@ -177,7 +178,7 @@ function Sidebar() {
                     }
                     
                     .sidebar-content {
-                        padding: 0 1.25rem 1.25rem 1.25rem;
+                        padding: 1rem 1.25rem 1.25rem 1.25rem;
                         position: relative;
                         z-index: 1;
                         overflow-y: auto;
@@ -199,6 +200,11 @@ function Sidebar() {
                     
                     .nav-section-title:first-child {
                         margin-top: 0;
+                    }
+                    
+                    /* Remove gap between Notifications and Account Settings section */
+                    .instructor-divider + .nav-section-title {
+                        margin-top: 0.5rem;
                     }
                     
                     .instructor-nav-link {
@@ -224,7 +230,7 @@ function Sidebar() {
                         width: 0;
                         height: 100%;
                         background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-                        transition: width 0.3s ease;
+                        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                         z-index: 0;
                     }
                     
@@ -263,7 +269,7 @@ function Sidebar() {
                         align-items: center;
                         justify-content: center;
                         font-size: 0.9rem;
-                        transition: all 0.3s ease;
+                        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     }
                     
                     .instructor-nav-link:hover .instructor-nav-icon,
@@ -277,7 +283,7 @@ function Sidebar() {
                         color: #e74c3c;
                         width: 100%;
                         margin-top: 1rem;
-                        transition: all 0.3s ease;
+                        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                         border-radius: 10px;
                         padding: 0.875rem 1rem;
                         font-weight: 500;
@@ -297,7 +303,7 @@ function Sidebar() {
                         width: 0;
                         height: 100%;
                         background: #e74c3c;
-                        transition: width 0.3s ease;
+                        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                         z-index: 0;
                     }
                     
@@ -335,7 +341,7 @@ function Sidebar() {
                     .instructor-divider {
                         height: 1px;
                         background: linear-gradient(90deg, transparent 0%, rgba(52, 152, 219, 0.15) 50%, transparent 100%);
-                        margin: 1rem 0;
+                        margin: 0.5rem 0;
                     }
                     
                     /* Hide divider when sidebar is collapsed */
@@ -401,6 +407,13 @@ function Sidebar() {
                         background: rgba(102, 126, 234, 0.1);
                         margin: 1rem 0.5rem;
                         padding: 0;
+                        display: none; /* Hide completely when collapsed */
+                    }
+                    
+                    /* Hide ::after element on nav-section-title when collapsed */
+                    .instructor-sidebar.collapsed .nav-section-title::after,
+                    .instructor-sidebar.collapsed .section-title::after {
+                        display: none !important;
                     }
                     
                     /* Tooltip for collapsed nav items */
@@ -461,6 +474,12 @@ function Sidebar() {
                     .instructor-sidebar.collapsed .instructor-nav-link .nav-icon i,
                     .instructor-sidebar.collapsed .instructor-nav-link .instructor-nav-icon i {
                         color: #4a5568;
+                    }
+                    
+                    /* Active state icon color when sidebar is collapsed */
+                    .instructor-sidebar.collapsed .instructor-nav-link.active .nav-icon i,
+                    .instructor-sidebar.collapsed .instructor-nav-link.active .instructor-nav-icon i {
+                        color: white !important;
                     }
                     
                     /* Toggle button for sidebar - Now inside sidebar-header */

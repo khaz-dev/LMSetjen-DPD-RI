@@ -83,6 +83,31 @@ function Wishlist() {
         }
     };
 
+    if (loading) {
+        return (
+            <>
+                <BaseHeader />
+                <section style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                    <div className="container" style={{ flex: 1 }}>
+                        <Header />
+                        <div className="row mt-0 mt-md-4">
+                            <Sidebar />
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                                <div className="text-center">
+                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p className="mt-3 text-muted">Loading Wishlist...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <Footer />
+            </>
+        );
+    }
+
     return (
         <>
             <BaseHeader />
@@ -120,21 +145,6 @@ function Wishlist() {
                                 </div>
                             </div>
 
-                            {/* Loading State */}
-                            {loading && (
-                                <div >
-                                    <div className="text-center">
-                                        <div className="loading-dots">
-                                            <div className="dot"></div>
-                                            <div className="dot"></div>
-                                            <div className="dot"></div>
-                                        </div>
-                                        <h5 className="mt-4 mb-2 fw-bold text-primary">Loading your wishlist...</h5>
-                                        <p className="text-muted mb-0">Please wait while we fetch your saved courses</p>
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Error State */}
                             {error && (
                                 <div className="empty-state">
@@ -152,7 +162,7 @@ function Wishlist() {
                             )}
                             
                             {/* Wishlist Content */}
-                            {!loading && !error && (
+                            {!error && (
                                 <>
                                     {wishlist?.length > 0 ? (
                                         <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">

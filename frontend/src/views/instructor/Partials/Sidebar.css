@@ -1,63 +1,126 @@
 /* Instructor Sidebar Responsive Layout Fixes */
+/* Universal styles that work on ALL instructor pages dynamically */
 
-/* Shrink sidebar column when collapsed - ALL instructor pages */
-.modern-dashboard .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.modern-dashboard .row > .col-md-4:has(.instructor-sidebar.collapsed),
-.instructor-profile-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.instructor-profile-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-.instructor-review-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.instructor-review-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-.instructor-notification-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.instructor-notification-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-.instructor-qa-detail-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.instructor-qa-detail-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-.instructor-password-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.instructor-password-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-.qa-bg-section .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.qa-bg-section .row > .col-md-4:has(.instructor-sidebar.collapsed),
-.courses-container .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.courses-container .row > .col-md-4:has(.instructor-sidebar.collapsed),
-.course-create-container .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.course-create-container .row > .col-md-4:has(.instructor-sidebar.collapsed),
-.course-edit-container .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.course-edit-container .row > .col-md-4:has(.instructor-sidebar.collapsed),
-.modern-students .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-.modern-students .row > .col-md-4:has(.instructor-sidebar.collapsed) {
-    flex: 0 0 auto !important;
-    width: fit-content !important;
-    max-width: calc(85px + 1rem) !important; /* 85px sidebar + 16px gap */
-    min-width: calc(85px + 1rem) !important;
+/* Remove top gaps only on mobile - allow mt-md-4 to work on larger screens */
+@media (max-width: 767px) {
+    .row:has(.instructor-sidebar) {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
 }
 
-/* Expand main content column when sidebar is collapsed - ALL instructor pages */
-.modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-.instructor-profile-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.instructor-profile-page .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-.instructor-review-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.instructor-review-page .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-.instructor-notification-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.instructor-notification-page .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-.instructor-qa-detail-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.instructor-qa-detail-page .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-.instructor-password-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.instructor-password-page .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-.qa-bg-section .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.qa-bg-section .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-.courses-container .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.courses-container .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-.course-create-container .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.course-create-container .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-.course-edit-container .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.course-edit-container .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-.modern-students .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-.modern-students .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
-    flex: 1 1 auto !important;
-    max-width: 100% !important;
-    width: auto !important;
+/* Ensure sidebar column has NO top gaps */
+.col-lg-3:has(.instructor-sidebar),
+.col-md-4:has(.instructor-sidebar) {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }
 
-/* Ensure proper spacing on mobile */
+/* Ensure content columns align at the top */
+.row:has(.instructor-sidebar) > .col-lg-9,
+.row:has(.instructor-sidebar) > .col-md-8,
+.row:has(.instructor-sidebar) > .col-12 {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Remove ALL gaps from instructor-sidebar itself */
+.instructor-sidebar {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Desktop: Large screens (lg >= 992px) */
+@media (min-width: 992px) {
+    /* Force all instructor page sidebar columns to proper width */
+    .col-lg-3:has(.instructor-sidebar),
+    .col-md-4:has(.instructor-sidebar) {
+        flex: 0 0 auto !important;
+        width: 25% !important;
+        max-width: 25% !important;
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), flex 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Force all instructor page content columns to proper width */
+    .row:has(.instructor-sidebar) > .col-lg-9,
+    .row:has(.instructor-sidebar) > .col-md-8 {
+        flex: 0 0 auto !important;
+        width: 75% !important;
+        max-width: 75% !important;
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), flex 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* COLLAPSED STATE: Shrink sidebar column */
+    .col-lg-3:has(.instructor-sidebar.collapsed),
+    .col-md-4:has(.instructor-sidebar.collapsed) {
+        flex: 0 0 auto !important;
+        width: fit-content !important;
+        max-width: calc(85px + 1rem) !important;
+        min-width: calc(85px + 1rem) !important;
+    }
+
+    /* COLLAPSED STATE: Expand content column */
+    .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
+    .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        max-width: 100% !important;
+    }
+
+    /* Direct sidebar width control */
+    .instructor-sidebar {
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .instructor-sidebar.collapsed {
+        width: 85px !important;
+    }
+}
+
+/* Tablet: Medium screens (md: 768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    /* Force all instructor page sidebar columns to proper width */
+    .col-md-4:has(.instructor-sidebar) {
+        flex: 0 0 auto !important;
+        width: 33.333333% !important;
+        max-width: 33.333333% !important;
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), flex 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Force all instructor page content columns to proper width */
+    .row:has(.instructor-sidebar) > .col-md-8 {
+        flex: 0 0 auto !important;
+        width: 66.666667% !important;
+        max-width: 66.666667% !important;
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), flex 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* COLLAPSED STATE: Shrink sidebar column */
+    .col-md-4:has(.instructor-sidebar.collapsed) {
+        flex: 0 0 auto !important;
+        width: fit-content !important;
+        max-width: calc(85px + 1rem) !important;
+        min-width: calc(85px + 1rem) !important;
+    }
+
+    /* COLLAPSED STATE: Expand content column */
+    .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        max-width: 100% !important;
+    }
+
+    /* Direct sidebar width control */
+    .instructor-sidebar {
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .instructor-sidebar.collapsed {
+        width: 85px !important;
+    }
+}
+
+/* Mobile: Small screens - Always full width */
 @media (max-width: 767px) {
     .modern-dashboard .row > .col-lg-3,
     .modern-dashboard .row > .col-md-4,

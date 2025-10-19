@@ -4,8 +4,7 @@ import Footer from '../partials/Footer';
 import { Link } from 'react-router-dom';
 import apiInstance from '../../utils/axios';
 import Toast from '../plugin/Toast';
-import logoWebP from "../../assets/logo/logo-180.webp";
-import logoPNG from "../../assets/logo/logo-180.png";
+import logoPNG from "../../assets/logo/logo-192.png";
 import './ForgotPassword.css';
 
 function ForgotPassword() {
@@ -84,14 +83,11 @@ function ForgotPassword() {
                     <div className="mb-3">
                       <div className="d-inline-flex align-items-center justify-content-center">
                         <div className="forgot-password-logo-container">
-                          <picture>
-                            <source srcSet={logoWebP} type="image/webp" />
-                            <img 
-                              src={logoPNG} 
-                              alt="LMSetjen DPD RI Logo" 
-                              className="forgot-password-logo"
-                            />
-                          </picture>
+                          <img 
+                            src={logoPNG} 
+                            alt="LMSetjen DPD RI Logo" 
+                            className="forgot-password-logo"
+                          />
                         </div>
                       </div>
                     </div>

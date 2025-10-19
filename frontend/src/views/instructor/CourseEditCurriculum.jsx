@@ -30,7 +30,7 @@ import { CSS } from '@dnd-kit/utilities';
 // Local component imports
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
-import LoadingSpinner from "./Partials/LoadingSpinner";
+import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import WorkflowStepper from "../../components/WorkflowStepper";
@@ -869,15 +869,16 @@ function SortableLessonItem({
                             )}
                         </div>
 
-                        <div className="form-check">
+                        <div className="form-check" style={{paddingLeft: 0, marginLeft: 0}}>
                             <input
                                 type="checkbox"
                                 className="form-check-input"
                                 id={`preview-${variantIndex}-${itemIndex}`}
                                 checked={item?.preview || false}
                                 onChange={(e) => handleLessonChange(variantIndex, itemIndex, "preview", e.target.checked)}
+                                style={{marginLeft: 0}}
                             />
-                            <label className="form-check-label" htmlFor={`preview-${variantIndex}-${itemIndex}`}>
+                            <label className="form-check-label" htmlFor={`preview-${variantIndex}-${itemIndex}`} style={{paddingLeft: 0}}>
                                 <i className="fas fa-eye me-2"></i>
                                 Allow preview (Students can view this lesson before enrolling)
                             </label>
@@ -2850,46 +2851,30 @@ function CourseEditCurriculum() {
         }
     };
 
-    // Loading component for better UX
-    if (uiState.loading) {
-        return (
-            <div
-                className="curriculum-loading-content"
-                style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '100vh', // Changed from 50vh to 100vh for full vertical centering
-                    width: '100vw',     // Ensure it takes full width
-                    position: 'fixed',  // Overlay on top of everything
-                    top: 0,
-                    left: 0,
-                    zIndex: 9999,       // On top of other content
-                    background: 'rgba(255,255,255,0.95)' // Optional: subtle overlay
-                }}
-            >
-                <div
-                    className="spinner-border text-primary"
-                    role="status"
-                    style={{
-                        width: '3rem',
-                        height: '3rem',
-                        flexShrink: 0,
-                        borderWidth: '0.25em',
-                        marginBottom: '1rem'
-                    }}
-                >
-                    <span className="visually-hidden">Loading...</span>
-                </div>
-                <p>Loading curriculum...</p>
-            </div>
-        );
-    }
-
     // Show full-page loading spinner on initial load
     if (uiState.loading && !course.title) {
-        return <LoadingSpinner fullPage={true} message="Loading Curriculum..." />;
+        return (
+            <>
+                <BaseHeader />
+                <section className="course-edit-container" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                    <div className="container" style={{ flex: 1 }}>
+                        <Header />
+                        <div className="row">
+                            <Sidebar />
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                                <div className="text-center">
+                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p className="mt-3 text-muted">Loading Curriculum...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <Footer />
+            </>
+        );
     }
 
     return (
@@ -2898,7 +2883,7 @@ function CourseEditCurriculum() {
             <section className="course-edit-container">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row">
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
                             {/* Workflow Stepper */}

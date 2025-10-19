@@ -4,8 +4,7 @@ import Footer from '../partials/Footer';
 import apiInstance from '../../utils/axios';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Toast from '../plugin/Toast';
-import logoWebP from "../../assets/logo/logo-180.webp";
-import logoPNG from "../../assets/logo/logo-180.png";
+import logoPNG from "../../assets/logo/logo-192.png";
 import './CreateNewPassword.css';
 
 function CreateNewPassword() {
@@ -150,14 +149,11 @@ function CreateNewPassword() {
                     <div className="mb-3">
                       <div className="d-inline-flex align-items-center justify-content-center">
                         <div className="create-password-logo-container">
-                          <picture>
-                            <source srcSet={logoWebP} type="image/webp" />
-                            <img 
-                              src={logoPNG} 
-                              alt="LMSetjen DPD RI Logo" 
-                              className="create-password-logo"
-                            />
-                          </picture>
+                          <img 
+                            src={logoPNG} 
+                            alt="LMSetjen DPD RI Logo" 
+                            className="create-password-logo"
+                          />
                         </div>
                       </div>
                     </div>

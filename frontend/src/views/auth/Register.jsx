@@ -8,8 +8,7 @@ import { useAuthStore } from "../../store/auth";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Toast from '../plugin/Toast';
-import logoWebP from "../../assets/logo/logo-180.webp";
-import logoPNG from "../../assets/logo/logo-180.png";
+import logoPNG from "../../assets/logo/logo-192.png";
 import "./Register.css";
 
 function Register() {
@@ -192,14 +191,11 @@ function Register() {
                     <div className="mb-3">
                       <div className="d-inline-flex align-items-center justify-content-center">
                         <div className="register-logo-container">
-                          <picture>
-                            <source srcSet={logoWebP} type="image/webp" />
-                            <img 
-                              src={logoPNG} 
-                              alt="LMSetjen DPD RI Logo" 
-                              className="register-logo"
-                            />
-                          </picture>
+                          <img 
+                            src={logoPNG} 
+                            alt="LMSetjen DPD RI Logo" 
+                            className="register-logo"
+                          />
                         </div>
                       </div>
                     </div>

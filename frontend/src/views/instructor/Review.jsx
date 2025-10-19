@@ -5,6 +5,7 @@ import { Rating } from 'react-simple-star-rating';
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import LoadingSpinner from "./Partials/LoadingSpinner";
+import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 
@@ -111,7 +112,28 @@ function Review() {
 
     // Show full-page loading spinner on initial load
     if (loading) {
-        return <LoadingSpinner fullPage={true} message="Loading Reviews..." />;
+        return (
+            <>
+                <BaseHeader />
+                <section className="instructor-review-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                    <div className="container" style={{ flex: 1 }}>
+                        <Header />
+                        <div className="row">
+                            <Sidebar />
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                                <div className="text-center">
+                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p className="mt-3 text-muted">Loading Reviews...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <Footer />
+            </>
+        );
     }
 
     return (
@@ -122,7 +144,7 @@ function Review() {
                 <div className="container">
                     {/* Header Here */}
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row">
                         {/* Sidebar Here */}
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">

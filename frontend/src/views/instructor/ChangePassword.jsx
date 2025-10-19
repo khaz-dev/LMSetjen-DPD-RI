@@ -271,6 +271,7 @@ function ChangePassword() {
                     placeholder={placeholder}
                     autoComplete="new-password"
                     aria-invalid={errors[field] ? 'true' : 'false'}
+                    style={{paddingLeft: '2.25rem'}}
                 />
                 <button
                     type="button"
@@ -360,7 +361,7 @@ function ChangePassword() {
             <section className="instructor-password-page">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row">
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
                             {/* Page Header */}

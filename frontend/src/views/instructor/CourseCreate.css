@@ -127,7 +127,8 @@
 
 /* Modern Form Body */
 .form-body-modern {
-    padding: 2rem;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 /* Enhanced Section Styling */
@@ -707,7 +708,8 @@
     }
     
     .form-body-modern {
-        padding: 1.5rem;
+        padding: 0 !important;
+        margin: 0 !important;
     }
     
     .form-section {
@@ -736,7 +738,8 @@
     }
     
     .form-body-modern {
-        padding: 1rem;
+        padding: 0 !important;
+        margin: 0 !important;
     }
     
     .form-section {

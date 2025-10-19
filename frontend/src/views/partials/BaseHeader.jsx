@@ -120,7 +120,6 @@ function BaseHeader() {
         { to: "/instructor/reviews/", icon: "fas fa-star", text: "Review" },
         { to: "/instructor/question-answer/", icon: "fas fa-envelope", text: "Tanya Jawab" },
         { to: "/instructor/students/", icon: "fas fa-users", text: "Murid Saya" },
-        { to: "/instructor/earning/", icon: "fas fa-chart-line", text: "Capaian Saya" },
         { to: "/instructor/profile/", icon: "fas fa-gear", text: "Pengaturan" },
         { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar" }
     ];

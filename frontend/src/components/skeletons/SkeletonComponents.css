@@ -1,0 +1,415 @@
+/**
+ * Skeleton Loader Component Styles
+ * Professional shimmer animations and skeleton layouts
+ */
+
+/* ==========================================
+   SHIMMER ANIMATION (Global)
+   ========================================== */
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ==========================================
+   BASE SKELETON STYLES
+   ========================================== */
+
+.skeleton-box,
+.skeleton-circle {
+    background: linear-gradient(
+        90deg,
+        #f0f0f0 0%,
+        #f8f8f8 20%,
+        #f0f0f0 40%,
+        #f0f0f0 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s linear infinite;
+    border-radius: 8px;
+}
+
+.skeleton-circle {
+    border-radius: 50% !important;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .skeleton-box,
+    .skeleton-circle {
+        background: linear-gradient(
+            90deg,
+            #2a2a2a 0%,
+            #3a3a3a 20%,
+            #2a2a2a 40%,
+            #2a2a2a 100%
+        );
+        background-size: 1000px 100%;
+    }
+}
+
+/* ==========================================
+   CARD SKELETONS
+   ========================================== */
+
+.skeleton-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.skeleton-card-body {
+    padding: 1rem;
+}
+
+.skeleton-course-card,
+.skeleton-category-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.skeleton-stat-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.skeleton-chart {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* ==========================================
+   LIST SKELETONS
+   ========================================== */
+
+.skeleton-list-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.skeleton-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ==========================================
+   TABLE SKELETONS
+   ========================================== */
+
+.skeleton-table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.skeleton-table-header {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 16px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.skeleton-table-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.skeleton-table-row:last-child {
+    border-bottom: none;
+}
+
+/* ==========================================
+   PAGE SKELETONS
+   ========================================== */
+
+.skeleton-page {
+    padding: 24px;
+    min-height: calc(100vh - 120px);
+}
+
+.skeleton-page-header {
+    margin-bottom: 32px;
+}
+
+.skeleton-page-content {
+    margin-top: 24px;
+}
+
+/* ==========================================
+   ROUTE LOADER (Full Page)
+   ========================================== */
+
+.skeleton-route-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    padding: 85px 20px 20px; /* Account for fixed header */
+}
+
+.skeleton-route-loader-content {
+    width: 100%;
+    max-width: 1200px;
+    padding: 40px;
+}
+
+.skeleton-route-bars {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ==========================================
+   BUTTON LOADER (Dots Animation)
+   ========================================== */
+
+.button-loader {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.button-loader-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.button-loader-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+    animation: button-loader-bounce 1.4s infinite ease-in-out both;
+}
+
+.button-loader-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.button-loader-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes button-loader-bounce {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ==========================================
+   PROFILE SKELETON
+   ========================================== */
+
+.skeleton-profile {
+    padding: 24px;
+}
+
+/* ==========================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================== */
+
+@media (max-width: 768px) {
+    .skeleton-page {
+        padding: 16px;
+    }
+    
+    .skeleton-route-loader-content {
+        padding: 20px;
+    }
+    
+    .skeleton-list-item {
+        padding: 12px;
+    }
+    
+    .skeleton-table-header,
+    .skeleton-table-row {
+        padding: 12px 16px;
+        gap: 12px;
+    }
+}
+
+/* ==========================================
+   UTILITY CLASSES
+   ========================================== */
+
+/* Faster animation for small elements */
+.skeleton-fast {
+    animation-duration: 1.5s !important;
+}
+
+/* Slower animation for large elements */
+.skeleton-slow {
+    animation-duration: 2.5s !important;
+}
+
+/* Pulse instead of shimmer */
+.skeleton-pulse {
+    animation: pulse 2s ease-in-out infinite !important;
+}
+
+/* No animation (static skeleton) */
+.skeleton-static {
+    animation: none !important;
+    background: #f0f0f0 !important;
+}
+
+/* High contrast skeleton (for accessibility) */
+.skeleton-high-contrast {
+    background: linear-gradient(
+        90deg,
+        #e0e0e0 0%,
+        #f0f0f0 20%,
+        #e0e0e0 40%,
+        #e0e0e0 100%
+    ) !important;
+    background-size: 1000px 100%;
+}
+
+/* ==========================================
+   SKELETON WITH CONTENT PREVIEW
+   ========================================== */
+
+/* Show skeleton over actual content during loading */
+.skeleton-overlay {
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.8) 20%,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s linear infinite;
+    z-index: 1;
+}
+
+/* ==========================================
+   SKELETON GRID LAYOUTS
+   ========================================== */
+
+.skeleton-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.skeleton-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.skeleton-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 992px) {
+    .skeleton-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .skeleton-grid-2,
+    .skeleton-grid-3,
+    .skeleton-grid-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================
+   SMOOTH TRANSITIONS
+   ========================================== */
+
+/* Fade in real content when skeleton is removed */
+.skeleton-fade-out {
+    animation: skeleton-fade-out 0.3s ease-out forwards;
+}
+
+@keyframes skeleton-fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.content-fade-in {
+    animation: content-fade-in 0.4s ease-in forwards;
+}
+
+@keyframes content-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================
+   PRINT STYLES
+   ========================================== */
+
+@media print {
+    .skeleton-box,
+    .skeleton-circle,
+    .skeleton-card,
+    .skeleton-route-loader {
+        display: none !important;
+    }
+}

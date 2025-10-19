@@ -230,14 +230,13 @@ button div,
    ================================ */
 
 .quiz-card {
-    /* Old purple gradient example: */
-    /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
-    background: var(--neutral-50) !important;
-    /* #2563eb and #1e40af are Tailwind's blue-600 and blue-800, adjust as needed */
-    color: #fff;
-    border-radius: 18px;
-    box-shadow: 0 4px 24px 0 rgba(30,64,175,0.08);
-    /* ...other styles... */
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    border: 1px solid var(--neutral-200);
+    position: relative;
+    overflow: hidden;
 }
 
 .quiz-card::before {
@@ -248,6 +247,7 @@ button div,
     right: 0;
     height: 4px;
     background: var(--instructor-gradient);
+    z-index: 1;
 }
 
 .quiz-card:hover {
@@ -257,16 +257,33 @@ button div,
 
 .quiz-card-header {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
     padding: var(--space-lg);
     background: linear-gradient(135deg, var(--neutral-50) 0%, white 100%);
     border-bottom: 1px solid var(--neutral-200);
+    position: relative;
+    z-index: 2;
+}
+
+.quiz-actions {
+    flex: 0 0 auto;
+    display: flex;
+    gap: var(--space-sm);
+    order: 1; /* Actions on the left */
+}
+
+.quiz-status {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    order: 2; /* Status on the right */
 }
 
 .quiz-status .status-badge {
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    gap: 0.5rem;
     padding: 0.5rem 1rem;
     border-radius: var(--radius-full);
     font-size: 0.875rem;
@@ -285,10 +302,7 @@ button div,
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-.quiz-actions {
-    display: flex;
-    gap: var(--space-sm);
-}
+/* .quiz-actions moved up above .quiz-status */
 
 .btn-icon {
     width: 40px;
@@ -933,4 +947,68 @@ button div,
 .quiz-card:hover *,
 .question-card:hover * {
     cursor: pointer !important;
+}
+
+/* ================================
+   SIDEBAR LAYOUT FIX - CourseQuiz Page
+   Ensures sidebar columns don't overflow
+   ================================ */
+@media (min-width: 992px) {
+    /* Expanded state */
+    .modern-dashboard .col-lg-3 {
+        flex: 0 0 auto !important;
+        width: 25% !important;
+        max-width: 25% !important;
+    }
+    
+    .modern-dashboard .col-lg-9 {
+        flex: 0 0 auto !important;
+        width: 75% !important;
+        max-width: 75% !important;
+    }
+    
+    /* Collapsed state - when sidebar has .collapsed class */
+    .modern-dashboard .col-lg-3:has(.instructor-sidebar.collapsed) {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        max-width: 100px !important;
+        min-width: 100px !important;
+    }
+    
+    .modern-dashboard .col-lg-9:has(~ .col-lg-3 .instructor-sidebar.collapsed),
+    .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-lg-9 {
+        flex: 1 1 auto !important;
+        width: calc(100% - 100px) !important;
+        max-width: calc(100% - 100px) !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    /* Expanded state */
+    .modern-dashboard .col-md-4 {
+        flex: 0 0 auto !important;
+        width: 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+    
+    .modern-dashboard .col-md-8 {
+        flex: 0 0 auto !important;
+        width: 66.666667% !important;
+        max-width: 66.666667% !important;
+    }
+    
+    /* Collapsed state */
+    .modern-dashboard .col-md-4:has(.instructor-sidebar.collapsed) {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        max-width: 100px !important;
+        min-width: 100px !important;
+    }
+    
+    .modern-dashboard .col-md-8:has(~ .col-md-4 .instructor-sidebar.collapsed),
+    .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
+        flex: 1 1 auto !important;
+        width: calc(100% - 100px) !important;
+        max-width: calc(100% - 100px) !important;
+    }
 }

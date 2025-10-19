@@ -30,24 +30,165 @@
         transform: translateX(-50%);
         top: 10px;
       }
+
+      /* ========================================
+         CRITICAL CSS - SPINNER FIX
+         Inline styles to prevent FOUC on first load
+         ======================================== */
+      
+      /* Bootstrap spinner base styles - inline for immediate availability */
+      .spinner-border {
+        display: inline-block;
+        width: 2rem;
+        height: 2rem;
+        vertical-align: -0.125em;
+        border: 0.25em solid currentcolor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spinner-border-rotate 0.75s linear infinite;
+      }
+      
+      .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.2em;
+      }
+      
+      @keyframes spinner-border-rotate {
+        to { transform: rotate(360deg); }
+      }
+      
+      /* Critical spinner consistency rules */
+      .spinner-border,
+      .spinner-border-sm {
+        flex-shrink: 0 !important;
+        min-width: fit-content !important;
+        min-height: fit-content !important;
+        aspect-ratio: 1 / 1 !important;
+        box-sizing: border-box !important;
+      }
+      
+      /* Ensure parent containers don't distort spinners */
+      div:has(> .spinner-border),
+      div:has(> .spinner-border-sm),
+      span:has(> .spinner-border),
+      span:has(> .spinner-border-sm) {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      
+      /* Loading container centering */
+      .text-center {
+        text-align: center !important;
+      }
+      
+      .text-center:has(> .spinner-border) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+      }
+      
+      /* Bootstrap helper classes used in loading states */
+      .visually-hidden {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0,0,0,0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+      }
+      
+      .text-primary {
+        color: #0d6efd !important;
+      }
+      
+      .text-muted {
+        color: #6c757d !important;
+      }
+      
+      .mt-3 {
+        margin-top: 1rem !important;
+      }
+      
+      /* Flexbox layout for loading states */
+      .d-flex {
+        display: flex !important;
+      }
+      
+      .align-items-center {
+        align-items: center !important;
+      }
+      
+      .justify-content-center {
+        justify-content: center !important;
+      }
+      
+      /* Prevent layout shift - enforce dimensions immediately */
+      [style*="width: 3rem"][style*="height: 3rem"].spinner-border {
+        width: 3rem !important;
+        height: 3rem !important;
+        min-width: 3rem !important;
+        min-height: 3rem !important;
+        max-width: 3rem !important;
+        max-height: 3rem !important;
+      }
     </style>
 
-    <!-- Bootstrap CSS Link -->
+    <!-- Preload Bootstrap CSS for faster loading -->
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+        crossorigin="anonymous"
+      />
+    </noscript>
+
+    <!-- Bootstrap CSS Link (fallback for browsers without preload support) -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
       crossorigin="anonymous"
     />
-    <!-- Fontawesome and Bootstrap Icons -->
+    <!-- Fontawesome and Bootstrap Icons - preload for better performance -->
     <link
-      rel="stylesheet"
+      rel="preload"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      />
+    </noscript>
+    
     <link
-      rel="stylesheet"
+      rel="preload"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      />
+    </noscript>
   </head>
   <body>
     <!-- Skip to main content link for keyboard navigation -->

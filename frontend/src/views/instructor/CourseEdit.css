@@ -1307,6 +1307,70 @@ button div,
     border-bottom: none;
 }
 
+/* ================================
+   SIDEBAR LAYOUT FIX
+   Ensures sidebar columns don't overflow
+   ================================ */
+@media (min-width: 992px) {
+    /* Expanded state */
+    .course-edit-container .col-lg-3 {
+        flex: 0 0 auto !important;
+        width: 25% !important;
+        max-width: 25% !important;
+    }
+    
+    .course-edit-container .col-lg-9 {
+        flex: 0 0 auto !important;
+        width: 75% !important;
+        max-width: 75% !important;
+    }
+    
+    /* Collapsed state - when sidebar has .collapsed class */
+    .course-edit-container .col-lg-3:has(.instructor-sidebar.collapsed) {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        max-width: 100px !important;
+        min-width: 100px !important;
+    }
+    
+    .course-edit-container .col-lg-9:has(~ .col-lg-3 .instructor-sidebar.collapsed),
+    .course-edit-container .row:has(.instructor-sidebar.collapsed) > .col-lg-9 {
+        flex: 1 1 auto !important;
+        width: calc(100% - 100px) !important;
+        max-width: calc(100% - 100px) !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    /* Expanded state */
+    .course-edit-container .col-md-4 {
+        flex: 0 0 auto !important;
+        width: 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+    
+    .course-edit-container .col-md-8 {
+        flex: 0 0 auto !important;
+        width: 66.666667% !important;
+        max-width: 66.666667% !important;
+    }
+    
+    /* Collapsed state */
+    .course-edit-container .col-md-4:has(.instructor-sidebar.collapsed) {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        max-width: 100px !important;
+        min-width: 100px !important;
+    }
+    
+    .course-edit-container .col-md-8:has(~ .col-md-4 .instructor-sidebar.collapsed),
+    .course-edit-container .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
+        flex: 1 1 auto !important;
+        width: calc(100% - 100px) !important;
+        max-width: calc(100% - 100px) !important;
+    }
+}
+
 .validation-errors .alert {
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
     border-left: 4px solid var(--error-color);

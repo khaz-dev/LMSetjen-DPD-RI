@@ -5,6 +5,7 @@ import "./Dashboard.css";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import LoadingSpinner from "./Partials/LoadingSpinner";
+import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import { calculateTotalDuration, getDurationStats } from "../../utils/durationUtils";
@@ -198,7 +199,28 @@ function Dashboard() {
 
     // Show full-page loading spinner on initial load
     if (loading) {
-        return <LoadingSpinner fullPage={true} message="Loading Dashboard..." />;
+        return (
+            <>
+                <BaseHeader />
+                <section className="modern-dashboard" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                    <div className="container" style={{ flex: 1 }}>
+                        <Header />
+                        <div className="row">
+                            <Sidebar />
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                                <div className="text-center">
+                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p className="mt-3 text-muted">Loading Dashboard...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <Footer />
+            </>
+        );
     }
 
     return (
@@ -212,7 +234,7 @@ function Dashboard() {
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
                             {/* Dashboard Header */}
-                            <div className="dashboard-header-modern mb-4">
+                            <div className="dashboard-header-modern mb-3">
                                 <div className="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h2 className="dashboard-title">
@@ -276,8 +298,8 @@ function Dashboard() {
                             </div>
 
                             {/* Secondary Stats Row */}
-                            <div className="row">
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-4">
+                            <div className="row mb-3">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-3">
                                     <div className="mini-stat-card">
                                         <div className="mini-stat-icon text-warning">
                                             <i className="fas fa-bell"></i>
@@ -289,7 +311,7 @@ function Dashboard() {
                                     </div>
                                 </div>
 
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-4">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-3">
                                     <div className="mini-stat-card">
                                         <div className="mini-stat-icon text-info">
                                             <i className="fas fa-question-circle"></i>
@@ -301,7 +323,7 @@ function Dashboard() {
                                     </div>
                                 </div>
 
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-4">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-3">
                                     <div className="mini-stat-card">
                                         <div className="mini-stat-icon" >
                                             <i className="fas fa-chart-line"></i>
@@ -315,10 +337,10 @@ function Dashboard() {
                             </div>
 
                             {/* Content Creation Statistics */}
-                            <div className="row mb-4">
+                            <div className="row mb-3">
                                 <div className="col-12">
                                     <div className="dashboard-card">
-                                        <div className="card-body p-4">
+                                        <div className="card-body p-3">
                                             <h5 className="mb-3 fw-bold">
                                                 <i className="fas fa-clock me-2"></i>
                                                 Content Creation Overview
@@ -361,7 +383,7 @@ function Dashboard() {
                             {/* Main Content Grid */}
                             <div className="row">
                                 {/* Recent Activity Panel */}
-                                <div className="col-lg-6 mb-4">
+                                <div className="col-lg-6 mb-3">
                                     <div className="activity-panel-modern">
                                         <div className="panel-header">
                                             <h5 className="panel-title">
@@ -394,7 +416,7 @@ function Dashboard() {
                                 </div>
 
                                 {/* Course Analytics Chart */}
-                                <div className="col-lg-6 mb-4">
+                                <div className="col-lg-6 mb-3">
                                     <div className="analytics-panel-modern">
                                         <div className="panel-header">
                                             <h5 className="panel-title">
@@ -455,9 +477,9 @@ function Dashboard() {
                             </div>
 
                             {/* Top Performing Courses Row */}
-                            <div className="row">
+                            <div className="row mb-3">
                                 {/* Top Performing Courses */}
-                                <div className="col-lg-12 mb-4">
+                                <div className="col-lg-12 mb-3">
                                     <div className="performance-panel-modern">
                                         <div className="panel-header">
                                             <h5 className="panel-title">

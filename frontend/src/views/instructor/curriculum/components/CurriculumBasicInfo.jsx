@@ -179,7 +179,7 @@ const CurriculumBasicInfo = forwardRef(({
                             <div className="spinner-border text-primary spinner-border-sm" role="status">
                                 <span className="visually-hidden">Loading...</span>
                             </div>
-                            <span className="ms-2 text-muted">Loading editor...</span>
+                            <span className="ms-2 text-muted">Loading content editor...</span>
                         </div>
                     }>
                         <CKEditor

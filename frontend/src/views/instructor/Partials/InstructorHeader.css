@@ -8,8 +8,9 @@
   overflow: hidden;
   box-shadow: 0 25px 50px var(--theme-shadow-color);
   min-height: 180px;
-  margin-top: 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .instructor-header-card::before {
@@ -41,6 +42,7 @@
 .instructor-header-content {
   position: relative;
   z-index: 1;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .instructor-profile-avatar {
@@ -468,11 +470,13 @@
 /* Collapsed State */
 .instructor-header-card.collapsed {
   min-height: auto;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .instructor-header-card.collapsed .instructor-header-content {
   display: none;
+  opacity: 0;
+  transform: translateY(-20px);
 }
 
 /* Hide main toggle button when collapsed */
@@ -484,13 +488,14 @@
 .instructor-header-collapsed {
   position: relative;
   z-index: 10;
-  animation: slideDown 0.3s ease;
+  /* Animation removed - no animation on page load */
 }
 
-@keyframes slideDown {
+/* Keyframes kept for potential future use but not applied by default */
+@keyframes slideDownSmooth {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
@@ -581,7 +586,9 @@
   transition: transform 0.3s ease;
 }
 
-/* Expanded State Animation */
+/* Expanded State - Animation removed for page load */
 .instructor-header-card:not(.collapsed) .instructor-header-content {
-  animation: slideDown 0.3s ease;
+  /* No animation on page load - only smooth transitions on collapse/expand */
+  opacity: 1;
+  transform: translateY(0);
 }

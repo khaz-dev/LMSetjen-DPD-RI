@@ -451,16 +451,32 @@ Best regards`;
                             </div>
                         </div>
 
-                        {/* Loading State */}
+                        {/* Loading State - Skeleton Cards */}
                         {isLoading ? (
-                            <div className="loading-state">
-                                <div className="loading-spinner-wrapper">
-                                    <div className="spinner-border text-primary" role="status">
-                                        <span className="visually-hidden">Loading...</span>
+                            <div className="row g-4">
+                                {[...Array(8)].map((_, index) => (
+                                    <div key={index} className="col-lg-3 col-md-6">
+                                        <div 
+                                            className="card border-0 h-100"
+                                            style={{
+                                                borderRadius: '16px',
+                                                background: '#f8f9fa',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
+                                            <div className="placeholder" style={{ height: '200px', background: '#e9ecef' }}></div>
+                                            <div className="card-body p-3">
+                                                <div className="placeholder rounded mb-2" style={{ width: '70%', height: '20px' }}></div>
+                                                <div className="placeholder rounded mb-2" style={{ width: '100%', height: '16px' }}></div>
+                                                <div className="placeholder rounded mb-3" style={{ width: '90%', height: '16px' }}></div>
+                                                <div className="d-flex justify-content-between">
+                                                    <div className="placeholder rounded" style={{ width: '45%', height: '14px' }}></div>
+                                                    <div className="placeholder rounded" style={{ width: '45%', height: '14px' }}></div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <h4>Loading courses...</h4>
-                                <p>Please wait while we fetch the latest courses for you.</p>
+                                ))}
                             </div>
                         ) : courses.length === 0 ? (
                             /* Empty State */

@@ -160,6 +160,32 @@ function Dashboard() {
     const getTotalLearningTime = () => totalLearningTime;
     const getCompletedLearningTime = () => completedLearningTime;
 
+    // Show full-page loading spinner on initial load
+    if (fetching) {
+        return (
+            <>
+                <BaseHeader />
+                <section className="dashboard-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                    <div className="container" style={{ flex: 1 }}>
+                        <Header />
+                        <div className="row mt-0 mt-md-4">
+                            <Sidebar />
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                                <div className="text-center">
+                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p className="mt-3 text-muted">Loading Dashboard...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <Footer />
+            </>
+        );
+    }
+
     return (
         <>
             <BaseHeader />
@@ -367,21 +393,13 @@ function Dashboard() {
                                             </div>
                                         </div>
                                         
-                                        {fetching ? (
-                                            <div className="card-body p-4 text-center">
-                                                <div className="spinner-border text-primary" role="status">
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </div>
-                                                <p className="mt-3 text-muted">Loading your courses...</p>
-                                            </div>
-                                        ) : (
-                                            <div className="card-body p-4 pt-0">
-                                                {progressData.length > 0 ? (
-                                                    <div className="row">
-                                                        {progressData.slice(0, 6).map((course, index) => (
-                                                            <div key={course.enrollment_id || index} className="col-md-6 mb-4">
-                                                                <div className="course-card">
-                                                                    <div className="card-body p-4 d-flex flex-column h-100">
+                                        <div className="card-body p-4 pt-0">
+                                            {progressData.length > 0 ? (
+                                                <div className="row">
+                                                    {progressData.slice(0, 6).map((course, index) => (
+                                                        <div key={course.enrollment_id || index} className="col-md-6 mb-4">
+                                                            <div className="course-card">
+                                                                <div className="card-body p-4 d-flex flex-column h-100">
                                                                         {/* Course Image with Overlay */}
                                                                         <div className="course-image-container">
                                                                             <img
@@ -509,7 +527,6 @@ function Dashboard() {
                                                     </div>
                                                 )}
                                             </div>
-                                        )}
                                     </div>
                                 </div>
                             </div>

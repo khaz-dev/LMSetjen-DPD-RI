@@ -348,3 +348,82 @@ span:has(> .spinner-border) {
   flex-shrink: 0 !important;
   border-radius: 50% !important;
 }
+
+/* ========================================
+   LOADING STATE CONSISTENCY FIX
+   Ensures all instructor page loading states have consistent spacing
+   ======================================== */
+
+/* Force consistent row spacing in loading states */
+section[style*="minHeight: calc(100vh - 120px)"] .row,
+section[style*="minHeight:calc(100vh - 120px)"] .row {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+@media (min-width: 768px) {
+  section[style*="minHeight: calc(100vh - 120px)"] .row,
+  section[style*="minHeight:calc(100vh - 120px)"] .row {
+    margin-top: 1.5rem !important;
+  }
+}
+
+
+/* Ensure loading spinner containers are always centered */
+.text-center:has(> .spinner-border) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+/* Prevent layout shift during initial load */
+[style*="display: flex"][style*="alignItems: center"][style*="justifyContent: center"] {
+  min-height: 60vh !important; /* Ensure consistent height */
+}
+
+/* Loading text spacing */
+.text-center .mt-3.text-muted {
+  margin-top: 1rem !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  color: #6c757d !important;
+}
+
+/* ========================================
+   GLOBAL SPINNER SIZE CONSTRAINTS
+   Prevent oversized, annoying loading spinners across entire project
+   ======================================== */
+
+/* Enforce maximum spinner size - NEVER bigger than 3rem */
+.spinner-border {
+  max-width: 3rem !important;
+  max-height: 3rem !important;
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+/* Default spinner size should be reasonable (2rem) */
+.spinner-border:not(.spinner-border-sm):not([style*="width"]) {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+/* Spinner-sm should be even smaller */
+.spinner-border-sm {
+  max-width: 1.5rem !important;
+  max-height: 1.5rem !important;
+}
+
+/* Prevent any inline styles from making spinners huge */
+.loading-spinner-wrapper .spinner-border,
+.loading-state .spinner-border {
+  max-width: 3rem !important;
+  max-height: 3rem !important;
+}
+
+/* ========================================
+   END SPINNER SIZE CONSTRAINTS
+   ======================================== */
+

@@ -7,6 +7,7 @@ import "./CourseQuiz.css";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import LoadingSpinner from "./Partials/LoadingSpinner";
+import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import WorkflowStepper from "../../components/WorkflowStepper";
@@ -393,7 +394,28 @@ function CourseQuiz() {
 
     // Show full-page loading spinner on initial load
     if (loading && !course) {
-        return <LoadingSpinner fullPage={true} message="Loading Quiz..." />;
+        return (
+            <>
+                <BaseHeader />
+                <div className="modern-dashboard" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                    <div className="container" style={{ flex: 1 }}>
+                        <Header />
+                        <div className="row">
+                            <Sidebar />
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                                <div className="text-center">
+                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p className="mt-3 text-muted">Loading Quiz...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <Footer />
+            </>
+        );
     }
 
     return (
@@ -403,7 +425,7 @@ function CourseQuiz() {
             <div className="modern-dashboard">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row">
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
                             {/* Workflow Stepper */}
@@ -558,12 +580,6 @@ function CourseQuiz() {
                                             quizzes.map((quiz) => (
                                                 <div key={quiz.quiz_id} className="quiz-card">
                                                     <div className="quiz-card-header">
-                                                        <div className="quiz-status">
-                                                            <span className={`status-badge ${quiz.is_active ? 'active' : 'inactive'}`}>
-                                                                <i className={`fas ${quiz.is_active ? 'fa-check-circle' : 'fa-pause-circle'}`}></i>
-                                                                {quiz.is_active ? 'Active' : 'Inactive'}
-                                                            </span>
-                                                        </div>
                                                         <div className="quiz-actions mb-0 pb-0">
                                                             <button 
                                                                 className="btn-icon"
@@ -579,6 +595,12 @@ function CourseQuiz() {
                                                             >
                                                                 <i className="fas fa-trash"></i>
                                                             </button>
+                                                        </div>
+                                                        <div className="quiz-status">
+                                                            <span className={`status-badge ${quiz.is_active ? 'active' : 'inactive'}`}>
+                                                                <i className={`fas ${quiz.is_active ? 'fa-check-circle' : 'fa-pause-circle'}`}></i>
+                                                                {quiz.is_active ? 'Active' : 'Inactive'}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                     <div className="quiz-card-body mb-0 pb-0">

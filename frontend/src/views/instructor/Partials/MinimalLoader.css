@@ -1,0 +1,57 @@
+/* Minimal Loader - Smooth page transitions without annoying full-page spinners */
+
+.minimal-loader-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.minimal-loader-bar {
+    height: 3px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        #3498db 25%,
+        #2980b9 50%,
+        #3498db 75%,
+        transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.minimal-loader-message {
+    position: fixed;
+    top: 10px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #2d3748;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    animation: fadeInOut 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes fadeInOut {
+    0%, 100% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 1;
+    }
+}

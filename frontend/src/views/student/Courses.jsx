@@ -49,7 +49,25 @@ function Courses() {
         return totalLectures > 0 ? Math.round((completedLessons / totalLectures) * 100) : 0;
     };
 
-    return (
+    if (fetching) {
+        return (
+            <>
+                <BaseHeader />
+                <section style={{ minHeight: 'calc(100vh - 120px)' }}>
+                    <div className="container">
+                        <Header />
+                        <div className="row mt-0 mt-md-4">
+                            <Sidebar />
+                            <div className="col-lg-9 col-md-8 col-12">
+                                <SkeletonPage contentType="cards" items={6} hasHeader={false} />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <Footer />
+            </>
+        );
+    }    return (
         <>
             <BaseHeader />
 
@@ -94,24 +112,14 @@ function Courses() {
                                 </div>
                             </div>
 
-                            {fetching === true && (
-                                <div className="d-flex justify-content-center py-5">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
-                                        <span className="visually-hidden">Loading...</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {fetching === false && (
-                                <>
-                                    {/* Search Section */}
-                                    <div className="search-card">
-                                        <div className="row align-items-center">
-                                            <div className="col-lg-6">
-                                                <h4 className="fw-bold mb-2 d-flex align-items-center">
-                                                    <i className="fas fa-search text-primary me-2"></i>
-                                                    Find Your Courses
-                                                </h4>
+                            {/* Search Section */}
+                            <div className="search-card">
+                                <div className="row align-items-center">
+                                    <div className="col-lg-6">
+                                        <h4 className="fw-bold mb-2 d-flex align-items-center">
+                                            <i className="fas fa-search text-primary me-2"></i>
+                                            Find Your Courses
+                                        </h4>
                                                 <p className="text-muted mb-0">Search through your enrolled courses</p>
                                             </div>
                                             <div className="col-lg-6 mt-3 mt-lg-0">
@@ -248,8 +256,6 @@ function Courses() {
                                             </Link>
                                         </div>
                                     )}
-                                </>
-                            )}
                         </div>
                     </div>
                 </div>

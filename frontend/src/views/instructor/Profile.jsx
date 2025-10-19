@@ -4,6 +4,7 @@ import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import LoadingSpinner from "./Partials/LoadingSpinner";
+import MinimalLoader from "./Partials/MinimalLoader";
 import ProfilePictureCropModal from "../../components/ProfilePictureCropModal/ProfilePictureCropModal";
 import CountrySelector from "../../components/CountrySelector/CountrySelector";
 
@@ -678,7 +679,28 @@ function Profile() {
 
     // Show full-page loading spinner on initial load
     if (uiState.loading && !profile) {
-        return <LoadingSpinner fullPage={true} message="Loading Profile..." />;
+        return (
+            <>
+                <BaseHeader />
+                <section className="instructor-profile-page modern-profile-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                    <div className="container" style={{ flex: 1 }}>
+                        <Header />
+                        <div className="row">
+                            <Sidebar />
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                                <div className="text-center">
+                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p className="mt-3 text-muted">Loading Profile...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <Footer />
+            </>
+        );
     }
 
     return (
@@ -688,7 +710,7 @@ function Profile() {
             <section className="instructor-profile-page modern-profile-page">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row">
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
                             {/* Modern Header Section */}

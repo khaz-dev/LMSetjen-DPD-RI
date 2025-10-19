@@ -57,17 +57,29 @@ const CourseQuiz = lazy(() => import("./views/instructor/CourseQuiz"));
 const DashboardAdmin = lazy(() => import("./views/admin/DashboardAdmin"));
 const UsersAdmin = lazy(() => import("./views/admin/UsersAdmin"));
 
-// Loading component for Suspense fallback
+// Loading component for Suspense fallback - Centered spinner
 const LoadingFallback = () => (
     <div 
         className="d-flex justify-content-center align-items-center" 
         style={{ 
             minHeight: '100vh',
-            paddingTop: '85px' // Account for fixed header
+            background: 'rgba(255, 255, 255, 0.98)',
+            paddingTop: '85px'
         }}
     >
-        <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+        <div className="text-center">
+            <div 
+                className="spinner-border text-primary" 
+                role="status"
+                style={{
+                    width: '2.5rem',
+                    height: '2.5rem',
+                    borderWidth: '0.25rem'
+                }}
+            >
+                <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="mt-3 text-muted" style={{ fontSize: '0.95rem' }}>Loading page...</p>
         </div>
     </div>
 );

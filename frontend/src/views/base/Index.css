@@ -791,6 +791,18 @@ body:has(.landing-page-container) {
 }
 
 /* ==========================================
+   SKELETON LOADING ANIMATION
+   ========================================== */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* ==========================================
    END OF INDEX PAGE SCOPED STYLES
    All styles are now isolated to .landing-page-container
    This prevents conflicts with other pages

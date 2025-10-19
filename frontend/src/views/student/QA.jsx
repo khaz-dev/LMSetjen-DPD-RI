@@ -31,7 +31,7 @@ function QA() {
     const [conversationMessages, setConversationMessages] = useState({});
     
     // Loading states
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [messageLoading, setMessageLoading] = useState(false);
     
     // Modal states
@@ -347,6 +347,31 @@ function QA() {
         </div>
     );
 
+    if (loading && enrolledCourses.length === 0) {
+        return (
+            <>
+                <BaseHeader />
+                <section style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                    <div className="container" style={{ flex: 1 }}>
+                        <Header />
+                        <div className="row mt-0 mt-md-4">
+                            <Sidebar />
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                                <div className="text-center">
+                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p className="mt-3 text-muted">Loading Q&A Forum...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <Footer />
+            </>
+        );
+    }
+
     return (
         <>
             <BaseHeader />
@@ -422,14 +447,7 @@ function QA() {
                                         </div>
 
                                         {/* Course Grid */}
-                                        {loading ? (
-                                            <div className="empty-state">
-                                                <div className="spinner-border text-primary qa-loading-spinner">
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </div>
-                                                <p className="mt-3">Loading your courses...</p>
-                                            </div>
-                                        ) : filteredCourses.length === 0 ? (
+                                        {filteredCourses.length === 0 ? (
                                             <div className="empty-state">
                                                 <i className="fas fa-search empty-icon"></i>
                                                 <h4 className="mb-3">No Courses Found</h4>
@@ -565,14 +583,7 @@ function QA() {
                                         </div>
 
                                         {/* Questions List */}
-                                        {loading ? (
-                                            <div className="empty-state">
-                                                <div className="spinner-border text-primary qa-loading-spinner">
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </div>
-                                                <p className="mt-3">Loading discussions...</p>
-                                            </div>
-                                        ) : questions?.length === 0 ? (
+                                        {questions?.length === 0 ? (
                                             <div className="empty-state">
                                                 <i className="fas fa-question-circle empty-icon"></i>
                                                 <h4 className="mb-3">No Questions Yet</h4>
