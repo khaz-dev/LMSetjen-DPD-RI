@@ -56,6 +56,7 @@ const CourseQuiz = lazy(() => import("./views/instructor/CourseQuiz"));
 // Admin Routes
 const DashboardAdmin = lazy(() => import("./views/admin/DashboardAdmin"));
 const UsersAdmin = lazy(() => import("./views/admin/UsersAdmin"));
+const SystemDocumentation = lazy(() => import("./views/admin/SystemDocumentation"));
 
 // Loading component for Suspense fallback - Centered spinner
 const LoadingFallback = () => (
@@ -376,6 +377,16 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={['admin']}>
                                             <UsersAdmin />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/admin/documentation/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={['admin']}>
+                                            <SystemDocumentation />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }
