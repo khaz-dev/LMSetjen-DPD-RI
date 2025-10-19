@@ -549,7 +549,7 @@ function Sidebar() {
                     .modern-students .row > .col-md-4:has(.instructor-sidebar.collapsed) {
                         flex: 0 0 auto !important;
                         width: auto !important;
-                        max-width: 85px !important;
+                        max-width: calc(85px + 1rem) !important; /* 85px sidebar + 16px gap */
                     }
                 `}
             </style>

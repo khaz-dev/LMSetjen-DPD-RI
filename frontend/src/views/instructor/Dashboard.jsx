@@ -4,6 +4,7 @@ import "./Dashboard.css";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import { calculateTotalDuration, getDurationStats } from "../../utils/durationUtils";
@@ -194,6 +195,11 @@ function Dashboard() {
             setCourses(filtered);
         }
     }, [originalCourses]);
+
+    // Show full-page loading spinner on initial load
+    if (loading) {
+        return <LoadingSpinner fullPage={true} message="Loading Dashboard..." />;
+    }
 
     return (
         <>

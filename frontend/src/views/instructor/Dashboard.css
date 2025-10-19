@@ -47,7 +47,7 @@
   padding-top: 0 !important;
 }
 
-/* UNIVERSAL FIX: Sidebar column - auto sizing */
+/* UNIVERSAL FIX: Sidebar column - auto sizing, wraps content */
 .modern-dashboard .row > .col-lg-3,
 .modern-dashboard .row > .col-md-4,
 .instructor-profile-page .row > .col-lg-3,
@@ -73,7 +73,9 @@
   padding-top: 0 !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
-  flex: 0 0 auto;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: fit-content !important;
   transition: all 0.3s ease;
 }
 
