@@ -2569,6 +2569,7 @@ class StudentQuizAttemptsAPIView(generics.ListAPIView):
 # Certificate API Views
 class StudentCertificateEligibilityAPIView(APIView):
     """Check if student is eligible for certificate and return certificate data"""
+    permission_classes = [AllowAny]  # Allow students to check eligibility
     
     def get(self, request, user_id, course_id):
         try:
@@ -2624,6 +2625,7 @@ class StudentCertificateEligibilityAPIView(APIView):
 
 class StudentCertificateGenerateAPIView(APIView):
     """Generate certificate for eligible student"""
+    permission_classes = [AllowAny]  # Allow students to generate certificates
     
     def post(self, request):
         try:
@@ -2674,6 +2676,7 @@ class StudentCertificateGenerateAPIView(APIView):
 
 class StudentCertificateDownloadAPIView(APIView):
     """Download certificate as PDF"""
+    permission_classes = [AllowAny]  # Allow anyone with certificate ID to view
     
     def get(self, request, certificate_id):
         try:
