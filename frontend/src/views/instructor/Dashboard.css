@@ -15,6 +15,14 @@
 
 .modern-dashboard .row {
   position: relative;
+  margin-top: 0 !important;
+}
+
+/* Remove top spacing from sidebar column specifically */
+.modern-dashboard .row > .col-lg-3,
+.modern-dashboard .row > .col-md-4 {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
 }
 
 /* Dashboard Header */

@@ -525,16 +525,10 @@ function Sidebar() {
                     .instructor-sidebar.collapsed .instructor-logout-btn .nav-text {
                         display: none;
                     }
-                    
-                    /* Remove any top gap from sidebar column */
-                    .modern-dashboard .row > [class*="col-"] {
-                        padding-top: 0;
-                        margin-top: 0;
-                    }
                 `}
             </style>
             
-            <div className="col-lg-3 col-md-4 col-12">
+            <div className="col-lg-3 col-md-4 col-12" style={{ paddingTop: 0, marginTop: 0 }}>
                 <nav className={`instructor-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
                     {/* Mobile Header */}
                     <div className="d-md-none">
@@ -562,12 +556,11 @@ function Sidebar() {
                                 <h5 className="mb-1 fw-bold">Instructor Dashboard</h5>
                                 <p className="mb-0 opacity-90 small">Manage courses & students</p>
                             </div>
-                            {/* Collapse Toggle Button (Desktop only) - Right end */}
+                            {/* Collapse Toggle Button - Right end via justify-content: space-between */}
                             <button 
                                 className="sidebar-toggle-btn d-flex"
                                 onClick={toggleSidebarCollapse}
                                 title="Collapse sidebar"
-                                style={{ marginLeft: 'auto' }}
                             >
                                 <i className="bi bi-chevron-left"></i>
                             </button>
