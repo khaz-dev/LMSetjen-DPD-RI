@@ -28,6 +28,7 @@ const CreateNewPassword = lazy(() => import("./views/auth/CreateNewPassword"));
 const Index = lazy(() => import("./views/base/Index"));
 const CourseDetail = lazy(() => import("./views/base/CourseDetail"));
 const Search = lazy(() => import("./views/base/Search"));
+const UserGuide = lazy(() => import("./views/base/UserGuide"));
 const NotFound = lazy(() => import("./views/base/NotFound"));
 
 // Student Routes
@@ -163,6 +164,7 @@ function App() {
                                 <Route path="/" element={<Index />} />
                                 <Route path="/course-detail/:slug/" element={<CourseDetail />} />
                                 <Route path="/search/" element={<Search />} />
+                                <Route path="/user-guide/" element={<UserGuide />} />
 
                                 {/* Student Routes */}
                                 <Route

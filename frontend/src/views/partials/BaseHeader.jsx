@@ -200,6 +200,13 @@ function BaseHeader() {
 
                 <div className="collapse navbar-collapse" id="navbarSupportedContent">
                     <div className="navbar-content">
+                        {/* User Guide Link */}
+                        <Link to="/user-guide/" className="nav-link-guide">
+                            <i className="fas fa-book-reader me-2"></i>
+                            <span className="d-none d-md-inline">Panduan Pengguna</span>
+                            <span className="d-inline d-md-none">Panduan</span>
+                        </Link>
+
                         {/* Search */}
                         {!isSearchPage && (
                             <div className="search-container">
