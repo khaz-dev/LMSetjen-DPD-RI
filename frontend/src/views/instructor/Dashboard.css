@@ -31,6 +31,22 @@
   flex-wrap: wrap;
 }
 
+/* CRITICAL: Override Bootstrap mt-md-4 class on container rows */
+.modern-dashboard .container > .row,
+.instructor-profile-page .container > .row,
+.instructor-review-page .container > .row,
+.instructor-notification-page .container > .row,
+.instructor-qa-detail-page .container > .row,
+.instructor-password-page .container > .row,
+.qa-bg-section .container > .row,
+.courses-container .container > .row,
+.course-create-container .container > .row,
+.course-edit-container .container > .row,
+.modern-students .container > .row {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
 /* UNIVERSAL FIX: Sidebar column - auto sizing */
 .modern-dashboard .row > .col-lg-3,
 .modern-dashboard .row > .col-md-4,
@@ -56,6 +72,7 @@
 .modern-students .row > .col-md-4 {
   padding-top: 0 !important;
   margin-top: 0 !important;
+  margin-bottom: 0 !important;
   flex: 0 0 auto;
   transition: all 0.3s ease;
 }

@@ -6,28 +6,20 @@ import Toast, { LogoutConfirmation } from "../../plugin/Toast";
 function Sidebar() {
     const location = useLocation();
     
-    // Collapse state - synced with header via localStorage and events
+    // Collapse state - INDEPENDENT from header, separate localStorage key
     const [isCollapsed, setIsCollapsed] = useState(() => {
-        const saved = localStorage.getItem('instructorHeaderCollapsed');
+        const saved = localStorage.getItem('instructorSidebarCollapsed');
         return saved === 'true';
     });
 
-    // Listen for header toggle events to sync sidebar
-    useEffect(() => {
-        const handleHeaderToggle = (e) => {
-            setIsCollapsed(e.detail.collapsed);
-        };
-        window.addEventListener('instructorHeaderToggle', handleHeaderToggle);
-        return () => window.removeEventListener('instructorHeaderToggle', handleHeaderToggle);
-    }, []);
-
-    // Toggle sidebar collapse
+    // Remove event listener - sidebar is now independent from header
+    
+    // Toggle sidebar collapse - INDEPENDENT
     const toggleSidebarCollapse = () => {
         const newState = !isCollapsed;
         setIsCollapsed(newState);
-        localStorage.setItem('instructorHeaderCollapsed', newState.toString());
-        // Notify header to sync
-        window.dispatchEvent(new CustomEvent('instructorHeaderToggle', { detail: { collapsed: newState } }));
+        localStorage.setItem('instructorSidebarCollapsed', newState.toString());
+        // No event dispatching - sidebar is now independent
     };
     
     // Check if current path is active
@@ -133,11 +125,17 @@ function Sidebar() {
                         align-self: flex-start;
                         display: flex;
                         flex-direction: column;
-                        margin-top: 0;
+                        margin-top: 0 !important;
+                        margin-right: 0;
                     }
                     
                     .instructor-sidebar:hover {
                         box-shadow: 0 12px 40px rgba(52, 152, 219, 0.18);
+                    }
+                    
+                    /* Add right margin when sidebar is collapsed */
+                    .instructor-sidebar.collapsed {
+                        margin-right: 1rem;
                     }
                     
                     .instructor-sidebar-header {
@@ -556,7 +554,7 @@ function Sidebar() {
                 `}
             </style>
             
-            <div className="col-lg-3 col-md-4 col-12" style={{ paddingTop: 0, marginTop: 0 }}>
+            <div className="col-lg-3 col-md-4 col-12" style={{ paddingTop: 0, marginTop: 0, marginBottom: 0 }}>
                 <nav className={`instructor-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
                     {/* Mobile Header */}
                     <div className="d-md-none">

@@ -16,7 +16,7 @@ function Header() {
   const [error, setError] = useState(null);
   const [lastFetchTime, setLastFetchTime] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    // Initialize from localStorage
+    // Initialize from localStorage - SEPARATE key for header
     const saved = localStorage.getItem('instructorHeaderCollapsed');
     return saved === 'true';
   });
@@ -26,13 +26,12 @@ function Header() {
   // Cache duration in milliseconds (5 minutes)
   const CACHE_DURATION = 5 * 60 * 1000;
 
-  // Toggle collapse state and save to localStorage
+  // Toggle collapse state and save to localStorage - INDEPENDENT from sidebar
   const toggleCollapse = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
     localStorage.setItem('instructorHeaderCollapsed', newState.toString());
-    // Dispatch custom event for sidebar to listen
-    window.dispatchEvent(new CustomEvent('instructorHeaderToggle', { detail: { collapsed: newState } }));
+    // No event dispatching - header is now independent
   };
 
   // Function to check if current page is active
