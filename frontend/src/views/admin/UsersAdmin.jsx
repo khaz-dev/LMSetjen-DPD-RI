@@ -222,7 +222,10 @@ function UsersAdmin() {
 
     // Sync external users data
     const syncData = async () => {
+        alert('🚀 SYNC DATA FUNCTION CALLED!');
         console.log('🚀 syncData function called');
+        console.error('🚀 syncData function called - ERROR LEVEL');
+        console.warn('🚀 syncData function called - WARN LEVEL');
         
         // Create new AbortController for this sync operation
         abortControllerRef.current = new AbortController();
@@ -242,6 +245,10 @@ function UsersAdmin() {
         
         console.log('📊 Setting initial progress:', initialProgress);
         setSyncProgress(initialProgress);
+        
+        // Add a small delay to ensure state is set
+        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('✅ After state set delay');
         
         try {
             // Update progress to syncing
@@ -442,7 +449,10 @@ function UsersAdmin() {
                             <div className="dashboard-actions">
                                 <button 
                                     className="btn-modern-primary btn-sync" 
-                                    onClick={syncData}
+                                    onClick={() => {
+                                        console.log('⚡⚡⚡ BUTTON CLICKED! ⚡⚡⚡');
+                                        syncData();
+                                    }}
                                     disabled={syncing}
                                 >
                                     {syncing ? (
