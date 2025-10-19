@@ -504,25 +504,6 @@ function CourseEdit() {
     }
 
     return (
-                                <div className="course-form-card card">
-                                    <div className="loading-overlay">
-                                        <div className="loading-content">
-                                            <div className="loading-spinner"></div>
-                                            <h5 className="text-muted mb-2">Loading course data...</h5>
-                                            <p className="text-muted mb-0">Please wait while we fetch your course information</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <Footer />
-            </>
-        );
-    }
-
-    return (
         <>
             <BaseHeader />         
             <section className="course-edit-container">
