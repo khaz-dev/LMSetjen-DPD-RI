@@ -147,13 +147,34 @@ function Courses() {
                                             <div className="col-lg-3 col-md-3 col-12 mb-3 mb-md-0">
                                                 <div className="course-image-wrapper">
                                                     <Link to={`/student/courses/${c.enrollment_id}/`}>
-                                                        <img
-                                                            src={c.course.image}
-                                                            alt="course"
-                                                            className="course-image w-100"
-                                                        />
-                                                        <div className="course-image-overlay">
-                                                            <i className="fas fa-play-circle play-icon"></i>
+                                                        {c?.course?.image ? (
+                                                            <>
+                                                                <img
+                                                                    src={c.course.image}
+                                                                    alt="course"
+                                                                    className="course-image w-100"
+                                                                    onError={(e) => {
+                                                                        e.target.style.display = 'none';
+                                                                        e.target.nextSibling.nextSibling.style.display = 'flex';
+                                                                    }}
+                                                                />
+                                                                <div className="course-image-overlay">
+                                                                    <i className="fas fa-play-circle play-icon"></i>
+                                                                </div>
+                                                            </>
+                                                        ) : null}
+                                                        <div 
+                                                            className="course-placeholder" 
+                                                            style={{ 
+                                                                display: c?.course?.image ? 'none' : 'flex', 
+                                                                alignItems: 'center', 
+                                                                justifyContent: 'center', 
+                                                                height: '150px', 
+                                                                backgroundColor: '#f0f0f0', 
+                                                                borderRadius: '8px' 
+                                                            }}
+                                                        >
+                                                            <i className="fas fa-graduation-cap" style={{ fontSize: '36px', color: '#ccc' }}></i>
                                                         </div>
                                                     </Link>
                                                 </div>

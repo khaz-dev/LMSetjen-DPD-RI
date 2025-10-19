@@ -400,19 +400,29 @@ function Dashboard() {
                                                         <div key={course.enrollment_id || index} className="col-md-6 mb-4">
                                                             <div className="course-card">
                                                                 <div className="card-body p-4 d-flex flex-column h-100">
-                                                                        {/* Course Image with Overlay */}
-                                                                        <div className="course-image-container">
-                                                                            <img
-                                                                                src={course.course.image}
-                                                                                alt={course.course.title}
-                                                                                className="course-image"
-                                                                            />
-                                                                            <div className="course-image-overlay">
-                                                                                <i className="fas fa-play-circle course-play-icon"></i>
-                                                                            </div>
-                                                                        </div>
-                                                                        
-                                                                        {/* Course Title */}
+                                                        {/* Course Image with Overlay */}
+                                                        <div className="course-image-container">
+                                                            {course?.course?.image ? (
+                                                                <>
+                                                                    <img
+                                                                        src={course.course.image}
+                                                                        alt={course.course.title || 'Course'}
+                                                                        className="course-image"
+                                                                        onError={(e) => {
+                                                                            e.target.style.display = 'none';
+                                                                            e.target.parentElement.querySelector('.course-placeholder').style.display = 'flex';
+                                                                        }}
+                                                                    />
+                                                                    <div className="course-image-overlay">
+                                                                        <i className="fas fa-play-circle course-play-icon"></i>
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <div className="course-placeholder" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
+                                                                    <i className="fas fa-graduation-cap" style={{ fontSize: '48px', color: '#ccc' }}></i>
+                                                                </div>
+                                                            )}
+                                                        </div>                                                                        {/* Course Title */}
                                                                         <Link 
                                                                             to={`/student/courses/${course.enrollment_id}/`}
                                                                             className="text-decoration-none"

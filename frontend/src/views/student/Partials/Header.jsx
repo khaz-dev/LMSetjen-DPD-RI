@@ -143,12 +143,12 @@ function Header() {
                         <span className="visually-hidden">Loading...</span>
                       </div>
                     </div>
-                  ) : profile.image && !imageError ? (
+                  ) : profile?.image && !imageError ? (
                     <img
                       key={profile.image} // Force re-render when image URL changes
                       src={profile.image}
                       className="profile-avatar"
-                      alt={`${profile.full_name || 'User'} avatar`}
+                      alt={`${profile?.full_name || 'User'} avatar`}
                       onError={() => {
                         setImageError(true);
                       }}

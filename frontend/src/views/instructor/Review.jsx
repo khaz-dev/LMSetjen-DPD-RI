@@ -319,17 +319,38 @@ function Review() {
                                                                 background: 'linear-gradient(135deg, #3498db, #2980b9)',
                                                                 borderRadius: '50%'
                                                             }}>
-                                                                <img
-                                                                    src={r.profile.image}
-                                                                    alt="avatar"
-                                                                    className="rounded-circle"
-                                                                    style={{
+                                                                {r.profile?.image ? (
+                                                                    <img
+                                                                        src={r.profile.image}
+                                                                        alt="avatar"
+                                                                        className="rounded-circle"
+                                                                        style={{
+                                                                            width: "70px",
+                                                                            height: "70px",
+                                                                            objectFit: "cover",
+                                                                            border: '3px solid white'
+                                                                        }}
+                                                                        onError={(e) => {
+                                                                            e.target.style.display = 'none';
+                                                                            e.target.parentElement.innerHTML = '<div style="width: 70px; height: 70px; background: #3498db; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px;"><i class="fas fa-user"></i></div>';
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div style={{
                                                                         width: "70px",
                                                                         height: "70px",
-                                                                        objectFit: "cover",
+                                                                        background: '#3498db',
+                                                                        borderRadius: '50%',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        color: 'white',
+                                                                        fontSize: '28px',
                                                                         border: '3px solid white'
-                                                                    }}
-                                                                />
+                                                                    }}>
+                                                                        <i className="fas fa-user"></i>
+                                                                    </div>
+                                                                )}
                                                                 <div style={{
                                                                     position: 'absolute',
                                                                     bottom: '5px',
