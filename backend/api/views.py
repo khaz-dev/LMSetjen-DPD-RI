@@ -2567,6 +2567,7 @@ class StudentQuizAttemptsAPIView(generics.ListAPIView):
 
 
 # Certificate API Views
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentCertificateEligibilityAPIView(APIView):
     """Check if student is eligible for certificate and return certificate data"""
     permission_classes = [AllowAny]  # Allow students to check eligibility
@@ -2623,6 +2624,7 @@ class StudentCertificateEligibilityAPIView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentCertificateGenerateAPIView(APIView):
     """Generate certificate for eligible student"""
     permission_classes = [AllowAny]  # Allow students to generate certificates
@@ -2674,6 +2676,7 @@ class StudentCertificateGenerateAPIView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentCertificateDownloadAPIView(APIView):
     """Download certificate as PDF"""
     permission_classes = [AllowAny]  # Allow anyone with certificate ID to view
