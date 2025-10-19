@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { logout } from "../../../utils/auth";
 import Toast, { LogoutConfirmation } from "../../plugin/Toast";
+import "./Sidebar.css";
 
 function Sidebar() {
     const location = useLocation();
@@ -522,71 +523,6 @@ function Sidebar() {
                     
                     .instructor-sidebar.collapsed .instructor-logout-btn .nav-text {
                         display: none;
-                    }
-                    
-                    /* UNIVERSAL FIX: Shrink column when sidebar is collapsed - applies to ALL instructor pages */
-                    .modern-dashboard .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .modern-dashboard .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .instructor-profile-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .instructor-profile-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .instructor-review-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .instructor-review-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .instructor-notification-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .instructor-notification-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .instructor-qa-detail-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .instructor-qa-detail-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .instructor-password-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .instructor-password-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .qa-bg-section .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .qa-bg-section .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .courses-container .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .courses-container .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .course-create-container .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .course-create-container .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .course-edit-container .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .course-edit-container .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .modern-students .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .modern-students .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .instructor-profile-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .instructor-profile-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .instructor-notification-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .instructor-notification-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .instructor-review-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .instructor-review-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .instructor-qa-detail-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .instructor-qa-detail-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
-                    .instructor-password-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .instructor-password-page .row > .col-md-4:has(.instructor-sidebar.collapsed) {
-                        flex: 0 0 auto !important;
-                        width: auto !important;
-                        max-width: calc(85px + 1rem) !important; /* 85px sidebar + 16px gap */
-                    }
-                    
-                    /* Expand main content column when sidebar is collapsed */
-                    .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-                    .qa-bg-section .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .qa-bg-section .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-                    .courses-container .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .courses-container .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-                    .course-create-container .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .course-create-container .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-                    .course-edit-container .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .course-edit-container .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-                    .modern-students .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .modern-students .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-                    .instructor-profile-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .instructor-profile-page .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-                    .instructor-notification-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .instructor-notification-page .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-                    .instructor-review-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .instructor-review-page .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-                    .instructor-qa-detail-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .instructor-qa-detail-page .row:has(.instructor-sidebar.collapsed) > .col-md-8,
-                    .instructor-password-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9,
-                    .instructor-password-page .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
-                        flex: 1 1 auto !important;
-                        max-width: 100% !important;
                     }
                 `}
             </style>
