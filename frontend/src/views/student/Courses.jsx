@@ -8,6 +8,7 @@ import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
+import { SkeletonPage } from "../../components/skeletons";
 import "./Courses.css";
 
 function Courses() {
