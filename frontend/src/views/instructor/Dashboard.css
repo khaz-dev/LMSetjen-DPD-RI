@@ -16,6 +16,8 @@
 .modern-dashboard .row {
   position: relative;
   margin-top: 0 !important;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 /* Remove top spacing from sidebar column specifically */
@@ -23,6 +25,16 @@
 .modern-dashboard .row > .col-md-4 {
   padding-top: 0 !important;
   margin-top: 0 !important;
+  flex: 0 0 auto;
+  transition: all 0.3s ease;
+}
+
+/* Content column should fill remaining space */
+.modern-dashboard .row > .col-lg-9,
+.modern-dashboard .row > .col-md-8 {
+  flex: 1 1 auto;
+  max-width: 100%;
+  transition: all 0.3s ease;
 }
 
 /* Dashboard Header */

@@ -525,6 +525,14 @@ function Sidebar() {
                     .instructor-sidebar.collapsed .instructor-logout-btn .nav-text {
                         display: none;
                     }
+                    
+                    /* Shrink column when sidebar is collapsed */
+                    .modern-dashboard .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .modern-dashboard .row > .col-md-4:has(.instructor-sidebar.collapsed) {
+                        flex: 0 0 auto !important;
+                        width: auto !important;
+                        max-width: 85px !important;
+                    }
                 `}
             </style>
             
