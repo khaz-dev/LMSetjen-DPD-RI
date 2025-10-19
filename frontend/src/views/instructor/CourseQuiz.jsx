@@ -397,35 +397,6 @@ function CourseQuiz() {
     }
 
     return (
-                    justifyContent: 'center',
-                    minHeight: '100vh', // Changed from 50vh to 100vh for full vertical centering
-                    width: '100vw',     // Ensure it takes full width
-                    position: 'fixed',  // Overlay on top of everything
-                    top: 0,
-                    left: 0,
-                    zIndex: 9999,       // On top of other content
-                    background: 'rgba(255,255,255,0.95)' // Optional: subtle overlay
-                }}
-            >
-                <div
-                    className="spinner-border text-primary"
-                    role="status"
-                    style={{
-                        width: '3rem',
-                        height: '3rem',
-                        flexShrink: 0,
-                        borderWidth: '0.25em',
-                        marginBottom: '1rem'
-                    }}
-                >
-                    <span className="visually-hidden">Loading...</span>
-                </div>
-                <p>Loading quiz management...</p>
-            </div>
-        );
-    }
-
-    return (
         <>
             <BaseHeader />
 
