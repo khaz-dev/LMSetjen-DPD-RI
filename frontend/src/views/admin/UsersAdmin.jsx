@@ -56,6 +56,15 @@ function UsersAdmin() {
         password: '',
         password2: ''
     });
+    
+    const [passwordValidation, setPasswordValidation] = useState({
+        length: false,
+        uppercase: false,
+        lowercase: false,
+        number: false,
+        special: false,
+        notCommon: true
+    });
 
     const api = useAxios;
 
@@ -119,6 +128,20 @@ function UsersAdmin() {
         }
 
         setFilteredUsers(filtered);
+    };
+    
+    // Validate password strength
+    const validatePassword = (password) => {
+        const commonPasswords = ['password', '12345678', 'qwerty', 'abc123', 'password123', 'admin', 'letmein'];
+        
+        setPasswordValidation({
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+            notCommon: !commonPasswords.includes(password.toLowerCase())
+        });
     };
 
     // Handle form submission for create/edit user
@@ -222,10 +245,6 @@ function UsersAdmin() {
 
     // Sync external users data
     const syncData = async () => {
-        alert('🚀 SYNC DATA FUNCTION CALLED!');
-        console.log('🚀 syncData function called');
-        console.error('🚀 syncData function called - ERROR LEVEL');
-        console.warn('🚀 syncData function called - WARN LEVEL');
         
         // Create new AbortController for this sync operation
         abortControllerRef.current = new AbortController();
@@ -993,9 +1012,41 @@ function UsersAdmin() {
                                                                 className="form-input-modern"
                                                                 placeholder="Enter secure password"
                                                                 value={formData.password}
-                                                                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                                                onChange={(e) => {
+                                                                    setFormData({...formData, password: e.target.value});
+                                                                    validatePassword(e.target.value);
+                                                                }}
                                                                 required
                                                             />
+                                                            <div className="password-requirements">
+                                                                <p className="requirements-title">Password must contain:</p>
+                                                                <div className="requirement-list">
+                                                                    <div className={`requirement-item ${passwordValidation.length ? 'valid' : ''}`}>
+                                                                        {passwordValidation.length ? <FaCheck /> : <FaTimes />}
+                                                                        <span>At least 8 characters</span>
+                                                                    </div>
+                                                                    <div className={`requirement-item ${passwordValidation.uppercase ? 'valid' : ''}`}>
+                                                                        {passwordValidation.uppercase ? <FaCheck /> : <FaTimes />}
+                                                                        <span>One uppercase letter (A-Z)</span>
+                                                                    </div>
+                                                                    <div className={`requirement-item ${passwordValidation.lowercase ? 'valid' : ''}`}>
+                                                                        {passwordValidation.lowercase ? <FaCheck /> : <FaTimes />}
+                                                                        <span>One lowercase letter (a-z)</span>
+                                                                    </div>
+                                                                    <div className={`requirement-item ${passwordValidation.number ? 'valid' : ''}`}>
+                                                                        {passwordValidation.number ? <FaCheck /> : <FaTimes />}
+                                                                        <span>One number (0-9)</span>
+                                                                    </div>
+                                                                    <div className={`requirement-item ${passwordValidation.special ? 'valid' : ''}`}>
+                                                                        {passwordValidation.special ? <FaCheck /> : <FaTimes />}
+                                                                        <span>One special character (!@#$%...)</span>
+                                                                    </div>
+                                                                    <div className={`requirement-item ${passwordValidation.notCommon ? 'valid' : ''}`}>
+                                                                        {passwordValidation.notCommon ? <FaCheck /> : <FaTimes />}
+                                                                        <span>Not a common password</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     
@@ -1014,6 +1065,16 @@ function UsersAdmin() {
                                                                 onChange={(e) => setFormData({...formData, password2: e.target.value})}
                                                                 required
                                                             />
+                                                            {formData.password2 && formData.password !== formData.password2 && (
+                                                                <div className="password-match-error">
+                                                                    <FaTimes /> Passwords do not match
+                                                                </div>
+                                                            )}
+                                                            {formData.password2 && formData.password === formData.password2 && (
+                                                                <div className="password-match-success">
+                                                                    <FaCheck /> Passwords match
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </>
