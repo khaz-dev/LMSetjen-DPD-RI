@@ -526,9 +526,29 @@ function Sidebar() {
                         display: none;
                     }
                     
-                    /* Shrink column when sidebar is collapsed */
+                    /* UNIVERSAL FIX: Shrink column when sidebar is collapsed - applies to ALL instructor pages */
                     .modern-dashboard .row > .col-lg-3:has(.instructor-sidebar.collapsed),
-                    .modern-dashboard .row > .col-md-4:has(.instructor-sidebar.collapsed) {
+                    .modern-dashboard .row > .col-md-4:has(.instructor-sidebar.collapsed),
+                    .instructor-profile-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .instructor-profile-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
+                    .instructor-review-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .instructor-review-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
+                    .instructor-notification-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .instructor-notification-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
+                    .instructor-qa-detail-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .instructor-qa-detail-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
+                    .instructor-password-page .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .instructor-password-page .row > .col-md-4:has(.instructor-sidebar.collapsed),
+                    .qa-bg-section .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .qa-bg-section .row > .col-md-4:has(.instructor-sidebar.collapsed),
+                    .courses-container .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .courses-container .row > .col-md-4:has(.instructor-sidebar.collapsed),
+                    .course-create-container .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .course-create-container .row > .col-md-4:has(.instructor-sidebar.collapsed),
+                    .course-edit-container .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .course-edit-container .row > .col-md-4:has(.instructor-sidebar.collapsed),
+                    .modern-students .row > .col-lg-3:has(.instructor-sidebar.collapsed),
+                    .modern-students .row > .col-md-4:has(.instructor-sidebar.collapsed) {
                         flex: 0 0 auto !important;
                         width: auto !important;
                         max-width: 85px !important;

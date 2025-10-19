@@ -13,25 +13,76 @@
   position: relative;
 }
 
-.modern-dashboard .row {
+/* UNIVERSAL FIX: Apply flexbox layout to ALL instructor pages */
+.modern-dashboard .row,
+.instructor-profile-page .row,
+.instructor-review-page .row,
+.instructor-notification-page .row,
+.instructor-qa-detail-page .row,
+.instructor-password-page .row,
+.qa-bg-section .row,
+.courses-container .row,
+.course-create-container .row,
+.course-edit-container .row,
+.modern-students .row {
   position: relative;
   margin-top: 0 !important;
   display: flex;
   flex-wrap: wrap;
 }
 
-/* Remove top spacing from sidebar column specifically */
+/* UNIVERSAL FIX: Sidebar column - auto sizing */
 .modern-dashboard .row > .col-lg-3,
-.modern-dashboard .row > .col-md-4 {
+.modern-dashboard .row > .col-md-4,
+.instructor-profile-page .row > .col-lg-3,
+.instructor-profile-page .row > .col-md-4,
+.instructor-review-page .row > .col-lg-3,
+.instructor-review-page .row > .col-md-4,
+.instructor-notification-page .row > .col-lg-3,
+.instructor-notification-page .row > .col-md-4,
+.instructor-qa-detail-page .row > .col-lg-3,
+.instructor-qa-detail-page .row > .col-md-4,
+.instructor-password-page .row > .col-lg-3,
+.instructor-password-page .row > .col-md-4,
+.qa-bg-section .row > .col-lg-3,
+.qa-bg-section .row > .col-md-4,
+.courses-container .row > .col-lg-3,
+.courses-container .row > .col-md-4,
+.course-create-container .row > .col-lg-3,
+.course-create-container .row > .col-md-4,
+.course-edit-container .row > .col-lg-3,
+.course-edit-container .row > .col-md-4,
+.modern-students .row > .col-lg-3,
+.modern-students .row > .col-md-4 {
   padding-top: 0 !important;
   margin-top: 0 !important;
   flex: 0 0 auto;
   transition: all 0.3s ease;
 }
 
-/* Content column should fill remaining space */
+/* UNIVERSAL FIX: Content column - fills remaining space */
 .modern-dashboard .row > .col-lg-9,
-.modern-dashboard .row > .col-md-8 {
+.modern-dashboard .row > .col-md-8,
+.instructor-profile-page .row > .col-lg-9,
+.instructor-profile-page .row > .col-md-8,
+.instructor-review-page .row > .col-lg-9,
+.instructor-review-page .row > .col-md-8,
+.instructor-notification-page .row > .col-lg-9,
+.instructor-notification-page .row > .col-md-8,
+.instructor-qa-detail-page .row > .col-lg-9,
+.instructor-qa-detail-page .row > .col-md-8,
+.instructor-password-page .row > .col-lg-9,
+.instructor-password-page .row > .col-md-8,
+.qa-bg-section .row > .col-lg-9,
+.qa-bg-section .row > .col-md-8,
+.courses-container .row > .col-lg-9,
+.courses-container .row > .col-md-8,
+.course-create-container .row > .col-lg-9,
+.course-create-container .row > .col-md-8,
+.course-edit-container .row > .col-lg-9,
+.course-edit-container .row > .col-md-8,
+.modern-students .row > .col-lg-9,
+.modern-students .row > .col-md-8 {
   flex: 1 1 auto;
   max-width: 100%;
   transition: all 0.3s ease;
