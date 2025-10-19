@@ -2570,6 +2570,7 @@ class StudentQuizAttemptsAPIView(generics.ListAPIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentCertificateEligibilityAPIView(APIView):
     """Check if student is eligible for certificate and return certificate data"""
+    authentication_classes = []
     permission_classes = [AllowAny]  # Allow students to check eligibility
     
     def get(self, request, user_id, course_id):
@@ -2627,6 +2628,7 @@ class StudentCertificateEligibilityAPIView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentCertificateGenerateAPIView(APIView):
     """Generate certificate for eligible student"""
+    authentication_classes = []
     permission_classes = [AllowAny]  # Allow students to generate certificates
     
     def post(self, request):
@@ -2679,6 +2681,7 @@ class StudentCertificateGenerateAPIView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentCertificateDownloadAPIView(APIView):
     """Download certificate as PDF"""
+    authentication_classes = []
     permission_classes = [AllowAny]  # Allow anyone with certificate ID to view
     
     def get(self, request, certificate_id):
