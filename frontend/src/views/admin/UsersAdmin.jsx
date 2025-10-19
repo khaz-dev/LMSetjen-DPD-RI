@@ -222,11 +222,14 @@ function UsersAdmin() {
 
     // Sync external users data
     const syncData = async () => {
+        console.log('🚀 syncData function called');
+        
         // Create new AbortController for this sync operation
         abortControllerRef.current = new AbortController();
         
         setSyncing(true);
-        setSyncProgress({
+        
+        const initialProgress = {
             show: true,
             status: 'initializing',
             message: 'Connecting to external API...',
@@ -235,7 +238,10 @@ function UsersAdmin() {
             failed: 0,
             total: 0,
             errors: []
-        });
+        };
+        
+        console.log('📊 Setting initial progress:', initialProgress);
+        setSyncProgress(initialProgress);
         
         try {
             // Update progress to syncing
@@ -1024,7 +1030,10 @@ function UsersAdmin() {
             </section>
 
             {/* Sync Progress Modal */}
-            {syncProgress.show && (
+            {(() => {
+                console.log('🎨 Modal render check - syncProgress.show:', syncProgress.show, 'syncProgress:', syncProgress);
+                return syncProgress.show;
+            })() && (
                 <div className="sync-modal">
                     <div className="sync-progress-modal">
                         {/* Modal Header */}
