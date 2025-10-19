@@ -15,6 +15,9 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
     const [quizResults, setQuizResults] = useState([]);
     const certificateRef = useRef();
 
+    // Use WebP with PNG fallback for better performance
+    const certificateBackground = certificateBackgroundWebP || certificateBackgroundPNG;
+
     // Check eligibility for certificate
     const checkEligibility = async () => {
         try {
