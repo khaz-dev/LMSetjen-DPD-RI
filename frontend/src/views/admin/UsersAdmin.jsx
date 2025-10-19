@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
     FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaUserGraduate, FaUserTie, 
     FaUsers, FaChartLine, FaUserCheck, FaUserTimes, FaDownload, FaFilter,
-    FaCog, FaUserCog, FaChevronDown, FaBell, FaSpinner, FaArrowRight
+    FaCog, FaUserCog, FaChevronDown, FaBell, FaSpinner, FaArrowRight, FaTimes, FaCheck
 } from 'react-icons/fa';
 import { 
     MdFilterList, MdDownload, MdCheckBox, MdCheckBoxOutlineBlank,
@@ -20,6 +20,16 @@ function UsersAdmin() {
     const [filteredUsers, setFilteredUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
+    const [syncProgress, setSyncProgress] = useState({
+        show: false,
+        status: 'initializing', // initializing, syncing, completed, error, cancelled
+        message: 'Preparing to sync...',
+        created: 0,
+        updated: 0,
+        failed: 0,
+        total: 0,
+        errors: []
+    });
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -35,6 +45,9 @@ function UsersAdmin() {
         teachers: 0,
         admins: 0
     });
+    
+    // AbortController for cancelling sync
+    const abortControllerRef = useRef(null);
     
     const [formData, setFormData] = useState({
         full_name: '',
@@ -209,36 +222,107 @@ function UsersAdmin() {
 
     // Sync external users data
     const syncData = async () => {
+        // Create new AbortController for this sync operation
+        abortControllerRef.current = new AbortController();
+        
         setSyncing(true);
+        setSyncProgress({
+            show: true,
+            status: 'initializing',
+            message: 'Connecting to external API...',
+            created: 0,
+            updated: 0,
+            failed: 0,
+            total: 0,
+            errors: []
+        });
+        
         try {
-            const response = await api.post('/admin/sync-external-users/');
+            // Update progress to syncing
+            setSyncProgress(prev => ({
+                ...prev,
+                status: 'syncing',
+                message: 'Syncing user data from external source...'
+            }));
+            
+            const response = await api.post('/admin/sync-external-users/', {}, {
+                signal: abortControllerRef.current.signal
+            });
+            
             const { results } = response.data;
+            
+            // Update progress with results
+            setSyncProgress(prev => ({
+                ...prev,
+                status: 'completed',
+                message: 'Sync completed successfully!',
+                created: results.created || 0,
+                updated: results.updated || 0,
+                failed: results.failed || 0,
+                total: results.total_users || 0,
+                errors: results.errors || []
+            }));
             
             Toast().fire({
                 icon: "success",
-                title: `Sync completed successfully! Created: ${results.created}, Updated: ${results.updated}, Total: ${results.total_users}`,
+                title: `Sync completed! Created: ${results.created}, Updated: ${results.updated}`,
             });
+            
             if (results.errors && results.errors.length > 0) {
                 console.warn('Sync errors:', results.errors);
-                Toast().fire({
-                    icon: "warning",
-                    title: `Sync completed with ${results.errors.length} errors. Check console for details.`,
-                });
-
             }
             
             // Refresh users list after sync
             await fetchUsers();
             
         } catch (error) {
-            console.error('Error syncing external users:', error);
-            Toast().fire({
-                icon: "error",
-                title: error.response?.data?.error || 'Failed to sync external users data'
-            });
+            // Check if it was cancelled
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+                setSyncProgress(prev => ({
+                    ...prev,
+                    status: 'cancelled',
+                    message: 'Sync operation was cancelled by user'
+                }));
+                
+                Toast().fire({
+                    icon: "info",
+                    title: 'Sync operation cancelled'
+                });
+            } else {
+                console.error('Error syncing external users:', error);
+                
+                setSyncProgress(prev => ({
+                    ...prev,
+                    status: 'error',
+                    message: error.response?.data?.error || 'Failed to sync external users data',
+                    errors: [error.response?.data?.error || error.message]
+                }));
+                
+                Toast().fire({
+                    icon: "error",
+                    title: error.response?.data?.error || 'Failed to sync external users data'
+                });
+            }
         } finally {
             setSyncing(false);
+            abortControllerRef.current = null;
         }
+    };
+    
+    // Cancel sync operation
+    const cancelSync = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            setSyncing(false);
+        }
+    };
+    
+    // Close sync progress modal
+    const closeSyncProgress = () => {
+        setSyncProgress(prev => ({
+            ...prev,
+            show: false
+        }));
     };
 
     // Modal handlers
@@ -938,6 +1022,169 @@ function UsersAdmin() {
                     )}
                 </div>
             </section>
+
+            {/* Sync Progress Modal */}
+            {syncProgress.show && (
+                <div className="modal-overlay-modern active">
+                    <div className="modal-container-modern sync-modal">
+                        <div className="modal-header-modern">
+                            <h2>
+                                <MdSync className={syncing ? 'spinning' : ''} />
+                                Syncing External User Data
+                            </h2>
+                            {!syncing && syncProgress.status !== 'cancelled' && (
+                                <button className="modal-close-modern" onClick={closeSyncProgress}>
+                                    <FaTimes />
+                                </button>
+                            )}
+                        </div>
+                        
+                        <div className="modal-body-modern sync-progress-body">
+                            {/* Status Message */}
+                            <div className={`sync-status sync-status-${syncProgress.status}`}>
+                                {syncProgress.status === 'initializing' && (
+                                    <FaSpinner className="status-icon spinning" />
+                                )}
+                                {syncProgress.status === 'syncing' && (
+                                    <FaSpinner className="status-icon spinning" />
+                                )}
+                                {syncProgress.status === 'completed' && (
+                                    <FaCheck className="status-icon" />
+                                )}
+                                {syncProgress.status === 'error' && (
+                                    <FaTimes className="status-icon" />
+                                )}
+                                {syncProgress.status === 'cancelled' && (
+                                    <FaTimes className="status-icon" />
+                                )}
+                                <p className="sync-message">{syncProgress.message}</p>
+                            </div>
+
+                            {/* Progress Stats */}
+                            {(syncProgress.status === 'syncing' || syncProgress.status === 'completed') && (
+                                <div className="sync-stats">
+                                    <div className="sync-stat-item">
+                                        <div className="stat-icon stat-created">
+                                            <MdPersonAdd />
+                                        </div>
+                                        <div className="stat-content">
+                                            <div className="stat-value">{syncProgress.created}</div>
+                                            <div className="stat-label">Created</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="sync-stat-item">
+                                        <div className="stat-icon stat-updated">
+                                            <FaEdit />
+                                        </div>
+                                        <div className="stat-content">
+                                            <div className="stat-value">{syncProgress.updated}</div>
+                                            <div className="stat-label">Updated</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="sync-stat-item">
+                                        <div className="stat-icon stat-total">
+                                            <MdPeople />
+                                        </div>
+                                        <div className="stat-content">
+                                            <div className="stat-value">{syncProgress.total}</div>
+                                            <div className="stat-label">Total Processed</div>
+                                        </div>
+                                    </div>
+                                    
+                                    {syncProgress.failed > 0 && (
+                                        <div className="sync-stat-item">
+                                            <div className="stat-icon stat-failed">
+                                                <FaTimes />
+                                            </div>
+                                            <div className="stat-content">
+                                                <div className="stat-value">{syncProgress.failed}</div>
+                                                <div className="stat-label">Failed</div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Progress Bar */}
+                            {syncing && (
+                                <div className="sync-progress-bar">
+                                    <div className="progress-bar-animated">
+                                        <div className="progress-bar-fill"></div>
+                                    </div>
+                                    <p className="progress-text">Processing...</p>
+                                </div>
+                            )}
+
+                            {/* Error List */}
+                            {syncProgress.errors.length > 0 && (
+                                <div className="sync-errors">
+                                    <h4>
+                                        <FaTimes />
+                                        Errors Encountered ({syncProgress.errors.length})
+                                    </h4>
+                                    <ul className="error-list">
+                                        {syncProgress.errors.slice(0, 5).map((error, index) => (
+                                            <li key={index}>{error}</li>
+                                        ))}
+                                        {syncProgress.errors.length > 5 && (
+                                            <li className="error-more">
+                                                ...and {syncProgress.errors.length - 5} more errors
+                                            </li>
+                                        )}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="sync-actions">
+                                {syncing ? (
+                                    <button 
+                                        className="btn-cancel-sync" 
+                                        onClick={cancelSync}
+                                    >
+                                        <FaTimes />
+                                        Cancel Sync
+                                    </button>
+                                ) : (
+                                    <>
+                                        {syncProgress.status === 'completed' && (
+                                            <button 
+                                                className="btn-close-sync" 
+                                                onClick={closeSyncProgress}
+                                            >
+                                                <FaCheck />
+                                                Done
+                                            </button>
+                                        )}
+                                        {(syncProgress.status === 'error' || syncProgress.status === 'cancelled') && (
+                                            <>
+                                                <button 
+                                                    className="btn-close-sync btn-secondary" 
+                                                    onClick={closeSyncProgress}
+                                                >
+                                                    Close
+                                                </button>
+                                                <button 
+                                                    className="btn-retry-sync" 
+                                                    onClick={() => {
+                                                        closeSyncProgress();
+                                                        setTimeout(syncData, 300);
+                                                    }}
+                                                >
+                                                    <MdSync />
+                                                    Retry Sync
+                                                </button>
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Footer /> 
         </>
