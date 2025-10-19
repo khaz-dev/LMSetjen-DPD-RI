@@ -3277,9 +3277,15 @@ class AdminUserBulkActionsAPIView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class SyncExternalUsersAPIView(APIView):
     """
     API View to sync user data from external API
+    
+    CSRF exempt because:
+    - Uses JWT authentication
+    - Admin-only endpoint with role verification
+    - Protected by IsAuthenticated permission class
     """
     permission_classes = [IsAuthenticated]
     
