@@ -3,6 +3,7 @@ import dayjs, { moment } from "../../utils/dayjs";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 
@@ -91,12 +92,16 @@ function Students() {
         return 'Unknown Student';
     };
 
+    // Show full-page loading spinner on initial load
     if (isLoading) {
-        return (
-            <>
-                <BaseHeader />
-                <section className="modern-students">
-                    <div className="container">
+        return <LoadingSpinner fullPage={true} message="Loading Students..." />;
+    }
+
+    return (
+        <>
+            <BaseHeader />
+            <section className="modern-students">
+                <div className="container">
                         <Header />
                         <div className="row mt-0 mt-md-4">
                             <Sidebar />

@@ -6,6 +6,7 @@ import Button from "react-bootstrap/Button";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 
@@ -15,11 +16,18 @@ import Toast from "../plugin/Toast";
 
 function TeacherNotification() {
     const [noti, setNoti] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const fetchNoti = () => {
-        useAxios.get(`teacher/noti-list/${UserData()?.teacher_id}/`).then((res) => {
+    const fetchNoti = async () => {
+        try {
+            setLoading(true);
+            const res = await useAxios.get(`teacher/noti-list/${UserData()?.teacher_id}/`);
             setNoti(res.data);
-        });
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -41,6 +49,11 @@ function TeacherNotification() {
             });
         });
     };
+
+    // Show full-page loading spinner on initial load
+    if (loading) {
+        return <LoadingSpinner fullPage={true} message="Loading Notifications..." />;
+    }
 
     return (
         <>

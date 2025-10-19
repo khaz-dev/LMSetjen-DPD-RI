@@ -30,6 +30,7 @@ import { CSS } from '@dnd-kit/utilities';
 // Local component imports
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import WorkflowStepper from "../../components/WorkflowStepper";
@@ -2884,6 +2885,11 @@ function CourseEditCurriculum() {
                 <p>Loading curriculum...</p>
             </div>
         );
+    }
+
+    // Show full-page loading spinner on initial load
+    if (uiState.loading && !course.title) {
+        return <LoadingSpinner fullPage={true} message="Loading Curriculum..." />;
     }
 
     return (

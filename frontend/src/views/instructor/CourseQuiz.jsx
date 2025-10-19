@@ -6,6 +6,7 @@ import "./CourseQuiz.css";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import WorkflowStepper from "../../components/WorkflowStepper";
@@ -390,14 +391,12 @@ function CourseQuiz() {
         setQuestionsAdded(0);
     };
 
+    // Show full-page loading spinner on initial load
     if (loading && !course) {
-        return (
-            <div
-                className="quiz-loading-content"
-                style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
+        return <LoadingSpinner fullPage={true} message="Loading Quiz..." />;
+    }
+
+    return (
                     justifyContent: 'center',
                     minHeight: '100vh', // Changed from 50vh to 100vh for full vertical centering
                     width: '100vw',     // Ensure it takes full width

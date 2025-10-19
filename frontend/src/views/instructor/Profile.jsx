@@ -3,6 +3,7 @@ import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
 import ProfilePictureCropModal from "../../components/ProfilePictureCropModal/ProfilePictureCropModal";
 import CountrySelector from "../../components/CountrySelector/CountrySelector";
 
@@ -674,6 +675,11 @@ function Profile() {
             </button>
         </div>
     );
+
+    // Show full-page loading spinner on initial load
+    if (uiState.loading && !profile) {
+        return <LoadingSpinner fullPage={true} message="Loading Profile..." />;
+    }
 
     return (
         <>

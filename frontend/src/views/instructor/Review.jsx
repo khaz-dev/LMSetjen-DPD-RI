@@ -4,6 +4,7 @@ import { Rating } from 'react-simple-star-rating';
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 
@@ -17,12 +18,19 @@ function Review() {
     const [replies, setReplies] = useState({});
     const [filteredReviews, setFilteredReview] = useState([]);
     const [loadingReply, setLoadingReply] = useState({});
+    const [loading, setLoading] = useState(true);
 
-    const fetchReviewsData = () => {
-        useAxios.get(`teacher/review-lists/${teacherId}/`).then((res) => {
+    const fetchReviewsData = async () => {
+        try {
+            setLoading(true);
+            const res = await useAxios.get(`teacher/review-lists/${teacherId}/`);
             setReviews(res.data);
             setFilteredReview(res.data);
-        });
+        } catch (error) {
+            console.error("Error fetching reviews:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -100,6 +108,11 @@ function Review() {
             setFilteredReview(filtered);
         }
     };
+
+    // Show full-page loading spinner on initial load
+    if (loading) {
+        return <LoadingSpinner fullPage={true} message="Loading Reviews..." />;
+    }
 
     return (
         <>

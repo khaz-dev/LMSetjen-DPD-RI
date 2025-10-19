@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import CourseCard from "../../components/CourseCard";
@@ -16,14 +17,18 @@ import "../../styles/Courses.css";
 function Courses() {
     const [courses, setCourses] = useState([]);
     const [originalCourses, setOriginalCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const fetchCourseData = async () => {
         try {
+            setLoading(true);
             const response = await useAxios.get(`teacher/course-lists/${UserData()?.teacher_id}/`);
             setCourses(response.data);
             setOriginalCourses(response.data);
         } catch (error) {
             console.error("Error fetching courses:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -43,6 +48,11 @@ function Courses() {
             setCourses(filtered);
         }
     };
+
+    // Show full-page loading spinner on initial load
+    if (loading) {
+        return <LoadingSpinner fullPage={true} message="Loading Courses..." />;
+    }
 
     return (
         <>

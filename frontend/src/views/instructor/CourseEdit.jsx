@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 
@@ -497,16 +498,12 @@ function CourseEdit() {
         }
     };
 
+    // Show full-page loading spinner on initial load
     if (loading) {
-        return (
-            <>
-                <BaseHeader />
-                <section className="course-edit-container">
-                    <div className="container">
-                        <Header />
-                        <div className="row mt-0 mt-md-4">
-                            <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12">
+        return <LoadingSpinner fullPage={true} message="Loading Course..." />;
+    }
+
+    return (
                                 <div className="course-form-card card">
                                     <div className="loading-overlay">
                                         <div className="loading-content">

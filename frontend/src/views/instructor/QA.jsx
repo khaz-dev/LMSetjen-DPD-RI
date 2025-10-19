@@ -6,6 +6,7 @@ import dayjs, { moment } from "../../utils/dayjs";
 // Components
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 
@@ -186,6 +187,11 @@ function QA() {
     useEffect(() => {
         fetchQuestions();
     }, []);
+
+    // Show full-page loading spinner on initial load
+    if (loading) {
+        return <LoadingSpinner fullPage={true} message="Loading Q&A..." />;
+    }
 
     return (
         <>
