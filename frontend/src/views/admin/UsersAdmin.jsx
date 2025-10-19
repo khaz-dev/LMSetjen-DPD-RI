@@ -1025,159 +1025,179 @@ function UsersAdmin() {
 
             {/* Sync Progress Modal */}
             {syncProgress.show && (
-                <div className="modal-overlay-modern active">
-                    <div className="modal-container-modern sync-modal">
-                        <div className="modal-header-modern">
-                            <h2>
-                                <MdSync className={syncing ? 'spinning' : ''} />
-                                Syncing External User Data
-                            </h2>
-                            {!syncing && syncProgress.status !== 'cancelled' && (
-                                <button className="modal-close-modern" onClick={closeSyncProgress}>
-                                    <FaTimes />
-                                </button>
-                            )}
-                        </div>
-                        
-                        <div className="modal-body-modern sync-progress-body">
-                            {/* Status Message */}
-                            <div className={`sync-status sync-status-${syncProgress.status}`}>
-                                {syncProgress.status === 'initializing' && (
-                                    <FaSpinner className="status-icon spinning" />
-                                )}
-                                {syncProgress.status === 'syncing' && (
-                                    <FaSpinner className="status-icon spinning" />
-                                )}
-                                {syncProgress.status === 'completed' && (
-                                    <FaCheck className="status-icon" />
-                                )}
-                                {syncProgress.status === 'error' && (
-                                    <FaTimes className="status-icon" />
-                                )}
-                                {syncProgress.status === 'cancelled' && (
-                                    <FaTimes className="status-icon" />
-                                )}
-                                <p className="sync-message">{syncProgress.message}</p>
+                <div className="sync-modal">
+                    <div className="sync-progress-modal">
+                        {/* Modal Header */}
+                        <div className={`sync-progress-header ${syncProgress.status}`}>
+                            <div className={`sync-header-icon ${syncing ? 'spinning' : ''}`}>
+                                {syncProgress.status === 'initializing' && <FaSpinner />}
+                                {syncProgress.status === 'syncing' && <MdSync />}
+                                {syncProgress.status === 'completed' && <FaCheck />}
+                                {syncProgress.status === 'error' && <FaTimes />}
+                                {syncProgress.status === 'cancelled' && <FaTimes />}
                             </div>
+                            <div className="sync-header-text">
+                                <h3>
+                                    {syncProgress.status === 'initializing' && 'Initializing Sync...'}
+                                    {syncProgress.status === 'syncing' && 'Syncing Data...'}
+                                    {syncProgress.status === 'completed' && 'Sync Completed!'}
+                                    {syncProgress.status === 'error' && 'Sync Failed'}
+                                    {syncProgress.status === 'cancelled' && 'Sync Cancelled'}
+                                </h3>
+                                <p>{syncProgress.message}</p>
+                            </div>
+                        </div>
 
-                            {/* Progress Stats */}
+                        {/* Modal Body */}
+                        <div className="sync-progress-body">
+                            {/* Show stats during syncing and after completion */}
                             {(syncProgress.status === 'syncing' || syncProgress.status === 'completed') && (
-                                <div className="sync-stats">
-                                    <div className="sync-stat-item">
-                                        <div className="stat-icon stat-created">
-                                            <MdPersonAdd />
+                                <>
+                                    {/* Statistics Grid */}
+                                    <div className="sync-stats">
+                                        <div className="sync-stat-item created">
+                                            <div className="sync-stat-label">Created</div>
+                                            <div className="sync-stat-value">{syncProgress.created}</div>
                                         </div>
-                                        <div className="stat-content">
-                                            <div className="stat-value">{syncProgress.created}</div>
-                                            <div className="stat-label">Created</div>
+                                        <div className="sync-stat-item updated">
+                                            <div className="sync-stat-label">Updated</div>
+                                            <div className="sync-stat-value">{syncProgress.updated}</div>
                                         </div>
-                                    </div>
-                                    
-                                    <div className="sync-stat-item">
-                                        <div className="stat-icon stat-updated">
-                                            <FaEdit />
+                                        <div className="sync-stat-item failed">
+                                            <div className="sync-stat-label">Failed</div>
+                                            <div className="sync-stat-value">{syncProgress.failed}</div>
                                         </div>
-                                        <div className="stat-content">
-                                            <div className="stat-value">{syncProgress.updated}</div>
-                                            <div className="stat-label">Updated</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="sync-stat-item">
-                                        <div className="stat-icon stat-total">
-                                            <MdPeople />
-                                        </div>
-                                        <div className="stat-content">
-                                            <div className="stat-value">{syncProgress.total}</div>
-                                            <div className="stat-label">Total Processed</div>
+                                        <div className="sync-stat-item total">
+                                            <div className="sync-stat-label">Total</div>
+                                            <div className="sync-stat-value">{syncProgress.total}</div>
                                         </div>
                                     </div>
-                                    
-                                    {syncProgress.failed > 0 && (
-                                        <div className="sync-stat-item">
-                                            <div className="stat-icon stat-failed">
-                                                <FaTimes />
+
+                                    {/* Progress Bar (only show during syncing) */}
+                                    {syncing && (
+                                        <div className="sync-progress-bar-container">
+                                            <div className="sync-progress-label">
+                                                <span>Syncing in progress...</span>
+                                                <span className="sync-progress-percentage">
+                                                    {syncProgress.total > 0 
+                                                        ? Math.round(((syncProgress.created + syncProgress.updated) / syncProgress.total) * 100)
+                                                        : 0}%
+                                                </span>
                                             </div>
-                                            <div className="stat-content">
-                                                <div className="stat-value">{syncProgress.failed}</div>
-                                                <div className="stat-label">Failed</div>
+                                            <div className="sync-progress-bar-track">
+                                                <div 
+                                                    className="sync-progress-bar-fill"
+                                                    style={{
+                                                        width: syncProgress.total > 0 
+                                                            ? `${Math.round(((syncProgress.created + syncProgress.updated) / syncProgress.total) * 100)}%`
+                                                            : '0%'
+                                                    }}
+                                                ></div>
                                             </div>
                                         </div>
                                     )}
+                                </>
+                            )}
+
+                            {/* Success Status Message */}
+                            {syncProgress.status === 'completed' && (
+                                <div className="sync-status-message">
+                                    <div className="sync-status-icon success">
+                                        <FaCheck />
+                                    </div>
+                                    <h4>Successfully Synced!</h4>
+                                    <p>
+                                        All user data has been synchronized from the external source.
+                                        {syncProgress.created > 0 && ` ${syncProgress.created} new user(s) created.`}
+                                        {syncProgress.updated > 0 && ` ${syncProgress.updated} user(s) updated.`}
+                                    </p>
                                 </div>
                             )}
 
-                            {/* Progress Bar */}
-                            {syncing && (
-                                <div className="sync-progress-bar">
-                                    <div className="progress-bar-animated">
-                                        <div className="progress-bar-fill"></div>
+                            {/* Error Status Message */}
+                            {syncProgress.status === 'error' && (
+                                <div className="sync-status-message">
+                                    <div className="sync-status-icon error">
+                                        <FaTimes />
                                     </div>
-                                    <p className="progress-text">Processing...</p>
+                                    <h4>Sync Failed</h4>
+                                    <p>An error occurred while syncing user data. Please try again.</p>
+                                </div>
+                            )}
+
+                            {/* Cancelled Status Message */}
+                            {syncProgress.status === 'cancelled' && (
+                                <div className="sync-status-message">
+                                    <div className="sync-status-icon cancelled">
+                                        <FaTimes />
+                                    </div>
+                                    <h4>Sync Cancelled</h4>
+                                    <p>The sync operation was cancelled before completion.</p>
                                 </div>
                             )}
 
                             {/* Error List */}
-                            {syncProgress.errors.length > 0 && (
+                            {syncProgress.errors && syncProgress.errors.length > 0 && (
                                 <div className="sync-errors">
                                     <h4>
                                         <FaTimes />
                                         Errors Encountered ({syncProgress.errors.length})
                                     </h4>
-                                    <ul className="error-list">
-                                        {syncProgress.errors.slice(0, 5).map((error, index) => (
-                                            <li key={index}>{error}</li>
-                                        ))}
-                                        {syncProgress.errors.length > 5 && (
-                                            <li className="error-more">
-                                                ...and {syncProgress.errors.length - 5} more errors
-                                            </li>
-                                        )}
-                                    </ul>
+                                    {syncProgress.errors.slice(0, 5).map((error, index) => (
+                                        <div key={index} className="sync-error-item">
+                                            <FaTimes />
+                                            <span>{error}</span>
+                                        </div>
+                                    ))}
+                                    {syncProgress.errors.length > 5 && (
+                                        <div className="sync-error-item">
+                                            <FaTimes />
+                                            <span>...and {syncProgress.errors.length - 5} more errors</span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
                             {/* Action Buttons */}
                             <div className="sync-actions">
-                                {syncing ? (
+                                {syncing && (
                                     <button 
-                                        className="btn-cancel-sync" 
+                                        className="sync-action-btn cancel"
                                         onClick={cancelSync}
                                     >
                                         <FaTimes />
                                         Cancel Sync
                                     </button>
-                                ) : (
+                                )}
+                                
+                                {!syncing && syncProgress.status === 'completed' && (
+                                    <button 
+                                        className="sync-action-btn done"
+                                        onClick={closeSyncProgress}
+                                    >
+                                        <FaCheck />
+                                        Done
+                                    </button>
+                                )}
+                                
+                                {!syncing && (syncProgress.status === 'error' || syncProgress.status === 'cancelled') && (
                                     <>
-                                        {syncProgress.status === 'completed' && (
-                                            <button 
-                                                className="btn-close-sync" 
-                                                onClick={closeSyncProgress}
-                                            >
-                                                <FaCheck />
-                                                Done
-                                            </button>
-                                        )}
-                                        {(syncProgress.status === 'error' || syncProgress.status === 'cancelled') && (
-                                            <>
-                                                <button 
-                                                    className="btn-close-sync btn-secondary" 
-                                                    onClick={closeSyncProgress}
-                                                >
-                                                    Close
-                                                </button>
-                                                <button 
-                                                    className="btn-retry-sync" 
-                                                    onClick={() => {
-                                                        closeSyncProgress();
-                                                        setTimeout(syncData, 300);
-                                                    }}
-                                                >
-                                                    <MdSync />
-                                                    Retry Sync
-                                                </button>
-                                            </>
-                                        )}
+                                        <button 
+                                            className="sync-action-btn retry"
+                                            onClick={() => {
+                                                closeSyncProgress();
+                                                setTimeout(syncData, 300);
+                                            }}
+                                        >
+                                            <MdSync />
+                                            Retry
+                                        </button>
+                                        <button 
+                                            className="sync-action-btn done"
+                                            onClick={closeSyncProgress}
+                                        >
+                                            Close
+                                        </button>
                                     </>
                                 )}
                             </div>
