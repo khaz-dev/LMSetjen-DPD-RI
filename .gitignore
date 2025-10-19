@@ -252,3 +252,70 @@ reports/draft_*
 # Archives
 *.tgz
 *.bz2
+
+# ===================================
+# TEMPORARY & CLEANUP FILES
+# ===================================
+# Temporary files
+temp_*.txt
+temp_*.md
+build-output.txt
+*-temp.js
+*-temp.jsx
+
+# Old lighthouse reports (keep only latest)
+lighthouse-*.html
+lighthouse-*.json
+!lighthouse-latest.html
+!lighthouse-latest.json
+chromewebdata_*.report.html
+
+# Old deployment/fix documentation (applied fixes)
+*_FIX.md
+*_FIX_*.md
+*-FIX-*.md
+COMPLETE_*_SUMMARY.md
+
+# Duplicate optimization reports
+OPTIMIZATION_*.md
+PERFORMANCE_*.md
+!PERFORMANCE_MONITORING.md
+
+# Cleanup and troubleshooting files
+CLEANUP_*.txt
+TROUBLESHOOTING-*.md
+*_TROUBLESHOOTING.txt
+
+# Old deployment guides (keep only main guide)
+DEPLOY_*.sh
+DEPLOY_*.ps1
+deploy-*.sh
+deploy-*.ps1
+!deploy-to-production.sh
+
+# Update scripts (use git for version control)
+update-*.sh
+update-*.ps1
+
+# Test/audit scripts (keep in scripts/ folder only)
+run-*.ps1
+audit-*.ps1
+verify-*.ps1
+scan-*.ps1
+
+# Duplicate Docker configs
+docker-compose.*.yml
+!docker-compose.yml
+!docker-compose.override.yml
+
+# Old nginx configs (keep only active ones)
+nginx-*.conf
+!nginx.conf
+
+# Railway/Vercel configs (not using these platforms)
+railway.toml
+vercel.json
+
+# Helper/reset scripts (dangerous in production)
+reset_*.py
+*-helper.ps1
