@@ -100,30 +100,6 @@ function Students() {
     return (
         <>
             <BaseHeader />
-            <section className="modern-students">
-                <div className="container">
-                        <Header />
-                        <div className="row mt-0 mt-md-4">
-                            <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12">
-                                <div className="students-loading">
-                                    <div className="spinner-border text-primary" role="status">
-                                        <span className="visually-hidden">Loading students...</span>
-                                    </div>
-                                    <p className="mt-3 text-muted">Loading students...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <Footer />
-            </>
-        );
-    }
-
-    return (
-        <>
-            <BaseHeader />
 
             <section className="modern-students">
                 <div className="container">
