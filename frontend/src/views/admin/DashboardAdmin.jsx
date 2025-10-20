@@ -186,10 +186,10 @@ function DashboardAdmin() {
     }
 
     return (
-        <>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <AdminHeader />
                 
-            <section className="pt-5 pb-5 modern-dashboard">
+            <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
                 <div className="container">
                     {/* Dashboard Header */}
                     <div className="dashboard-header-modern">
@@ -681,7 +681,7 @@ function DashboardAdmin() {
             </section>
 
             <Footer />      
-        </>
+        </div>
     );
 }
 
