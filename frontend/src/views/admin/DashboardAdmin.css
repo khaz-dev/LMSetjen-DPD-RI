@@ -9,7 +9,29 @@
     padding: 100px 0 50px;
 }
 
-/* Dashboard Header */
+/* Dashboard Header Modern - CRITICAL: Must be in this file for lazy loading */
+.dashboard-header-modern {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+    border: 1px solid #e3f2fd;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.header-text {
+    flex: 1;
+}
+
+/* Dashboard Header (Legacy - keeping for backwards compatibility) */
 .dashboard-header {
     background: white;
     padding: 30px;
