@@ -1,5 +1,11 @@
 /* Admin Dashboard Styles */
 
+.modern-dashboard {
+    min-height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+}
+
 .admin-dashboard {
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     min-height: 100vh;

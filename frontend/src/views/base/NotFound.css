@@ -3,7 +3,7 @@
     min-height: 100vh;
     display: flex;
     align-items: center;
-    background: transparent;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     padding-top: 20px;
     margin-top: -5px;
     padding-bottom: 80px;

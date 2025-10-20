@@ -1,12 +1,17 @@
 import { Link } from 'react-router-dom';
 import BaseHeader from '../partials/BaseHeader';
+import AdminHeader from '../partials/AdminHeader';
 import BaseFooter from '../partials/BaseFooter';
+import UserData from '../plugin/UserData';
 import './NotFound.css';
 
 function NotFound() {
+    const userData = UserData();
+    const isAdmin = userData?.role === 'admin';
+
     return (
         <>
-            <BaseHeader />
+            {isAdmin ? <AdminHeader /> : <BaseHeader />}
             
             <section className="notfound-section">
                 {/* Background Pattern */}
