@@ -124,84 +124,99 @@ function AdminHeader() {
                     </div>
                 </Link>
 
-                {/* Admin Navigation */}
-                <div className="navbar-nav ms-auto">
-                    {/* Quick Stats */}
-                    <div className="nav-item admin-quick-stats">
-                        <span className="quick-stat-item">
-                            <i className="fas fa-users text-primary"></i>
-                            <span className="stat-label">Users Online</span>
-                        </span>
-                    </div>
+                {/* Navbar Toggler for mobile */}
+                <button
+                    className="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#adminNavbar"
+                    aria-controls="adminNavbar"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span className="navbar-toggler-icon"><span></span></span>
+                </button>
 
-                    {/* Notifications */}
-                    <div className="nav-item dropdown admin-notifications">
-                        <button 
-                            className="nav-link notification-btn"
-                            type="button"
-                            data-bs-toggle="dropdown"
-                        >
-                            <i className="fas fa-bell"></i>
-                            <span className="notification-badge">3</span>
-                        </button>
-                        <ul className="dropdown-menu notification-dropdown">
-                            <li><h6 className="dropdown-header">Notifications</h6></li>
-                            <li><hr className="dropdown-divider" /></li>
-                            <li><a className="dropdown-item" href="#">New user registered</a></li>
-                            <li><a className="dropdown-item" href="#">Course requires approval</a></li>
-                            <li><a className="dropdown-item" href="#">System backup completed</a></li>
-                            <li><hr className="dropdown-divider" /></li>
-                            <li><a className="dropdown-item text-center" href="#">View all notifications</a></li>
-                        </ul>
-                    </div>
+                {/* Responsive Admin Navigation */}
+                <div className="collapse navbar-collapse" id="adminNavbar">
+                    <div className="navbar-nav ms-auto">
+                        {/* Quick Stats */}
+                        <div className="nav-item admin-quick-stats">
+                            <span className="quick-stat-item">
+                                <i className="fas fa-users text-primary"></i>
+                                <span className="stat-label">Users Online</span>
+                            </span>
+                        </div>
 
-                    {/* Admin Profile Dropdown */}
-                    {isLoggedIn() && isAdmin && (
-                        <div 
-                            className="nav-item dropdown admin-profile-dropdown"
-                            onMouseEnter={handleMouseEnter}
-                            onMouseLeave={handleMouseLeave}
-                        >
+                        {/* Notifications */}
+                        <div className="nav-item dropdown admin-notifications">
                             <button 
-                                className="nav-link dropdown-toggle admin-profile-btn"
+                                className="nav-link notification-btn"
                                 type="button"
                                 data-bs-toggle="dropdown"
-                                aria-expanded={dropdownOpen}
                             >
-                                <div className="admin-avatar">
-                                    {userData?.image ? (
-                                        <img 
-                                            src={userData.image} 
-                                            alt="Admin" 
-                                            className="avatar-img"
-                                        />
-                                    ) : (
-                                        <i className="fas fa-user-shield"></i>
-                                    )}
-                                </div>
-                                <div className="admin-info">
-                                    <span className="admin-name">{getDisplayName()}</span>
-                                    <span className="admin-role">
-                                        {isSuperAdmin ? 'Super Admin' : 'Admin'}
-                                    </span>
-                                </div>
+                                <i className="fas fa-bell"></i>
+                                <span className="notification-badge">3</span>
                             </button>
-                            
-                            <ul className={`dropdown-menu admin-dropdown ${dropdownOpen ? 'show' : ''}`}>
-                                <li><h6 className="dropdown-header">
-                                    <i className="fas fa-shield-alt me-2"></i>
-                                    Admin Panel
-                                </h6></li>
-                                {renderDropdownItems(filteredMenuItems)}
+                            <ul className="dropdown-menu notification-dropdown">
+                                <li><h6 className="dropdown-header">Notifications</h6></li>
+                                <li><hr className="dropdown-divider" /></li>
+                                <li><a className="dropdown-item" href="#">New user registered</a></li>
+                                <li><a className="dropdown-item" href="#">Course requires approval</a></li>
+                                <li><a className="dropdown-item" href="#">System backup completed</a></li>
+                                <li><hr className="dropdown-divider" /></li>
+                                <li><a className="dropdown-item text-center" href="#">View all notifications</a></li>
                             </ul>
                         </div>
-                    )}
 
-                    {/* System Status Indicator */}
-                    <div className="nav-item admin-status">
-                        <div className="system-status online">
-                            <span className="status-dot"></span>
-                            <span className="status-text">System Online</span>
+                        {/* Admin Profile Dropdown */}
+                        {isLoggedIn() && isAdmin && (
+                            <div 
+                                className="nav-item dropdown admin-profile-dropdown"
+                                onMouseEnter={handleMouseEnter}
+                                onMouseLeave={handleMouseLeave}
+                            >
+                                <button 
+                                    className="nav-link dropdown-toggle admin-profile-btn"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded={dropdownOpen}
+                                >
+                                    <div className="admin-avatar">
+                                        {userData?.image ? (
+                                            <img 
+                                                src={userData.image} 
+                                                alt="Admin" 
+                                                className="avatar-img"
+                                            />
+                                        ) : (
+                                            <i className="fas fa-user-shield"></i>
+                                        )}
+                                    </div>
+                                    <div className="admin-info">
+                                        <span className="admin-name">{getDisplayName()}</span>
+                                        <span className="admin-role">
+                                            {isSuperAdmin ? 'Super Admin' : 'Admin'}
+                                        </span>
+                                    </div>
+                                </button>
+                                
+                                <ul className={`dropdown-menu admin-dropdown ${dropdownOpen ? 'show' : ''}`}>
+                                    <li><h6 className="dropdown-header">
+                                        <i className="fas fa-shield-alt me-2"></i>
+                                        Admin Panel
+                                    </h6></li>
+                                    {renderDropdownItems(filteredMenuItems)}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* System Status Indicator */}
+                        <div className="nav-item admin-status">
+                            <div className="system-status online">
+                                <span className="status-dot"></span>
+                                <span className="status-text">System Online</span>
+                            </div>
                         </div>
                     </div>
                 </div>

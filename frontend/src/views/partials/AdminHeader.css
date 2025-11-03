@@ -1,3 +1,60 @@
+
+/* Custom Navbar Toggler Icon for better contrast */
+.navbar-toggler {
+    border: none;
+    background: none;
+    outline: none;
+    box-shadow: none;
+}
+
+.navbar-toggler-icon {
+    width: 28px;
+    height: 28px;
+    display: inline-block;
+    background: none;
+    position: relative;
+}
+
+.navbar-toggler-icon::before,
+.navbar-toggler-icon::after,
+.navbar-toggler-icon span {
+    content: '';
+    display: block;
+    height: 4px;
+    width: 100%;
+    background: #fff; /* White for high contrast */
+    border-radius: 2px;
+    margin: 5px 0;
+    transition: all 0.3s;
+}
+
+.navbar-toggler-icon span {
+    margin: 0;
+}
+
+.navbar-toggler-icon::before {
+    margin-top: 4px;
+}
+
+.navbar-toggler-icon::after {
+    margin-bottom: 4px;
+}
+
+/* Horizontal navigation for desktop */
+.navbar-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Each nav-item inline */
+.nav-item {
+    display: flex;
+    align-items: center;
+    margin: 0 0.25rem;
+}
+
 /* Admin Header Styles */
 .admin-header {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
