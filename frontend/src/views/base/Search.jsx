@@ -11,7 +11,7 @@ import { WishlistContext } from "../plugin/Context";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import Toast from "../plugin/Toast";
 
-import "./Saerch.css";
+import "./Search.css";
 
 function Search() {
     const [courses, setCourses] = useState([]);
