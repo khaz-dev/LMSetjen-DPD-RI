@@ -37,14 +37,11 @@ body:has(.landing-page-container) {
 /* Hide scrollbar for landing page only */
 .landing-page-container::-webkit-scrollbar {
     display: none !important;
+    overflow-x: hidden !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
 }
-
-.landing-page-container {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-    background: transparent !important;
-}
-
 /* === SCROLL SNAP CONTAINER - ULTRA SMOOTH EXPERIENCE === */
 /* Optimized for professional, buttery-smooth scrolling */
 .landing-page-container {
@@ -60,6 +57,11 @@ body:has(.landing-page-container) {
     position: relative;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior-y: contain !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    background: transparent !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
 }
 
 .landing-page-container .snap-section,
@@ -174,6 +176,12 @@ body:has(.landing-page-container) {
     margin-top: auto !important; /* Push footer to bottom if needed */
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
+}
+
+/* Fix for any absolutely positioned elements that may overflow */
+.landing-page-container [class*="position-absolute"] {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
 }
 
 /* === SECTION NAVIGATION INDICATOR === */
