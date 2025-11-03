@@ -5,8 +5,8 @@
 /* Container */
 .user-guide-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     padding-bottom: 3rem;
+    margin-top: -1rem;
 }
 
 /* Header */
@@ -253,12 +253,15 @@
 
 .path-code {
     display: block;
-    background: rgba(0, 0, 0, 0.2);
+    background: #fff;           /* Solid white background for contrast */
+    color: #2c3e50;             /* Dark text for readability */
     padding: 0.5rem;
     border-radius: 6px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     margin: 0.8rem 0;
     font-family: 'Courier New', monospace;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.10);
 }
 
 .dashboard-card p {
