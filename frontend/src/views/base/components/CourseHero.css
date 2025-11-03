@@ -1,0 +1,19 @@
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumb-item a,
+.breadcrumb-item span {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    line-height: 1.5;
+}

@@ -1,6 +1,8 @@
 import React from "react";
 import dayjs from "../../../utils/dayjs";
 import { Rating } from "react-simple-star-rating";
+import "./CourseHero.css";
+import { Link } from "react-router-dom";
 
 const CourseHero = ({ course }) => {
     if (!course) return null;
@@ -36,12 +38,17 @@ const CourseHero = ({ course }) => {
                                         </a>
                                     </li>
                                     <li className="breadcrumb-item">
-                                        <a href="/courses" className="text-white text-decoration-none opacity-75">
+                                        <a href="/search" className="text-white text-decoration-none opacity-75">
                                             Kursus
                                         </a>
                                     </li>
                                     <li className="breadcrumb-item">
-                                        <span className="text-white opacity-75">{course.category?.title}</span>
+                                        <Link
+                                            to={`/search/?category=${encodeURIComponent(course.category?.title)}`}
+                                            className="text-white text-decoration-none opacity-75"
+                                        >
+                                            {course.category?.title}
+                                        </Link>
                                     </li>
                                 </ol>
                             </nav>
