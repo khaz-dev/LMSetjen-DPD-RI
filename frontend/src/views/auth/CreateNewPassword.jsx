@@ -6,7 +6,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Toast from '../plugin/Toast';
 import logoPNG from "../../assets/logo/logo-192.png";
 import './CreateNewPassword.css';
-import '../styles/PasswordInput.css';
+import '../../styles/PasswordInput.css';
 
 function CreateNewPassword() {
   const [password, setPassword] = useState("");
