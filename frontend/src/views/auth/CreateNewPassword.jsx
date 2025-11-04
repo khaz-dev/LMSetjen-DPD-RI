@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Toast from '../plugin/Toast';
 import logoPNG from "../../assets/logo/logo-192.png";
 import './CreateNewPassword.css';
+import '../styles/PasswordInput.css';
 
 function CreateNewPassword() {
   const [password, setPassword] = useState("");
@@ -182,12 +183,12 @@ function CreateNewPassword() {
                         <i className="fas fa-lock create-password-form-icon"></i>
                         Password Baru
                       </label>
-                      <div className="position-relative">
+                      <div className="password-input-wrapper">
                         <input
                           type={showPassword ? "text" : "password"}
                           id="password"
                           name="password"
-                          className={`form-control create-password-password-input ${errors.password ? 'is-invalid' : ''}`}
+                          className={`form-control password-input ${errors.password ? 'is-invalid' : ''}`}
                           placeholder="Masukkan password baru"
                           value={password}
                           onChange={(e) => handleInputChange('password', e.target.value)}
@@ -195,7 +196,7 @@ function CreateNewPassword() {
                         />
                         <button
                           type="button"
-                          className="btn position-absolute end-0 top-50 translate-middle-y me-2 create-password-password-toggle"
+                          className="password-visibility-toggle"
                           onClick={() => setShowPassword(!showPassword)}
                           aria-label="Toggle password visibility"
                         >
@@ -255,12 +256,12 @@ function CreateNewPassword() {
                         <i className="fas fa-lock create-password-form-icon"></i>
                         Konfirmasi Password
                       </label>
-                      <div className="position-relative">
+                      <div className="password-input-wrapper">
                         <input
                           type={showConfirmPassword ? "text" : "password"}
                           id="confirmPassword"
                           name="confirmPassword"
-                          className={`form-control create-password-password-input ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                          className={`form-control password-input ${errors.confirmPassword ? 'is-invalid' : ''}`}
                           placeholder="Masukkan ulang password baru"
                           value={confirmPassword}
                           onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
@@ -268,7 +269,7 @@ function CreateNewPassword() {
                         />
                         <button
                           type="button"
-                          className="btn position-absolute end-0 top-50 translate-middle-y me-2 create-password-password-toggle"
+                          className="password-visibility-toggle"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           aria-label="Toggle confirm password visibility"
                         >

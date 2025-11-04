@@ -31,6 +31,80 @@
     padding: 2rem;
     user-select: none; /* Prevent text selection on body */
 }
+/* Password input container */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+/* Password input field */
+.login-password-input {
+    width: 100% !important;
+    padding: 10px 45px 10px 14px !important; /* Right padding for the toggle button */
+    border-radius: 12px !important;
+    border: 2px solid #e9ecef !important;
+    font-size: 15px !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: white !important;
+    position: relative !important;
+    z-index: 1 !important; /* Lower than the toggle button */
+}
+
+.login-password-input:hover {
+    border-color: #adb5bd !important;
+    background-color: white !important; /* Keep white background on hover */
+}
+
+.login-password-input:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+    background-color: white !important;
+    outline: none !important;
+}
+
+/* Password visibility toggle button */
+.password-visibility-toggle {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 100 !important; /* Always on top */
+    background: none !important;
+    border: none !important;
+    padding: 8px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    color: #6c757d !important;
+    font-size: 1.2rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: color 0.2s ease !important;
+    pointer-events: auto !important; /* Ensure clickable */
+    opacity: 1 !important; /* Always visible */
+    width: auto !important;
+    height: auto !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+}
+
+/* Hover and focus states for the toggle button */
+.password-visibility-toggle:hover,
+.password-visibility-toggle:focus {
+    color: #667eea !important;
+    opacity: 1 !important;
+    outline: none !important;
+}
+
+/* Ensure the toggle button stays visible even when the input has validation states */
+.login-password-input.is-invalid ~ .password-visibility-toggle,
+.login-password-input.is-valid ~ .password-visibility-toggle {
+    z-index: 100 !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 .login-logo-container {
     width: 100%;
@@ -115,16 +189,11 @@
     outline: none;
 }
 
-/* Password input styles */
+/* Prevent input hover/focus from overlapping the button */
 .login-card input.form-control.login-password-input {
-    border-radius: 12px;
-    border: 2px solid #e9ecef;
-    padding: 10px 50px 10px 14px;
-    font-size: 15px;
-    transition: all 0.2s ease-in-out;
-    user-select: text;
-    cursor: text;
-    background-color: white;
+    position: relative;
+    z-index: 1;
+    background-color: white !important;
 }
 
 .login-card input.form-control.login-password-input:hover:not(:disabled):not(:focus) {
@@ -139,17 +208,29 @@
     outline: none;
 }
 
+/* Ensure toggle button is always above input and visible */
 .login-password-toggle {
-    border: none;
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    z-index: 10; /* Increase z-index so it's always above input */
     background: transparent;
+    border: none;
     color: #6c757d;
-    padding-right: 8px;
-    user-select: none; /* Prevent text selection */
-    cursor: pointer; /* Pointer cursor for buttons */
+    padding: 0;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
 }
 
-.login-password-toggle:hover {
+.login-password-toggle:hover,
+.login-password-toggle:focus {
     color: #667eea;
+    z-index: 11;
 }
 
 .login-error-feedback {

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import ErrorBoundary from "../../components/ErrorBoundary";
 
 import apiInstance from "../../utils/axios";
 import { register } from "../../utils/auth";
@@ -8,16 +9,21 @@ import { useAuthStore } from "../../store/auth";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Toast from '../plugin/Toast';
+import '../../styles/PasswordInput.css';
 import logoPNG from "../../assets/logo/logo-192.png";
 import "./Register.css";
 
-function Register() {
+function RegisterContent() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
     password2: ""
   });
+
+  if (typeof window === 'undefined') {
+    return null;
+  }
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -277,12 +283,12 @@ function Register() {
                         <i className="register-form-icon fas fa-lock"></i>
                         Password
                       </label>
-                      <div className="position-relative">
+                      <div className="password-input-wrapper">
                         <input
                           type={showPassword ? "text" : "password"}
                           id="password"
                           name="password"
-                          className={`${getInputClass('password')} register-password-input`}
+                          className={`${getInputClass('password')} password-input`}
                           placeholder="Buat password yang kuat"
                           value={formData.password}
                           onChange={handleInputChange}
@@ -291,7 +297,7 @@ function Register() {
                         />
                         <button
                           type="button"
-                          className="register-password-toggle btn position-absolute end-0 top-50 translate-middle-y me-2"
+                          className="password-visibility-toggle"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
@@ -342,12 +348,12 @@ function Register() {
                         <i className="register-form-icon fas fa-lock"></i>
                         Konfirmasi Password
                       </label>
-                      <div className="position-relative">
+                      <div className="password-input-wrapper">
                         <input
                           type={showPassword2 ? "text" : "password"}
                           id="password2"
                           name="password2"
-                          className={`${getInputClass('password2')} register-password-input`}
+                          className={`${getInputClass('password2')} password-input`}
                           placeholder="Ulangi password Anda"
                           value={formData.password2}
                           onChange={handleInputChange}
@@ -356,7 +362,7 @@ function Register() {
                         />
                         <button
                           type="button"
-                          className="register-password-toggle btn position-absolute end-0 top-50 translate-middle-y me-2"
+                          className="password-visibility-toggle"
                           onClick={() => setShowPassword2(!showPassword2)}
                         >
                           <i className={`fas ${showPassword2 ? 'fa-eye-slash' : 'fa-eye'}`}></i>
@@ -423,4 +429,14 @@ function Register() {
   );
 }
 
-export default Register
+function Register() {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<div>Loading...</div>}>
+        <RegisterContent />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+export default Register;

@@ -5,7 +5,12 @@ import viteCompression from 'vite-plugin-compression'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      // Add fast refresh options
+      fastRefresh: true,
+      // Exclude problematic files from HMR
+      include: "**/*.{jsx,tsx}",
+    }),
     // Gzip compression
     viteCompression({
       algorithm: 'gzip',
@@ -21,6 +26,20 @@ export default defineConfig({
       deleteOriginFile: false,
     }),
   ],
+  server: {
+    hmr: {
+      // HMR settings
+      protocol: 'ws',
+      host: 'localhost',
+      overlay: true,
+    },
+    watch: {
+      usePolling: true,
+    },
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
+  },
   build: {
     // Optimize bundle size
     minify: 'terser',

@@ -14,6 +14,7 @@ import useAxios from '../../utils/useAxios';
 import Toast, { DeleteConfirmation } from "../plugin/Toast";
 import dayjs from '../../utils/dayjs';
 import './UsersAdmin.css';
+import '../styles/PasswordInput.css';
 
 function UsersAdmin() {
     const [users, setUsers] = useState([]);
@@ -48,6 +49,18 @@ function UsersAdmin() {
     
     // AbortController for cancelling sync
     const abortControllerRef = useRef(null);
+    
+    const [showPasswords, setShowPasswords] = useState({
+        password: false,
+        password2: false
+    });
+
+    const togglePasswordVisibility = (field) => {
+        setShowPasswords(prev => ({
+            ...prev,
+            [field]: !prev[field]
+        }));
+    };
     
     const [formData, setFormData] = useState({
         full_name: '',
@@ -1006,18 +1019,28 @@ function UsersAdmin() {
                                                                 <FaCog className="label-icon" />
                                                                 Password *
                                                             </label>
-                                                            <input
-                                                                type="password"
-                                                                id="password"
-                                                                className="form-input-modern"
-                                                                placeholder="Enter secure password"
-                                                                value={formData.password}
-                                                                onChange={(e) => {
-                                                                    setFormData({...formData, password: e.target.value});
-                                                                    validatePassword(e.target.value);
-                                                                }}
-                                                                required
-                                                            />
+                                                            <div className="password-input-wrapper">
+                                                                <input
+                                                                    type={showPasswords.password ? "text" : "password"}
+                                                                    id="password"
+                                                                    className="form-control password-input"
+                                                                    placeholder="Enter secure password"
+                                                                    value={formData.password}
+                                                                    onChange={(e) => {
+                                                                        setFormData({...formData, password: e.target.value});
+                                                                        validatePassword(e.target.value);
+                                                                    }}
+                                                                    required
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    className="password-visibility-toggle"
+                                                                    onClick={() => togglePasswordVisibility('password')}
+                                                                    aria-label="Toggle password visibility"
+                                                                >
+                                                                    <i className={showPasswords.password ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                                                                </button>
+                                                            </div>
                                                             <div className="password-requirements">
                                                                 <p className="requirements-title">Password must contain:</p>
                                                                 <div className="requirement-list">
@@ -1056,15 +1079,25 @@ function UsersAdmin() {
                                                                 <FaCog className="label-icon" />
                                                                 Confirm Password *
                                                             </label>
-                                                            <input
-                                                                type="password"
-                                                                id="password2"
-                                                                className="form-input-modern"
-                                                                placeholder="Confirm password"
-                                                                value={formData.password2}
-                                                                onChange={(e) => setFormData({...formData, password2: e.target.value})}
-                                                                required
-                                                            />
+                                                            <div className="password-input-wrapper">
+                                                                <input
+                                                                    type={showPasswords.password2 ? "text" : "password"}
+                                                                    id="password2"
+                                                                    className="form-control password-input"
+                                                                    placeholder="Confirm password"
+                                                                    value={formData.password2}
+                                                                    onChange={(e) => setFormData({...formData, password2: e.target.value})}
+                                                                    required
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    className="password-visibility-toggle"
+                                                                    onClick={() => togglePasswordVisibility('password2')}
+                                                                    aria-label="Toggle confirm password visibility"
+                                                                >
+                                                                    <i className={showPasswords.password2 ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                                                                </button>
+                                                            </div>
                                                             {formData.password2 && formData.password !== formData.password2 && (
                                                                 <div className="password-match-error">
                                                                     <FaTimes /> Passwords do not match

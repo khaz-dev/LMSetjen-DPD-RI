@@ -9,6 +9,7 @@ import silentAxios from "../../utils/silentAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import "./ChangePassword.css";
+import '../../styles/PasswordInput.css';
 
 // Constants
 const PASSWORD_MIN_LENGTH = 6;
@@ -259,11 +260,10 @@ function ChangePassword() {
                 <i className={`${icon} instructor-password-label-icon`}></i>
                 {label} <span className="text-danger">*</span>
             </label>
-            <div className="instructor-password-input-wrapper">
-                <i className={`fas fa-lock instructor-password-icon`}></i>
+            <div className="password-input-wrapper">
                 <input
                     type={showPasswords[field] ? "text" : "password"}
-                    className={`instructor-password-input ${errors[field] ? 'is-invalid' : ''}`}
+                    className={`form-control password-input ${errors[field] ? 'is-invalid' : ''}`}
                     id={field}
                     name={field}
                     value={passwords[field]}
@@ -271,32 +271,49 @@ function ChangePassword() {
                     placeholder={placeholder}
                     autoComplete="new-password"
                     aria-invalid={errors[field] ? 'true' : 'false'}
-                    style={{paddingLeft: '2.25rem'}}
                 />
                 <button
                     type="button"
-                    className="instructor-password-toggle"
+                    className="password-visibility-toggle"
                     onClick={() => togglePasswordVisibility(field)}
                     aria-label={`Toggle ${label.toLowerCase()} visibility`}
                     aria-expanded={showPasswords[field]}
                 >
                     <i className={showPasswords[field] ? "fas fa-eye-slash" : "fas fa-eye"}></i>
                 </button>
-                {/* Password Strength Indicator for new password */}
+            </div>
+            
+            <div className="password-feedback-container">
+                {/* Password Strength Indicator */}
                 {field === 'new_password' && passwords[field] && (
-                    <div className={`instructor-password-strength-indicator instructor-password-strength-${getPasswordStrength(passwords[field])}`}></div>
+                    <div className="instructor-password-strength-container">
+                        <div className="instructor-password-strength-label">
+                            <span className="instructor-password-strength-text">
+                                Password Strength:
+                            </span>
+                            <span className={`text-${getPasswordStrength(passwords[field]) === 'weak' ? 'danger' : 
+                                           getPasswordStrength(passwords[field]) === 'medium' ? 'warning' : 'success'}`}>
+                                {getPasswordStrength(passwords[field]).charAt(0).toUpperCase() + 
+                                 getPasswordStrength(passwords[field]).slice(1)}
+                            </span>
+                        </div>
+                        <div className={`instructor-password-strength-indicator instructor-password-strength-${getPasswordStrength(passwords[field])}`} />
+                    </div>
                 )}
-                {/* Real-time password mismatch warning */}
+                
+                {/* Password Mismatch Warning */}
                 {field === 'confirm_new_password' && passwords[field] && passwords.new_password !== passwords[field] && (
-                    <small className="instructor-password-mismatch-warning">
-                        <i className="fas fa-exclamation-triangle me-1"></i>
-                        Passwords do not match
-                    </small>
+                    <div className="instructor-password-mismatch-warning">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        <span>Passwords do not match</span>
+                    </div>
                 )}
+                
+                {/* Error Messages */}
                 {errors[field] && (
                     <div className="instructor-password-error">
                         <i className="fas fa-exclamation-circle"></i>
-                        {errors[field]}
+                        <span>{errors[field]}</span>
                     </div>
                 )}
             </div>

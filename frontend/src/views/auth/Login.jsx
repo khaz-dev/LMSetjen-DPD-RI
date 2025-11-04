@@ -230,7 +230,7 @@ function Login() {
                         <i className="fas fa-lock login-form-icon"></i>
                         Password
                       </label>
-                      <div className="position-relative">
+                      <div className="password-input-wrapper">
                         <input
                           type={showPassword ? "text" : "password"}
                           id="password"
@@ -243,7 +243,7 @@ function Login() {
                         />
                         <button
                           type="button"
-                          className="btn position-absolute end-0 top-50 translate-middle-y me-2 login-password-toggle"
+                          className="password-visibility-toggle"
                           onClick={togglePasswordVisibility}
                           aria-label="Toggle password visibility"
                         >

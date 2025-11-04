@@ -153,6 +153,36 @@
     color: #667eea;
 }
 
+/* Password input wrapper for consistent positioning */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Update password visibility toggle position */
+.password-visibility-toggle {
+    position: absolute;
+    top: 50%;
+    right: 22px !important; /* Increased from default to move it more to the right */
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    padding: 0;
+    width: 40px; /* Fixed width for better positioning */
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* Ensure the input has enough padding for the button */
+.password-input {
+    padding-right: 56px !important; /* Increased right padding to prevent text overlap */
+}
+
 .register-error-feedback {
     color: #dc3545;
     font-size: 0.875rem;
