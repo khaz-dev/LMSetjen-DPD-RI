@@ -8,7 +8,7 @@ function Footer() {
     brand: {
       name: 'LMSetjen DPD RI',
       tagline: 'Platform e-learning BPSDM OKK untuk Setjen DPD RI',
-      copyright: `© ${currentYear} BPSDM | OKK`
+      copyright: `© ${currentYear} BPSDM All rights reserved.`
     },
     contact: {
       email: 'sdm@dpd.go.id',

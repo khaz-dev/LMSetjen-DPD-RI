@@ -9,7 +9,7 @@ function BaseFooter() {
       name: 'LMSetjen DPD RI',
       tagline: 'Platform e-learning BPSDM OKK untuk Setjen DPD RI',
       description: 'Platform e-learning berbasis LMS yang dikembangkan oleh BPSDM OKK untuk mendukung pelatihan digital pegawai dan anggota Setjen DPD RI.',
-      copyright: `© ${currentYear} BPSDM | OKK`
+      copyright: `© ${currentYear} BPSDM All rights reserved.`
     },
     contact: {
       email: 'sdm@dpd.go.id',
