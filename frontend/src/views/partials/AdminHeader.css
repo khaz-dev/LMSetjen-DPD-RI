@@ -273,26 +273,32 @@ body {
 
 /* Admin Dropdown Menu */
 .admin-dropdown {
+    position: absolute;
+    top: 100%; /* Directly below the nav-item */
+    left: 0;
+    right: auto;
     min-width: 280px;
     border: none;
     box-shadow: 0 15px 50px rgba(0,0,0,0.2);
     border-radius: 15px;
     padding: 0.5rem 0;
     background: white;
-    margin-top: 0.75rem;
+    margin-top: 8px; /* Small gap below nav-item */
     backdrop-filter: blur(20px);
+    z-index: 1050;
 }
 
 .admin-dropdown::before {
     content: '';
     position: absolute;
     top: -8px;
-    right: 20px;
+    right: 32px;
     width: 0;
     height: 0;
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
     border-bottom: 8px solid white;
+    left: auto;
 }
 
 .admin-dropdown .dropdown-header {
@@ -461,8 +467,13 @@ body {
     
     .notification-dropdown,
     .admin-dropdown {
+        left: 0 !important;
+        right: 0 !important;
         min-width: 250px;
-        margin-right: 1rem;
+        margin-right: 0;
+    }
+    .admin-dropdown::before {
+        right: 20px !important;
     }
 }
 
