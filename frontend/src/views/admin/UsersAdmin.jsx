@@ -14,7 +14,7 @@ import useAxios from '../../utils/useAxios';
 import Toast, { DeleteConfirmation } from "../plugin/Toast";
 import dayjs from '../../utils/dayjs';
 import './UsersAdmin.css';
-import '../styles/PasswordInput.css';
+import '../../styles/PasswordInput.css';
 
 function UsersAdmin() {
     const [users, setUsers] = useState([]);
