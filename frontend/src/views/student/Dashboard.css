@@ -104,22 +104,26 @@
 
 .stat-label {
   font-size: 1rem;
-  opacity: 0.85;
   margin-left: 0.1rem;
   margin-top: 0.5rem;
-  color: #6c757d;
+  color: rgba(255, 255, 255, 0.95) !important;
   text-align: right;
   white-space: normal;
   word-break: break-word;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.3px;
 }
 
 /* Additional specificity for stat labels */
 .dashboard-stat-card .stat-label {
     font-size: 1rem !important;
+    color: rgba(255, 255, 255, 0.95) !important;
 }
 
 .stat-label.text-end {
     font-size: 1rem !important;
+    color: rgba(255, 255, 255, 0.95) !important;
 }
 
 /* Progress Circle */

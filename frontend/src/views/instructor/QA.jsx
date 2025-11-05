@@ -490,7 +490,10 @@ function QA() {
                             disabled={messageLoading || !getCurrentMessage().trim()}
                         >
                             {messageLoading ? (
-                                <span className="spinner-border spinner-border-sm"></span>
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2"></span>
+                                    <strong>Sending...</strong>
+                                </>
                             ) : (
                                 <>
                                     <i className="fas fa-paper-plane"></i>

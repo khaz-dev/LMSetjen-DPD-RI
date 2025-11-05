@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
     FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaUserGraduate, FaUserTie, 
     FaUsers, FaChartLine, FaUserCheck, FaUserTimes, FaDownload, FaFilter,
@@ -34,18 +34,21 @@ function UsersAdmin() {
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 25; // Display 25 users per page
     const [showModal, setShowModal] = useState(false);
     const [modalType, setModalType] = useState('create'); // create, edit, view
     const [selectedUser, setSelectedUser] = useState(null);
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [showBulkActions, setShowBulkActions] = useState(false);
-    const [stats, setStats] = useState({
-        total_users: 0,
-        active_users: 0,
-        students: 0,
-        teachers: 0,
-        admins: 0
-    });
+    // Memoized statistics calculation
+    const stats = useMemo(() => ({
+        total_users: users.length,
+        active_users: users.filter(user => user.is_active).length,
+        students: users.filter(user => user.role === 'student').length,
+        teachers: users.filter(user => user.role === 'teacher').length,
+        admins: users.filter(user => user.role === 'admin').length
+    }), [users]);
     
     // AbortController for cancelling sync
     const abortControllerRef = useRef(null);
@@ -81,29 +84,18 @@ function UsersAdmin() {
 
     const api = useAxios;
 
-    // Fetch users and statistics
-    const fetchUsers = async () => {
+    // Fetch users and statistics - OPTIMIZED
+    const fetchUsers = useCallback(async () => {
         try {
-            const response = await api.get('/admin/user-management/');
+            // Fetch with query parameter optimization
+            const response = await api.get('/admin/user-management/?_t=' + Date.now());
             const usersData = response.data;
-            setUsers(usersData);
-            setFilteredUsers(usersData);
             
-            // Calculate statistics
-            const totalUsers = usersData.length;
-            const activeUsers = usersData.filter(user => user.is_active).length;
-            const students = usersData.filter(user => user.role === 'student').length;
-            const teachers = usersData.filter(user => user.role === 'teacher').length;
-            const admins = usersData.filter(user => user.role === 'admin').length;
+            // Handle both array and paginated response
+            const users = Array.isArray(usersData) ? usersData : usersData.results || [];
             
-            setStats({
-                total_users: totalUsers,
-                active_users: activeUsers,
-                students: students,
-                teachers: teachers,
-                admins: admins
-            });
-            
+            setUsers(users);
+            setFilteredUsers(users);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -113,10 +105,11 @@ function UsersAdmin() {
             });
             setLoading(false);
         }
-    };
+    }, [api]);
 
-    // Filter users based on search and filters
-    const applyFilters = () => {
+    // Filter users based on search and filters - OPTIMIZED
+    // Use useMemo to avoid recreating the filtered array
+    const filteredUsersData = useMemo(() => {
         let filtered = [...users];
 
         // Search filter
@@ -140,11 +133,28 @@ function UsersAdmin() {
             );
         }
 
-        setFilteredUsers(filtered);
-    };
+        return filtered;
+    }, [searchTerm, roleFilter, statusFilter, users]);
+
+    // Apply filters and reset pagination
+    useEffect(() => {
+        setFilteredUsers(filteredUsersData);
+        setCurrentPage(1); // Reset to first page when filters change
+    }, [filteredUsersData]);
+
+    // Keep applyFilters for backward compatibility (no-op now)
+    const applyFilters = useCallback(() => {
+        // Filtering is now handled by filteredUsersData useMemo
+    }, []);
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
     
     // Validate password strength
-    const validatePassword = (password) => {
+    const validatePassword = useCallback((password) => {
         const commonPasswords = ['password', '12345678', 'qwerty', 'abc123', 'password123', 'admin', 'letmein'];
         
         setPasswordValidation({
@@ -155,10 +165,10 @@ function UsersAdmin() {
             special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
             notCommon: !commonPasswords.includes(password.toLowerCase())
         });
-    };
+    }, []);
 
     // Handle form submission for create/edit user
-    const handleSubmit = async (e) => {
+    const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
         
         try {
@@ -186,10 +196,10 @@ function UsersAdmin() {
                 title: error.response?.data?.message || 'Failed to save user'
             });
         }
-    };
+    }, [modalType, selectedUser, formData, api, fetchUsers]);
 
     // Handle delete user
-    const handleDeleteUser = async (userId) => {
+    const handleDeleteUser = useCallback(async (userId) => {
         const confirm = await DeleteConfirmation({
             title: "Delete User",
             text: "Are you sure you want to delete this user? This action cannot be undone."
@@ -210,10 +220,10 @@ function UsersAdmin() {
                 title: error.response?.data?.message || 'Failed to delete user'
             });
         }
-    };
+    }, [api, fetchUsers]);
 
     // Handle bulk actions
-    const handleBulkAction = async (action) => {
+    const handleBulkAction = useCallback(async (action) => {
         if (selectedUsers.length === 0) {
             Toast().fire({
                 icon: "warning",
@@ -221,12 +231,6 @@ function UsersAdmin() {
             });
             return;
         }
-
-        const confirmMessage = {
-            'activate': 'Are you sure you want to activate selected users?',
-            'deactivate': 'Are you sure you want to deactivate selected users?',
-            'delete': 'Are you sure you want to delete selected users? This action cannot be undone.'
-        };
 
         const confirm = await DeleteConfirmation({
             title: "Delete Users",
@@ -254,7 +258,7 @@ function UsersAdmin() {
                 title: error.response?.data?.message || 'Failed to perform bulk action'
             });
         }
-    };
+    }, [selectedUsers, api, fetchUsers]);
 
     // Sync external users data
     const syncData = async () => {
@@ -275,12 +279,8 @@ function UsersAdmin() {
             errors: []
         };
         
-        console.log('📊 Setting initial progress:', initialProgress);
-        setSyncProgress(initialProgress);
-        
         // Add a small delay to ensure state is set
         await new Promise(resolve => setTimeout(resolve, 100));
-        console.log('✅ After state set delay');
         
         try {
             // Update progress to syncing
@@ -370,14 +370,15 @@ function UsersAdmin() {
         }));
     };
 
-    // Modal handlers
-    const openCreateModal = () => {
+    // Modal handlers - optimized with useCallback
+    const openCreateModal = useCallback(() => {
+        setShowModal(true);
         setModalType('create');
         resetForm();
-        setShowModal(true);
-    };
+    }, []);
 
-    const openEditModal = (user) => {
+    const openEditModal = useCallback((user) => {
+        setShowModal(true);
         setModalType('edit');
         setSelectedUser(user);
         setFormData({
@@ -387,25 +388,24 @@ function UsersAdmin() {
             password: '',
             password2: ''
         });
-        setShowModal(true);
-    };
+    }, []);
 
-    const openViewModal = async (user) => {
+    const openViewModal = useCallback(async (user) => {
         try {
             const response = await api.get(`/admin/user-detail/${user.id}/`);
             setSelectedUser(response.data);
-            setModalType('view');
             setShowModal(true);
+            setModalType('view');
         } catch (error) {
             console.error('Error fetching user details:', error);
             Toast().fire({
                 icon: "error",
-                title: 'Failed to fetch user details'
+                title: 'Failed to load user details'
             });
         }
-    };
+    }, [api]);
 
-    const resetForm = () => {
+    const resetForm = useCallback(() => {
         setFormData({
             full_name: '',
             email: '',
@@ -414,33 +414,37 @@ function UsersAdmin() {
             password2: ''
         });
         setSelectedUser(null);
-    };
-
-    // Selection handlers
-    const handleSelectAll = () => {
-        if (selectedUsers.length === filteredUsers.length) {
-            setSelectedUsers([]);
-        } else {
-            setSelectedUsers(filteredUsers.map(user => user.id));
-        }
-    };
-
-    const handleSelectUser = (userId) => {
-        if (selectedUsers.includes(userId)) {
-            setSelectedUsers(selectedUsers.filter(id => id !== userId));
-        } else {
-            setSelectedUsers([...selectedUsers, userId]);
-        }
-    };
-
-    // Effects
-    useEffect(() => {
-        fetchUsers();
     }, []);
 
+    // Selection handlers - optimized with useCallback
+    const handleSelectAll = useCallback(() => {
+        if (selectedUsers.length === paginatedUsers.length) {
+            setSelectedUsers([]);
+        } else {
+            setSelectedUsers(paginatedUsers.map(user => user.id));
+        }
+    }, [selectedUsers, paginatedUsers]);
+
+    const handleSelectUser = useCallback((userId) => {
+        setSelectedUsers(prev =>
+            prev.includes(userId)
+                ? prev.filter(id => id !== userId)
+                : [...prev, userId]
+        );
+    }, []);
+
+    // Effects - OPTIMIZED
     useEffect(() => {
+        // Only fetch on mount
+        if (users.length === 0) {
+            fetchUsers();
+        }
+    }, []); // Only run on mount
+
+    useEffect(() => {
+        // Apply filters only when filters change, not when users change
         applyFilters();
-    }, [searchTerm, roleFilter, statusFilter, users]);
+    }, [searchTerm, roleFilter, statusFilter, applyFilters]);
 
     useEffect(() => {
         setShowBulkActions(selectedUsers.length > 0);
@@ -482,7 +486,6 @@ function UsersAdmin() {
                                 <button 
                                     className="btn-modern-primary btn-sync" 
                                     onClick={() => {
-                                        console.log('⚡⚡⚡ BUTTON CLICKED! ⚡⚡⚡');
                                         syncData();
                                     }}
                                     disabled={syncing}
@@ -683,7 +686,7 @@ function UsersAdmin() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredUsers.map((user) => (
+                                {paginatedUsers.map((user) => (
                                     <tr key={user.id} className={`user-row-modern ${selectedUsers.includes(user.id) ? 'selected-row' : ''}`}>
                                         <td className="select-cell">
                                             <div className="checkbox-modern">
@@ -812,11 +815,7 @@ function UsersAdmin() {
                                         </td>
                                     </tr>
                                 ))}
-                            </tbody>
-                        </table>
-
-                        {filteredUsers.length === 0 && (
-                            <tbody>
+                            {filteredUsers.length === 0 && (
                                 <tr>
                                     <td colSpan="8" className="empty-state-cell">
                                         <div className="empty-state-modern">
@@ -829,9 +828,81 @@ function UsersAdmin() {
                                         </div>
                                     </td>
                                 </tr>
+                            )}
                             </tbody>
-                        )}
+                        </table>
                     </div>
+
+                    {/* Pagination Controls - Compact Professional */}
+                    {filteredUsers.length > itemsPerPage && (
+                        <div className="pagination-controls-compact">
+                            <button 
+                                className="pagination-btn-compact"
+                                onClick={() => setCurrentPage(1)}
+                                disabled={currentPage === 1}
+                                title="First page"
+                            >
+                                ⟨⟨
+                            </button>
+                            <button 
+                                className="pagination-btn-compact"
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                title="Previous page"
+                            >
+                                ⟨
+                            </button>
+                            
+                            <div className="pagination-display">
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum;
+                                    if (totalPages <= 5) {
+                                        // Show all pages if 5 or fewer total
+                                        pageNum = i + 1;
+                                    } else if (currentPage <= 3) {
+                                        // Show 1-5 when near start
+                                        pageNum = i + 1;
+                                    } else if (currentPage >= totalPages - 2) {
+                                        // Show last 5 when near end
+                                        pageNum = totalPages - 4 + i;
+                                    } else {
+                                        // Show current page centered: -2, -1, current, +1, +2
+                                        pageNum = currentPage - 2 + i;
+                                    }
+                                    return pageNum;
+                                }).map(page => (
+                                    <button
+                                        key={page}
+                                        className={`pagination-page ${currentPage === page ? 'active' : ''}`}
+                                        onClick={() => setCurrentPage(page)}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+                            </div>
+                            
+                            <span className="pagination-counter">
+                                {currentPage} / {totalPages}
+                            </span>
+                            
+                            <button 
+                                className="pagination-btn-compact"
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                title="Next page"
+                            >
+                                ⟩
+                            </button>
+                            <button 
+                                className="pagination-btn-compact"
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={currentPage === totalPages}
+                                title="Last page"
+                            >
+                                ⟩⟩
+                            </button>
+                        </div>
+                    )}
 
                     {/* Modern User Modal */}
                     {showModal && (
@@ -1135,7 +1206,6 @@ function UsersAdmin() {
 
             {/* Sync Progress Modal */}
             {(() => {
-                console.log('🎨 Modal render check - syncProgress.show:', syncProgress.show, 'syncProgress:', syncProgress);
                 return syncProgress.show;
             })() && (
                 <div className="sync-modal">

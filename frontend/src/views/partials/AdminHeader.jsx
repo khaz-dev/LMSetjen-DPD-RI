@@ -111,7 +111,7 @@ function AdminHeader() {
     );
 
     return (
-        <nav className="admin-header navbar navbar-expand-lg">
+        <nav className="admin-header navbar navbar-expand-xxl">
             <div className="container">
                 {/* Brand */}
                 <Link className="navbar-brand admin-brand" to="/admin/dashboard/">
@@ -124,7 +124,7 @@ function AdminHeader() {
                     </div>
                 </Link>
 
-                {/* Navbar Toggler for mobile */}
+                {/* Navbar Toggler for mobile - only shows on smaller screens */}
                 <button
                     className="navbar-toggler"
                     type="button"

@@ -1,10 +1,44 @@
 
-/* Custom Navbar Toggler Icon for better contrast */
-.navbar-toggler {
+/* ========================================
+   NAVBAR TOGGLER - RESPONSIVE VISIBILITY
+   ======================================== */
+
+/* Hide toggler by default (large screens) */
+.admin-header .navbar-toggler {
     border: none;
     background: none;
     outline: none;
     box-shadow: none;
+    display: none !important; /* Force hide on large screens */
+    visibility: hidden !important;
+}
+
+/* Show toggler ONLY on screens below 1200px */
+@media (max-width: 1199px) {
+    .admin-header .navbar-toggler {
+        display: block !important; /* Force show on small screens */
+        visibility: visible !important;
+    }
+}
+
+/* Force navbar-collapse to always display on large screens */
+@media (min-width: 1200px) {
+    .admin-header .navbar-collapse {
+        display: flex !important;
+        visibility: visible !important;
+        flex-basis: auto !important;
+    }
+}
+
+/* Ensure navbar is not collapsed on large screens */
+@media (min-width: 1200px) {
+    .admin-header.navbar.navbar-expand-xxl {
+        flex-wrap: nowrap;
+    }
+    
+    .admin-header.navbar.navbar-expand-xxl .navbar-collapse {
+        display: flex !important;
+    }
 }
 
 .navbar-toggler-icon {
@@ -46,6 +80,7 @@
     flex-direction: row;
     align-items: center;
     gap: 0.5rem;
+    margin-left: auto;
 }
 
 /* Each nav-item inline */
@@ -188,13 +223,22 @@ body {
 }
 
 .notification-dropdown {
-    min-width: 280px;
+    width: 280px;
+    max-width: calc(100vw - 32px) !important;
     border: none;
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     border-radius: 12px;
     padding: 0;
     background: white;
-    margin-top: 0.5rem;
+    margin: 0 !important;
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 1050;
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden !important;
 }
 
 .notification-dropdown .dropdown-item {
@@ -273,32 +317,38 @@ body {
 
 /* Admin Dropdown Menu */
 .admin-dropdown {
-    position: absolute;
-    top: 100%; /* Directly below the nav-item */
-    left: 0;
-    right: auto;
-    min-width: 280px;
+    position: absolute !important;
+    top: calc(100% + 8px) !important; /* Position directly below the button */
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: 280px;
+    max-width: calc(100vw - 32px) !important; /* Account for padding on both sides */
     border: none;
     box-shadow: 0 15px 50px rgba(0,0,0,0.2);
     border-radius: 15px;
     padding: 0.5rem 0;
     background: white;
-    margin-top: 8px; /* Small gap below nav-item */
+    margin: 0 !important;
     backdrop-filter: blur(20px);
     z-index: 1050;
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden !important; /* Prevent horizontal scroll */
 }
 
 .admin-dropdown::before {
     content: '';
     position: absolute;
     top: -8px;
-    right: 32px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 0;
     height: 0;
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
     border-bottom: 8px solid white;
-    left: auto;
+    right: auto;
 }
 
 .admin-dropdown .dropdown-header {
@@ -434,6 +484,81 @@ body {
     animation: adminDropdownFadeIn 0.3s ease-out;
 }
 
+/* ========================================
+   RESPONSIVE DROPDOWN POSITIONING
+   ======================================== */
+
+/* Medium laptops (1024px - 1199px) - Adjust dropdown to prevent header expansion */
+@media (max-width: 1199px) and (min-width: 1024px) {
+    .admin-dropdown {
+        position: absolute !important;
+        top: calc(100% + 8px) !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 260px;
+        max-width: calc(100vw - 32px) !important;
+        max-height: 70vh;
+        overflow-y: auto;
+        overflow-x: hidden !important;
+        border-radius: 12px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        z-index: 1050;
+        margin: 0 !important;
+    }
+
+    .admin-dropdown::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 8px solid white;
+        right: auto;
+    }
+
+    .admin-dropdown .dropdown-header {
+        padding: 0.9rem 1.2rem;
+        font-size: 0.9rem;
+    }
+
+    .admin-dropdown .dropdown-item {
+        padding: 0.75rem 1.1rem;
+        font-size: 0.9rem;
+    }
+
+    .admin-profile-btn {
+        min-width: 180px;
+    }
+}
+
+/* Small laptops (768px - 1023px) */
+@media (max-width: 1023px) {
+    .admin-dropdown {
+        position: absolute !important;
+        top: calc(100% + 8px) !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 240px;
+        max-width: calc(100vw - 32px) !important;
+        max-height: 65vh;
+        overflow-y: auto;
+        overflow-x: hidden !important;
+        border-radius: 10px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        margin: 0 !important;
+    }
+
+    .admin-dropdown::before {
+        display: none; /* Hide arrow on smaller screens */
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .admin-header {
@@ -467,13 +592,22 @@ body {
     
     .notification-dropdown,
     .admin-dropdown {
-        left: 0 !important;
-        right: 0 !important;
-        min-width: 250px;
-        margin-right: 0;
+        position: absolute !important;
+        top: calc(100% + 8px) !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 240px;
+        max-width: calc(100vw - 32px) !important;
+        max-height: 70vh;
+        overflow-y: auto;
+        overflow-x: hidden !important;
+        margin: 0 !important;
     }
-    .admin-dropdown::before {
-        right: 20px !important;
+
+    .admin-dropdown::before,
+    .notification-dropdown::before {
+        display: none;
     }
 }
 
@@ -492,9 +626,32 @@ body {
     
     .notification-dropdown,
     .admin-dropdown {
-        min-width: 200px;
-        left: auto !important;
-        right: 0 !important;
-        margin-right: 0.5rem;
+        position: absolute !important;
+        top: calc(100% + 8px) !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 200px;
+        max-width: calc(100vw - 24px) !important; /* Smaller padding for phone */
+        max-height: 75vh;
+        overflow-y: auto;
+        overflow-x: hidden !important;
+        margin: 0 !important;
+        border-radius: 8px;
+    }
+
+    .admin-dropdown::before,
+    .notification-dropdown::before {
+        display: none;
+    }
+
+    .admin-dropdown .dropdown-header {
+        padding: 0.8rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .admin-dropdown .dropdown-item {
+        padding: 0.7rem 1rem;
+        font-size: 0.85rem;
     }
 }

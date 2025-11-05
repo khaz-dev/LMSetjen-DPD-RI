@@ -321,16 +321,18 @@
 
 .search-icon-modern {
     position: absolute;
-    left: 15px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: #64748b;
     font-size: 1.1rem;
+    pointer-events: none;
+    z-index: 2;
 }
 
 .search-input-modern {
     width: 100%;
-    padding: 12px 15px 12px 45px;
+    padding: 12px 15px 12px 42px !important;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     font-size: 1rem;
@@ -425,12 +427,31 @@
     scroll-behavior: smooth;
 }
 
+/* Custom scrollbar for table container */
+.users-table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.users-table-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.users-table-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.users-table-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 .users-table-modern {
     width: 100%;
-    min-width: 1200px; /* Minimum width to prevent cramping */
+    min-width: 1240px; /* Exact sum of all column widths */
     border-collapse: collapse;
     margin: 0;
-    table-layout: fixed; /* Fixed layout for better control */
+    table-layout: auto; /* Changed from fixed to auto for proper content sizing */
 }
 
 .users-table-modern thead {
@@ -2120,3 +2141,153 @@
         justify-content: center;
     }
 }
+
+/* ========================================
+   PAGINATION CONTROLS
+   ======================================== */
+
+/* ========================================
+   COMPACT PROFESSIONAL PAGINATION CONTROLS
+   ======================================== */
+
+.pagination-controls-compact {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 25px;
+    padding: 12px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
+}
+
+.pagination-btn-compact {
+    padding: 6px 10px;
+    border: 1px solid #d4d4d8;
+    background: white;
+    color: #52525b;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn-compact:hover:not(:disabled) {
+    background: #f4f4f5;
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-1px);
+}
+
+.pagination-btn-compact:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #fafafa;
+    color: #d4d4d8;
+}
+
+.pagination-display {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.pagination-page {
+    padding: 4px 8px;
+    border: 1px solid #e4e4e7;
+    background: white;
+    color: #52525b;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-page:hover:not(.active) {
+    background: #f4f4f5;
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.pagination-page.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+    font-weight: 600;
+}
+
+.pagination-counter {
+    font-size: 12px;
+    color: #71717a;
+    font-weight: 500;
+    padding: 0 8px;
+    white-space: nowrap;
+}
+
+/* Responsive pagination */
+@media (max-width: 768px) {
+    .pagination-controls-compact {
+        gap: 6px;
+        padding: 10px 12px;
+    }
+
+    .pagination-btn-compact {
+        padding: 5px 8px;
+        font-size: 12px;
+        min-width: 30px;
+        height: 30px;
+    }
+
+    .pagination-page {
+        padding: 3px 6px;
+        font-size: 11px;
+        min-width: 26px;
+        height: 26px;
+    }
+
+    .pagination-counter {
+        font-size: 11px;
+        padding: 0 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pagination-controls-compact {
+        gap: 4px;
+        padding: 8px 10px;
+    }
+
+    .pagination-btn-compact {
+        padding: 4px 6px;
+        font-size: 11px;
+        min-width: 28px;
+        height: 28px;
+    }
+
+    .pagination-page {
+        padding: 2px 5px;
+        font-size: 10px;
+        min-width: 24px;
+        height: 24px;
+    }
+
+    .pagination-counter {
+        font-size: 10px;
+        padding: 0 4px;
+    }
+}
+

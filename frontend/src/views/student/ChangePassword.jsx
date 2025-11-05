@@ -359,7 +359,7 @@ function ChangePassword() {
                                 role="status" 
                                 aria-hidden="true"
                             ></span>
-                            {isValidatingOldPassword ? "Verifying Password..." : "Updating Password..."}
+                            <strong>{isValidatingOldPassword ? "Verifying Password..." : "Updating Password..."}</strong>
                         </>
                     ) : (
                         <>

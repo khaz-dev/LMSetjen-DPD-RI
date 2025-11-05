@@ -648,8 +648,8 @@ function Profile() {
             >
                 {uiState.loading ? (
                     <>
-                        <span className="spinner-border spinner-border-sm text-purple loading-spinner-sm" role="status" aria-hidden="true"></span>
-                        Updating Profile...
+                        <span className="spinner-border spinner-border-sm loading-spinner-sm" role="status" aria-hidden="true"></span>
+                        <strong>Updating Profile...</strong>
                     </>
                 ) : (
                     <>

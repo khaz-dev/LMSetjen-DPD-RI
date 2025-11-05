@@ -476,7 +476,7 @@ function CourseCreate() {
                                             {loading ? (
                                                 <>
                                                     <span className="spinner-border spinner-border-sm me-2"></span>
-                                                    Creating Course...
+                                                    <strong>Creating Course...</strong>
                                                 </>
                                             ) : (
                                                 <>

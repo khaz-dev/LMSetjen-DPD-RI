@@ -289,7 +289,7 @@ function Login() {
                         {isLoading ? (
                           <>
                             <span className="spinner-border login-spinner" role="status" aria-hidden="true"></span>
-                            Memproses Login...
+                            <strong>Memproses Login...</strong>
                           </>
                         ) : (
                           <>
