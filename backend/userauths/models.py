@@ -65,6 +65,15 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+    class Meta:
+        # Add database indexes for frequently queried fields
+        indexes = [
+            models.Index(fields=['role']),
+            models.Index(fields=['is_active']),
+            models.Index(fields=['-date_joined']),
+            models.Index(fields=['role', 'is_active']),
+        ]
+
     def __str__(self):
         return self.email
     

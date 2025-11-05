@@ -62,7 +62,17 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        # Only return essential fields for admin list view - OPTIMIZED
+        fields = [
+            'id',
+            'username',
+            'email',
+            'full_name',
+            'role',
+            'is_active',
+            'last_login',
+            'date_joined'
+        ]
 
 class OrganizationUnitSerializer(serializers.ModelSerializer):
     class Meta:
