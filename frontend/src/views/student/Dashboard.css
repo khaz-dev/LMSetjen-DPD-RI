@@ -134,7 +134,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: conic-gradient(from 0deg, #667eea 0%, #764ba2 var(--progress, 0%), #e9ecef var(--progress, 0%));
+    background: conic-gradient(from 0deg, #667eea 0deg, #764ba2 calc(var(--progress, 0) * 3.6deg), #e9ecef 0deg);
     position: relative;
     user-select: none; /* Prevent selection */
     cursor: default; /* Default cursor */
@@ -147,11 +147,17 @@
     height: 90px;
     background: white;
     border-radius: 50%;
+    z-index: 1;
+}
+
+.progress-inner {
+    position: relative;
+    z-index: 2;
 }
 
 .progress-text {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     font-weight: 700;
     font-size: 1.25rem;
     color: #333;
@@ -682,12 +688,18 @@
     box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
 }
 
-/* Search Container */
+/* Search Container - Unified Design */
 .search-container {
+    display: flex;
+    align-items: center;
+    min-width: 300px;
     background: #f8f9fa;
-    border-radius: 15px;
-    padding: 1rem;
+    border-radius: 25px;
+    padding: 5px;
     border: 1px solid #e9ecef;
+    user-select: none; /* Prevent text selection on container */
+    height: 48px; /* Increased height for better proportions */
+    gap: 0.5rem;
     transition: all 0.3s ease;
 }
 
@@ -697,19 +709,45 @@
 }
 
 .search-input {
+    flex: 1;
     border: none;
     background: transparent;
     outline: none;
-    width: 100%;
-    font-size: 1rem;
-    color: #333;
+    box-shadow: none;
+    font-size: 0.95rem;
+    padding-left: 20px;
+    color: #343a40;
     user-select: text; /* Allow text selection in input */
     cursor: text; /* Text cursor for input */
+    height: 36px; /* Increased to fit within 48px container with 5px padding */
 }
 
 .search-input::placeholder {
-    color: #6c757d;
+    color: rgba(52, 58, 64, 0.6);
     user-select: none; /* Prevent placeholder selection */
+}
+
+.search-button {
+    min-width: 80px;
+    background: var(--theme-gradient);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-weight: 600;
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+    box-shadow: var(--theme-card-shadow);
+    user-select: none; /* Prevent text selection */
+    cursor: pointer; /* Pointer cursor for button */
+    height: 36px; /* Match search-input height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--theme-hover-shadow);
 }
 
 /* Card Headers */

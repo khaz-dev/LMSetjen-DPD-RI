@@ -34,22 +34,28 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: conic-gradient(from 0deg, #667eea 0deg, #667eea calc(var(--progress, 0) * 3.6deg), transparent calc(var(--progress, 0) * 3.6deg));
     display: flex;
     align-items: center;
     justify-content: center;
+    background: conic-gradient(from 0deg, #667eea 0deg, #764ba2 calc(var(--progress, 0) * 3.6deg), #e9ecef 0deg);
     position: relative;
+    user-select: none;
+    cursor: default;
+}
+
+.progress-circle::before {
+    content: '';
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    background: white;
+    border-radius: 50%;
+    z-index: 1;
 }
 
 .progress-inner {
-    width: 80px;
-    height: 80px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 2;
 }
 
 .modern-tabs {
@@ -1335,13 +1341,18 @@
     }
     
     .progress-circle {
-        width: 80px;
-        height: 80px;
+        width: 120px;
+        height: 120px;
+    }
+    
+    .progress-circle::before {
+        width: 90px;
+        height: 90px;
     }
     
     .progress-inner {
-        width: 60px;
-        height: 60px;
+        position: relative;
+        z-index: 2;
     }
     
     .tab-content-modern {

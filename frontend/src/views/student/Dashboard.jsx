@@ -25,29 +25,45 @@ function Dashboard() {
         });
 
         useAxios.get(`student/course-list/${UserData()?.user_id}/`).then((res) => {
-            setCourses(res.data);
-            setFetching(false);
-            
-            // Calculate additional statistics
-            calculateProgressData(res.data);
-            generateRecentActivity(res.data);
-        });
-    };
+            // Synchronously compute progress before state updates to avoid race condition
+            const progressStats = res.data.map(course => {
+                // ===== Count Completed Items =====
+                const totalLessons = course.lectures?.length || 0;
+                const completedLessons = course.completed_lesson?.length || 0;
+                
+                // ===== Count Quiz Completion =====
+                const quizResults = course.quiz_results || [];
+                const totalQuizzes = quizResults.length || 0;
+                const passedQuizzes = quizResults.filter(q => q.passed).length || 0;
+                
+                // ===== Combined Progress (all items treated equally) =====
+                // This matches CourseDetail.jsx calculation for consistency
+                const totalItems = totalLessons + totalQuizzes;
+                const completedItems = completedLessons + passedQuizzes;
+                
+                let progressPercentage = 0;
+                if (totalItems > 0) {
+                    progressPercentage = Math.round((completedItems / totalItems) * 100);
+                }
+                
+                return {
+                    ...course,
+                    progressPercentage,
+                    totalLessons,
+                    completedLessons,
+                    totalQuizzes,
+                    completedQuizzes: passedQuizzes,
+                    quizProgress: totalQuizzes > 0 ? Math.round((passedQuizzes / totalQuizzes) * 100) : 0,
+                    lessonProgress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
+                };
+            });
 
-    const calculateProgressData = (coursesData) => {
-        const progressStats = coursesData.map(course => {
-            const totalLessons = course.lectures?.length || 0;
-            const completedLessons = course.completed_lesson?.length || 0;
-            const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-            
-            return {
-                ...course,
-                progressPercentage,
-                totalLessons,
-                completedLessons
-            };
+            // Batch all state updates together for better performance
+            setCourses(res.data);
+            setProgressData(progressStats);
+            generateRecentActivity(res.data);
+            setFetching(false);  // Set to false AFTER all data is prepared
         });
-        setProgressData(progressStats);
     };
 
     const generateRecentActivity = (coursesData) => {
@@ -133,8 +149,17 @@ function Dashboard() {
             const completedLessonIds = course.completed_lesson || [];
             const lectures = course.lectures || [];
             
+            // Extract completed lesson IDs from nested CompletedLesson structure
+            // completed_lesson is array of { id, variant_item: { id, variant_item_id }, ... }
+            const completedVariantItemIds = new Set(
+                completedLessonIds.map(cl => 
+                    cl.variant_item?.id || cl.variant_item?.variant_item_id || cl.id
+                )
+            );
+            
             lectures.forEach(lecture => {
-                if (completedLessonIds.includes(lecture.id)) {
+                // Match lectures by their ID with completed variant items
+                if (completedVariantItemIds.has(lecture.id)) {
                     totalSeconds += parseDurationToSeconds(lecture.content_duration);
                 }
             });
@@ -205,17 +230,31 @@ function Dashboard() {
                                     </div>
                                     <div className="col-md-4 text-md-end mt-3 mt-md-0">
                                         <div className="d-flex justify-content-md-end justify-content-center text-primary">
-                                                <div
-                                                    className="progress-circle"
-                                                    style={{ '--progress': getAverageProgress() || 0 }}
-                                                >
-                                                    <div className="progress-inner">
-                                                    <div className="text-center">
-                                                        <div className="h3 fw-bold mb-0">{getAverageProgress() || 0}%</div>
-                                                        <small>Complete</small>
+                                                {progressData.length > 0 ? (
+                                                    <div
+                                                        className="progress-circle"
+                                                        style={{ '--progress': getAverageProgress() || 0 }}
+                                                    >
+                                                        <div className="progress-inner">
+                                                        <div className="text-center">
+                                                            <div className="h3 fw-bold mb-0">{getAverageProgress() || 0}%</div>
+                                                            <small>Complete</small>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                                ) : (
+                                                    <div
+                                                        className="progress-circle"
+                                                        style={{ '--progress': 5 }}
+                                                    >
+                                                        <div className="progress-inner">
+                                                        <div className="text-center">
+                                                            <div className="h3 fw-bold mb-0">--%</div>
+                                                            <small style={{ fontSize: '0.7rem' }}>Loading...</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                )}
                                         </div>
                                         <h5 className="mt-2 mb-0 opacity-90 medium text-md-end text-center">Average Progress</h5>
                                     </div>
@@ -383,13 +422,19 @@ function Dashboard() {
                                                 <i className="fas fa-chart-line me-2"></i>
                                                 My Courses
                                             </h5>
-                                            <div className="search-container" style={{width: '300px'}}>
+                                            <div className="search-container">
                                                 <input 
                                                     type="search" 
                                                     className="search-input" 
                                                     placeholder="Search your courses..." 
                                                     onChange={handleSearch}
                                                 />
+                                                <button 
+                                                    onClick={handleSearch} 
+                                                    className="search-button"
+                                                >
+                                                    <i className="fas fa-search me-1"></i>
+                                                </button>
                                             </div>
                                         </div>
                                         
