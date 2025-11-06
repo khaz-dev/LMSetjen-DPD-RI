@@ -168,6 +168,8 @@ export const logout = () => {
         
         // Clear sessionStorage except our logout flag
         const loggingOut = sessionStorage.getItem('logging_out');
+        // Preserve lastSuccessfulSyncTime from localStorage
+        const lastSyncTime = localStorage.getItem('lastSuccessfulSyncTime');
         try {
             sessionStorage.clear();
             if (loggingOut) {
@@ -175,6 +177,15 @@ export const logout = () => {
             }
         } catch (e) {
             // Silent fail
+        }
+        
+        // Restore lastSuccessfulSyncTime after localStorage is cleared
+        if (lastSyncTime) {
+            try {
+                localStorage.setItem('lastSuccessfulSyncTime', lastSyncTime);
+            } catch (e) {
+                // Silent fail
+            }
         }
         
         // Enhanced redirect logic for better mobile/throttling support
@@ -235,11 +246,38 @@ export const setUser = async () => {
     const refresh_token = Cookie.get("refresh_token");
 
     if (!access_token || !refresh_token) {
+        // Preserve lastSuccessfulSyncTime from localStorage
+        const lastSyncTime = localStorage.getItem('lastSuccessfulSyncTime');
+        
         // Clear everything if no tokens
         useAuthStore.getState().setUser(null);
         useAuthStore.getState().setLoading(false);
-        localStorage.clear();
+        
+        // Clear specific items instead of everything to preserve important data
+        const itemsToRemove = [
+            "access_token", "refresh_token", "user", "userData", 
+            "profile", "wishlist", "cart", "course_progress"
+        ];
+        
+        itemsToRemove.forEach(item => {
+            try {
+                localStorage.removeItem(item);
+            } catch (e) {
+                // Silent fail
+            }
+        });
+        
         sessionStorage.clear();
+        
+        // Restore lastSuccessfulSyncTime after cleanup
+        if (lastSyncTime) {
+            try {
+                localStorage.setItem('lastSuccessfulSyncTime', lastSyncTime);
+            } catch (e) {
+                // Silent fail
+            }
+        }
+        
         return;
     }
 

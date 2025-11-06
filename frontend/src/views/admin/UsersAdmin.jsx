@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
     FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaUserGraduate, FaUserTie, 
-    FaUsers, FaChartLine, FaUserCheck, FaUserTimes, FaDownload, FaFilter,
+    FaUsers, FaChartLine, FaUserCheck, FaUserTimes, FaFilter,
     FaCog, FaUserCog, FaChevronDown, FaBell, FaSpinner, FaArrowRight, FaTimes, FaCheck
 } from 'react-icons/fa';
 import { 
-    MdFilterList, MdDownload, MdCheckBox, MdCheckBoxOutlineBlank,
+    MdFilterList, MdCheckBox, MdCheckBoxOutlineBlank,
     MdPersonAdd, MdPeople, MdTrendingUp, MdDashboard, MdSync
 } from 'react-icons/md';
 import AdminHeader from '../partials/AdminHeader';
@@ -30,6 +30,13 @@ function UsersAdmin() {
         failed: 0,
         total: 0,
         errors: []
+    });
+    // Initialize from localStorage for persistence across sessions
+    const [lastSuccessfulSyncTime, setLastSuccessfulSyncTime] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('lastSuccessfulSyncTime');
+        }
+        return null;
     });
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
@@ -260,13 +267,16 @@ function UsersAdmin() {
         }
     }, [selectedUsers, api, fetchUsers]);
 
-    // Sync external users data
+    // Sync external users data - ENHANCED WITH SMART POLLING
     const syncData = async () => {
         
         // Create new AbortController for this sync operation
         abortControllerRef.current = new AbortController();
         
         setSyncing(true);
+        let progressPollInterval = null;
+        let pollTimeout = null;
+        let autoCloseTimeout = null;
         
         const initialProgress = {
             show: true,
@@ -276,8 +286,16 @@ function UsersAdmin() {
             updated: 0,
             failed: 0,
             total: 0,
-            errors: []
+            errors: [],
+            new: 0,
+            changed: 0,
+            unchanged: 0,
+            comparisonComplete: false,
+            lastSuccessfulSyncTimestamp: null
         };
+        
+        // Set initial progress state IMMEDIATELY to show the modal
+        setSyncProgress(initialProgress);
         
         // Add a small delay to ensure state is set
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -286,27 +304,98 @@ function UsersAdmin() {
             // Update progress to syncing
             setSyncProgress(prev => ({
                 ...prev,
+                show: true,
                 status: 'syncing',
                 message: 'Syncing user data from external source...'
             }));
             
-            const response = await api.post('/admin/sync-external-users/', {}, {
+            // Start the actual sync on backend
+            const syncPromise = api.post('/admin/sync-external-users/', {}, {
                 signal: abortControllerRef.current.signal
             });
             
+            // SMART POLLING: Stop when backend signals completion
+            let shouldStopPolling = false;
+            
+            // Poll the backend for real progress updates
+            // This gets actual live progress from the backend with completion detection
+            progressPollInterval = setInterval(async () => {
+                if (shouldStopPolling) return;
+                
+                try {
+                    const progressResponse = await api.get('/admin/sync-progress/');
+                    
+                    if (progressResponse.data) {
+                        setSyncProgress(prev => ({
+                            ...prev,
+                            created: progressResponse.data.created || 0,
+                            updated: progressResponse.data.updated || 0,
+                            failed: progressResponse.data.failed || 0,
+                            total: progressResponse.data.total || prev.total,
+                            errors: progressResponse.data.errors || [],
+                            new: progressResponse.data.new || 0,
+                            changed: progressResponse.data.changed || 0,
+                            unchanged: progressResponse.data.unchanged || 0,
+                            comparisonComplete: progressResponse.data.comparison_complete || false,
+                            lastSuccessfulSyncTimestamp: progressResponse.data.last_successful_sync_timestamp || null
+                        }));
+                        
+                        // SMART POLLING: Check if backend says sync is done
+                        // Stop polling when backend explicitly signals completion
+                        if (progressResponse.data.completion_timestamp && !progressResponse.data.is_syncing) {
+                            console.log('Backend completed sync, stopping polling');
+                            shouldStopPolling = true;
+                        }
+                    }
+                } catch (pollError) {
+                    // Silently fail on poll errors - polling is best-effort
+                    console.debug('Progress poll error (non-critical):', pollError);
+                }
+            }, 500); // Poll every 500ms for real-time updates
+            
+            // TIMEOUT FALLBACK: If polling doesn't stop in 5 minutes, force completion
+            pollTimeout = setTimeout(() => {
+                console.log('Polling timeout reached, forcing completion detection');
+                shouldStopPolling = true;
+            }, 5 * 60 * 1000); // 5 minutes max
+            
+            // Wait for the actual sync to complete
+            const response = await syncPromise;
+            
+            // Sync completed! Stop polling immediately
+            shouldStopPolling = true;
+            if (progressPollInterval) clearInterval(progressPollInterval);
+            if (pollTimeout) clearTimeout(pollTimeout);
+            
             const { results } = response.data;
             
-            // Update progress with results
+            // Update progress with final results from server
             setSyncProgress(prev => ({
                 ...prev,
                 status: 'completed',
-                message: 'Sync completed successfully!',
+                message: 'Sync completed successfully! ✓',
                 created: results.created || 0,
                 updated: results.updated || 0,
                 failed: results.failed || 0,
                 total: results.total_users || 0,
                 errors: results.errors || []
             }));
+            
+            // Fetch the last sync info from database (source of truth)
+            try {
+                const syncInfoResponse = await api.get('/admin/last-sync-info/');
+                if (syncInfoResponse.data && syncInfoResponse.data.last_sync_time) {
+                    setLastSuccessfulSyncTime(syncInfoResponse.data.last_sync_time);
+                    localStorage.setItem('lastSuccessfulSyncTime', syncInfoResponse.data.last_sync_time);
+                    console.log('Updated last sync time from database:', syncInfoResponse.data.last_sync_time);
+                }
+            } catch (error) {
+                console.debug('Failed to fetch updated sync info from database:', error);
+                // Fallback: use current time if database fetch fails
+                const now = new Date().toISOString();
+                setLastSuccessfulSyncTime(now);
+                localStorage.setItem('lastSuccessfulSyncTime', now);
+            }
             
             Toast().fire({
                 icon: "success",
@@ -317,10 +406,22 @@ function UsersAdmin() {
                 console.warn('Sync errors:', results.errors);
             }
             
-            // Refresh users list after sync
+            // AUTO-CLOSE: Show completion screen for 2.5 seconds then auto-close
+            // This gives user time to see the success message
+            autoCloseTimeout = setTimeout(() => {
+                console.log('Auto-closing sync progress modal');
+                closeSyncProgress();
+            }, 2500); // 2.5 seconds
+            
+            // Refresh users list after sync (no need to wait for auto-close)
             await fetchUsers();
             
         } catch (error) {
+            // Stop polling on error
+            shouldStopPolling = true;
+            if (progressPollInterval) clearInterval(progressPollInterval);
+            if (pollTimeout) clearTimeout(pollTimeout);
+            
             // Check if it was cancelled
             if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
                 setSyncProgress(prev => ({
@@ -333,6 +434,11 @@ function UsersAdmin() {
                     icon: "info",
                     title: 'Sync operation cancelled'
                 });
+                
+                // Auto-close cancelled after 1.5 seconds
+                autoCloseTimeout = setTimeout(() => {
+                    closeSyncProgress();
+                }, 1500);
             } else {
                 console.error('Error syncing external users:', error);
                 
@@ -351,6 +457,11 @@ function UsersAdmin() {
         } finally {
             setSyncing(false);
             abortControllerRef.current = null;
+            
+            // Cleanup all timeouts and intervals
+            if (progressPollInterval) clearInterval(progressPollInterval);
+            if (pollTimeout) clearTimeout(pollTimeout);
+            // Note: Don't clear autoCloseTimeout here as it might be needed for auto-close
         }
     };
     
@@ -369,6 +480,8 @@ function UsersAdmin() {
             show: false
         }));
     };
+
+
 
     // Modal handlers - optimized with useCallback
     const openCreateModal = useCallback(() => {
@@ -441,6 +554,32 @@ function UsersAdmin() {
         }
     }, []); // Only run on mount
 
+    // Fetch last sync info from database on component mount
+    useEffect(() => {
+        const fetchLastSyncInfo = async () => {
+            try {
+                const response = await api.get('/admin/last-sync-info/');
+                if (response.data && response.data.last_sync_time) {
+                    // Update state from database (source of truth)
+                    setLastSuccessfulSyncTime(response.data.last_sync_time);
+                    // Also update localStorage for consistency
+                    localStorage.setItem('lastSuccessfulSyncTime', response.data.last_sync_time);
+                    console.log('Loaded last sync time from database:', response.data.last_sync_time);
+                }
+            } catch (error) {
+                // Silently fail - this is non-critical
+                console.debug('Failed to fetch last sync info from database:', error);
+                // Fall back to localStorage if available
+                const localTime = localStorage.getItem('lastSuccessfulSyncTime');
+                if (localTime) {
+                    setLastSuccessfulSyncTime(localTime);
+                }
+            }
+        };
+        
+        fetchLastSyncInfo();
+    }, []); // Only run on mount
+
     useEffect(() => {
         // Apply filters only when filters change, not when users change
         applyFilters();
@@ -483,32 +622,52 @@ function UsersAdmin() {
                                 </p>
                             </div>
                             <div className="dashboard-actions">
-                                <button 
-                                    className="btn-modern-primary btn-sync" 
-                                    onClick={() => {
-                                        syncData();
-                                    }}
-                                    disabled={syncing}
-                                >
-                                    {syncing ? (
-                                        <>
-                                            <FaSpinner className="spinner fa-spin" />
-                                            Syncing...
-                                        </>
+                                <div className="sync-button-group">
+                                    <button 
+                                        className="btn-modern-primary btn-sync" 
+                                        onClick={() => {
+                                            syncData();
+                                        }}
+                                        disabled={syncing}
+                                    >
+                                        {syncing ? (
+                                            <>
+                                                <FaSpinner className="spinner fa-spin" />
+                                                Syncing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <MdSync />
+                                                Sync Data
+                                            </>
+                                        )}
+                                    </button>
+                                    {lastSuccessfulSyncTime ? (
+                                        <div className="last-sync-info">
+                                            <small className="last-sync-label">Last Sync:</small>
+                                            <div className="last-sync-time">
+                                                {new Date(lastSuccessfulSyncTime).toLocaleString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    second: '2-digit'
+                                                })}
+                                            </div>
+                                        </div>
                                     ) : (
-                                        <>
-                                            <MdSync />
-                                            Sync Data
-                                        </>
+                                        <div className="last-sync-info">
+                                            <small className="last-sync-label">Last Sync:</small>
+                                            <div className="last-sync-time">
+                                                Never
+                                            </div>
+                                        </div>
                                     )}
-                                </button>
+                                </div>
                                 <button className="btn-modern-primary" onClick={openCreateModal}>
                                     <MdPersonAdd />
                                     Add New User
-                                </button>
-                                <button className="btn-modern-secondary">
-                                    <MdDownload />
-                                    Export Data
                                 </button>
                             </div>
                         </div>
@@ -939,90 +1098,107 @@ function UsersAdmin() {
                                 <div className="modal-body-modern">
                                     {modalType === 'view' ? (
                                         <div className="user-details-view">
+                                            {/* Basic Information Section */}
                                             <div className="detail-section">
-                                                <h3>Basic Information</h3>
+                                                <h3>👤 Basic Information</h3>
                                                 <div className="detail-grid">
                                                     <div className="detail-item">
-                                                        <label>Full Name:</label>
+                                                        <label>Full Name</label>
                                                         <span>{selectedUser?.user_info?.full_name}</span>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>Email:</label>
+                                                        <label>Email Address</label>
                                                         <span>{selectedUser?.user_info?.email}</span>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>Username:</label>
+                                                        <label>Username</label>
                                                         <span>{selectedUser?.user_info?.username}</span>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>Role:</label>
+                                                        <label>User Role</label>
                                                         <span className={`role-badge ${selectedUser?.user_info?.role}`}>
-                                                            {selectedUser?.user_info?.role}
+                                                            {selectedUser?.user_info?.role === 'student' && '🎓 Student'}
+                                                            {selectedUser?.user_info?.role === 'teacher' && '👨‍🏫 Teacher'}
+                                                            {selectedUser?.user_info?.role === 'admin' && '⚙️ Administrator'}
                                                         </span>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>Status:</label>
+                                                        <label>Account Status</label>
                                                         <span className={`status-badge ${selectedUser?.user_info?.is_active ? 'active' : 'inactive'}`}>
-                                                            {selectedUser?.user_info?.is_active ? 'Active' : 'Inactive'}
+                                                            {selectedUser?.user_info?.is_active ? '✓ Active' : '✕ Inactive'}
                                                         </span>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>Date Joined:</label>
-                                                        <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleDateString() : 'N/A'}</span>
-                                                    </div>
-                                                    <div className="detail-item">
-                                                        <label>Last Login:</label>
-                                                        <span>{selectedUser?.user_info?.last_login ? new Date(selectedUser.user_info.last_login).toLocaleString() : 'Never'}</span>
+                                                        <label>Member Since</label>
+                                                        <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'}) : 'N/A'}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
+                                            {/* Activity Information Section */}
                                             <div className="detail-section">
-                                                <h3>Statistics</h3>
-                                                <div className="stats-grid-modal">
-                                                    {selectedUser?.user_info?.role === 'student' && (
-                                                        <>
-                                                            <div className="stat-item">
-                                                                <label>Total Enrollments:</label>
-                                                                <span>{selectedUser?.enrollment_stats?.total_enrollments || 0}</span>
-                                                            </div>
-                                                            <div className="stat-item">
-                                                                <label>Completed Courses:</label>
-                                                                <span>{selectedUser?.enrollment_stats?.completed_courses || 0}</span>
-                                                            </div>
-                                                            <div className="stat-item">
-                                                                <label>In Progress:</label>
-                                                                <span>{selectedUser?.enrollment_stats?.in_progress_courses || 0}</span>
-                                                            </div>
-                                                            <div className="stat-item">
-                                                                <label>Reviews Given:</label>
-                                                                <span>{selectedUser?.enrollment_stats?.reviews_count || 0}</span>
-                                                            </div>
-                                                        </>
-                                                    )}
-                                                    
-                                                    {selectedUser?.user_info?.role === 'teacher' && (
-                                                        <>
-                                                            <div className="stat-item">
-                                                                <label>Total Courses:</label>
-                                                                <span>{selectedUser?.teaching_stats?.total_courses || 0}</span>
-                                                            </div>
-                                                            <div className="stat-item">
-                                                                <label>Published Courses:</label>
-                                                                <span>{selectedUser?.teaching_stats?.published_courses || 0}</span>
-                                                            </div>
-                                                            <div className="stat-item">
-                                                                <label>Total Students:</label>
-                                                                <span>{selectedUser?.teaching_stats?.total_students || 0}</span>
-                                                            </div>
-                                                            <div className="stat-item">
-                                                                <label>Total Revenue:</label>
-                                                                <span>${selectedUser?.teaching_stats?.total_revenue || 0}</span>
-                                                            </div>
-                                                        </>
-                                                    )}
+                                                <h3>📊 Account Activity</h3>
+                                                <div className="detail-grid">
+                                                    <div className="detail-item">
+                                                        <label>Last Login</label>
+                                                        <span>{selectedUser?.user_info?.last_login ? new Date(selectedUser.user_info.last_login).toLocaleString('en-US', {year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : 'Never logged in'}</span>
+                                                    </div>
+                                                    <div className="detail-item">
+                                                        <label>Account Created</label>
+                                                        <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleString('en-US', {year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : 'N/A'}</span>
+                                                    </div>
                                                 </div>
                                             </div>
+
+                                            {/* Statistics Section - For Students */}
+                                            {selectedUser?.user_info?.role === 'student' && selectedUser?.enrollment_stats && (
+                                                <div className="detail-section">
+                                                    <h3>📚 Learning Statistics</h3>
+                                                    <div className="stats-grid-modal">
+                                                        <div className="stat-item">
+                                                            <label>Total Enrollments</label>
+                                                            <span>{selectedUser?.enrollment_stats?.total_enrollments || 0}</span>
+                                                        </div>
+                                                        <div className="stat-item">
+                                                            <label>Completed Courses</label>
+                                                            <span>{selectedUser?.enrollment_stats?.completed_courses || 0}</span>
+                                                        </div>
+                                                        <div className="stat-item">
+                                                            <label>In Progress Courses</label>
+                                                            <span>{selectedUser?.enrollment_stats?.in_progress_courses || 0}</span>
+                                                        </div>
+                                                        <div className="stat-item">
+                                                            <label>Certificates Earned</label>
+                                                            <span>{selectedUser?.enrollment_stats?.certificates_earned || 0}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Statistics Section - For Teachers */}
+                                            {selectedUser?.user_info?.role === 'teacher' && selectedUser?.teaching_stats && (
+                                                <div className="detail-section">
+                                                    <h3>🎓 Teaching Statistics</h3>
+                                                    <div className="stats-grid-modal">
+                                                        <div className="stat-item">
+                                                            <label>Total Courses Created</label>
+                                                            <span>{selectedUser?.teaching_stats?.total_courses || 0}</span>
+                                                        </div>
+                                                        <div className="stat-item">
+                                                            <label>Published Courses</label>
+                                                            <span>{selectedUser?.teaching_stats?.published_courses || 0}</span>
+                                                        </div>
+                                                        <div className="stat-item">
+                                                            <label>Total Students</label>
+                                                            <span>{selectedUser?.teaching_stats?.total_students || 0}</span>
+                                                        </div>
+                                                        <div className="stat-item">
+                                                            <label>Course Reviews</label>
+                                                            <span>{selectedUser?.teaching_stats?.total_reviews || 0}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <form onSubmit={handleSubmit} className="form-modern">
@@ -1236,7 +1412,31 @@ function UsersAdmin() {
                             {/* Show stats during syncing and after completion */}
                             {(syncProgress.status === 'syncing' || syncProgress.status === 'completed') && (
                                 <>
-                                    {/* Statistics Grid */}
+                                    {/* Comparison Results - Show after comparison complete */}
+                                    {syncProgress.comparisonComplete && (
+                                        <div className="sync-comparison-results">
+                                            <div className="comparison-title">Data Comparison Results</div>
+                                            <div className="comparison-breakdown">
+                                                <div className="comparison-item new">
+                                                    <div className="comparison-label">New Users</div>
+                                                    <div className="comparison-value">{syncProgress.new}</div>
+                                                    <div className="comparison-desc">Not in system</div>
+                                                </div>
+                                                <div className="comparison-item changed">
+                                                    <div className="comparison-label">Updated Users</div>
+                                                    <div className="comparison-value">{syncProgress.changed}</div>
+                                                    <div className="comparison-desc">Data changed</div>
+                                                </div>
+                                                <div className="comparison-item unchanged">
+                                                    <div className="comparison-label">Unchanged</div>
+                                                    <div className="comparison-value">{syncProgress.unchanged}</div>
+                                                    <div className="comparison-desc">Skipped</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Statistics Grid - Processing Results */}
                                     <div className="sync-stats">
                                         <div className="sync-stat-item created">
                                             <div className="sync-stat-label">Created</div>

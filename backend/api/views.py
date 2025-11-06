@@ -47,6 +47,58 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 
+# ============================================================
+# SYNC STATE MANAGEMENT - In-memory tracking for real-time progress
+# ============================================================
+
+_SYNC_STATE = {
+    'is_syncing': False,
+    'created': 0,
+    'updated': 0,
+    'failed': 0,
+    'total': 0,
+    'errors': [],
+    'completion_timestamp': None,
+    'last_successful_sync_timestamp': None,
+    'status': 'idle',  # idle, initializing, syncing, completed, error, cancelled
+    'new': 0,  # Users not in system (will be created)
+    'changed': 0,  # Users with changes (will be updated)
+    'unchanged': 0,  # Users with no changes (skipped)
+    'comparison_complete': False
+}
+
+def reset_sync_state():
+    """Reset sync state to initial values"""
+    global _SYNC_STATE
+    _SYNC_STATE = {
+        'is_syncing': False,
+        'created': 0,
+        'updated': 0,
+        'failed': 0,
+        'total': 0,
+        'errors': [],
+        'completion_timestamp': None,
+        'last_successful_sync_timestamp': None,
+        'status': 'idle',
+        'new': 0,
+        'changed': 0,
+        'unchanged': 0,
+        'comparison_complete': False
+    }
+
+def update_sync_state(**kwargs):
+    """Update specific sync state fields"""
+    global _SYNC_STATE
+    for key, value in kwargs.items():
+        if key in _SYNC_STATE:
+            _SYNC_STATE[key] = value
+
+def get_sync_state():
+    """Get current sync state"""
+    global _SYNC_STATE
+    return _SYNC_STATE.copy()
+
+
 # API Root View
 @method_decorator(csrf_exempt, name='dispatch')
 class APIRootView(APIView):
@@ -3103,17 +3155,25 @@ class AdminUserDetailAPIView(generics.RetrieveAPIView):
             user = self.get_object()
             serializer = self.get_serializer(user)
             
-            # Add additional user statistics
-            user_data = serializer.data
+            # Wrap user data in user_info object for frontend
+            user_info = serializer.data
+            response_data = {'user_info': user_info}
             
             # Add enrollment statistics if user is a student
             if user.role == 'student':
                 enrollments = api_models.EnrolledCourse.objects.filter(user=user)
-                user_data['enrollment_stats'] = {
+                
+                # Calculate completed courses using the is_course_completed() method
+                completed_count = 0
+                for enrollment in enrollments:
+                    if enrollment.is_course_completed():
+                        completed_count += 1
+                
+                response_data['enrollment_stats'] = {
                     'total_enrollments': enrollments.count(),
-                    'completed_courses': enrollments.filter(completed=True).count(),
-                    'in_progress_courses': enrollments.filter(completed=False).count(),
-                    'certificates_earned': api_models.Certificate.objects.filter(user=user).count() if hasattr(api_models, 'Certificate') else 0
+                    'completed_courses': completed_count,
+                    'in_progress_courses': enrollments.count() - completed_count,
+                    'certificates_earned': api_models.Certificate.objects.filter(user=user).count()
                 }
             
             # Add teaching statistics if user is a teacher
@@ -3121,18 +3181,21 @@ class AdminUserDetailAPIView(generics.RetrieveAPIView):
                 try:
                     teacher = api_models.Teacher.objects.get(user=user)
                     courses = api_models.Course.objects.filter(teacher=teacher)
-                    user_data['teaching_stats'] = {
+                    response_data['teaching_stats'] = {
                         'total_courses': courses.count(),
                         'published_courses': courses.filter(platform_status='Published').count(),
                         'total_students': api_models.EnrolledCourse.objects.filter(course__teacher=teacher).count(),
                         'total_reviews': api_models.Review.objects.filter(course__teacher=teacher).count()
                     }
                 except api_models.Teacher.DoesNotExist:
-                    user_data['teaching_stats'] = None
+                    response_data['teaching_stats'] = None
             
-            return Response(user_data, status=status.HTTP_200_OK)
+            return Response(response_data, status=status.HTTP_200_OK)
             
         except Exception as e:
+            print(f"Error in AdminUserDetailAPIView.retrieve: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -3343,6 +3406,88 @@ class AdminUserBulkActionsAPIView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+def compare_users_data(external_user, existing_user):
+    """
+    Compare external user data with existing user to determine if changed.
+    
+    Args:
+        external_user: External API user data (dict)
+        existing_user: Django User model instance
+    
+    Returns:
+        bool: True if user data has changed, False if identical
+    """
+    # Fields to compare
+    fields_to_compare = {
+        'full_name': 'name',
+        'email': 'email',
+        'nip': 'nip',
+        'golongan': 'golongan',
+        'kelas_jabatan': 'kelas_jabatan',
+        'jenis_jabatan': 'jenis_jabatan',
+        'external_status': 'status'
+    }
+    
+    for db_field, ext_field in fields_to_compare.items():
+        external_value = external_user.get(ext_field)
+        existing_value = getattr(existing_user, db_field, None)
+        
+        # Handle status field conversion
+        if db_field == 'external_status':
+            external_value = external_user.get(ext_field, '').upper()
+            existing_value = existing_user.external_status or ''
+        
+        # Compare values
+        if str(external_value or '').strip() != str(existing_value or '').strip():
+            return True
+    
+    return False
+
+
+def categorize_users_for_sync(users_data):
+    """
+    Categorize external users into NEW, CHANGED, and UNCHANGED.
+    
+    Args:
+        users_data: List of external user data dicts
+    
+    Returns:
+        dict: Contains 'new', 'changed', 'unchanged' categorized user lists and counts
+    """
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    
+    categorized = {
+        'new': [],
+        'changed': [],
+        'unchanged': []
+    }
+    
+    for user_data in users_data:
+        external_id = user_data.get('id')
+        email = user_data.get('email')
+        
+        try:
+            # Try to find user by external_id first
+            existing_user = User.objects.get(external_id=external_id)
+        except User.DoesNotExist:
+            try:
+                # Try to find by email
+                existing_user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                # User not in system - NEW
+                categorized['new'].append(user_data)
+                continue
+        
+        # User exists - check if changed
+        if compare_users_data(user_data, existing_user):
+            categorized['changed'].append(user_data)
+        else:
+            categorized['unchanged'].append(user_data)
+    
+    return categorized
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class SyncExternalUsersAPIView(APIView):
     """
@@ -3388,6 +3533,12 @@ class SyncExternalUsersAPIView(APIView):
                 {'error': 'Admin access required. Only admins can sync external users.'},
                 status=status.HTTP_403_FORBIDDEN
             )
+        
+        # Reset sync state at the beginning
+        reset_sync_state()
+        
+        # Create SyncHistory record to track this sync operation
+        sync_record = api_models.SyncHistory.start_sync('external_users')
         
         try:
             # External API URL
@@ -3475,14 +3626,19 @@ class SyncExternalUsersAPIView(APIView):
                 
             except Exception as json_error:
                 print(f"JSON parsing error: {str(json_error)}")
+                # Record failure in database
+                sync_record.fail_sync(f'Invalid response format from external API: {str(json_error)}')
                 return Response({
                     'error': f'Invalid response format from external API: {str(json_error)}'
                 }, status=status.HTTP_502_BAD_GATEWAY)
             
             # Check for success in the real API response structure
             if external_data.get('status') != 'success':
+                error_msg = f"External API returned error: {external_data.get('message', 'Unknown error')}"
+                # Record failure in database
+                sync_record.fail_sync(error_msg)
                 return Response({
-                    'error': f"External API returned error: {external_data.get('message', 'Unknown error')}"
+                    'error': error_msg
                 }, status=status.HTTP_400_BAD_REQUEST)
             
             users_data = external_data.get('data', [])
@@ -3498,7 +3654,38 @@ class SyncExternalUsersAPIView(APIView):
                 'errors': []
             }
             
-            for user_data in users_data:
+            # Initialize sync state
+            update_sync_state(
+                is_syncing=True,
+                total=len(users_data),
+                created=0,
+                updated=0,
+                failed=0,
+                errors=[],
+                new=0,
+                changed=0,
+                unchanged=0,
+                comparison_complete=False
+            )
+            
+            # SMART COMPARISON PHASE: Categorize users before processing
+            print("Starting user data comparison...")
+            categorized_users = categorize_users_for_sync(users_data)
+            
+            # Update sync state with comparison results
+            update_sync_state(
+                new=len(categorized_users['new']),
+                changed=len(categorized_users['changed']),
+                unchanged=len(categorized_users['unchanged']),
+                comparison_complete=True
+            )
+            
+            print(f"Comparison complete: {len(categorized_users['new'])} new, {len(categorized_users['changed'])} changed, {len(categorized_users['unchanged'])} unchanged")
+            
+            # Process only NEW and CHANGED users (skip unchanged for efficiency)
+            users_to_process = categorized_users['new'] + categorized_users['changed']
+            
+            for user_data in users_to_process:
                 try:
                     # Validate external user data
                     serializer = api_serializer.ExternalUserDataSerializer(data=user_data)
@@ -3507,6 +3694,11 @@ class SyncExternalUsersAPIView(APIView):
                             'external_id': user_data.get('id'),
                             'errors': serializer.errors
                         })
+                        # Update failed count
+                        update_sync_state(
+                            failed=len(sync_results['errors']),
+                            errors=sync_results['errors']
+                        )
                         continue
                     
                     validated_data = serializer.validated_data
@@ -3584,6 +3776,8 @@ class SyncExternalUsersAPIView(APIView):
                             )
                             user_created = True
                             sync_results['created'] += 1
+                            # Update created count in real-time
+                            update_sync_state(created=sync_results['created'])
                     
                     # Update existing user (whether found by external_id or email)
                     if not user_created:
@@ -3602,6 +3796,8 @@ class SyncExternalUsersAPIView(APIView):
                         user.save()
                         
                         sync_results['updated'] += 1
+                        # Update updated count in real-time
+                        update_sync_state(updated=sync_results['updated'])
                     
                     # Update or create profile
                     profile, created = Profile.objects.get_or_create(
@@ -3626,19 +3822,201 @@ class SyncExternalUsersAPIView(APIView):
                         'email': user_data.get('email', 'Unknown'),
                         'error': error_msg
                     })
+                    # Update failed count and errors in real-time
+                    update_sync_state(
+                        failed=len(sync_results['errors']),
+                        errors=sync_results['errors']
+                    )
                     continue
             
             # Log final results
             print(f"Sync completed: {sync_results['created']} created, {sync_results['updated']} updated, {len(sync_results['errors'])} errors")
             
+            # Record successful completion in database
+            sync_record.complete_sync(
+                created=sync_results['created'],
+                updated=sync_results['updated'],
+                failed=len(sync_results['errors']),
+                total=len(users_data),
+                notes=f"Successfully synced {len(users_data)} users from external API. {len(categorized_users['new'])} new, {len(categorized_users['changed'])} changed, {len(categorized_users['unchanged'])} unchanged."
+            )
+            
+            # Mark sync as complete with timestamp
+            now_timestamp = datetime.now().isoformat()
+            update_sync_state(
+                is_syncing=False,
+                status='completed',
+                completion_timestamp=now_timestamp,
+                last_successful_sync_timestamp=now_timestamp
+            )
+            
             return Response({
                 'message': 'User synchronization completed successfully',
-                'results': sync_results
+                'results': sync_results,
+                'sync_record_id': sync_record.id,
+                'last_sync_time': sync_record.completed_at
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
             print(f"Unexpected error in sync: {str(e)}")
+            # Record failure in database
+            sync_record.fail_sync(f'Synchronization failed: {str(e)}')
+            # Mark sync as failed with timestamp
+            update_sync_state(
+                is_syncing=False,
+                status='error',
+                completion_timestamp=datetime.now().isoformat()
+            )
             return Response({
                 'error': f'Synchronization failed: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SyncProgressAPIView(APIView):
+    """
+    Get real-time progress of ongoing sync operation
+    
+    Provides live updates while sync is in progress from in-memory state.
+    Also returns last successful sync info from database.
+    Requires admin authentication.
+    
+    Response:
+    {
+        "is_syncing": boolean,
+        "status": "idle|initializing|syncing|completed|error|cancelled",
+        "completion_timestamp": ISO timestamp when sync completed,
+        "last_successful_sync_timestamp": ISO timestamp of last successful sync,
+        "created": integer,      # Users created so far
+        "updated": integer,      # Users updated so far
+        "failed": integer,       # Users failed
+        "total": integer,        # Total users to sync
+        "new": integer,          # New users detected (not in system)
+        "changed": integer,      # Changed users detected (will be updated)
+        "unchanged": integer,    # Unchanged users (skipped)
+        "comparison_complete": boolean,  # Whether data comparison is done
+        "errors": array,         # Error details
+        "last_sync_info": {...}  # Last successful sync from database
+    }
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get current sync progress"""
+        # Verify admin access
+        if not hasattr(request.user, 'role') or request.user.role != 'admin':
+            return Response(
+                {'error': 'Admin access required. Only admins can view sync progress.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Return current sync state (in-memory for real-time progress)
+        state = get_sync_state()
+        
+        # Get last successful sync from database
+        last_successful_sync = api_models.SyncHistory.get_last_successful_sync('external_users')
+        
+        last_sync_info = None
+        if last_successful_sync:
+            last_sync_info = {
+                'id': last_successful_sync.id,
+                'started_at': last_successful_sync.started_at.isoformat(),
+                'completed_at': last_successful_sync.completed_at.isoformat() if last_successful_sync.completed_at else None,
+                'status': last_successful_sync.status,
+                'total_records': last_successful_sync.total_records,
+                'created_records': last_successful_sync.created_records,
+                'updated_records': last_successful_sync.updated_records,
+                'failed_records': last_successful_sync.failed_records,
+                'total_changed': last_successful_sync.total_changed,
+                'duration': last_successful_sync.duration,
+                'duration_seconds': last_successful_sync.duration_seconds,
+                'notes': last_successful_sync.notes
+            }
+        
+        return Response({
+            'is_syncing': state['is_syncing'],
+            'status': state.get('status', 'idle'),
+            'completion_timestamp': state.get('completion_timestamp'),
+            'last_successful_sync_timestamp': state.get('last_successful_sync_timestamp'),
+            'created': state['created'],
+            'updated': state['updated'],
+            'failed': state['failed'],
+            'total': state['total'],
+            'new': state.get('new', 0),
+            'changed': state.get('changed', 0),
+            'unchanged': state.get('unchanged', 0),
+            'comparison_complete': state.get('comparison_complete', False),
+            'errors': state['errors'],
+            'last_sync_info': last_sync_info
+        }, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LastSyncInfoAPIView(APIView):
+    """
+    Get last sync time from database
+    
+    Accessible to both authenticated and unauthenticated users.
+    Returns the last successful sync timestamp and statistics.
+    
+    Response:
+    {
+        "last_sync_time": ISO timestamp or null,
+        "sync_info": {
+            "id": integer,
+            "started_at": ISO timestamp,
+            "completed_at": ISO timestamp,
+            "status": "completed|in_progress|failed|cancelled",
+            "total_records": integer,
+            "created_records": integer,
+            "updated_records": integer,
+            "failed_records": integer,
+            "duration": "HH:MM:SS",
+            "duration_seconds": integer,
+            "notes": string
+        }
+    }
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    
+    def get(self, request):
+        """Get last sync time info"""
+        try:
+            # Get last successful sync from database
+            last_sync = api_models.SyncHistory.get_last_successful_sync('external_users')
+            
+            if not last_sync:
+                return Response({
+                    'last_sync_time': None,
+                    'sync_info': None,
+                    'message': 'No sync history available'
+                }, status=status.HTTP_200_OK)
+            
+            sync_info = {
+                'id': last_sync.id,
+                'started_at': last_sync.started_at.isoformat(),
+                'completed_at': last_sync.completed_at.isoformat() if last_sync.completed_at else None,
+                'status': last_sync.status,
+                'total_records': last_sync.total_records,
+                'created_records': last_sync.created_records,
+                'updated_records': last_sync.updated_records,
+                'failed_records': last_sync.failed_records,
+                'total_changed': last_sync.total_changed,
+                'duration': last_sync.duration,
+                'duration_seconds': last_sync.duration_seconds,
+                'notes': last_sync.notes
+            }
+            
+            return Response({
+                'last_sync_time': last_sync.completed_at.isoformat() if last_sync.completed_at else None,
+                'sync_info': sync_info
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"Error in LastSyncInfoAPIView: {str(e)}")
+            return Response({
+                'error': f'Error retrieving sync information: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 

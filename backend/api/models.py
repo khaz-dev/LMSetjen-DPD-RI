@@ -749,6 +749,130 @@ class TeacherExpertise(models.Model):
 # ==================== END NEW MODELS ====================
 
 
+# ==================== SYNC HISTORY MODEL ====================
+
+class SyncHistory(models.Model):
+    """
+    Track synchronization history of external user data.
+    Stores information about when syncs occur and sync statistics.
+    """
+    sync_type = models.CharField(
+        max_length=50,
+        default='external_users',
+        help_text="Type of sync operation (e.g., external_users, courses, etc.)"
+    )
+    started_at = models.DateTimeField(auto_now_add=True, help_text="When the sync started")
+    completed_at = models.DateTimeField(null=True, blank=True, help_text="When the sync completed")
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('in_progress', 'In Progress'),
+            ('completed', 'Completed'),
+            ('failed', 'Failed'),
+            ('cancelled', 'Cancelled')
+        ],
+        default='in_progress',
+        help_text="Current status of the sync"
+    )
+    
+    # Sync statistics
+    total_records = models.IntegerField(default=0, help_text="Total records processed")
+    created_records = models.IntegerField(default=0, help_text="New records created")
+    updated_records = models.IntegerField(default=0, help_text="Existing records updated")
+    failed_records = models.IntegerField(default=0, help_text="Records that failed to sync")
+    
+    # Additional info
+    error_message = models.TextField(blank=True, null=True, help_text="Error message if sync failed")
+    notes = models.TextField(blank=True, null=True, help_text="Additional notes about the sync")
+    
+    class Meta:
+        ordering = ['-started_at']
+        verbose_name = "Sync History"
+        verbose_name_plural = "Sync Histories"
+        indexes = [
+            models.Index(fields=['-started_at']),
+            models.Index(fields=['status', '-started_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.sync_type} - {self.started_at.strftime('%Y-%m-%d %H:%M:%S')} ({self.status})"
+    
+    @property
+    def duration(self):
+        """Calculate sync duration if completed"""
+        if self.completed_at:
+            delta = self.completed_at - self.started_at
+            return delta
+        return None
+    
+    @property
+    def duration_seconds(self):
+        """Get duration in seconds"""
+        if self.duration:
+            return int(self.duration.total_seconds())
+        return None
+    
+    @property
+    def total_changed(self):
+        """Total number of records that were created or updated"""
+        return self.created_records + self.updated_records
+    
+    @classmethod
+    def get_last_successful_sync(cls, sync_type='external_users'):
+        """Get the last successful sync record"""
+        return cls.objects.filter(
+            sync_type=sync_type,
+            status='completed'
+        ).first()
+    
+    @classmethod
+    def get_last_sync_time(cls, sync_type='external_users'):
+        """Get the last successful sync timestamp"""
+        last_sync = cls.get_last_successful_sync(sync_type)
+        if last_sync and last_sync.completed_at:
+            return last_sync.completed_at
+        return None
+    
+    @classmethod
+    def start_sync(cls, sync_type='external_users'):
+        """Create a new sync history record"""
+        return cls.objects.create(
+            sync_type=sync_type,
+            status='in_progress'
+        )
+    
+    def complete_sync(self, created=0, updated=0, failed=0, total=0, notes=None):
+        """Mark sync as completed with statistics"""
+        self.status = 'completed'
+        self.completed_at = timezone.now()
+        self.created_records = created
+        self.updated_records = updated
+        self.failed_records = failed
+        self.total_records = total
+        if notes:
+            self.notes = notes
+        self.save()
+    
+    def fail_sync(self, error_message, notes=None):
+        """Mark sync as failed"""
+        self.status = 'failed'
+        self.completed_at = timezone.now()
+        self.error_message = error_message
+        if notes:
+            self.notes = notes
+        self.save()
+    
+    def cancel_sync(self, notes=None):
+        """Mark sync as cancelled"""
+        self.status = 'cancelled'
+        self.completed_at = timezone.now()
+        if notes:
+            self.notes = notes
+        self.save()
+
+# ==================== END SYNC HISTORY MODEL ====================
+
+
 # Signal handlers for Profile-Teacher synchronization
 def sync_teacher_with_profile(sender, instance, **kwargs):
     """

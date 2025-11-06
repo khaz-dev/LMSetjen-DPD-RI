@@ -23,6 +23,7 @@ function BaseHeader() {
     const [isLoggedIn, user] = useAuthStore((state) => [state.isLoggedIn, state.user]);
     const userData = UserData();
     const hasTeacherId = !!(userData?.teacher_id && userData?.teacher_id !== null && userData?.teacher_id !== undefined && userData?.teacher_id !== 0);
+    const isAdmin = userData?.role === 'admin';
     
     // Animation effect
     useEffect(() => {
@@ -104,6 +105,7 @@ function BaseHeader() {
     const getDisplayName = () => {
         const fullName = userData?.full_name || user?.full_name || user?.username || '';
         const displayName = getFirstThreeWords(fullName);
+        if (isAdmin) return displayName || 'Admin';
         return displayName || (hasTeacherId ? 'Pemateri' : 'Peserta');
     };
 
@@ -130,6 +132,13 @@ function BaseHeader() {
         { to: "/student/wishlist/", icon: "fas fa-bookmark", text: "Materi Impian" },
         { to: "/student/question-answer/", icon: "fas fa-envelope", text: "Tanya Jawab" },
         { to: "/student/profile/", icon: "fas fa-gear", text: "Pengaturan" },
+        { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar" }
+    ];
+
+    const adminMenuItems = [
+        { to: "/admin/dashboard/", icon: "bi bi-grid-fill", text: "Dashboard" },
+        { to: "/admin/users/", icon: "fas fa-users", text: "Manajemen Pengguna" },
+        { to: "/admin/documentation/", icon: "fas fa-book", text: "Dokumentasi" },
         { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar" }
     ];
 
@@ -230,7 +239,21 @@ function BaseHeader() {
                         {/* User menu */}
                         {isLoggedIn() ? (
                             <div className="user-menu">
-                                {hasTeacherId ? (
+                                {isAdmin ? (
+                                    <div 
+                                        className="nav-item dropdown"
+                                        onMouseEnter={handleMouseEnter}
+                                        onMouseLeave={handleMouseLeave}
+                                    >
+                                        <div className="nav-link admin-link">
+                                            <i className="fas fa-shield-alt me-2"></i>
+                                            <span>{getDisplayName()}</span>
+                                        </div>
+                                        <ul className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
+                                            {renderDropdownItems(adminMenuItems)}
+                                        </ul>
+                                    </div>
+                                ) : hasTeacherId ? (
                                     <div 
                                         className="nav-item dropdown"
                                         onMouseEnter={handleMouseEnter}

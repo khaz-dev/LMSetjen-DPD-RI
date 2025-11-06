@@ -400,7 +400,7 @@ function ChangePassword() {
                             {/* Password Change Form */}
                             <div className="student-password-form-container">
                                 <form onSubmit={handleSubmit} autoComplete="off" noValidate>
-                                    <div className="row g-4">
+                                    <div className="row">
                                         {/* Password Fields */}
                                         {renderPasswordField(
                                             "old_password", 

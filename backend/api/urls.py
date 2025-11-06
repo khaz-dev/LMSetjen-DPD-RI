@@ -110,6 +110,8 @@ urlpatterns = [
     path("admin/enrollment-analytics/", api_views.AdminEnrollmentAnalyticsAPIView.as_view()),
     path("admin/system-health/", api_views.AdminSystemHealthAPIView.as_view()),
     path("admin/sync-external-users/", api_views.SyncExternalUsersAPIView.as_view()),
+    path("admin/sync-progress/", api_views.SyncProgressAPIView.as_view()),
+    path("admin/last-sync-info/", api_views.LastSyncInfoAPIView.as_view()),
 
 ]
 
