@@ -515,11 +515,16 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
     note = NoteSerializer(many=True, read_only=True)
     question_answer = Question_AnswerSerializer(many=True, read_only=True)
     review = ReviewSerializer(many=False, read_only=True)
+    quiz_results = serializers.SerializerMethodField()
 
 
     class Meta:
         fields = '__all__'
         model = api_models.EnrolledCourse
+
+    def get_quiz_results(self, obj):
+        """Return quiz results for this enrollment"""
+        return obj.quiz_results()
 
     def __init__(self, *args, **kwargs):
         super(EnrolledCourseSerializer, self).__init__(*args, **kwargs)
