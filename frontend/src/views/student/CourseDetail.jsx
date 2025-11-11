@@ -1272,7 +1272,7 @@ function CourseDetail() {
                     <div 
                         className="text-center p-4"
                         style={{
-                            background: 'white',
+                            background: 'transparent',
                             borderRadius: '15px',
                             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
                             border: '1px solid rgba(0, 0, 0, 0.1)'
@@ -1281,7 +1281,7 @@ function CourseDetail() {
                         <div className="spinner-border text-primary mb-3" role="status">
                             <span className="visually-hidden">Loading...</span>
                         </div>
-                        <p className="mb-0 text-muted">Updating course progress...</p>
+                        <p className="mb-0 text-white">Updating course progress...</p>
                     </div>
                 </div>
             )}

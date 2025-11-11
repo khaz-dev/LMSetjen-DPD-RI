@@ -474,52 +474,51 @@ function QA() {
                                                             className="student-qa-course-card"
                                                             onClick={() => handleCourseSelect(enrollment)}
                                                         >
-                                                            {/* Course Header */}
-                                                            <div className="course-card-header">
-                                                                <div className="course-image-container">
-                                                                    {enrollment.course?.image ? (
-                                                                        <img 
-                                                                            src={enrollment.course.image.startsWith("http") 
-                                                                                ? enrollment.course.image 
-                                                                                : `getMediaUrl(enrollment.course.image)`
-                                                                            } 
-                                                                            alt={enrollment.course?.title || 'Course'}
-                                                                            className="course-image"
-                                                                            onError={(e) => {
-                                                                                e.target.style.display = 'none';
-                                                                                e.target.nextSibling.style.display = 'flex';
-                                                                            }}
-                                                                        />
-                                                                    ) : null}
-                                                                    <div 
-                                                                        className="course-placeholder course-image-placeholder"
-                                                                        style={{ display: enrollment.course?.image ? 'none' : 'flex' }}
-                                                                    >
-                                                                        <i className="fas fa-graduation-cap"></i>
-                                                                    </div>
-                                                                </div>
-                                                                
-                                                                <div className="course-info">
-                                                                    <h5 className="student-qa-course-title">
-                                                                        {enrollment.course?.title || 'Untitled Course'}
-                                                                    </h5>
-                                                                    <p className="course-instructor">
-                                                                        <i className="fas fa-chalkboard-teacher me-2"></i>
-                                                                        {enrollment.course?.teacher?.full_name || 'Unknown Instructor'}
-                                                                    </p>
+                                                            {/* Course Image Header */}
+                                                            <div className="course-image-container">
+                                                                {enrollment.course?.image ? (
+                                                                    <img 
+                                                                        src={enrollment.course.image.startsWith("http") 
+                                                                            ? enrollment.course.image 
+                                                                            : `getMediaUrl(enrollment.course.image)`
+                                                                        } 
+                                                                        alt={enrollment.course?.title || 'Course'}
+                                                                        className="course-image"
+                                                                        onError={(e) => {
+                                                                            e.target.style.display = 'none';
+                                                                            e.target.nextSibling.style.display = 'flex';
+                                                                        }}
+                                                                    />
+                                                                ) : null}
+                                                                <div 
+                                                                    className="course-placeholder course-image-placeholder"
+                                                                    style={{ display: enrollment.course?.image ? 'none' : 'flex' }}
+                                                                >
+                                                                    <i className="fas fa-graduation-cap"></i>
                                                                 </div>
                                                             </div>
 
-                                                            {/* Course Meta Information */}
-                                                            <div className="student-qa-course-meta">
-                                                                <span className="qa-stats-badge">
-                                                                    <i className="fas fa-comments"></i>
-                                                                    {enrollment.qa_count || 0} Questions
-                                                                </span>
-                                                                <span className="discussion-activity">
-                                                                    <i className="fas fa-users"></i>
-                                                                    Active Discussion
-                                                                </span>
+                                                            {/* Course Info */}
+                                                            <div className="course-info">
+                                                                <h5 className="student-qa-course-title">
+                                                                    {enrollment.course?.title || 'Untitled Course'}
+                                                                </h5>
+                                                                <p className="course-instructor">
+                                                                    <i className="fas fa-chalkboard-teacher me-2"></i>
+                                                                    {enrollment.course?.teacher?.full_name || 'Unknown Instructor'}
+                                                                </p>
+                                                                
+                                                                {/* Course Meta Information */}
+                                                                <div className="student-qa-course-meta">
+                                                                    <span className="qa-stats-badge">
+                                                                        <i className="fas fa-comments"></i>
+                                                                        {enrollment.qa_count || 0} Questions
+                                                                    </span>
+                                                                    <span className="discussion-activity">
+                                                                        <i className="fas fa-users"></i>
+                                                                        Active Discussion
+                                                                    </span>
+                                                                </div>
                                                             </div>
 
                                                             {/* Course Action Area */}

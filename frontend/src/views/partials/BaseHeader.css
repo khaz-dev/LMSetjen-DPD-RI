@@ -391,11 +391,27 @@
     box-shadow: var(--theme-hover-shadow);
 }
 
+.active-item i {
+    color: white !important;
+}
+
+.active-item span {
+    color: white !important;
+}
+
 .active-item:hover {
     background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary) 100%);
     color: white;
     transform: translateX(12px);
     box-shadow: 0 12px 30px var(--theme-shadow-color);
+}
+
+.active-item:hover i {
+    color: white !important;
+}
+
+.active-item:hover span {
+    color: white !important;
 }
 
 /* User Guide Link */

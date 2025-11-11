@@ -140,10 +140,27 @@
     animation: fadeInUp 0.6s ease-out;
 }
 
+/* ===== COURSE CARD STYLES ===== */
+.student-qa-course-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 1.2rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    animation: fadeInUp 0.6s ease-out;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(20px);
     }
     to {
         opacity: 1;
@@ -157,11 +174,12 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
+    height: 3px;
     background: linear-gradient(90deg, #9b59b6 0%, #3498db 50%, #e74c3c 100%);
     transform: scaleX(0);
     transition: transform 0.4s ease;
     transform-origin: left;
+    z-index: 1;
 }
 
 .student-qa-course-card:hover::before {
@@ -170,61 +188,76 @@
 
 .student-qa-course-card:hover {
     border-color: #9b59b6;
-    box-shadow: 0 15px 35px rgba(155, 89, 182, 0.2);
-    transform: translateY(-5px);
-    background: linear-gradient(135deg, #ffffff 0%, #f1f3f4 100%);
+    box-shadow: 0 12px 28px rgba(155, 89, 182, 0.15);
+    transform: translateY(-4px);
 }
 
 .student-qa-course-card-header {
     display: flex;
-    align-items: center;
-    margin-bottom: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
 }
 
-.course-image {
-    width: 85px;
-    height: 85px;
-    border-radius: 16px;
-    object-fit: cover;
-    border: 3px solid white;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    position: relative;
-    transition: transform 0.3s ease;
-}
-
-.student-qa-course-card:hover .course-image {
-    transform: scale(1.05);
-}
-
-.course-placeholder {
-    width: 85px;
-    height: 85px;
-    border-radius: 16px;
+.course-image-container {
+    width: 100%;
+    height: 140px;
+    overflow: hidden;
     background: linear-gradient(135deg, #9b59b6 0%, #667eea 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px solid white;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.course-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.student-qa-course-card:hover .course-image {
+    transform: scale(1.08);
+}
+
+.course-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #9b59b6 0%, #667eea 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: white;
-    font-size: 1.5rem;
-    transition: transform 0.3s ease;
+    font-size: 3rem;
+    position: relative;
 }
 
-.student-qa-course-card:hover .course-placeholder {
-    transform: scale(1.05);
+.course-placeholder::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
 }
 
+.course-placeholder i {
+    position: relative;
+    z-index: 1;
+}
+
+/* Course Info Section */
 .course-info {
+    padding: 1rem;
     flex: 1;
-    margin-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .student-qa-course-title {
-    font-size: 1.15rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #2c3e50;
-    margin-bottom: 0.5rem;
+    margin: 0 0 0.35rem 0;
     line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -240,91 +273,114 @@
 
 .course-instructor {
     color: #6c757d;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 500;
     margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
+    transition: color 0.3s ease;
+}
+
+.student-qa-course-card:hover .course-instructor {
+    color: #9b59b6;
 }
 
 .student-qa-course-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
+    gap: 0.4rem;
+    margin-bottom: 0;
+    margin-top: auto;
 }
 
 .qa-stats-badge {
     background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
     color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 25px;
-    font-size: 0.85rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
     font-weight: 600;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.3);
+    gap: 0.35rem;
+    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.25);
     transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.qa-stats-badge i {
+    font-size: 0.75rem;
 }
 
 .student-qa-course-card:hover .qa-stats-badge {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.4);
+    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.35);
 }
 
 .discussion-activity {
     background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 25px;
-    font-size: 0.85rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
     font-weight: 600;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    gap: 0.35rem;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.25);
     transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.discussion-activity i {
+    font-size: 0.75rem;
 }
 
 .student-qa-course-card:hover .discussion-activity {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.35);
 }
 
+/* Course Action Area */
 .course-action-area {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
     border-top: 1px solid #f0f0f0;
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.02) 0%, rgba(52, 152, 219, 0.02) 100%);
 }
 
 .join-discussion-btn {
     background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
     color: white;
     border: none;
-    padding: 0.6rem 1.5rem;
+    padding: 0.55rem 1.5rem;
     border-radius: 25px;
     font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
+    font-size: 0.85rem;
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    gap: 0.6rem;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+    box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
     transform: translateX(0);
+    width: 100%;
+    max-width: 200px;
+    text-decoration: none;
 }
 
 .student-qa-course-card:hover .join-discussion-btn {
-    transform: translateX(8px) translateY(-2px);
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px rgba(231, 76, 60, 0.4);
     color: white;
+    text-decoration: none;
 }
 
 .join-discussion-arrow {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     transition: transform 0.3s ease;
 }
 

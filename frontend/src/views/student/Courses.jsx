@@ -45,9 +45,26 @@ function Courses() {
     };
 
     const calculateProgress = (course) => {
+        // ===== Count Completed Lessons =====
         const totalLectures = course.lectures?.length || 0;
         const completedLessons = course.completed_lesson?.length || 0;
-        return totalLectures > 0 ? Math.round((completedLessons / totalLectures) * 100) : 0;
+        
+        // ===== Count Quiz Completion =====
+        const quizResults = course.quiz_results || [];
+        const totalQuizzes = quizResults.length || 0;
+        const passedQuizzes = quizResults.filter(q => q.passed).length || 0;
+        
+        // ===== Combined Progress (all items treated equally) =====
+        // This matches Dashboard calculation for consistency
+        const totalItems = totalLectures + totalQuizzes;
+        const completedItems = completedLessons + passedQuizzes;
+        
+        let progressPercentage = 0;
+        if (totalItems > 0) {
+            progressPercentage = Math.round((completedItems / totalItems) * 100);
+        }
+        
+        return progressPercentage;
     };
 
     if (fetching) {
@@ -142,10 +159,10 @@ function Courses() {
                                         <div className="row g-4">
                                             {courses.map((c, index) => (
                                                 <div key={c.enrollment_id || c.id || index} className="col-12">
-                                                    <div className="course-card p-4">
+                                                    <div className="course-card">
                                                         <div className="row align-items-center">
                                             {/* Course Image */}
-                                            <div className="col-lg-3 col-md-3 col-12 mb-3 mb-md-0">
+                                            <div className="col-lg-3 col-md-3 col-12 mb-2 mb-md-0">
                                                 <div className="course-image-wrapper">
                                                     <Link to={`/student/courses/${c.enrollment_id}/`}>
                                                         {c?.course?.image ? (
@@ -170,18 +187,18 @@ function Courses() {
                                                                 display: c?.course?.image ? 'none' : 'flex', 
                                                                 alignItems: 'center', 
                                                                 justifyContent: 'center', 
-                                                                height: '150px', 
+                                                                height: '100px', 
                                                                 backgroundColor: '#f0f0f0', 
                                                                 borderRadius: '8px' 
                                                             }}
                                                         >
-                                                            <i className="fas fa-graduation-cap" style={{ fontSize: '36px', color: '#ccc' }}></i>
+                                                            <i className="fas fa-graduation-cap" style={{ fontSize: '32px', color: '#ccc' }}></i>
                                                         </div>
                                                     </Link>
                                                 </div>
                                             </div>                                                            
                                             {/* Course Info */}
-                                                            <div className="col-lg-5 col-md-5 col-12 mb-3 mb-lg-0">
+                                                            <div className="col-lg-5 col-md-5 col-12 mb-2 mb-lg-0">
                                                                 <div className="d-flex gap-2 mb-1">
                                                                     <span className="badge badge-modern">
                                                                         <i className="fas fa-folder-open"></i>
@@ -200,18 +217,18 @@ function Courses() {
                                                                         {c.course.title}
                                                                     </Link>
                                                                 </h5>
-                                                                <div className="d-flex flex-wrap gap-3 text-muted small">
+                                                                <div className="d-flex flex-wrap gap-2 text-muted small">
                                                                     <span>
                                                                         <i className="fas fa-calendar me-1 text-primary"></i>
                                                                         Enrolled: {moment(c.date).format("D MMM, YYYY")}
                                                                     </span>
                                                                     <span>
                                                                         <i className="fas fa-play-circle me-1 text-success"></i>
-                                                                        {c.lectures?.length} Lessons
+                                                                        {(c.lectures?.length || 0) + (c.quiz_results?.length || 0)} Total Items
                                                                     </span>
                                                                     <span>
                                                                         <i className="fas fa-check-circle me-1 text-info"></i>
-                                                                        {c.completed_lesson?.length} Completed
+                                                                        {(c.completed_lesson?.length || 0) + (c.quiz_results?.filter(q => q.passed)?.length || 0)} Completed
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -220,14 +237,14 @@ function Courses() {
                                                             <div className="col-lg-4 col-md-4 col-12">
                                                                 <div className="text-md-end">
                                                                     {/* Progress Bar */}
-                                                                    <div className="mb-3">
-                                                                        <div className="d-flex justify-content-between align-items-center mb-2">
+                                                                    <div className="mb-2">
+                                                                        <div className="d-flex justify-content-between align-items-center mb-1">
                                                                             <small className="text-muted">Progress</small>
                                                                             <small className="fw-bold text-primary">
                                                                                 {calculateProgress(c)}%
                                                                             </small>
                                                                         </div>
-                                                                        <div className="progress" style={{ height: '8px', borderRadius: '10px' }}>
+                                                                        <div className="progress" style={{ height: '6px', borderRadius: '10px' }}>
                                                                             <div 
                                                                                 className="progress-bar"
                                                                                 role="progressbar"
@@ -241,13 +258,21 @@ function Courses() {
                                                                     </div>
 
                                                                     {/* Action Button */}
-                                                                    {c.completed_lesson?.length < 1 ? (
+                                                                    {calculateProgress(c) === 0 ? (
                                                                         <Link 
                                                                             to={`/student/courses/${c.enrollment_id}/`} 
                                                                             className="course-btn btn-start"
                                                                         >
                                                                             <i className="fas fa-play"></i>
                                                                             Start Learning
+                                                                        </Link>
+                                                                    ) : calculateProgress(c) === 100 ? (
+                                                                        <Link 
+                                                                            to={`/student/courses/${c.enrollment_id}/`} 
+                                                                            className="course-btn btn-completed"
+                                                                        >
+                                                                            <i className="fas fa-trophy"></i>
+                                                                            Course Completed
                                                                         </Link>
                                                                     ) : (
                                                                         <Link 

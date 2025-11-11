@@ -496,7 +496,7 @@ function Profile() {
         </div>
     );
 
-    const renderFormField = (name, label, icon, type = "text", placeholder = "", rows = null, required = true) => (
+    const renderFormField = (name, label, icon, type = "text", placeholder = "", rows = null, required = true, disabled = false) => (
         <div className="col-12 mb-3">
             <label className="form-label modern-label" htmlFor={name}>
                 <i className={`${icon} form-label-icon`}></i>
@@ -511,7 +511,7 @@ function Profile() {
                     value={profileData[name] || ""}
                     placeholder={placeholder}
                     onChange={handleProfileChange}
-                    disabled={uiState.loading}
+                    disabled={uiState.loading || disabled}
                 />
             ) : (
                 <input 
@@ -523,7 +523,7 @@ function Profile() {
                     required={required}
                     value={profileData[name] || ""} 
                     onChange={handleProfileChange} 
-                    disabled={uiState.loading}
+                    disabled={uiState.loading || disabled}
                 />
             )}
         </div>
@@ -587,22 +587,19 @@ function Profile() {
             
             <div className="row g-3">
                 <div className="col-md-6">
-                    {renderFormField("nip", "NIP (Employee ID)", "fas fa-id-card", "text", "Enter your NIP", null, false)}
+                    {renderFormField("nip", "NIP (Employee ID)", "fas fa-id-card", "text", "Enter your NIP", null, false, true)}
                 </div>
                 <div className="col-md-6">
-                    {renderFormField("golongan", "Golongan", "fas fa-layer-group", "text", "Enter your golongan", null, false)}
+                    {renderFormField("golongan", "Golongan", "fas fa-layer-group", "text", "Enter your golongan", null, false, true)}
                 </div>
                 <div className="col-md-6">
-                    {renderFormField("kelas_jabatan", "Kelas Jabatan", "fas fa-star", "text", "Enter your kelas jabatan", null, false)}
+                    {renderFormField("jenis_jabatan", "Jenis Jabatan", "fas fa-tags", "text", "Enter your jenis jabatan", null, false, true)}
                 </div>
                 <div className="col-md-6">
-                    {renderFormField("jenis_jabatan", "Jenis Jabatan", "fas fa-tags", "text", "Enter your jenis jabatan", null, false)}
+                    {renderFormField("organization_unit_name", "Organization Unit", "fas fa-building", "text", "Organization unit name", null, false, true)}
                 </div>
                 <div className="col-md-6">
-                    {renderFormField("organization_unit_name", "Organization Unit", "fas fa-building", "text", "Organization unit name", null, false)}
-                </div>
-                <div className="col-md-6">
-                    {renderFormField("position_name", "Position", "fas fa-user-tie", "text", "Position title", null, false)}
+                    {renderFormField("position_name", "Position", "fas fa-user-tie", "text", "Position title", null, false, true)}
                 </div>
             </div>
             <small className="field-help-text">Employee information is automatically synchronized from the organization system</small>

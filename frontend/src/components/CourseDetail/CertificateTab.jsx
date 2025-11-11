@@ -106,7 +106,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
     }, [course]);
 
     const formatDate = (date) => {
-        return moment(date).format('MMMM Do, YYYY');
+        return moment(date).format('MMMM D, YYYY');
     };
 
     const getCompletionStatus = () => {
@@ -267,13 +267,17 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                             />
                             <div className="certificate-content">
                                 <div className="certificate-id">
-                                    <span>{certificate.certificate_id}</span>
+                                    <span>Certificate ID: {certificate.certificate_id}</span>
                                 </div>
+                                <h5 className="show-student">This is to certify that:</h5>
                                 <h2 className="student-name">{UserData()?.full_name}</h2>
                                 <div className="certificate-body">
+                                    <h6 className="show-course-title">has successfully completed the course</h6>
                                     <h3 className="course-title">{course?.course?.title}</h3>
                                 </div>
                                 <div className="course-instructor">
+                                    <h6 className="show-instructor">with distinction, demonstrating proficiency in all</h6>
+                                    <h6 className="show-instructor">course materials and assessments by</h6>
                                     <span>{course?.course?.teacher?.full_name}</span>
                                 </div>
                                 <div className="certificate-date">

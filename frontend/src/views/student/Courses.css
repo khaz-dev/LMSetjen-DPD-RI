@@ -98,7 +98,7 @@
 .courses-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.2rem;
+    gap: 1rem;
     margin-top: 0.8rem;
 }
 
@@ -111,6 +111,7 @@
     border: 1px solid #e9ecef;
     position: relative;
     z-index: 1;
+    padding: 1rem !important;
 }
 
 /* Remove problematic hover effects - you can comment out or modify these */
@@ -124,7 +125,7 @@
 
 .course-image {
     width: 100%;
-    height: 120px;
+    height: 100px;
     border-radius: 12px;
     object-fit: cover;
     transition: transform 0.3s ease;
@@ -143,7 +144,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, var(--theme-gradient-start), var(--theme-gradient-end));
+    background: transparent;
     opacity: 0;
     transition: opacity 0.3s ease;
     display: flex;
@@ -154,7 +155,7 @@
 
 /* Show overlay on hover */
 .course-image-wrapper:hover .course-image-overlay {
-    opacity: 0.9;
+    opacity: 0;
 }
 
 .play-icon {
@@ -164,29 +165,29 @@
 }
 
 .course-content {
-    padding: 1.5rem;
+    padding: 1rem;
 }
 
 .course-title {
-    font-size: 1.3rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: #2d3748;
     line-height: 1.3;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.5rem;
     display: -webkit-box;
     line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    height: 3.6rem;
+    height: 2.6rem;
 }
 
 .course-instructor {
     color: var(--theme-primary);
     font-weight: 500;
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
 }
 
 .course-instructor i {
@@ -198,14 +199,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.4rem;
 }
 
 .course-date {
     color: #6c757d;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
 }
 
@@ -215,7 +216,7 @@
 }
 
 .progress-section {
-    margin: 1.5rem 0;
+    margin: 1rem 0;
 }
 
 .progress-header {
@@ -267,12 +268,12 @@
     background: var(--theme-gradient);
     border: none;
     border-radius: 12px;
-    padding: 0.75rem 1.5rem;
+    padding: 0.55rem 1.5rem;
     color: white;
     font-weight: 500;
     text-decoration: none;
     transition: all 0.3s ease;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -288,19 +289,86 @@
     color: white;
 }
 
+/* Course Button States */
+.course-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 0.55rem 1.5rem;
+    color: white;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.course-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+/* Start Learning Button - Green gradient */
+.btn-start {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+}
+
+.btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+    color: white;
+}
+
+/* Continue Learning Button - Purple gradient */
+.btn-continue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-continue:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+/* Course Completed Button - Light background with green border */
+.btn-completed {
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    color: #48bb78;
+    border: 2px solid #48bb78;
+    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.1);
+}
+
+.btn-completed:hover {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+}
+
 .badge-modern {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     color: white !important;
     border-radius: 12px;
-    padding: 0.5rem 1rem;
-    font-size: 0.75rem;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.7rem;
     font-weight: 600;
     border: none;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    height: 32px;
+    height: 28px;
     min-width: fit-content;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -309,15 +377,15 @@
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
     color: white !important;
     border-radius: 12px;
-    padding: 0.5rem 1rem;
-    font-size: 0.75rem;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.7rem;
     font-weight: 600;
     border: none;
     box-shadow: 0 2px 8px rgba(245, 87, 108, 0.25);
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    height: 32px;
+    height: 28px;
     min-width: fit-content;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }

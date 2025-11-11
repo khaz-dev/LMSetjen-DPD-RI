@@ -294,13 +294,20 @@
 .student-profile-page .modern-input:disabled {
     background-color: #f8f9fa;
     border-color: #dee2e6;
-    color: #6c757d;
-    cursor: not-allowed;
+    color: #343a40;
+    cursor: default;
 }
 
 .student-profile-page .modern-textarea {
     resize: vertical;
     min-height: 120px;
+}
+
+.student-profile-page .modern-textarea:disabled {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #343a40;
+    cursor: default;
 }
 
 .student-profile-page .required-asterisk {
