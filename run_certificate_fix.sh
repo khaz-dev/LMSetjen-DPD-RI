@@ -93,7 +93,9 @@ else:
                     break
         except Exception as e:
             print(f"  ✗ Error on certificate {cert.id}: {e}")
-            failed += 1    print(f"\n✅ Completed!")
+            failed += 1
+    
+    print(f"\n✅ Completed!")
     print(f"  Successfully updated: {successful}")
     print(f"  Failed: {failed}")
     
