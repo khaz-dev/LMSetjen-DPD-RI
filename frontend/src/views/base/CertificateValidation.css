@@ -1,0 +1,657 @@
+/* Certificate Validation Page Styles */
+
+.certificate-validation-container {
+    min-height: 100vh;
+    padding: 3rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.validation-loader {
+    text-align: center;
+    color: white;
+}
+
+.validation-loader .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+}
+
+.validation-loader p {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Validation Result Container */
+.validation-result {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    max-width: 1000px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Result Icon */
+.result-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    animation: bounce 0.6s ease-out;
+}
+
+@keyframes bounce {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.success-icon {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.error-icon {
+    background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%);
+    color: white;
+}
+
+/* Valid Result */
+.valid-result h1 {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.valid-result .subtitle {
+    text-align: center;
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+/* Invalid Result */
+.invalid-result {
+    text-align: center;
+}
+
+.invalid-result h2 {
+    color: #dc3545;
+    font-weight: 700;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.invalid-result .error-message {
+    color: #6c757d;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+/* Certificate Details Grid */
+.certificate-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin: 3rem 0;
+}
+
+.details-section {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.details-section .section-title {
+    color: #2c3e50;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #667eea;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.details-section .section-title i {
+    color: #667eea;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.95rem;
+    min-width: 150px;
+}
+
+.detail-value {
+    color: #2c3e50;
+    font-weight: 500;
+    text-align: right;
+    flex: 1;
+    margin-left: 1rem;
+    word-break: break-word;
+}
+
+/* Certificate ID Box */
+.certificate-id-box {
+    background: white;
+    border: 2px dashed #667eea;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 0.75rem;
+}
+
+.certificate-id-box code {
+    color: #667eea;
+    font-weight: 700;
+    font-size: 1.1rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+/* Description Section - Removed */
+
+/* Course Link Section */
+.course-link-section {
+    text-align: center;
+}
+
+.btn-course-link {
+    text-transform: none;
+    letter-spacing: 0.5px;
+}
+
+/* Verification Badge */
+.verification-badge {
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.badge-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+}
+
+.badge-content i {
+    font-size: 1.3rem;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 160px;
+    justify-content: center;
+}
+
+.action-buttons .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.action-buttons .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.action-buttons .btn-outline-secondary {
+    color: #667eea;
+    border: 2px solid #667eea;
+    background: transparent;
+}
+
+.action-buttons .btn-outline-secondary:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+
+/* Tablet */
+@media (max-width: 768px) {
+    .certificate-validation-container {
+        padding: 2rem 1rem;
+    }
+
+    .validation-result {
+        padding: 2rem 1.5rem;
+        border-radius: 16px;
+    }
+
+    .result-icon {
+        width: 80px;
+        height: 80px;
+        font-size: 2.5rem;
+    }
+
+    .valid-result h1 {
+        font-size: 1.6rem;
+    }
+
+    .certificate-details-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .details-section {
+        padding: 1.5rem;
+    }
+
+    .action-buttons {
+        gap: 1rem;
+    }
+
+    .action-buttons .btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.95rem;
+        min-width: 140px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .certificate-validation-container {
+        padding: 1rem;
+        min-height: 100vh;
+    }
+
+    .validation-result {
+        padding: 1.5rem 1rem;
+        border-radius: 12px;
+    }
+
+    .result-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .valid-result h1 {
+        font-size: 1.3rem;
+    }
+
+    .valid-result .subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .details-section {
+        padding: 1rem;
+    }
+
+    .details-section .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.5rem 0;
+    }
+
+    .detail-label {
+        min-width: unset;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        text-align: left;
+        margin-left: 0;
+        font-size: 0.95rem;
+    }
+
+    .certificate-details-grid {
+        gap: 1.5rem;
+        margin: 1.5rem 0;
+    }
+
+    .description-section {
+        padding: 1rem;
+    }
+
+    .description-text {
+        font-size: 0.95rem;
+    }
+
+    .badge-content {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .action-buttons {
+        gap: 0.75rem;
+        flex-direction: column;
+        margin-top: 1.5rem;
+    }
+
+    .action-buttons .btn {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .course-link-section {
+        margin-top: 1.5rem;
+    }
+
+    .btn-course-link {
+        padding: 0.8rem 1rem !important;
+        font-size: 0.95rem !important;
+    }
+
+    .invalid-result h2 {
+        font-size: 1.4rem;
+    }
+
+    .invalid-result .error-message {
+        font-size: 0.95rem;
+    }
+}
+
+/* Print Styles - Single Page Compact Layout */
+@media print {
+    /* Page setup for single page */
+    @page {
+        margin: 0.3in;
+        size: A4 portrait;
+    }
+
+    /* Hide header and footer */
+    .base-header,
+    .navbar,
+    nav,
+    header,
+    footer,
+    .footer-wrapper {
+        display: none !important;
+    }
+
+    /* Reset body and container */
+    body {
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 10px !important;
+    }
+
+    .certificate-validation-container {
+        background: white !important;
+        padding: 0 !important;
+        min-height: auto !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        margin: 0 !important;
+    }
+
+    .validation-result {
+        box-shadow: none !important;
+        padding: 0.5rem !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+        background: white !important;
+        animation: none !important;
+        margin: 0 !important;
+        border: none !important;
+    }
+
+    /* Result styling for print */
+    .result-icon {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.5rem !important;
+        margin: 0 auto 0.3rem !important;
+        page-break-after: avoid !important;
+    }
+
+    .valid-result h1 {
+        color: black !important;
+        font-size: 1.2rem !important;
+        margin-bottom: 0.1rem !important;
+        text-align: center !important;
+    }
+
+    .valid-result .subtitle {
+        color: #333 !important;
+        font-size: 0.8rem !important;
+        margin-bottom: 0.3rem !important;
+        text-align: center !important;
+    }
+
+    /* Details sections - single column, compact */
+    .certificate-details-grid {
+        display: block !important;
+        margin: 0.3rem 0 !important;
+    }
+
+    .details-section {
+        background: #fafafa !important;
+        border: 0.5px solid #ddd !important;
+        page-break-inside: avoid !important;
+        margin-bottom: 0.3rem !important;
+        padding: 0.4rem !important;
+    }
+
+    .details-section .section-title {
+        color: black !important;
+        border-bottom: 0.5px solid #ccc !important;
+        font-size: 0.85rem !important;
+        page-break-after: avoid !important;
+        margin-bottom: 0.2rem !important;
+        padding-bottom: 0.1rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.2rem !important;
+    }
+
+    .details-section .section-title i {
+        font-size: 0.7rem !important;
+    }
+
+    .detail-row {
+        color: #333 !important;
+        padding: 0.15rem 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        font-size: 0.75rem !important;
+    }
+
+    .detail-label {
+        color: #666 !important;
+        font-weight: bold !important;
+        min-width: 100px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .detail-value {
+        color: #333 !important;
+        text-align: right !important;
+        flex: 1 !important;
+        margin-left: 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Certificate ID Box */
+    .certificate-id-box {
+        background: white !important;
+        border: 1px solid #999 !important;
+        page-break-inside: avoid !important;
+        padding: 0.3rem !important;
+        margin-top: 0.1rem !important;
+    }
+
+    .certificate-id-box code {
+        color: black !important;
+        font-size: 0.7rem !important;
+        font-weight: bold !important;
+    }
+
+    /* Course Link Section */
+    .course-link-section {
+        display: none !important;
+    }
+
+    /* Verification Badge */
+    .verification-badge {
+        margin: 0.2rem 0 !important;
+        page-break-inside: avoid !important;
+        text-align: center !important;
+    }
+
+    .badge-content {
+        background: #fafafa !important;
+        color: black !important;
+        border: 0.5px solid #ddd !important;
+        padding: 0.3rem !important;
+        box-shadow: none !important;
+        font-size: 0.8rem !important;
+        font-weight: bold !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.3rem !important;
+        border-radius: 0 !important;
+    }
+
+    .badge-content i {
+        font-size: 0.8rem !important;
+    }
+
+    /* Action buttons */
+    .action-buttons {
+        display: none !important;
+    }
+
+    /* Links */
+    a {
+        color: black !important;
+        text-decoration: none !important;
+    }
+
+    a[href]:after {
+        content: "" !important;
+    }
+
+    /* Ensure content prints properly */
+    .invalid-result {
+        text-align: center !important;
+    }
+
+    .invalid-result h2 {
+        color: black !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 0.2rem !important;
+    }
+
+    .invalid-result .error-message {
+        color: #333 !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Ensure gradient backgrounds are not printed (saves ink) */
+    * {
+        background: white !important;
+    }
+
+    .result-icon.success-icon {
+        background: #e8f5e9 !important;
+        color: #2e7d32 !important;
+    }
+
+    .result-icon.error-icon {
+        background: #ffebee !important;
+        color: #c62828 !important;
+    }
+
+    /* Hide icons for compact print */
+    i {
+        display: none !important;
+    }
+
+    .details-section .section-title i {
+        display: inline !important;
+    }
+
+    .badge-content i {
+        display: inline !important;
+    }
+
+    .result-icon i {
+        display: inline !important;
+    }
+}

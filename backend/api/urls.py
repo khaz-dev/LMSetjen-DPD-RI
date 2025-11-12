@@ -59,6 +59,7 @@ urlpatterns = [
     path("student/certificate-eligibility/<user_id>/<course_id>/", api_views.StudentCertificateEligibilityAPIView.as_view()),
     path("student/certificate-generate/", api_views.StudentCertificateGenerateAPIView.as_view()),
     path("student/certificate-download/<certificate_id>/", api_views.StudentCertificateDownloadAPIView.as_view()),
+    path("certificate/validate/<validation_token>/", api_views.CertificateValidationAPIView.as_view(), name="certificate-validate"),
 
 
     # Teacher Routes

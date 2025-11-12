@@ -23,6 +23,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from api.media_views import VideoStreamView, EnhancedMediaView
+from api import views as api_views
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -44,7 +45,11 @@ urlpatterns = [
     
     
     path('admin/', admin.site.urls),
-    # Add something new here
+    
+    # Certificate Validation Route - Serves React SPA
+    # In production with Docker/nginx, this is not used (nginx handles routing)
+    # In development without Docker, this allows React Router to handle the route
+    path('certificate/validate/<str:validation_token>/', api_views.ReactSPACatchAllView.as_view(), name='certificate-validate-spa'),
 
     path("api/v1/", include("api.urls"))
 ]

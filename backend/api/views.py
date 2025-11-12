@@ -2666,7 +2666,7 @@ class StudentCertificateEligibilityAPIView(APIView):
                 existing_cert = api_models.Certificate.objects.get(
                     course=course, user=user
                 )
-                certificate = api_serializer.CertificateSerializer(existing_cert).data
+                certificate = api_serializer.CertificateSerializer(existing_cert, context={'request': request}).data
             except api_models.Certificate.DoesNotExist:
                 pass
             
@@ -2717,7 +2717,7 @@ class StudentCertificateGenerateAPIView(APIView):
             certificate, created = enrollment.get_or_create_certificate()
             
             if certificate:
-                certificate_data = api_serializer.CertificateSerializer(certificate).data
+                certificate_data = api_serializer.CertificateSerializer(certificate, context={'request': request}).data
                 message = "Certificate generated successfully!" if created else "Certificate already exists"
                 
                 return Response({
@@ -2777,6 +2777,65 @@ class StudentCertificateDownloadAPIView(APIView):
             return Response({'error': 'Certificate not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CertificateValidationAPIView(APIView):
+    """Validate certificate authenticity by validation token"""
+    authentication_classes = []
+    permission_classes = [AllowAny]  # Public certificate validation
+    
+    def get(self, request, validation_token):
+        """Get certificate details for validation"""
+        try:
+            certificate = api_models.Certificate.objects.select_related(
+                'user', 'course', 'course__teacher'
+            ).get(validation_token=validation_token)
+            
+            if not certificate.is_valid:
+                return Response({
+                    'is_valid': False,
+                    'status': 'invalid',
+                    'message': 'This certificate has been marked as invalid',
+                    'details': None
+                }, status=status.HTTP_200_OK)
+            
+            # Certificate is valid - return full details
+            certificate_details = {
+                'certificate_id': certificate.certificate_id,
+                'student_name': certificate.user.full_name if certificate.user else 'Unknown',
+                'student_email': certificate.user.email if certificate.user else 'Unknown',
+                'course_title': certificate.course.title,
+                'course_slug': certificate.course.slug,
+                'instructor_name': certificate.course.teacher.full_name if certificate.course.teacher else 'Unknown',
+                'instructor_email': certificate.course.teacher.user.email if certificate.course.teacher and certificate.course.teacher.user else 'Unknown',
+                'completion_date': certificate.date.strftime('%B %d, %Y'),
+                'issued_date': certificate.created_at.strftime('%B %d, %Y'),
+                'course_level': certificate.course.level,
+                'course_category': certificate.course.category.title if certificate.course.category else 'General'
+            }
+            
+            return Response({
+                'is_valid': True,
+                'status': 'valid',
+                'message': 'Certificate is authentic and valid',
+                'details': certificate_details
+            }, status=status.HTTP_200_OK)
+                
+        except api_models.Certificate.DoesNotExist:
+            return Response({
+                'is_valid': False,
+                'status': 'not_found',
+                'message': 'Certificate not found in our system',
+                'details': None
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'is_valid': False,
+                'status': 'error',
+                'message': f'Error validating certificate: {str(e)}',
+                'details': None
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ========== ADMIN API VIEWS ==========
@@ -4020,3 +4079,48 @@ class LastSyncInfoAPIView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# ========== REACT SPA CATCH-ALL VIEW ==========
+
+class ReactSPACatchAllView(APIView):
+    """
+    Catch-all view for React SPA routes.
+    Serves the React app for certificate validation and other frontend routes.
+    In production with nginx, this is not used (nginx handles routing).
+    In development without Docker, this enables React Router to handle client-side routes.
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Serve React app for all non-API routes.
+        This enables certificate validation page at /certificate/validate/{token}/
+        """
+        try:
+            # In development: return a redirect to frontend dev server if not in Docker
+            # In production with Docker: nginx handles this, so this view won't be reached
+            if settings.DEBUG:
+                # Get the current host to determine which frontend to redirect to
+                host = request.get_host()
+                path = request.path
+                
+                # If localhost or 127.0.0.1, redirect to local React dev server (Vite runs on 5173)
+                if 'localhost' in host or '127.0.0.1' in host:
+                    frontend_url = 'http://localhost:5173'
+                else:
+                    # For other hosts (remote development), use FRONTEND_SITE_URL
+                    frontend_url = settings.FRONTEND_SITE_URL
+                
+                # Redirect to frontend with the path
+                return redirect(f"{frontend_url}{path}")
+            else:
+                # Fallback: return 404
+                return Response(
+                    {'error': 'Frontend not configured'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
+            return Response(
+                {'error': f'Error serving React app: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

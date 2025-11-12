@@ -402,13 +402,24 @@ class CertificateSerializer(serializers.ModelSerializer):
     course_title = serializers.CharField(source='course.title', read_only=True)
     student_name = serializers.CharField(source='user.full_name', read_only=True)
     instructor_name = serializers.CharField(source='course.teacher.full_name', read_only=True)
+    qr_code_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = [
             'id', 'course', 'user', 'enrollment', 'certificate_id', 
-            'is_valid', 'date', 'course_title', 'student_name', 'instructor_name'
+            'validation_token', 'is_valid', 'date', 'course_title', 'student_name', 
+            'instructor_name', 'qr_code_url', 'created_at', 'updated_at'
         ]
         model = api_models.Certificate
+
+    def get_qr_code_url(self, obj):
+        """Generate QR code URL for certificate validation (frontend route)"""
+        request = self.context.get('request')
+        if request:
+            domain = request.get_host()
+            protocol = 'https' if request.is_secure() else 'http'
+            return f"{protocol}://{domain}/certificate/validate/{obj.validation_token}/"
+        return None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

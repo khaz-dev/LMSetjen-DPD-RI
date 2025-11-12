@@ -3,6 +3,7 @@ import dayjs, { moment } from '../../utils/dayjs';
 import apiInstance from '../../utils/axios';
 import UserData from '../../views/plugin/UserData';
 import Toast from '../../views/plugin/Toast';
+import QRCode from 'qrcode.react';
 import certificateBackgroundWebP from '../../assets/certificate-bg.webp';
 import certificateBackgroundPNG from '../../assets/certificate-bg.png';
 import './CertificateTab.css';
@@ -284,6 +285,20 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                     <strong>Date of Completion:</strong>
                                     <span>{formatDate(certificate.date)}</span>
                                 </div>
+                                
+                                {/* QR Code for Certificate Validation */}
+                                {certificate.qr_code_url && (
+                                    <div className="certificate-qr-code">
+                                        <QRCode 
+                                            value={certificate.qr_code_url}
+                                            size={100}
+                                            level="H"
+                                            includeMargin={false}
+                                            renderAs="svg"
+                                        />
+                                        <p className="qr-label">Scan to Verify</p>
+                                    </div>
+                                )}
                             </div>
                             
                         </div>

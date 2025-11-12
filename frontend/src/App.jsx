@@ -29,6 +29,7 @@ const Index = lazy(() => import("./views/base/Index"));
 const CourseDetail = lazy(() => import("./views/base/CourseDetail"));
 const Search = lazy(() => import("./views/base/Search"));
 const UserGuide = lazy(() => import("./views/base/UserGuide"));
+const CertificateValidation = lazy(() => import("./views/base/CertificateValidation"));
 const NotFound = lazy(() => import("./views/base/NotFound"));
 
 // Student Routes
@@ -165,6 +166,7 @@ function App() {
                                 <Route path="/course-detail/:slug/" element={<CourseDetail />} />
                                 <Route path="/search/" element={<Search />} />
                                 <Route path="/user-guide/" element={<UserGuide />} />
+                                <Route path="/certificate/validate/:validation_token/" element={<CertificateValidation />} />
 
                                 {/* Student Routes */}
                                 <Route

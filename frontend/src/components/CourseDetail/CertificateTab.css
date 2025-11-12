@@ -455,6 +455,36 @@
     line-height: 1.1;
 }
 
+/* QR Code Styling */
+.certificate-qr-code {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    position: absolute;
+    left: 2.5%;
+    bottom: 12%;
+    z-index: 10;
+}
+
+.certificate-qr-code svg {
+    width: 100px;
+    height: 100px;
+    border: 2px solid #2c3e50;
+    padding: 4px;
+    background: white;
+    border-radius: 4px;
+}
+
+.certificate-qr-code .qr-label {
+    font-size: 0.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+}
+
 .seal-icon {
     width: 80px;
     height: 80px;
@@ -590,6 +620,20 @@
     .certificate-date span {
         font-size: 0.75rem !important;
     }
+    
+    .certificate-qr-code {
+        left: 10%;
+        bottom: 8%;
+    }
+    
+    .certificate-qr-code svg {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .certificate-qr-code .qr-label {
+        font-size: 0.6rem;
+    }
 }
 
 /* Large Laptop - 1440px to 2559px */
@@ -600,6 +644,41 @@
     
     .certificate-content {
         padding: 14% 7% 3.5% 7%;
+    }
+
+    .course-instructor {
+        font-size: 0.8rem !important;
+        margin-top: 1.5% !important;
+    }
+    
+    .course-instructor span {
+        font-size: 1rem !important;
+        margin-top: 0.5rem !important;
+    }
+
+    .certificate-date {
+        margin-top: 0.5%;
+        gap: 0.10rem;
+    }
+    
+    .certificate-date strong,
+    .certificate-date span {
+        font-size: 0.8rem !important;
+        margin-top: 0.3rem !important;
+    }
+    
+    .certificate-qr-code {
+        left: 8%;
+        bottom: 7%;
+    }
+    
+    .certificate-qr-code svg {
+        width: 110px;
+        height: 110px;
+    }
+    
+    .certificate-qr-code .qr-label {
+        font-size: 0.6rem;
     }
 }
 
@@ -679,6 +758,20 @@
     .certificate-date span {
         font-size: 0.7rem !important;
     }
+    
+    .certificate-qr-code {
+        left: 6%;
+        bottom: 12%;
+    }
+    
+    .certificate-qr-code svg {
+        width: 90px;
+        height: 90px;
+    }
+    
+    .certificate-qr-code .qr-label {
+        font-size: 0.5rem;
+    }
 }
 
 /* Tablet - 769px to 1024px */
@@ -693,7 +786,7 @@
     }
     
     .certificate-content {
-        padding: 11% 2.2% 1.2% 2.2%;
+        padding: 13% 2.2% 1.2% 2.2%;
         gap: 0;
         overflow-y: auto;
         max-height: 100%;
@@ -705,11 +798,11 @@
     }
     
     .certificate-id span {
-        font-size: 0.35rem;
+        font-size: 0.5rem;
     }
     
     .student-name {
-        font-size: 0.6rem !important;
+        font-size: 1.2rem !important;
         margin: 0.08rem 0 0.06rem 0 !important;
     }
     
@@ -723,40 +816,55 @@
     }
     
     .course-title {
-        font-size: 0.6rem !important;
+        font-size: 1.2rem !important;
         margin: 0rem 1rem 0.3rem 0rem !important;
     }
 
     .show-student{
-        font-size: 0.45rem !important;
-        margin: 0.3rem 0rem 0.3rem 0rem !important;
+        font-size: 0.6rem !important;
+        margin: 0.5rem 0rem 0.3rem 0rem !important;
     }
     .show-course-title{
-        font-size: 0.45rem !important;
+        font-size: 0.6rem !important;
         margin: 0.3rem 0 0.3rem 0 !important;
     }
     .show-instructor{
-        font-size: 0.4rem !important;
+        font-size: 0.6rem !important;
         margin: 0rem !important;
     }
     
     .course-instructor {
-        font-size: 0.4rem !important;
-        margin-top: 0.25% !important;
+        font-size: 0.6rem !important;
+        margin-top: 0.8% !important;
     }
     
     .course-instructor span {
-        font-size: .4rem !important;
+        font-size: .8rem !important;
+        margin-top: 0.5rem !important;
     }
     
     .certificate-date {
-        margin-top: 0;
+        margin-top: 0.3rem !important;
         gap: 0.06rem;
     }
     
     .certificate-date strong,
     .certificate-date span {
-        font-size: 0.33rem !important;
+        font-size: 0.6rem !important;
+    }
+    
+    .certificate-qr-code {
+        left: 8%;
+        bottom: 8%;
+    }
+    
+    .certificate-qr-code svg {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .certificate-qr-code .qr-label {
+        font-size: 0.35rem;
     }
     
     .status-card {
@@ -859,6 +967,20 @@
         font-size: 0.3rem !important;
     }
     
+    .certificate-qr-code {
+        left: 5%;
+        bottom: 7%;
+    }
+    
+    .certificate-qr-code svg {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .certificate-qr-code .qr-label {
+        font-size: 0.3rem;
+    }
+    
     .status-card {
         flex-direction: column;
         text-align: center;
@@ -959,6 +1081,20 @@
     .certificate-date strong,
     .certificate-date span {
         font-size: 0.45rem !important;
+    }
+    
+    .certificate-qr-code {
+        left: 1.8%;
+        bottom: 10%;
+    }
+    
+    .certificate-qr-code svg {
+        width: 55px;
+        height: 55px;
+    }
+    
+    .certificate-qr-code .qr-label {
+        font-size: 0.28rem;
     }
     
     .status-card {
@@ -1070,6 +1206,20 @@
     .certificate-date strong,
     .certificate-date span {
         font-size: 0.32rem !important;
+    }
+    
+    .certificate-qr-code {
+        left: 5%;
+        bottom: 7%;
+    }
+    
+    .certificate-qr-code svg {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .certificate-qr-code .qr-label {
+        font-size: 0.24rem;
     }
     
     .status-card {
@@ -1201,6 +1351,20 @@
         font-size: 0.25rem !important;
     }
     
+    .certificate-qr-code {
+        left: 7%;
+        bottom: 7%;
+    }
+    
+    .certificate-qr-code svg {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .certificate-qr-code .qr-label {
+        font-size: 0.22rem;
+    }
+    
     .status-card {
         flex-direction: column;
         text-align: center;
@@ -1329,6 +1493,20 @@
     .certificate-date strong,
     .certificate-date span {
         font-size: 0.2rem !important;
+    }
+    
+    .certificate-qr-code {
+        left: 5%;
+        bottom: 5%;
+    }
+    
+    .certificate-qr-code svg {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .certificate-qr-code .qr-label {
+        font-size: 0.18rem;
     }
     
     .show-student {
@@ -1549,6 +1727,24 @@
     .certificate-date strong,
     .certificate-date span {
         font-size: 1.2rem !important;
+    }
+    
+    .certificate-qr-code {
+        position: absolute !important;
+        left: 8% !important;
+        bottom: 8% !important;
+    }
+    
+    .certificate-qr-code svg {
+        width: 120px !important;
+        height: 120px !important;
+        border: 2px solid #2c3e50 !important;
+        padding: 4px !important;
+    }
+    
+    .certificate-qr-code .qr-label {
+        font-size: 0.8rem !important;
+        color: black !important;
     }
     
     .certificate-actions,

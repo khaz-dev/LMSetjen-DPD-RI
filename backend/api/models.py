@@ -307,14 +307,22 @@ class Certificate(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     enrollment = models.ForeignKey('EnrolledCourse', on_delete=models.CASCADE, null=True, blank=True)
     certificate_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    validation_token = ShortUUIDField(unique=True, length=12, max_length=20, alphabet="abcdefghijklmnopqrstuvwxyz0123456789", editable=False)
     is_valid = models.BooleanField(default=True)
     date = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.course.title} - {self.user.full_name if self.user else 'Unknown'}"
     
     class Meta:
         unique_together = ['course', 'user']  # One certificate per user per course
+        indexes = [
+            models.Index(fields=['validation_token']),
+            models.Index(fields=['certificate_id']),
+            models.Index(fields=['user', 'course']),
+        ]
     
 class CompletedLesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
