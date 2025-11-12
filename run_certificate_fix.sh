@@ -20,8 +20,20 @@ echo "📍 Working directory: $(pwd)"
 echo "📍 Docker compose file found: ✓"
 echo ""
 
-# Run the Python script in the container
-echo "🚀 Executing validation token population script..."
+# Step 1: Apply pending migrations
+echo "📦 Step 1/2: Applying pending migrations..."
+docker compose exec -T backend python manage.py migrate
+
+if [ $? -ne 0 ]; then
+    echo "❌ Error: Migration failed!"
+    exit 1
+fi
+
+echo "✅ Migrations applied successfully"
+echo ""
+
+# Step 2: Populate validation tokens
+echo "🚀 Step 2/2: Executing validation token population script..."
 echo "   This will take ~30 seconds..."
 echo ""
 
