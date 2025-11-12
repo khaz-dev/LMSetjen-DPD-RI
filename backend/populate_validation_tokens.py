@@ -11,7 +11,7 @@ Or in Django shell:
 """
 
 from api.models import Certificate
-from shortuuid import ShortUUID
+import shortuuid
 import sys
 
 def populate_validation_tokens():
@@ -20,12 +20,6 @@ def populate_validation_tokens():
     print("=" * 70)
     print("🔧 Certificate Validation Token Population Script")
     print("=" * 70)
-    
-    # Initialize ShortUUID generator (same as in model)
-    su = ShortUUID(
-        alphabet="abcdefghijklmnopqrstuvwxyz0123456789",
-        length=12
-    )
     
     # Check current status
     all_certs = Certificate.objects.all()
@@ -50,12 +44,14 @@ def populate_validation_tokens():
     
     for idx, cert in enumerate(certs_without_token, 1):
         try:
-            # Generate unique token
+            # Generate unique token using shortuuid
+            # ShortUUID().random(length) generates a random short UUID
             max_attempts = 100
-            attempts = 0
-            
-            while attempts < max_attempts:
-                new_token = su.random()
+            for attempt in range(max_attempts):
+                # Generate 12-character short UUID with alphanumeric alphabet
+                new_token = shortuuid.ShortUUID(
+                    alphabet="abcdefghijklmnopqrstuvwxyz0123456789"
+                ).random(12)
                 
                 # Check if token already exists
                 if not Certificate.objects.filter(validation_token=new_token).exists():
@@ -64,14 +60,12 @@ def populate_validation_tokens():
                     successful += 1
                     
                     # Progress indicator
-                    if idx % 10 == 0:
+                    if idx % 10 == 0 or idx == certs_without_token.count():
                         print(f"  ✓ Processed {idx}/{certs_without_token.count()} certificates")
                     
                     break
-                
-                attempts += 1
-            
-            if attempts >= max_attempts:
+            else:
+                # If we couldn't generate a unique token after max_attempts
                 print(f"  ✗ Failed to generate unique token for certificate {cert.id}")
                 failed += 1
                 failed_certs.append(cert.id)
@@ -103,8 +97,10 @@ def populate_validation_tokens():
             print(f"\n📋 Sample Certificate:")
             print(f"  Certificate ID: {sample.certificate_id}")
             print(f"  Validation Token: {sample.validation_token}")
-            print(f"  User: {sample.user.full_name if sample.user else 'N/A'}")
-            print(f"  Course: {sample.course.title if sample.course else 'N/A'}")
+            if sample.user:
+                print(f"  User: {sample.user.full_name}")
+            if sample.course:
+                print(f"  Course: {sample.course.title}")
         
         return True
     else:

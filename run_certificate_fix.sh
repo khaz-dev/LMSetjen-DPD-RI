@@ -41,17 +41,14 @@ django.setup()
 
 # Import models
 from api.models import Certificate
-from shortuuid import ShortUUID
+import shortuuid
 
 print("=" * 70)
 print("🔧 Certificate Validation Token Population Script")
 print("=" * 70)
 
-# Initialize ShortUUID generator (same as in model)
-su = ShortUUID(
-    alphabet="abcdefghijklmnopqrstuvwxyz0123456789",
-    length=12
-)
+# Initialize ShortUUID generator with correct parameters
+su = shortuuid.ShortUUID(alphabet="abcdefghijklmnopqrstuvwxyz0123456789")
 
 # Check current status
 all_certs = Certificate.objects.all()
@@ -69,14 +66,19 @@ if certs_without_token.count() == 0:
 else:
     print(f"\n🔄 Generating validation tokens for {certs_without_token.count()} certificates...")
     
+    
     successful = 0
     failed = 0
     
     for idx, cert in enumerate(certs_without_token, 1):
         try:
-            # Generate unique token
+            # Generate unique token using shortuuid
+            # ShortUUID().random(length) generates a random short UUID
             for attempt in range(100):
-                new_token = su.random()
+                # Generate 12-character short UUID with alphanumeric alphabet
+                new_token = shortuuid.ShortUUID(
+                    alphabet="abcdefghijklmnopqrstuvwxyz0123456789"
+                ).random(12)
                 
                 # Check if token already exists
                 if not Certificate.objects.filter(validation_token=new_token).exists():
@@ -91,9 +93,7 @@ else:
                     break
         except Exception as e:
             print(f"  ✗ Error on certificate {cert.id}: {e}")
-            failed += 1
-    
-    print(f"\n✅ Completed!")
+            failed += 1    print(f"\n✅ Completed!")
     print(f"  Successfully updated: {successful}")
     print(f"  Failed: {failed}")
     
