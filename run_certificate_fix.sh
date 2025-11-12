@@ -25,12 +25,81 @@ echo "🚀 Executing validation token population script..."
 echo "   This will take ~30 seconds..."
 echo ""
 
-docker compose exec -T backend python manage.py shell << 'PYTHON_EOF'
+# Run the Python script directly (embedded in container)
+docker compose exec -T backend python << 'PYTHON_EOF'
 import sys
-sys.path.insert(0, '/app')
+import os
 
-# Import and run the population script
-exec(open('/app/backend/populate_validation_tokens.py').read())
+# Add app to path
+sys.path.insert(0, '/app')
+os.chdir('/app')
+
+# Setup Django
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+django.setup()
+
+# Import models
+from api.models import Certificate
+from shortuuid import ShortUUID
+
+print("=" * 70)
+print("🔧 Certificate Validation Token Population Script")
+print("=" * 70)
+
+# Initialize ShortUUID generator (same as in model)
+su = ShortUUID(
+    alphabet="abcdefghijklmnopqrstuvwxyz0123456789",
+    length=12
+)
+
+# Check current status
+all_certs = Certificate.objects.all()
+certs_with_token = all_certs.filter(validation_token__isnull=False)
+certs_without_token = all_certs.filter(validation_token__isnull=True)
+
+print(f"\n📊 Current Status:")
+print(f"  Total certificates: {all_certs.count()}")
+print(f"  With validation_token: {certs_with_token.count()}")
+print(f"  Without validation_token: {certs_without_token.count()}")
+
+if certs_without_token.count() == 0:
+    print("\n✅ All certificates already have validation tokens!")
+    print("   No action needed.")
+else:
+    print(f"\n🔄 Generating validation tokens for {certs_without_token.count()} certificates...")
+    
+    successful = 0
+    failed = 0
+    
+    for idx, cert in enumerate(certs_without_token, 1):
+        try:
+            # Generate unique token
+            for attempt in range(100):
+                new_token = su.random()
+                
+                # Check if token already exists
+                if not Certificate.objects.filter(validation_token=new_token).exists():
+                    cert.validation_token = new_token
+                    cert.save()
+                    successful += 1
+                    
+                    # Progress indicator
+                    if idx % 10 == 0 or idx == certs_without_token.count():
+                        print(f"  ✓ Processed {idx}/{certs_without_token.count()}")
+                    
+                    break
+        except Exception as e:
+            print(f"  ✗ Error on certificate {cert.id}: {e}")
+            failed += 1
+    
+    print(f"\n✅ Completed!")
+    print(f"  Successfully updated: {successful}")
+    print(f"  Failed: {failed}")
+    
+    # Verify
+    remaining = Certificate.objects.filter(validation_token__isnull=True).count()
+    print(f"\n✅ All certificates now have validation tokens!" if remaining == 0 else f"⚠️  {remaining} still need tokens")
 PYTHON_EOF
 
 EXIT_CODE=$?
