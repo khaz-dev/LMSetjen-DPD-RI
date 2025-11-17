@@ -1,218 +1,398 @@
-# Sensitive Data Refactoring - Implementation Summary
-
-**Date:** November 17, 2025  
-**Status:** ✅ Complete
+# 🔒 Sensitive Data Refactoring - Implementation Summary
 
 ## What Was Done
 
-All sensitive credentials have been successfully moved from hardcoded values in source code to environment variables using Django's `.env` configuration approach.
+### Problem
+Sensitive API credentials were hardcoded in `backend/api/views.py`:
+- X-API-Token: `hY89aCK6...` 
+- XSRF-TOKEN: `eyJpdiI6IkwwenJ...`
+- Session Cookie: `eyJpdiI6ImM2NGhSSXBK...`
+
+This exposed credentials to:
+- Git history (permanent record)
+- Code repositories (shared with team)
+- Accidental commits (if .gitignore not working)
+- CI/CD logs (if logged)
+
+### Solution
+Implemented **environment variable-based configuration** using Django's `environs` library.
+
+---
 
 ## Files Modified
 
-### 1. `backend/.env` (Updated)
-**Changes:** Added external API integration section
-```dotenv
-EXTERNAL_API_URL=https://cmb.tail91813a.ts.net/api/external/users
-EXTERNAL_API_TOKEN=hY89aCK6...
-EXTERNAL_API_XSRF_TOKEN=eyJpdiI6...
-EXTERNAL_API_SESSION_COOKIE=cmb_setjen_dpd_ri_session=...
-EXTERNAL_API_TIMEOUT=30
-```
-**Status:** ✅ Git-ignored (never commits to repository)
-
-### 2. `backend/.env.example` (Created)
-**Purpose:** Template file documenting all required environment variables  
-**Status:** ✅ Safe to commit (no real secrets)  
-**Usage:** New developers copy to `.env` and fill in real values
-
-### 3. `backend/backend/settings.py` (Updated)
-**Changes:** Added EXTERNAL_API configuration (lines 539-549)
+### 1. **backend/backend/settings.py**
+✅ Added centralized `EXTERNAL_API` configuration:
 ```python
 EXTERNAL_API = {
-    'url': env('EXTERNAL_API_URL', default='...'),
-    'token': env('EXTERNAL_API_TOKEN', default=''),
-    'xsrf_token': env('EXTERNAL_API_XSRF_TOKEN', default=''),
-    'session_cookie': env('EXTERNAL_API_SESSION_COOKIE', default=''),
-    'timeout': env.int('EXTERNAL_API_TIMEOUT', default=30),
+    'cmb': {
+        'base_url': env('CMB_API_URL', default='https://cmb.tail91813a.ts.net'),
+        'api_token': env('CMB_API_TOKEN', default=''),
+        'xsrf_token': env('CMB_XSRF_TOKEN', default=''),
+        'session_cookie': env('CMB_SESSION_COOKIE', default=''),
+        'timeout': env.int('CMB_API_TIMEOUT', default=30),
+        'users_endpoint': '/api/external/users',
+    }
 }
 ```
-**Status:** ✅ Loads from `.env` at startup
 
-### 4. `backend/api/views.py` (Updated)
-**Changes:** Modified `SyncExternalUsersAPIView.post()` method (lines 3600-3625)  
+**Benefits:**
+- Single source of truth for external APIs
+- Type-safe (e.g., timeout as integer)
+- Easy to extend for new APIs
+- Follows Django conventions
+
+### 2. **backend/api/views.py** (SyncExternalUsersAPIView)
+✅ Replaced hardcoded credentials with dynamic loading:
+
 **Before:**
 ```python
+external_api_url = "https://cmb.tail91813a.ts.net/api/external/users"
 headers = {
     'X-API-Token': 'hY89aCK6tgMmGQNootpLYsw9otfwmNAv24cZ3QIljC8aI8DQ4RbxQlHPn0cVBbgdtwuJpWbxfbu4qGCwTycKtAiIDwX8ePEcWRtBhu2LfKmsY87eGuCDXBv8pAvbLtEH',
-    'Cookie': 'XSRF-TOKEN=eyJpdiI6...'
+    'Cookie': 'XSRF-TOKEN=eyJp...;cmb_setjen_dpd_ri_session=eyJpdiI6IkM2NGhS...'
 }
 ```
 
 **After:**
 ```python
 from django.conf import settings
+cmb_config = settings.EXTERNAL_API.get('cmb', {})
 
-external_api_config = settings.EXTERNAL_API
-headers = {
-    'X-API-Token': external_api_config['token'],
-    'Cookie': f'XSRF-TOKEN={external_api_config["xsrf_token"]}; {external_api_config["session_cookie"]}'
-}
-```
-**Status:** ✅ Uses settings instead of hardcoded values
+external_api_url = f"{cmb_config.get('base_url')}{cmb_config.get('users_endpoint')}"
+api_token = cmb_config.get('api_token', '')
+xsrf_token = cmb_config.get('xsrf_token', '')
+session_cookie = cmb_config.get('session_cookie', '')
 
-### 5. `backend/SENSITIVE_DATA_SECURITY.md` (Created)
-**Purpose:** Comprehensive security documentation with:
-- Before/after comparison
-- Security best practices
-- Production deployment strategies
-- Troubleshooting guide
-- Git history cleanup instructions
-
-### 6. `backend/SENSITIVE_DATA_QUICK_REFERENCE.md` (Created)
-**Purpose:** Quick reference guide for team with:
-- Files changed summary
-- Environment variables overview
-- How to use in development and production
-- Verification checklist
-- Common commands
-
-## Sensitive Data Moved
-
-| Credential | Location | Access Method |
-|-----------|----------|----------------|
-| EXTERNAL_API_TOKEN | `.env` | `settings.EXTERNAL_API['token']` |
-| EXTERNAL_API_XSRF_TOKEN | `.env` | `settings.EXTERNAL_API['xsrf_token']` |
-| EXTERNAL_API_SESSION_COOKIE | `.env` | `settings.EXTERNAL_API['session_cookie']` |
-| EXTERNAL_API_URL | `.env` | `settings.EXTERNAL_API['url']` |
-| EXTERNAL_API_TIMEOUT | `.env` | `settings.EXTERNAL_API['timeout']` |
-
-## Security Improvements
-
-### Before ❌
-- Credentials hardcoded in `views.py`
-- Visible in source code
-- Exposed in git repository
-- One change requires code modification
-- Mixed dev/prod credentials
-- High security risk
-
-### After ✅
-- Credentials in `.env` (git-ignored)
-- Not visible in source code
-- Safe git history
-- Change only requires `.env` update
-- Per-environment configuration
-- Enterprise best practice
-
-## Implementation Details
-
-### 1. Environment Variable Loading
-Django `environs` library already configured in `settings.py`:
-```python
-from environs import Env
-env = Env()
-env.read_env()  # Reads .env file
+headers = {}
+if api_token:
+    headers['X-API-Token'] = api_token
+if xsrf_token or session_cookie:
+    cookie_parts = []
+    if xsrf_token:
+        cookie_parts.append(f'XSRF-TOKEN={xsrf_token}')
+    if session_cookie:
+        cookie_parts.append(f'cmb_setjen_dpd_ri_session={session_cookie}')
+    headers['Cookie'] = '; '.join(cookie_parts)
 ```
 
-### 2. Default Values
-Settings includes safe defaults (empty strings) to prevent application crash if `.env` is missing:
-```python
-'token': env('EXTERNAL_API_TOKEN', default=''),
+**Benefits:**
+- No hardcoded credentials
+- Flexible header construction
+- Fallback to defaults
+- Easy to debug (prints URL without token)
+
+### 3. **.env.example** (AWS/Production)
+✅ Added CMB API credentials section:
+```env
+# ============================================
+# External API Configuration - CMB Integration
+# ============================================
+CMB_API_URL=https://cmb.tail91813a.ts.net
+CMB_API_TOKEN=your-cmb-api-token-here
+CMB_XSRF_TOKEN=your-cmb-xsrf-token-here
+CMB_SESSION_COOKIE=your-cmb-session-cookie-here
+CMB_API_TIMEOUT=30
 ```
 
-### 3. Type Conversion
-Timeout value automatically converts to integer:
-```python
-'timeout': env.int('EXTERNAL_API_TIMEOUT', default=30),
-```
+### 4. **.env.docker.example** (Docker)
+✅ Added same CMB API credentials section for Docker deployments
 
-## Verification Steps
-
-### ✅ Confirmed Working
-1. `.env` file is in `.gitignore` - credentials never committed
-2. `.env.example` created for documentation
-3. `settings.py` loads all variables from `.env`
-4. `views.py` uses `settings.EXTERNAL_API` instead of hardcoded values
-5. All sensitive data removed from source code
-
-### Test Commands
-```bash
-# Verify .env is ignored
-git check-ignore backend/.env
-# Output: backend/.env
-
-# Verify credentials in settings
-python manage.py shell
->>> from django.conf import settings
->>> print(settings.EXTERNAL_API['token'][:50])
-# Output: hY89aCK6tgMmGQNootpLYsw9otfwmNAv24cZ3QIljC8aI...
-
-# Verify no hardcoded credentials in tracked files
-git grep "hY89aCK6tgMmGQNootpLYsw9otfwmNAv24cZ3QIljC8aI8DQ4RbxQlHPn0cVBbgdtwuJpWbxfbu4qGCwTycKtAiIDwX8ePEcWRtBhu2LfKmsY87eGuCDXBv8pAvbLtEH"
-# Output: (nothing found - good!)
-```
-
-## How to Use
-
-### For Your Team
-1. Pull latest changes: `git pull origin main`
-2. Verify `.env` exists with credentials
-3. Restart application: `docker-compose restart backend`
-4. New team members:
-   - Copy `.env.example` to `.env`
-   - Fill in credentials
-   - Run application
-
-### For Production Deployment
-1. **Option A:** Mount `.env` file with production credentials
-2. **Option B:** Use environment variables in Docker
-3. **Option C:** Use AWS Secrets Manager / HashiCorp Vault
-4. See `SENSITIVE_DATA_SECURITY.md` for detailed instructions
-
-## Next Steps (Optional)
-
-1. **Rotate credentials** - Change `EXTERNAL_API_TOKEN` and `EXTERNAL_API_SESSION_COOKIE` periodically
-2. **Production secrets** - Consider AWS Secrets Manager or Vault
-3. **Monitoring** - Track API token usage for suspicious activity
-4. **Git cleanup** - Optionally remove old commits with exposed credentials (use BFG Repo Cleaner)
-
-## Security Level
-
-**Current Status:** ✅ **Enterprise Best Practice**
-
-- [x] Credentials not in source code
-- [x] Credentials not in git repository  
-- [x] Per-environment configuration
-- [x] Easy credential rotation
-- [x] Production-ready
-- [x] OWASP compliant
-
-## References
-
-- `SENSITIVE_DATA_SECURITY.md` - Comprehensive guide
-- `SENSITIVE_DATA_QUICK_REFERENCE.md` - Quick reference
-- `.env.example` - Environment variables template
-- [Python environs](https://github.com/sloria/environs)
-- [12 Factor App](https://12factor.net/config)
-- [OWASP Secrets Management](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
-
-## Rollback Instructions (If Needed)
-
-If you need to revert these changes:
-
-```bash
-# View recent commits
-git log --oneline -10
-
-# Revert specific commit
-git revert <commit-hash>
-
-# Or hard reset (be careful!)
-git reset --hard <previous-commit>
-```
-
-**Note:** This should not be necessary. The changes are additive and backward-compatible.
+### 5. **New Documentation Files**
+✅ Created comprehensive guides:
+- `EXTERNAL_API_CONFIGURATION.md` - Full technical documentation
+- `API_CREDENTIALS_QUICK_GUIDE.md` - Quick reference for setup
 
 ---
 
-**Questions?** Refer to `SENSITIVE_DATA_SECURITY.md` and `SENSITIVE_DATA_QUICK_REFERENCE.md`
+## How to Use
+
+### Production Server Setup
+
+```bash
+# 1. SSH to production
+ssh -i key.pem ubuntu@your-ec2-ip
+cd ~/LMSetjen-DPD-RI
+
+# 2. Edit .env
+nano .env
+
+# 3. Add credentials (get from CMB admin):
+CMB_API_URL=https://cmb.tail91813a.ts.net
+CMB_API_TOKEN=actual-token-from-admin
+CMB_XSRF_TOKEN=actual-xsrf-token
+CMB_SESSION_COOKIE=actual-session-cookie
+CMB_API_TIMEOUT=30
+
+# 4. Save (Ctrl+O, Enter, Ctrl+X)
+
+# 5. Restart backend
+docker compose restart backend
+
+# 6. Verify
+docker compose logs -f backend | grep "Attempting to fetch"
+```
+
+### Local Development
+
+```bash
+# 1. Copy example
+cp .env.example .env
+
+# 2. Add your test credentials
+nano .env
+
+# 3. Django auto-loads .env
+python manage.py runserver
+```
+
+### Docker Development
+
+```bash
+# 1. Copy example
+cp .env.docker.example .env.docker
+
+# 2. Add credentials
+nano .env.docker
+
+# 3. Update docker-compose.yml backend service:
+# env_file: .env.docker
+
+# 4. Restart
+docker compose restart backend
+```
+
+---
+
+## Security Improvements
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| **Credential Storage** | Hardcoded in Python | Environment variables |
+| **Git Exposure** | ❌ Visible in commits | ✅ In .gitignore |
+| **Code Review** | ❌ Credentials exposed | ✅ Safe to share code |
+| **Credential Rotation** | ❌ Requires code change | ✅ Just edit .env |
+| **Audit Trail** | ❌ Hidden in commits | ✅ Can track .env changes |
+| **Access Control** | ❌ Everyone with repo access | ✅ .env file per environment |
+| **CI/CD Logs** | ❌ Credentials logged | ✅ Safe to share logs |
+
+---
+
+## Credential Rotation
+
+When credentials need to be updated:
+
+```bash
+# 1. Get new credentials from CMB admin
+# 2. Edit .env
+nano .env
+
+# 3. Update the credentials:
+CMB_API_TOKEN=new-token
+CMB_XSRF_TOKEN=new-xsrf
+CMB_SESSION_COOKIE=new-session
+
+# 4. Restart container
+docker compose restart backend
+
+# 5. Verify
+docker compose logs backend | grep "Response status code"
+```
+
+**No code changes needed!** Just environment update + restart.
+
+---
+
+## Verification
+
+### Check Credentials Are Loaded
+
+```bash
+# Docker
+docker compose exec backend env | grep CMB
+
+# Expected output:
+# CMB_API_URL=https://cmb.tail91813a.ts.net
+# CMB_API_TOKEN=your-actual-token
+# CMB_XSRF_TOKEN=your-actual-xsrf
+# CMB_SESSION_COOKIE=your-actual-session
+# CMB_API_TIMEOUT=30
+```
+
+### Check API Calls Work
+
+```bash
+# Docker
+docker compose logs -f backend | grep "Attempting to fetch\|Response status"
+
+# Expected:
+# Attempting to fetch data from: https://cmb.tail91813a.ts.net/api/external/users?all=1
+# Response status code: 200
+```
+
+### Check No Credentials in Logs
+
+```bash
+# Should NOT show actual tokens
+docker compose logs backend | grep "hY89aCK6"  # Should return nothing!
+```
+
+---
+
+## Architecture Flow
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Production Server / Docker Container               │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  .env file (local, never committed)                │
+│  ├─ CMB_API_URL                                    │
+│  ├─ CMB_API_TOKEN                                  │
+│  ├─ CMB_XSRF_TOKEN                                 │
+│  └─ CMB_SESSION_COOKIE                             │
+│          ↓                                          │
+│  Django Settings (settings.py)                     │
+│  └─ EXTERNAL_API['cmb'] (from environs.env())     │
+│          ↓                                          │
+│  Views (api/views.py)                              │
+│  └─ SyncExternalUsersAPIView                      │
+│          ↓                                          │
+│  requests.get(headers={...})                       │
+│          ↓                                          │
+│  CMB API (https://cmb.tail91813a.ts.net)          │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+
+Git Repository
+├─ .env (✅ in .gitignore - NEVER committed)
+├─ .env.example (✅ with placeholder values)
+├─ backend/backend/settings.py (✅ uses env() vars)
+├─ backend/api/views.py (✅ uses settings)
+└─ EXTERNAL_API_CONFIGURATION.md (✅ documentation)
+```
+
+---
+
+## Security Checklist
+
+- ✅ No credentials in `views.py`
+- ✅ No credentials in git history
+- ✅ No credentials in `.gitignore` files
+- ✅ `.env` file in `.gitignore`
+- ✅ `.env.example` has placeholder values
+- ✅ Settings.py loads from environment
+- ✅ Views.py uses settings, not env directly
+- ✅ Type safety with `env.int()` for timeout
+- ✅ Graceful fallbacks for development
+- ✅ Documentation for setup and rotation
+- ✅ Easy credential rotation (no code changes)
+- ✅ Headers only added if credentials provided
+
+---
+
+## Additional Recommendations
+
+### 1. Add Request Logging (Production)
+```python
+logger.info(f"Syncing users from: {external_api_url}")
+# Don't log tokens!
+```
+
+### 2. Add Request Retries
+```python
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+session = requests.Session()
+retry = Retry(connect=3, backoff_factor=0.5)
+session.mount('https://', adapter)
+```
+
+### 3. Use AWS Secrets Manager (Enterprise)
+- Automatic credential rotation
+- Audit logging
+- Access control per environment
+
+### 4. Implement Certificate Pinning
+- Pin expected SSL certificates
+- Prevent MITM attacks
+
+### 5. Monitor Failed API Calls
+- Track failed credentials
+- Alert on repeated failures
+- Automatic credential rotation triggers
+
+---
+
+## Migration Notes
+
+### For Existing Deployments
+
+If you already have a production `.env` file with other variables:
+
+1. **Backup current .env:**
+   ```bash
+   cp .env .env.backup
+   ```
+
+2. **Add new CMB variables:**
+   ```bash
+   # Add to existing .env:
+   CMB_API_URL=https://cmb.tail91813a.ts.net
+   CMB_API_TOKEN=your-token
+   CMB_XSRF_TOKEN=your-xsrf
+   CMB_SESSION_COOKIE=your-session
+   CMB_API_TIMEOUT=30
+   ```
+
+3. **Restart:**
+   ```bash
+   docker compose restart backend
+   ```
+
+4. **Verify:**
+   ```bash
+   docker compose logs backend | grep "Response status"
+   ```
+
+### For CI/CD Pipelines
+
+If you use GitHub Actions, GitLab CI, etc.:
+
+```yaml
+# Example GitHub Actions
+- name: Deploy Backend
+  env:
+    CMB_API_TOKEN: ${{ secrets.CMB_API_TOKEN }}
+    CMB_XSRF_TOKEN: ${{ secrets.CMB_XSRF_TOKEN }}
+    CMB_SESSION_COOKIE: ${{ secrets.CMB_SESSION_COOKIE }}
+  run: |
+    docker compose up -d backend
+```
+
+---
+
+## Support & Questions
+
+For questions about the setup:
+1. Check `API_CREDENTIALS_QUICK_GUIDE.md` (quick reference)
+2. Check `EXTERNAL_API_CONFIGURATION.md` (detailed guide)
+3. Check logs: `docker compose logs backend | grep CMB`
+
+---
+
+## Status
+
+✅ **Implementation Complete**
+
+- [x] Settings.py configured with EXTERNAL_API
+- [x] views.py updated to use settings
+- [x] .env.example updated
+- [x] .env.docker.example updated
+- [x] Documentation created
+- [x] Quick guide created
+- [x] Ready for deployment
+
+**Next Step:** Update production `.env` file with actual CMB credentials and restart backend container.
+

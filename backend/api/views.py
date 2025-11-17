@@ -3600,23 +3600,29 @@ class SyncExternalUsersAPIView(APIView):
         sync_record = api_models.SyncHistory.start_sync('external_users')
         
         try:
+            # Get external API configuration from settings
             from django.conf import settings
+            cmb_config = settings.EXTERNAL_API.get('cmb', {})
             
-            # Load external API configuration from settings (loaded from .env)
-            external_api_config = settings.EXTERNAL_API
-            external_api_url = external_api_config['url']
-            external_api_token = external_api_config['token']
-            external_api_xsrf = external_api_config['xsrf_token']
-            external_api_session = external_api_config['session_cookie']
-            api_timeout = external_api_config['timeout']
+            external_api_url = f"{cmb_config.get('base_url', 'https://cmb.tail91813a.ts.net')}{cmb_config.get('users_endpoint', '/api/external/users')}"
+            api_token = cmb_config.get('api_token', '')
+            xsrf_token = cmb_config.get('xsrf_token', '')
+            session_cookie = cmb_config.get('session_cookie', '')
+            api_timeout = cmb_config.get('timeout', 30)
             
             print(f"Attempting to fetch data from: {external_api_url}")
             
-            # Add API authentication headers
-            headers = {
-                'X-API-Token': external_api_token,
-                'Cookie': f'XSRF-TOKEN={external_api_xsrf}; {external_api_session}'
-            }
+            # Build authentication headers from environment variables
+            headers = {}
+            if api_token:
+                headers['X-API-Token'] = api_token
+            if xsrf_token or session_cookie:
+                cookie_parts = []
+                if xsrf_token:
+                    cookie_parts.append(f'XSRF-TOKEN={xsrf_token}')
+                if session_cookie:
+                    cookie_parts.append(f'cmb_setjen_dpd_ri_session={session_cookie}')
+                headers['Cookie'] = '; '.join(cookie_parts)
             
             # Add the ?all=1 parameter to get all data
             full_api_url = f"{external_api_url}?all=1"
