@@ -539,3 +539,16 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Trust X-Forwarded-Host header from nginx
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
+
+# ===== EXTERNAL API INTEGRATION CONFIGURATION =====
+# External User Synchronization API Settings
+EXTERNAL_API = {
+    'url': env('EXTERNAL_API_URL', default='https://cmb.tail91813a.ts.net/api/external/users'),
+    'token': env('EXTERNAL_API_TOKEN', default=''),
+    'xsrf_token': env('EXTERNAL_API_XSRF_TOKEN', default=''),
+    'session_cookie': env('EXTERNAL_API_SESSION_COOKIE', default=''),
+    'timeout': env.int('EXTERNAL_API_TIMEOUT', default=30),
+}
+
+# Alert: These credentials should NEVER be hardcoded in source files
+# Always use .env file or environment variables for external API credentials
