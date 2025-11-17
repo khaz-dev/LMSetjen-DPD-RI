@@ -300,6 +300,10 @@ function UsersAdmin() {
         // Add a small delay to ensure state is set
         await new Promise(resolve => setTimeout(resolve, 100));
         
+        // SMART POLLING: Stop when backend signals completion
+        // DECLARE OUTSIDE TRY BLOCK so it's accessible in catch block
+        let shouldStopPolling = false;
+        
         try {
             // Update progress to syncing
             setSyncProgress(prev => ({
@@ -313,9 +317,6 @@ function UsersAdmin() {
             const syncPromise = api.post('/admin/sync-external-users/', {}, {
                 signal: abortControllerRef.current.signal
             });
-            
-            // SMART POLLING: Stop when backend signals completion
-            let shouldStopPolling = false;
             
             // Poll the backend for real progress updates
             // This gets actual live progress from the backend with completion detection
@@ -1529,7 +1530,24 @@ function UsersAdmin() {
                                     {syncProgress.errors.slice(0, 5).map((error, index) => (
                                         <div key={index} className="sync-error-item">
                                             <FaTimes />
-                                            <span>{error}</span>
+                                            <span>
+                                                {typeof error === 'string' ? (
+                                                    error
+                                                ) : (
+                                                    <>
+                                                        {error.external_id && (
+                                                            <>ID: {error.external_id} | </>
+                                                        )}
+                                                        {error.name && (
+                                                            <>Name: {error.name} | </>
+                                                        )}
+                                                        {error.email && (
+                                                            <>Email: {error.email} | </>
+                                                        )}
+                                                        {error.error ? error.error : (error.errors ? JSON.stringify(error.errors) : 'Unknown error')}
+                                                    </>
+                                                )}
+                                            </span>
                                         </div>
                                     ))}
                                     {syncProgress.errors.length > 5 && (

@@ -31,6 +31,9 @@ export const getMediaUrl = (path) => {
     return `${BACKEND_URL}/media/${cleanPath}`;
 };
 
-export const userId = UserData()?.user_id;
-export const PAYPAL_CLIENT_ID = "AfgB8dQx5PP51IEnMoolGQtKKrMygi3aAZsg3-WNoi5esLsVUTTip1l-wC_l6on8RBBD6Rm2Npj4Ar7X";
-export const teacherId = UserData()?.teacher_id; 
+// NOTE: Do NOT export userId or teacherId at module load time!
+// These should be retrieved dynamically using UserData() when needed to ensure fresh token data
+// export const userId = UserData()?.user_id;  // DEPRECATED - use UserData().user_id in component
+// export const teacherId = UserData()?.teacher_id;  // DEPRECATED - use UserData().teacher_id in component
+
+export const PAYPAL_CLIENT_ID = "AfgB8dQx5PP51IEnMoolGQtKKrMygi3aAZsg3-WNoi5esLsVUTTip1l-wC_l6on8RBBD6Rm2Npj4Ar7X"; 

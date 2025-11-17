@@ -190,22 +190,6 @@ else:
 #     }
 #     EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
 
-# ============================================
-# External API Configuration
-# ============================================
-# API endpoints and credentials for third-party integrations
-
-EXTERNAL_API = {
-    'cmb': {
-        'base_url': env('CMB_API_URL', default='https://cmb.tail91813a.ts.net'),
-        'api_token': env('CMB_API_TOKEN', default=''),
-        'xsrf_token': env('CMB_XSRF_TOKEN', default=''),
-        'session_cookie': env('CMB_SESSION_COOKIE', default=''),
-        'timeout': env.int('CMB_API_TIMEOUT', default=30),
-        'users_endpoint': '/api/external/users',
-    }
-}
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

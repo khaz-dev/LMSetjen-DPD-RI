@@ -11,7 +11,6 @@ import Footer from "../partials/Footer";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
-import { teacherId } from "../../utils/constants";
 import Toast from "../plugin/Toast";
 
 function Review() {
@@ -24,7 +23,11 @@ function Review() {
     const fetchReviewsData = async () => {
         try {
             setLoading(true);
-            const res = await useAxios.get(`teacher/review-lists/${teacherId}/`);
+            const userData = UserData();
+            if (!userData?.teacher_id) {
+                throw new Error("Teacher ID not found");
+            }
+            const res = await useAxios.get(`teacher/review-lists/${userData.teacher_id}/`);
             setReviews(res.data);
             setFilteredReview(res.data);
         } catch (error) {
@@ -45,7 +48,11 @@ function Review() {
         setLoadingReply({...loadingReply, [reviewId]: true});
         
         try {
-            await useAxios.patch(`teacher/review-detail/${teacherId}/${reviewId}/`, {
+            const userData = UserData();
+            if (!userData?.teacher_id) {
+                throw new Error("Teacher ID not found");
+            }
+            await useAxios.patch(`teacher/review-detail/${userData.teacher_id}/${reviewId}/`, {
                 reply: replyText,
             });
             

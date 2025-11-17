@@ -3600,35 +3600,22 @@ class SyncExternalUsersAPIView(APIView):
         sync_record = api_models.SyncHistory.start_sync('external_users')
         
         try:
-            # Get external API configuration from settings
-            from django.conf import settings
-            cmb_config = settings.EXTERNAL_API.get('cmb', {})
-            
-            external_api_url = f"{cmb_config.get('base_url', 'https://cmb.tail91813a.ts.net')}{cmb_config.get('users_endpoint', '/api/external/users')}"
-            api_token = cmb_config.get('api_token', '')
-            xsrf_token = cmb_config.get('xsrf_token', '')
-            session_cookie = cmb_config.get('session_cookie', '')
-            api_timeout = cmb_config.get('timeout', 30)
+            # External API URL
+            external_api_url = "https://cmb.tail91813a.ts.net/api/external/users"
             
             print(f"Attempting to fetch data from: {external_api_url}")
             
-            # Build authentication headers from environment variables
-            headers = {}
-            if api_token:
-                headers['X-API-Token'] = api_token
-            if xsrf_token or session_cookie:
-                cookie_parts = []
-                if xsrf_token:
-                    cookie_parts.append(f'XSRF-TOKEN={xsrf_token}')
-                if session_cookie:
-                    cookie_parts.append(f'cmb_setjen_dpd_ri_session={session_cookie}')
-                headers['Cookie'] = '; '.join(cookie_parts)
+            # Add API authentication headers
+            headers = {
+                'X-API-Token': 'hY89aCK6tgMmGQNootpLYsw9otfwmNAv24cZ3QIljC8aI8DQ4RbxQlHPn0cVBbgdtwuJpWbxfbu4qGCwTycKtAiIDwX8ePEcWRtBhu2LfKmsY87eGuCDXBv8pAvbLtEH',
+                'Cookie': 'XSRF-TOKEN=eyJpdiI6IkwwenJpQk94QStXcHpVbUdFMEoraWc9PSIsInZhbHVlIjoidkUvN0Z2MjBKSThqazlvSFdBYjZnaWpaVC9PRGhvUlkzelZvVmp6Z3NQWk9jYXpnbjNIeHVFUmxmcUFFdFZ0YkYrZldibE5OKzIwU2U5US9BVnJqb2dtR0FXdXpOMFhEL0o5U0x2MHpSdnY3Q2E5MGFGcSt4dHRwVkxMYTNJY0MiLCJtYWMiOiIzODliMDRkNjQyOTkzNDdiNmQ3MDRjMGU5Y2ZhMTJhNmE2MGEzMmM2OWNhNTVhM2I0NWI4MTAzZmZkZjRiOTkxIiwidGFnIjoiIn0%3D; cmb_setjen_dpd_ri_session=eyJpdiI6ImM2NGhSSXBKSXhaM3QxTWROV3dxaGc9PSIsInZhbHVlIjoiVFVxSSt5MnIxKzREQUw1dm5tTW91UzJnQzZuc2ZjZGY1REJjZGNVazdJOCtLQnNLK2QwQ05BMVowUVpKMm8yRmovNndRelJhUFBnajd3bDBBeEdoTUdNWkVXcVhLbExmU2dOUlpYMFFFUVRtR3pSSmtmWmN3ajdUb0dDbzduQVIiLCJtYWMiOiI2ODc3YWRhZjAzNzBkZDQxZjBiZTc0NzhjYjcyY2IwOTQyMWEyYTY4YWI1N2NlOGM2Y2Y2NzNlM2E1ZmI5MDQ0IiwidGFnIjoiIn0%3D'
+            }
             
             # Add the ?all=1 parameter to get all data
             full_api_url = f"{external_api_url}?all=1"
             
             try:
-                response = requests.get(full_api_url, headers=headers, timeout=api_timeout)
+                response = requests.get(full_api_url, headers=headers, timeout=30)
                 print(f"Response status code: {response.status_code}")
                 response.raise_for_status()
                 
