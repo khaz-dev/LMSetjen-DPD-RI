@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
+import fs from 'fs'
+import path from 'path'
 
 // SPA Fallback Plugin - serve index.html for all non-file routes
 // This enables client-side routing for React Router
@@ -9,32 +11,58 @@ function spaFallbackPlugin() {
     name: 'spa-fallback',
     apply: 'serve',
     configureServer(server) {
+      // Return a POST hook that runs AFTER Vite's built-in middlewares
       return () => {
-        // Middleware to handle SPA routing fallback
+        // Use the post hook to catch all unhandled requests
         server.middlewares.use((req, res, next) => {
-          // Get the path without query string
-          const path = req.url.split('?')[0]
+          const method = req.method
+          const url = req.url
           
-          // Check for real file extensions (not JWT tokens which contain dots)
-          // Real file extensions: .js, .css, .json, .png, .jpg, .svg, .woff2, etc.
-          // JWT tokens look like: eyJ0eXAi.eyJuaXA....bJacH9ei (multiple dots, not file extensions)
-          const hasFileExtension = /\.\w{2,4}$/.test(path)
-          
-          // Skip if it's a real file request
-          if (hasFileExtension) {
+          // Only handle GET and HEAD requests
+          if (method !== 'GET' && method !== 'HEAD') {
             return next()
           }
           
-          // Skip api calls and other special paths
-          if (path.startsWith('/api') || path.startsWith('/node_modules')) {
+          // Get the path without query string or fragment
+          const urlPath = url.split('?')[0].split('#')[0]
+          
+          console.log(`[SPA] Middleware checking: ${urlPath}`)
+          
+          // Skip if it's an API request
+          if (urlPath.startsWith('/api')) {
+            console.log(`[SPA]   → API request, passing through`)
             return next()
           }
           
-          // For all other routes (including /sso/{jwt_token}), rewrite to root (/)
-          // This allows React Router to handle the routing
-          // JWT tokens in URLs will now work: /sso/eyJ0eXAi.eyJuaXA...bJacH9ei
-          req.url = '/'
-          next()
+          // Skip if it's a special Vite path
+          if (urlPath.startsWith('/node_modules') || urlPath.startsWith('/@') || urlPath.startsWith('/vite')) {
+            console.log(`[SPA]   → Special path, passing through`)
+            return next()
+          }
+          
+          // Check for real file extensions
+          // Match patterns like: .js, .css, .json, .png, .jpg, .gif, .svg, .ico, .woff, .woff2, etc.
+          // The regex /\.\w{2,5}$/ looks for a dot followed by 2-5 word characters at the END of path
+          // This prevents matching JWT tokens which have multiple dots in the middle
+          // JWT example: /sso/eyJ0eXAi.eyJuaXA.bJacH9ei (NOT at end, so won't match)
+          if (/\.\w{2,5}$/.test(urlPath)) {
+            console.log(`[SPA]   → File request, passing through`)
+            return next()
+          }
+          
+          // All other routes should serve index.html for SPA routing
+          console.log(`[SPA]   → Route request, serving index.html`)
+          try {
+            // Use path.join to construct the path to index.html
+            const indexPath = path.join(process.cwd(), 'index.html')
+            const html = fs.readFileSync(indexPath, 'utf-8')
+            res.setHeader('Content-Type', 'text/html; charset=utf-8')
+            res.end(html)
+          } catch (error) {
+            console.error('[SPA] Error serving index.html:', error)
+            res.statusCode = 500
+            res.end('Error serving index.html')
+          }
         })
       }
     }
