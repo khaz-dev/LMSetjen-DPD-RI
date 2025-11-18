@@ -9,8 +9,9 @@ const useAuthStore = create((set, get) => ({
         user_id: get().allUserData?.user_id || null,
         username: get().allUserData?.username || null,
         email: get().allUserData?.email || null,
-        nip: get().allUserData?.nip || null,  // Added NIP field
-        role: get().allUserData?.role || null,  // Added role field
+        full_name: get().allUserData?.full_name || null,  // Added full_name field
+        nip: get().allUserData?.nip || null,
+        role: get().allUserData?.role || null,
     }),
 
     setUser: (user) => 

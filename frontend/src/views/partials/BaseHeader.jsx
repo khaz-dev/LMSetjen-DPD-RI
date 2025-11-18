@@ -20,7 +20,7 @@ function BaseHeader() {
     const navigate = useNavigate();
     const location = useLocation();
     const isSearchPage = location.pathname.includes('/search');
-    const [isLoggedIn, user] = useAuthStore((state) => [state.isLoggedIn, state.user]);
+    const [isLoggedIn, user, allUserData] = useAuthStore((state) => [state.isLoggedIn, state.user, state.allUserData]);
     const userData = UserData();
     const hasTeacherId = !!(userData?.teacher_id && userData?.teacher_id !== null && userData?.teacher_id !== undefined && userData?.teacher_id !== 0);
     const isAdmin = userData?.role === 'admin';
@@ -103,8 +103,13 @@ function BaseHeader() {
     };
 
     const getDisplayName = () => {
-        const fullName = userData?.full_name || user?.full_name || user?.username || '';
+        // Try to get full_name from multiple sources in order of preference:
+        // 1. allUserData (from Zustand store) - most reliable for SSO
+        // 2. userData (from decoded JWT token)
+        // 3. user().full_name (from auth store user function)
+        const fullName = allUserData?.full_name || userData?.full_name || user()?.full_name || '';
         const displayName = getFirstThreeWords(fullName);
+        
         if (isAdmin) return displayName || 'Admin';
         return displayName || (hasTeacherId ? 'Pemateri' : 'Peserta');
     };
