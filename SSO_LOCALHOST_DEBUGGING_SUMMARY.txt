@@ -1,0 +1,366 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║           🔧 SSO LOCALHOST DEBUGGING - ISSUES FIXED & READY TO TEST 🔧       ║
+║                                                                              ║
+║                       LMSetjen DPD RI Learning Management System             ║
+║                                                                              ║
+║                            November 18, 2025 | v2.0                         ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+════════════════════════════════════════════════════════════════════════════════
+📋 WHAT WAS THE PROBLEM?
+════════════════════════════════════════════════════════════════════════════════
+
+Your SSO integration was receiving tokens from Nusa DPD correctly, but:
+
+1. ❌ Frontend couldn't process tokens on localhost
+2. ❌ Cookie settings too restrictive for HTTP (used secure=true for localhost)
+3. ❌ SameSite=Strict prevented cookie storage
+4. ❌ No debugging logs to trace the issue
+5. ❌ Backend not returning helpful error messages
+
+════════════════════════════════════════════════════════════════════════════════
+✅ WHAT WAS FIXED
+════════════════════════════════════════════════════════════════════════════════
+
+FRONTEND CHANGES (SSOLogin.jsx):
+────────────────────────────────────────────────────────────────────────────
+✅ Added comprehensive console logging at each step
+✅ Changed cookie settings for localhost:
+   - secure: false (allow HTTP on localhost)
+   - sameSite: 'Lax' (less restrictive for localhost)
+✅ Added detailed error messages
+✅ Improved token validation
+✅ Added API endpoint debugging
+
+BACKEND CHANGES (views.py):
+────────────────────────────────────────────────────────────────────────────
+✅ Added extensive logging to sso/verify/ endpoint
+✅ Logs each step: token received → decoded → validated → user created → JWT generated
+✅ Improved error messages with clear status codes
+✅ Added debugging for failed verifications
+
+NEW DEBUGGING TOOLS:
+────────────────────────────────────────────────────────────────────────────
+✅ SSO_LOCALHOST_DEBUG_GUIDE.md - Comprehensive debugging guide
+✅ test-sso-localhost.ps1 - Windows PowerShell testing script
+✅ test-sso-localhost.sh - Bash testing script
+✅ Both scripts test: backend, frontend, CORS, token validation, database
+
+════════════════════════════════════════════════════════════════════════════════
+🚀 QUICK START - TEST YOUR SSO NOW
+════════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Start Services
+─────────────────────────────────────────────────────────────────────────────
+
+Terminal 1 - Backend:
+$ cd backend
+$ python manage.py runserver 0.0.0.0:8000
+
+Terminal 2 - Frontend:
+$ cd frontend
+$ npm run dev
+
+Terminal 3 - Monitor Backend (Optional):
+$ docker compose logs -f backend
+
+STEP 2: Test with Script (Recommended)
+─────────────────────────────────────────────────────────────────────────────
+
+Windows (PowerShell):
+$ .\test-sso-localhost.ps1
+
+Linux/Mac (Bash):
+$ chmod +x test-sso-localhost.sh
+$ ./test-sso-localhost.sh
+
+STEP 3: Test in Browser
+─────────────────────────────────────────────────────────────────────────────
+
+1. Get SSO token from Nusa DPD (or use test token below)
+2. Visit URL: http://localhost:5173/sso/{your_sso_token}
+3. Open DevTools (F12) → Console tab
+4. Look for logs starting with: 🔐 SSO Login Started
+
+STEP 4: Watch the Logs
+─────────────────────────────────────────────────────────────────────────────
+
+Browser Console should show:
+✅ 🔐 SSO Login Started
+✅ SSO Token: eyJ0eXA...
+✅ API Base URL: http://127.0.0.1:8000
+✅ 📤 Sending SSO token to backend...
+✅ Backend response received: 200
+✅ 💾 Storing tokens in cookies...
+✅ 🍪 Tokens stored successfully
+✅ 👤 User data: {id: 1, email: "...", role: "student"}
+✅ Redirecting based on role: student
+
+Backend Logs should show:
+✅ 🔐 SSO Token Verification Started
+✅ SSO token received: eyJ0eXA...
+✅ 📤 Decoding SSO token...
+✅ ✅ Token decoded successfully
+✅ 👤 Getting or creating user from SSO data...
+✅ ✅ User found/created: 1, created=True
+✅ 🎉 SSO login successful for user: user@example.com
+
+════════════════════════════════════════════════════════════════════════════════
+📝 TEST TOKEN (For Testing Locally)
+════════════════════════════════════════════════════════════════════════════════
+
+Token:
+eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuaXAiOiIxOTk3MDExODIwMjUwNjEwMDEiLCJpYXQiOjE3NjM0NTA5MzgsImV4cCI6MTc2MzQ1NDUzOH0.KdOc7e7wnGSfQTQBSA_ebElA7s9KmDltREOpAiMoa5A
+
+Contains:
+- NIP: 19970118202506100001
+- Issued: 2025-11-18
+- Expires: 2025-11-18 (EXPIRED - get fresh from Nusa DPD for real testing)
+
+Test URL:
+http://localhost:5173/sso/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuaXAiOiIxOTk3MDExODIwMjUwNjEwMDEiLCJpYXQiOjE3NjM0NTA5MzgsImV4cCI6MTc2MzQ1NDUzOH0.KdOc7e7wnGSfQTQBSA_ebElA7s9KmDltREOpAiMoa5A
+
+════════════════════════════════════════════════════════════════════════════════
+🔍 TROUBLESHOOTING QUICK GUIDE
+════════════════════════════════════════════════════════════════════════════════
+
+ISSUE 1: "Network Error" in Browser
+────────────────────────────────────────────────────────────────────────────
+Solution:
+- Check backend is running on port 8000
+- Run: curl http://127.0.0.1:8000/api/v1/health/
+- Should return 200 OK
+
+ISSUE 2: CORS Error in Console
+────────────────────────────────────────────────────────────────────────────
+Solution:
+- Check CORS_ALLOWED_ORIGINS in backend/backend/settings.py
+- Must include: "http://localhost:5173"
+- Already configured ✅
+
+ISSUE 3: Token Expired Error
+────────────────────────────────────────────────────────────────────────────
+Solution:
+- Get fresh token from Nusa DPD (expires after 1 hour)
+- Or generate new test token with longer expiration
+- Browser console shows: "Invalid or expired SSO token"
+
+ISSUE 4: User Not Created
+────────────────────────────────────────────────────────────────────────────
+Solution:
+- Check backend logs: docker compose logs backend
+- Verify user model has NIP field
+- Check database is running
+
+ISSUE 5: Redirect Not Working
+────────────────────────────────────────────────────────────────────────────
+Solution:
+- Check console for "👤 User data:" message
+- If user role is null, check database user record
+- Backend logs should show "User found/created"
+
+ISSUE 6: Token Shows in Network Response But Cookies Empty
+────────────────────────────────────────────────────────────────────────────
+Solution:
+- Check browser console for cookie errors
+- Verify js-cookie is loaded
+- Check cookie settings (secure, sameSite)
+- Already fixed in updated code ✅
+
+════════════════════════════════════════════════════════════════════════════════
+📊 DETAILED DEBUGGING FILES
+════════════════════════════════════════════════════════════════════════════════
+
+New Documentation:
+├─ SSO_LOCALHOST_DEBUG_GUIDE.md (This comprehensive guide)
+│  ├─ Step-by-step browser debugging
+│  ├─ Backend log monitoring
+│  ├─ Manual token testing with curl
+│  ├─ Cookie verification
+│  ├─ Network tab inspection
+│  ├─ Troubleshooting 6 common issues
+│  └─ Complete debug checklist
+│
+├─ test-sso-localhost.ps1 (Windows PowerShell script)
+│  ├─ Tests backend connectivity
+│  ├─ Tests frontend connectivity
+│  ├─ Tests CORS configuration
+│  ├─ Tests SSO endpoint directly
+│  ├─ Tests token format and decoding
+│  └─ Tests database connection
+│
+└─ test-sso-localhost.sh (Bash script)
+   ├─ Same as PowerShell version
+   ├─ Unix/Linux/Mac compatible
+   └─ Automated verification
+
+Updated Code:
+├─ frontend/src/views/auth/SSOLogin.jsx
+│  ├─ Comprehensive console logging
+│  ├─ Fixed cookie settings (secure=false, sameSite=Lax)
+│  ├─ Better error handling
+│  └─ Detailed debugging at each step
+│
+└─ backend/api/views.py
+   ├─ Added logging module
+   ├─ Logs token reception, decoding, validation
+   ├─ Logs user creation/update
+   ├─ Logs JWT token generation
+   └─ Improved error messages
+
+════════════════════════════════════════════════════════════════════════════════
+✨ COMPLETE DEBUGGING FLOW
+════════════════════════════════════════════════════════════════════════════════
+
+1. START SERVICES
+   Terminal 1: cd backend && python manage.py runserver 0.0.0.0:8000
+   Terminal 2: cd frontend && npm run dev
+
+2. RUN TEST SCRIPT
+   Windows: .\test-sso-localhost.ps1
+   Linux/Mac: ./test-sso-localhost.sh
+   
+   Script will test:
+   ✓ Backend running
+   ✓ Frontend running
+   ✓ CORS configured
+   ✓ SSO endpoint working
+   ✓ Token format valid
+   ✓ Database accessible
+
+3. TEST IN BROWSER
+   - Open: http://localhost:5173/sso/{token}
+   - Press F12 to open DevTools
+   - Watch Console tab for logs
+   - Check Network tab for POST request
+   - Check Application → Cookies for tokens
+
+4. MONITOR BACKEND
+   Terminal 3: docker compose logs -f backend
+   OR check Django server terminal
+   
+   Look for:
+   ✓ 🔐 SSO Token Verification Started
+   ✓ ✅ Token decoded successfully
+   ✓ 🎉 SSO login successful for user
+
+5. VERIFY SUCCESS
+   ✓ Console shows: "🎉 SSO login successful for user"
+   ✓ Cookies show: access_token and refresh_token
+   ✓ Auto-redirects to: /student/dashboard/ (or appropriate role)
+   ✓ Logged in with user data from SSO
+
+════════════════════════════════════════════════════════════════════════════════
+🎯 NEXT STEPS
+════════════════════════════════════════════════════════════════════════════════
+
+1. TEST LOCALLY (Right Now)
+   - Follow "Quick Start" section above
+   - Test with provided token
+   - Get fresh token from Nusa DPD
+   - Verify all debugging logs appear
+
+2. CREATE TEST ACCOUNTS
+   - Verify multiple SSO users can log in
+   - Check user database for each login
+   - Test role-based redirects (student/teacher/admin)
+
+3. TEST ERROR SCENARIOS
+   - Expired token → Should show error message
+   - Invalid token → Should show error message
+   - Network down → Should show "Network Error"
+   - Database down → Should show error
+
+4. PRODUCTION TESTING
+   - Once localhost works perfectly
+   - Deploy to production server
+   - Test with production domain
+   - Monitor logs in production
+
+5. USER ACCEPTANCE TESTING
+   - Have actual users test
+   - Collect feedback
+   - Monitor production logs
+
+════════════════════════════════════════════════════════════════════════════════
+📞 SUPPORT & ADDITIONAL RESOURCES
+════════════════════════════════════════════════════════════════════════════════
+
+Debugging Guides:
+- SSO_LOCALHOST_DEBUG_GUIDE.md ← Comprehensive step-by-step guide
+- SSO_INTEGRATION_GUIDE.md ← Technical architecture
+- SSO_ENV_CONFIGURATION.md ← Environment setup
+
+Testing Scripts:
+- test-sso-localhost.ps1 ← Windows PowerShell
+- test-sso-localhost.sh ← Linux/Mac Bash
+
+Implementation Files:
+- backend/api/sso_utils.py ← Token verification logic
+- backend/api/views.py ← SSO endpoint (with debugging)
+- frontend/src/views/auth/SSOLogin.jsx ← SSO component (with debugging)
+
+Token Tools:
+- JWT Inspector: https://jwt.io
+- Base64 Decoder: https://www.base64decode.org
+
+════════════════════════════════════════════════════════════════════════════════
+✅ DEPLOYMENT CHECKLIST
+════════════════════════════════════════════════════════════════════════════════
+
+Local Testing (Before Production):
+- [ ] Test with test token provided
+- [ ] Get fresh token from Nusa DPD
+- [ ] Verify all console logs appear
+- [ ] Check backend logs for success message
+- [ ] Verify cookies are set correctly
+- [ ] Test redirect to correct dashboard
+- [ ] Test user creation in database
+- [ ] Test persistence (refresh page, still logged in)
+- [ ] Test multiple logins (different users)
+- [ ] Test error scenarios (expired token, network error)
+
+Before Production Deployment:
+- [ ] All local tests passing
+- [ ] Code changes committed to GitHub
+- [ ] Environment variables configured
+- [ ] Backend SSL certificate valid
+- [ ] Frontend SSL certificate valid
+- [ ] CORS configured for production domain
+- [ ] Database backups scheduled
+- [ ] Monitoring/logging configured
+- [ ] Support team trained on debugging
+- [ ] Rollback plan documented
+
+Post-Production Deployment:
+- [ ] Monitor logs for errors
+- [ ] Test SSO with real users
+- [ ] Check performance/response time
+- [ ] Monitor error rates
+- [ ] Track user feedback
+- [ ] Review security logs
+
+════════════════════════════════════════════════════════════════════════════════
+🎉 YOU'RE READY TO DEBUG & TEST!
+════════════════════════════════════════════════════════════════════════════════
+
+The SSO integration is now fully debuggable and compatible with localhost.
+
+All debugging tools, enhanced logging, and test scripts are ready.
+
+Start with:
+1. Run test-sso-localhost.ps1 (or .sh)
+2. Review SSO_LOCALHOST_DEBUG_GUIDE.md
+3. Test in browser with console open
+4. Monitor backend logs
+
+Happy debugging! 🚀
+
+════════════════════════════════════════════════════════════════════════════════
+
+                    DEBUGGING PACKAGE PREPARED ✅
+                          v2.0 | Ready to Test
+
+════════════════════════════════════════════════════════════════════════════════

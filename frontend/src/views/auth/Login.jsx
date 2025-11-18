@@ -308,7 +308,7 @@ function Login() {
                     {/* SSO Login Button */}
                     <div className="d-grid mb-3">
                       <a 
-                        href="https://nusadpd.duckdns.org/sso/" 
+                        href="https://nusadpd.duckdns.org" 
                         className="btn btn-lg login-sso-btn"
                         target="_self"
                         title="Login menggunakan akun Nusa DPD"

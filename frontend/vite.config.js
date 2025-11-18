@@ -1,8 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
-import fs from 'fs'
-import path from 'path'
 
 // SPA Fallback Plugin - serve index.html for all non-file routes
 // This enables client-side routing for React Router
@@ -50,19 +48,13 @@ function spaFallbackPlugin() {
             return next()
           }
           
-          // All other routes should serve index.html for SPA routing
-          console.log(`[SPA]   → Route request, serving index.html`)
-          try {
-            // Use path.join to construct the path to index.html
-            const indexPath = path.join(process.cwd(), 'index.html')
-            const html = fs.readFileSync(indexPath, 'utf-8')
-            res.setHeader('Content-Type', 'text/html; charset=utf-8')
-            res.end(html)
-          } catch (error) {
-            console.error('[SPA] Error serving index.html:', error)
-            res.statusCode = 500
-            res.end('Error serving index.html')
-          }
+          // For all other routes, rewrite to /index.html so Vite can process it
+          // This allows React Router to handle the routing on the client side
+          // IMPORTANT: We rewrite to /index.html (not serve directly) so Vite's React plugin
+          // can inject the Fast Refresh preamble into the HTML
+          console.log(`[SPA]   → Route request, rewriting to /index.html`)
+          req.url = '/index.html'
+          next()
         })
       }
     }
