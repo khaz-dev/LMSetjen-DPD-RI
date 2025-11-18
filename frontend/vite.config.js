@@ -2,9 +2,40 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
 
+// SPA Fallback Plugin - serve index.html for all non-file routes
+// This enables client-side routing for React Router
+function spaFallbackPlugin() {
+  return {
+    name: 'spa-fallback',
+    apply: 'serve',
+    configureServer(server) {
+      return () => {
+        // Middleware to handle SPA routing fallback
+        server.middlewares.use((req, res, next) => {
+          // Skip if it's a real file request (has a file extension)
+          if (req.url.includes('.')) {
+            return next()
+          }
+          
+          // Skip api calls and other special paths
+          if (req.url.startsWith('/api') || req.url.startsWith('/node_modules')) {
+            return next()
+          }
+          
+          // For all other routes, rewrite to root (/)
+          // This allows React Router to handle the routing
+          req.url = '/'
+          next()
+        })
+      }
+    }
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    spaFallbackPlugin(),
     react({
       // Add fast refresh options
       fastRefresh: true,
@@ -27,6 +58,7 @@ export default defineConfig({
     }),
   ],
   server: {
+    port: 5173,
     hmr: {
       // HMR settings
       protocol: 'ws',
