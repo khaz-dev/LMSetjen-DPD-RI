@@ -1,0 +1,189 @@
+/* SSO Login Page Styles */
+
+.sso-login-section {
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem 0;
+}
+
+.sso-login-card {
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.sso-login-card:hover {
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  transform: translateY(-5px);
+}
+
+.sso-login-body {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+/* Loading State */
+.sso-loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.sso-loading-spinner .spinner-border {
+  width: 4rem;
+  height: 4rem;
+  border-width: 0.4rem;
+}
+
+.sso-status-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.sso-status-subtitle {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+/* Error State */
+.sso-error-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 4rem;
+  height: 4rem;
+  margin: 1rem auto;
+  background: #f8d7da;
+  border-radius: 50%;
+  font-size: 2rem;
+  color: #dc3545;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.sso-error-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #dc3545;
+  margin-bottom: 1rem;
+}
+
+.sso-error-message {
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.sso-error-subtitle {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* Success State */
+.sso-success-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 4rem;
+  height: 4rem;
+  margin: 1rem auto;
+  background: #d4edda;
+  border-radius: 50%;
+  font-size: 2rem;
+  color: #28a745;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.sso-success-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #28a745;
+  margin-bottom: 1rem;
+}
+
+.sso-success-message {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Info Box */
+.sso-info-box {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border-left: 4px solid #667eea;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.sso-info-box p {
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sso-login-section {
+    padding: 1rem;
+  }
+
+  .sso-login-body {
+    padding: 2rem 1.5rem;
+  }
+
+  .sso-status-title,
+  .sso-error-title,
+  .sso-success-title {
+    font-size: 1.25rem;
+  }
+
+  .sso-loading-spinner .spinner-border {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .sso-error-icon,
+  .sso-success-icon {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.5rem;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .sso-login-card {
+    background: rgba(30, 30, 30, 0.95);
+  }
+
+  .sso-status-title,
+  .sso-error-title,
+  .sso-success-title {
+    color: #fff;
+  }
+
+  .sso-status-subtitle {
+    color: #bbb;
+  }
+
+  .sso-info-box {
+    background: rgba(50, 50, 50, 0.9);
+    color: #ccc;
+  }
+}

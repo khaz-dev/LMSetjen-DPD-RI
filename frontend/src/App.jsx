@@ -21,6 +21,7 @@ import RoleRoute from "./layouts/RoleRoute";
 // Auth Routes
 const Register = lazy(() => import("./views/auth/Register"));
 const Login = lazy(() => import("./views/auth/Login"));
+const SSOLogin = lazy(() => import("./views/auth/SSOLogin"));
 const ForgotPassword = lazy(() => import("./views/auth/ForgotPassword"));
 const CreateNewPassword = lazy(() => import("./views/auth/CreateNewPassword"));
 
@@ -158,6 +159,7 @@ function App() {
                                 <Routes>
                                     <Route path="/register/" element={<Register />} />
                                     <Route path="/login/" element={<Login />} />
+                                    <Route path="/sso/:sso_token/" element={<SSOLogin />} />
                                     <Route path="/forgot-password/" element={<ForgotPassword />} />
                                     <Route path="/create-new-password/" element={<CreateNewPassword />} />
 

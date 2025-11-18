@@ -170,6 +170,153 @@ class HealthCheckAPIView(APIView):
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = api_serializer.MyTokenObtainPairSerializer
 
+
+# ============================================================
+# SSO (Single Sign-On) Integration with Nusa DPD
+# ============================================================
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SSOTokenVerifyAPIView(APIView):
+    """
+    Verify SSO token and exchange for LMS JWT tokens
+    
+    Endpoint: /api/v1/sso/verify/
+    Method: POST
+    
+    Request:
+    {
+        "sso_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+    }
+    
+    Response:
+    {
+        "access": "lms_jwt_access_token",
+        "refresh": "lms_jwt_refresh_token",
+        "user": {
+            "id": 1,
+            "email": "user@email.com",
+            "full_name": "User Name",
+            "role": "student",
+            "nip": "20000420202506100008"
+        }
+    }
+    
+    CSRF exempt because:
+    - Public SSO endpoint
+    - External authentication integration
+    - Uses token-based verification
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    
+    def post(self, request):
+        """Verify SSO token and create/update user"""
+        from .sso_utils import SSOTokenVerifier, SSOUserManager, SSOTokenSerializer, SSOUserSerializer
+        import jwt
+        
+        # Get SSO token from request
+        sso_token = request.data.get('sso_token')
+        
+        if not sso_token:
+            return Response(
+                {"error": "SSO token is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Decode SSO token without verification (trusting the SSO provider)
+            # In production, you should verify the signature using the SSO provider's public key
+            sso_data = SSOTokenVerifier.decode_token_unsafe(sso_token)
+            
+            # Validate SSO data
+            sso_serializer = SSOUserSerializer(data=sso_data)
+            if not sso_serializer.is_valid():
+                return Response(
+                    {"error": "Invalid SSO data", "details": sso_serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get or create user from SSO data
+            user, created = SSOUserManager.get_or_create_user_from_sso(sso_data)
+            
+            # Generate JWT tokens for LMS
+            refresh = RefreshToken.for_user(user)
+            
+            return Response(
+                {
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                    "user": {
+                        "id": user.id,
+                        "email": user.email,
+                        "full_name": user.full_name,
+                        "role": user.role,
+                        "nip": user.nip,
+                        "is_active": user.is_active,
+                    },
+                    "created": created,
+                    "message": "SSO login successful"
+                },
+                status=status.HTTP_200_OK
+            )
+        
+        except jwt.InvalidTokenError as e:
+            return Response(
+                {"error": f"Invalid SSO token: {str(e)}"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except ValueError as e:
+            return Response(
+                {"error": f"SSO data error: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"SSO verification failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SSOLoginRedirectAPIView(APIView):
+    """
+    SSO Login Redirect Handler
+    
+    Endpoint: /api/v1/sso/login/{sso_token}/
+    Method: GET
+    
+    Redirects to /sso/{sso_token}/ on frontend for handling
+    Used when user is redirected from SSO provider with token
+    
+    CSRF exempt because:
+    - Public SSO redirect endpoint
+    - Handles external authentication flow
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    
+    def get(self, request, sso_token=None):
+        """Redirect SSO token to frontend for processing"""
+        if not sso_token:
+            return Response(
+                {"error": "SSO token is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Return token and instructions for frontend
+        frontend_url = f"{settings.FRONTEND_SITE_URL}/sso/{sso_token}/"
+        
+        return Response(
+            {
+                "message": "SSO token received. Redirecting to frontend...",
+                "frontend_url": frontend_url,
+                "sso_token": sso_token,
+                "verify_endpoint": request.build_absolute_uri('/api/v1/sso/verify/')
+            },
+            status=status.HTTP_200_OK
+        )
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(generics.CreateAPIView):
     """

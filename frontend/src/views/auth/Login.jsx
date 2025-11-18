@@ -300,6 +300,24 @@ function Login() {
                       </button>
                     </div>
 
+                    {/* SSO Login Divider */}
+                    <div className="login-divider mb-3">
+                      <span className="login-divider-text">atau</span>
+                    </div>
+
+                    {/* SSO Login Button */}
+                    <div className="d-grid mb-3">
+                      <a 
+                        href="https://nusadpd.duckdns.org/sso/" 
+                        className="btn btn-lg login-sso-btn"
+                        target="_self"
+                        title="Login menggunakan akun Nusa DPD"
+                      >
+                        <i className="fas fa-building me-2"></i>
+                        Login dengan Nusa DPD
+                      </a>
+                    </div>
+
                     <div className="text-center">
                       <small className="text-muted" style={{ userSelect: 'none' }}>
                         Butuh bantuan?{' '}
