@@ -263,6 +263,27 @@ class SSOTokenVerifyAPIView(APIView):
             logger.info("🔑 Generating JWT tokens for LMS...")
             refresh = RefreshToken.for_user(user)
             
+            # CRITICAL: Add all user fields to the token payload (matching MyTokenObtainPairSerializer)
+            # This ensures frontend has complete user data from token
+            refresh.access_token['full_name'] = user.full_name
+            refresh.access_token['email'] = user.email
+            refresh.access_token['username'] = user.username
+            refresh.access_token['role'] = user.role
+            refresh.access_token['nip'] = user.nip
+            refresh.access_token['is_active'] = user.is_active
+            
+            try:
+                refresh.access_token['teacher_id'] = user.teacher.id
+            except:
+                refresh.access_token['teacher_id'] = 0
+                
+            try:
+                refresh.access_token['admin_id'] = user.admin.id if hasattr(user, 'admin') else 0
+                refresh.access_token['is_super_admin'] = user.admin.is_super_admin if hasattr(user, 'admin') else False
+            except:
+                refresh.access_token['admin_id'] = 0
+                refresh.access_token['is_super_admin'] = False
+            
             logger.info("✅ JWT tokens generated successfully")
             logger.info(f"🎉 SSO login successful for user: {user.email}")
             

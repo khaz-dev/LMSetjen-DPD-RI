@@ -320,10 +320,24 @@ export const setAuthUser = (access_token, refresh_token) => {
         console.log("🔐 Auth tokens set with options:", cookieOptions);
 
         try {
-            const user = jwt_decode(access_token);
-            if (user) {
-                console.log("👤 Setting auth user from decoded token:", user);
-                useAuthStore.getState().setUser(user);
+            const decodedToken = jwt_decode(access_token);
+            if (decodedToken) {
+                console.log("👤 Setting auth user from decoded token:", decodedToken);
+                
+                // Merge with existing data rather than replace
+                // This preserves full_name, role, nip from SSO responses
+                const currentUser = useAuthStore.getState().allUserData;
+                const mergedUser = {
+                    // Start with current data (may have been set by SSO response)
+                    ...currentUser,
+                    // Override with decoded token data
+                    ...decodedToken,
+                    // Ensure user_id is set (primary identifier)
+                    user_id: decodedToken.user_id || currentUser?.user_id
+                };
+                
+                console.log("📦 Merged user data:", mergedUser);
+                useAuthStore.getState().setUser(mergedUser);
             }
         } catch (error) {
             console.error("Token decode error:", error);
