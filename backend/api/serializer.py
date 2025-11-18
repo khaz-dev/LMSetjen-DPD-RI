@@ -16,6 +16,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
         token['username'] = user.username
         token['role'] = user.role
+        token['nip'] = user.nip  # Add NIP field for SSO identity
         
         try:
             token['teacher_id'] = user.teacher.id

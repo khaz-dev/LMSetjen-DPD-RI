@@ -6,6 +6,7 @@ import UserData from '../plugin/UserData';
 import apiInstance from '../../utils/axios';
 import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
+import { setAuthUser } from '../../utils/auth';
 import './SSOLogin.css';
 
 /**
@@ -87,7 +88,7 @@ function SSOLogin() {
 
       console.log("💾 Storing tokens in cookies...");
 
-      // Store tokens in cookies
+      // Store tokens in cookies AND update auth store
       import('js-cookie').then(Cookie => {
         Cookie.default.set('access_token', access, {
           expires: 7,
@@ -104,6 +105,23 @@ function SSOLogin() {
         console.log("Access token cookie:", Cookie.default.get('access_token') ? `${Cookie.default.get('access_token').substring(0, 20)}...` : "NOT FOUND");
         console.log("Refresh token cookie:", Cookie.default.get('refresh_token') ? `${Cookie.default.get('refresh_token').substring(0, 20)}...` : "NOT FOUND");
 
+        // CRITICAL: Update auth store with user data
+        console.log("📝 Updating auth store with user data...");
+        useAuthStore.getState().setUser({
+          user_id: user?.id,
+          username: user?.email, // Use email as username for display
+          email: user?.email,
+          full_name: user?.full_name,
+          role: user?.role,
+          nip: user?.nip,  // Include NIP for identity
+          is_active: user?.is_active,
+        });
+        console.log("✅ Auth store updated successfully");
+
+        // CRITICAL: Also call setAuthUser to decode and store tokens properly
+        // This ensures all interceptors and auth utilities recognize the login
+        setAuthUser(access, refresh);
+
         // Show success message
         const statusMessage = created 
           ? "Welcome! Your account has been created via SSO."
@@ -117,29 +135,30 @@ function SSOLogin() {
         // Redirect based on user role
         console.log("👤 User data:", user);
         console.log("User role:", user?.role);
+        console.log("User NIP:", user?.nip);
 
         setTimeout(() => {
           try {
             const userData = UserData();
             console.log("UserData from store:", userData);
+            const authStoreData = useAuthStore.getState().allUserData;
+            console.log("Auth store data:", authStoreData);
             
-            if (userData && userData.role) {
-              console.log("Redirecting based on role:", userData.role);
-              switch (userData.role) {
-                case 'admin':
-                  navigate('/admin/dashboard/');
-                  break;
-                case 'teacher':
-                  navigate('/instructor/dashboard/');
-                  break;
-                case 'student':
-                default:
-                  navigate('/student/dashboard/');
-                  break;
-              }
-            } else {
-              console.log("No user data, redirecting to student dashboard");
-              navigate('/student/dashboard/');
+            // Use role from either source (userData or authStore)
+            const userRole = user?.role || authStoreData?.role || 'student';
+            console.log("Final user role for redirect:", userRole);
+            
+            switch (userRole) {
+              case 'admin':
+                navigate('/admin/dashboard/');
+                break;
+              case 'teacher':
+                navigate('/instructor/dashboard/');
+                break;
+              case 'student':
+              default:
+                navigate('/student/dashboard/');
+                break;
             }
           } catch (redirectError) {
             console.error("⚠️ Redirect error:", redirectError);

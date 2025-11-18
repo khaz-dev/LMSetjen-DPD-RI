@@ -303,22 +303,26 @@ export const setAuthUser = (access_token, refresh_token) => {
     }
     
     if (access_token && refresh_token) {
-        // Secure cookies for HTTPS deployment
-        Cookie.set("access_token", access_token, {
-            expires: 1,
-            secure: true,
-            sameSite: 'strict'
+        // Determine secure cookie settings based on environment
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const cookieOptions = {
+            expires: isLocalhost ? 1 : 1,  // 1 day for access token
+            secure: !isLocalhost,  // Only secure flag on HTTPS (production)
+            sameSite: isLocalhost ? 'Lax' : 'strict'  // Lax for localhost, strict for HTTPS
+        };
+
+        Cookie.set("access_token", access_token, cookieOptions);
+        Cookie.set("refresh_token", refresh_token, {
+            ...cookieOptions,
+            expires: isLocalhost ? 7 : 7,  // 7 days for refresh token
         });
 
-        Cookie.set("refresh_token", refresh_token, {
-            expires: 7,
-            secure: true,
-            sameSite: 'strict'
-        });
+        console.log("🔐 Auth tokens set with options:", cookieOptions);
 
         try {
             const user = jwt_decode(access_token);
             if (user) {
+                console.log("👤 Setting auth user from decoded token:", user);
                 useAuthStore.getState().setUser(user);
             }
         } catch (error) {
