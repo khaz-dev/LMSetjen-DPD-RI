@@ -160,6 +160,7 @@ function App() {
                                     <Route path="/register/" element={<Register />} />
                                     <Route path="/login/" element={<Login />} />
                                     <Route path="/sso/:sso_token/" element={<SSOLogin />} />
+                                    <Route path="/sso/login/:sso_token/" element={<SSOLogin />} />
                                     <Route path="/forgot-password/" element={<ForgotPassword />} />
                                     <Route path="/create-new-password/" element={<CreateNewPassword />} />
 
