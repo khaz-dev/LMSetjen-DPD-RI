@@ -7,6 +7,7 @@ import apiInstance from '../../utils/axios';
 import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
 import { setAuthUser } from '../../utils/auth';
+import Cookie from 'js-cookie';
 import './SSOLogin.css';
 
 /**
@@ -88,84 +89,71 @@ function SSOLogin() {
 
       console.log("💾 Storing tokens in cookies...");
 
-      // Store tokens in cookies AND update auth store
-      import('js-cookie').then(Cookie => {
-        Cookie.default.set('access_token', access, {
-          expires: 7,
-          secure: false, // Allow localhost (change to true for HTTPS)
-          sameSite: 'Lax', // Changed from Strict for localhost compatibility
-        });
-        Cookie.default.set('refresh_token', refresh, {
-          expires: 7,
-          secure: false, // Allow localhost
-          sameSite: 'Lax', // Changed from Strict for localhost
-        });
-
-        console.log("🍪 Tokens stored successfully");
-        console.log("Access token cookie:", Cookie.default.get('access_token') ? `${Cookie.default.get('access_token').substring(0, 20)}...` : "NOT FOUND");
-        console.log("Refresh token cookie:", Cookie.default.get('refresh_token') ? `${Cookie.default.get('refresh_token').substring(0, 20)}...` : "NOT FOUND");
-
-        // CRITICAL: Update auth store with user data
-        console.log("📝 Updating auth store with user data...");
-        useAuthStore.getState().setUser({
-          user_id: user?.id,
-          username: user?.email, // Use email as username for display
-          email: user?.email,
-          full_name: user?.full_name,
-          role: user?.role,
-          nip: user?.nip,  // Include NIP for identity
-          is_active: user?.is_active,
-        });
-        console.log("✅ Auth store updated successfully");
-
-        // CRITICAL: Also call setAuthUser to decode and store tokens properly
-        // This ensures all interceptors and auth utilities recognize the login
-        setAuthUser(access, refresh);
-
-        // Show success message
-        const statusMessage = created 
-          ? "Welcome! Your account has been created via SSO."
-          : "Welcome back! Logged in via SSO.";
-
-        Toast().fire({
-          icon: "success",
-          title: statusMessage,
-        });
-
-        // Redirect based on user role
-        console.log("👤 User data:", user);
-        console.log("User role:", user?.role);
-        console.log("User NIP:", user?.nip);
-
-        setTimeout(() => {
-          try {
-            const userData = UserData();
-            console.log("UserData from store:", userData);
-            const authStoreData = useAuthStore.getState().allUserData;
-            console.log("Auth store data:", authStoreData);
-            
-            // Use role from either source (userData or authStore)
-            const userRole = user?.role || authStoreData?.role || 'student';
-            console.log("Final user role for redirect:", userRole);
-            
-            switch (userRole) {
-              case 'admin':
-                navigate('/admin/dashboard/');
-                break;
-              case 'teacher':
-                navigate('/instructor/dashboard/');
-                break;
-              case 'student':
-              default:
-                navigate('/student/dashboard/');
-                break;
-            }
-          } catch (redirectError) {
-            console.error("⚠️ Redirect error:", redirectError);
-            navigate('/student/dashboard/');
-          }
-        }, 1500);
+      // Store tokens in cookies immediately
+      Cookie.set('access_token', access, {
+        expires: 7,
+        secure: false,
+        sameSite: 'Lax',
       });
+      Cookie.set('refresh_token', refresh, {
+        expires: 7,
+        secure: false,
+        sameSite: 'Lax',
+      });
+
+      console.log("🍪 Tokens stored successfully");
+      console.log("Access token cookie:", Cookie.get('access_token') ? `${Cookie.get('access_token').substring(0, 20)}...` : "NOT FOUND");
+      console.log("Refresh token cookie:", Cookie.get('refresh_token') ? `${Cookie.get('refresh_token').substring(0, 20)}...` : "NOT FOUND");
+
+      // CRITICAL: Update auth store with user data
+      console.log("📝 Updating auth store with user data...");
+      useAuthStore.getState().setUser({
+        user_id: user?.id,
+        username: user?.email,
+        email: user?.email,
+        full_name: user?.full_name,
+        role: user?.role,
+        nip: user?.nip,
+        is_active: user?.is_active,
+      });
+      console.log("✅ Auth store updated successfully");
+
+      // CRITICAL: Also call setAuthUser to decode and store tokens properly
+      setAuthUser(access, refresh);
+
+      // Show success message
+      const statusMessage = created 
+        ? "Welcome! Your account has been created via SSO."
+        : "Welcome back! Logged in via SSO.";
+
+      Toast().fire({
+        icon: "success",
+        title: statusMessage,
+      });
+
+      // Redirect based on user role
+      console.log("👤 User data:", user);
+      console.log("User role:", user?.role);
+      console.log("User NIP:", user?.nip);
+
+      // Determine redirect path immediately
+      let redirectPath = '/student/dashboard/';
+      const userRole = user?.role;
+      
+      console.log("Final user role for redirect:", userRole);
+      
+      if (userRole === 'admin') {
+        redirectPath = '/admin/dashboard/';
+      } else if (userRole === 'teacher') {
+        redirectPath = '/instructor/dashboard/';
+      }
+
+      console.log("Redirecting to:", redirectPath);
+      
+      // Perform redirect with minimal delay
+      setTimeout(() => {
+        navigate(redirectPath);
+      }, 500);
 
     } catch (err) {
       console.error("❌ SSO login error:", err);
