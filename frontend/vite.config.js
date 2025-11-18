@@ -12,18 +12,27 @@ function spaFallbackPlugin() {
       return () => {
         // Middleware to handle SPA routing fallback
         server.middlewares.use((req, res, next) => {
-          // Skip if it's a real file request (has a file extension)
-          if (req.url.includes('.')) {
+          // Get the path without query string
+          const path = req.url.split('?')[0]
+          
+          // Check for real file extensions (not JWT tokens which contain dots)
+          // Real file extensions: .js, .css, .json, .png, .jpg, .svg, .woff2, etc.
+          // JWT tokens look like: eyJ0eXAi.eyJuaXA....bJacH9ei (multiple dots, not file extensions)
+          const hasFileExtension = /\.\w{2,4}$/.test(path)
+          
+          // Skip if it's a real file request
+          if (hasFileExtension) {
             return next()
           }
           
           // Skip api calls and other special paths
-          if (req.url.startsWith('/api') || req.url.startsWith('/node_modules')) {
+          if (path.startsWith('/api') || path.startsWith('/node_modules')) {
             return next()
           }
           
-          // For all other routes, rewrite to root (/)
+          // For all other routes (including /sso/{jwt_token}), rewrite to root (/)
           // This allows React Router to handle the routing
+          // JWT tokens in URLs will now work: /sso/eyJ0eXAi.eyJuaXA...bJacH9ei
           req.url = '/'
           next()
         })
