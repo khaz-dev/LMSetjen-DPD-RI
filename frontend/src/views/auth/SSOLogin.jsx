@@ -64,25 +64,45 @@ function SSOLogin() {
       setLoading(true);
       setError(null);
 
+      console.log("🔐 SSO Login Started");
+      console.log("SSO Token:", sso_token ? `${sso_token.substring(0, 20)}...` : "MISSING");
+      console.log("API Base URL:", apiInstance.defaults.baseURL);
+      console.log("Full endpoint URL:", `${apiInstance.defaults.baseURL}sso/verify/`);
+
       // Call backend SSO verify endpoint
+      console.log("📤 Sending SSO token to backend...");
       const response = await apiInstance.post('sso/verify/', {
         sso_token: sso_token,
       });
 
+      console.log("✅ Backend response received:", response.status);
+      console.log("Response data:", response.data);
+
       const { access, refresh, user, created, message } = response.data;
+
+      // Validate response
+      if (!access || !refresh) {
+        throw new Error("Invalid response from backend: missing tokens");
+      }
+
+      console.log("💾 Storing tokens in cookies...");
 
       // Store tokens in cookies
       import('js-cookie').then(Cookie => {
         Cookie.default.set('access_token', access, {
           expires: 7,
-          secure: true,
-          sameSite: 'Strict',
+          secure: false, // Allow localhost (change to true for HTTPS)
+          sameSite: 'Lax', // Changed from Strict for localhost compatibility
         });
         Cookie.default.set('refresh_token', refresh, {
           expires: 7,
-          secure: true,
-          sameSite: 'Strict',
+          secure: false, // Allow localhost
+          sameSite: 'Lax', // Changed from Strict for localhost
         });
+
+        console.log("🍪 Tokens stored successfully");
+        console.log("Access token cookie:", Cookie.default.get('access_token') ? `${Cookie.default.get('access_token').substring(0, 20)}...` : "NOT FOUND");
+        console.log("Refresh token cookie:", Cookie.default.get('refresh_token') ? `${Cookie.default.get('refresh_token').substring(0, 20)}...` : "NOT FOUND");
 
         // Show success message
         const statusMessage = created 
@@ -95,10 +115,16 @@ function SSOLogin() {
         });
 
         // Redirect based on user role
+        console.log("👤 User data:", user);
+        console.log("User role:", user?.role);
+
         setTimeout(() => {
           try {
             const userData = UserData();
+            console.log("UserData from store:", userData);
+            
             if (userData && userData.role) {
+              console.log("Redirecting based on role:", userData.role);
               switch (userData.role) {
                 case 'admin':
                   navigate('/admin/dashboard/');
@@ -112,17 +138,21 @@ function SSOLogin() {
                   break;
               }
             } else {
+              console.log("No user data, redirecting to student dashboard");
               navigate('/student/dashboard/');
             }
           } catch (redirectError) {
-            console.error("Redirect error:", redirectError);
+            console.error("⚠️ Redirect error:", redirectError);
             navigate('/student/dashboard/');
           }
         }, 1500);
       });
 
     } catch (err) {
-      console.error("SSO login error:", err);
+      console.error("❌ SSO login error:", err);
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+      console.error("Error config:", err.config);
       
       let errorMessage = "SSO login failed. Please try again.";
 
@@ -143,6 +173,8 @@ function SSOLogin() {
         icon: "error",
         title: errorMessage,
       });
+
+      console.error("Error message displayed:", errorMessage);
 
       // Redirect to login after showing error
       setTimeout(() => {

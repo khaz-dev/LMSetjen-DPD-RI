@@ -213,34 +213,58 @@ class SSOTokenVerifyAPIView(APIView):
         """Verify SSO token and create/update user"""
         from .sso_utils import SSOTokenVerifier, SSOUserManager, SSOTokenSerializer, SSOUserSerializer
         import jwt
+        import logging
+        
+        logger = logging.getLogger(__name__)
         
         # Get SSO token from request
         sso_token = request.data.get('sso_token')
         
+        logger.info("🔐 SSO Token Verification Started")
+        logger.info(f"Request data: {request.data}")
+        logger.info(f"SSO token received: {sso_token[:20] if sso_token else 'MISSING'}...")
+        
         if not sso_token:
+            logger.error("❌ SSO token is missing from request")
             return Response(
                 {"error": "SSO token is required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         try:
+            logger.info("📤 Decoding SSO token...")
             # Decode SSO token without verification (trusting the SSO provider)
             # In production, you should verify the signature using the SSO provider's public key
             sso_data = SSOTokenVerifier.decode_token_unsafe(sso_token)
             
+            logger.info(f"✅ Token decoded successfully")
+            logger.info(f"SSO data: {sso_data}")
+            
             # Validate SSO data
+            logger.info("🔍 Validating SSO data...")
             sso_serializer = SSOUserSerializer(data=sso_data)
             if not sso_serializer.is_valid():
+                logger.error(f"❌ Invalid SSO data: {sso_serializer.errors}")
                 return Response(
                     {"error": "Invalid SSO data", "details": sso_serializer.errors},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
+            logger.info("✅ SSO data validation passed")
+            
             # Get or create user from SSO data
+            logger.info("👤 Getting or creating user from SSO data...")
             user, created = SSOUserManager.get_or_create_user_from_sso(sso_data)
             
+            logger.info(f"✅ User found/created: {user.id}, created={created}")
+            logger.info(f"User details: email={user.email}, role={user.role}, nip={user.nip}")
+            
             # Generate JWT tokens for LMS
+            logger.info("🔑 Generating JWT tokens for LMS...")
             refresh = RefreshToken.for_user(user)
+            
+            logger.info("✅ JWT tokens generated successfully")
+            logger.info(f"🎉 SSO login successful for user: {user.email}")
             
             return Response(
                 {
@@ -261,16 +285,20 @@ class SSOTokenVerifyAPIView(APIView):
             )
         
         except jwt.InvalidTokenError as e:
+            logger.error(f"❌ Invalid SSO token: {str(e)}")
             return Response(
                 {"error": f"Invalid SSO token: {str(e)}"},
                 status=status.HTTP_401_UNAUTHORIZED
             )
         except ValueError as e:
+            logger.error(f"❌ SSO data error: {str(e)}")
             return Response(
                 {"error": f"SSO data error: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
+            logger.error(f"❌ SSO verification failed: {str(e)}")
+            logger.exception("Full traceback:")
             return Response(
                 {"error": f"SSO verification failed: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
