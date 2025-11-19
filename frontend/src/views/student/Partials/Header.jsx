@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import dayjs, { moment } from "../../../utils/dayjs";
 import { ProfileContext } from "../../plugin/Context";
 import UserData from "../../plugin/UserData";
@@ -16,6 +16,7 @@ function Header() {
   const [lastFetchTime, setLastFetchTime] = useState(null);
   const userData = UserData();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Cache duration in milliseconds (5 minutes)
   const CACHE_DURATION = 5 * 60 * 1000;
@@ -136,7 +137,19 @@ function Header() {
             <div className="row align-items-center">
               {/* Profile Avatar Section */}
               <div className="col-lg-3 col-md-4 mb-4 mb-lg-0">
-                <div className="text-center position-relative">
+                <div 
+                  className="text-center position-relative avatar-container"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => navigate('/student/profile/')}
+                  title="Click to edit your profile"
+                  role="button"
+                  tabIndex={0}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      navigate('/student/profile/');
+                    }
+                  }}
+                >
                   {loading ? (
                     <div className="default-avatar loading-shimmer mx-auto">
                       <div className="spinner-border text-white" role="status" style={{ width: "2.5rem", height: "2.5rem" }}>

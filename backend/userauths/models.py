@@ -87,7 +87,12 @@ class User(AbstractUser):
         return self.role == 'student'
     
     def save(self, *args, **kwargs):
-        email_username, domain = self.email.split("@")
+        # Safely split email with error handling
+        try:
+            email_username, domain = self.email.split("@")
+        except (ValueError, AttributeError):
+            email_username = self.email or "user"
+        
         if self.full_name == "" or self.full_name == None:
             self.full_name = email_username
         if self.username == "" or self.username == None:
@@ -145,7 +150,7 @@ class Profile(models.Model):
     
     def save(self, *args, **kwargs):
         if self.full_name == "" or self.full_name == None:
-            self.full_name == self.user.username
+            self.full_name = self.user.username
         super(Profile, self).save(*args, **kwargs)
 
 

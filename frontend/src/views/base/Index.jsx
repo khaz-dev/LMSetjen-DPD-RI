@@ -23,6 +23,8 @@ function Index() {
     const [isLoading, setIsLoading] = useState(true);
     const [wishlistItems, setWishlistItems] = useState([]);
     const [activeSection, setActiveSection] = useState(0);
+    const [showSectionLabel, setShowSectionLabel] = useState(false);
+    const [labelHideTimeout, setLabelHideTimeout] = useState(null);
     const [stats, setStats] = useState({
         total_courses: 0,
         total_teachers: 0,
@@ -168,6 +170,8 @@ function Index() {
         if (!container) return;
 
         let scrollTimeout;
+        let hideTimeout;
+        
         const handleScroll = () => {
             // Debounce scroll events for better performance
             clearTimeout(scrollTimeout);
@@ -182,6 +186,18 @@ function Index() {
 
                     if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
                         setActiveSection(index);
+                        // Show label when transitioning between sections
+                        setShowSectionLabel(true);
+                        
+                        // Clear existing hide timeout
+                        if (hideTimeout) {
+                            clearTimeout(hideTimeout);
+                        }
+                        
+                        // Hide label after 3 seconds
+                        hideTimeout = setTimeout(() => {
+                            setShowSectionLabel(false);
+                        }, 3000);
                     }
                 });
             }, 50); // 50ms debounce for smooth performance
@@ -196,6 +212,9 @@ function Index() {
         return () => {
             container.removeEventListener('scroll', handleScroll);
             clearTimeout(scrollTimeout);
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+            }
         };
     }, []);
 
@@ -203,9 +222,23 @@ function Index() {
     const scrollToSection = (index) => {
         const sections = document.querySelectorAll('.snap-section');
         if (sections[index]) {
+            // Show label when user clicks to scroll
+            setShowSectionLabel(true);
+            
+            // Clear existing timeout
+            if (labelHideTimeout) {
+                clearTimeout(labelHideTimeout);
+            }
+            
+            // Hide label after 3 seconds
+            const timeout = setTimeout(() => {
+                setShowSectionLabel(false);
+            }, 3000);
+            setLabelHideTimeout(timeout);
+            
             sections[index].scrollIntoView({ 
                 behavior: 'smooth',
-                block: 'start', // Start alignment works better with scroll-snap
+                block: 'start',
                 inline: 'nearest'
             });
         }
@@ -234,7 +267,7 @@ function Index() {
                             onClick={() => scrollToSection(index)}
                         >
                             <div className="section-nav-dot"></div>
-                        <div className="section-nav-label">
+                        <div className={`section-nav-label ${showSectionLabel && activeSection === index ? 'visible' : ''}`}>
                             <i className={`fas fa-${section.icon} me-2`}></i>
                             {section.label}
                         </div>

@@ -4,6 +4,7 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.db import models
+from django.db.models import Q
 from django.db.models.functions import ExtractMonth
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import Http404
@@ -368,6 +369,35 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     authentication_classes = []
     serializer_class = api_serializer.RegisterSerializer
+    
+    def create(self, request, *args, **kwargs):
+        """Override create to add error handling and logging"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            logger.info(f"Registration request received: {request.data}")
+            
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            self.perform_create(serializer)
+            
+            logger.info(f"User registered successfully: {serializer.data.get('email')}")
+            
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            
+        except serializers.ValidationError as e:
+            logger.error(f"Validation error during registration: {str(e)}")
+            return Response({"error": "Validation failed", "details": e.detail}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Unexpected error during registration: {str(e)}")
+            logger.exception("Full traceback:")
+            return Response(
+                {"error": "Registration failed", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 def generate_random_otp(length=7):
     otp = ''.join([str(random.randint(0, 9)) for _ in range(length)])
@@ -599,8 +629,20 @@ class SearchCourseAPIView(generics.ListAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        query = self.request.GET.get('query')
-        return api_models.Course.objects.filter(title__icontains=query, platform_status="Published", teacher_course_status="Published")
+        # Get search query from either 'search' or 'query' parameter
+        query = self.request.GET.get('search') or self.request.GET.get('query')
+        
+        # If no query provided, return empty queryset
+        if not query:
+            return api_models.Course.objects.none()
+        
+        # Search in course title, description, and instructor name
+        return api_models.Course.objects.filter(
+            Q(title__icontains=query) | 
+            Q(description__icontains=query),
+            platform_status="Published", 
+            teacher_course_status="Published"
+        ).distinct()
     
 class StudentSummaryAPIView(generics.ListAPIView):
     serializer_class = api_serializer.StudentSummarySerializer

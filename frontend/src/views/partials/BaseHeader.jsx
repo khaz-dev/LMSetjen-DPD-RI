@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { WishlistContext } from '../plugin/Context';
 import { useAuthStore } from "../../store/auth";
 import UserData from "../plugin/UserData";
+import apiInstance from "../../utils/axios";
 import logoWebP from "../../assets/logo/logo-192.webp";
 import logoPNG from "../../assets/logo/logo-192.png";
 import { logout } from "../../utils/auth";
@@ -16,6 +17,10 @@ function BaseHeader() {
     const [animationSkipped, setAnimationSkipped] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [hoverTimeout, setHoverTimeout] = useState(null);
+    const [searchResults, setSearchResults] = useState([]);
+    const [showSearchModal, setShowSearchModal] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchTimeout, setSearchTimeout] = useState(null);
     
     const navigate = useNavigate();
     const location = useLocation();
@@ -31,14 +36,51 @@ function BaseHeader() {
         return () => clearTimeout(timer);
     }, []);
 
+    // Search API call with debounce
+    useEffect(() => {
+        // Clear previous timeout
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+
+        // Don't search if query is empty
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            setShowSearchModal(false);
+            return;
+        }
+
+        // Set new timeout for debounce
+        const timeout = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                const response = await apiInstance.get(`course/search/?search=${encodeURIComponent(searchQuery)}`);
+                const courses = response.data?.results || response.data || [];
+                setSearchResults(Array.isArray(courses) ? courses.slice(0, 5) : []);
+                setShowSearchModal(true);
+            } catch (error) {
+                console.error("Search error:", error);
+                setSearchResults([]);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 150); // 150ms debounce for snappier results
+
+        setSearchTimeout(timeout);
+        return () => clearTimeout(timeout);
+    }, [searchQuery]);
+
     // Cleanup hover timeout
     useEffect(() => {
         return () => {
             if (hoverTimeout) {
                 clearTimeout(hoverTimeout);
             }
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
         };
-    }, [hoverTimeout]);
+    }, [hoverTimeout, searchTimeout]);
 
     const handleBrandHover = () => {
         if (!typingComplete && !animationSkipped) {
@@ -49,11 +91,18 @@ function BaseHeader() {
 
     // Search functionality
     const handleSearchSubmit = () => {
+        setShowSearchModal(false);
         if (searchQuery.trim()) {
             navigate(`/search/?search=${encodeURIComponent(searchQuery.trim())}`);
         } else {
             navigate('/search/');
         }
+    };
+
+    const handleCourseSelect = (courseSlug) => {
+        setShowSearchModal(false);
+        setSearchQuery("");
+        navigate(`/course-detail/${courseSlug}/`);
     };
 
     const handleKeyPress = (e) => {
@@ -108,7 +157,14 @@ function BaseHeader() {
         // 2. userData (from decoded JWT token)
         // 3. user().full_name (from auth store user function)
         const fullName = allUserData?.full_name || userData?.full_name || user()?.full_name || '';
-        const displayName = getFirstThreeWords(fullName);
+
+        // Clean up the full name - remove any trailing commas, extra spaces, special characters, and trim
+        const cleanedFullName = fullName
+            .replace(/,+/g, '') // Remove all commas
+            .replace(/[^\w\s]/g, '') // Remove special characters except spaces and word characters
+            .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
+            .trim();
+        const displayName = getFirstThreeWords(cleanedFullName);
         
         if (isAdmin) return displayName || 'Admin';
         return displayName || (hasTeacherId ? 'Pemateri' : 'Peserta');
@@ -223,21 +279,112 @@ function BaseHeader() {
 
                         {/* Search */}
                         {!isSearchPage && (
-                            <div className="search-container">
-                                <input
-                                    className="search-input"
-                                    type="search"
-                                    placeholder="Cari Pembelajaran..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyPress={handleKeyPress}
-                                />
-                                <button 
-                                    onClick={handleSearchSubmit} 
-                                    className="search-button"
-                                >
-                                    <i className="fas fa-search me-1"></i>Cari
-                                </button>
+                            <div className="search-container-wrapper">
+                                <div className="search-container">
+                                    <input
+                                        className="search-input"
+                                        type="search"
+                                        placeholder="Cari Pembelajaran..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                        onFocus={() => searchQuery.trim() && setShowSearchModal(true)}
+                                    />
+                                    <button 
+                                        onClick={handleSearchSubmit} 
+                                        className="search-button"
+                                    >
+                                        <i className="fas fa-search me-1"></i>Cari
+                                    </button>
+                                </div>
+
+                                {/* Search Modal */}
+                                {showSearchModal && (
+                                    <div className="search-modal">
+                                        {searchResults.length > 0 ? (
+                                            <>
+                                                <div className="search-modal-header">
+                                                    <span className="search-modal-title">
+                                                        <i className="fas fa-search me-2"></i>
+                                                        Hasil Pencarian ({searchResults.length})
+                                                    </span>
+                                                    <button 
+                                                        className="search-modal-close"
+                                                        onClick={() => setShowSearchModal(false)}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                                <div className="search-modal-content">
+                                                    {searchResults.map((course) => (
+                                                        <div 
+                                                            key={course.id} 
+                                                            className="search-modal-item"
+                                                            onClick={() => handleCourseSelect(course.slug)}
+                                                        >
+                                                            <div className="search-item-image">
+                                                                {course.image ? (
+                                                                    <img src={course.image} alt={course.title} />
+                                                                ) : (
+                                                                    <div className="search-item-image-placeholder">
+                                                                        <i className="fas fa-book"></i>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="search-item-content">
+                                                                <h4 className="search-item-title">{course.title}</h4>
+                                                                {course.description && (
+                                                                    <p className="search-item-description">{course.description}</p>
+                                                                )}
+                                                                <div className="search-item-meta">
+                                                                    <span className="search-item-category">
+                                                                        <i className="fas fa-tag me-1"></i>
+                                                                        {course.category?.title || 'Umum'}
+                                                                    </span>
+                                                                    {course.students_count !== undefined && (
+                                                                        <span className="search-item-students">
+                                                                            <i className="fas fa-users me-1"></i>
+                                                                            {course.students_count} peserta
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                {course.rating && (
+                                                                    <div className="search-item-rating">
+                                                                        <i className="fas fa-star text-warning"></i>
+                                                                        <span className="rating-value">{course.rating.toFixed(1)}</span>
+                                                                        <span className="rating-text">({course.number_of_rating || 0} rating)</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="search-modal-footer">
+                                                    <button 
+                                                        className="btn-view-all"
+                                                        onClick={handleSearchSubmit}
+                                                    >
+                                                        <i className="fas fa-arrow-right me-2"></i>
+                                                        Lihat Semua Hasil
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : isSearching ? (
+                                            <div className="search-modal-loading">
+                                                <div className="search-loading-spinner"></div>
+                                                <p>Mencari pembelajaran...</p>
+                                            </div>
+                                        ) : (
+                                            <div className="search-modal-empty">
+                                                <i className="fas fa-search"></i>
+                                                <p>Tidak ada kursus yang cocok</p>
+                                                <small>Coba ubah kata kunci atau tekan Enter untuk pencarian lengkap</small>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+
                             </div>
                         )}
 

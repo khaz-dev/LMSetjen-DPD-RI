@@ -1,0 +1,134 @@
+/* Coming Soon Modal Styles */
+
+.coming-soon-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.coming-soon-modal-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.coming-soon-modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  width: 90%;
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.coming-soon-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.coming-soon-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.coming-soon-modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.coming-soon-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.coming-soon-modal-body {
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.coming-soon-icon {
+  font-size: 3rem;
+  color: #667eea;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.coming-soon-modal-body p {
+  margin: 0.5rem 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+.coming-soon-subtitle {
+  color: #999;
+  font-size: 0.9rem !important;
+}
+
+.coming-soon-modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.coming-soon-modal-footer .btn {
+  min-width: 100px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .coming-soon-modal-content {
+    max-width: 95%;
+  }
+  
+  .coming-soon-modal-header {
+    padding: 1rem;
+  }
+  
+  .coming-soon-modal-body {
+    padding: 1.5rem 1rem;
+  }
+  
+  .coming-soon-icon {
+    font-size: 2.5rem;
+  }
+}

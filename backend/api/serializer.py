@@ -46,21 +46,46 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attr):
         if attr['password'] != attr['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
+        
+        # Validate email format
+        email = attr.get('email', '')
+        if '@' not in email:
+            raise serializers.ValidationError({"email": "Please provide a valid email address."})
+        
+        # Check if user already exists
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "A user with this email already exists."})
 
         return attr
     
     def create(self, validated_data):
-        user = User.objects.create(
-            full_name=validated_data['full_name'],
-            email=validated_data['email'],
-        )
+        try:
+            email = validated_data['email']
+            full_name = validated_data.get('full_name', '')
+            password = validated_data['password']
+            
+            # Split email safely
+            try:
+                email_username, email_domain = email.split("@")
+            except ValueError:
+                raise serializers.ValidationError({"email": "Invalid email format"})
+            
+            # Create user
+            user = User.objects.create(
+                full_name=full_name or email_username,
+                email=email,
+                username=email_username,  # Set username here to avoid issues
+            )
+            
+            # Set password
+            user.set_password(password)
+            user.save()
+            
+            return user
+        except Exception as e:
+            print(f"Error in RegisterSerializer.create: {str(e)}")
+            raise serializers.ValidationError({"error": f"Registration failed: {str(e)}"})
 
-        email_username, _ = user.email.split("@")
-        user.username = email_username
-        user.set_password(validated_data['password'])
-        user.save()
-
-        return user
     
     
 class UserSerializer(serializers.ModelSerializer):

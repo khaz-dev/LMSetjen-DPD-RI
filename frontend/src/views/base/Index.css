@@ -242,10 +242,31 @@ body:has(.landing-page-container) {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.section-nav-item:hover .section-nav-label,
-.section-nav-item.active .section-nav-label {
+.section-nav-label.visible {
     opacity: 1;
     transform: translateX(0);
+    animation: hideLabel 3s forwards;
+}
+
+@keyframes hideLabel {
+    0% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    85% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+}
+
+.section-nav-item:hover .section-nav-label {
+    opacity: 1;
+    transform: translateX(0);
+    animation: none;
 }
 
 .section-nav-item.active .section-nav-label {
