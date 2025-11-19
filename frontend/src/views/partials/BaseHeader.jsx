@@ -333,9 +333,6 @@ function BaseHeader() {
                                                             </div>
                                                             <div className="search-item-content">
                                                                 <h4 className="search-item-title">{course.title}</h4>
-                                                                {course.description && (
-                                                                    <p className="search-item-description">{course.description}</p>
-                                                                )}
                                                                 <div className="search-item-meta">
                                                                     <span className="search-item-category">
                                                                         <i className="fas fa-tag me-1"></i>
