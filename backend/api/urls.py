@@ -30,6 +30,7 @@ urlpatterns = [
     path("course/course-list/", api_views.CourseListAPIView.as_view()),
     path("course/search/", api_views.SearchCourseAPIView.as_view()),
     path("course/course-detail/<slug>/", api_views.CourseDetailAPIView.as_view()),
+    path("statistics/public-stats/", api_views.PublicStatsAPIView.as_view()),
     
     # Enrollment API Endpoints
     path("course/enroll/", api_views.CourseEnrollmentAPIView.as_view()),
