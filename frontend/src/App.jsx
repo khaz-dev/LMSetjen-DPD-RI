@@ -10,9 +10,6 @@ import UserData from "./views/plugin/UserData";
 // Import theme provider
 import ThemeProvider from "./components/ThemeProvider";
 
-// Import Coming Soon Modal
-import ComingSoonModal from "./components/ComingSoonModal";
-
 // Import mobile-optimized Toast styles
 import "./views/plugin/toast-mobile.css";
 
@@ -158,7 +155,6 @@ function App() {
                 <BrowserRouter>
                     <ThemeProvider>
                         <MainWrapper>
-                            <ComingSoonModal />
                             <Suspense fallback={<LoadingFallback />}>
                                 <Routes>
                                     <Route path="/register/" element={<Register />} />

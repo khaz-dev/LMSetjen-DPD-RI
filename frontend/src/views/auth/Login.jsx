@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useComingSoon } from "../../components/ComingSoonModal";
 
 import { login, redirectUserByRole } from "../../utils/auth";
 import { useAuthStore } from "../../store/auth";
@@ -17,7 +16,6 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const handleComingSoon = useComingSoon('Support');
 
   const navigate = useNavigate();
   const { isLoggedIn } = useAuthStore();
@@ -310,7 +308,7 @@ function Login() {
                     {/* SSO Login Button */}
                     <div className="d-grid mb-3">
                       <a 
-                        href="https://nusadpd.duckdns.org" 
+                        href="https://nusadpd.duckdns.org/sso/" 
                         className="btn btn-lg login-sso-btn"
                         target="_self"
                         title="Login menggunakan akun Nusa DPD"
@@ -323,7 +321,7 @@ function Login() {
                     <div className="text-center">
                       <small className="text-muted" style={{ userSelect: 'none' }}>
                         Butuh bantuan?{' '}
-                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="login-help-link">
+                        <a href="#" className="login-help-link">
                           Hubungi Support
                         </a>
                       </small>

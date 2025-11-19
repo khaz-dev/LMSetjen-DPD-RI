@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useComingSoon } from "../../components/ComingSoonModal";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
@@ -8,8 +7,6 @@ import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 
 function QADetail() {
-    const handleComingSoon = useComingSoon('User profiles');
-    
     return (
         <>
             <BaseHeader />
@@ -343,7 +340,7 @@ function QADetail() {
                                         <li className="comment-item mb-3">
                                             <div className="d-flex">
                                                 <div className="avatar avatar-sm flex-shrink-0">
-                                                    <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
+                                                    <a href="#">
                                                         <img className="avatar-img rounded-circle" src="https://desphixs.com/geeks/assets/images/avatar/avatar-2.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
                                                     </a>
                                                 </div>
@@ -371,7 +368,7 @@ function QADetail() {
                                         <li className="comment-item mb-3">
                                             <div className="d-flex">
                                                 <div className="avatar avatar-sm flex-shrink-0">
-                                                    <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
+                                                    <a href="#">
                                                         <img className="avatar-img rounded-circle" src="https://desphixs.com/geeks/assets/images/avatar/avatar-1.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
                                                     </a>
                                                 </div>
@@ -399,7 +396,7 @@ function QADetail() {
                                         <li className="comment-item mb-3">
                                             <div className="d-flex">
                                                 <div className="avatar avatar-sm flex-shrink-0">
-                                                    <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
+                                                    <a href="#">
                                                         <img className="avatar-img rounded-circle" src="https://desphixs.com/geeks/assets/images/avatar/avatar-3.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
                                                     </a>
                                                 </div>
@@ -427,7 +424,7 @@ function QADetail() {
                                         <li className="comment-item mb-3">
                                             <div className="d-flex">
                                                 <div className="avatar avatar-sm flex-shrink-0">
-                                                    <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
+                                                    <a href="#">
                                                         <img className="avatar-img rounded-circle" src="https://desphixs.com/geeks/assets/images/avatar/avatar-3.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
                                                     </a>
                                                 </div>
@@ -476,4 +473,3 @@ function QADetail() {
 }
 
 export default QADetail;
-
