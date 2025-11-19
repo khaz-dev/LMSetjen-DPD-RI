@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ErrorBoundary from "../../components/ErrorBoundary";
+import { useComingSoon } from "../../components/ComingSoonModal";
 
 import apiInstance from "../../utils/axios";
 import { register } from "../../utils/auth";
@@ -20,6 +21,7 @@ function RegisterContent() {
     password: "",
     password2: ""
   });
+  const handleComingSoon = useComingSoon('Terms and Policies');
 
   if (typeof window === 'undefined') {
     return null;
@@ -407,11 +409,11 @@ function RegisterContent() {
                     <div className="text-center">
                       <small className="text-muted">
                         Dengan mendaftar, Anda menyetujui{' '}
-                        <a href="#" className="register-terms-link text-decoration-none">
+                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="register-terms-link text-decoration-none">
                           Syarat & Ketentuan
                         </a>{' '}
                         dan{' '}
-                        <a href="#" className="register-terms-link text-decoration-none">
+                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="register-terms-link text-decoration-none">
                           Kebijakan Privasi
                         </a>
                       </small>

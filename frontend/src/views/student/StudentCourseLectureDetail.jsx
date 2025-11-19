@@ -3,10 +3,12 @@ import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
 import Sidebar from './Partials/Sidebar'
 import Header from './Partials/Header'
+import { useComingSoon } from '../../components/ComingSoonModal'
 
 import ReactPlayer from 'react-player'
 
 function StudentCourseLectureDetail() {
+    const handleComingSoon = useComingSoon('Assignments');
     return (
         <>
             <BaseHeader />
@@ -134,8 +136,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -150,8 +151,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -168,8 +168,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-lock me-0" />
                                                                                     </a>
@@ -211,8 +210,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -227,8 +225,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -243,8 +240,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -260,8 +256,7 @@ function StudentCourseLectureDetail() {
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <div>
                                                                                         <a
-                                                                                            href="#"
-                                                                                            className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                            href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                             data-bs-toggle="modal"
                                                                                             data-bs-target="#exampleModal"
                                                                                         >
@@ -319,8 +314,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -335,8 +329,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -351,8 +344,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -367,8 +359,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -383,8 +374,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -399,8 +389,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -415,8 +404,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -431,8 +419,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -447,8 +434,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -463,8 +449,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -479,8 +464,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -523,8 +507,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -539,8 +522,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -555,8 +537,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -599,8 +580,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -615,8 +595,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -631,8 +610,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -648,8 +626,7 @@ function StudentCourseLectureDetail() {
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <div>
                                                                                         <a
-                                                                                            href="#"
-                                                                                            className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                            href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                             data-bs-toggle="modal"
                                                                                             data-bs-target="#exampleModal"
                                                                                         >
@@ -680,8 +657,7 @@ function StudentCourseLectureDetail() {
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <div>
                                                                                         <a
-                                                                                            href="#"
-                                                                                            className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                            href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                             data-bs-toggle="modal"
                                                                                             data-bs-target="#exampleModal"
                                                                                         >
@@ -739,8 +715,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -755,8 +730,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -771,8 +745,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -787,8 +760,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -804,8 +776,7 @@ function StudentCourseLectureDetail() {
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <div>
                                                                                         <a
-                                                                                            href="#"
-                                                                                            className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                            href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                             data-bs-toggle="modal"
                                                                                             data-bs-target="#exampleModal"
                                                                                         >
@@ -836,8 +807,7 @@ function StudentCourseLectureDetail() {
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <div>
                                                                                         <a
-                                                                                            href="#"
-                                                                                            className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                            href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                             data-bs-toggle="modal"
                                                                                             data-bs-target="#exampleModal"
                                                                                         >
@@ -895,8 +865,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -911,8 +880,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -927,8 +895,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -943,8 +910,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -991,8 +957,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -1007,8 +972,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -1023,8 +987,7 @@ function StudentCourseLectureDetail() {
                                                                             <div className="d-flex justify-content-between align-items-center">
                                                                                 <div className="position-relative d-flex align-items-center">
                                                                                     <a
-                                                                                        href="#"
-                                                                                        className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
+                                                                                        href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                                                     >
                                                                                         <i className="fas fa-play me-0" />
                                                                                     </a>
@@ -1073,10 +1036,10 @@ function StudentCourseLectureDetail() {
                                                                             </p>
                                                                             {/* Buttons */}
                                                                             <div className="hstack gap-3 flex-wrap">
-                                                                                <a href="#" className="btn btn-success mb-0">
+                                                                                <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-success mb-0">
                                                                                     <i className="bi bi-pencil-square me-2" /> Edit
                                                                                 </a>
-                                                                                <a href="#" className="btn btn-danger mb-0">
+                                                                                <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-danger mb-0">
                                                                                     <i className="bi bi-trash me-2" /> Delete
                                                                                 </a>
                                                                             </div>
@@ -1110,6 +1073,8 @@ function StudentCourseLectureDetail() {
                                                                         <div className="col-sm-6 col-lg-3">
                                                                             <a
                                                                                 href="#"
+                                                                                onClick={handleComingSoon}
+                                                                                style={{ cursor: "pointer" }}
                                                                                 className="btn btn-primary mb-0 w-100"
                                                                                 data-bs-toggle="modal"
                                                                                 data-bs-target="#modalCreatePost"
@@ -1136,7 +1101,7 @@ function StudentCourseLectureDetail() {
                                                                                     </div>
                                                                                     <div className="ms-2">
                                                                                         <h6 className="mb-0">
-                                                                                            <a href="#" className='text-decoration-none text-dark'>Angelina Poi</a>
+                                                                                            <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="text-decoration-none text-dark">Angelina Poi</a>
                                                                                         </h6>
                                                                                         <small>Asked 10 Hours ago</small>
                                                                                     </div>
@@ -1167,7 +1132,7 @@ function StudentCourseLectureDetail() {
                                                                                     </div>
                                                                                     <div className="ms-2">
                                                                                         <h6 className="mb-0">
-                                                                                            <a href="#" className='text-decoration-none text-dark'>Angelina Poi</a>
+                                                                                            <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="text-decoration-none text-dark">Angelina Poi</a>
                                                                                         </h6>
                                                                                         <small>Asked 10 Hours ago</small>
                                                                                     </div>
@@ -1367,3 +1332,7 @@ function StudentCourseLectureDetail() {
 }
 
 export default StudentCourseLectureDetail
+
+
+
+

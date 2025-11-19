@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
 import { Link } from 'react-router-dom';
+import { useComingSoon } from '../../components/ComingSoonModal';
 import apiInstance from '../../utils/axios';
 import Toast from '../plugin/Toast';
 import logoPNG from "../../assets/logo/logo-192.png";
@@ -12,6 +13,7 @@ function ForgotPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
+  const handleComingSoon = useComingSoon('Support');
 
   const validateForm = () => {
     const newErrors = {};
@@ -202,7 +204,7 @@ function ForgotPassword() {
                     <div className="text-center mt-4">
                       <small className="text-muted" style={{ userSelect: 'none' }}>
                         Butuh bantuan?{' '}
-                        <a href="#" className="forgot-password-help-link">
+                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="forgot-password-help-link">
                           Hubungi Support
                         </a>
                       </small>

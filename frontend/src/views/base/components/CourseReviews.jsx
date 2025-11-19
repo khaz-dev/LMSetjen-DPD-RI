@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Rating } from "react-simple-star-rating";
 import dayjs, { moment } from "../../../utils/dayjs";
+import { useComingSoon } from "../../../components/ComingSoonModal";
 
 const CourseReviews = ({ reviews = [], averageRating = 0, totalReviews = 0 }) => {
     const [filter, setFilter] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
     const [showAll, setShowAll] = useState(false);
     const [imageErrors, setImageErrors] = useState({});
+    const handleComingSoon = useComingSoon('Review actions');
 
     // Function to get initials from name
     const getInitials = (name) => {
@@ -282,13 +284,13 @@ const CourseReviews = ({ reviews = [], averageRating = 0, totalReviews = 0 }) =>
                                                     </button>
                                                     <ul className="dropdown-menu">
                                                         <li>
-                                                            <a className="dropdown-item" href="#">
+                                                            <a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
                                                                 <i className="fas fa-flag me-2"></i>
                                                                 Report
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a className="dropdown-item" href="#">
+                                                            <a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
                                                                 <i className="fas fa-share me-2"></i>
                                                                 Share
                                                             </a>

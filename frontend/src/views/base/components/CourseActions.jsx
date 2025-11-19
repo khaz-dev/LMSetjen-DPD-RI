@@ -1,4 +1,5 @@
 import React from "react";
+import { useComingSoon } from "../../../components/ComingSoonModal";
 
 const CourseActions = ({ 
     courseId, 
@@ -8,6 +9,7 @@ const CourseActions = ({
     isEnrolling, 
     handleEnrollment 
 }) => {
+    const handleComingSoon = useComingSoon('Share options');
     return (
         <div className="card-body px-3">
             {/* Course Actions */}
@@ -49,26 +51,26 @@ const CourseActions = ({
                                 <small className="text-muted fw-bold">Share this course</small>
                             </li>
                             <li>
-                                <a className="dropdown-item py-2 px-3 d-flex align-items-center share-dropdown-item" href="#">
+                                <a className="dropdown-item py-2 px-3 d-flex align-items-center share-dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
                                     <i className="fab fa-twitter text-info me-3 share-dropdown-icon" />
                                     <span>Twitter</span>
                                 </a>
                             </li>
                             <li>
-                                <a className="dropdown-item py-2 px-3 d-flex align-items-center share-dropdown-item" href="#">
+                                <a className="dropdown-item py-2 px-3 d-flex align-items-center share-dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
                                     <i className="fab fa-facebook text-primary me-3 share-dropdown-icon" />
                                     <span>Facebook</span>
                                 </a>
                             </li>
                             <li>
-                                <a className="dropdown-item py-2 px-3 d-flex align-items-center share-dropdown-item" href="#">
+                                <a className="dropdown-item py-2 px-3 d-flex align-items-center share-dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
                                     <i className="fab fa-linkedin text-info me-3 share-dropdown-icon" />
                                     <span>LinkedIn</span>
                                 </a>
                             </li>
                             <li><hr className="dropdown-divider my-1" /></li>
                             <li>
-                                <a className="dropdown-item py-2 px-3 d-flex align-items-center share-dropdown-item" href="#">
+                                <a className="dropdown-item py-2 px-3 d-flex align-items-center share-dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
                                     <i className="fas fa-copy text-secondary me-3 copy-link-icon" />
                                     <span>Copy link</span>
                                 </a>

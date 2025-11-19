@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
+import { useComingSoon } from '../../components/ComingSoonModal';
 import apiInstance from '../../utils/axios';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Toast from '../plugin/Toast';
@@ -16,6 +17,7 @@ function CreateNewPassword() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState("");
+  const handleComingSoon = useComingSoon('Support');
 
   const navigate = useNavigate();
   const [searchParam] = useSearchParams();
@@ -315,7 +317,7 @@ function CreateNewPassword() {
                     <div className="text-center">
                       <small className="text-muted" style={{ userSelect: 'none' }}>
                         Butuh bantuan?{' '}
-                        <a href="#" className="create-password-help-link">
+                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="create-password-help-link">
                           Hubungi Support
                         </a>
                       </small>

@@ -2,11 +2,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth';
 import UserData from '../plugin/UserData';
+import { useComingSoon } from '../../components/ComingSoonModal';
 import './AdminHeader.css';
 
 function AdminHeader() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [hoverTimeout, setHoverTimeout] = useState(null);
+    const handleComingSoon = useComingSoon('Notifications');
     
     const navigate = useNavigate();
     const location = useLocation();
@@ -161,11 +163,11 @@ function AdminHeader() {
                             <ul className="dropdown-menu notification-dropdown">
                                 <li><h6 className="dropdown-header">Notifications</h6></li>
                                 <li><hr className="dropdown-divider" /></li>
-                                <li><a className="dropdown-item" href="#">New user registered</a></li>
-                                <li><a className="dropdown-item" href="#">Course requires approval</a></li>
-                                <li><a className="dropdown-item" href="#">System backup completed</a></li>
+                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>New user registered</a></li>
+                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>Course requires approval</a></li>
+                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>System backup completed</a></li>
                                 <li><hr className="dropdown-divider" /></li>
-                                <li><a className="dropdown-item text-center" href="#">View all notifications</a></li>
+                                <li><a className="dropdown-item text-center" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>View all notifications</a></li>
                             </ul>
                         </div>
 

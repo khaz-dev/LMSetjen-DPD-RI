@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useComingSoon } from "../../../components/ComingSoonModal";
 
 const CourseFAQ = () => {
     const [activeIndex, setActiveIndex] = useState(null);
+    const handleComingSoon = useComingSoon('Bonus Materials');
 
     const toggleFAQ = (index) => {
         setActiveIndex(activeIndex === index ? null : index);
@@ -140,23 +142,23 @@ const CourseFAQ = () => {
                 <div className="mt-4 text-center">
                     <h6 className="fw-semibold mb-3">Quick Links</h6>
                     <div className="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="#" className="btn btn-sm btn-outline-secondary">
+                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-sm btn-outline-secondary">
                             <i className="fas fa-file-alt me-1"></i>
                             Course Syllabus
                         </a>
-                        <a href="#" className="btn btn-sm btn-outline-secondary">
+                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-sm btn-outline-secondary">
                             <i className="fas fa-graduation-cap me-1"></i>
                             Sample Certificate
                         </a>
-                        <a href="#" className="btn btn-sm btn-outline-secondary">
+                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-sm btn-outline-secondary">
                             <i className="fas fa-play me-1"></i>
                             Preview Lessons
                         </a>
-                        <a href="#" className="btn btn-sm btn-outline-secondary">
+                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-sm btn-outline-secondary">
                             <i className="fas fa-star me-1"></i>
                             Student Reviews
                         </a>
-                        <a href="#" className="btn btn-sm btn-outline-secondary">
+                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-sm btn-outline-secondary">
                             <i className="fas fa-user-tie me-1"></i>
                             Instructor Bio
                         </a>

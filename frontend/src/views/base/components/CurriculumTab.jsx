@@ -1,6 +1,8 @@
 import React from "react";
+import { useComingSoon } from "../../../components/ComingSoonModal";
 
 const CurriculumTab = ({ curriculum }) => {
+    const handleComingSoon = useComingSoon('Course lessons');
     if (!curriculum || curriculum.length === 0) {
         return (
             <div className="tab-pane fade" id="course-pills-2" role="tabpanel" aria-labelledby="course-pills-tab-2">
@@ -39,6 +41,8 @@ const CurriculumTab = ({ curriculum }) => {
                                             <div className="position-relative d-flex align-items-center">
                                                 <a 
                                                     href="#" 
+                                                    onClick={handleComingSoon}
+                                                    style={{ cursor: "pointer" }}
                                                     className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static"
                                                 >
                                                     <i className={`fas ${lesson.preview ? 'fa-play' : 'fa-lock'} me-0`} />
