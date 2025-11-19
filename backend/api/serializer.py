@@ -11,7 +11,12 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-
+        cls._add_user_fields(token, user)
+        return token
+    
+    @staticmethod
+    def _add_user_fields(token, user):
+        """Add custom user fields to JWT token - used by both normal login and SSO"""
         token['full_name'] = user.full_name
         token['email'] = user.email
         token['username'] = user.username
@@ -29,8 +34,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         except:
             token['admin_id'] = 0
             token['is_super_admin'] = False
-
-        return token
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])

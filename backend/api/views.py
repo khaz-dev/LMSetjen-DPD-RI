@@ -263,26 +263,14 @@ class SSOTokenVerifyAPIView(APIView):
             logger.info("🔑 Generating JWT tokens for LMS...")
             refresh = RefreshToken.for_user(user)
             
-            # CRITICAL: Add all user fields to the token payload (matching MyTokenObtainPairSerializer)
-            # This ensures frontend has complete user data from token
-            refresh.access_token['full_name'] = user.full_name
-            refresh.access_token['email'] = user.email
-            refresh.access_token['username'] = user.username
-            refresh.access_token['role'] = user.role
-            refresh.access_token['nip'] = user.nip
-            refresh.access_token['is_active'] = user.is_active
+            # Use the same method as MyTokenObtainPairSerializer to add custom fields
+            # This ensures both access_token and refresh token have all user data
+            api_serializer.MyTokenObtainPairSerializer._add_user_fields(refresh.access_token, user)
+            api_serializer.MyTokenObtainPairSerializer._add_user_fields(refresh, user)
             
-            try:
-                refresh.access_token['teacher_id'] = user.teacher.id
-            except:
-                refresh.access_token['teacher_id'] = 0
-                
-            try:
-                refresh.access_token['admin_id'] = user.admin.id if hasattr(user, 'admin') else 0
-                refresh.access_token['is_super_admin'] = user.admin.is_super_admin if hasattr(user, 'admin') else False
-            except:
-                refresh.access_token['admin_id'] = 0
-                refresh.access_token['is_super_admin'] = False
+            # Also ensure is_active is present (not added by serializer)
+            refresh.access_token['is_active'] = user.is_active
+            refresh['is_active'] = user.is_active
             
             logger.info("✅ JWT tokens generated successfully")
             logger.info(f"🎉 SSO login successful for user: {user.email}")
