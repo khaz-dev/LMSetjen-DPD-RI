@@ -1,8 +1,16 @@
 import UserData from "../views/plugin/UserData";
 
 // Use environment variable for API URL, fallback to localhost for development
-const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
-export const API_BASE_URL = `${BACKEND_URL}/api/v1/`;
+// On production, VITE_API_BASE_URL will be '/api' (relative path)
+// On localhost development, it defaults to 'http://127.0.0.1:8000'
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+
+// Build the full API base URL
+// If baseURL is already a full URL (http://...), use it as-is + /api/v1
+// If baseURL is relative (/api), use it as-is + /v1 (baseURL already has /api)
+export const API_BASE_URL = baseURL.startsWith('http')
+  ? `${baseURL}/api/v1/`   // Full URL: append /api/v1/
+  : `${baseURL}/v1/`;       // Relative: append /v1/ (baseURL already has /api)
 
 // Default image URL for fallback cases
 export const DEFAULT_IMAGE_URL = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";

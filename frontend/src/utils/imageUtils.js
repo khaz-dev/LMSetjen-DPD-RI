@@ -153,8 +153,12 @@ export const getImageUrl = (imagePath, baseUrl = null) => {
     return imagePath;
   }
 
-  // For relative paths, prepend the base URL
-  const base = baseUrl || import.meta.env.VITE_SERVER_URL || 'http://127.0.0.1:8000';
+  // Get base URL from environment variable or use relative path
+  // On production, VITE_API_BASE_URL will be '/api' (relative path)
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+  
+  // For media URLs, use the base URL (already includes /api if needed)
+  const base = baseUrl || apiBase;
   
   // Remove leading slash if base URL ends with slash
   const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
