@@ -12,16 +12,22 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
     useEffect(() => {
         // Check if user is logged in first
         if (!loggedIn) {
+            console.log("🚫 RoleRoute: User not logged in (isLoggedIn=false)");
             setHasCheckedRole(true);
             setShouldRender(false);
             return;
         }
 
+        console.log("✅ RoleRoute: User logged in, checking role...");
+        
         // Get user data and check role
         const userData = UserData();
+        console.log("👤 RoleRoute: userData =", userData);
+        console.log("👤 RoleRoute: userData.role =", userData?.role);
         
         if (!userData || !userData.role) {
             // User is logged in but has no role data
+            console.error("❌ RoleRoute: No role data found!");
             Toast().fire({
                 icon: 'error',
                 title: 'Access Denied',
@@ -36,11 +42,15 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
         const userRole = userData.role.toLowerCase();
         const normalizedAllowedRoles = allowedRoles.map(role => role.toLowerCase());
         
+        console.log("👤 RoleRoute: userRole =", userRole, "allowedRoles =", normalizedAllowedRoles);
+        
         // Check if user has permission
         if (normalizedAllowedRoles.includes(userRole)) {
+            console.log("✅ RoleRoute: User has permission!");
             setShouldRender(true);
         } else {
             // User doesn't have permission
+            console.error("❌ RoleRoute: Permission denied - user role doesn't match allowed roles");
             const roleDisplay = userRole === 'teacher' ? 'Instructor' : userRole.charAt(0).toUpperCase() + userRole.slice(1);
             const requiredRoles = allowedRoles.map(role => {
                 if (role.toLowerCase() === 'teacher') return 'Instructor';
