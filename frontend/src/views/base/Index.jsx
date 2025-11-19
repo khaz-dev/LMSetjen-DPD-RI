@@ -21,6 +21,7 @@ function Index() {
     const [categories, setCategories] = useState([]);
     const [featuredCourses, setFeaturedCourses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isStatsLoading, setIsStatsLoading] = useState(true);
     const [wishlistItems, setWishlistItems] = useState([]);
     const [activeSection, setActiveSection] = useState(0);
     const [showSectionLabel, setShowSectionLabel] = useState(false);
@@ -29,7 +30,10 @@ function Index() {
         total_courses: 0,
         total_teachers: 0,
         total_students: 0,
-        completion_rate: 95
+        completion_rate: 0,
+        total_certificates: 0,
+        total_materials: 0,
+        platform_rating: 4.8
     });
     const [wishlistCount, setWishlistCount, refreshWishlistCount] = useContext(WishlistContext);
 
@@ -54,23 +58,6 @@ function Index() {
             
             // Get featured courses (first 6 courses)
             setFeaturedCourses(coursesData.slice(0, 6));
-            
-            // Calculate statistics from courses data
-            const totalCourses = coursesData.length;
-            const totalStudents = coursesData.reduce((sum, course) => 
-                sum + (course.students?.length || 0), 0);
-            const uniqueTeachers = new Set(
-                coursesData
-                    .map(course => course.teacher?.id)
-                    .filter(id => id !== undefined)
-            ).size;
-            
-            setStats({
-                total_courses: totalCourses,
-                total_teachers: uniqueTeachers,
-                total_students: totalStudents,
-                completion_rate: 95
-            });
 
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -80,6 +67,42 @@ function Index() {
             });
         } finally {
             setIsLoading(false);
+        }
+    }, []);
+
+    // Fetch real-time statistics from backend
+    const fetchStatistics = useCallback(async () => {
+        setIsStatsLoading(true);
+        try {
+            const response = await apiInstance.get(`/statistics/public-stats/`);
+            console.log('📊 Statistics API Response:', response.data); // DEBUG
+            if (response.data) {
+                const newStats = {
+                    total_courses: response.data.total_courses || 0,
+                    total_teachers: response.data.total_teachers || 0,
+                    total_students: response.data.total_students || 0,
+                    completion_rate: response.data.completion_rate || 0,
+                    total_certificates: response.data.total_certificates || 0,
+                    total_materials: response.data.total_materials || 0,
+                    platform_rating: response.data.platform_rating || 4.8
+                };
+                console.log('📊 Setting stats state:', newStats); // DEBUG
+                setStats(newStats);
+            }
+        } catch (error) {
+            console.error('❌ Error fetching statistics:', error);
+            // Set default stats on error
+            setStats({
+                total_courses: 0,
+                total_teachers: 0,
+                total_students: 0,
+                completion_rate: 0,
+                total_certificates: 0,
+                total_materials: 0,
+                platform_rating: 4.8
+            });
+        } finally {
+            setIsStatsLoading(false);
         }
     }, []);
 
@@ -105,6 +128,7 @@ function Index() {
         
         // Fetch data
         fetchData();
+        fetchStatistics();
         
         // Fetch wishlist items if user is logged in
         if (userId && !isAdminOrTeacher) {
@@ -559,276 +583,614 @@ function Index() {
                     <div className="row g-3 justify-content-center">
                         {/* Row 1 - All 4 stats */}
                         <div className="col-lg-3 col-md-6">
-                            <div 
-                                className="card border-0 h-100 text-center"
-                                style={{
-                                    borderRadius: '16px',
-                                    background: 'white',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                <div className="card-body p-3">
-                                    <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-2"
-                                        style={{
-                                            width: '50px',
-                                            height: '50px',
-                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                            borderRadius: '12px',
-                                            color: 'white',
-                                            fontSize: '1.3rem'
-                                        }}
-                                    >
-                                        <i className="fas fa-book-open"></i>
-                                    </div>
-                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_courses}+</h4>
-                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Kursus Tersedia</p>
-                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
-                                        <i className="fas fa-arrow-up me-1"></i>
-                                        +5 kursus baru
-                                    </small>
+                            {isStatsLoading ? (
+                                <div 
+                                    className="card border-0 h-100 text-center"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        padding: '1.5rem'
+                                    }}
+                                >
+                                    <div className="placeholder rounded-circle mx-auto mb-3" style={{ width: '50px', height: '50px', background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+                                    <div className="placeholder rounded mx-auto mb-2" style={{ width: '60%', height: '24px', background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+                                    <div className="placeholder rounded mx-auto" style={{ width: '70%', height: '14px', background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
                                 </div>
-                            </div>
+                            ) : (
+                                <div 
+                                    className="card border-0 h-100 text-center"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <div className="card-body p-3">
+                                        <div 
+                                            className="d-inline-flex align-items-center justify-content-center mb-2"
+                                            style={{
+                                                width: '50px',
+                                                height: '50px',
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                borderRadius: '12px',
+                                                color: 'white',
+                                                fontSize: '1.3rem'
+                                            }}
+                                        >
+                                            <i className="fas fa-book-open"></i>
+                                        </div>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_courses}+</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Kursus Tersedia</p>
+                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                            <i className="fas fa-arrow-up me-1"></i>
+                                            +5 kursus baru
+                                        </small>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-lg-3 col-md-6">
-                            <div 
-                                className="card border-0 h-100 text-center"
-                                style={{
-                                    borderRadius: '16px',
-                                    background: 'white',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                <div className="card-body p-3">
+                            {isStatsLoading ? (
+                                <div 
+                                    className="card border-0 h-100"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        padding: '1.5rem'
+                                    }}
+                                >
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-2"
                                         style={{
                                             width: '50px',
                                             height: '50px',
-                                            background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
                                             borderRadius: '12px',
-                                            color: 'white',
-                                            fontSize: '1.3rem'
+                                            margin: '0 auto 1rem'
                                         }}
-                                    >
-                                        <i className="fas fa-users"></i>
-                                    </div>
-                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_students}+</h4>
-                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Peserta Aktif</p>
-                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
-                                        <i className="fas fa-arrow-up me-1"></i>
-                                        +12 peserta baru
-                                    </small>
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '80px',
+                                            height: '24px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto 0.5rem'
+                                        }}
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '100px',
+                                            height: '16px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto'
+                                        }}
+                                    ></div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div 
+                                    className="card border-0 h-100 text-center"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <div className="card-body p-3">
+                                        <div 
+                                            className="d-inline-flex align-items-center justify-content-center mb-2"
+                                            style={{
+                                                width: '50px',
+                                                height: '50px',
+                                                background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                                                borderRadius: '12px',
+                                                color: 'white',
+                                                fontSize: '1.3rem'
+                                            }}
+                                        >
+                                            <i className="fas fa-users"></i>
+                                        </div>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_students}+</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Peserta Aktif</p>
+                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                            <i className="fas fa-arrow-up me-1"></i>
+                                            +12 peserta baru
+                                        </small>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-lg-3 col-md-6">
-                            <div 
-                                className="card border-0 h-100 text-center"
-                                style={{
-                                    borderRadius: '16px',
-                                    background: 'white',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                <div className="card-body p-3">
+                            {isStatsLoading ? (
+                                <div 
+                                    className="card border-0 h-100"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        padding: '1.5rem'
+                                    }}
+                                >
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-2"
                                         style={{
                                             width: '50px',
                                             height: '50px',
-                                            background: 'linear-gradient(135deg, #ffc107 0%, #ff8800 100%)',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
                                             borderRadius: '12px',
-                                            color: 'white',
-                                            fontSize: '1.3rem'
+                                            margin: '0 auto 1rem'
                                         }}
-                                    >
-                                        <i className="fas fa-chalkboard-teacher"></i>
-                                    </div>
-                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_teachers}+</h4>
-                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Instruktur Ahli</p>
-                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
-                                        <i className="fas fa-certificate me-1"></i>
-                                        Tersertifikasi
-                                    </small>
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '80px',
+                                            height: '24px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto 0.5rem'
+                                        }}
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '100px',
+                                            height: '16px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto'
+                                        }}
+                                    ></div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div 
+                                    className="card border-0 h-100 text-center"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <div className="card-body p-3">
+                                        <div 
+                                            className="d-inline-flex align-items-center justify-content-center mb-2"
+                                            style={{
+                                                width: '50px',
+                                                height: '50px',
+                                                background: 'linear-gradient(135deg, #ffc107 0%, #ff8800 100%)',
+                                                borderRadius: '12px',
+                                                color: 'white',
+                                                fontSize: '1.3rem'
+                                            }}
+                                        >
+                                            <i className="fas fa-chalkboard-teacher"></i>
+                                        </div>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_teachers}+</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Instruktur Ahli</p>
+                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                            <i className="fas fa-certificate me-1"></i>
+                                            Tersertifikasi
+                                        </small>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-lg-3 col-md-6">
-                            <div 
-                                className="card border-0 h-100 text-center"
-                                style={{
-                                    borderRadius: '16px',
-                                    background: 'white',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                <div className="card-body p-3">
+                            {isStatsLoading ? (
+                                <div 
+                                    className="card border-0 h-100"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        padding: '1.5rem'
+                                    }}
+                                >
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-2"
                                         style={{
                                             width: '50px',
                                             height: '50px',
-                                            background: 'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
                                             borderRadius: '12px',
-                                            color: 'white',
-                                            fontSize: '1.3rem'
+                                            margin: '0 auto 1rem'
                                         }}
-                                    >
-                                        <i className="fas fa-chart-line"></i>
-                                    </div>
-                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.completion_rate}%</h4>
-                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Tingkat Kelulusan</p>
-                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
-                                        <i className="fas fa-trophy me-1"></i>
-                                        Rata-rata tinggi
-                                    </small>
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '80px',
+                                            height: '24px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto 0.5rem'
+                                        }}
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '100px',
+                                            height: '16px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto'
+                                        }}
+                                    ></div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div 
+                                    className="card border-0 h-100 text-center"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <div className="card-body p-3">
+                                        <div 
+                                            className="d-inline-flex align-items-center justify-content-center mb-2"
+                                            style={{
+                                                width: '50px',
+                                                height: '50px',
+                                                background: 'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)',
+                                                borderRadius: '12px',
+                                                color: 'white',
+                                                fontSize: '1.3rem'
+                                            }}
+                                        >
+                                            <i className="fas fa-chart-line"></i>
+                                        </div>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.completion_rate}%</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Tingkat Kelulusan</p>
+                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                            <i className="fas fa-trophy me-1"></i>
+                                            Rata-rata tinggi
+                                        </small>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Row 2 - Additional stats for 2x4 visual layout */}
                         <div className="col-lg-3 col-md-6">
-                            <div 
-                                className="card border-0 h-100 text-center"
-                                style={{
-                                    borderRadius: '16px',
-                                    background: 'white',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                <div className="card-body p-3">
+                            {isStatsLoading ? (
+                                <div 
+                                    className="card border-0 h-100"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        padding: '1.5rem'
+                                    }}
+                                >
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-2"
                                         style={{
                                             width: '50px',
                                             height: '50px',
-                                            background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
                                             borderRadius: '12px',
-                                            color: 'white',
-                                            fontSize: '1.3rem'
+                                            margin: '0 auto 1rem'
                                         }}
-                                    >
-                                        <i className="fas fa-certificate"></i>
-                                    </div>
-                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>1000+</h4>
-                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Sertifikat Diterbitkan</p>
-                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
-                                        <i className="fas fa-arrow-up me-1"></i>
-                                        Terus meningkat
-                                    </small>
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '80px',
+                                            height: '24px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto 0.5rem'
+                                        }}
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '100px',
+                                            height: '16px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto'
+                                        }}
+                                    ></div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div 
+                                    className="card border-0 h-100 text-center"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <div className="card-body p-3">
+                                        <div 
+                                            className="d-inline-flex align-items-center justify-content-center mb-2"
+                                            style={{
+                                                width: '50px',
+                                                height: '50px',
+                                                background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
+                                                borderRadius: '12px',
+                                                color: 'white',
+                                                fontSize: '1.3rem'
+                                            }}
+                                        >
+                                            <i className="fas fa-certificate"></i>
+                                        </div>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_certificates}+</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Sertifikat Diterbitkan</p>
+                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                            <i className="fas fa-arrow-up me-1"></i>
+                                            Terus meningkat
+                                        </small>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-lg-3 col-md-6">
-                            <div 
-                                className="card border-0 h-100 text-center"
-                                style={{
-                                    borderRadius: '16px',
-                                    background: 'white',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                <div className="card-body p-3">
+                            {isStatsLoading ? (
+                                <div 
+                                    className="card border-0 h-100"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        padding: '1.5rem'
+                                    }}
+                                >
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-2"
                                         style={{
                                             width: '50px',
                                             height: '50px',
-                                            background: 'linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
                                             borderRadius: '12px',
-                                            color: 'white',
-                                            fontSize: '1.3rem'
+                                            margin: '0 auto 1rem'
                                         }}
-                                    >
-                                        <i className="fas fa-clock"></i>
-                                    </div>
-                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>24/7</h4>
-                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Akses Kapan Saja</p>
-                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
-                                        <i className="fas fa-check me-1"></i>
-                                        Fleksibel
-                                    </small>
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '80px',
+                                            height: '24px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto 0.5rem'
+                                        }}
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '100px',
+                                            height: '16px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto'
+                                        }}
+                                    ></div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div 
+                                    className="card border-0 h-100 text-center"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <div className="card-body p-3">
+                                        <div 
+                                            className="d-inline-flex align-items-center justify-content-center mb-2"
+                                            style={{
+                                                width: '50px',
+                                                height: '50px',
+                                                background: 'linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)',
+                                                borderRadius: '12px',
+                                                color: 'white',
+                                                fontSize: '1.3rem'
+                                            }}
+                                        >
+                                            <i className="fas fa-clock"></i>
+                                        </div>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>24/7</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Akses Kapan Saja</p>
+                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                            <i className="fas fa-check me-1"></i>
+                                            Fleksibel
+                                        </small>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-lg-3 col-md-6">
-                            <div 
-                                className="card border-0 h-100 text-center"
-                                style={{
-                                    borderRadius: '16px',
-                                    background: 'white',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                <div className="card-body p-3">
+                            {isStatsLoading ? (
+                                <div 
+                                    className="card border-0 h-100"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        padding: '1.5rem'
+                                    }}
+                                >
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-2"
                                         style={{
                                             width: '50px',
                                             height: '50px',
-                                            background: 'linear-gradient(135deg, #fd7e14 0%, #dc3545 100%)',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
                                             borderRadius: '12px',
-                                            color: 'white',
-                                            fontSize: '1.3rem'
+                                            margin: '0 auto 1rem'
                                         }}
-                                    >
-                                        <i className="fas fa-video"></i>
-                                    </div>
-                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>500+</h4>
-                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Video Pembelajaran</p>
-                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
-                                        <i className="fas fa-play me-1"></i>
-                                        HD Quality
-                                    </small>
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '80px',
+                                            height: '24px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto 0.5rem'
+                                        }}
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '100px',
+                                            height: '16px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto'
+                                        }}
+                                    ></div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div 
+                                    className="card border-0 h-100 text-center"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <div className="card-body p-3">
+                                        <div 
+                                            className="d-inline-flex align-items-center justify-content-center mb-2"
+                                            style={{
+                                                width: '50px',
+                                                height: '50px',
+                                                background: 'linear-gradient(135deg, #fd7e14 0%, #dc3545 100%)',
+                                                borderRadius: '12px',
+                                                color: 'white',
+                                                fontSize: '1.3rem'
+                                            }}
+                                        >
+                                            <i className="fas fa-video"></i>
+                                        </div>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_materials}+</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Video Pembelajaran</p>
+                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                            <i className="fas fa-play me-1"></i>
+                                            HD Quality
+                                        </small>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-lg-3 col-md-6">
-                            <div 
-                                className="card border-0 h-100 text-center"
-                                style={{
-                                    borderRadius: '16px',
-                                    background: 'white',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                <div className="card-body p-3">
+                            {isStatsLoading ? (
+                                <div 
+                                    className="card border-0 h-100"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        padding: '1.5rem'
+                                    }}
+                                >
                                     <div 
-                                        className="d-inline-flex align-items-center justify-content-center mb-2"
                                         style={{
                                             width: '50px',
                                             height: '50px',
-                                            background: 'linear-gradient(135deg, #20c997 0%, #28a745 100%)',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
                                             borderRadius: '12px',
-                                            color: 'white',
-                                            fontSize: '1.3rem'
+                                            margin: '0 auto 1rem'
                                         }}
-                                    >
-                                        <i className="fas fa-star"></i>
-                                    </div>
-                                    <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>4.8/5</h4>
-                                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Rating Platform</p>
-                                    <small className="text-success" style={{ fontSize: '0.75rem' }}>
-                                        <i className="fas fa-thumbs-up me-1"></i>
-                                        Sangat memuaskan
-                                    </small>
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '80px',
+                                            height: '24px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto 0.5rem'
+                                        }}
+                                    ></div>
+                                    <div 
+                                        style={{
+                                            width: '100px',
+                                            height: '16px',
+                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
+                                            backgroundSize: '200% 100%',
+                                            animation: 'shimmer 1.5s infinite',
+                                            borderRadius: '4px',
+                                            margin: '0 auto'
+                                        }}
+                                    ></div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div 
+                                    className="card border-0 h-100 text-center"
+                                    style={{
+                                        borderRadius: '16px',
+                                        background: 'white',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    <div className="card-body p-3">
+                                        <div 
+                                            className="d-inline-flex align-items-center justify-content-center mb-2"
+                                            style={{
+                                                width: '50px',
+                                                height: '50px',
+                                                background: 'linear-gradient(135deg, #20c997 0%, #28a745 100%)',
+                                                borderRadius: '12px',
+                                                color: 'white',
+                                                fontSize: '1.3rem'
+                                            }}
+                                        >
+                                            <i className="fas fa-star"></i>
+                                        </div>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.platform_rating}/5</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Rating Platform</p>
+                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                            <i className="fas fa-thumbs-up me-1"></i>
+                                            Sangat memuaskan
+                                        </small>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

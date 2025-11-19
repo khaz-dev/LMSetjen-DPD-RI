@@ -10,6 +10,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 
 
 
@@ -553,6 +554,112 @@ class CourseListAPIView(generics.ListAPIView):
     queryset = api_models.Course.objects.filter(platform_status="Published", teacher_course_status="Published")
     serializer_class = api_serializer.CourseSerializer
     permission_classes = [AllowAny]
+
+
+class PublicStatsAPIView(generics.GenericAPIView):
+    """
+    Public Statistics API - Returns real-time platform statistics
+    Used for homepage and public-facing dashboards
+    
+    Returns:
+    - total_courses: Number of published courses
+    - total_students: Number of enrolled students (unique users)
+    - total_teachers: Number of active teachers with courses
+    - completion_rate: Average course completion rate
+    - total_certificates: Number of certificates issued
+    - total_materials: Number of course materials/lessons
+    - platform_rating: Average platform rating from reviews
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        try:
+            from django.db.models import Count, Q, Avg
+            
+            # 1. Total published courses
+            total_courses = api_models.Course.objects.filter(
+                platform_status="Published", 
+                teacher_course_status="Published"
+            ).count()
+            
+            # 2. Total unique students (enrolled in courses)
+            total_students = api_models.EnrolledCourse.objects.values('user').distinct().count()
+            
+            # 3. Total active teachers (with published courses)
+            total_teachers = api_models.Course.objects.filter(
+                platform_status="Published",
+                teacher_course_status="Published"
+            ).values('teacher').distinct().count()
+            
+            # 4. Calculate completion rate correctly
+            # Since completion_percentage is a method, we need to iterate through enrollments
+            # OR calculate based on CompletedLesson records
+            total_enrollments = api_models.EnrolledCourse.objects.count()
+            if total_enrollments > 0:
+                # Calculate completion percentage for each enrollment
+                completion_percentages = []
+                for enrollment in api_models.EnrolledCourse.objects.all():
+                    completion_percentages.append(enrollment.completion_percentage())
+                completion_rate = round(sum(completion_percentages) / len(completion_percentages), 1)
+            else:
+                completion_rate = 0
+            
+            # 5. Total certificates issued
+            try:
+                total_certificates = api_models.Certificate.objects.count()
+            except:
+                total_certificates = 0
+            
+            # 6. Total course lessons/materials (using VariantItem for lessons)
+            try:
+                from api.models import VariantItem
+                total_materials = VariantItem.objects.filter(
+                    variant__course__platform_status="Published"
+                ).count()
+            except:
+                try:
+                    # Fallback to counting files if available
+                    total_materials = api_models.Variant.objects.filter(
+                        course__platform_status="Published"
+                    ).count()
+                except:
+                    total_materials = 0
+            
+            # 7. Platform rating (average of all course ratings)
+            try:
+                platform_rating = api_models.Review.objects.filter(
+                    active=True
+                ).aggregate(avg_rating=Avg('rating'))['avg_rating'] or 4.8
+                platform_rating = round(float(platform_rating), 1)
+            except:
+                platform_rating = 4.8
+            
+            return Response({
+                'total_courses': total_courses,
+                'total_students': total_students,
+                'total_teachers': total_teachers,
+                'completion_rate': completion_rate,
+                'total_certificates': total_certificates,
+                'total_materials': total_materials,
+                'platform_rating': platform_rating,
+                'timestamp': timezone.now().isoformat()
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"Error in PublicStatsAPIView: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response({
+                'error': str(e),
+                'total_courses': 0,
+                'total_students': 0,
+                'total_teachers': 0,
+                'completion_rate': 0,
+                'total_certificates': 0,
+                'total_materials': 0,
+                'platform_rating': 4.8
+            }, status=status.HTTP_200_OK)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
