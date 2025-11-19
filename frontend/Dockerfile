@@ -20,7 +20,8 @@ RUN npm ci && \
 COPY . .
 
 # Build argument for API URL
-ARG VITE_API_BASE_URL=http://localhost:8000
+# Default to using the same origin (production) or localhost for development
+ARG VITE_API_BASE_URL=/api
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Debug: Show environment variable

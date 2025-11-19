@@ -1,8 +1,10 @@
 import axios from "axios";
 import Cookie from "js-cookie";
 
-// Get API URL from environment variable, fallback to localhost for development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+// Get API URL from environment variable
+// For production: use relative path /api (nginx proxies to backend)
+// For development: use localhost
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 // Create an Axios instance with default settings
 const apiInstance = axios.create({
