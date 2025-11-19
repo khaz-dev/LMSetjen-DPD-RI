@@ -359,20 +359,107 @@ function Index() {
                                 <div className="row g-2">
                                     <div className="col-4">
                                         <div className="text-center">
-                                            <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.total_courses}+</h3>
-                                            <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Kursus</small>
+                                            {isStatsLoading ? (
+                                                <>
+                                                    <div 
+                                                        style={{
+                                                            width: '50px',
+                                                            height: '32px',
+                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
+                                                            backgroundSize: '200% 100%',
+                                                            animation: 'shimmer 1.5s infinite',
+                                                            borderRadius: '4px',
+                                                            margin: '0 auto 0.5rem'
+                                                        }}
+                                                    ></div>
+                                                    <div 
+                                                        style={{
+                                                            width: '40px',
+                                                            height: '12px',
+                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
+                                                            backgroundSize: '200% 100%',
+                                                            animation: 'shimmer 1.5s infinite',
+                                                            borderRadius: '4px',
+                                                            margin: '0 auto'
+                                                        }}
+                                                    ></div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.total_courses}+</h3>
+                                                    <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Kursus</small>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="col-4">
                                         <div className="text-center">
-                                            <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.total_students}+</h3>
-                                            <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Peserta</small>
+                                            {isStatsLoading ? (
+                                                <>
+                                                    <div 
+                                                        style={{
+                                                            width: '50px',
+                                                            height: '32px',
+                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
+                                                            backgroundSize: '200% 100%',
+                                                            animation: 'shimmer 1.5s infinite',
+                                                            borderRadius: '4px',
+                                                            margin: '0 auto 0.5rem'
+                                                        }}
+                                                    ></div>
+                                                    <div 
+                                                        style={{
+                                                            width: '40px',
+                                                            height: '12px',
+                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
+                                                            backgroundSize: '200% 100%',
+                                                            animation: 'shimmer 1.5s infinite',
+                                                            borderRadius: '4px',
+                                                            margin: '0 auto'
+                                                        }}
+                                                    ></div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.total_students}+</h3>
+                                                    <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Peserta</small>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="col-4">
                                         <div className="text-center">
-                                            <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.completion_rate}%</h3>
-                                            <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Tingkat Selesai</small>
+                                            {isStatsLoading ? (
+                                                <>
+                                                    <div 
+                                                        style={{
+                                                            width: '50px',
+                                                            height: '32px',
+                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
+                                                            backgroundSize: '200% 100%',
+                                                            animation: 'shimmer 1.5s infinite',
+                                                            borderRadius: '4px',
+                                                            margin: '0 auto 0.5rem'
+                                                        }}
+                                                    ></div>
+                                                    <div 
+                                                        style={{
+                                                            width: '40px',
+                                                            height: '12px',
+                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
+                                                            backgroundSize: '200% 100%',
+                                                            animation: 'shimmer 1.5s infinite',
+                                                            borderRadius: '4px',
+                                                            margin: '0 auto'
+                                                        }}
+                                                    ></div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.completion_rate}%</h3>
+                                                    <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Tingkat Selesai</small>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1343,7 +1430,6 @@ function Index() {
                                                         borderRadius: '8px',
                                                         fontWeight: '500',
                                                         fontSize: '0.75rem',
-                                                        padding: '0.3rem 0.8rem'
                                                     }}
                                                 >
                                                     Lihat Kursus
