@@ -51,13 +51,20 @@ function Index() {
                 apiInstance.get(`/course/category/`)
             ]);
 
-            // Set courses data
-            const coursesData = coursesResponse.data || [];
-            setCourses(coursesData);
-            setCategories(categoriesResponse.data || []);
+            // Extract courses data - handle both paginated and non-paginated responses
+            // If response has 'results' key (paginated), use that; otherwise use data directly
+            const coursesData = coursesResponse.data?.results || coursesResponse.data || [];
+            const categoriesData = categoriesResponse.data?.results || categoriesResponse.data || [];
+            
+            // Ensure coursesData is an array before using
+            const coursesArray = Array.isArray(coursesData) ? coursesData : [];
+            const categoriesArray = Array.isArray(categoriesData) ? categoriesData : [];
+            
+            setCourses(coursesArray);
+            setCategories(categoriesArray);
             
             // Get featured courses (first 6 courses)
-            setFeaturedCourses(coursesData.slice(0, 6));
+            setFeaturedCourses(coursesArray.slice(0, 6));
 
         } catch (error) {
             console.error('Error fetching data:', error);

@@ -16,7 +16,7 @@ const API_BASE_URL = baseURL.startsWith('http')
 // Create an Axios instance with default settings
 const apiInstance = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 15000, // 15 seconds for general API calls
+    timeout: 30000,  // Increased from 10s to 30s to handle slower connections and large responses
     headers: {
         "Content-Type": "application/json",
     },
