@@ -20,9 +20,9 @@ function BaseHeader() {
     const [searchResults, setSearchResults] = useState([]);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
-    const [searchTimeout, setSearchTimeout] = useState(null);
-    
-    const navigate = useNavigate();
+    const [searchAbortController, setSearchAbortController] = useState(null);
+
+    // Search API call with debounce
     const location = useLocation();
     const isSearchPage = location.pathname.includes('/search');
     const [isLoggedIn, user, allUserData] = useAuthStore((state) => [state.isLoggedIn, state.user, state.allUserData]);
@@ -36,8 +36,13 @@ function BaseHeader() {
         return () => clearTimeout(timer);
     }, []);
 
-    // Search API call with debounce
+    // Search API call with debounce and abort controller
     useEffect(() => {
+        // Abort previous search request if still pending
+        if (searchAbortController) {
+            searchAbortController.abort();
+        }
+
         // Clear previous timeout
         if (searchTimeout) {
             clearTimeout(searchTimeout);
@@ -53,24 +58,40 @@ function BaseHeader() {
         // Set new timeout for debounce
         const timeout = setTimeout(async () => {
             setIsSearching(true);
+            const controller = new AbortController();
+            setSearchAbortController(controller);
+            
             try {
-                const response = await apiInstance.get(`course/search/?search=${encodeURIComponent(searchQuery)}`);
+                // Use shorter timeout for search (8 seconds)
+                const response = await apiInstance.get(
+                    `course/search/?search=${encodeURIComponent(searchQuery)}`,
+                    { 
+                        timeout: 8000,
+                        signal: controller.signal 
+                    }
+                );
                 const courses = response.data?.results || response.data || [];
                 setSearchResults(Array.isArray(courses) ? courses.slice(0, 5) : []);
                 setShowSearchModal(true);
             } catch (error) {
-                console.error("Search error:", error);
+                // Don't log abort errors - they're expected when user types quickly
+                if (error.name !== 'AbortError') {
+                    console.error("Search error:", error);
+                }
                 setSearchResults([]);
             } finally {
                 setIsSearching(false);
             }
-        }, 150); // 150ms debounce for snappier results
+        }, 100); // 100ms debounce for faster response (reduced from 150ms)
 
         setSearchTimeout(timeout);
-        return () => clearTimeout(timeout);
+        return () => {
+            clearTimeout(timeout);
+            controller?.abort();
+        };
     }, [searchQuery]);
 
-    // Cleanup hover timeout
+    // Cleanup hover timeout and abort controller
     useEffect(() => {
         return () => {
             if (hoverTimeout) {
@@ -79,8 +100,11 @@ function BaseHeader() {
             if (searchTimeout) {
                 clearTimeout(searchTimeout);
             }
+            if (searchAbortController) {
+                searchAbortController.abort();
+            }
         };
-    }, [hoverTimeout, searchTimeout]);
+    }, [hoverTimeout, searchTimeout, searchAbortController]);
 
     const handleBrandHover = () => {
         if (!typingComplete && !animationSkipped) {

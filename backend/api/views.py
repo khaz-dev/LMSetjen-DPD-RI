@@ -744,12 +744,21 @@ class SearchCourseAPIView(generics.ListAPIView):
             return api_models.Course.objects.none()
         
         # Search in course title, description, and instructor name
-        return api_models.Course.objects.filter(
+        # Use select_related to fetch related objects in one query
+        # Use only() to reduce data transferred from database
+        return api_models.Course.objects.select_related(
+            'category', 'teacher'
+        ).only(
+            'id', 'title', 'description', 'slug', 'image', 'level',
+            'category__id', 'category__title',
+            'teacher__id', 'teacher__user__full_name',
+            'platform_status', 'teacher_course_status', 'featured'
+        ).filter(
             Q(title__icontains=query) | 
             Q(description__icontains=query),
             platform_status="Published", 
             teacher_course_status="Published"
-        ).distinct()
+        ).distinct()[:50]  # Limit to first 50 results for performance
     
 class StudentSummaryAPIView(generics.ListAPIView):
     serializer_class = api_serializer.StudentSummarySerializer

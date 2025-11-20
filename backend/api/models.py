@@ -128,11 +128,11 @@ class Course(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, blank=True, null=True)
     file = models.URLField(max_length=500, blank=True, null=True)  # Changed to URLField for file-upload API
     image = models.URLField(max_length=500, blank=True, null=True)  # Changed to URLField for file-upload API
-    title = models.CharField(max_length=200, blank=True, null=True)
+    title = models.CharField(max_length=200, blank=True, null=True, db_index=True)  # Added index for search
     description = models.TextField(null=True, blank=True)
     level = models.CharField(choices=LEVEL, default="Beginner", max_length=100, blank=True, null=True)
-    platform_status = models.CharField(choices=PLATFORM_STATUS, default="Draft", max_length=100, blank=True, null=True)
-    teacher_course_status = models.CharField(choices=TEACHER_STATUS, default="Draft", max_length=100)
+    platform_status = models.CharField(choices=PLATFORM_STATUS, default="Draft", max_length=100, blank=True, null=True, db_index=True)  # Added index
+    teacher_course_status = models.CharField(choices=TEACHER_STATUS, default="Draft", max_length=100, db_index=True)  # Added index
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)

@@ -96,9 +96,18 @@ function App() {
         try {
             const userData = UserData();
             if (userData?.user_id) {
-                apiInstance.get(`student/wishlist/${userData.user_id}/`).then((res) => {
+                // Use shorter timeout for wishlist API (5 seconds)
+                // to prevent blocking other operations
+                apiInstance.get(
+                    `student/wishlist/${userData.user_id}/`,
+                    { timeout: 5000 }
+                ).then((res) => {
                     setWishlistCount(res.data?.length || 0);
-                }).catch(() => {
+                }).catch((error) => {
+                    // Silently fail for wishlist - don't block other operations
+                    if (error.code === 'ECONNABORTED') {
+                        console.warn("Wishlist fetch timeout - using cached count");
+                    }
                     setWishlistCount(0);
                 });
             }
