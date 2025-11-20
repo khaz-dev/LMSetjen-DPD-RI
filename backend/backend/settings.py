@@ -466,7 +466,9 @@ os.makedirs(LOGS_DIR, exist_ok=True)
 # Django Extensions for better development and monitoring
 if DEBUG:
     INSTALLED_APPS += ['debug_toolbar', 'django_extensions']
-    MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE
+    # Insert debug_toolbar after GZipMiddleware to avoid middleware ordering warning
+    gzip_index = MIDDLEWARE.index('django.middleware.gzip.GZipMiddleware')
+    MIDDLEWARE.insert(gzip_index + 1, 'debug_toolbar.middleware.DebugToolbarMiddleware')
     
     # Debug toolbar configuration
     DEBUG_TOOLBAR_CONFIG = {
