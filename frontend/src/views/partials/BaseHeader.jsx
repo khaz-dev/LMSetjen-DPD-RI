@@ -20,9 +20,10 @@ function BaseHeader() {
     const [searchResults, setSearchResults] = useState([]);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [searchTimeout, setSearchTimeout] = useState(null);
     const [searchAbortController, setSearchAbortController] = useState(null);
 
-    // Search API call with debounce
+    const navigate = useNavigate();
     const location = useLocation();
     const isSearchPage = location.pathname.includes('/search');
     const [isLoggedIn, user, allUserData] = useAuthStore((state) => [state.isLoggedIn, state.user, state.allUserData]);
