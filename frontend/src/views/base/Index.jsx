@@ -118,15 +118,23 @@ function Index() {
         if (!userId) return;
         try {
             const response = await apiInstance.get(`student/wishlist/${userId}/`);
-            setWishlistItems(response.data);
+            // Handle both paginated and non-paginated responses
+            const wishlistData = response.data?.results || response.data || [];
+            // Ensure wishlistData is an array
+            const wishlistArray = Array.isArray(wishlistData) ? wishlistData : [];
+            setWishlistItems(wishlistArray);
         } catch (error) {
             console.error("Error fetching wishlist:", error);
+            // Set empty array on error to prevent .some() errors
+            setWishlistItems([]);
         }
     }, [userId]);
 
     // Check if course is in wishlist
     const isCourseInWishlist = (courseId) => {
-        return wishlistItems.some(item => item.course?.id === courseId);
+        // Ensure wishlistItems is an array before calling .some()
+        const items = Array.isArray(wishlistItems) ? wishlistItems : [];
+        return items.some(item => item.course?.id === courseId);
     };
 
     useEffect(() => {
