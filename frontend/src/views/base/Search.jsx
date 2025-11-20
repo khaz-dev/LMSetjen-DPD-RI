@@ -50,14 +50,22 @@ function Search() {
         setIsLoading(true);
         try {
             const response = await useAxios.get(`course/course-list/`);
-            setCourses(response.data);
-            setAllCourses(response.data);
+            // Handle both paginated and non-paginated responses
+            const coursesData = response.data?.results || response.data || [];
+            // Ensure coursesData is an array
+            const coursesArray = Array.isArray(coursesData) ? coursesData : [];
+            
+            setCourses(coursesArray);
+            setAllCourses(coursesArray);
             
             // Extract unique categories from courses
-            const uniqueCategories = [...new Set(response.data.map(course => course.category?.title).filter(Boolean))];
+            const uniqueCategories = [...new Set(coursesArray.map(course => course.category?.title).filter(Boolean))];
             setCategories(uniqueCategories);
         } catch (error) {
             console.error("Error fetching courses:", error);
+            // Set empty arrays on error to prevent .map() and .slice() errors
+            setCourses([]);
+            setAllCourses([]);
             Toast().fire({
                 icon: "error",
                 title: "Failed to load courses",
@@ -72,7 +80,11 @@ function Search() {
         if (!userId) return;
         try {
             const response = await useAxios.get(`student/wishlist/${userId}/`);
-            setWishlistItems(response.data);
+            // Handle paginated API response
+            // API returns { results: [...], count: N, ... } due to DRF pagination
+            const wishlistData = response.data?.results || response.data || [];
+            const wishlistArray = Array.isArray(wishlistData) ? wishlistData : [];
+            setWishlistItems(wishlistArray);
         } catch (error) {
             console.error("Error fetching wishlist:", error);
         }
@@ -80,6 +92,10 @@ function Search() {
 
     // Check if course is in wishlist
     const isCourseInWishlist = (courseId) => {
+        // Ensure wishlistItems is an array before calling .some()
+        if (!Array.isArray(wishlistItems)) {
+            return false;
+        }
         return wishlistItems.some(item => item.course?.id === courseId);
     };
 
@@ -309,10 +325,11 @@ Best regards`;
     };
 
     // Pagination calculations
+    const coursesArray = Array.isArray(courses) ? courses : [];
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = courses.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(courses.length / itemsPerPage);
+    const currentItems = coursesArray.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(coursesArray.length / itemsPerPage);
     const pageNumbers = Array.from(
         { length: totalPages },
         (_, index) => index + 1
