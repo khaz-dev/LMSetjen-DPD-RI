@@ -695,12 +695,24 @@
     background: var(--theme-gradient-light);
     border-radius: 8px;
     user-select: none; /* Prevent text selection */
+    transition: all 0.3s ease;
+}
+
+.instructor-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.25);
 }
 
 .student-link {
     background: var(--theme-gradient-light);
     border-radius: 8px;
     user-select: none; /* Prevent text selection */
+    transition: all 0.3s ease;
+}
+
+.student-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.25);
 }
 
 .admin-link {
@@ -708,6 +720,12 @@
     border-radius: 8px;
     user-select: none; /* Prevent text selection */
     color: white !important;
+    transition: all 0.3s ease;
+}
+
+.admin-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.35);
 }
 
 .admin-link span {
