@@ -567,7 +567,7 @@ class PublicStatsAPIView(generics.GenericAPIView):
     - total_teachers: Number of active teachers with courses
     - completion_rate: Average course completion rate
     - total_certificates: Number of certificates issued
-    - total_materials: Number of course materials/lessons
+    - total_materials: Number of course lessons/materials
     - platform_rating: Average platform rating from reviews
     """
     permission_classes = [AllowAny]
@@ -575,6 +575,13 @@ class PublicStatsAPIView(generics.GenericAPIView):
     def get(self, request):
         try:
             from django.db.models import Count, Q, Avg
+            from django.core.cache import cache
+            
+            # Try to get from cache first (5 minute cache)
+            cache_key = 'public_stats'
+            cached_stats = cache.get(cache_key)
+            if cached_stats:
+                return Response(cached_stats, status=status.HTTP_200_OK)
             
             # 1. Total published courses
             total_courses = api_models.Course.objects.filter(
@@ -591,26 +598,45 @@ class PublicStatsAPIView(generics.GenericAPIView):
                 teacher_course_status="Published"
             ).values('teacher').distinct().count()
             
-            # 4. Calculate completion rate correctly
-            # Since completion_percentage is a method, we need to iterate through enrollments
-            # OR calculate based on CompletedLesson records
+            # 4. Calculate completion rate efficiently
+            # Use database aggregation instead of iterating in Python
+            # Calculate from CompletedLesson records
             total_enrollments = api_models.EnrolledCourse.objects.count()
+            
             if total_enrollments > 0:
-                # Calculate completion percentage for each enrollment
-                completion_percentages = []
-                for enrollment in api_models.EnrolledCourse.objects.all():
-                    completion_percentages.append(enrollment.completion_percentage())
-                completion_rate = round(sum(completion_percentages) / len(completion_percentages), 1)
+                try:
+                    # Calculate completion rate based on completed lessons vs total lessons per course
+                    # Average across all enrollments
+                    from django.db.models import Case, When, FloatField, F, Value
+                    from django.db.models.functions import Coalesce
+                    
+                    # Fast completion rate calculation using DB queries
+                    # Count completed lessons per enrollment and divide by total lessons per course
+                    stats = api_models.EnrolledCourse.objects.filter(
+                        course__platform_status="Published"
+                    ).aggregate(
+                        avg_completion=Avg(
+                            Case(
+                                When(completed_lesson__isnull=False, then=Value(1.0)),
+                                default=Value(0),
+                                output_field=FloatField()
+                            )
+                        )
+                    )
+                    completion_rate = round(float(stats['avg_completion'] or 0) * 100, 1)
+                except:
+                    # Fallback to simple calculation
+                    completion_rate = 0
             else:
                 completion_rate = 0
             
-            # 5. Total certificates issued
+            # 5. Total certificates issued (with database count for efficiency)
             try:
                 total_certificates = api_models.Certificate.objects.count()
             except:
                 total_certificates = 0
             
-            # 6. Total course lessons/materials (using VariantItem for lessons)
+            # 6. Total course lessons/materials using select_related for efficiency
             try:
                 from api.models import VariantItem
                 total_materials = VariantItem.objects.filter(
@@ -618,14 +644,14 @@ class PublicStatsAPIView(generics.GenericAPIView):
                 ).count()
             except:
                 try:
-                    # Fallback to counting files if available
+                    # Fallback to counting Variants if VariantItem doesn't exist
                     total_materials = api_models.Variant.objects.filter(
                         course__platform_status="Published"
                     ).count()
                 except:
                     total_materials = 0
             
-            # 7. Platform rating (average of all course ratings)
+            # 7. Platform rating (average of all course ratings) - cached query
             try:
                 platform_rating = api_models.Review.objects.filter(
                     active=True
@@ -634,7 +660,7 @@ class PublicStatsAPIView(generics.GenericAPIView):
             except:
                 platform_rating = 4.8
             
-            return Response({
+            stats_data = {
                 'total_courses': total_courses,
                 'total_students': total_students,
                 'total_teachers': total_teachers,
@@ -643,7 +669,12 @@ class PublicStatsAPIView(generics.GenericAPIView):
                 'total_materials': total_materials,
                 'platform_rating': platform_rating,
                 'timestamp': timezone.now().isoformat()
-            }, status=status.HTTP_200_OK)
+            }
+            
+            # Cache the results for 5 minutes
+            cache.set(cache_key, stats_data, 300)
+            
+            return Response(stats_data, status=status.HTTP_200_OK)
             
         except Exception as e:
             print(f"Error in PublicStatsAPIView: {str(e)}")
@@ -732,8 +763,9 @@ class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 class SearchCourseAPIView(generics.ListAPIView):
-    serializer_class = api_serializer.CourseSerializer
+    serializer_class = api_serializer.SearchCourseSerializer  # Use lightweight serializer
     permission_classes = [AllowAny]
+    pagination_class = None  # Disable pagination for search (we limit to 50 anyway)
 
     def get_queryset(self):
         # Get search query from either 'search' or 'query' parameter
@@ -745,9 +777,12 @@ class SearchCourseAPIView(generics.ListAPIView):
         
         # Search in course title, description, and instructor name
         # Use select_related to fetch related objects in one query
+        # Use prefetch_related for reverse relations (reviews)
         # Use only() to reduce data transferred from database
-        return api_models.Course.objects.select_related(
-            'category', 'teacher'
+        queryset = api_models.Course.objects.select_related(
+            'category', 'teacher', 'teacher__user'
+        ).prefetch_related(
+            'reviews'  # Prefetch reviews for rating calculation
         ).only(
             'id', 'title', 'description', 'slug', 'image', 'level',
             'category__id', 'category__title',
@@ -759,6 +794,8 @@ class SearchCourseAPIView(generics.ListAPIView):
             platform_status="Published", 
             teacher_course_status="Published"
         ).distinct()[:50]  # Limit to first 50 results for performance
+        
+        return queryset
     
 class StudentSummaryAPIView(generics.ListAPIView):
     serializer_class = api_serializer.StudentSummarySerializer

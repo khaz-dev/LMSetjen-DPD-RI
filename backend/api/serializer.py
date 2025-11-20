@@ -342,6 +342,36 @@ class BasicTeacherSerializer(serializers.ModelSerializer):
         return None
 
 
+class SearchCourseSerializer(serializers.ModelSerializer):
+    """Lightweight Course serializer optimized for search results - minimal fields and no nested relations"""
+    teacher_name = serializers.CharField(source='teacher.user.full_name', read_only=True)
+    category_name = serializers.CharField(source='category.title', read_only=True)
+    students_count = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
+    number_of_rating = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.Course
+        fields = ['id', 'title', 'slug', 'image', 'level', 'category_name', 'teacher_name', 'students_count', 'rating', 'number_of_rating']
+    
+    def get_students_count(self, obj):
+        """Count enrolled students without triggering N+1 queries"""
+        if hasattr(obj, '_students_count'):
+            return obj._students_count
+        return api_models.EnrolledCourse.objects.filter(course=obj).count()
+    
+    def get_rating(self, obj):
+        """Get average rating"""
+        if hasattr(obj, '_avg_rating'):
+            return obj._avg_rating
+        rating = obj.average_rating()
+        return round(rating, 1) if rating else None
+    
+    def get_number_of_rating(self, obj):
+        """Get number of ratings"""
+        if hasattr(obj, '_rating_count'):
+            return obj._rating_count
+        return obj.rating_count()
 
 
 class VariantItemSerializer(serializers.ModelSerializer):
