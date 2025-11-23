@@ -50,12 +50,12 @@
 }
 
 .spinner-ring:nth-child(1) {
-    border-top-color: #667eea;
+    border-top-color: var(--theme-primary) !important;
     animation-delay: 0s;
 }
 
 .spinner-ring:nth-child(2) {
-    border-right-color: #764ba2;
+    border-right-color: var(--theme-primary-dark) !important;
     animation-delay: -0.3s;
     width: 85%;
     height: 85%;
@@ -71,7 +71,7 @@
 .spinner-core {
     width: 40%;
     height: 40%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border-radius: 50%;
     animation: pulse 1.5s ease-in-out infinite;
 }

@@ -49,7 +49,7 @@
   align-items: center;
   padding: 1.5rem;
   border-bottom: 1px solid #e9ecef;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--theme-gradient) !important;
   color: white;
 }
 
@@ -86,7 +86,7 @@
 
 .coming-soon-icon {
   font-size: 3rem;
-  color: #667eea;
+  color: var(--theme-primary) !important;
   margin-bottom: 1rem;
   display: block;
 }

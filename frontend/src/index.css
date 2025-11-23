@@ -112,6 +112,114 @@ body.student-theme {
   --theme-border-color: rgba(102, 126, 234, 0.2);
 }
 
+/* Dark Theme (Student - Purple Dark Mode) */
+body.student-theme.dark-theme,
+body.dark-theme {
+  --theme-primary: #a78bfa;
+  --theme-primary-dark: #c084fc;
+  --theme-primary-light: #e9d5ff;
+  --theme-primary-lighter: #f3e8ff;
+  --theme-secondary: #ddd6fe;
+  --theme-accent: #f3e8ff;
+  --theme-gradient-start: #8b5cf6;
+  --theme-gradient-end: #a78bfa;
+  --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
+  --theme-gradient-light: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(167, 139, 250, 0.15));
+  --theme-shadow-color: rgba(139, 92, 246, 0.2);
+  --theme-hover-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+  --theme-card-shadow: 0 4px 15px rgba(139, 92, 246, 0.15);
+  --theme-text-on-primary: #1f2937;
+  --theme-border-color: rgba(139, 92, 246, 0.2);
+  
+  /* Dark mode color overrides */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --border-light: rgba(203, 213, 225, 0.15);
+}
+
+/* Dark Theme (Instructor - Blue Dark Mode) */
+body.instructor-theme.dark-theme {
+  --theme-primary: #60a5fa;
+  --theme-primary-dark: #93c5fd;
+  --theme-primary-light: #dbeafe;
+  --theme-primary-lighter: #eff6ff;
+  --theme-secondary: #e0f2fe;
+  --theme-accent: #eff6ff;
+  --theme-gradient-start: #3b82f6;
+  --theme-gradient-end: #60a5fa;
+  --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
+  --theme-gradient-light: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(96, 165, 250, 0.15));
+  --theme-shadow-color: rgba(59, 130, 246, 0.2);
+  --theme-hover-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+  --theme-card-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+  --theme-text-on-primary: #1e3a8a;
+  --theme-border-color: rgba(59, 130, 246, 0.2);
+}
+
+/* Dark Mode Background */
+body.dark-theme {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+body.dark-theme * {
+  background-color: var(--bg-primary, inherit);
+  color: var(--text-primary, inherit);
+}
+
+body.dark-theme .bg-light,
+body.dark-theme .bg-white {
+  background-color: #1e293b !important;
+}
+
+body.dark-theme .text-dark {
+  color: #f1f5f9 !important;
+}
+
+body.dark-theme .card,
+body.dark-theme .modal-content,
+body.dark-theme .form-control {
+  background-color: #1e293b;
+  color: #f1f5f9;
+  border-color: var(--border-light);
+}
+
+body.dark-theme .form-control {
+  background-color: #334155;
+  color: #f1f5f9;
+}
+
+body.dark-theme .form-control:focus {
+  background-color: #334155;
+  color: #f1f5f9;
+  border-color: var(--theme-primary);
+}
+
+body.dark-theme .nav,
+body.dark-theme .navbar {
+  background-color: #1e293b;
+  border-color: var(--border-light);
+}
+
+body.dark-theme .dropdown-menu {
+  background-color: #334155;
+  border-color: var(--border-light);
+}
+
+body.dark-theme .dropdown-item {
+  color: #f1f5f9;
+}
+
+body.dark-theme .dropdown-item:hover,
+body.dark-theme .dropdown-item:active {
+  background-color: #475569;
+  color: #f1f5f9;
+}
+
 /* Global text selection prevention for all non-interactive elements */
 * {
   -webkit-tap-highlight-color: transparent;

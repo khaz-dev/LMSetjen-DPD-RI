@@ -139,14 +139,14 @@
     font-weight: 600;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid var(--theme-primary) !important;
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
 .details-section .section-title i {
-    color: #667eea;
+    color: var(--theme-primary) !important;
 }
 
 .detail-row {
@@ -180,7 +180,7 @@
 /* Certificate ID Box */
 .certificate-id-box {
     background: white;
-    border: 2px dashed #667eea;
+    border: 2px dashed var(--theme-primary) !important;
     padding: 1rem;
     border-radius: 8px;
     text-align: center;
@@ -188,7 +188,7 @@
 }
 
 .certificate-id-box code {
-    color: #667eea;
+    color: var(--theme-primary) !important;
     font-weight: 700;
     font-size: 1.1rem;
     font-family: 'Courier New', monospace;
@@ -252,26 +252,26 @@
 }
 
 .action-buttons .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border: none;
 }
 
 .action-buttons .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    box-shadow: 0 8px 20px var(--theme-shadow-color) !important;
+    background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary) 100%) !important;
 }
 
 .action-buttons .btn-outline-secondary {
-    color: #667eea;
-    border: 2px solid #667eea;
+    color: var(--theme-primary) !important;
+    border: 2px solid var(--theme-primary) !important;
     background: transparent;
 }
 
 .action-buttons .btn-outline-secondary:hover {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
+    background: var(--theme-primary) !important;
+    color: white !important;
+    border-color: var(--theme-primary) !important;
     transform: translateY(-2px);
 }
 

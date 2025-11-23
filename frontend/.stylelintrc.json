@@ -1,0 +1,69 @@
+{
+  "extends": "stylelint-config-standard-scss",
+  "plugins": [
+    "stylelint-no-unsupported-browser-features"
+  ],
+  "rules": {
+    "color-hex-case": "lower",
+    "color-no-invalid-hex": true,
+    "declaration-no-important": [
+      true,
+      {
+        "severity": "warning"
+      }
+    ],
+    "font-family-name-quotes": "always-where-recommended",
+    "function-name-case": "lower",
+    "function-url-quotes": "always",
+    "max-nesting-depth": [
+      3,
+      {
+        "severity": "warning"
+      }
+    ],
+    "media-feature-name-case": "lower",
+    "no-descending-specificity": [
+      true,
+      {
+        "severity": "warning"
+      }
+    ],
+    "no-duplicate-selectors": true,
+    "no-empty-source": true,
+    "number-leading-zero": "always",
+    "property-case": "lower",
+    "selector-type-case": "lower",
+    "unit-case": "lower",
+    "color-no-hex": [
+      false
+    ],
+    "scss/operator-no-unspaced": true,
+    "scss/selector-no-redundant-nesting-selector": true,
+    "at-rule-empty-line-before": [
+      "always",
+      {
+        "except": [
+          "blockless-after-blockless",
+          "first-nested"
+        ],
+        "ignore": [
+          "after-comment"
+        ]
+      }
+    ],
+    "custom-property-pattern": "^(theme|--)",
+    "alpha-value-notation": "percentage",
+    "selector-attribute-quotes": "always",
+    "no-unknown-animations": true
+  },
+  "overrides": [
+    {
+      "files": "**/*.css",
+      "customSyntax": "postcss-scss",
+      "rules": {
+        "scss/comment-no-empty": null,
+        "scss/at-rule-no-unknown": null
+      }
+    }
+  ]
+}

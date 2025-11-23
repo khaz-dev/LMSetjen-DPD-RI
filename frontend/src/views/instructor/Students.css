@@ -83,7 +83,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -104,7 +104,7 @@
 }
 
 .student-card:hover .student-avatar {
-    border-color: #667eea;
+    border-color: var(--theme-primary) !important;
     transform: scale(1.05);
 }
 
@@ -173,7 +173,7 @@
     margin: 0 auto 1rem auto;
     font-size: 1.25rem;
     color: white;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
 }
 
 .error-state {

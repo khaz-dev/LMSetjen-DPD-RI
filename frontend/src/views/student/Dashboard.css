@@ -134,7 +134,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: conic-gradient(from 0deg, #667eea 0deg, #764ba2 calc(var(--progress, 0) * 3.6deg), #e9ecef 0deg);
+    background: conic-gradient(from 0deg, var(--theme-primary) 0deg, var(--theme-primary-dark) calc(var(--progress, 0) * 3.6deg), #e9ecef 0deg);
     position: relative;
     user-select: none; /* Prevent selection */
     cursor: default; /* Default cursor */
@@ -186,7 +186,7 @@
     top: 0;
     bottom: 0;
     width: 4px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -194,8 +194,8 @@
 .activity-item:hover {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
-    border-color: rgba(102, 126, 234, 0.2);
+    box-shadow: 0 8px 25px var(--theme-shadow-color) !important;
+    border-color: var(--theme-border-color) !important;
 }
 
 .activity-item:hover::before {
@@ -245,7 +245,7 @@
 }
 
 .activity-item .activity-icon.text-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
 }
 
@@ -286,10 +286,10 @@
 .dashboard-card .card-header h5 i {
     font-size: 1rem;
     padding: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 2px 8px var(--theme-shadow-color) !important;
 }
 
 /* Make Recent Activity card even more compact */
@@ -321,14 +321,14 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     position: relative;
     height: 100%;
-    border: 1px solid rgba(102, 126, 234, 0.1);
+    border: 1px solid var(--theme-border-color) !important;
     user-select: none; /* Prevent text selection */
 }
 
 .course-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 50px rgba(102, 126, 234, 0.15);
-    border-color: rgba(102, 126, 234, 0.3);
+    box-shadow: 0 20px 50px var(--theme-shadow-color) !important;
+    border-color: var(--theme-primary-light) !important;
 }
 
 .course-card::before {
@@ -338,7 +338,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -375,7 +375,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+    background: linear-gradient(45deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8)) !important;
     opacity: 0;
     transition: opacity 0.3s ease;
     display: flex;
@@ -415,7 +415,7 @@
 }
 
 .course-card:hover .course-title {
-    color: #667eea;
+    color: var(--theme-primary) !important;
 }
 
 .course-title:hover {
@@ -424,13 +424,13 @@
 
 .course-category {
     background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-    color: #667eea;
+    color: var(--theme-primary) !important;
     padding: 0.3rem 0.6rem;
     border-radius: 15px;
     font-size: 0.7rem;
     font-weight: 600;
     display: inline-block;
-    border: 1px solid rgba(102, 126, 234, 0.2);
+    border: 1px solid var(--theme-border-color) !important;
     user-select: none; /* Prevent text selection */
     cursor: default; /* Default cursor */
 }
@@ -462,13 +462,13 @@
 }
 
 .progress-percentage {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
     padding: 0.3rem 0.6rem;
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 700;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 2px 8px var(--theme-shadow-color) !important;
     user-select: none; /* Prevent text selection */
 }
 
@@ -578,14 +578,14 @@
 }
 
 .btn-continue {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 15px var(--theme-shadow-color) !important;
 }
 
 .btn-continue:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 25px var(--theme-shadow-color) !important;
     color: white;
 }
 
@@ -624,13 +624,13 @@
 }
 
 .meta-icon {
-    color: #667eea;
+    color: var(--theme-primary) !important;
     user-select: none; /* Prevent icon selection */
 }
 
 /* Welcome Section */
 .welcome-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border-radius: 20px;
     color: white;
     padding: 2rem;
