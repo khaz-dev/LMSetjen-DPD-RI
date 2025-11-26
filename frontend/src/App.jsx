@@ -63,6 +63,7 @@ const CourseQuiz = lazy(() => import("./views/instructor/CourseQuiz"));
 const DashboardAdmin = lazy(() => import("./views/admin/DashboardAdmin"));
 const UsersAdmin = lazy(() => import("./views/admin/UsersAdmin"));
 const SystemDocumentation = lazy(() => import("./views/admin/SystemDocumentation"));
+const KelolaMaterialAdmin = lazy(() => import("./views/admin/KelolaMaterialAdmin"));
 
 // Loading component for Suspense fallback - Centered spinner
 const LoadingFallback = () => (
@@ -397,6 +398,16 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={['admin']}>
                                             <SystemDocumentation />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/admin/kelola-materi/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={['admin']}>
+                                            <KelolaMaterialAdmin />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }

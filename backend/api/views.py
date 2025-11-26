@@ -4741,6 +4741,129 @@ class AdminUserBulkActionsAPIView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# ========== ✨ PHASE 4.11: ADMIN CATEGORY MANAGEMENT API VIEWS ==========
+
+class AdminCategoryListCreateAPIView(generics.ListCreateAPIView):
+    """
+    ✨ PHASE 4.11: Admin endpoint to list and create course categories
+    - Requires admin authentication
+    - Supports full CRUD operations for course categories
+    """
+    queryset = api_models.Category.objects.all()
+    serializer_class = api_serializer.CategoryManagementSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        """Get all categories for admin management"""
+        # Verify admin access
+        if not (hasattr(self.request.user, 'role') and self.request.user.role == 'admin'):
+            return api_models.Category.objects.none()
+        return api_models.Category.objects.all().order_by('-id')
+    
+    def get_permissions(self):
+        """Require admin role for all operations"""
+        if self.request.method in ['POST', 'PUT', 'DELETE']:
+            return [IsAuthenticated, IsAdminUser()]
+        return [IsAuthenticated]
+    
+    def create(self, request, *args, **kwargs):
+        """Create new course category - Admin only"""
+        try:
+            # Verify admin access
+            if not (hasattr(request.user, 'role') and request.user.role == 'admin'):
+                return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+            
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                category = serializer.save()
+                return Response(
+                    {
+                        'message': 'Category created successfully',
+                        'category': serializer.data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminCategoryDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    ✨ PHASE 4.11: Admin endpoint for category details, updates, and deletion
+    - GET: Retrieve category details with course count
+    - PUT/PATCH: Update category information
+    - DELETE: Remove category (only if no courses assigned)
+    """
+    queryset = api_models.Category.objects.all()
+    serializer_class = api_serializer.CategoryManagementSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+    
+    def get_permissions(self):
+        """Require admin role for modifications"""
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            return [IsAuthenticated, IsAdminUser()]
+        return [IsAuthenticated]
+    
+    def update(self, request, *args, **kwargs):
+        """Update category details"""
+        try:
+            # Verify admin access
+            if not (hasattr(request.user, 'role') and request.user.role == 'admin'):
+                return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+            
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            
+            if serializer.is_valid():
+                category = serializer.save()
+                return Response(
+                    {
+                        'message': 'Category updated successfully',
+                        'category': serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Delete category - only if no courses assigned"""
+        try:
+            # Verify admin access
+            if not (hasattr(request.user, 'role') and request.user.role == 'admin'):
+                return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+            
+            instance = self.get_object()
+            
+            # Check if category has courses
+            course_count = api_models.Course.objects.filter(category=instance).count()
+            if course_count > 0:
+                return Response(
+                    {
+                        'error': f'Cannot delete category with {course_count} course(s). Remove courses first.',
+                        'course_count': course_count
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            category_name = instance.title
+            instance.delete()
+            
+            return Response(
+                {
+                    'message': f'Category "{category_name}" deleted successfully'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        except api_models.Category.DoesNotExist:
+            return Response({'error': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 def compare_users_data(external_user, existing_user):
     """
     Compare external user data with existing user to determine if changed.

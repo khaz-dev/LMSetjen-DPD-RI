@@ -67,7 +67,7 @@ function AdminHeader() {
         { to: "/admin/dashboard/", icon: "bi bi-grid-fill", text: "Dashboard", requiresSuperAdmin: false },
         { to: "/admin/users/", icon: "fas fa-users", text: "Kelola Pengguna", requiresSuperAdmin: false },
         { to: "/admin/documentation/", icon: "fas fa-book", text: "Dokumentasi Sistem", requiresSuperAdmin: false },
-        { to: "/admin/courses/", icon: "fas fa-book-atlas", text: "Kelola Materi", requiresSuperAdmin: false },
+        { to: "/admin/kelola-materi/", icon: "fas fa-book-atlas", text: "Kelola Materi", requiresSuperAdmin: false },
         { to: "/admin/analytics/", icon: "fas fa-chart-line", text: "Analytics", requiresSuperAdmin: false },
         { to: "/admin/reports/", icon: "fas fa-file-alt", text: "Laporan", requiresSuperAdmin: false },
         { to: "/admin/system/", icon: "fas fa-cogs", text: "Pengaturan Sistem", requiresSuperAdmin: true },

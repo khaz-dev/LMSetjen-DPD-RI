@@ -277,6 +277,48 @@ class CategorySerializer(serializers.ModelSerializer):
         model = api_models.Category
 
 
+class CategoryManagementSerializer(serializers.ModelSerializer):
+    """✨ PHASE 4.11: Serializer for admin category management with full CRUD support"""
+    course_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        fields = ['id', 'title', 'image', 'slug', 'active', 'course_count', 'created_at', 'updated_at']
+        model = api_models.Category
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_course_count(self, obj):
+        """Get count of courses in this category"""
+        return api_models.Course.objects.filter(category=obj).count()
+    
+    def validate_title(self, value):
+        """Ensure category title is not empty and unique"""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Category title cannot be empty.")
+        
+        # Check for uniqueness excluding current instance
+        instance = self.instance
+        duplicate = api_models.Category.objects.filter(title__iexact=value.strip())
+        if instance:
+            duplicate = duplicate.exclude(id=instance.id)
+        
+        if duplicate.exists():
+            raise serializers.ValidationError(f"Category with title '{value}' already exists.")
+        
+        return value.strip()
+    
+    def create(self, validated_data):
+        """Create new category with slug auto-generation"""
+        category = api_models.Category.objects.create(**validated_data)
+        return category
+    
+    def update(self, instance, validated_data):
+        """Update category details"""
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+
 class TeacherExpertiseSerializer(serializers.ModelSerializer):
     """Serializer for teacher expertise/skills"""
     class Meta:

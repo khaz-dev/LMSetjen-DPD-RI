@@ -143,6 +143,10 @@ urlpatterns = [
     path("admin/sync-external-users/", api_views.SyncExternalUsersAPIView.as_view()),
     path("admin/sync-progress/", api_views.SyncProgressAPIView.as_view()),
     path("admin/last-sync-info/", api_views.LastSyncInfoAPIView.as_view()),
+    
+    # ✨ PHASE 4.11: Admin Category Management URLs
+    path("admin/category/", api_views.AdminCategoryListCreateAPIView.as_view()),
+    path("admin/category/<int:id>/", api_views.AdminCategoryDetailAPIView.as_view()),
 
     # ✨ TIER 1: Content Gap Analysis
     path("analytics/content-gaps/", api_views.ContentGapAnalysisView.as_view()),
