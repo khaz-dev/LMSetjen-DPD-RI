@@ -65,7 +65,7 @@
 }
 
 .title-icon {
-    background: var(--theme-gradient) !important;
+    background: var(--theme-gradient);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
