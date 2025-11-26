@@ -204,7 +204,7 @@ function KelolaMaterialAdmin() {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <AdminHeader />
 
             <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
@@ -510,9 +510,11 @@ function KelolaMaterialAdmin() {
                                             name="active"
                                             checked={formData.active}
                                             onChange={handleFormChange}
+                                            style={{ cursor: "pointer" }}
                                         />
                                         <label className="form-check-label" htmlFor="categoryActive">
-                                            <i className="fas fa-eye me-2"></i>Make this category visible on the platform
+                                            <i className="fas fa-eye me-2"></i>
+                                            Make this category visible on the platform
                                         </label>
                                     </div>
                                 </div>
