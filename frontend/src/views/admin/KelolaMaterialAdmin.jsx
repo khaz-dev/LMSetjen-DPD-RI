@@ -180,6 +180,14 @@ function KelolaMaterialAdmin() {
         cat.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Calculate stats
+    const stats = {
+        total: categories.length,
+        active: categories.filter(c => c.active).length,
+        withCourses: categories.filter(c => c.course_count > 0).length,
+        totalCourses: categories.reduce((sum, c) => sum + c.course_count, 0)
+    };
+
     if (!isAdmin) {
         return (
             <div className="kelola-materi-page">
@@ -199,137 +207,233 @@ function KelolaMaterialAdmin() {
         <div className="kelola-materi-page">
             <AdminHeader />
 
-            <div className="container-fluid py-4 mt-5">
-                <div className="kelola-materi-header mb-4">
-                    <div className="row align-items-center">
-                        <div className="col-md-8">
-                            <div>
-                                <h1 className="kelola-materi-title">
-                                    <i className="fas fa-book me-3"></i>Kelola Materi (Manage Categories)
+            <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
+                <div className="container-fluid">
+                    {/* Modern Header */}
+                    <div className="dashboard-header-modern mb-4">
+                        <div className="header-content">
+                            <div className="header-text">
+                                <h1 className="dashboard-title">
+                                    <i className="fas fa-book-atlas me-3"></i>Kelola Materi
                                 </h1>
-                                <p className="kelola-materi-subtitle text-muted">
-                                    Manage course categories - Create, edit, and remove categories
+                                <p className="dashboard-subtitle">
+                                    Manage course categories with full control over content organization
                                 </p>
                             </div>
-                        </div>
-                        <div className="col-md-4 text-end">
-                            <button 
-                                className="btn btn-primary btn-lg"
-                                onClick={handleAddCategory}
-                            >
-                                <i className="fas fa-plus me-2"></i>Add Category
-                            </button>
+                            <div className="dashboard-actions">
+                                <button 
+                                    className="btn btn-primary"
+                                    onClick={handleAddCategory}
+                                >
+                                    <i className="fas fa-plus me-2"></i>Add Category
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Search Bar */}
-                <div className="row mb-4">
-                    <div className="col-md-6">
-                        <div className="input-group">
-                            <span className="input-group-text bg-white border-end-0">
-                                <i className="fas fa-search"></i>
-                            </span>
-                            <input
-                                type="text"
-                                className="form-control border-start-0"
-                                placeholder="Search categories..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Categories List */}
-                {loading ? (
-                    <div className="text-center py-5">
-                        <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                ) : filteredCategories.length === 0 ? (
-                    <div className="alert alert-info">
-                        <i className="fas fa-info-circle me-2"></i>
-                        {searchTerm ? "No categories found matching your search" : "No categories yet. Create one to get started!"}
-                    </div>
-                ) : (
-                    <div className="categories-container">
-                        <div className="row">
-                            {filteredCategories.map(category => (
-                                <div key={category.id} className="col-lg-6 col-xl-4 mb-4">
-                                    <div className="category-card">
-                                        <div className="category-card-header">
-                                            {category.image && (
-                                                <img 
-                                                    src={category.image} 
-                                                    alt={category.title}
-                                                    className="category-image"
-                                                    onError={(e) => {
-                                                        e.target.style.display = "none";
-                                                    }}
-                                                />
-                                            )}
-                                            {!category.image && (
-                                                <div className="category-image-placeholder">
-                                                    <i className="fas fa-image"></i>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="category-card-body">
-                                            <h5 className="category-title">{category.title}</h5>
-                                            <div className="category-meta">
-                                                <span className="badge bg-info">
-                                                    <i className="fas fa-graduation-cap me-1"></i>
-                                                    {category.course_count} course{category.course_count !== 1 ? "s" : ""}
-                                                </span>
-                                                {category.active ? (
-                                                    <span className="badge bg-success">
-                                                        <i className="fas fa-check-circle me-1"></i>Active
-                                                    </span>
-                                                ) : (
-                                                    <span className="badge bg-danger">
-                                                        <i className="fas fa-times-circle me-1"></i>Inactive
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {category.slug && (
-                                                <p className="category-slug text-muted small mt-2">
-                                                    Slug: <code>{category.slug}</code>
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="category-card-footer">
-                                            <button
-                                                className="btn btn-sm btn-outline-primary"
-                                                onClick={() => handleEditCategory(category)}
-                                            >
-                                                <i className="fas fa-edit me-1"></i>Edit
-                                            </button>
-                                            <button
-                                                className="btn btn-sm btn-outline-danger"
-                                                onClick={() => handleDeleteCategory(category)}
-                                                disabled={category.course_count > 0}
-                                                title={category.course_count > 0 ? "Cannot delete category with courses" : "Delete category"}
-                                            >
-                                                <i className="fas fa-trash me-1"></i>Remove
-                                            </button>
-                                        </div>
+                    {/* Statistics Cards */}
+                    <div className="row mb-4">
+                        <div className="col-lg-3 col-md-6 mb-3">
+                            <div className="stat-card stat-card-primary">
+                                <div className="stat-card-body">
+                                    <div className="stat-icon">
+                                        <i className="fas fa-layer-group"></i>
+                                    </div>
+                                    <div className="stat-info">
+                                        <h4 className="stat-number">{stats.total}</h4>
+                                        <p className="stat-label">Total Categories</p>
+                                        <span className="stat-change neutral">All categories</span>
                                     </div>
                                 </div>
-                            ))}
+                            </div>
+                        </div>
+
+                        <div className="col-lg-3 col-md-6 mb-3">
+                            <div className="stat-card stat-card-success">
+                                <div className="stat-card-body">
+                                    <div className="stat-icon">
+                                        <i className="fas fa-check-circle"></i>
+                                    </div>
+                                    <div className="stat-info">
+                                        <h4 className="stat-number">{stats.active}</h4>
+                                        <p className="stat-label">Active</p>
+                                        <span className="stat-change positive">Visible</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-lg-3 col-md-6 mb-3">
+                            <div className="stat-card stat-card-warning">
+                                <div className="stat-card-body">
+                                    <div className="stat-icon">
+                                        <i className="fas fa-book"></i>
+                                    </div>
+                                    <div className="stat-info">
+                                        <h4 className="stat-number">{stats.withCourses}</h4>
+                                        <p className="stat-label">With Courses</p>
+                                        <span className="stat-change neutral">{stats.totalCourses} courses</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-lg-3 col-md-6 mb-3">
+                            <div className="stat-card stat-card-info">
+                                <div className="stat-card-body">
+                                    <div className="stat-icon">
+                                        <i className="fas fa-graduation-cap"></i>
+                                    </div>
+                                    <div className="stat-info">
+                                        <h4 className="stat-number">{stats.totalCourses}</h4>
+                                        <p className="stat-label">Total Courses</p>
+                                        <span className="stat-change neutral">Assigned</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                )}
-            </div>
+
+                    {/* Search and Filter */}
+                    <div className="row mb-4">
+                        <div className="col-md-6">
+                            <div className="input-group search-input-group">
+                                <span className="input-group-text bg-white border-end-0">
+                                    <i className="fas fa-search"></i>
+                                </span>
+                                <input
+                                    type="text"
+                                    className="form-control border-start-0"
+                                    placeholder="Search categories..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="col-md-6 text-end">
+                            <span className="text-muted">
+                                Showing <strong>{filteredCategories.length}</strong> of <strong>{categories.length}</strong> categories
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Categories List */}
+                    {loading ? (
+                        <div className="activity-panel">
+                            <div className="text-center py-5">
+                                <div className="spinner-border text-primary" role="status">
+                                    <span className="visually-hidden">Loading...</span>
+                                </div>
+                                <p className="mt-3 text-muted">Loading categories...</p>
+                            </div>
+                        </div>
+                    ) : filteredCategories.length === 0 ? (
+                        <div className="activity-panel">
+                            <div className="empty-state">
+                                <div className="empty-state-icon">
+                                    <i className="fas fa-inbox"></i>
+                                </div>
+                                <h4>No Categories Found</h4>
+                                <p className="text-muted">
+                                    {searchTerm ? "Your search didn't match any categories" : "Create your first category to get started"}
+                                </p>
+                                {!searchTerm && (
+                                    <button 
+                                        className="btn btn-primary mt-3"
+                                        onClick={handleAddCategory}
+                                    >
+                                        <i className="fas fa-plus me-2"></i>Create Category
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="activity-panel">
+                            <div className="categories-table-responsive">
+                                <table className="categories-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Category Name</th>
+                                            <th>Status</th>
+                                            <th>Courses</th>
+                                            <th className="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredCategories.map(category => (
+                                            <tr key={category.id}>
+                                                <td>
+                                                    <div className="category-row-content">
+                                                        {category.image && (
+                                                            <img 
+                                                                src={category.image} 
+                                                                alt={category.title}
+                                                                className="category-row-image"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = "none";
+                                                                }}
+                                                            />
+                                                        )}
+                                                        <div>
+                                                            <h6 className="mb-1">{category.title}</h6>
+                                                            {category.slug && <small className="text-muted">Slug: {category.slug}</small>}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {category.active ? (
+                                                        <span className="badge bg-success">
+                                                            <i className="fas fa-check-circle me-1"></i>Active
+                                                        </span>
+                                                    ) : (
+                                                        <span className="badge bg-secondary">
+                                                            <i className="fas fa-times-circle me-1"></i>Inactive
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <span className="badge bg-info">
+                                                        <i className="fas fa-book me-1"></i>
+                                                        {category.course_count}
+                                                    </span>
+                                                </td>
+                                                <td className="text-end">
+                                                    <div className="action-buttons">
+                                                        <button
+                                                            className="btn btn-sm btn-outline-primary action-btn"
+                                                            onClick={() => handleEditCategory(category)}
+                                                            title="Edit category"
+                                                        >
+                                                            <i className="fas fa-edit"></i>
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-sm btn-outline-danger action-btn"
+                                                            onClick={() => handleDeleteCategory(category)}
+                                                            disabled={category.course_count > 0}
+                                                            title={category.course_count > 0 ? "Cannot delete category with courses" : "Delete category"}
+                                                        >
+                                                            <i className="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </section>
 
             {/* Add/Edit Category Modal */}
             {showModal && (
-                <div className="modal show d-block" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
-                    <div className="modal-dialog modal-lg">
+                <div className="modal show d-block modern-modal" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+                    <div className="modal-dialog modal-lg modal-dialog-centered">
                         <div className="modal-content">
-                            <div className="modal-header">
+                            <div className="modal-header modern-modal-header">
                                 <h5 className="modal-title">
+                                    <i className={`fas fa-${modalMode === "add" ? "plus-circle" : "edit"} me-2`}></i>
                                     {modalMode === "add" ? "Add New Category" : "Edit Category"}
                                 </h5>
                                 <button
@@ -338,57 +442,59 @@ function KelolaMaterialAdmin() {
                                     onClick={() => setShowModal(false)}
                                 ></button>
                             </div>
-                            <div className="modal-body">
+                            <div className="modal-body modern-modal-body">
                                 {formErrors.submit && (
-                                    <div className="alert alert-danger" role="alert">
+                                    <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <i className="fas fa-exclamation-circle me-2"></i>
                                         {formErrors.submit}
+                                        <button type="button" className="btn-close" onClick={() => setFormErrors({...formErrors, submit: ""})}></button>
                                     </div>
                                 )}
                                 
-                                <div className="mb-3">
-                                    <label htmlFor="categoryTitle" className="form-label">
+                                <div className="mb-4">
+                                    <label htmlFor="categoryTitle" className="form-label modern-form-label">
                                         Category Name <span className="text-danger">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         id="categoryTitle"
-                                        className={`form-control ${formErrors.title ? "is-invalid" : ""}`}
+                                        className={`form-control modern-form-control ${formErrors.title ? "is-invalid" : ""}`}
                                         name="title"
                                         value={formData.title}
                                         onChange={handleFormChange}
-                                        placeholder="Enter category name"
+                                        placeholder="e.g., Programming, Design, Business"
                                     />
                                     {formErrors.title && (
                                         <div className="invalid-feedback d-block">
-                                            {formErrors.title}
+                                            <i className="fas fa-times-circle me-1"></i>{formErrors.title}
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="mb-3">
-                                    <label htmlFor="categoryImage" className="form-label">
+                                <div className="mb-4">
+                                    <label htmlFor="categoryImage" className="form-label modern-form-label">
                                         Image URL
                                     </label>
                                     <input
                                         type="url"
                                         id="categoryImage"
-                                        className="form-control"
+                                        className="form-control modern-form-control"
                                         name="image"
                                         value={formData.image}
                                         onChange={handleFormChange}
                                         placeholder="https://example.com/image.jpg"
                                     />
-                                    <small className="text-muted">
+                                    <small className="text-muted d-block mt-2">
                                         <i className="fas fa-info-circle me-1"></i>
-                                        Enter a full URL to an image file
+                                        Enter a full URL to an image file (JPG, PNG, GIF)
                                     </small>
                                     {formData.image && (
-                                        <div className="mt-2">
+                                        <div className="mt-3">
                                             <img
                                                 src={formData.image}
                                                 alt="Preview"
                                                 className="img-thumbnail"
-                                                style={{ maxHeight: "150px" }}
+                                                style={{ maxHeight: "150px", maxWidth: "100%" }}
                                                 onError={() => null}
                                             />
                                         </div>
@@ -396,7 +502,7 @@ function KelolaMaterialAdmin() {
                                 </div>
 
                                 <div className="mb-3">
-                                    <div className="form-check">
+                                    <div className="form-check modern-form-check">
                                         <input
                                             type="checkbox"
                                             id="categoryActive"
@@ -406,24 +512,25 @@ function KelolaMaterialAdmin() {
                                             onChange={handleFormChange}
                                         />
                                         <label className="form-check-label" htmlFor="categoryActive">
-                                            Active (Visible on platform)
+                                            <i className="fas fa-eye me-2"></i>Make this category visible on the platform
                                         </label>
                                     </div>
                                 </div>
                             </div>
-                            <div className="modal-footer">
+                            <div className="modal-footer modern-modal-footer">
                                 <button
                                     type="button"
-                                    className="btn btn-secondary"
+                                    className="btn btn-outline-secondary"
                                     onClick={() => setShowModal(false)}
                                 >
-                                    Cancel
+                                    <i className="fas fa-times me-2"></i>Cancel
                                 </button>
                                 <button
                                     type="button"
                                     className="btn btn-primary"
                                     onClick={handleSaveCategory}
                                 >
+                                    <i className={`fas fa-${modalMode === "add" ? "check" : "save"} me-2`}></i>
                                     {modalMode === "add" ? "Create Category" : "Save Changes"}
                                 </button>
                             </div>
