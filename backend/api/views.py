@@ -4751,7 +4751,7 @@ class AdminCategoryListCreateAPIView(generics.ListCreateAPIView):
     """
     queryset = api_models.Category.objects.all()
     serializer_class = api_serializer.CategoryManagementSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get_queryset(self):
         """Get all categories for admin management"""
@@ -4759,12 +4759,6 @@ class AdminCategoryListCreateAPIView(generics.ListCreateAPIView):
         if not (hasattr(self.request.user, 'role') and self.request.user.role == 'admin'):
             return api_models.Category.objects.none()
         return api_models.Category.objects.all().order_by('-id')
-    
-    def get_permissions(self):
-        """Require admin role for all operations"""
-        if self.request.method in ['POST', 'PUT', 'DELETE']:
-            return [IsAuthenticated, IsAdminUser()]
-        return [IsAuthenticated]
     
     def create(self, request, *args, **kwargs):
         """Create new course category - Admin only"""
@@ -4797,14 +4791,8 @@ class AdminCategoryDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
     queryset = api_models.Category.objects.all()
     serializer_class = api_serializer.CategoryManagementSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     lookup_field = 'id'
-    
-    def get_permissions(self):
-        """Require admin role for modifications"""
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            return [IsAuthenticated, IsAdminUser()]
-        return [IsAuthenticated]
     
     def update(self, request, *args, **kwargs):
         """Update category details"""
