@@ -190,7 +190,7 @@ function KelolaMaterialAdmin() {
 
     if (!isAdmin) {
         return (
-            <div className="kelola-materi-page">
+            <>
                 <AdminHeader />
                 <div className="container mt-5">
                     <div className="alert alert-danger">
@@ -199,16 +199,16 @@ function KelolaMaterialAdmin() {
                     </div>
                 </div>
                 <Footer />
-            </div>
+            </>
         );
     }
 
     return (
-        <div className="kelola-materi-page">
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <AdminHeader />
 
             <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
-                <div className="container-fluid">
+                <div className="container">
                     {/* Modern Header */}
                     <div className="dashboard-header-modern mb-4">
                         <div className="header-content">
