@@ -372,7 +372,7 @@
     box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
 }
 
-/* ✨ REMOVED: badge-modern is now consistently styled from Header.css with high specificity */
+/* ✨ badge-modern is now consistently styled globally from index.css - applies to all pages */
 
 .badge-level {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
