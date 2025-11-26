@@ -98,15 +98,14 @@ function KelolaMaterialAdmin() {
                 active: formData.active
             };
 
-            let response;
             if (modalMode === "add") {
-                response = await apiInstance.post("admin/category/", payload);
+                await apiInstance.post("admin/category/", payload);
                 Toast().fire({
                     icon: "success",
                     title: "Category created successfully"
                 });
             } else {
-                response = await apiInstance.put(`admin/category/${selectedCategory.id}/`, payload);
+                await apiInstance.put(`admin/category/${selectedCategory.id}/`, payload);
                 Toast().fire({
                     icon: "success",
                     title: "Category updated successfully"
