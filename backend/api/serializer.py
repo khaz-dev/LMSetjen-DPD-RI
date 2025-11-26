@@ -282,9 +282,9 @@ class CategoryManagementSerializer(serializers.ModelSerializer):
     course_count = serializers.SerializerMethodField()
     
     class Meta:
-        fields = ['id', 'title', 'image', 'slug', 'active', 'course_count', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'image', 'slug', 'active', 'course_count']
         model = api_models.Category
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'slug', 'course_count']
     
     def get_course_count(self, obj):
         """Get count of courses in this category"""
