@@ -33,6 +33,7 @@ DEBUG = env.bool('DEBUG', default=True)
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
     'localhost',
     '127.0.0.1',
+    'testserver',  # For running tests
     '16.79.83.21',  # EC2 server IP
     'lmsetjendpdri.duckdns.org',  # Production domain
     '.onrender.com',
@@ -338,7 +339,6 @@ try:
             'LOCATION': env('REDIS_URL', default='redis://localhost:6379/1'),
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-                'PARSER_CLASS': 'redis.connection.HiredisParser',
                 'CONNECTION_POOL_KWARGS': {
                     'max_connections': 50,
                     'retry_on_timeout': True,

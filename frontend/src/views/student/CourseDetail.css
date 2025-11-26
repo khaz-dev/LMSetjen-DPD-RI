@@ -1,9 +1,11 @@
 .modern-student-course {
     min-height: 100vh;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
 }
 
 .course-progress-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border-radius: 25px;
     padding: 2rem;
     color: white;
@@ -36,7 +38,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: conic-gradient(from 0deg, #667eea 0deg, #764ba2 calc(var(--progress, 0) * 3.6deg), #e9ecef 0deg);
+    background: conic-gradient(from 0deg, var(--theme-primary) 0deg, var(--theme-primary-dark) calc(var(--progress, 0) * 3.6deg), #e9ecef 0deg);
     position: relative;
     user-select: none;
     cursor: default;
@@ -91,7 +93,7 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     transform: scaleX(0);
     transition: transform 0.3s ease;
     border-radius: 2px 2px 0 0;
@@ -99,10 +101,10 @@
 
 .nav-tabs-modern .nav-link:hover {
     background: white;
-    color: #667eea;
+    color: var(--theme-primary);
     border-color: #e9ecef;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 4px 12px var(--theme-shadow-color) !important;
 }
 
 .nav-tabs-modern .nav-link:hover::before {
@@ -110,16 +112,16 @@
 }
 
 .nav-tabs-modern .nav-link.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: #ffffff;
     border-color: transparent;
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 6px 20px var(--theme-shadow-color) !important;
 }
 
 .nav-tabs-modern .nav-link.active::before {
     transform: scaleX(1);
-    background: #667eea;
+    background: var(--theme-primary);
     height: 2px;
 }
 
@@ -145,13 +147,13 @@
 }
 
 .lecture-card:hover {
-    border-color: #667eea;
+    border-color: var(--theme-primary);
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 10px 25px var(--theme-shadow-color) !important;
 }
 
 .lecture-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
     border-radius: 15px;
     padding: 1.5rem;
@@ -200,14 +202,14 @@
     width: 20px;
     height: 20px;
     border-radius: 4px;
-    border: 2px solid #667eea;
+    border: 2px solid var(--theme-primary);
     background: white;
     transition: all 0.3s ease;
 }
 
 .completion-checkbox:checked {
-    background: #667eea;
-    border-color: #667eea;
+    background: var(--theme-primary);
+    border-color: var(--theme-primary);
 }
 
 .note-card {
@@ -491,7 +493,7 @@
 }
 
 .add-btn-modern {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border: none;
     border-radius: 12px;
     padding: 0.75rem 1.5rem;
@@ -505,7 +507,7 @@
 
 .add-btn-modern:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 20px var(--theme-shadow-color) !important;
     color: white;
 }
 
@@ -689,22 +691,22 @@
 }
 
 .review-card-modern:hover {
-    border-color: #667eea;
+    border-color: var(--theme-primary);
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
 }
 
 .review-card-modern .btn-outline-primary {
-    border-color: #667eea;
-    color: #667eea;
+    border-color: var(--theme-primary);
+    color: var(--theme-primary);
     font-size: 0.875rem;
     padding: 0.375rem 0.75rem;
     transition: all 0.3s ease;
 }
 
 .review-card-modern .btn-outline-primary:hover {
-    background-color: #667eea;
-    border-color: #667eea;
+    background-color: var(--theme-primary);
+    border-color: var(--theme-primary);
     color: white;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
@@ -823,8 +825,8 @@
 }
 
 .form-control-modern:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 0.2rem var(--theme-shadow-color);
     background: white;
 }
 
@@ -835,7 +837,7 @@
 }
 
 .viewer-modal-modern .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
     border-radius: 20px 20px 0 0;
     border: none;
@@ -903,7 +905,7 @@
 }
 
 .modal-header-modern {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
     padding: 1.5rem 2rem;
     border: none;
@@ -1019,7 +1021,7 @@
 .form-label-icon {
     width: 20px;
     height: 20px;
-    color: #667eea;
+    color: var(--theme-primary);
     font-size: 1.1rem;
 }
 
@@ -1054,9 +1056,9 @@
 }
 
 .form-input-modern:focus {
-    border-color: #667eea;
+    border-color: var(--theme-primary);
     background: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px var(--theme-shadow-color);
 }
 
 .form-input-note:focus {
@@ -1087,9 +1089,9 @@
 }
 
 .form-textarea-modern:focus {
-    border-color: #667eea;
+    border-color: var(--theme-primary);
     background: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px var(--theme-shadow-color);
 }
 
 .form-textarea-note:focus {
@@ -1188,7 +1190,7 @@
 }
 
 .btn-submit-modern {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
     border: none;
     padding: 0.75rem 2rem;
@@ -1330,7 +1332,7 @@
 .empty-icon {
     font-size: 3rem;
     margin-bottom: 1rem;
-    color: #667eea;
+    color: var(--theme-primary);
     opacity: 0.7;
 }
 
@@ -1943,10 +1945,10 @@
 }
 
 .student-quiz-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border-radius: 20px;
     padding: 0;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 10px 30px var(--theme-shadow-color);
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -2146,7 +2148,7 @@
 
 .student-quiz-actions .btn-primary {
     background: white;
-    color: #667eea;
+    color: var(--theme-primary);
 }
 
 .quiz-actions .btn-primary:hover {
@@ -2173,7 +2175,7 @@
 
 /* Quiz Modal Styles */
 .quiz-modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
     padding: 25px 30px;
     display: flex;
@@ -2214,7 +2216,7 @@
 .quiz-intro-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
@@ -2257,7 +2259,7 @@
 
 .quiz-info-card i {
     font-size: 1.5rem;
-    color: #667eea;
+    color: var(--theme-primary);
 }
 
 .info-number {
@@ -2344,7 +2346,7 @@
 
 .quiz-question-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     transition: width 0.3s ease;
 }
 
@@ -2383,7 +2385,7 @@
 }
 
 .quiz-choice-label:hover {
-    border-color: #667eea;
+    border-color: var(--theme-primary);
     background: #f8f9ff;
 }
 
@@ -2399,8 +2401,8 @@
 }
 
 .quiz-choice input[type="radio"]:checked {
-    border-color: #667eea;
-    background: #667eea;
+    border-color: var(--theme-primary);
+    background: var(--theme-primary);
 }
 
 .quiz-choice input[type="radio"]:checked::after {
@@ -2417,7 +2419,7 @@
 
 .quiz-choice input[type="radio"]:checked + .quiz-choice-text {
     font-weight: 600;
-    color: #667eea;
+    color: var(--theme-primary);
 }
 
 .quiz-choice-text {

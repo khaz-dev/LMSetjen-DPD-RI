@@ -312,7 +312,7 @@ function QADetail() {
                 `}
             </style>
 
-            <section className="modern-qa-detail-page pt-5 pb-5">
+            <section className="modern-qa-detail-page">
                 <div className="container">
                     {/* Header Here */}
                     <Header />

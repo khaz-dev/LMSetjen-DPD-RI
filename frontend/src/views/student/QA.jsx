@@ -27,6 +27,7 @@ function QA() {
     
     // Q&A related states
     const [questions, setQuestions] = useState([]);
+    const [questionSearchQuery, setQuestionSearchQuery] = useState("");
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [conversationMessages, setConversationMessages] = useState({});
     
@@ -52,9 +53,12 @@ function QA() {
         try {
             const response = await useAxios.get(`student/course-list/${UserData()?.user_id}/`);
             
+            // Handle both array and paginated response formats
+            const courseData = Array.isArray(response.data) ? response.data : (response.data?.results || []);
+            
             // Add Q&A count for each course
             const coursesWithQA = await Promise.all(
-                response.data.map(async (enrollment) => {
+                courseData.map(async (enrollment) => {
                     try {
                         const qaResponse = await useAxios.get(`student/question-answer-list-create/${enrollment.course.id}/`);
                         return {
@@ -86,7 +90,11 @@ function QA() {
         setLoading(true);
         try {
             const response = await useAxios.get(`student/question-answer-list-create/${courseId}/`);
-            setQuestions(response.data || []);
+            // Ensure we always set an array
+            const data = response.data;
+            const questionsArray = Array.isArray(data) ? data : (data?.results ? data.results : []);
+            setQuestions(questionsArray);
+            setQuestionSearchQuery(""); // Reset search when fetching new questions
         } catch (error) {
             console.error("Error fetching course questions:", error);
             if (error.response?.status === 404) {
@@ -231,12 +239,14 @@ function QA() {
     // Handle search questions
     const handleSearchQuestion = (event) => {
         const query = event.target.value.toLowerCase();
+        setQuestionSearchQuery(event.target.value); // Update controlled input state
         if (!selectedCourse) return;
         
         if (query === "") {
             fetchCourseQuestions(selectedCourse.course.id);
         } else {
-            const filtered = questions?.filter((question) => {
+            const questionsArray = Array.isArray(questions) ? questions : [];
+            const filtered = questionsArray.filter((question) => {
                 return question.title?.toLowerCase().includes(query) ||
                        question.messages?.[0]?.message?.toLowerCase().includes(query);
             });
@@ -575,6 +585,7 @@ function QA() {
                                                     className="form-control form-control-modern" 
                                                     type="search" 
                                                     placeholder="Search questions and discussions..." 
+                                                    value={questionSearchQuery}
                                                     onChange={handleSearchQuestion}
                                                 />
                                                 <i className="fas fa-search search-icon"></i>
@@ -582,7 +593,7 @@ function QA() {
                                         </div>
 
                                         {/* Questions List */}
-                                        {questions?.length === 0 ? (
+                                        {!Array.isArray(questions) || questions.length === 0 ? (
                                             <div className="empty-state">
                                                 <i className="fas fa-question-circle empty-icon"></i>
                                                 <h4 className="mb-3">No Questions Yet</h4>

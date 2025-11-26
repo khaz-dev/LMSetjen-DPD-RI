@@ -577,7 +577,7 @@ function Index() {
                                       dalam menjalankan fungsi legislasi dan pengawasannya.
                                 </p>
                                 
-                                <div className="row g-4 mb-4">
+                                <div className="row g-3 mb-4">
                                     <div className="col-sm-6">
                                         <div className="d-flex align-items-center">
                                             <div 
@@ -586,7 +586,7 @@ function Index() {
                                                 <i className="fas fa-users"></i>
                                             </div>
                                             <div>
-                                                <h3 className="fw-bold mb-1">Pengembangan SDM</h3>
+                                                <h5 className="fw-bold mb-1">Pengembangan SDM</h5>
                                                 <small className="text-muted">Peningkatan kompetensi pegawai</small>
                                             </div>
                                         </div>
@@ -600,7 +600,7 @@ function Index() {
                                                 <i className="fas fa-graduation-cap"></i>
                                             </div>
                                             <div>
-                                                <h3 className="fw-bold mb-1">Pembelajaran Digital</h3>
+                                                <h5 className="fw-bold mb-1">Pembelajaran Digital</h5>
                                                 <small className="text-muted">Transformasi digital pendidikan</small>
                                             </div>
                                         </div>
@@ -1882,7 +1882,7 @@ function Index() {
                         <div className="col-lg-4 text-lg-end mt-4 mt-lg-0">
                             <Link 
                                 to="/register"
-                                className="btn btn-lg px-4 py-3"
+                                className="btn btn-lg px-4 py-3 cta-register-btn"
                                 style={{
                                     background: 'white',
                                     color: '#667eea',
@@ -1895,7 +1895,8 @@ function Index() {
                                     position: 'relative',
                                     zIndex: 10,
                                     textDecoration: 'none',
-                                    display: 'inline-block'
+                                    display: 'inline-block',
+                                    transition: 'all 0.3s ease'
                                 }}
                             >
                                 <i className="fas fa-rocket me-2"></i>

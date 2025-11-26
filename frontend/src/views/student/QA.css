@@ -53,18 +53,20 @@
 .modern-qa-page {
     background: linear-gradient(135deg, #fafafa 0%, #f8f4ff 50%, #f0ebff 100%) !important;
     min-height: 100vh;
-    padding-top: 85px; /* Add top spacing for fixed header */
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+    margin-top: 0 !important;
 }
 
 .qa-header-card {
-    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    background: var(--theme-gradient) !important;
     border-radius: 20px;
-    color: white;
+    color: white !important;
     padding: 2.5rem;
     margin-bottom: 2rem;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 15px 35px rgba(155, 89, 182, 0.3);
+    box-shadow: 0 15px 35px var(--theme-shadow-color) !important;
 }
 
 .qa-header-card::before {
@@ -203,7 +205,7 @@
     width: 100%;
     height: 140px;
     overflow: hidden;
-    background: linear-gradient(135deg, #9b59b6 0%, #667eea 100%);
+    background: var(--theme-gradient) !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -224,7 +226,7 @@
 .course-placeholder {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #9b59b6 0%, #667eea 100%);
+    background: var(--theme-gradient) !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -594,7 +596,7 @@
 }
 
 .modal-header-modern {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: var(--theme-gradient) !important;
     color: white;
     padding: 1.5rem 2rem;
     border: none;
@@ -715,7 +717,7 @@
 .form-label-icon {
     width: 20px;
     height: 20px;
-    color: #667eea;
+    color: var(--theme-primary);
     font-size: 1.1rem;
 }
 
@@ -743,7 +745,7 @@
 }
 
 .form-input-modern:focus {
-    border-color: #667eea;
+    border-color: var(--theme-primary);
     background: white;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
@@ -754,7 +756,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     transform: scaleX(0);
     transition: transform 0.3s ease;
     border-radius: 0 0 12px 12px;
@@ -786,7 +788,7 @@
 }
 
 .form-textarea-modern:focus {
-    border-color: #667eea;
+    border-color: var(--theme-primary);
     background: white;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
@@ -797,7 +799,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     transform: scaleX(0);
     transition: transform 0.3s ease;
     border-radius: 0 0 12px 12px;
@@ -1172,10 +1174,12 @@
 }
 
 .message-send-btn-qa:disabled {
-    opacity: 0.6;
+    background: linear-gradient(135deg, #d8b3e8 0%, #c9a0d9 100%);
+    color: #6c4a7d;
     cursor: not-allowed;
     transform: none;
-    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+    box-shadow: 0 2px 8px rgba(108, 74, 125, 0.2);
+    opacity: 1;
 }
 
 .badge-draft-qa {
@@ -1256,13 +1260,8 @@
     opacity: 0.7;
 }
 
-.badge-modern {
-    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-    color: white;
-    border-radius: 20px;
-    padding: 0.5rem 1rem;
-    font-weight: 600;
-}
+/* Badge styling inherits from global Header.css - no page-specific override */
+/* This ensures consistent badge-modern styling across all pages */
 
 .form-section-header {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -1483,7 +1482,7 @@
 
 /* Message Bubble Styles */
 .message-bubble-user {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
     border-radius: 18px 18px 4px 18px;
     padding: 12px 18px;
@@ -1540,7 +1539,7 @@
 
 /* Button Styles */
 .btn-qa-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border: none;
     border-radius: 10px;
     padding: 0.75rem 1.5rem;
@@ -1567,7 +1566,7 @@
 }
 
 .qa-search-input:focus {
-    border-color: #667eea;
+    border-color: var(--theme-primary);
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     background: white;
 }
@@ -1624,7 +1623,7 @@
 .modern-qa-page p,
 .modern-qa-page span,
 .modern-qa-page small,
-.modern-qa-page div:not(.form-control):not(input):not(textarea),
+.modern-qa-page div:not(.form-control):not(input):not(textarea):not(.badge-modern):not(.student-header-card):not(.student-header-content),
 .modern-qa-page label,
 .modern-qa-page .student-qa-course-title,
 .modern-qa-page .course-instructor,

@@ -19,7 +19,9 @@ function Courses() {
         setFetching(true);
         useAxios.get(`student/course-list/${UserData()?.user_id}/`)
             .then((res) => {
-                setCourses(res.data);
+                // Handle both array and paginated response formats
+                const courseData = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+                setCourses(courseData);
                 setFetching(false);
             })
             .catch((error) => {
@@ -71,7 +73,7 @@ function Courses() {
         return (
             <>
                 <BaseHeader />
-                <section style={{ minHeight: 'calc(100vh - 120px)' }}>
+                <section style={{ minHeight: "calc(100vh - 120px)" }}>
                     <div className="container">
                         <Header />
                         <div className="row mt-0 mt-md-4">
@@ -101,7 +103,7 @@ function Courses() {
                                     <div className="row align-items-center">
                                         <div className="col-lg-8">
                                             <h1 className="mb-2 fw-bold d-flex align-items-center">
-                                                <i className="fas fa-graduation-cap me-3" style={{ fontSize: '2rem' }}></i>
+                                                <i className="fas fa-graduation-cap me-3" style={{ fontSize: "2rem" }}></i>
                                                 My Learning Journey
                                             </h1>
                                             <p className="mb-0 opacity-90 lead">
@@ -172,8 +174,8 @@ function Courses() {
                                                                     alt="course"
                                                                     className="course-image w-100"
                                                                     onError={(e) => {
-                                                                        e.target.style.display = 'none';
-                                                                        e.target.nextSibling.nextSibling.style.display = 'flex';
+                                                                        e.target.style.display = "none";
+                                                                        e.target.nextSibling.nextSibling.style.display = "flex";
                                                                     }}
                                                                 />
                                                                 <div className="course-image-overlay">
@@ -184,15 +186,15 @@ function Courses() {
                                                         <div 
                                                             className="course-placeholder" 
                                                             style={{ 
-                                                                display: c?.course?.image ? 'none' : 'flex', 
-                                                                alignItems: 'center', 
-                                                                justifyContent: 'center', 
-                                                                height: '100px', 
-                                                                backgroundColor: '#f0f0f0', 
-                                                                borderRadius: '8px' 
+                                                                display: c?.course?.image ? "none" : "flex", 
+                                                                alignItems: "center", 
+                                                                justifyContent: "center", 
+                                                                height: "100px", 
+                                                                backgroundColor: "#f0f0f0", 
+                                                                borderRadius: "8px" 
                                                             }}
                                                         >
-                                                            <i className="fas fa-graduation-cap" style={{ fontSize: '32px', color: '#ccc' }}></i>
+                                                            <i className="fas fa-graduation-cap" style={{ fontSize: "32px", color: "#ccc" }}></i>
                                                         </div>
                                                     </Link>
                                                 </div>
@@ -202,7 +204,7 @@ function Courses() {
                                                                 <div className="d-flex gap-2 mb-1">
                                                                     <span className="badge badge-modern">
                                                                         <i className="fas fa-folder-open"></i>
-                                                                        {c.course.category?.title || 'General'}
+                                                                        {c.course.category?.title || "General"}
                                                                     </span>
                                                                     <span className="badge badge-level">
                                                                         <i className="fas fa-signal"></i>
@@ -244,14 +246,14 @@ function Courses() {
                                                                                 {calculateProgress(c)}%
                                                                             </small>
                                                                         </div>
-                                                                        <div className="progress" style={{ height: '6px', borderRadius: '10px' }}>
+                                                                        <div className="progress" style={{ height: "6px", borderRadius: "10px" }}>
                                                                             <div 
                                                                                 className="progress-bar"
                                                                                 role="progressbar"
                                                                                 style={{ 
                                                                                     width: `${calculateProgress(c)}%`,
-                                                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                                                    borderRadius: '10px'
+                                                                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                                                    borderRadius: "10px"
                                                                                 }}
                                                                             ></div>
                                                                         </div>
@@ -298,7 +300,7 @@ function Courses() {
                                                 You haven't enrolled in any courses yet. Start your learning journey today!
                                             </p>
                                             <Link to="/search" className="btn btn-modern-primary">
-                                                <i className="fas fa-search me-2" style={{ verticalAlign: 'middle', fontSize: '1rem', lineHeight: 1 }}></i>
+                                                <i className="fas fa-search me-2" style={{ verticalAlign: "middle", fontSize: "1rem", lineHeight: 1 }}></i>
                                                 Browse Courses
                                             </Link>
                                         </div>

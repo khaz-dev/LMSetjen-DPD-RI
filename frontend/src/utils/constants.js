@@ -27,16 +27,16 @@ export const getMediaUrl = (path) => {
     
     // If path already starts with /media/, use it as-is
     if (cleanPath.startsWith('/media/')) {
-        return `${BACKEND_URL}${cleanPath}`;
+        return `${baseURL}${cleanPath}`;
     }
     
     // If path starts with /, add /media prefix
     if (cleanPath.startsWith('/')) {
-        return `${BACKEND_URL}/media${cleanPath}`;
+        return `${baseURL}/media${cleanPath}`;
     }
     
     // Otherwise, add /media/ prefix
-    return `${BACKEND_URL}/media/${cleanPath}`;
+    return `${baseURL}/media/${cleanPath}`;
 };
 
 // NOTE: Do NOT export userId or teacherId at module load time!

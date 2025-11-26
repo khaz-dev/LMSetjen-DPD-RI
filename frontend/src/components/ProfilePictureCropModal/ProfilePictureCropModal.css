@@ -58,6 +58,7 @@
         0 0 0 1px rgba(0, 0, 0, 0.1);
     animation: slideUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     overflow: hidden;
+    min-height: 0;
 }
 
 @keyframes slideUp {
@@ -108,8 +109,8 @@
 .crop-container > p.crop-description {
     background: linear-gradient(to bottom, var(--theme-light, #f8f9ff), #ffffff);
     margin: 0;
-    padding: 1.25rem 2rem;
-    border-bottom: 2px solid #f0f0f0;
+    padding: 1rem 2rem 0.75rem 2rem;
+    border-bottom: none;
     color: #4a5568;
     font-size: 0.95rem;
     text-align: center;
@@ -121,12 +122,13 @@
 .crop-image-container {
     position: relative;
     width: 100%;
-    min-height: 400px;
-    max-height: 500px;
+    flex: 1;
+    min-height: 200px;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 2.5rem;
+    padding: 1rem 1.5rem;
+    box-sizing: border-box;
     background: 
         linear-gradient(45deg, var(--theme-light, #f8f9ff) 25%, transparent 25%),
         linear-gradient(-45deg, var(--theme-light, #f8f9ff) 25%, transparent 25%),
@@ -135,35 +137,47 @@
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     background-color: #ffffff;
-    overflow: auto;
-    flex: 1;
+    overflow: visible;
+    scroll-behavior: auto;
 }
 
-/* Ensure ReactCrop container is centered */
+/* Ensure ReactCrop wrapper is properly sized and centered */
 .crop-image-container > div {
-    width: auto !important;
+    width: 35% !important;
+    max-width: 35% !important;
     height: auto !important;
+    min-height: auto !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
     position: relative !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    z-index: 10 !important;
 }
 
 /* ReactCrop Wrapper Styling */
 .ReactCrop {
     display: block !important;
     position: relative !important;
-    width: auto !important;
+    width: 100% !important;
     height: auto !important;
-    max-width: 65% !important;
-    margin: 0 auto !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
 }
 
 /* Crop Image */
 .crop-image {
-    max-width: 100%;
-    max-height: 100%;
-    display: block;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    object-fit: contain !important;
+    visibility: visible !important;
 }
 
 /* Footer Row - Side by Side Layout */
@@ -300,17 +314,21 @@
 
     .crop-container > p.crop-description {
         font-size: 0.875rem;
-        padding: 1rem 1.5rem;
+        padding: 0.875rem 1.5rem 0.625rem 1.5rem;
     }
 
     .crop-image-container {
-        min-height: 300px;
-        max-height: 400px;
-        padding: 1.5rem;
+        min-height: 220px;
+        padding: 1rem 1.25rem;
+    }
+
+    .crop-image-container > div {
+        width: 45% !important;
+        max-width: 45% !important;
     }
 
     .ReactCrop {
-        max-width: 80% !important;
+        max-width: 100% !important;
     }
 
     /* Stack footer vertically on tablet */
@@ -369,17 +387,21 @@
 
     .crop-container > p.crop-description {
         font-size: 0.8125rem;
-        padding: 0.875rem 1rem;
+        padding: 0.75rem 1rem 0.5rem 1rem;
     }
 
     .crop-image-container {
-        min-height: 250px;
-        max-height: 350px;
-        padding: 1rem;
+        min-height: 180px;
+        padding: 0.75rem 1rem;
+    }
+
+    .crop-image-container > div {
+        width: 55% !important;
+        max-width: 55% !important;
     }
 
     .ReactCrop {
-        max-width: 90% !important;
+        max-width: 100% !important;
     }
 
     .crop-footer-row {
@@ -416,12 +438,16 @@
 /* Extra Small Devices */
 @media (max-width: 400px) {
     .crop-image-container {
-        min-height: 200px;
-        max-height: 300px;
-        padding: 0.75rem;
+        min-height: 150px;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .crop-image-container > div {
+        width: 65% !important;
+        max-width: 65% !important;
     }
 
     .ReactCrop {
-        max-width: 95% !important;
+        max-width: 100% !important;
     }
 }

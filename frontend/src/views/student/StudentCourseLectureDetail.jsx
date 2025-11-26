@@ -11,7 +11,7 @@ function StudentCourseLectureDetail() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5">
+            <section style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
                 <div className="container">
                     {/* Header Here */}
                     <Header />

@@ -1,7 +1,7 @@
-import React from 'react';
-import ReactCrop from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-import './ProfilePictureCropModal.css';
+import React from "react";
+import ReactCrop from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
+import "./ProfilePictureCropModal.css";
 
 /**
  * Reusable Profile Picture Crop Modal Component
@@ -31,7 +31,7 @@ const ProfilePictureCropModal = ({
     onCancel,
     imgRef,
     onImageLoad,
-    variant = 'student' // Default to student theme
+    variant = "student" // Default to student theme
 }) => {
     // Don't render if not shown or no image
     if (!show || !imageSrc) {
@@ -39,8 +39,8 @@ const ProfilePictureCropModal = ({
     }
 
     // Determine which button class to use based on variant
-    const buttonClass = variant === 'instructor' ? 'crop-buttons-instructor' : 'crop-buttons-student';
-    const themeClass = variant === 'instructor' ? 'crop-modal-instructor' : 'crop-modal-student';
+    const buttonClass = variant === "instructor" ? "crop-buttons-instructor" : "crop-buttons-student";
+    const themeClass = variant === "instructor" ? "crop-modal-instructor" : "crop-modal-student";
 
     return (
         <div className={`crop-modal ${themeClass}`} onClick={onCancel}>
@@ -77,13 +77,6 @@ const ProfilePictureCropModal = ({
                             src={imageSrc}
                             alt="Crop preview"
                             className="crop-image"
-                            style={{
-                                maxWidth: '65%',
-                                maxHeight: '55vh',
-                                width: 'auto',
-                                height: 'auto',
-                                display: 'block'
-                            }}
                             onLoad={onImageLoad}
                         />
                     </ReactCrop>
@@ -98,7 +91,7 @@ const ProfilePictureCropModal = ({
                     </div>
                     
                     <div className={buttonClass}>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div style={{ display: "flex", gap: "1rem" }}>
                             <button 
                                 type="button"
                                 className="btn btn-crop-cancel"

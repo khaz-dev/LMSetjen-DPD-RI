@@ -80,7 +80,7 @@ function Courses() {
         <>
             <BaseHeader />
 
-            <section className="courses-container">
+            <section className="courses-container" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
                 <div className="container">
                     <Header />
                     <div className="row">

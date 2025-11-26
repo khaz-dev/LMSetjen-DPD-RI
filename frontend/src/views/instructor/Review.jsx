@@ -147,7 +147,7 @@ function Review() {
         <>
             <BaseHeader />
 
-            <section className="instructor-review-page">
+            <section className="instructor-review-page" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
                 <div className="container">
                     {/* Header Here */}
                     <Header />

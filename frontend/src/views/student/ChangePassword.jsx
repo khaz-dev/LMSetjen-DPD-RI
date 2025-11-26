@@ -10,7 +10,7 @@ import silentAxios from "../../utils/silentAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import "./ChangePassword.css";
-import '../../styles/PasswordInput.css';
+import "../../styles/PasswordInput.css";
 
 // Constants
 const PASSWORD_MIN_LENGTH = 6;
@@ -73,10 +73,10 @@ const arePasswordsDifferent = (oldPassword, newPassword) => {
 
 // Password strength checker
 const getPasswordStrength = (password) => {
-    if (!password) return '';
-    if (password.length < 6) return 'weak';
-    if (password.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) return 'medium';
-    return 'strong';
+    if (!password) return "";
+    if (password.length < 6) return "weak";
+    if (password.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) return "medium";
+    return "strong";
 };
 
 function ChangePassword() {
@@ -126,7 +126,7 @@ function ChangePassword() {
                 };
             }
             
-            const response = await silentAxios.post(`user/token/`, {
+            const response = await silentAxios.post("user/token/", {
                 email: userEmail,
                 password: oldPassword
             });
@@ -232,7 +232,7 @@ function ChangePassword() {
             }
 
             const formData = createFormData(UserData(), passwords);
-            const response = await useAxios.post(`user/change-password/`, formData);
+            const response = await useAxios.post("user/change-password/", formData);
             
             Toast().fire({
                 icon: "success",
@@ -264,14 +264,14 @@ function ChangePassword() {
             <div className="password-input-wrapper">
                 <input
                     type={showPasswords[field] ? "text" : "password"}
-                    className={`form-control password-input ${errors[field] ? 'is-invalid' : ''}`}
+                    className={`form-control password-input ${errors[field] ? "is-invalid" : ""}`}
                     id={field}
                     name={field}
                     value={passwords[field]}
                     onChange={handlePasswordChange}
                     placeholder={placeholder}
                     autoComplete="new-password"
-                    aria-invalid={errors[field] ? 'true' : 'false'}
+                    aria-invalid={errors[field] ? "true" : "false"}
                 />
                 <button
                     type="button"
@@ -286,14 +286,14 @@ function ChangePassword() {
             
             <div className="password-feedback-container">
                 {/* Password Strength Indicator */}
-                {field === 'new_password' && passwords[field] && (
+                {field === "new_password" && passwords[field] && (
                     <div className="student-password-strength-container">
                         <div className="student-password-strength-label">
                             <span className="student-password-strength-text">
                                 Password Strength:
                             </span>
-                            <span className={`text-${getPasswordStrength(passwords[field]) === 'weak' ? 'danger' : 
-                                           getPasswordStrength(passwords[field]) === 'medium' ? 'warning' : 'success'}`}>
+                            <span className={`text-${getPasswordStrength(passwords[field]) === "weak" ? "danger" : 
+                                           getPasswordStrength(passwords[field]) === "medium" ? "warning" : "success"}`}>
                                 {getPasswordStrength(passwords[field]).charAt(0).toUpperCase() + 
                                  getPasswordStrength(passwords[field]).slice(1)}
                             </span>
@@ -303,7 +303,7 @@ function ChangePassword() {
                 )}
                 
                 {/* Password Mismatch Warning */}
-                {field === 'confirm_new_password' && passwords[field] && passwords.new_password !== passwords[field] && (
+                {field === "confirm_new_password" && passwords[field] && passwords.new_password !== passwords[field] && (
                     <div className="student-password-mismatch-warning">
                         <i className="fas fa-exclamation-triangle"></i>
                         <span>Passwords do not match</span>
@@ -381,6 +381,7 @@ function ChangePassword() {
                     <div className="row mt-0 mt-md-4">
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
+
                             {/* Page Header */}
                             <div className="student-password-header mb-4">
                                 <div></div>

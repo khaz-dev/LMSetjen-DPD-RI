@@ -33,7 +33,7 @@
 .notfound-404-text {
     font-size: 80px;
     font-weight: 800;
-    color: #667eea;
+    color: var(--theme-primary) !important;
     line-height: 1;
     margin-bottom: 0.75rem;
     text-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
@@ -45,7 +45,7 @@
     width: 70px;
     height: 70px;
     margin: 0 auto 1.25rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -94,7 +94,7 @@
 
 .notfound-info-icon {
     font-size: 1.25rem;
-    color: #667eea;
+    color: var(--theme-primary) !important;
     margin-right: 0.75rem;
     margin-top: 0.125rem;
     flex-shrink: 0;
@@ -129,7 +129,7 @@
 }
 
 .notfound-btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     color: white;
     border: none;
     border-radius: 12px;
@@ -147,7 +147,7 @@
 
 .notfound-btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 12px 25px rgba(102, 126, 234, 0.4) !important;
     color: white;
 }
 
@@ -175,8 +175,8 @@
 
 .notfound-btn-outline {
     background: transparent;
-    color: #667eea;
-    border: 2px solid #667eea;
+    color: var(--theme-primary) !important;
+    border: 2px solid var(--theme-primary) !important;
     border-radius: 12px;
     padding: 10px 20px;
     font-weight: 600;
@@ -191,7 +191,7 @@
 
 .notfound-btn-outline:hover {
     transform: translateY(-2px);
-    background: #667eea;
+    background: var(--theme-primary) !important;
     color: white;
     border-color: #667eea;
 }
@@ -223,7 +223,7 @@
 }
 
 .notfound-help-link {
-    color: #667eea;
+    color: var(--theme-primary) !important;
     font-size: 0.8125rem;
     font-weight: 500;
     text-decoration: none;
@@ -232,7 +232,7 @@
 }
 
 .notfound-help-link:hover {
-    color: #764ba2;
+    color: var(--theme-primary-dark) !important;
 }
 
 .notfound-help-separator {

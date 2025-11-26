@@ -30,3 +30,22 @@ admin.site.register(models.CourseRequirement)
 admin.site.register(models.CourseLearningOutcome)
 admin.site.register(models.CourseResource)
 admin.site.register(models.TeacherExpertise)
+
+# ✨ PHASE 3-4: Search and Analytics
+admin.site.register(models.SearchAnalytics)
+admin.site.register(models.SearchLog)
+admin.site.register(models.CourseSearchAnalytics)
+
+# ✨ TIER 1: Quick Wins (Content Gap, At-Risk, Recommendations)
+admin.site.register(models.ContentGap)
+admin.site.register(models.StudentRiskAssessment)
+admin.site.register(models.CourseRecommendation)
+
+# ✨ TIER 2: Core Features (Performance, Learning Paths, Churn)
+admin.site.register(models.InstructorPerformance)
+admin.site.register(models.LearningPath)
+admin.site.register(models.ChurnPrediction)
+
+# ✨ TIER 3: Optimizations (Intent Classification, Quiz Calibration)
+admin.site.register(models.SearchIntent)
+admin.site.register(models.QuizMetrics)

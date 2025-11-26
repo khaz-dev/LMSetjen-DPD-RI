@@ -10,7 +10,6 @@ import { Rating } from 'react-simple-star-rating';
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
-import GetCurrentAddress from "../plugin/UserCountry";
 import { WishlistContext } from "../plugin/Context";
 import "./Wishlist.css";
 
@@ -26,7 +25,11 @@ function Wishlist() {
             setError(null);
             
             const response = await useAxios.get(`student/wishlist/${UserData()?.user_id}/`);
-            setWishlist(response.data);
+            // Handle paginated API response
+            // API returns { results: [...], count: N, ... } due to DRF pagination
+            const wishlistData = response.data?.results || response.data || [];
+            const wishlistArray = Array.isArray(wishlistData) ? wishlistData : [];
+            setWishlist(wishlistArray);
         } catch (err) {
             console.error("Error fetching wishlist:", err);
             setError("Failed to load wishlist");
@@ -38,8 +41,6 @@ function Wishlist() {
             setLoading(false);
         }
     };
-
-    const country = GetCurrentAddress()?.country;
 
     useEffect(() => {
         fetchWishlist();
@@ -273,7 +274,7 @@ function Wishlist() {
                                             <p className="text-muted mb-4">
                                                 You haven't saved any courses yet. Browse our course catalog and save courses you're interested in!
                                             </p>
-                                            <Link to="/" className="btn btn-modern">
+                                            <Link to="/search" className="btn btn-modern">
                                                 <i className="fas fa-search me-2"></i>
                                                 Browse Courses
                                             </Link>

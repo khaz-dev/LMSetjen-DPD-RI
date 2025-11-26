@@ -37,21 +37,21 @@ function Dashboard() {
         let cleanUrl = imageUrl;
         
         // If it contains encoded URLs, decode and extract the actual path
-        if (cleanUrl.includes('%3A') || cleanUrl.includes('http%3A')) {
+        if (cleanUrl.includes("%3A") || cleanUrl.includes("http%3A")) {
             cleanUrl = decodeURIComponent(cleanUrl);
         }
         
         // Extract just the filename if it's a nested URL structure
-        if (cleanUrl.includes('/media/')) {
-            const parts = cleanUrl.split('/media/');
+        if (cleanUrl.includes("/media/")) {
+            const parts = cleanUrl.split("/media/");
             if (parts.length > 1) {
                 // Get the last part which should be the actual filename
-                cleanUrl = '/media/' + parts[parts.length - 1];
+                cleanUrl = "/media/" + parts[parts.length - 1];
             }
         }
         
         // If it's already a complete URL, return as is
-        if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+        if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
             return cleanUrl;
         }
         
@@ -84,22 +84,31 @@ function Dashboard() {
                 useAxios.get(`teacher/best-course-earning/${teacherId}/`)
             ]);
             
+            // Normalize responses to arrays (handle both array and paginated responses)
+            const coursesData = Array.isArray(coursesResponse.data) ? coursesResponse.data : (coursesResponse.data?.results || []);
+            const reviewsData = Array.isArray(reviewsResponse.data) ? reviewsResponse.data : (reviewsResponse.data?.results || []);
+            const notificationsData = Array.isArray(notificationsResponse.data) ? notificationsResponse.data : (notificationsResponse.data?.results || []);
+            const ordersData = Array.isArray(ordersResponse.data) ? ordersResponse.data : (ordersResponse.data?.results || []);
+            const questionsData = Array.isArray(questionsResponse.data) ? questionsResponse.data : (questionsResponse.data?.results || []);
+            const bestCoursesData = Array.isArray(bestCoursesResponse.data) ? bestCoursesResponse.data : (bestCoursesResponse.data?.results || []);
+            const studentsData = Array.isArray(studentsResponse.data) ? studentsResponse.data : (studentsResponse.data?.results || []);
+            
             setStats(statsResponse.data[0] || {});
-            setCourses(coursesResponse.data || []);
-            setOriginalCourses(coursesResponse.data || []);
-            setStudents(studentsResponse.data || []);
-            setReviews(reviewsResponse.data || []);
-            setNotifications(notificationsResponse.data || []);
-            setOrders(ordersResponse.data || []);
-            setQuestions(questionsResponse.data || []);
-            setBestCourses(bestCoursesResponse.data || []);
+            setCourses(coursesData);
+            setOriginalCourses(coursesData);
+            setStudents(studentsData);
+            setReviews(reviewsData);
+            setNotifications(notificationsData);
+            setOrders(ordersData);
+            setQuestions(questionsData);
+            setBestCourses(bestCoursesData);
             
             // Generate recent activity
             generateRecentActivity(
-                studentsResponse.data || [], 
-                reviewsResponse.data || [], 
-                questionsResponse.data || [],
-                notificationsResponse.data || []
+                studentsData, 
+                reviewsData, 
+                questionsData,
+                notificationsData
             );
             
         } catch (error) {
@@ -112,37 +121,48 @@ function Dashboard() {
     const generateRecentActivity = (studentsData, reviewsData, questionsData, notificationsData) => {
         const activities = [];
         
+        // Ensure data is array (handle both array and object with results property)
+        const students = Array.isArray(studentsData) ? studentsData : (studentsData?.results || []);
+        const reviews = Array.isArray(reviewsData) ? reviewsData : (reviewsData?.results || []);
+        const questions = Array.isArray(questionsData) ? questionsData : (questionsData?.results || []);
+        
         // Add recent student enrollments
-        studentsData.slice(0, 3).forEach(student => {
-            activities.push({
-                type: 'enrollment',
-                title: `${student.full_name} enrolled in a course`,
-                time: moment(student.date).fromNow(),
-                icon: 'fas fa-user-plus',
-                color: '#10b981'
-            });
+        students.slice(0, 3).forEach(student => {
+            if (student?.full_name) {
+                activities.push({
+                    type: "enrollment",
+                    title: `${student.full_name} enrolled in a course`,
+                    time: moment(student.date).fromNow(),
+                    icon: "fas fa-user-plus",
+                    color: "#10b981"
+                });
+            }
         });
         
         // Add recent reviews
-        reviewsData.slice(0, 3).forEach(review => {
-            activities.push({
-                type: 'review',
-                title: `New ${review.rating}★ review received`,
-                time: moment(review.date).fromNow(),
-                icon: 'fas fa-star',
-                color: '#f59e0b'
-            });
+        reviews.slice(0, 3).forEach(review => {
+            if (review?.rating) {
+                activities.push({
+                    type: "review",
+                    title: `New ${review.rating}★ review received`,
+                    time: moment(review.date).fromNow(),
+                    icon: "fas fa-star",
+                    color: "#f59e0b"
+                });
+            }
         });
         
         // Add recent questions
-        questionsData.slice(0, 3).forEach(question => {
-            activities.push({
-                type: 'question',
-                title: `New question: ${question.title}`,
-                time: moment(question.date).fromNow(),
-                icon: 'fas fa-question-circle',
-                color: '#3b82f6'
-            });
+        questions.slice(0, 3).forEach(question => {
+            if (question?.title) {
+                activities.push({
+                    type: "question",
+                    title: `New question: ${question.title}`,
+                    time: moment(question.date).fromNow(),
+                    icon: "fas fa-question-circle",
+                    color: "#3b82f6"
+                });
+            }
         });
         
         // Sort by most recent and take top 6
@@ -156,18 +176,23 @@ function Dashboard() {
 
     // Memoize enhanced statistics calculation
     const enhancedStats = useMemo(() => {
-        const averageRating = reviews.length > 0 
-            ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+        // Ensure arrays
+        const reviewsArray = Array.isArray(reviews) ? reviews : [];
+        const notificationsArray = Array.isArray(notifications) ? notifications : [];
+        const questionsArray = Array.isArray(questions) ? questions : [];
+        
+        const averageRating = reviewsArray.length > 0 
+            ? (reviewsArray.reduce((sum, review) => sum + review.rating, 0) / reviewsArray.length).toFixed(1)
             : 0;
-        const unreadNotifications = notifications.filter(n => !n.seen).length;
-        const pendingQuestions = questions.filter(q => !q.answered).length;
+        const unreadNotifications = notificationsArray.filter(n => !n.seen).length;
+        const pendingQuestions = questionsArray.filter(q => !q.answered).length;
         
         return {
             averageRating,
             unreadNotifications,
             pendingQuestions,
-            totalReviews: reviews.length,
-            totalQuestions: questions.length
+            totalReviews: reviewsArray.length,
+            totalQuestions: questionsArray.length
         };
     }, [reviews, notifications, questions]);
 
@@ -202,14 +227,14 @@ function Dashboard() {
         return (
             <>
                 <BaseHeader />
-                <section className="modern-dashboard" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <section className="modern-dashboard" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
                                     </div>
                                     <p className="mt-3 text-muted">Loading Dashboard...</p>
@@ -252,7 +277,7 @@ function Dashboard() {
                             <div className="row">
                                 {/* Primary Stats */}
                                 <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
-                                    <div className="stat-card-enhanced" style={{'--card-accent': '#3498db', '--icon-bg': '#3498db'}}>
+                                    <div className="stat-card-enhanced" style={{"--card-accent": "#3498db", "--icon-bg": "#3498db"}}>
                                         <div className="stat-icon-enhanced">
                                             <i className="fas fa-book-open"></i>
                                         </div>
@@ -267,7 +292,7 @@ function Dashboard() {
                                 </div>
 
                                 <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
-                                    <div className="stat-card-enhanced" style={{'--card-accent': '#10b981', '--icon-bg': '#10b981'}}>
+                                    <div className="stat-card-enhanced" style={{"--card-accent": "#10b981", "--icon-bg": "#10b981"}}>
                                         <div className="stat-icon-enhanced">
                                             <i className="fas fa-users"></i>
                                         </div>
@@ -282,7 +307,7 @@ function Dashboard() {
                                 </div>
 
                                 <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
-                                    <div className="stat-card-enhanced" style={{'--card-accent': '#2980b9', '--icon-bg': '#2980b9'}}>
+                                    <div className="stat-card-enhanced" style={{"--card-accent": "#2980b9", "--icon-bg": "#2980b9"}}>
                                         <div className="stat-icon-enhanced">
                                             <i className="fas fa-star"></i>
                                         </div>
@@ -299,7 +324,7 @@ function Dashboard() {
 
                             {/* Secondary Stats Row */}
                             <div className="row mb-3">
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-3">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-2 mt-2">
                                     <div className="mini-stat-card">
                                         <div className="mini-stat-icon text-warning">
                                             <i className="fas fa-bell"></i>
@@ -311,7 +336,7 @@ function Dashboard() {
                                     </div>
                                 </div>
 
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-3">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-2 mt-2">
                                     <div className="mini-stat-card">
                                         <div className="mini-stat-icon text-info">
                                             <i className="fas fa-question-circle"></i>
@@ -323,13 +348,13 @@ function Dashboard() {
                                     </div>
                                 </div>
 
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-3">
+                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-2 mt-2">
                                     <div className="mini-stat-card">
                                         <div className="mini-stat-icon" >
                                             <i className="fas fa-chart-line"></i>
                                         </div>
                                         <div className="mini-stat-content">
-                                            <div className="mini-stat-number">{courses.filter(c => c.platform_status === 'Published').length}</div>
+                                            <div className="mini-stat-number">{courses.filter(c => c.platform_status === "Published").length}</div>
                                             <div className="mini-stat-label">Published Courses</div>
                                         </div>
                                     </div>
@@ -348,28 +373,28 @@ function Dashboard() {
                                             <div className="row g-3">
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
-                                                        <i className="fas fa-hourglass-half text-primary mb-2" style={{fontSize: '2rem'}}></i>
+                                                        <i className="fas fa-hourglass-half text-primary mb-2" style={{fontSize: "2rem"}}></i>
                                                         <div className="h5 fw-bold mb-0">{totalContentDuration}</div>
                                                         <small className="text-muted">Total Content Created</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
-                                                        <i className="fas fa-film text-info mb-2" style={{fontSize: '2rem'}}></i>
+                                                        <i className="fas fa-film text-info mb-2" style={{fontSize: "2rem"}}></i>
                                                         <div className="h5 fw-bold mb-0">{courseDurationStats.count || 0}</div>
                                                         <small className="text-muted">Total Lectures</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
-                                                        <i className="fas fa-chart-line text-success mb-2" style={{fontSize: '2rem'}}></i>
+                                                        <i className="fas fa-chart-line text-success mb-2" style={{fontSize: "2rem"}}></i>
                                                         <div className="h5 fw-bold mb-0">{courseDurationStats.average || "0m"}</div>
                                                         <small className="text-muted">Avg Lecture Length</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
-                                                        <i className="fas fa-fire text-danger mb-2" style={{fontSize: '2rem'}}></i>
+                                                        <i className="fas fa-fire text-danger mb-2" style={{fontSize: "2rem"}}></i>
                                                         <div className="h5 fw-bold mb-0">{courseDurationStats.max || "0m"}</div>
                                                         <small className="text-muted">Longest Lecture</small>
                                                     </div>
@@ -396,7 +421,7 @@ function Dashboard() {
                                             {recentActivity.length > 0 ? (
                                                 recentActivity.map((activity, index) => (
                                                     <div key={index} className="activity-item">
-                                                        <div className="activity-icon" style={{'--color': activity.color}}>
+                                                        <div className="activity-icon" style={{"--color": activity.color}}>
                                                             <i className={activity.icon}></i>
                                                         </div>
                                                         <div className="activity-content">
@@ -436,28 +461,28 @@ function Dashboard() {
                                             <div className="row">
                                                 <div className="col-md-6 mb-3">
                                                     <div className="analytics-metric">
-                                                        <div className="metric-value">{courses.filter(c => c.platform_status === 'Published').length}</div>
+                                                        <div className="metric-value">{courses.filter(c => c.platform_status === "Published").length}</div>
                                                         <div className="metric-label">Published</div>
                                                         <div className="metric-chart">
-                                                            <div className="chart-bar" style={{width: '85%', backgroundColor: '#10b981'}}></div>
+                                                            <div className="chart-bar" style={{width: "85%", backgroundColor: "#10b981"}}></div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-6 mb-3">
                                                     <div className="analytics-metric">
-                                                        <div className="metric-value">{courses.filter(c => c.platform_status === 'Draft').length}</div>
+                                                        <div className="metric-value">{courses.filter(c => c.platform_status === "Draft").length}</div>
                                                         <div className="metric-label">Drafts</div>
                                                         <div className="metric-chart">
-                                                            <div className="chart-bar" style={{width: '45%', backgroundColor: '#f59e0b'}}></div>
+                                                            <div className="chart-bar" style={{width: "45%", backgroundColor: "#f59e0b"}}></div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-6 mb-3">
                                                     <div className="analytics-metric">
-                                                        <div className="metric-value">{courses.filter(c => c.platform_status === 'Review').length}</div>
+                                                        <div className="metric-value">{courses.filter(c => c.platform_status === "Review").length}</div>
                                                         <div className="metric-label">In Review</div>
                                                         <div className="metric-chart">
-                                                            <div className="chart-bar" style={{width: '25%', backgroundColor: '#3498db'}}></div>
+                                                            <div className="chart-bar" style={{width: "25%", backgroundColor: "#3498db"}}></div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -466,7 +491,7 @@ function Dashboard() {
                                                         <div className="metric-value">{courses.reduce((sum, c) => sum + (c.students?.length || 0), 0)}</div>
                                                         <div className="metric-label">Total Enrollments</div>
                                                         <div className="metric-chart">
-                                                            <div className="chart-bar" style={{width: '100%', backgroundColor: '#2980b9'}}></div>
+                                                            <div className="chart-bar" style={{width: "100%", backgroundColor: "#2980b9"}}></div>
                                                         </div>
                                                     </div>
                                                 </div>

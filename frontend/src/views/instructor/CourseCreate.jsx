@@ -52,7 +52,11 @@ function CourseCreate() {
         const fetchCategories = async () => {
             try {
                 const response = await useAxios.get(`course/category/`);
-                setCategory(response.data);
+                // Normalize response: handle both array and paginated responses
+                const categoryData = Array.isArray(response.data) 
+                    ? response.data 
+                    : (response.data?.results || []);
+                setCategory(categoryData);
             } catch (error) {
                 console.error('Error fetching categories:', error);
                 Toast("error", "Failed to load categories");
@@ -404,7 +408,7 @@ function CourseCreate() {
                                                 warnings={warnings.category || []}
                                                 options={[
                                                     { value: "", label: "Select a category" },
-                                                    ...(category?.map(cat => ({ value: cat.id, label: cat.title })) || [])
+                                                    ...((Array.isArray(category) ? category : [])?.map(cat => ({ value: cat.id, label: cat.title })) || [])
                                                 ]}
                                                 required
                                                 helpText="Choose the most relevant category for your course"

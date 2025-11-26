@@ -13,6 +13,9 @@ import ThemeProvider from "./components/ThemeProvider";
 // Import mobile-optimized Toast styles
 import "./views/plugin/toast-mobile.css";
 
+// ✨ PHASE 4.9: Import performance optimization styles
+import "./styles/performance.css";
+
 import MainWrapper from "./layouts/MainWrapper";
 import PrivateRoute from "./layouts/PrivateRoute";
 import RoleRoute from "./layouts/RoleRoute";
@@ -96,18 +99,9 @@ function App() {
         try {
             const userData = UserData();
             if (userData?.user_id) {
-                // Use shorter timeout for wishlist API (5 seconds)
-                // to prevent blocking other operations
-                apiInstance.get(
-                    `student/wishlist/${userData.user_id}/`,
-                    { timeout: 5000 }
-                ).then((res) => {
+                apiInstance.get(`student/wishlist/${userData.user_id}/`).then((res) => {
                     setWishlistCount(res.data?.length || 0);
-                }).catch((error) => {
-                    // Silently fail for wishlist - don't block other operations
-                    if (error.code === 'ECONNABORTED') {
-                        console.warn("Wishlist fetch timeout - using cached count");
-                    }
+                }).catch(() => {
                     setWishlistCount(0);
                 });
             }

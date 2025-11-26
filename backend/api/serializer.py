@@ -342,36 +342,6 @@ class BasicTeacherSerializer(serializers.ModelSerializer):
         return None
 
 
-class SearchCourseSerializer(serializers.ModelSerializer):
-    """Lightweight Course serializer optimized for search results - minimal fields and no nested relations"""
-    teacher_name = serializers.CharField(source='teacher.user.full_name', read_only=True)
-    category_name = serializers.CharField(source='category.title', read_only=True)
-    students_count = serializers.SerializerMethodField()
-    rating = serializers.SerializerMethodField()
-    number_of_rating = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = api_models.Course
-        fields = ['id', 'title', 'slug', 'image', 'level', 'category_name', 'teacher_name', 'students_count', 'rating', 'number_of_rating']
-    
-    def get_students_count(self, obj):
-        """Count enrolled students without triggering N+1 queries"""
-        if hasattr(obj, '_students_count'):
-            return obj._students_count
-        return api_models.EnrolledCourse.objects.filter(course=obj).count()
-    
-    def get_rating(self, obj):
-        """Get average rating"""
-        if hasattr(obj, '_avg_rating'):
-            return obj._avg_rating
-        rating = obj.average_rating()
-        return round(rating, 1) if rating else None
-    
-    def get_number_of_rating(self, obj):
-        """Get number of ratings"""
-        if hasattr(obj, '_rating_count'):
-            return obj._rating_count
-        return obj.rating_count()
 
 
 class VariantItemSerializer(serializers.ModelSerializer):
@@ -636,6 +606,33 @@ class CourseResourceSerializer(serializers.ModelSerializer):
 
 # ==================== END NEW SERIALIZERS ====================
 
+class SearchCourseSerializer(serializers.ModelSerializer):
+    """✨ PHASE 2: Lightweight serializer for search results - only essential fields (~500B per course vs 5KB)"""
+    category_name = serializers.CharField(source='category.title', read_only=True)
+    teacher_name = serializers.CharField(source='teacher.user.full_name', read_only=True)
+    students_count = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
+    number_of_rating = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.Course
+        # Only return fields needed for search modal - 70% smaller response
+        fields = ['id', 'title', 'slug', 'image', 'level', 'category_name', 'teacher_name', 
+                  'students_count', 'rating', 'number_of_rating', 'featured']
+    
+    def get_students_count(self, obj):
+        """Count enrolled students efficiently"""
+        return api_models.EnrolledCourse.objects.filter(course=obj).count()
+    
+    def get_rating(self, obj):
+        """Get average rating"""
+        rating = obj.average_rating()
+        return round(rating, 1) if rating else None
+    
+    def get_number_of_rating(self, obj):
+        """Get number of ratings"""
+        return obj.rating_count()
+
 class CourseSerializer(serializers.ModelSerializer):
     students = EnrolledCourseSerializer(many=True, required=False, read_only=True,)
     curriculum = VariantSerializer(many=True, required=False, read_only=True,)
@@ -886,3 +883,557 @@ class ExternalUserDataSerializer(serializers.Serializer):
     jenis_jabatan = serializers.CharField(allow_null=True, required=False)
     unit_organisasi = serializers.DictField(allow_null=True, required=False)
     jabatan = serializers.DictField(allow_null=True, required=False)
+
+
+class SearchAnalyticsSerializer(serializers.ModelSerializer):
+    """Serializer for trending search queries"""
+    class Meta:
+        model = api_models.SearchAnalytics
+        fields = ['id', 'query', 'search_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'search_count']
+
+
+# ✨ PHASE 4: Full-Text Search related serializers
+
+class FullTextSearchResultSerializer(serializers.ModelSerializer):
+    """Serializer for FTS results - includes ranking"""
+    rank = serializers.FloatField(read_only=True)
+    teacher_name = serializers.CharField(source='teacher.full_name', read_only=True)
+    category_name = serializers.CharField(source='category.title', read_only=True)
+    rating = serializers.SerializerMethodField()
+    rating_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.Course
+        fields = [
+            'id', 'slug', 'title', 'description', 'image',
+            'level', 'rank', 'teacher_name', 'category_name',
+            'rating', 'rating_count', 'featured', 'date'
+        ]
+    
+    def get_rating(self, obj):
+        return obj.average_rating() or 0
+    
+    def get_rating_count(self, obj):
+        return obj.rating_count() or 0
+
+
+class SearchLogSerializer(serializers.ModelSerializer):
+    """Serializer for search logs"""
+    class Meta:
+        model = api_models.SearchLog
+        fields = ['id', 'query', 'results_count', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+
+class CourseSearchAnalyticsSerializer(serializers.ModelSerializer):
+    """Serializer for per-course search analytics"""
+    course_title = serializers.CharField(source='course.title', read_only=True)
+    
+    class Meta:
+        model = api_models.CourseSearchAnalytics
+        fields = [
+            'id', 'course', 'course_title', 'search_impressions',
+            'search_clicks', 'click_through_rate', 'updated_at'
+        ]
+        read_only_fields = ['id', 'updated_at']
+
+
+# ✨ PHASE 4.3: Analytics serializers
+class TrendingSearchSerializer(serializers.Serializer):
+    """Serializer for trending searches"""
+    query = serializers.CharField()
+    count = serializers.IntegerField()
+    unique_users = serializers.IntegerField()
+    avg_results = serializers.FloatField()
+
+
+class FailedSearchSerializer(serializers.Serializer):
+    """Serializer for failed searches (zero results)"""
+    query = serializers.CharField()
+    attempt_count = serializers.IntegerField()
+    last_attempted = serializers.DateTimeField()
+
+
+class SearchVolumeSerializer(serializers.Serializer):
+    """Serializer for daily search volume"""
+    date = serializers.DateField()
+    count = serializers.IntegerField()
+
+
+class SearchStatsSerializer(serializers.Serializer):
+    """Serializer for aggregate search statistics"""
+    total_searches = serializers.IntegerField()
+    unique_searchers = serializers.IntegerField()
+    avg_results = serializers.FloatField()
+    unique_queries = serializers.IntegerField()
+
+
+class CourseSearchMetricsSerializer(serializers.ModelSerializer):
+    """Serializer for course search metrics"""
+    course_title = serializers.CharField(source='course.title', read_only=True)
+    teacher_name = serializers.CharField(source='course.teacher.full_name', read_only=True)
+    category_name = serializers.CharField(source='course.category.title', read_only=True)
+    
+    class Meta:
+        model = api_models.CourseSearchAnalytics
+        fields = [
+            'course', 'course_title', 'teacher_name', 'category_name',
+            'search_impressions', 'search_clicks', 'click_through_rate'
+        ]
+        read_only_fields = fields
+
+
+# ✨ PHASE 4.4: Dashboard Serializers
+class DashboardOverviewSerializer(serializers.Serializer):
+    """Overall dashboard metrics and KPIs"""
+    total_searches = serializers.IntegerField()
+    unique_searchers = serializers.IntegerField()
+    unique_queries = serializers.IntegerField()
+    avg_results_per_search = serializers.FloatField()
+    avg_ctr = serializers.FloatField()
+    period_days = serializers.IntegerField()
+    search_quality_score = serializers.FloatField()  # Custom calculated score
+
+
+class DashboardTrendingSerializer(serializers.Serializer):
+    """Trending searches data for dashboard"""
+    trending_searches = TrendingSearchSerializer(many=True)
+    failed_searches = FailedSearchSerializer(many=True)
+    search_volume_trend = SearchVolumeSerializer(many=True)
+
+
+class DashboardCoursePerformanceSerializer(serializers.Serializer):
+    """Course search performance metrics"""
+    total_courses = serializers.IntegerField()
+    top_courses = CourseSearchMetricsSerializer(many=True)
+    avg_metrics = serializers.DictField()  # avg_impressions, avg_clicks, avg_ctr
+
+
+class DashboardCompleteSerializer(serializers.Serializer):
+    """Complete dashboard data combining all metrics"""
+    overview = DashboardOverviewSerializer()
+    trending = DashboardTrendingSerializer()
+    course_performance = DashboardCoursePerformanceSerializer()
+    timestamp = serializers.DateTimeField()
+    period = serializers.CharField()  # 'daily', 'weekly', 'monthly'
+
+
+# ✨ PHASE 4.5: Advanced Filters Serializers
+
+class FilterOptionSerializer(serializers.Serializer):
+    """Generic filter option serializer"""
+    id = serializers.IntegerField()
+    label = serializers.CharField()
+    count = serializers.IntegerField()
+
+
+class CategoryFilterSerializer(serializers.Serializer):
+    """Serializer for category filter options"""
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    course_count = serializers.IntegerField()
+    slug = serializers.CharField()
+
+
+class LevelFilterSerializer(serializers.Serializer):
+    """Serializer for course level filter options"""
+    level = serializers.CharField()
+    count = serializers.IntegerField()
+    description = serializers.CharField(required=False)
+
+
+class RatingFilterSerializer(serializers.Serializer):
+    """Serializer for rating range filter options"""
+    min_rating = serializers.FloatField()
+    max_rating = serializers.FloatField()
+    count = serializers.IntegerField()
+    percentage = serializers.FloatField()
+
+
+class TeacherFilterSerializer(serializers.Serializer):
+    """Serializer for teacher filter options"""
+    id = serializers.IntegerField()
+    full_name = serializers.CharField()
+    image = serializers.URLField(required=False, allow_null=True)
+    course_count = serializers.IntegerField()
+    avg_rating = serializers.FloatField()
+
+
+class FilterOptionsResponseSerializer(serializers.Serializer):
+    """Response serializer containing all filter options"""
+    categories = CategoryFilterSerializer(many=True)
+    levels = LevelFilterSerializer(many=True)
+    ratings = RatingFilterSerializer(many=True)
+    teachers = TeacherFilterSerializer(many=True)
+
+
+# ✨ PHASE 4.6: Integrated Search Serializers
+
+class AdvancedSearchFiltersSerializer(serializers.Serializer):
+    """Request serializer for advanced search filters"""
+    category_id = serializers.IntegerField(required=False, allow_null=True)
+    level = serializers.CharField(required=False, allow_null=True)
+    min_rating = serializers.FloatField(required=False, allow_null=True)
+    max_rating = serializers.FloatField(required=False, allow_null=True)
+    teacher_id = serializers.IntegerField(required=False, allow_null=True)
+
+
+class AdvancedSearchRequestSerializer(serializers.Serializer):
+    """Request serializer for advanced search endpoint"""
+    query = serializers.CharField(max_length=500, required=True)
+    filters = AdvancedSearchFiltersSerializer(required=False, allow_null=True)
+    page = serializers.IntegerField(required=False, default=1, min_value=1)
+    per_page = serializers.IntegerField(required=False, default=10, min_value=1, max_value=100)
+
+
+class AdvancedSearchResultSerializer(serializers.ModelSerializer):
+    """Serializer for individual search results with filter info"""
+    rank = serializers.FloatField(read_only=True)
+    teacher_name = serializers.CharField(source='teacher.full_name', read_only=True)
+    category_name = serializers.CharField(source='category.title', read_only=True)
+    rating = serializers.SerializerMethodField()
+    rating_count = serializers.SerializerMethodField()
+    matched_filters = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.Course
+        fields = [
+            'id', 'slug', 'title', 'description', 'image', 'level',
+            'rank', 'teacher_name', 'category_name', 'rating', 'rating_count',
+            'featured', 'date', 'matched_filters'
+        ]
+    
+    def get_rating(self, obj):
+        return obj.average_rating() or 0
+    
+    def get_rating_count(self, obj):
+        return obj.rating_count() or 0
+    
+    def get_matched_filters(self, obj):
+        """Return which filters this course matched"""
+        request_filters = self.context.get('filters', {})
+        matched = []
+        
+        if request_filters.get('category_id') and obj.category_id == request_filters['category_id']:
+            matched.append('category')
+        if request_filters.get('level') and obj.level == request_filters['level']:
+            matched.append('level')
+        if request_filters.get('teacher_id') and obj.teacher_id == request_filters['teacher_id']:
+            matched.append('teacher')
+        
+        # Check rating filter
+        if request_filters.get('min_rating'):
+            avg_rating = obj.average_rating() or 0
+            min_rating = request_filters.get('min_rating', 0)
+            if avg_rating >= min_rating:
+                matched.append('rating')
+        
+        return matched
+
+
+class AdvancedSearchResponseSerializer(serializers.Serializer):
+    """Response serializer for advanced search results"""
+    query = serializers.CharField()
+    filters_applied = AdvancedSearchFiltersSerializer()
+    total_results = serializers.IntegerField()
+    page = serializers.IntegerField()
+    per_page = serializers.IntegerField()
+    total_pages = serializers.IntegerField()
+    results = AdvancedSearchResultSerializer(many=True)
+    execution_time_ms = serializers.FloatField()
+    search_quality_score = serializers.FloatField()  # Based on results quality
+
+
+# ==================== TIER 1: SERIALIZERS ====================
+
+class ContentGapSerializer(serializers.ModelSerializer):
+    """Serializer for content gap analysis"""
+    class Meta:
+        model = api_models.ContentGap
+        fields = [
+            'id', 'search_query', 'attempt_count', 'unique_users',
+            'priority_score', 'suggested_course_title', 'suggested_category',
+            'last_searched', 'created_at'
+        ]
+        read_only_fields = ['priority_score', 'created_at', 'last_searched']
+
+
+class StudentRiskAssessmentSerializer(serializers.ModelSerializer):
+    """Serializer for at-risk student detection"""
+    enrollment_detail = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.StudentRiskAssessment
+        fields = [
+            'id', 'enrollment', 'enrollment_detail', 'risk_score', 'risk_level',
+            'indicators', 'intervention_sent', 'intervention_date',
+            'last_assessed', 'created_at'
+        ]
+        read_only_fields = ['last_assessed', 'created_at']
+    
+    def get_enrollment_detail(self, obj):
+        return {
+            'user': obj.enrollment.user.full_name,
+            'course': obj.enrollment.course.title,
+            'id': obj.enrollment.id
+        }
+
+
+class CourseRecommendationSerializer(serializers.ModelSerializer):
+    """Serializer for course recommendations"""
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    course_detail = serializers.SerializerMethodField()
+    conversion_rate = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.CourseRecommendation
+        fields = [
+            'id', 'user', 'user_name', 'course', 'course_detail',
+            'score', 'reason', 'clicked', 'enrolled', 'click_date',
+            'enroll_date', 'conversion_rate', 'created_at'
+        ]
+        read_only_fields = ['created_at', 'click_date', 'enroll_date']
+    
+    def get_course_detail(self, obj):
+        return {
+            'id': obj.course.id,
+            'title': obj.course.title,
+            'image': str(obj.course.image) if obj.course.image else None
+        }
+    
+    def get_conversion_rate(self, obj):
+        return obj.conversion_rate
+
+
+# ==================== TIER 2: SERIALIZERS ====================
+
+class InstructorPerformanceSerializer(serializers.ModelSerializer):
+    """Serializer for instructor performance analytics"""
+    teacher_name = serializers.CharField(source='teacher.full_name', read_only=True)
+    
+    class Meta:
+        model = api_models.InstructorPerformance
+        fields = [
+            'id', 'teacher', 'teacher_name', 'avg_rating', 'total_ratings',
+            'course_count', 'total_students', 'avg_completion_rate',
+            'avg_qa_response_time_hours', 'qa_response_rate',
+            'positive_reviews_pct', 'teaching_effectiveness_score',
+            'period_start', 'period_end'
+        ]
+        read_only_fields = ['teaching_effectiveness_score', 'period_start', 'period_end']
+
+
+class LearningPathSerializer(serializers.ModelSerializer):
+    """Serializer for learning paths"""
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    
+    class Meta:
+        model = api_models.LearningPath
+        fields = [
+            'id', 'user', 'user_name', 'title', 'description',
+            'difficulty_progression', 'estimated_duration_hours',
+            'completion_percentage', 'courses_completed', 'courses_total',
+            'effectiveness_score', 'success_probability',
+            'created_at', 'started_at', 'estimated_completion', 'completed_at'
+        ]
+        read_only_fields = ['created_at']
+
+
+class ChurnPredictionSerializer(serializers.ModelSerializer):
+    """Serializer for churn predictions"""
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    
+    class Meta:
+        model = api_models.ChurnPrediction
+        fields = [
+            'id', 'user', 'user_name', 'user_email', 'churn_probability',
+            'risk_signals', 'intervention_status', 'intervention_date',
+            'created_at', 'last_updated'
+        ]
+        read_only_fields = ['created_at', 'last_updated']
+
+
+# ==================== TIER 3: SERIALIZERS ====================
+
+class SearchIntentSerializer(serializers.ModelSerializer):
+    """Serializer for search intent classification"""
+    best_courses_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.SearchIntent
+        fields = [
+            'id', 'query', 'intent_type', 'related_keywords',
+            'best_courses_count', 'created_at'
+        ]
+        read_only_fields = ['created_at']
+    
+    def get_best_courses_count(self, obj):
+        return obj.best_courses.count()
+
+
+class QuizMetricsSerializer(serializers.ModelSerializer):
+    """Serializer for quiz metrics"""
+    quiz_title = serializers.CharField(source='quiz.title', read_only=True)
+    calibration_recommendations = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.QuizMetrics
+        fields = [
+            'id', 'quiz', 'quiz_title', 'avg_score', 'pass_rate',
+            'discrimination_index', 'difficulty_rating', 'avg_time_minutes',
+            'calibration_recommendations', 'last_calibrated'
+        ]
+        read_only_fields = ['last_calibrated']
+    
+    def get_calibration_recommendations(self, obj):
+        return obj.get_calibration_recommendations()
+
+
+# ✨ PHASE 4.10: Search Quality Metrics Serializers
+
+class CourseSearchQualitySerializer(serializers.ModelSerializer):
+    """
+    Serialize course search quality metrics for Super Admin dashboard.
+    Shows impressions, clicks, CTR, and performance indicators.
+    """
+    course_title = serializers.CharField(source='course.title', read_only=True)
+    course_slug = serializers.CharField(source='course.slug', read_only=True)
+    category = serializers.CharField(source='course.category.title', read_only=True)
+    level = serializers.CharField(source='course.level', read_only=True)
+    performance_indicator = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.CourseSearchAnalytics
+        fields = [
+            'id', 'course_title', 'course_slug', 'category', 'level',
+            'search_impressions', 'search_clicks', 'click_through_rate',
+            'performance_indicator', 'updated_at'
+        ]
+        read_only_fields = ['id', 'updated_at']
+    
+    def get_performance_indicator(self, obj):
+        """Return performance status based on CTR"""
+        if obj.search_impressions == 0:
+            return 'HIDDEN'
+        elif obj.click_through_rate >= 5.0:
+            return 'HIGH'
+        elif obj.click_through_rate >= 1.0:
+            return 'NORMAL'
+        else:
+            return 'LOW'
+
+
+class SearchQualityReportSerializer(serializers.Serializer):
+    """Serialize comprehensive search quality report for dashboard"""
+    total_courses = serializers.IntegerField()
+    total_impressions = serializers.IntegerField()
+    total_clicks = serializers.IntegerField()
+    avg_impressions = serializers.FloatField()
+    avg_clicks = serializers.FloatField()
+    avg_ctr = serializers.FloatField()
+    no_impression_courses = serializers.IntegerField()
+    high_performers = serializers.IntegerField()
+    low_performers = serializers.IntegerField()
+    overall_ctr = serializers.FloatField()
+
+
+class CTRDistributionSerializer(serializers.Serializer):
+    """Serialize CTR distribution for histogram visualization"""
+    range_0_1 = serializers.IntegerField()
+    range_1_3 = serializers.IntegerField()
+    range_3_5 = serializers.IntegerField()
+    range_5_10 = serializers.IntegerField()
+    range_10_plus = serializers.IntegerField()
+
+
+class QualityRecommendationSerializer(serializers.Serializer):
+    """Serialize quality recommendations"""
+    priority = serializers.CharField()
+    action = serializers.CharField()
+    description = serializers.CharField()
+    affected_count = serializers.IntegerField()
+
+
+# ✨ PHASE 4.10 TIER 1.2: Search Query Taxonomy Serializers
+
+class SearchQueryCategorySerializer(serializers.ModelSerializer):
+    """Serialize search query categories"""
+    category_type_display = serializers.CharField(source='get_category_type_display', read_only=True)
+    
+    class Meta:
+        model = api_models.SearchQueryCategory
+        fields = [
+            'id', 'category_type', 'category_type_display', 'category_name',
+            'query_patterns', 'description', 'trending', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at']
+
+
+class SearchQueryTaxonomySerializer(serializers.ModelSerializer):
+    """Serialize individual search query taxonomy entries"""
+    category_name = serializers.CharField(source='category.category_name', read_only=True)
+    category_type = serializers.CharField(source='category.category_type', read_only=True)
+    ctr_percent = serializers.SerializerMethodField()
+    failed_rate_percent = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.SearchQueryTaxonomy
+        fields = [
+            'id', 'search_query', 'category', 'category_name', 'category_type',
+            'search_count', 'click_through_count', 'failed_count', 'unique_users',
+            'ctr_percent', 'failed_rate_percent', 'last_searched', 'created_at'
+        ]
+        read_only_fields = ['id', 'last_searched', 'created_at']
+    
+    def get_ctr_percent(self, obj):
+        """Calculate CTR percentage"""
+        if obj.search_count == 0:
+            return 0.0
+        return round((obj.click_through_count / obj.search_count) * 100, 2)
+    
+    def get_failed_rate_percent(self, obj):
+        """Calculate failure rate percentage"""
+        if obj.search_count == 0:
+            return 0.0
+        return round((obj.failed_count / obj.search_count) * 100, 2)
+
+
+class SearchTaxonomyAnalyticsSerializer(serializers.ModelSerializer):
+    """Serialize taxonomy analytics data"""
+    category_name = serializers.CharField(source='category.category_name', read_only=True)
+    category_type = serializers.CharField(source='category.category_type', read_only=True)
+    performance_indicator = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.SearchTaxonomyAnalytics
+        fields = [
+            'id', 'category', 'category_name', 'category_type',
+            'total_searches', 'total_clicks', 'total_failures', 'unique_queries',
+            'unique_users', 'avg_ctr', 'failed_rate', 'trending_score',
+            'performance_indicator', 'last_updated'
+        ]
+        read_only_fields = ['id', 'last_updated']
+    
+    def get_performance_indicator(self, obj):
+        """Determine category performance status"""
+        if obj.avg_ctr >= 10:
+            return 'EXCELLENT'
+        elif obj.avg_ctr >= 5:
+            return 'GOOD'
+        elif obj.avg_ctr >= 1:
+            return 'FAIR'
+        else:
+            return 'POOR'
+
+
+class QueryTaxonomyReportSerializer(serializers.Serializer):
+    """Serialize comprehensive query taxonomy report"""
+    total_searches = serializers.IntegerField()
+    unique_queries = serializers.IntegerField()
+    unique_users = serializers.IntegerField()
+    avg_ctr = serializers.FloatField()
+    avg_failed_rate = serializers.FloatField()
+    categories = SearchTaxonomyAnalyticsSerializer(many=True, read_only=True)
+

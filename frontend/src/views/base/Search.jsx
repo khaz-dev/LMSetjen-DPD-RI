@@ -405,6 +405,17 @@ Best regards`;
                                             value={searchQuery}
                                             onChange={handleSearch}
                                         />
+                                        {searchQuery && (
+                                            <button
+                                                type="button"
+                                                className="clear-search-btn"
+                                                onClick={handleClearSearch}
+                                                title="Clear search"
+                                                aria-label="Clear search input"
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        )}
                                         <i className="fas fa-search search-icon"></i>
                                     </div>
                                 </div>
@@ -496,24 +507,32 @@ Best regards`;
                                 ))}
                             </div>
                         ) : courses.length === 0 ? (
-                            /* Empty State */
-                            <div className="empty-state">
-                                <i className="fas fa-search empty-icon"></i>
-                                <h4 className="mb-3">No Courses Found</h4>
-                                <p className="mb-3">
+                            /* ✨ FIX: Enhanced Empty State with better visibility */
+                            <div className="empty-state empty-state-enhanced">
+                                <div className="empty-state-animation">
+                                    <i className="fas fa-search empty-icon"></i>
+                                </div>
+                                <h4 className="mb-3 empty-state-title">No Courses Found</h4>
+                                <p className="mb-4 empty-state-message">
                                     {searchQuery 
-                                        ? `No courses match "${searchQuery}". Try adjusting your search terms.`
+                                        ? <>No courses match "<strong>{searchQuery}</strong>". Try adjusting your search terms.</>
                                         : "No courses are available at the moment."
                                     }
                                 </p>
                                 {searchQuery && (
-                                    <button 
-                                        className="btn btn-primary"
-                                        onClick={handleClearSearch}
-                                    >
-                                        <i className="fas fa-arrow-left me-2"></i>
-                                        Show All Courses
-                                    </button>
+                                    <div className="empty-state-actions">
+                                        <button 
+                                            className="btn btn-primary empty-state-btn"
+                                            onClick={handleClearSearch}
+                                        >
+                                            <i className="fas fa-arrow-left me-2"></i>
+                                            Show All Courses
+                                        </button>
+                                        <p className="empty-state-hint mt-3">
+                                            <i className="fas fa-lightbulb me-2"></i>
+                                            Try different keywords or check spelling
+                                        </p>
+                                    </div>
                                 )}
                             </div>
                         ) : (

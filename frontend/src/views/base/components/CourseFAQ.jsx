@@ -3,7 +3,7 @@ import { useComingSoon } from "../../../components/ComingSoonModal";
 
 const CourseFAQ = () => {
     const [activeIndex, setActiveIndex] = useState(null);
-    const handleComingSoon = useComingSoon('Bonus Materials');
+    const handleComingSoon = useComingSoon("Bonus Materials");
 
     const toggleFAQ = (index) => {
         setActiveIndex(activeIndex === index ? null : index);
@@ -68,20 +68,20 @@ const CourseFAQ = () => {
                                 <div key={index} className="accordion-item border border-light rounded-3 mb-3 shadow-sm">
                                     <h2 className="accordion-header">
                                         <button
-                                            className={`accordion-button ${activeIndex !== index ? 'collapsed' : ''} bg-light fw-semibold`}
+                                            className={`accordion-button ${activeIndex !== index ? "collapsed" : ""} bg-light fw-semibold`}
                                             type="button"
                                             onClick={() => toggleFAQ(index)}
-                                            style={{ borderRadius: '0.375rem' }}
+                                            style={{ borderRadius: "0.375rem" }}
                                         >
                                             <span className="me-3 text-primary">
-                                                <i className={`fas fa-${activeIndex === index ? 'minus' : 'plus'}-circle`}></i>
+                                                <i className={`fas fa-${activeIndex === index ? "minus" : "plus"}-circle`}></i>
                                             </span>
                                             {faq.question}
                                         </button>
                                     </h2>
-                                    <div className={`accordion-collapse collapse ${activeIndex === index ? 'show' : ''}`}>
+                                    <div className={`accordion-collapse collapse ${activeIndex === index ? "show" : ""}`}>
                                         <div className="accordion-body p-4 pt-0">
-                                            <div className="text-muted" style={{ lineHeight: '1.7' }}>
+                                            <div className="text-muted" style={{ lineHeight: "1.7" }}>
                                                 {faq.answer}
                                             </div>
                                         </div>
@@ -89,79 +89,6 @@ const CourseFAQ = () => {
                                 </div>
                             ))}
                         </div>
-                    </div>
-                </div>
-
-                {/* Contact Support Section */}
-                <div className="mt-5 p-4 bg-light rounded-3 text-center">
-                    <h5 className="fw-semibold mb-3">Still Have Questions?</h5>
-                    <p className="text-muted mb-4">
-                        Can't find the answer you're looking for? Our support team is here to help!
-                    </p>
-                    <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-                        <button className="btn btn-primary">
-                            <i className="fas fa-envelope me-2"></i>
-                            Contact Support
-                        </button>
-                        <button className="btn btn-outline-primary">
-                            <i className="fas fa-comments me-2"></i>
-                            Live Chat
-                        </button>
-                        <button className="btn btn-outline-secondary">
-                            <i className="fas fa-phone me-2"></i>
-                            Call Us
-                        </button>
-                    </div>
-                    
-                    <div className="mt-4 row g-3 text-center">
-                        <div className="col-md-4">
-                            <div className="bg-white rounded-3 p-3">
-                                <i className="fas fa-clock text-primary fa-2x mb-2"></i>
-                                <div className="fw-semibold">Response Time</div>
-                                <small className="text-muted">Usually within 24 hours</small>
-                            </div>
-                        </div>
-                        <div className="col-md-4">
-                            <div className="bg-white rounded-3 p-3">
-                                <i className="fas fa-users text-success fa-2x mb-2"></i>
-                                <div className="fw-semibold">Community Forum</div>
-                                <small className="text-muted">Join 10,000+ students</small>
-                            </div>
-                        </div>
-                        <div className="col-md-4">
-                            <div className="bg-white rounded-3 p-3">
-                                <i className="fas fa-book text-info fa-2x mb-2"></i>
-                                <div className="fw-semibold">Knowledge Base</div>
-                                <small className="text-muted">Browse our help articles</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Quick Links */}
-                <div className="mt-4 text-center">
-                    <h6 className="fw-semibold mb-3">Quick Links</h6>
-                    <div className="d-flex flex-wrap justify-content-center gap-2">
-                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-sm btn-outline-secondary">
-                            <i className="fas fa-file-alt me-1"></i>
-                            Course Syllabus
-                        </a>
-                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-sm btn-outline-secondary">
-                            <i className="fas fa-graduation-cap me-1"></i>
-                            Sample Certificate
-                        </a>
-                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-sm btn-outline-secondary">
-                            <i className="fas fa-play me-1"></i>
-                            Preview Lessons
-                        </a>
-                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-sm btn-outline-secondary">
-                            <i className="fas fa-star me-1"></i>
-                            Student Reviews
-                        </a>
-                        <a href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }} className="btn btn-sm btn-outline-secondary">
-                            <i className="fas fa-user-tie me-1"></i>
-                            Instructor Bio
-                        </a>
                     </div>
                 </div>
             </div>

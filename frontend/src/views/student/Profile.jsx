@@ -27,13 +27,13 @@ const AVATAR_SIZE = {
 
 const IMAGE_CONFIG = {
     QUALITY: 0.8,
-    FORMAT: 'image/jpeg',
-    MAX_SIZE: '5MB'
+    FORMAT: "image/jpeg",
+    MAX_SIZE: "5MB"
 };
 
 const CROP_CONFIG = {
     INITIAL: {
-        unit: 'px',
+        unit: "px",
         width: 200,
         height: 200,
         x: 50,
@@ -53,9 +53,9 @@ const VALIDATION_MESSAGES = {
 };
 
 const SOCIAL_PLATFORMS = {
-    FACEBOOK: 'facebook',
-    TWITTER: 'twitter',
-    LINKEDIN: 'linkedin'
+    FACEBOOK: "facebook",
+    TWITTER: "twitter",
+    LINKEDIN: "linkedin"
 };
 
 // Utility Functions
@@ -67,7 +67,7 @@ const validateUrl = (url) => {
 const formatUrl = (url) => {
     if (!url) return url;
     if (validateUrl(url)) return url;
-    return url.startsWith('www.') || url.includes('.') ? `https://${url}` : url;
+    return url.startsWith("www.") || url.includes(".") ? `https://${url}` : url;
 };
 
 const createFormData = (profileData, croppedImageBlob, fileName, originalImage) => {
@@ -106,16 +106,16 @@ const createFormData = (profileData, croppedImageBlob, fileName, originalImage) 
 
 const extractFileName = (imagePath) => {
     if (!imagePath) return "";
-    return imagePath.split('/').pop() || "profile-picture";
+    return imagePath.split("/").pop() || "profile-picture";
 };
 
 const getCroppedImage = (image, crop, fileName) => {
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
     canvas.width = crop.width;
     canvas.height = crop.height;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
 
     ctx.drawImage(
         image,
@@ -349,7 +349,7 @@ function Profile() {
                 title: VALIDATION_MESSAGES.IMAGE_CROP_SUCCESS
             });
         } catch (error) {
-            console.error('Error cropping image:', error);
+            console.error("Error cropping image:", error);
             Toast().fire({
                 icon: "error",
                 title: VALIDATION_MESSAGES.IMAGE_CROP_ERROR
@@ -391,9 +391,9 @@ function Profile() {
         });
         
         // Reset file input to allow selecting the same file again
-        const fileInput = document.getElementById('profileImage');
+        const fileInput = document.getElementById("profileImage");
         if (fileInput) {
-            fileInput.value = '';
+            fileInput.value = "";
         }
     };
 
@@ -419,13 +419,13 @@ function Profile() {
     );
 
     const renderProfileAvatar = () => (
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: "relative" }}>
             <img
                 src={uiState.imagePreview}
                 className="modern-avatar"
                 alt="Profile"
                 onError={(e) => {
-                    e.target.style.display = 'none';
+                    e.target.style.display = "none";
                     setUiState(prev => ({ ...prev, imagePreview: "" }));
                 }}
             />
@@ -658,18 +658,18 @@ function Profile() {
         </div>
     );
 
-    if (uiState.loading && !profile.full_name) {
+    if (uiState.loading && (!profile || !profile.full_name)) {
         return (
             <>
                 <BaseHeader />
-                <section style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <section style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row mt-0 mt-md-4">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
                                     </div>
                                     <p className="mt-3 text-muted">Loading Profile...</p>
@@ -694,16 +694,41 @@ function Profile() {
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
                             {/* Modern Header Section */}
-                            <div className="modern-header-section">
-                                <div className="header-decoration"></div>
-                                <div className="student-header-content">
-                                    <h1 className="page-header-title">
-                                        <i className="fas fa-user-edit page-header-title-icon"></i>
-                                        Profile Settings
-                                    </h1>
-                                    <p className="page-header-subtitle">
-                                        Manage your account information and student profile
-                                    </p>
+                            <div className="modern-header-section mb-4" style={{
+                                background: "rgba(255, 255, 255, 0.95)",
+                                backdropFilter: "blur(10px)",
+                                borderRadius: "20px",
+                                padding: "30px",
+                                border: "1px solid rgba(255, 255, 255, 0.2)",
+                                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+                                position: "relative",
+                                overflow: "hidden"
+                            }}>
+                                <div style={{
+                                    position: "absolute",
+                                    top: "-50%",
+                                    right: "-20%",
+                                    width: "300px",
+                                    height: "300px",
+                                    background: "linear-gradient(45deg, #667eea20, #764ba220)",
+                                    borderRadius: "50%",
+                                    zIndex: 1
+                                }}></div>
+                                <div className="d-flex align-items-center justify-content-between position-relative" style={{ zIndex: 2 }}>
+                                    <div>
+                                        <h1 className="mb-2" style={{
+                                            background: "linear-gradient(135deg, #667eea, #764ba2)",
+                                            WebkitBackgroundClip: "text",
+                                            WebkitTextFillColor: "transparent",
+                                            fontSize: "2.5rem",
+                                            fontWeight: "bold"
+                                        }}>
+                                            <i className="fas fa-user-edit me-3"></i>Profile Settings
+                                        </h1>
+                                        <p className="mb-0 text-muted" style={{ fontSize: "1.1rem" }}>
+                                            Manage your account information and student profile
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -753,7 +778,7 @@ function Profile() {
                     const y = (height - cropSize) / 2;
                     
                     const initialCrop = {
-                        unit: 'px',
+                        unit: "px",
                         width: cropSize,
                         height: cropSize,
                         x: x,

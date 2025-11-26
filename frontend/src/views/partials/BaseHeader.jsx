@@ -21,8 +21,12 @@ function BaseHeader() {
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [searchTimeout, setSearchTimeout] = useState(null);
-    const [searchAbortController, setSearchAbortController] = useState(null);
-
+    const [selectedResultIndex, setSelectedResultIndex] = useState(-1);  // ✨ Track keyboard navigation
+    const [searchHistory, setSearchHistory] = useState([]);  // ✨ PHASE 3: Search history
+    const [showSearchHistory, setShowSearchHistory] = useState(false);  // ✨ PHASE 3: Show history dropdown
+    const [trendingSearches, setTrendingSearches] = useState([]);  // ✨ PHASE 3: Trending searches
+    const [showTrendingSearches, setShowTrendingSearches] = useState(false);  // ✨ PHASE 3: Show trending dropdown
+    
     const navigate = useNavigate();
     const location = useLocation();
     const isSearchPage = location.pathname.includes('/search');
@@ -37,62 +41,100 @@ function BaseHeader() {
         return () => clearTimeout(timer);
     }, []);
 
-    // Search API call with debounce and abort controller
+    // ✨ PHASE 3: Load search history from localStorage on component mount
     useEffect(() => {
-        // Abort previous search request if still pending
-        if (searchAbortController) {
-            searchAbortController.abort();
+        const savedHistory = localStorage.getItem('searchHistory');
+        if (savedHistory) {
+            try {
+                setSearchHistory(JSON.parse(savedHistory));
+            } catch (e) {
+                console.warn('Failed to parse search history:', e);
+                setSearchHistory([]);
+            }
         }
+        
+        // ✨ PHASE 3: Sync search param from URL if navigating to search page
+        const searchParams = new URLSearchParams(location.search);
+        const queryParam = searchParams.get('search');
+        if (queryParam && isSearchPage) {
+            setSearchQuery(queryParam);
+        }
+    }, [location]);
 
+    // ✨ PHASE 3: Fetch trending searches on component mount
+    useEffect(() => {
+        const fetchTrendingSearches = async () => {
+            try {
+                const response = await apiInstance.get('course/trending-searches/');
+                setTrendingSearches(response.data?.trending || []);
+            } catch (error) {
+                console.error('Failed to fetch trending searches:', error);
+                setTrendingSearches([]);
+            }
+        };
+        fetchTrendingSearches();
+    }, []);
+
+    // ✨ PHASE 3: Save search to history when navigating to search results
+    const addToSearchHistory = (query) => {
+        if (!query || query.trim().length < 2) return;
+        
+        const trimmedQuery = query.trim();
+        // Remove if already exists (so it goes to top)
+        const filtered = searchHistory.filter(item => item !== trimmedQuery);
+        // Add to beginning
+        const updated = [trimmedQuery, ...filtered].slice(0, 5); // Keep only last 5
+        setSearchHistory(updated);
+        localStorage.setItem('searchHistory', JSON.stringify(updated));
+    };
+
+    // Search API call with debounce
+    useEffect(() => {
         // Clear previous timeout
         if (searchTimeout) {
             clearTimeout(searchTimeout);
         }
 
-        // Don't search if query is empty
-        if (!searchQuery.trim()) {
+        // ✨ IMPROVEMENT: Require minimum 2 characters and trim whitespace
+        const trimmedQuery = searchQuery.trim();
+        if (!trimmedQuery || trimmedQuery.length < 2) {
+            // ALWAYS hide modal and clear results if query is too short
             setSearchResults([]);
             setShowSearchModal(false);
+            setShowSearchHistory(false);  // Hide history
+            setSelectedResultIndex(-1);  // Reset keyboard navigation
+            setIsSearching(false);  // Ensure loading state is cleared
             return;
         }
 
         // Set new timeout for debounce
         const timeout = setTimeout(async () => {
             setIsSearching(true);
-            const controller = new AbortController();
-            setSearchAbortController(controller);
-            
+            setSelectedResultIndex(-1);  // Reset keyboard navigation on new search
             try {
-                // Use shorter timeout for search (8 seconds)
-                const response = await apiInstance.get(
-                    `course/search/?search=${encodeURIComponent(searchQuery)}`,
-                    { 
-                        timeout: 8000,
-                        signal: controller.signal 
-                    }
-                );
+                const response = await apiInstance.get(`course/search/?search=${encodeURIComponent(trimmedQuery)}`);
                 const courses = response.data?.results || response.data || [];
-                setSearchResults(Array.isArray(courses) ? courses.slice(0, 5) : []);
-                setShowSearchModal(true);
+                const courseArray = Array.isArray(courses) ? courses.slice(0, 5) : [];
+                setSearchResults(courseArray);
+                // ✨ FIX: ALWAYS show modal even with 0 results so user gets clear feedback
+                // The modal component handles empty state display internally
+                setShowSearchModal(true);  // Show modal regardless of result count
+                setShowSearchHistory(false);  // Hide history when we have results
             } catch (error) {
-                // Don't log abort errors - they're expected when user types quickly
-                if (error.name !== 'AbortError') {
-                    console.error("Search error:", error);
-                }
+                console.error("Search error:", error);
                 setSearchResults([]);
+                // ✨ FIX: Show modal on error too so user knows search was attempted
+                setShowSearchModal(true);
             } finally {
                 setIsSearching(false);
             }
-        }, 100); // 100ms debounce for faster response (reduced from 150ms)
+        }, 200);  // ✨ IMPROVEMENT: Increased debounce from 150ms to 200ms for better performance
 
         setSearchTimeout(timeout);
-        return () => {
-            clearTimeout(timeout);
-            controller?.abort();
-        };
+        return () => clearTimeout(timeout);
     }, [searchQuery]);
 
-    // Cleanup hover timeout and abort controller
+    // Cleanup hover timeout
     useEffect(() => {
         return () => {
             if (hoverTimeout) {
@@ -101,11 +143,8 @@ function BaseHeader() {
             if (searchTimeout) {
                 clearTimeout(searchTimeout);
             }
-            if (searchAbortController) {
-                searchAbortController.abort();
-            }
         };
-    }, [hoverTimeout, searchTimeout, searchAbortController]);
+    }, [hoverTimeout, searchTimeout]);
 
     const handleBrandHover = () => {
         if (!typingComplete && !animationSkipped) {
@@ -116,23 +155,113 @@ function BaseHeader() {
 
     // Search functionality
     const handleSearchSubmit = () => {
+        const trimmedQuery = searchQuery.trim();
+        if (trimmedQuery && trimmedQuery.length >= 2) {
+            addToSearchHistory(trimmedQuery);  // ✨ PHASE 3: Add to history
+        }
         setShowSearchModal(false);
-        if (searchQuery.trim()) {
-            navigate(`/search/?search=${encodeURIComponent(searchQuery.trim())}`);
+        setShowSearchHistory(false);  // ✨ PHASE 3: Hide history
+        if (trimmedQuery) {
+            navigate(`/search/?search=${encodeURIComponent(trimmedQuery)}`);
         } else {
             navigate('/search/');
         }
     };
 
     const handleCourseSelect = (courseSlug) => {
+        addToSearchHistory(searchQuery);  // ✨ PHASE 3: Add to history
         setShowSearchModal(false);
+        setShowSearchHistory(false);  // ✨ PHASE 3: Hide history
         setSearchQuery("");
         navigate(`/course-detail/${courseSlug}/`);
     };
 
+    // ✨ PHASE 3: Handle search history item click
+    const handleHistoryItemClick = (item) => {
+        setSearchQuery(item);
+        setShowSearchHistory(false);
+        // The debounce in useEffect will trigger the search automatically
+    };
+
+    // ✨ PHASE 3: Clear search history
+    const clearSearchHistory = () => {
+        setSearchHistory([]);
+        localStorage.removeItem('searchHistory');
+        setShowSearchHistory(false);
+    };
+
+    // ✨ PHASE 3: Handle trending item click
+    const handleTrendingItemClick = (query) => {
+        setSearchQuery(query);
+        setShowTrendingSearches(false);
+        addToSearchHistory(query);  // Add to history when clicked
+        // The debounce in useEffect will trigger the search automatically
+    };
+
+    // ✨ PHASE 3: Handle input focus - show modal if there are results or show history/trending
+    const handleSearchInputFocus = () => {
+        // Show history if available and query is short
+        if (searchQuery.trim().length < 2 && searchHistory.length > 0) {
+            setShowSearchHistory(true);
+            setShowTrendingSearches(false);
+            return;
+        }
+        // Show trending if no history and query is short
+        if (searchQuery.trim().length < 2 && searchHistory.length === 0 && trendingSearches.length > 0) {
+            setShowTrendingSearches(true);
+            setShowSearchHistory(false);
+            return;
+        }
+        // Show results modal if query is valid and we have results
+        if (searchQuery.trim().length >= 2 && searchResults.length > 0) {
+            setShowSearchModal(true);
+        }
+    };
+
     const handleKeyPress = (e) => {
+        // ✨ IMPROVEMENT: Enhanced keyboard navigation
         if (e.key === 'Enter') {
-            handleSearchSubmit();
+            if (selectedResultIndex >= 0) {
+                // If history is shown, click the history item
+                if (showSearchHistory && searchHistory[selectedResultIndex]) {
+                    handleHistoryItemClick(searchHistory[selectedResultIndex]);
+                }
+                // If trending is shown, click the trending item
+                else if (showTrendingSearches && trendingSearches[selectedResultIndex]) {
+                    handleTrendingItemClick(trendingSearches[selectedResultIndex]);
+                }
+                // If results are shown, navigate to the course
+                else if (searchResults[selectedResultIndex]) {
+                    handleCourseSelect(searchResults[selectedResultIndex].slug);
+                }
+            } else {
+                // Otherwise, do full search
+                handleSearchSubmit();
+            }
+        } else if (e.key === 'ArrowDown') {
+            // Navigate down through results/history/trending
+            e.preventDefault();
+            let maxIndex = -1;
+            if (showSearchHistory) {
+                maxIndex = searchHistory.length - 1;
+            } else if (showTrendingSearches) {
+                maxIndex = trendingSearches.length - 1;
+            } else {
+                maxIndex = searchResults.length - 1;
+            }
+            setSelectedResultIndex(prev => 
+                prev < maxIndex ? prev + 1 : prev
+            );
+        } else if (e.key === 'ArrowUp') {
+            // Navigate up through results/history/trending
+            e.preventDefault();
+            setSelectedResultIndex(prev => prev > 0 ? prev - 1 : -1);
+        } else if (e.key === 'Escape') {
+            // Close modals
+            setShowSearchModal(false);
+            setShowSearchHistory(false);  // ✨ PHASE 3: Close history
+            setShowTrendingSearches(false);  // ✨ PHASE 3: Close trending
+            setSelectedResultIndex(-1);
         }
     };
 
@@ -304,20 +433,36 @@ function BaseHeader() {
 
                         {/* Search */}
                         {!isSearchPage && (
-                            <div className="search-container-wrapper">
+                            <div className="search-container-wrapper" onClick={(e) => {
+                                // Close modal only when clicking outside search area, not on it
+                                if (e.target.closest('.search-container')) return;
+                                if (e.target.closest('.search-modal')) return;
+                                setShowSearchModal(false);
+                                setShowSearchHistory(false);  // ✨ PHASE 3: Close history
+                                setShowTrendingSearches(false);  // ✨ PHASE 3: Close trending
+                            }}>
                                 <div className="search-container">
                                     <input
                                         className="search-input"
                                         type="search"
                                         placeholder="Cari Pembelajaran..."
                                         value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        onKeyPress={handleKeyPress}
-                                        onFocus={() => searchQuery.trim() && setShowSearchModal(true)}
+                                        onChange={(e) => {
+                                            setSearchQuery(e.target.value);
+                                            // Close history/trending when user types
+                                            setShowSearchHistory(false);
+                                            setShowTrendingSearches(false);
+                                        }}
+                                        onKeyDown={handleKeyPress}  // ✨ Changed from onKeyPress to onKeyDown for arrow keys
+                                        onFocus={handleSearchInputFocus}  // ✨ PHASE 3 FIX: Call proper handler to show history or results
+                                        aria-label="Search courses"  // ✨ NEW: Accessibility attribute
+                                        aria-autocomplete="list"
+                                        aria-controls="search-results"
                                     />
                                     <button 
                                         onClick={handleSearchSubmit} 
                                         className="search-button"
+                                        aria-label="Search"
                                     >
                                         <i className="fas fa-search me-1"></i>Cari
                                     </button>
@@ -325,7 +470,7 @@ function BaseHeader() {
 
                                 {/* Search Modal */}
                                 {showSearchModal && (
-                                    <div className="search-modal">
+                                    <div className="search-modal" id="search-results" role="listbox">
                                         {searchResults.length > 0 ? (
                                             <>
                                                 <div className="search-modal-header">
@@ -336,16 +481,20 @@ function BaseHeader() {
                                                     <button 
                                                         className="search-modal-close"
                                                         onClick={() => setShowSearchModal(false)}
+                                                        aria-label="Close search results"
                                                     >
                                                         ✕
                                                     </button>
                                                 </div>
                                                 <div className="search-modal-content">
-                                                    {searchResults.map((course) => (
+                                                    {searchResults.map((course, index) => (
                                                         <div 
-                                                            key={course.id} 
-                                                            className="search-modal-item"
+                                                            key={course.id}
+                                                            className={`search-modal-item ${index === selectedResultIndex ? 'selected' : ''}`}
                                                             onClick={() => handleCourseSelect(course.slug)}
+                                                            onMouseEnter={() => setSelectedResultIndex(index)}
+                                                            role="option"
+                                                            aria-selected={index === selectedResultIndex}
                                                         >
                                                             <div className="search-item-image">
                                                                 {course.image ? (
@@ -403,6 +552,83 @@ function BaseHeader() {
                                                 <small>Coba ubah kata kunci atau tekan Enter untuk pencarian lengkap</small>
                                             </div>
                                         )}
+                                    </div>
+                                )}
+
+                                {/* ✨ PHASE 3: Search History Modal */}
+                                {showSearchHistory && searchHistory.length > 0 && (
+                                    <div className="search-modal search-history-modal" role="listbox">
+                                        <div className="search-modal-header">
+                                            <span className="search-modal-title">
+                                                <i className="fas fa-history me-2"></i>
+                                                Riwayat Pencarian
+                                            </span>
+                                            <button 
+                                                className="search-modal-close"
+                                                onClick={() => setShowSearchHistory(false)}
+                                                aria-label="Close search history"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                        <div className="search-modal-content">
+                                            {searchHistory.map((item, index) => (
+                                                <div 
+                                                    key={`history-${index}`}
+                                                    className={`search-history-item ${index === selectedResultIndex ? 'selected' : ''}`}
+                                                    onClick={() => handleHistoryItemClick(item)}
+                                                    onMouseEnter={() => setSelectedResultIndex(index)}
+                                                    role="option"
+                                                    aria-selected={index === selectedResultIndex}
+                                                >
+                                                    <i className="fas fa-clock me-2"></i>
+                                                    <span>{item}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="search-modal-footer">
+                                            <button 
+                                                className="btn-clear-history"
+                                                onClick={clearSearchHistory}
+                                            >
+                                                <i className="fas fa-trash me-2"></i>
+                                                Hapus Riwayat
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ✨ PHASE 3: Trending Searches Modal */}
+                                {showTrendingSearches && trendingSearches.length > 0 && (
+                                    <div className="search-modal search-trending-modal" role="listbox">
+                                        <div className="search-modal-header">
+                                            <span className="search-modal-title">
+                                                <i className="fas fa-fire me-2"></i>
+                                                Pencarian Trending
+                                            </span>
+                                            <button 
+                                                className="search-modal-close"
+                                                onClick={() => setShowTrendingSearches(false)}
+                                                aria-label="Close trending searches"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                        <div className="search-modal-content">
+                                            {trendingSearches.map((item, index) => (
+                                                <div 
+                                                    key={`trending-${index}`}
+                                                    className={`search-trending-item ${index === selectedResultIndex ? 'selected' : ''}`}
+                                                    onClick={() => handleTrendingItemClick(item)}
+                                                    onMouseEnter={() => setSelectedResultIndex(index)}
+                                                    role="option"
+                                                    aria-selected={index === selectedResultIndex}
+                                                >
+                                                    <i className="fas fa-fire me-2"></i>
+                                                    <span>{item}</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
 

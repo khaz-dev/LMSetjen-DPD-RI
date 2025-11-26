@@ -29,8 +29,33 @@ urlpatterns = [
     path("course/category/", api_views.CategoryListAPIView.as_view()),
     path("course/course-list/", api_views.CourseListAPIView.as_view()),
     path("course/search/", api_views.SearchCourseAPIView.as_view()),
+    path("course/full-text-search/", api_views.FullTextSearchAPIView.as_view()),  # ✨ PHASE 4: FTS endpoint
+    path("course/trending-searches/", api_views.TrendingSearchesAPIView.as_view()),
     path("course/course-detail/<slug>/", api_views.CourseDetailAPIView.as_view()),
     path("statistics/public-stats/", api_views.PublicStatsAPIView.as_view()),
+    
+    # ✨ PHASE 4.3: Analytics Endpoints
+    path("analytics/trending-searches/", api_views.TrendingSearchesAnalyticsAPIView.as_view()),
+    path("analytics/failed-searches/", api_views.FailedSearchesAnalyticsAPIView.as_view()),
+    path("analytics/search-volume/", api_views.SearchVolumeAnalyticsAPIView.as_view()),
+    path("analytics/search-stats/", api_views.SearchStatsAPIView.as_view()),
+    path("analytics/course-search-metrics/", api_views.CourseSearchMetricsAPIView.as_view()),
+    
+    # ✨ PHASE 4.4: Dashboard Endpoints
+    path("analytics/dashboard/", api_views.SearchAnalyticsDashboardAPIView.as_view()),
+    path("analytics/summary/", api_views.SearchAnalyticsSummaryAPIView.as_view()),
+    path("analytics/trend/", api_views.SearchAnalyticsTrendAPIView.as_view()),
+    
+    # ✨ PHASE 4.5: Advanced Filters Endpoints
+    path("filters/options/", api_views.FilterOptionsAPIView.as_view()),
+    path("filters/categories/", api_views.CategoryFilterAPIView.as_view()),
+    path("filters/levels/", api_views.LevelFilterAPIView.as_view()),
+    path("filters/ratings/", api_views.RatingFilterAPIView.as_view()),
+    path("filters/teachers/", api_views.TeacherFilterAPIView.as_view()),
+    
+    # ✨ PHASE 4.6: Integrated Search Endpoints
+    path("search/advanced/", api_views.AdvancedSearchAPIView.as_view()),
+    path("search/suggestions/", api_views.AdvancedSearchSuggestionsAPIView.as_view()),
     
     # Enrollment API Endpoints
     path("course/enroll/", api_views.CourseEnrollmentAPIView.as_view()),
@@ -119,6 +144,34 @@ urlpatterns = [
     path("admin/sync-progress/", api_views.SyncProgressAPIView.as_view()),
     path("admin/last-sync-info/", api_views.LastSyncInfoAPIView.as_view()),
 
+    # ✨ TIER 1: Content Gap Analysis
+    path("analytics/content-gaps/", api_views.ContentGapAnalysisView.as_view()),
+    path("analytics/content-gaps/<int:pk>/", api_views.ContentGapDetailView.as_view()),
+
+    # ✨ TIER 1: At-Risk Student Detection
+    path("analytics/at-risk-students/", api_views.StudentRiskAssessmentView.as_view()),
+    path("analytics/at-risk-students/<int:pk>/", api_views.StudentRiskAssessmentDetailView.as_view()),
+    path("analytics/at-risk-students/trigger-assessment/", api_views.StudentRiskAssessmentTriggerView.as_view()),
+    path("analytics/at-risk-summary/", api_views.StudentRiskSummaryView.as_view()),
+
+    # ✨ TIER 1: Course Recommendations
+    path("analytics/recommendations/", api_views.CourseRecommendationView.as_view()),
+    path("analytics/recommendations/<int:pk>/", api_views.CourseRecommendationDetailView.as_view()),
+    path("analytics/recommendations/<int:pk>/click/", api_views.RecommendationClickTrackView.as_view()),
+    path("analytics/recommendations/<int:pk>/enroll/", api_views.RecommendationConversionTrackView.as_view()),
+    path("analytics/recommendations/stats/", api_views.RecommendationStatsView.as_view()),
+
+    # ✨ PHASE 4.10: Search Quality Metrics Dashboard
+    path("analytics/search-quality/", api_views.SearchQualityMetricsView.as_view()),
+    path("analytics/search-quality/courses/", api_views.CourseSearchQualityListView.as_view()),
+    path("analytics/search-quality/courses/<int:course_id>/", api_views.CourseSearchQualityDetailView.as_view()),
+
+    # ✨ PHASE 4.10 TIER 1.2: Search Query Taxonomy Analytics
+    path("analytics/search-taxonomy/report/", api_views.SearchQueryTaxonomyReportView.as_view()),
+    path("analytics/search-taxonomy/categories/", api_views.SearchQueryCategoryListView.as_view()),
+    path("analytics/search-taxonomy/queries/", api_views.SearchQueryTaxonomyListView.as_view()),
+    path("analytics/search-taxonomy/category-analytics/", api_views.SearchTaxonomyAnalyticsView.as_view()),
+    path("analytics/search-taxonomy/trending/", api_views.TrendingCategoriesView.as_view()),
+    path("analytics/search-taxonomy/timeline/", api_views.QueryAnalysisByTimeView.as_view()),
+
 ]
-
-

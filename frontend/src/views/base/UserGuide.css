@@ -11,7 +11,7 @@
 
 /* Header */
 .guide-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient);
     color: white;
     padding: 3rem 0;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -48,12 +48,18 @@
     display: flex;
     gap: 2rem;
     font-size: 0.95rem;
-    opacity: 0.9;
+    opacity: 0.95;
+    color: white !important;
 }
 
 .meta-item {
     display: flex;
     align-items: center;
+    color: white !important;
+}
+
+.meta-item i {
+    color: white !important;
 }
 
 .header-actions {
@@ -66,7 +72,8 @@
     padding: 0.65rem 1.2rem;
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
-    color: #667eea !important;
+    color: var(--theme-primary) !important;
+    background-color: white !important;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -76,7 +83,7 @@
 .btn-export {
     padding: 0.65rem 1.5rem;
     background: white;
-    color: #667eea;
+    color: var(--theme-primary);
     border: none;
     border-radius: 8px;
     font-weight: 600;
@@ -116,7 +123,7 @@
 
 .toc-item {
     padding: 1.2rem 1.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient);
     color: white;
     border: none;
     border-radius: 12px;
@@ -168,7 +175,7 @@
     display: flex;
     align-items: center;
     padding-bottom: 1rem;
-    border-bottom: 3px solid #667eea;
+    border-bottom: 3px solid var(--theme-primary);
 }
 
 .section-intro {
@@ -221,42 +228,46 @@
     margin-top: 1.5rem;
 }
 
-.dashboard-card {
+/* ✨ SCOPED: Only apply pink gradient to dashboard cards within UserGuide page */
+.user-guide-container .dashboard-cards .dashboard-card {
     padding: 1.5rem;
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: white !important;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
     transition: transform 0.3s ease;
 }
 
-.dashboard-card:hover {
+.user-guide-container .dashboard-cards .dashboard-card:hover {
     transform: translateY(-5px);
 }
 
-.dashboard-card h4 {
+.user-guide-container .dashboard-cards .dashboard-card h4 {
     font-size: 1.3rem;
     margin-bottom: 0.8rem;
     font-weight: 600;
+    color: white !important;
 }
 
 .path-code {
     display: block;
-    background: #fff;           /* Solid white background for contrast */
-    color: #2c3e50;             /* Dark text for readability */
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #2c3e50 !important;
     padding: 0.5rem;
     border-radius: 6px;
     font-size: 0.95rem;
     margin: 0.8rem 0;
     font-family: 'Courier New', monospace;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.10);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.dashboard-card p {
+/* ✨ SCOPED: Only apply white text to paragraph within UserGuide dashboard cards */
+.user-guide-container .dashboard-cards .dashboard-card p {
     font-size: 0.95rem;
     line-height: 1.6;
     opacity: 0.95;
+    color: white !important;
 }
 
 /* Feature Grid */
@@ -270,7 +281,7 @@
 .feature-card {
     padding: 1.5rem;
     background: #f8f9fa;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid var(--theme-primary);
     border-radius: 8px;
     transition: all 0.3s ease;
 }
@@ -281,7 +292,7 @@
 }
 
 .feature-card h4 {
-    color: #667eea;
+    color: var(--theme-primary);
     font-size: 1.2rem;
     margin-bottom: 0.8rem;
     font-weight: 600;
@@ -333,7 +344,7 @@
 .showcase-icon {
     width: 60px;
     height: 60px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient);
     color: white;
     border-radius: 12px;
     display: flex;
@@ -420,7 +431,7 @@
     padding: 1.5rem;
     border-radius: 12px;
     margin-bottom: 1.5rem;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid var(--theme-primary);
     transition: all 0.3s ease;
 }
 

@@ -5,6 +5,13 @@ import apiInstance from '../../utils/axios';
 import UserData from '../plugin/UserData';
 import Toast from '../plugin/Toast';
 
+// Analytics Components
+import ContentGapWidget from '../../components/Analytics/ContentGapWidget';
+import AtRiskStudentsWidget from '../../components/Analytics/AtRiskStudentsWidget';
+import RecommendationMetricsWidget from '../../components/Analytics/RecommendationMetricsWidget';
+import SearchQualityWidget from '../../components/Analytics/SearchQualityWidget';
+import QueryTaxonomyWidget from '../../components/Analytics/QueryTaxonomyWidget';
+
 // Lazy load Chart.js components (516 KB)
 const Line = lazy(() => import('react-chartjs-2').then(m => ({ default: m.Line })));
 const Bar = lazy(() => import('react-chartjs-2').then(m => ({ default: m.Bar })));
@@ -248,6 +255,46 @@ function DashboardAdmin() {
                                 onClick={() => setActiveTab('activity')}
                             >
                                 <i className="fas fa-activity me-2"></i>Recent Activity
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button 
+                                className={`nav-link ${activeTab === 'content-gaps' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('content-gaps')}
+                            >
+                                <i className="fas fa-search-minus me-2"></i>Content Gaps
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button 
+                                className={`nav-link ${activeTab === 'at-risk' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('at-risk')}
+                            >
+                                <i className="fas fa-user-shield me-2"></i>At-Risk Students
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button 
+                                className={`nav-link ${activeTab === 'recommendations' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('recommendations')}
+                            >
+                                <i className="fas fa-star me-2"></i>Recommendations
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button 
+                                className={`nav-link ${activeTab === 'search-quality' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('search-quality')}
+                            >
+                                <i className="fas fa-chart-line me-2"></i>Search Quality
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button 
+                                className={`nav-link ${activeTab === 'query-taxonomy' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('query-taxonomy')}
+                            >
+                                <i className="fas fa-tags me-2"></i>Query Taxonomy
                             </button>
                         </li>
                     </ul>
@@ -674,6 +721,41 @@ function DashboardAdmin() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Content Gaps Tab (TIER 1) */}
+                        {activeTab === 'content-gaps' && (
+                            <div className="tab-pane fade show active">
+                                <ContentGapWidget />
+                            </div>
+                        )}
+
+                        {/* At-Risk Students Tab (TIER 1) */}
+                        {activeTab === 'at-risk' && (
+                            <div className="tab-pane fade show active">
+                                <AtRiskStudentsWidget />
+                            </div>
+                        )}
+
+                        {/* Recommendations Tab (TIER 1) */}
+                        {activeTab === 'recommendations' && (
+                            <div className="tab-pane fade show active">
+                                <RecommendationMetricsWidget />
+                            </div>
+                        )}
+
+                        {/* Search Quality Tab (PHASE 4.10) */}
+                        {activeTab === 'search-quality' && (
+                            <div className="tab-pane fade show active">
+                                <SearchQualityWidget />
+                            </div>
+                        )}
+
+                        {/* Query Taxonomy Tab (PHASE 4.10 TIER 1.2) */}
+                        {activeTab === 'query-taxonomy' && (
+                            <div className="tab-pane fade show active">
+                                <QueryTaxonomyWidget />
                             </div>
                         )}
                     </div>

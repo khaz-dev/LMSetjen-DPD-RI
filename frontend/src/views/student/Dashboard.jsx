@@ -25,8 +25,11 @@ function Dashboard() {
         });
 
         useAxios.get(`student/course-list/${UserData()?.user_id}/`).then((res) => {
+            // Handle both array and paginated response formats
+            const courseData = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+            
             // Synchronously compute progress before state updates to avoid race condition
-            const progressStats = res.data.map(course => {
+            const progressStats = courseData.map(course => {
                 // ===== Count Completed Items =====
                 const totalLessons = course.lectures?.length || 0;
                 const completedLessons = course.completed_lesson?.length || 0;
@@ -59,9 +62,9 @@ function Dashboard() {
             });
 
             // Batch all state updates together for better performance
-            setCourses(res.data);
+            setCourses(courseData);
             setProgressData(progressStats);
-            generateRecentActivity(res.data);
+            generateRecentActivity(courseData);
             setFetching(false);  // Set to false AFTER all data is prepared
         });
     };

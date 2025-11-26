@@ -6,7 +6,7 @@ import { API_BASE_URL } from "./constants";
 // Create an Axios instance with default settings
 const useAxios = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 30000, // 30 seconds for longer operations (file uploads, heavy queries)
+    timeout: 10000000,
     headers: {
         "Content-Type": "application/json",
     },

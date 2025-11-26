@@ -1,0 +1,66 @@
+{
+  "timestamp": "2025-11-22T13:22:38.090329",
+  "base_url": "http://127.0.0.1:8000",
+  "tests": {
+    "test_1": {
+      "name": "Cache + URL Persistence",
+      "duration": 0.5785489082336426,
+      "passed": true,
+      "details": {
+        "first_search_response_time": "0ms",
+        "first_search_result_count": 0,
+        "cached_response_time": "41ms",
+        "cached_result_count": 0,
+        "cache_speedup": "0.0x",
+        "cache_effective": false,
+        "url_params_valid": true
+      }
+    },
+    "test_2": {
+      "name": "Virtual Scrolling + Lazy Loading",
+      "duration": 0.0473325252532959,
+      "passed": true,
+      "details": {
+        "items_loaded": 0,
+        "has_count": true,
+        "has_next": false,
+        "has_results": true,
+        "has_pagination": true
+      }
+    },
+    "test_3": {
+      "name": "Debouncing + Cache",
+      "duration": 0.21490716934204102,
+      "passed": true,
+      "details": {
+        "query_response_times": [
+          "41ms",
+          "33ms",
+          "33ms",
+          "31ms",
+          "38ms",
+          "37ms"
+        ],
+        "average_response_time": "36ms",
+        "cache_improvement": "1.02x"
+      }
+    },
+    "test_4": {
+      "name": "Search Workflow",
+      "duration": 0.23325395584106445,
+      "passed": true,
+      "details": {
+        "initial_search_ok": true,
+        "dashboard_available": true,
+        "follow_up_search_ok": true,
+        "state_preserved": true
+      }
+    }
+  },
+  "summary": {
+    "total_tests": 4,
+    "passed_tests": 4,
+    "failed_tests": 0,
+    "success_rate": "100.0%"
+  }
+}

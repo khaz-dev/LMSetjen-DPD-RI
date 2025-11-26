@@ -23,7 +23,11 @@ function TeacherNotification() {
         try {
             setLoading(true);
             const res = await useAxios.get(`teacher/noti-list/${UserData()?.teacher_id}/`);
-            setNoti(res.data);
+            // Normalize response: handle both array and paginated responses
+            const notificationData = Array.isArray(res.data) 
+                ? res.data 
+                : (res.data?.results || []);
+            setNoti(notificationData);
         } catch (error) {
             console.error("Error fetching notifications:", error);
         } finally {
@@ -81,7 +85,7 @@ function TeacherNotification() {
         <>
             <BaseHeader />
 
-            <section className="instructor-notification-page" style={{ minHeight: '100vh' }}>
+            <section className="instructor-notification-page" style={{ minHeight: '100vh', paddingTop: '3rem', paddingBottom: '3rem' }}>
                 <div className="container">
                     {/* Header Here */}
                     <Header />
@@ -136,7 +140,7 @@ function TeacherNotification() {
                                                 fontWeight: '600'
                                             }}>
                                                 <i className="fas fa-exclamation-circle me-2"></i>
-                                                {noti?.filter(n => !n.seen)?.length || 0} Unread
+                                                {(Array.isArray(noti) ? noti : [])?.filter(n => !n.seen)?.length || 0} Unread
                                             </div>
                                         </div>
                                     </div>
@@ -145,9 +149,9 @@ function TeacherNotification() {
 
                             {/* Modern Notifications Container */}
                             <div className="modern-notifications-container">
-                                {noti?.length > 0 ? (
+                                {(Array.isArray(noti) ? noti : [])?.length > 0 ? (
                                     <div className="row g-4">
-                                        {noti.map((n, index) => (
+                                        {(Array.isArray(noti) ? noti : []).map((n, index) => (
                                             <div key={n.id || index} className="col-12">
                                                 <div className="modern-notification-card" style={{
                                                     background: 'rgba(255, 255, 255, 0.95)',

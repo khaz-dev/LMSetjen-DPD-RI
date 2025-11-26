@@ -58,7 +58,7 @@
 }
 
 .login-password-input:focus {
-    border-color: #667eea !important;
+    border-color: var(--theme-primary) !important;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
     background-color: white !important;
     outline: none !important;
@@ -93,7 +93,7 @@
 /* Hover and focus states for the toggle button */
 .password-visibility-toggle:hover,
 .password-visibility-toggle:focus {
-    color: #667eea !important;
+    color: var(--theme-primary) !important;
     opacity: 1 !important;
     outline: none !important;
 }
@@ -140,7 +140,7 @@
 }
 
 .login-register-link {
-    color: #667eea;
+    color: var(--theme-primary);
     text-decoration: none;
     font-weight: bold;
     user-select: text; /* Allow text selection for links */
@@ -148,7 +148,7 @@
 }
 
 .login-register-link:hover {
-    color: #5a67d8;
+    color: var(--theme-primary-dark);
     text-decoration: underline;
 }
 
@@ -161,7 +161,7 @@
 }
 
 .login-form-icon {
-    color: #667eea;
+    color: var(--theme-primary);
     margin-right: 0.5rem;
 }
 
@@ -183,7 +183,7 @@
 }
 
 .login-card input.form-control.login-input:focus {
-    border-color: #667eea;
+    border-color: var(--theme-primary);
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     background-color: white;
     outline: none;
@@ -202,7 +202,7 @@
 }
 
 .login-card input.form-control.login-password-input:focus {
-    border-color: #667eea;
+    border-color: var(--theme-primary);
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     background-color: white;
     outline: none;
@@ -229,7 +229,7 @@
 
 .login-password-toggle:hover,
 .login-password-toggle:focus {
-    color: #667eea;
+    color: var(--theme-primary);
     z-index: 11;
 }
 
@@ -258,7 +258,7 @@
 }
 
 .login-card .form-check-input.login-checkbox {
-    border-color: #667eea;
+    border-color: var(--theme-primary) !important;
     user-select: none; /* Prevent text selection */
     cursor: pointer; /* Pointer cursor for checkboxes */
     margin-top: 0 !important;
@@ -272,8 +272,8 @@
 }
 
 .login-card .form-check-input.login-checkbox:checked {
-    background-color: #667eea;
-    border-color: #667eea;
+    background-color: var(--theme-primary) !important;
+    border-color: var(--theme-primary) !important;
 }
 
 /* Checkbox label styling */
@@ -287,7 +287,7 @@
 }
 
 .login-forgot-link {
-    color: #667eea;
+    color: var(--theme-primary) !important;
     font-size: 14px;
     text-decoration: none;
     user-select: text; /* Allow text selection for links */
@@ -295,12 +295,12 @@
 }
 
 .login-forgot-link:hover {
-    color: #5a67d8;
+    color: var(--theme-primary-dark);
     text-decoration: underline;
 }
 
 .login-submit-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient);
     border: none;
     border-radius: 12px;
     color: white;
@@ -311,6 +311,10 @@
     transform: scale(1);
     user-select: none; /* Prevent text selection */
     cursor: pointer; /* Pointer cursor for buttons */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .login-submit-btn:hover {
@@ -330,14 +334,14 @@
 }
 
 .login-help-link {
-    color: #667eea;
+    color: var(--theme-primary);
     text-decoration: none;
     user-select: text; /* Allow text selection for links */
     cursor: pointer; /* Pointer cursor for links */
 }
 
 .login-help-link:hover {
-    color: #5a67d8;
+    color: var(--theme-primary-dark);
     text-decoration: underline;
 }
 
@@ -350,7 +354,7 @@
 }
 
 .login-submit-btn:disabled {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient);
     opacity: 0.9;
     cursor: not-allowed;
 }
@@ -445,7 +449,7 @@
 
 /* SSO Login Button */
 .login-sso-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border: none;
     color: white;
     font-weight: 600;
@@ -462,7 +466,7 @@
 }
 
 .login-sso-btn:hover {
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    background: linear-gradient(135deg, var(--theme-primary-dark), var(--theme-primary)) !important;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     color: white;

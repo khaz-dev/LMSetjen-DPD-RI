@@ -392,8 +392,8 @@ function CourseDetail() {
                 await fetchCourseDetail(true); // true = prevent loading state
             }
         } catch (error) {
-            console.error('Error submitting quiz:', error);
-            console.error('Error details:', error.response?.data);
+            console.error("Error submitting quiz:", error);
+            console.error("Error details:", error.response?.data);
             Toast().fire({
                 icon: "error",
                 title: "Failed to submit quiz. Please try again."
@@ -465,8 +465,8 @@ function CourseDetail() {
                 });
             }
         } catch (error) {
-            console.error('Error auto-submitting quiz:', error);
-            console.error('Error details:', error.response?.data);
+            console.error("Error auto-submitting quiz:", error);
+            console.error("Error details:", error.response?.data);
             Toast().fire({
                 icon: "error",
                 title: "Auto-submit failed",
@@ -580,7 +580,7 @@ function CourseDetail() {
             console.error("Failed to save quiz progress:", error);
             
             // If storage is full, try to clean up old quiz progress
-            if (error.name === 'QuotaExceededError') {
+            if (error.name === "QuotaExceededError") {
                 cleanupOldQuizProgress();
                 try {
                     localStorage.setItem(progressKey, JSON.stringify(progressData));
@@ -598,7 +598,7 @@ function CourseDetail() {
         let cleanedCount = 0;
         
         keys.forEach(key => {
-            if (key.startsWith('quiz_progress_')) {
+            if (key.startsWith("quiz_progress_")) {
                 try {
                     const data = localStorage.getItem(key);
                     if (data) {
@@ -619,7 +619,7 @@ function CourseDetail() {
 
     const loadQuizProgress = (quizData) => {
         // Handle both quiz objects and quiz IDs
-        const quizId = typeof quizData === 'string' ? quizData : quizData?.quiz_id;
+        const quizId = typeof quizData === "string" ? quizData : quizData?.quiz_id;
         if (!quizId) {
             return null;
         }
@@ -633,8 +633,8 @@ function CourseDetail() {
                 
                 // Validate progress data structure
                 const isValidData = progressData && 
-                                   typeof progressData.timeRemaining === 'number' &&
-                                   typeof progressData.currentQuestionIndex === 'number' &&
+                                   typeof progressData.timeRemaining === "number" &&
+                                   typeof progressData.currentQuestionIndex === "number" &&
                                    progressData.answers &&
                                    progressData.quiz &&
                                    progressData.startTime;
@@ -663,7 +663,7 @@ function CourseDetail() {
 
     // Helper function to check if a quiz has saved progress (for resume functionality)
     const hasQuizProgress = (quizData) => {
-        const quizId = typeof quizData === 'string' ? quizData : quizData?.quiz_id;
+        const quizId = typeof quizData === "string" ? quizData : quizData?.quiz_id;
         if (!quizId) return false;
         
         const progressKey = `quiz_progress_${UserData()?.user_id}_${quizId}`;
@@ -678,8 +678,8 @@ function CourseDetail() {
                 // Check if progress is valid and not expired (2 hours)
                 const maxAge = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
                 const isValidData = progressData && 
-                                   typeof progressData.timeRemaining === 'number' &&
-                                   typeof progressData.currentQuestionIndex === 'number' &&
+                                   typeof progressData.timeRemaining === "number" &&
+                                   typeof progressData.currentQuestionIndex === "number" &&
                                    progressData.answers &&
                                    progressData.quiz &&
                                    progressData.startTime;
@@ -702,7 +702,7 @@ function CourseDetail() {
 
     const clearQuizProgress = (quizData) => {
         // Handle both quiz objects and quiz IDs
-        const quizId = typeof quizData === 'string' ? quizData : quizData?.quiz_id;
+        const quizId = typeof quizData === "string" ? quizData : quizData?.quiz_id;
         if (!quizId) return;
         
         const progressKey = `quiz_progress_${UserData()?.user_id}_${quizId}`;
@@ -759,7 +759,7 @@ function CourseDetail() {
                     <p style="margin-bottom: 15px;"><strong>You have an incomplete quiz attempt:</strong></p>
                     <div style="padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #007bff;">
                         <p style="margin: 5px 0;"><strong>📝 Quiz:</strong> ${quiz.title}</p>
-                        <p style="margin: 5px 0;"><strong>⏰ Time Remaining:</strong> ${Math.floor(resumeData.timeRemaining / 60)}:${(resumeData.timeRemaining % 60).toString().padStart(2, '0')}</p>
+                        <p style="margin: 5px 0;"><strong>⏰ Time Remaining:</strong> ${Math.floor(resumeData.timeRemaining / 60)}:${(resumeData.timeRemaining % 60).toString().padStart(2, "0")}</p>
                         <p style="margin: 5px 0;"><strong>📊 Progress:</strong> Question ${resumeData.currentQuestionIndex + 1} of ${quiz.questions.length}</p>
                         <p style="margin: 5px 0;"><strong>📅 Started:</strong> ${new Date(resumeData.startTime).toLocaleString()}</p>
                         <p style="margin: 5px 0; color: #6c757d; font-size: 0.9em;">💡 Your progress has been automatically saved</p>
@@ -771,11 +771,11 @@ function CourseDetail() {
             cancelButtonText: "🆕 Start New Quiz",
             confirmButtonColor: "#28a745",
             cancelButtonColor: "#dc3545",
-            width: '500px',
+            width: "500px",
             customClass: {
-                popup: 'quiz-resume-dialog',
-                title: 'quiz-resume-title',
-                htmlContainer: 'quiz-resume-content'
+                popup: "quiz-resume-dialog",
+                title: "quiz-resume-title",
+                htmlContainer: "quiz-resume-content"
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -851,7 +851,7 @@ function CourseDetail() {
         };
         
         window.clearAllQuizProgress = () => {
-            const keys = Object.keys(localStorage).filter(k => k.startsWith('quiz_progress_'));
+            const keys = Object.keys(localStorage).filter(k => k.startsWith("quiz_progress_"));
             keys.forEach(key => localStorage.removeItem(key));
         };
         
@@ -871,7 +871,7 @@ function CourseDetail() {
     const handleColorChange = (color) => {
         // Validate color format
         const isValidColor = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
-        const validColor = isValidColor ? color : '#f39c12';
+        const validColor = isValidColor ? color : "#f39c12";
         
         setCreateNote({
             ...createNote,
@@ -883,15 +883,15 @@ function CourseDetail() {
     // Helper function to generate color variations
     const getColorVariations = (color) => {
         // Fallback to default orange if color is invalid
-        if (!color || typeof color !== 'string') {
-            color = '#f39c12';
+        if (!color || typeof color !== "string") {
+            color = "#f39c12";
         }
         
         const hexToRgb = (hex) => {
             // Clean the hex value
-            hex = hex.replace('#', '');
+            hex = hex.replace("#", "");
             if (hex.length === 3) {
-                hex = hex.split('').map(char => char + char).join('');
+                hex = hex.split("").map(char => char + char).join("");
             }
             
             const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -906,9 +906,9 @@ function CourseDetail() {
         if (!rgb) {
             // Fallback color variations if parsing fails
             return { 
-                light: 'rgba(243, 156, 18, 0.2)', 
-                hover: 'rgba(243, 156, 18, 0.13)', 
-                shadow: 'rgba(243, 156, 18, 0.3)' 
+                light: "rgba(243, 156, 18, 0.2)", 
+                hover: "rgba(243, 156, 18, 0.13)", 
+                shadow: "rgba(243, 156, 18, 0.3)" 
             };
         }
 
@@ -1073,7 +1073,7 @@ function CourseDetail() {
         formdata.append("qa_id", selectedConversation?.qa_id);
 
         try {
-            const response = await useAxios.post(`student/question-answer-message-create/`, formdata);
+            const response = await useAxios.post("student/question-answer-message-create/", formdata);
             
             // Update the selected conversation with new message data
             if (response.data.question) {
@@ -1160,7 +1160,7 @@ function CourseDetail() {
         formdata.append("rating", createReview.rating);
         formdata.append("review", createReview.review);
 
-        useAxios.post(`student/rate-course/`, formdata).then((res) => {
+        useAxios.post("student/rate-course/", formdata).then((res) => {
             fetchCourseDetail();
             // Reset form and edit state after successful submission
             setCreateReview({ rating: 1, review: "" });
@@ -1252,36 +1252,24 @@ function CourseDetail() {
             
             <BaseHeader />
 
-            {/* Subtle loading overlay - only for manual updates */}
+            {/* Simple loading overlay */}
             {isUpdatingCourse && (
                 <div 
                     style={{
-                        position: 'fixed',
+                        position: "fixed",
                         top: 0,
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        backgroundColor: "transparent",
                         zIndex: 9999,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backdropFilter: 'blur(2px)'
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
                     }}
                 >
-                    <div 
-                        className="text-center p-4"
-                        style={{
-                            background: 'transparent',
-                            borderRadius: '15px',
-                            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-                            border: '1px solid rgba(0, 0, 0, 0.1)'
-                        }}
-                    >
-                        <div className="spinner-border text-primary mb-3" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                        </div>
-                        <p className="mb-0 text-white">Updating course progress...</p>
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
                     </div>
                 </div>
             )}
@@ -1326,7 +1314,7 @@ function CourseDetail() {
                                             <div className="col-md-4 text-center text-primary">
                                                 <div 
                                                     className="progress-circle"
-                                                    style={{'--progress': completionPercentage || 0}}
+                                                    style={{"--progress": completionPercentage || 0}}
                                                 >
                                                     <div className="progress-inner">
                                                         <div className="text-center">
@@ -1404,7 +1392,7 @@ function CourseDetail() {
                                             
                                             {course?.note?.length > 0 ? (
                                                 course.note.map((n, index) => {
-                                                    const noteColor = n.color || '#f39c12';
+                                                    const noteColor = n.color || "#f39c12";
                                                     const colorVariations = getColorVariations(noteColor);
                                                     
                                                     return (
@@ -1412,9 +1400,9 @@ function CourseDetail() {
                                                             key={n.id || index} 
                                                             className="note-card"
                                                             style={{
-                                                                '--note-color': noteColor,
-                                                                '--note-color-light': colorVariations.light,
-                                                                '--note-color-hover': colorVariations.hover,
+                                                                "--note-color": noteColor,
+                                                                "--note-color-light": colorVariations.light,
+                                                                "--note-color-hover": colorVariations.hover,
                                                                 borderColor: colorVariations.light
                                                             }}
                                                         >
@@ -1507,16 +1495,16 @@ function CourseDetail() {
                                                                             : getMediaUrl(q.profile.image)
                                                                         }
                                                                         className="avatar-modern"
-                                                                        alt={`${q.profile?.full_name || 'User'} avatar`}
+                                                                        alt={`${q.profile?.full_name || "User"} avatar`}
                                                                         onError={(e) => {
-                                                                            e.target.style.display = 'none';
-                                                                            e.target.nextSibling.style.display = 'flex';
+                                                                            e.target.style.display = "none";
+                                                                            e.target.nextSibling.style.display = "flex";
                                                                         }}
                                                                     />
                                                                 ) : null}
                                                                 <div 
                                                                     className="avatar-placeholder"
-                                                                    style={{ display: q.profile?.image ? 'none' : 'flex' }}
+                                                                    style={{ display: q.profile?.image ? "none" : "flex" }}
                                                                 >
                                                                     <i className="fas fa-user"></i>
                                                                 </div>
@@ -1524,13 +1512,13 @@ function CourseDetail() {
                                                             
                                                             <div className="question-content">
                                                                 <h5 className="question-title">
-                                                                    {q.title || 'No Title'}
+                                                                    {q.title || "No Title"}
                                                                 </h5>
                                                                 
                                                                 <div className="question-meta">
                                                                     <div className="question-meta-item">
                                                                         <i className="fas fa-user question-meta-icon"></i>
-                                                                        <span>{q.profile?.full_name || 'Anonymous User'}</span>
+                                                                        <span>{q.profile?.full_name || "Anonymous User"}</span>
                                                                     </div>
                                                                     <div className="question-meta-item">
                                                                         <i className="fas fa-calendar-alt question-meta-icon"></i>
@@ -1585,7 +1573,7 @@ function CourseDetail() {
                                                     <div className="quiz-summary">
                                                         <span className="badge bg-primary px-3 py-2 rounded-pill">
                                                             <i className="fas fa-brain me-1"></i>
-                                                            {quizzes.length} Quiz{quizzes.length > 1 ? 'zes' : ''} Available
+                                                            {quizzes.length} Quiz{quizzes.length > 1 ? "zes" : ""} Available
                                                         </span>
                                                     </div>
                                                 )}
@@ -1595,22 +1583,22 @@ function CourseDetail() {
                                                 <div className="row">
                                                     {quizzes.map((quiz, index) => (
                                                         <div key={quiz.quiz_id} className="col-lg-6 col-md-6 mb-4">
-                                                            <div className="student-quiz-card" style={{position: 'relative'}}>
+                                                            <div className="student-quiz-card" style={{position: "relative"}}>
                                                                 {hasQuizProgress(quiz) && (
                                                                     <div className="resume-quiz-badge" style={{
-                                                                        position: 'absolute',
-                                                                        top: '1px',
-                                                                        right: '2px',
-                                                                        background: 'linear-gradient(135deg, #17a2b8, #138496)',
-                                                                        color: 'white',
-                                                                        padding: '8px 12px',
-                                                                        borderRadius: '20px',
-                                                                        fontSize: '12px',
-                                                                        fontWeight: 'bold',
-                                                                        boxShadow: '0 3px 10px rgba(23, 162, 184, 0.3)',
+                                                                        position: "absolute",
+                                                                        top: "1px",
+                                                                        right: "2px",
+                                                                        background: "linear-gradient(135deg, #17a2b8, #138496)",
+                                                                        color: "white",
+                                                                        padding: "8px 12px",
+                                                                        borderRadius: "20px",
+                                                                        fontSize: "12px",
+                                                                        fontWeight: "bold",
+                                                                        boxShadow: "0 3px 10px rgba(23, 162, 184, 0.3)",
                                                                         zIndex: 10,
-                                                                        border: '2px solid white',
-                                                                        animation: 'pulse 2s infinite'
+                                                                        border: "2px solid white",
+                                                                        animation: "pulse 2s infinite"
                                                                     }}>
                                                                         <i className="fas fa-play-circle me-1"></i>
                                                                         Resume
@@ -1622,7 +1610,7 @@ function CourseDetail() {
                                                                     </div>
                                                                     <div className="quiz-header-content">
                                                                         <h1 className="student-quiz-title">{quiz.title}</h1>
-                                                                        <p className="student-quiz-description">{quiz.description || 'Test your understanding of this course material'}</p>
+                                                                        <p className="student-quiz-description">{quiz.description || "Test your understanding of this course material"}</p>
                                                                     </div>
                                                                 </div>
                                                                 
@@ -1684,7 +1672,7 @@ function CourseDetail() {
                                                                     </div>
                                                                     <div className="progress quiz-progress-bar">
                                                                         <div 
-                                                                            className={`progress-bar ${quiz.is_passed ? 'bg-info' : 'bg-warning'}`}
+                                                                            className={`progress-bar ${quiz.is_passed ? "bg-info" : "bg-warning"}`}
                                                                             style={{width: `${quiz.best_score || 0}%`}}
                                                                         ></div>
                                                                     </div>
@@ -1756,7 +1744,7 @@ function CourseDetail() {
                                             
                                             {studentReview ? (
                                                 !isEditingReview ? (
-                                                    <div className="review-card-modern" style={{ position: 'relative' }}>
+                                                    <div className="review-card-modern" style={{ position: "relative" }}>
                                                         <div className="d-flex justify-content-between align-items-start mb-3">
                                                             <h5 className="mb-0">Your Review</h5>
                                                             <div className="d-flex gap-2">
@@ -1773,7 +1761,7 @@ function CourseDetail() {
                                                         <div className="star-rating mb-3 d-flex align-items-center justify-content-between">
                                                             <div className="d-flex align-items-center">
                                                                 {[...Array(5)].map((_, i) => (
-                                                                    <i key={i} className={`fas fa-star ${i < studentReview.rating ? 'text-warning' : 'text-muted'}`}></i>
+                                                                    <i key={i} className={`fas fa-star ${i < studentReview.rating ? "text-warning" : "text-muted"}`}></i>
                                                                 ))}
                                                                 <span className="ms-2">({studentReview.rating}/5)</span>
                                                             </div>
@@ -1793,7 +1781,7 @@ function CourseDetail() {
                                                                         </div>
                                                                         <div className="flex-grow-1">
                                                                             <h4 className="mb-0 instructor-name text-primary">
-                                                                                {course.course?.teacher?.full_name || 'Course Instructor'}
+                                                                                {course.course?.teacher?.full_name || "Course Instructor"}
                                                                             </h4>
                                                                             <small className="text-muted">Instructor Response</small>
                                                                         </div>
@@ -1826,7 +1814,7 @@ function CourseDetail() {
                                                                     {[1, 2, 3, 4, 5].map((star) => (
                                                                         <i 
                                                                             key={star}
-                                                                            className={`fas fa-star cursor-pointer ${star <= createReview.rating ? 'text-warning' : 'text-muted'}`}
+                                                                            className={`fas fa-star cursor-pointer ${star <= createReview.rating ? "text-warning" : "text-muted"}`}
                                                                             onClick={() => setCreateReview({...createReview, rating: star})}
                                                                         ></i>
                                                                     ))}
@@ -1874,7 +1862,7 @@ function CourseDetail() {
                                                                 {[1, 2, 3, 4, 5].map((star) => (
                                                                     <i 
                                                                         key={star}
-                                                                        className={`fas fa-star cursor-pointer ${star <= createReview.rating ? 'text-warning' : 'text-muted'}`}
+                                                                        className={`fas fa-star cursor-pointer ${star <= createReview.rating ? "text-warning" : "text-muted"}`}
                                                                         onClick={() => setCreateReview({...createReview, rating: star})}
                                                                     ></i>
                                                                 ))}
@@ -1932,18 +1920,18 @@ function CourseDetail() {
                             <div 
                                 className="modal-icon-wrapper note-icon-wrapper-dynamic"
                                 style={{ 
-                                    background: `rgba(255, 255, 255, 0.2)`,
-                                    border: `2px solid rgba(255, 255, 255, 0.3)` 
+                                    background: "rgba(255, 255, 255, 0.2)",
+                                    border: "2px solid rgba(255, 255, 255, 0.3)" 
                                 }}
                             >
                                 <i className="fas fa-sticky-note"></i>
                             </div>
                             <div className="modal-title-section">
                                 <h4 className="modal-title-modern">
-                                    {selectedNote ? 'Edit Course Note' : 'Add Course Note'}
+                                    {selectedNote ? "Edit Course Note" : "Add Course Note"}
                                 </h4>
                                 <p className="modal-subtitle">
-                                    {selectedNote ? 'Update your note with new insights' : 'Capture important insights and key takeaways from this course'}
+                                    {selectedNote ? "Update your note with new insights" : "Capture important insights and key takeaways from this course"}
                                 </p>
                             </div>
                         </div>
@@ -2002,7 +1990,7 @@ function CourseDetail() {
                                     required
                                 />
                                 <div className="character-counter">
-                                    {(createNote.note || '').length}/2000 characters
+                                    {(createNote.note || "").length}/2000 characters
                                 </div>
                             </div>
                         </div>
@@ -2015,19 +2003,19 @@ function CourseDetail() {
                             </label>
                             
                             {/* Color Preview */}
-                            <div className="color-preview-section" style={{ marginBottom: '1rem' }}>
-                                <div className="color-preview-label" style={{ fontSize: '0.9rem', color: '#6c757d', marginBottom: '0.5rem' }}>
+                            <div className="color-preview-section" style={{ marginBottom: "1rem" }}>
+                                <div className="color-preview-label" style={{ fontSize: "0.9rem", color: "#6c757d", marginBottom: "0.5rem" }}>
                                     Selected Color Preview:
                                 </div>
                                 <div 
                                     className="color-preview-demo"
                                     style={{
                                         background: `linear-gradient(135deg, ${selectedNoteColor} 0%, ${selectedNoteColor}dd 100%)`,
-                                        padding: '1rem',
-                                        borderRadius: '12px',
-                                        color: 'white',
-                                        textAlign: 'center',
-                                        fontWeight: '600',
+                                        padding: "1rem",
+                                        borderRadius: "12px",
+                                        color: "white",
+                                        textAlign: "center",
+                                        fontWeight: "600",
                                         boxShadow: `0 4px 15px ${getColorVariations(selectedNoteColor).shadow}`
                                     }}
                                 >
@@ -2038,29 +2026,29 @@ function CourseDetail() {
                             
                             <div className="color-picker-grid">
                                 {[
-                                    { color: '#f39c12', name: 'Orange' },
-                                    { color: '#e74c3c', name: 'Red' },
-                                    { color: '#3498db', name: 'Blue' },
-                                    { color: '#2ecc71', name: 'Green' },
-                                    { color: '#9b59b6', name: 'Purple' },
-                                    { color: '#f1c40f', name: 'Yellow' },
-                                    { color: '#e67e22', name: 'Dark Orange' },
-                                    { color: '#95a5a6', name: 'Gray' },
-                                    { color: '#1abc9c', name: 'Teal' },
-                                    { color: '#34495e', name: 'Dark Blue' },
-                                    { color: '#e91e63', name: 'Pink' },
-                                    { color: '#8e44ad', name: 'Violet' }
+                                    { color: "#f39c12", name: "Orange" },
+                                    { color: "#e74c3c", name: "Red" },
+                                    { color: "#3498db", name: "Blue" },
+                                    { color: "#2ecc71", name: "Green" },
+                                    { color: "#9b59b6", name: "Purple" },
+                                    { color: "#f1c40f", name: "Yellow" },
+                                    { color: "#e67e22", name: "Dark Orange" },
+                                    { color: "#95a5a6", name: "Gray" },
+                                    { color: "#1abc9c", name: "Teal" },
+                                    { color: "#34495e", name: "Dark Blue" },
+                                    { color: "#e91e63", name: "Pink" },
+                                    { color: "#8e44ad", name: "Violet" }
                                 ].map((colorOption) => (
                                     <div
                                         key={colorOption.color}
-                                        className={`color-option ${selectedNoteColor === colorOption.color ? 'selected' : ''}`}
+                                        className={`color-option ${selectedNoteColor === colorOption.color ? "selected" : ""}`}
                                         style={{ backgroundColor: colorOption.color }}
                                         onClick={() => {
                                             handleColorChange(colorOption.color);
                                             // Trigger handleNoteChange to update the color in createNote state
                                             handleNoteChange({
                                                 target: {
-                                                    name: 'color',
+                                                    name: "color",
                                                     value: colorOption.color
                                                 }
                                             });
@@ -2105,20 +2093,20 @@ function CourseDetail() {
                             style={{
                                 background: `linear-gradient(135deg, ${selectedNoteColor} 0%, ${selectedNoteColor}dd 100%)`,
                                 boxShadow: `0 4px 15px ${getColorVariations(selectedNoteColor).shadow}`,
-                                transition: 'all 0.3s ease'
+                                transition: "all 0.3s ease"
                             }}
                             onMouseEnter={(e) => {
                                 if (!e.target.disabled) {
                                     const variations = getColorVariations(selectedNoteColor);
                                     e.target.style.boxShadow = `0 8px 25px ${variations.shadow}`;
-                                    e.target.style.transform = 'translateY(-2px)';
+                                    e.target.style.transform = "translateY(-2px)";
                                 }
                             }}
                             onMouseLeave={(e) => {
                                 if (!e.target.disabled) {
                                     const variations = getColorVariations(selectedNoteColor);
                                     e.target.style.boxShadow = `0 4px 15px ${variations.shadow}`;
-                                    e.target.style.transform = 'translateY(0)';
+                                    e.target.style.transform = "translateY(0)";
                                 }
                             }}
                             // onClick={
@@ -2126,7 +2114,7 @@ function CourseDetail() {
                             // } // Call appropriate handler
                         >
                             <i className="fas fa-save"></i>
-                            {selectedNote ? 'Update Note' : 'Save Note'}
+                            {selectedNote ? "Update Note" : "Save Note"}
                         </button>
                     </div>
                 </div>
@@ -2251,14 +2239,14 @@ function CourseDetail() {
             {/* Conversation Modal */}
             <Modal show={ConversationShow} onHide={handleConversationClose} size="lg" className="conversation-modal-qa">
                 {/* Modal Header */}
-                <div className="modal-header-modern" style={{ background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)' }}>
+                <div className="modal-header-modern" style={{ background: "linear-gradient(135deg, #3498db 0%, #2980b9 100%)" }}>
                     <div className="modal-header-content">
                         <div className="modal-header-info">
                             <div className="modal-icon-wrapper">
                                 <i className="fas fa-comments"></i>
                             </div>
                             <div className="modal-title-section">
-                                <h4 className="modal-title-modern">{selectedConversation?.title || 'Discussion'}</h4>
+                                <h4 className="modal-title-modern">{selectedConversation?.title || "Discussion"}</h4>
                                 <p className="modal-subtitle">Join the conversation and share your thoughts</p>
                             </div>
                         </div>
@@ -2284,8 +2272,8 @@ function CourseDetail() {
                             const currentUser = UserData();
                             const isCurrentUser = msg.profile?.user_id === currentUser?.user_id || msg.profile?.id === currentUser?.user_id;
                             return (
-                                <div key={msg.id || `message-${index}`} className={`message-item-qa ${isCurrentUser ? 'message-item-qa-current-user' : ''}`}>
-                                    <div className={`d-flex ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
+                                <div key={msg.id || `message-${index}`} className={`message-item-qa ${isCurrentUser ? "message-item-qa-current-user" : ""}`}>
+                                    <div className={`d-flex ${isCurrentUser ? "flex-row-reverse" : ""}`}>
                                         <div className="flex-shrink-0">
                                             {msg.profile?.image ? (
                                                 <img
@@ -2294,10 +2282,10 @@ function CourseDetail() {
                                                         ? msg.profile.image 
                                                         : getMediaUrl(msg.profile.image)
                                                     }
-                                                    alt={`${msg.profile?.full_name || 'User'} avatar`}
+                                                    alt={`${msg.profile?.full_name || "User"} avatar`}
                                                     onError={(e) => {
-                                                        e.target.style.display = 'none';
-                                                        e.target.nextSibling.style.display = 'flex';
+                                                        e.target.style.display = "none";
+                                                        e.target.nextSibling.style.display = "flex";
                                                     }}
                                                 />
                                             ) : (
@@ -2305,24 +2293,24 @@ function CourseDetail() {
                                                     className="message-avatar-qa d-flex align-items-center justify-content-center"
                                                     style={{ 
                                                         background: isCurrentUser 
-                                                            ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)'
-                                                            : 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)',
-                                                        color: 'white',
-                                                        fontSize: '1.2rem'
+                                                            ? "linear-gradient(135deg, #28a745 0%, #20c997 100%)"
+                                                            : "linear-gradient(135deg, #3498db 0%, #2980b9 100%)",
+                                                        color: "white",
+                                                        fontSize: "1.2rem"
                                                     }}
                                                 >
                                                     <i className="fas fa-user"></i>
                                                 </div>
                                             )}
                                         </div>
-                                        <div className={`${isCurrentUser ? 'me-3' : 'ms-3'} flex-grow-1`}>
-                                            <div className={`message-content-qa ${isCurrentUser ? 'message-content-qa-current-user' : ''}`}>
+                                        <div className={`${isCurrentUser ? "me-3" : "ms-3"} flex-grow-1`}>
+                                            <div className={`message-content-qa ${isCurrentUser ? "message-content-qa-current-user" : ""}`}>
                                                 <div className="message-author-qa">
                                                     <div className="message-time-qa">
                                                         <i className="fas fa-clock me-1"></i>
                                                         {moment(msg.date).format("DD MMM, YYYY - HH:mm")}
                                                     </div>
-                                                    <span>{msg.profile?.full_name || 'Anonymous User'}</span>
+                                                    <span>{msg.profile?.full_name || "Anonymous User"}</span>
                                                 </div>
                                                 <div className="message-text-qa">{msg.message}</div>
                                             </div>
@@ -2370,16 +2358,16 @@ function CourseDetail() {
                 onHide={isQuizActive ? null : handleQuizClose} 
                 size="lg" 
                 centered 
-                backdrop={isQuizActive ? 'static' : true}
+                backdrop={isQuizActive ? "static" : true}
                 keyboard={isQuizActive ? false : true}
             >
                 {/* Debug section - remove in production */}
-                {process.env.NODE_ENV === 'development' && (
-                    <div style={{ position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', padding: '5px', fontSize: '10px', zIndex: 9999 }}>
-                        Quiz Debug: Active={isQuizActive ? 'Yes' : 'No'} | 
+                {process.env.NODE_ENV === "development" && (
+                    <div style={{ position: "absolute", top: 0, right: 0, background: "red", color: "white", padding: "5px", fontSize: "10px", zIndex: 9999 }}>
+                        Quiz Debug: Active={isQuizActive ? "Yes" : "No"} | 
                         Questions={selectedQuiz?.questions?.length || 0} | 
                         CurrentQ={currentQuestionIndex} |
-                        ShowResult={showQuizResult ? 'Yes' : 'No'}
+                        ShowResult={showQuizResult ? "Yes" : "No"}
                     </div>
                 )}
                 
@@ -2394,7 +2382,7 @@ function CourseDetail() {
                         </button>
                     )}
                     {isQuizActive && (
-                        <div className="quiz-modal-close disabled" style={{opacity: 0.5, cursor: 'not-allowed'}} title="Cannot close during active quiz">
+                        <div className="quiz-modal-close disabled" style={{opacity: 0.5, cursor: "not-allowed"}} title="Cannot close during active quiz">
                             <i className="fas fa-lock"></i>
                         </div>
                     )}
@@ -2408,7 +2396,7 @@ function CourseDetail() {
                             </div>
                             <h4>{selectedQuiz.title}</h4>
                             <p className="quiz-intro-description">
-                                {selectedQuiz.description || 'Test your understanding of the course material'}
+                                {selectedQuiz.description || "Test your understanding of the course material"}
                             </p>
                             
                             <div className="quiz-info-cards">
@@ -2429,7 +2417,7 @@ function CourseDetail() {
                                 </div>
                                 <div className="quiz-info-card">
                                     <i className="fas fa-redo"></i>
-                                    <span className={`info-number ${selectedQuiz.today_attempts >= 3 ? 'text-danger' : 'text-warning'}`}>
+                                    <span className={`info-number ${selectedQuiz.today_attempts >= 3 ? "text-danger" : "text-warning"}`}>
                                         {selectedQuiz.today_attempts || 0}/3
                                     </span>
                                     <span className="info-label">Today's Attempts</span>
@@ -2438,11 +2426,11 @@ function CourseDetail() {
 
                             {/* Attempt Status Warning */}
                             {selectedQuiz.today_attempts > 0 && (
-                                <div className={`quiz-attempt-warning ${selectedQuiz.can_attempt ? 'warning' : 'danger'}`}>
-                                    <i className={`fas ${selectedQuiz.can_attempt ? 'fa-exclamation-triangle' : 'fa-ban'} me-2`}></i>
+                                <div className={`quiz-attempt-warning ${selectedQuiz.can_attempt ? "warning" : "danger"}`}>
+                                    <i className={`fas ${selectedQuiz.can_attempt ? "fa-exclamation-triangle" : "fa-ban"} me-2`}></i>
                                     {selectedQuiz.can_attempt 
-                                        ? `You have used ${selectedQuiz.today_attempts} of 3 daily attempts. ${3 - selectedQuiz.today_attempts} attempt${3 - selectedQuiz.today_attempts !== 1 ? 's' : ''} remaining.`
-                                        : 'You have reached the daily limit of 3 attempts. Please try again tomorrow.'
+                                        ? `You have used ${selectedQuiz.today_attempts} of 3 daily attempts. ${3 - selectedQuiz.today_attempts} attempt${3 - selectedQuiz.today_attempts !== 1 ? "s" : ""} remaining.`
+                                        : "You have reached the daily limit of 3 attempts. Please try again tomorrow."
                                     }
                                 </div>
                             )}
@@ -2494,7 +2482,7 @@ function CourseDetail() {
                                 </div>
                                 <div className="quiz-timer">
                                     <i className="fas fa-clock me-2"></i>
-                                    {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
+                                    {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, "0")}
                                 </div>
                             </div>
                         </div>
@@ -2596,23 +2584,23 @@ function CourseDetail() {
                 {showQuizResult && quizResult && (
                     <div className="quiz-result-screen">
                         <div className="quiz-result-header">
-                            <div className={`quiz-result-icon ${quizResult.passed ? 'success' : 'failure'}`}>
-                                <i className={`fas ${quizResult.passed ? 'fa-trophy' : 'fa-times-circle'}`}></i>
+                            <div className={`quiz-result-icon ${quizResult.passed ? "success" : "failure"}`}>
+                                <i className={`fas ${quizResult.passed ? "fa-trophy" : "fa-times-circle"}`}></i>
                             </div>
-                            <h4 className={`quiz-result-title ${quizResult.passed ? 'text-success' : 'text-danger'}`}>
-                                {quizResult.passed ? 'Congratulations!' : 'Quiz Failed'}
+                            <h4 className={`quiz-result-title ${quizResult.passed ? "text-success" : "text-danger"}`}>
+                                {quizResult.passed ? "Congratulations!" : "Quiz Failed"}
                             </h4>
                             <p className="quiz-result-message">
                                 {quizResult.passed 
-                                    ? 'You have successfully passed the quiz!' 
-                                    : 'You need 80% or higher to pass. Try again!'}
+                                    ? "You have successfully passed the quiz!" 
+                                    : "You need 80% or higher to pass. Try again!"}
                             </p>
                         </div>
 
                         <div className="quiz-result-stats">
                             <div className="result-stat">
                                 <span className="student-stat-label">Your Score</span>
-                                <span className={`stat-value ${quizResult.passed ? 'text-success' : 'text-danger'}`}>
+                                <span className={`stat-value ${quizResult.passed ? "text-success" : "text-danger"}`}>
                                     {Math.round(quizResult.score)}%
                                 </span>
                             </div>
@@ -2629,13 +2617,13 @@ function CourseDetail() {
                                         const timeTaken = quizResult.time_taken || 0;
                                         const minutes = Math.floor(timeTaken / 60);
                                         const seconds = timeTaken % 60;
-                                        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                                        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
                                     })()}
                                 </span>
                             </div>
                             <div className="result-stat">
                                 <span className="student-stat-label">Today's Attempts</span>
-                                <span className={`stat-value ${quizResult.attempts_left === 0 ? 'text-danger' : 'text-warning'}`}>
+                                <span className={`stat-value ${quizResult.attempts_left === 0 ? "text-danger" : "text-warning"}`}>
                                     {quizResult.today_attempts || 0}/{quizResult.max_daily_attempts || 3}
                                 </span>
                             </div>
@@ -2651,11 +2639,11 @@ function CourseDetail() {
 
                         {/* Attempt Status Alert */}
                         {!quizResult.passed && (
-                            <div className={`attempt-status-alert ${quizResult.can_attempt ? 'alert-warning' : 'alert-danger'}`}>
-                                <i className={`fas ${quizResult.can_attempt ? 'fa-exclamation-triangle' : 'fa-ban'} me-2`}></i>
+                            <div className={`attempt-status-alert ${quizResult.can_attempt ? "alert-warning" : "alert-danger"}`}>
+                                <i className={`fas ${quizResult.can_attempt ? "fa-exclamation-triangle" : "fa-ban"} me-2`}></i>
                                 {quizResult.can_attempt 
-                                    ? `You have ${quizResult.attempts_left} attempt${quizResult.attempts_left !== 1 ? 's' : ''} left today. You need 80% to pass.`
-                                    : 'Daily limit reached! You can try again tomorrow. (3 attempts per day)'
+                                    ? `You have ${quizResult.attempts_left} attempt${quizResult.attempts_left !== 1 ? "s" : ""} left today. You need 80% to pass.`
+                                    : "Daily limit reached! You can try again tomorrow. (3 attempts per day)"
                                 }
                             </div>
                         )}

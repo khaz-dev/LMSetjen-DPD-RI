@@ -67,7 +67,7 @@
 }
 
 .register-login-link {
-    color: #667eea;
+    color: var(--theme-primary) !important;
     text-decoration: none;
     font-weight: bold;
     user-select: text;
@@ -75,7 +75,7 @@
 }
 
 .register-login-link:hover {
-    color: #5a67d8;
+    color: var(--theme-primary-dark);
     text-decoration: underline;
 }
 
@@ -88,7 +88,7 @@
 }
 
 .register-form-icon {
-    color: #667eea;
+    color: var(--theme-primary) !important;
     margin-right: 0.5rem;
 }
 
@@ -110,7 +110,7 @@
 }
 
 .register-card input.form-control.register-input:focus {
-    border-color: #667eea;
+    border-color: var(--theme-primary) !important;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     background-color: white;
     outline: none;
@@ -134,7 +134,7 @@
 }
 
 .register-card input.form-control.register-password-input:focus {
-    border-color: #667eea;
+    border-color: var(--theme-primary) !important;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     background-color: white;
     outline: none;
@@ -150,7 +150,7 @@
 }
 
 .register-password-toggle:hover {
-    color: #667eea;
+    color: var(--theme-primary);
 }
 
 /* Password input wrapper for consistent positioning */
@@ -219,7 +219,7 @@
 }
 
 .register-submit-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--theme-gradient) !important;
     border: none;
     border-radius: 12px;
     color: white;
@@ -249,14 +249,14 @@
 }
 
 .register-terms-link {
-    color: #667eea;
+    color: var(--theme-primary) !important;
     text-decoration: none;
     user-select: text;
     cursor: pointer;
 }
 
 .register-terms-link:hover {
-    color: #5a67d8;
+    color: var(--theme-primary-dark);
     text-decoration: underline;
 }
 

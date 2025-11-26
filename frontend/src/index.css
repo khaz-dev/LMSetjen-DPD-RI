@@ -85,8 +85,10 @@ body.instructor-theme {
   --theme-gradient-start: #3498db;
   --theme-gradient-end: #2980b9;
   --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
+  --theme-gradient-horizontal: linear-gradient(90deg, var(--theme-gradient-start), var(--theme-gradient-end));
   --theme-gradient-light: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(41, 128, 185, 0.1));
   --theme-shadow-color: rgba(52, 152, 219, 0.3);
+  --theme-primary-dark-semi-transparent: rgba(41, 128, 185, 0.9);
   --theme-hover-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
   --theme-card-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
   --theme-text-on-primary: #ffffff;
@@ -124,8 +126,10 @@ body.dark-theme {
   --theme-gradient-start: #8b5cf6;
   --theme-gradient-end: #a78bfa;
   --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
-  --theme-gradient-light: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(167, 139, 250, 0.15));
+  --theme-gradient-horizontal: linear-gradient(90deg, var(--theme-gradient-start), var(--theme-gradient-end));
+  --theme-gradient-light: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(167, 139, 250, 0.1));
   --theme-shadow-color: rgba(139, 92, 246, 0.2);
+  --theme-primary-dark-semi-transparent: rgba(139, 92, 246, 0.9);
   --theme-hover-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
   --theme-card-shadow: 0 4px 15px rgba(139, 92, 246, 0.15);
   --theme-text-on-primary: #1f2937;
@@ -154,6 +158,7 @@ body.instructor-theme.dark-theme {
   --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
   --theme-gradient-light: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(96, 165, 250, 0.15));
   --theme-shadow-color: rgba(59, 130, 246, 0.2);
+  --theme-primary-dark-semi-transparent: rgba(30, 64, 175, 0.9);
   --theme-hover-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
   --theme-card-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
   --theme-text-on-primary: #1e3a8a;

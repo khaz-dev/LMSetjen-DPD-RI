@@ -340,23 +340,39 @@
 
 /* Badge Styles */
 .badge-modern {
-    background: rgba(255, 255, 255, 0.2);
+    /* Base styling - consistent badge component */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
     color: white;
-    border-radius: 25px;
-    padding: 0.6rem 1.2rem;
+    border-radius: 16px;
+    padding: 0.5rem 1rem;
     font-weight: 500;
+    font-size: 0.875rem;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    gap: 0.4rem;
     margin-bottom: 0.5rem;
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
+    user-select: none;
+    cursor: default;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    min-height: 32px;
+    height: auto;
 }
 
 .badge-modern i {
-    user-select: none; /* Prevent icon selection */
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.9em;
+}
+
+.badge-modern:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Loading States */

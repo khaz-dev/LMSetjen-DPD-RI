@@ -1,0 +1,374 @@
+/* Query Taxonomy Widget Styles */
+
+.qtw-widget {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.qtw-widget .card-header {
+  background: linear-gradient(135deg, #f5f7fa 0%, #f0f1f4 100%);
+  border-bottom: 2px solid #e0e0e0;
+  padding: 1.25rem;
+}
+
+.qtw-widget h5 {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: #2c3e50;
+}
+
+.qtw-widget .card-header small {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* Metric Cards */
+.metric-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.1);
+}
+
+.metric-card.highlight {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border: none;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.metric-card.highlight .metric-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.metric-value {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.metric-card.highlight .metric-value {
+  color: white;
+}
+
+/* Category Cards */
+.category-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.category-card:hover {
+  border-color: #28a745;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.1);
+}
+
+.category-header {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.category-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stat {
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.stat .label {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.stat .value {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.top-queries {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 0.75rem;
+}
+
+.top-queries ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+}
+
+.top-queries li {
+  font-size: 0.85rem;
+  color: #495057;
+  padding: 0.25rem 0;
+}
+
+/* Tables */
+.qtw-queries .table,
+.qtw-timeline .table {
+  margin-bottom: 0;
+}
+
+.qtw-queries tbody tr:hover,
+.qtw-timeline tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.qtw-queries td,
+.qtw-timeline td {
+  vertical-align: middle;
+  padding: 0.75rem;
+}
+
+/* Analytics Cards */
+.analytics-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.analytics-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+}
+
+.analytics-card .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #f0f1f4;
+  padding-bottom: 0.75rem;
+}
+
+.analytics-card h6 {
+  margin: 0;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+}
+
+.metric-row span {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.metric-row strong {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.progress {
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  transition: width 0.3s ease;
+}
+
+/* Timeline */
+.trending-badge {
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+  border: 1px solid #ffcccc;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.trending-badge strong {
+  color: #c41e3a;
+  font-size: 0.95rem;
+}
+
+.trend-score {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+/* Tabs */
+.qtw-widget .nav-tabs {
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.qtw-widget .nav-tabs .nav-link {
+  color: #495057;
+  font-weight: 500;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.3s ease;
+}
+
+.qtw-widget .nav-tabs .nav-link:hover {
+  color: #007bff;
+  border-bottom-color: #007bff;
+}
+
+.qtw-widget .nav-tabs .nav-link.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background: transparent;
+}
+
+/* Overview Tab */
+.qtw-overview {
+  padding: 1rem 0;
+}
+
+/* Queries Tab */
+.qtw-queries {
+  padding: 1rem 0;
+}
+
+/* Analytics Tab */
+.qtw-analytics {
+  padding: 1rem 0;
+}
+
+/* Timeline Tab */
+.qtw-timeline {
+  padding: 1rem 0;
+}
+
+/* Filter Select */
+.qtw-queries .form-select {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.qtw-queries .form-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Badge Styles */
+.badge {
+  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+  font-weight: 500;
+}
+
+/* Card Footer */
+.qtw-widget .card-footer {
+  border-top: 1px solid #e0e0e0;
+  padding: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .category-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .qtw-widget h5 {
+    font-size: 1rem;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+
+  .analytics-card .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .analytics-card .header .badge {
+    margin-top: 0.5rem;
+  }
+
+  .table-responsive {
+    font-size: 0.85rem;
+  }
+
+  .btn-group {
+    flex-wrap: wrap;
+  }
+
+  .btn-group .btn {
+    flex: 1;
+    min-width: 50px;
+  }
+}
+
+/* Loading State */
+.text-center {
+  padding: 2rem;
+  color: #6c757d;
+}
+
+/* Alert Styles */
+.alert {
+  margin: 1rem 0;
+  border-radius: 6px;
+}
+
+.alert-info {
+  background-color: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  color: #004085;
+}
+
+/* Button Styles */
+.btn-outline-primary {
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

@@ -48,7 +48,9 @@ const CourseSidebar = ({
     const checkWishlistStatus = async () => {
         try {
             const response = await useAxios.get(`student/wishlist/${userData.user_id}/`);
-            const wishlistItems = response.data;
+            // Handle paginated API response
+            const wishlistData = response.data?.results || response.data || [];
+            const wishlistItems = Array.isArray(wishlistData) ? wishlistData : [];
             const isInList = wishlistItems.some(item => item.course?.id === course.id);
             setLocalIsInWishlist(isInList);
         } catch (error) {
