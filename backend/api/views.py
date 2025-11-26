@@ -1675,9 +1675,14 @@ class StudentCourseListAPIView(generics.ListAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        user_id = self.kwargs['user_id']
-        user =  User.objects.get(id=user_id)
-        return api_models.EnrolledCourse.objects.filter(user=user)
+        user_id = self.kwargs.get('user_id')
+        if not user_id:
+            return api_models.EnrolledCourse.objects.none()
+        try:
+            user = User.objects.get(id=user_id)
+            return api_models.EnrolledCourse.objects.filter(user=user)
+        except User.DoesNotExist:
+            return api_models.EnrolledCourse.objects.none()
 
 class StudentCourseDetailAPIView(generics.RetrieveAPIView):
     serializer_class = api_serializer.EnrolledCourseSerializer
@@ -1685,11 +1690,21 @@ class StudentCourseDetailAPIView(generics.RetrieveAPIView):
     lookup_field = 'enrollment_id'
 
     def get_object(self):
-        user_id = self.kwargs['user_id']
-        enrollment_id = self.kwargs['enrollment_id']
-
-        user = User.objects.get(id=user_id)
-        return api_models.EnrolledCourse.objects.get(user=user, enrollment_id=enrollment_id)
+        user_id = self.kwargs.get('user_id')
+        enrollment_id = self.kwargs.get('enrollment_id')
+        
+        if not user_id or not enrollment_id:
+            raise Http404("User ID and Enrollment ID required")
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise Http404("User not found")
+        
+        try:
+            return api_models.EnrolledCourse.objects.get(user=user, enrollment_id=enrollment_id)
+        except api_models.EnrolledCourse.DoesNotExist:
+            raise Http404("Enrollment not found")
         
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
@@ -2046,13 +2061,18 @@ class StudentNoteCreateAPIView(generics.ListCreateAPIView):
     authentication_classes = []
 
     def get_queryset(self):
-        user_id = self.kwargs['user_id']
-        enrollment_id = self.kwargs['enrollment_id']
-
-        user = User.objects.get(id=user_id)
-        enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
+        user_id = self.kwargs.get('user_id')
+        enrollment_id = self.kwargs.get('enrollment_id')
         
-        return api_models.Note.objects.filter(user=user, course=enrolled.course)
+        if not user_id or not enrollment_id:
+            return api_models.Note.objects.none()
+        
+        try:
+            user = User.objects.get(id=user_id)
+            enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
+            return api_models.Note.objects.filter(user=user, course=enrolled.course)
+        except (User.DoesNotExist, api_models.EnrolledCourse.DoesNotExist):
+            return api_models.Note.objects.none()
 
     def create(self, request, *args, **kwargs):
         user_id = request.data['user_id']
@@ -2083,13 +2103,19 @@ class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = []
 
     def get_object(self):
-        user_id = self.kwargs['user_id']
-        enrollment_id = self.kwargs['enrollment_id']
-        note_id = self.kwargs['note_id']
-
-        user = User.objects.get(id=user_id)
-        enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
-        note = api_models.Note.objects.get(user=user, course=enrolled.course, id=note_id)
+        user_id = self.kwargs.get('user_id')
+        enrollment_id = self.kwargs.get('enrollment_id')
+        note_id = self.kwargs.get('note_id')
+        
+        if not user_id or not enrollment_id or not note_id:
+            raise Http404("User ID, Enrollment ID, and Note ID required")
+        
+        try:
+            user = User.objects.get(id=user_id)
+            enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
+            return api_models.Note.objects.get(user=user, course=enrolled.course, id=note_id)
+        except (User.DoesNotExist, api_models.EnrolledCourse.DoesNotExist, api_models.Note.DoesNotExist):
+            raise Http404("Resource not found")
         return note
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -2158,11 +2184,21 @@ class StudentRateCourseUpdateAPIView(generics.RetrieveUpdateAPIView):
     authentication_classes = []
 
     def get_object(self):
-        user_id = self.kwargs['user_id']
-        review_id = self.kwargs['review_id']
-
-        user = User.objects.get(id=user_id)
-        return api_models.Review.objects.get(id=review_id, user=user)
+        user_id = self.kwargs.get('user_id')
+        review_id = self.kwargs.get('review_id')
+        
+        if not user_id or not review_id:
+            raise Http404("User ID and Review ID required")
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise Http404("User not found")
+        
+        try:
+            return api_models.Review.objects.get(id=review_id, user=user)
+        except api_models.Review.DoesNotExist:
+            raise Http404("Review not found")
 
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
@@ -2179,9 +2215,15 @@ class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
     authentication_classes = []
 
     def get_queryset(self):
-        user_id = self.kwargs['user_id']
-        user = User.objects.get(id=user_id)
-        return api_models.Wishlist.objects.filter(user=user)
+        user_id = self.kwargs.get('user_id')
+        if not user_id:
+            return api_models.Wishlist.objects.none()
+        
+        try:
+            user = User.objects.get(id=user_id)
+            return api_models.Wishlist.objects.filter(user=user)
+        except User.DoesNotExist:
+            return api_models.Wishlist.objects.none()
     
     def create(self, request, *args, **kwargs):
         try:
@@ -2260,9 +2302,14 @@ class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
     authentication_classes = []
 
     def get_queryset(self):
-        course_id = self.kwargs['course_id']
-        course = api_models.Course.objects.get(id=course_id)
-        return api_models.Question_Answer.objects.filter(course=course)
+        course_id = self.kwargs.get('course_id')
+        if not course_id:
+            return api_models.Question_Answer.objects.none()
+        try:
+            course = api_models.Course.objects.get(id=course_id)
+            return api_models.Question_Answer.objects.filter(course=course)
+        except api_models.Course.DoesNotExist:
+            return api_models.Question_Answer.objects.none()
     
     def create(self, request, *args, **kwargs):
         course_id = request.data['course_id']
