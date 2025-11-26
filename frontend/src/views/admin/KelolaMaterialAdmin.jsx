@@ -134,19 +134,45 @@ function KelolaMaterialAdmin() {
         }
 
         try {
-            await apiInstance.delete(`admin/category/${category.id}/`);
-            Toast().fire({
-                icon: "success",
-                title: "Category deleted successfully"
-            });
-            fetchCategories();
+            const response = await apiInstance.delete(`admin/category/${category.id}/`);
+            
+            // Handle both 200 OK and 204 NO_CONTENT responses
+            if (response.status === 204 || response.status === 200) {
+                Toast().fire({
+                    icon: "success",
+                    title: "Category deleted successfully"
+                });
+                fetchCategories();
+            }
         } catch (error) {
             console.error("Error deleting category:", error);
-            const errorMsg = error.response?.data?.error || "Failed to delete category";
-            Toast().fire({
-                icon: "error",
-                title: errorMsg
-            });
+            
+            // Handle different error scenarios
+            if (error.response?.status === 400) {
+                // Category has courses
+                const errorMsg = error.response?.data?.error || "Cannot delete category with courses";
+                Toast().fire({
+                    icon: "warning",
+                    title: errorMsg
+                });
+            } else if (error.response?.status === 404) {
+                Toast().fire({
+                    icon: "error",
+                    title: "Category not found"
+                });
+                fetchCategories();
+            } else if (error.response?.status === 403) {
+                Toast().fire({
+                    icon: "error",
+                    title: "You do not have permission to delete this category"
+                });
+            } else {
+                const errorMsg = error.response?.data?.error || error.response?.data?.detail || "Failed to delete category";
+                Toast().fire({
+                    icon: "error",
+                    title: errorMsg
+                });
+            }
         }
     };
 

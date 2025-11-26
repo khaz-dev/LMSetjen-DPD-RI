@@ -4840,14 +4840,18 @@ class AdminCategoryDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             category_name = instance.title
             instance.delete()
             
+            # Return 200 OK with message instead of 204 for better frontend handling
             return Response(
                 {
-                    'message': f'Category "{category_name}" deleted successfully'
+                    'message': f'Category "{category_name}" deleted successfully',
+                    'success': True
                 },
-                status=status.HTTP_204_NO_CONTENT
+                status=status.HTTP_200_OK
             )
         except api_models.Category.DoesNotExist:
             return Response({'error': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
