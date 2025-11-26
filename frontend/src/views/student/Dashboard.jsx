@@ -233,31 +233,17 @@ function Dashboard() {
                                     </div>
                                     <div className="col-md-4 text-md-end mt-3 mt-md-0">
                                         <div className="d-flex justify-content-md-end justify-content-center text-primary">
-                                                {progressData.length > 0 ? (
-                                                    <div
-                                                        className="progress-circle"
-                                                        style={{ '--progress': getAverageProgress() || 0 }}
-                                                    >
-                                                        <div className="progress-inner">
-                                                        <div className="text-center">
-                                                            <div className="h3 fw-bold mb-0">{getAverageProgress() || 0}%</div>
-                                                            <small>Complete</small>
-                                                        </div>
+                                                <div
+                                                    className="progress-circle"
+                                                    style={{ '--progress': getAverageProgress() || 0 }}
+                                                >
+                                                    <div className="progress-inner">
+                                                    <div className="text-center">
+                                                        <div className="h3 fw-bold mb-0">{getAverageProgress() || 0}%</div>
+                                                        <small>Complete</small>
                                                     </div>
                                                 </div>
-                                                ) : (
-                                                    <div
-                                                        className="progress-circle"
-                                                        style={{ '--progress': 5 }}
-                                                    >
-                                                        <div className="progress-inner">
-                                                        <div className="text-center">
-                                                            <div className="h3 fw-bold mb-0">--%</div>
-                                                            <small style={{ fontSize: '0.7rem' }}>Loading...</small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                )}
+                                            </div>
                                         </div>
                                         <h5 className="mt-2 mb-0 opacity-90 medium text-md-end text-center">Average Progress</h5>
                                     </div>
