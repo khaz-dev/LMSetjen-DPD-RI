@@ -29,7 +29,9 @@ function KelolaMaterialAdmin() {
         try {
             setLoading(true);
             const response = await apiInstance.get("admin/category/");
-            setCategories(response.data || []);
+            // Handle both paginated and direct array responses
+            const data = Array.isArray(response.data) ? response.data : (response.data?.results || []);
+            setCategories(data);
         } catch (error) {
             console.error("Error fetching categories:", error);
             Toast().fire({
