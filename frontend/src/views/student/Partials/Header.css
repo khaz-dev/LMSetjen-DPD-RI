@@ -338,41 +338,41 @@
     animation: pulse 2s infinite;
 }
 
-/* Badge Styles */
-.badge-modern {
-    /* Base styling - consistent badge component */
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
-    color: white;
-    border-radius: 16px;
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    font-size: 0.875rem;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    margin-bottom: 0.5rem;
-    user-select: none;
-    cursor: default;
-    white-space: nowrap;
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-    min-height: 32px;
-    height: auto;
+/* Badge Styles - HIGH SPECIFICITY to prevent page-level overrides */
+.student-header-card .badge-modern {
+    /* Base styling - consistent badge component across all pages */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%) !important;
+    color: white !important;
+    border-radius: 16px !important;
+    padding: 0.5rem 1rem !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.4rem !important;
+    margin-bottom: 0.5rem !important;
+    user-select: none !important;
+    cursor: default !important;
+    white-space: nowrap !important;
+    transition: all 0.3s ease !important;
+    box-sizing: border-box !important;
+    min-height: 32px !important;
+    height: auto !important;
 }
 
-.badge-modern i {
-    user-select: none;
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.9em;
+.student-header-card .badge-modern i {
+    user-select: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 0.9em !important;
 }
 
-.badge-modern:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.student-header-card .badge-modern:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Loading States */
