@@ -1,10 +1,18 @@
 import axios from "axios";
 import Cookie from "js-cookie";
 
-// Get API URL from environment variable, fallback to localhost for development
+// Get API URL from environment variable, fallback to relative path for production
 // On production, VITE_API_BASE_URL will be '/api' (relative path)
 // On localhost development, it defaults to 'http://127.0.0.1:8000'
-const baseURL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+// The relative path is safer as it uses the same origin (http/https, domain, port)
+const baseURL = import.meta.env.VITE_API_BASE_URL || (() => {
+  // In development, use localhost. In production, use relative path
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://127.0.0.1:8000';
+  }
+  // In production, use relative path (no hardcoded domain)
+  return '/api';
+})();
 
 // Build the full API base URL
 // If baseURL is already a full URL (http://...), use it as-is + /v1
