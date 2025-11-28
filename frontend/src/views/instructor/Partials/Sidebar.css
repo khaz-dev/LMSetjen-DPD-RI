@@ -584,52 +584,12 @@
     }
 }
 
-/* Ensure sidebar column has NO top gaps */
-.col-lg-3:has(.instructor-sidebar),
-.col-md-4:has(.instructor-sidebar) {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-
-/* Ensure content columns align at the top */
-.row:has(.instructor-sidebar) > .col-lg-9,
-.row:has(.instructor-sidebar) > .col-md-8,
-.row:has(.instructor-sidebar) > .col-12 {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-
 /* Desktop: Large screens (lg >= 992px) */
 @media (min-width: 992px) {
-    /* Expanded State: Sidebar 25% width, Content 75% */
-    .col-lg-3.instructor-sidebar-column {
-        flex: 0 0 auto !important;
-        width: 25% !important;
-        max-width: 25% !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .row:has(.instructor-sidebar-column) > .col-lg-9 {
-        flex: 0 0 auto !important;
-        width: 75% !important;
-        max-width: 75% !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* Collapsed State: Sidebar ~85px, Content ~915px */
-    .col-lg-3.instructor-sidebar-column:has(.instructor-sidebar.collapsed) {
-        flex: 0 0 auto !important;
-        width: calc(85px + 1rem) !important;
-        max-width: calc(85px + 1rem) !important;
-        min-width: calc(85px + 1rem) !important;
-    }
-
-    .row:has(.col-lg-3.instructor-sidebar-column:has(.instructor-sidebar.collapsed)) > .col-lg-9 {
-        flex: 1 1 auto !important;
-        width: auto !important;
-        max-width: 100% !important;
-    }
-
+    /* REMOVED: Fixed width rules that conflicted with Dashboard.css flex properties */
+    /* Layout is now handled by Dashboard.css which has proper flex properties */
+    /* Sidebar collapse is controlled by Dashboard.css media queries and flex rules */
+    
     /* Direct sidebar width control */
     .col-lg-3.instructor-sidebar-column .instructor-sidebar {
         transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -642,35 +602,10 @@
 
 /* Tablet: Medium screens (md: 768px - 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
-    /* Expanded State: Sidebar 33%, Content 67% */
-    .col-md-4.instructor-sidebar-column {
-        flex: 0 0 auto !important;
-        width: 33.333333% !important;
-        max-width: 33.333333% !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .row:has(.instructor-sidebar-column) > .col-md-8 {
-        flex: 0 0 auto !important;
-        width: 66.666667% !important;
-        max-width: 66.666667% !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* Collapsed State: Sidebar ~85px, Content expands */
-    .col-md-4.instructor-sidebar-column:has(.instructor-sidebar.collapsed) {
-        flex: 0 0 auto !important;
-        width: fit-content !important;
-        max-width: calc(85px + 1rem) !important;
-        min-width: calc(85px + 1rem) !important;
-    }
-
-    .row:has(.col-md-4.instructor-sidebar-column:has(.instructor-sidebar.collapsed)) > .col-md-8 {
-        flex: 1 1 auto !important;
-        width: auto !important;
-        max-width: 100% !important;
-    }
-
+    /* REMOVED: Fixed width rules that conflicted with Dashboard.css flex properties */
+    /* Layout is now handled by Dashboard.css which has proper flex properties */
+    /* Sidebar collapse is controlled by Dashboard.css media queries and flex rules */
+    
     /* Direct sidebar width control */
     .col-md-4.instructor-sidebar-column .instructor-sidebar {
         transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
