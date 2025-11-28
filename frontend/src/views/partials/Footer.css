@@ -1,0 +1,141 @@
+/* Footer Component Styles */
+
+/* Main Footer Container */
+.footer-wrapper {
+  background: white;
+  border-top: 1px solid #e9ecef;
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+/* Footer Content Container - override admin page padding */
+.footer-wrapper .container {
+  padding: 0 !important;
+}
+
+/* Footer Row - align items center */
+.footer-content-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* ===== BRAND SECTION ===== */
+.footer-brand-section {
+  flex: 1;
+  min-width: 250px;
+}
+
+.footer-brand-name {
+  font-weight: 700;
+  color: #343a40;
+  margin-right: 0.5rem;
+  display: inline;
+  transition: color 0.3s ease;
+}
+
+.footer-brand-copyright {
+  font-size: 0.875rem;
+  color: #6c757d;
+  display: block;
+}
+
+/* ===== QUICK LINKS SECTION ===== */
+.footer-links-section {
+  flex: 1.25;
+  text-align: center;
+  margin: 0.5rem 0;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.footer-quick-link {
+  text-decoration: none;
+  font-size: 0.875rem;
+  color: #6c757d;
+  transition: all 0.3s ease;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.footer-quick-link:hover {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  text-decoration: none;
+}
+
+/* ===== CONTACT SECTION ===== */
+.footer-contact-section {
+  flex: 1;
+  text-align: right;
+  min-width: 250px;
+}
+
+.footer-contact-icon {
+  margin-right: 0.25rem;
+  color: #667eea;
+  transition: color 0.3s ease;
+}
+
+.footer-contact-email {
+  text-decoration: none;
+  color: #6c757d;
+  transition: color 0.3s ease;
+  display: inline;
+}
+
+.footer-contact-email:hover {
+  color: #667eea;
+  text-decoration: none;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .footer-content-row {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .footer-brand-section {
+    min-width: auto;
+  }
+
+  .footer-links-section {
+    margin: 0;
+    justify-content: center;
+    flex: auto;
+  }
+
+  .footer-contact-section {
+    text-align: center;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-wrapper {
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+
+  .footer-quick-link {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
+    margin: 0.25rem;
+  }
+
+  .footer-links-section {
+    gap: 0.5rem;
+  }
+
+  .footer-contact-section .footer-contact-icon {
+    display: none;
+  }
+}
