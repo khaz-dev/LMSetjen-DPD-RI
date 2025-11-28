@@ -1,16 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 import { 
     FaBook, FaFileDownload, FaGlobe, FaServer, FaDatabase, FaShieldAlt,
     FaUsers, FaCog, FaCode, FaNetworkWired, FaDocker, FaCloud,
     FaLock, FaKey, FaUserShield, FaChartLine, FaClipboardCheck,
     FaPrint, FaLanguage, FaCheckCircle, FaInfoCircle
-} from 'react-icons/fa';
-import AdminHeader from '../partials/AdminHeader';
-import Footer from '../partials/Footer';
-import './SystemDocumentation.css';
+} from "react-icons/fa";
+import AdminHeader from "../partials/AdminHeader";
+import Footer from "../partials/Footer";
+import "./SystemDocumentation.css";
 
 function SystemDocumentation() {
-    const [language, setLanguage] = useState('en'); // 'en' or 'id'
+    const [language, setLanguage] = useState("en"); // 'en' or 'id'
     const contentRef = useRef(null);
 
     const content = {
@@ -856,12 +856,12 @@ function SystemDocumentation() {
     const scrollToSection = (sectionId) => {
         const element = document.getElementById(sectionId);
         if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
         }
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <AdminHeader />
             
             <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
@@ -902,10 +902,10 @@ function SystemDocumentation() {
                             </span>
                             <span className="metadata-item">
                                 <FaCheckCircle />
-                                {t.lastUpdated}: {new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { 
-                                    year: 'numeric', 
-                                    month: 'long', 
-                                    day: 'numeric' 
+                                {t.lastUpdated}: {new Date().toLocaleDateString(language === "en" ? "en-US" : "id-ID", { 
+                                    year: "numeric", 
+                                    month: "long", 
+                                    day: "numeric" 
                                 })}
                             </span>
                         </div>
@@ -1271,7 +1271,7 @@ function SystemDocumentation() {
                         <h3 className="subsection-title">{t.roles.student}</h3>
                         <ul className="permission-list">
                             {t.roles.studentPerms.map((perm, index) => (
-                                <li key={index} className={perm.startsWith('✓') ? 'allowed' : 'denied'}>
+                                <li key={index} className={perm.startsWith("✓") ? "allowed" : "denied"}>
                                     {perm}
                                 </li>
                             ))}
@@ -1280,7 +1280,7 @@ function SystemDocumentation() {
                         <h3 className="subsection-title">{t.roles.teacher}</h3>
                         <ul className="permission-list">
                             {t.roles.teacherPerms.map((perm, index) => (
-                                <li key={index} className={perm.startsWith('✓') ? 'allowed' : 'denied'}>
+                                <li key={index} className={perm.startsWith("✓") ? "allowed" : "denied"}>
                                     {perm}
                                 </li>
                             ))}
@@ -1289,7 +1289,7 @@ function SystemDocumentation() {
                         <h3 className="subsection-title">{t.roles.admin}</h3>
                         <ul className="permission-list">
                             {t.roles.adminPerms.map((perm, index) => (
-                                <li key={index} className={perm.startsWith('✓') ? 'allowed' : 'denied'}>
+                                <li key={index} className={perm.startsWith("✓") ? "allowed" : "denied"}>
                                     {perm}
                                 </li>
                             ))}

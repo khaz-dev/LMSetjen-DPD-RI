@@ -667,9 +667,13 @@
 .stat-card:nth-child(4) { animation-delay: 0.4s; }
 
 /* Recent Activity Tab - Add spacing before footer */
-.admin-dashboard .modern-dashboard section + footer,
-.admin-dashboard section + footer {
-    margin-top: 80px;
+.admin-page-wrapper footer {
+    margin-top: 80px !important;
+}
+
+/* Override Footer's inline marginTop for consistency */
+.admin-page-wrapper > footer {
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Print Styles */

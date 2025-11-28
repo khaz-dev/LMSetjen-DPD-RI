@@ -193,7 +193,7 @@ function DashboardAdmin() {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div className="admin-page-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <AdminHeader />
                 
             <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>

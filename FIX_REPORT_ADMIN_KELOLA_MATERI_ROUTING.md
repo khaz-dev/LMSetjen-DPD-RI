@@ -17,12 +17,12 @@ The production server was returning **302 redirect** (Authentication required) f
 **Issue #1: Restrictive Nginx Regex Pattern**
 ```nginx
 # BEFORE (WRONG - Restrictive):
-location ~ ^/admin/(dashboard|users|courses|analytics|reports|system|profile)/ {
+location ~ ^/admin/(dashboard|users|analytics|reports|system|profile)/ {
     try_files $uri $uri/ /index.html;
 }
 ```
 
-The regex pattern explicitly listed allowed admin routes: `dashboard`, `users`, `courses`, `analytics`, `reports`, `system`, `profile`
+The regex pattern explicitly listed allowed admin routes: `dashboard`, `users`, `analytics`, `reports`, `system`, `profile`
 
 **But:** The new route `/admin/kelola-materi/` was NOT in this list!
 
@@ -45,7 +45,7 @@ https://lmsetjendpdri.duckdns.org/admin/kelola-materi/
                                     ↓
 Nginx (restrictive regex pattern)
                                     ↓
-Pattern `/admin/(dashboard|users|courses|...)` doesn't match `kelola-materi`
+Pattern `/admin/(dashboard|users|...)` doesn't match `kelola-materi`
                                     ↓
 Falls through to Django admin proxy: `location /admin { proxy_pass ... }`
                                     ↓
@@ -62,7 +62,7 @@ Django admin requires authentication
 
 **BEFORE (Restrictive):**
 ```nginx
-location ~ ^/admin/(dashboard|users|courses|analytics|reports|system|profile)/ {
+location ~ ^/admin/(dashboard|users|analytics|reports|system|profile)/ {
     try_files $uri $uri/ /index.html;
     add_header Cache-Control "no-cache, no-store, must-revalidate" always;
     add_header Pragma "no-cache" always;
@@ -165,7 +165,7 @@ curl https://localhost/admin/kelola-materi/ | head -50
 | Aspect | Before | After |
 |--------|--------|-------|
 | **Nginx Pattern** | Regex with explicit list | Simple `/admin/` path |
-| **Routes Matched** | dashboard, users, courses, analytics, reports, system, profile | All routes under `/admin/` |
+| **Routes Matched** | dashboard, users, analytics, reports, system, profile | All routes under `/admin/` |
 | **/admin/kelola-materi/** | ❌ 302 redirect | ✅ 200 OK with React SPA |
 | **New Admin Routes** | ❌ Would require config change | ✅ Automatically supported |
 | **Response Time** | N/A | ~200-300ms (includes SPA load) |

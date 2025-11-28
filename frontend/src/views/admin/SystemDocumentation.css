@@ -7,9 +7,13 @@
 }
 
 /* Footer Spacing - Match DashboardAdmin pattern */
-.system-documentation .modern-dashboard section + footer,
-.system-documentation section + footer {
-    margin-top: 80px;
+.admin-page-wrapper footer {
+    margin-top: 80px !important;
+}
+
+/* Override Footer's inline marginTop for consistency */
+.admin-page-wrapper > footer {
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Section wrapper with proper spacing */
