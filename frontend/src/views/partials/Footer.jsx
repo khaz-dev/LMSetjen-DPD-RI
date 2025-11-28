@@ -81,7 +81,6 @@ function Footer() {
     <footer 
       className="py-3"
       style={{
-        marginTop: '4rem',
         background: 'white',
         borderTop: '1px solid #e9ecef',
         boxShadow: '0 -4px 15px rgba(0, 0, 0, 0.1)'

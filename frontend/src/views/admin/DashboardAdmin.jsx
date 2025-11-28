@@ -1,21 +1,21 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import AdminHeader from '../partials/AdminHeader';
-import Footer from '../partials/Footer';
-import apiInstance from '../../utils/axios';
-import UserData from '../plugin/UserData';
-import Toast from '../plugin/Toast';
+import React, { useState, useEffect, lazy, Suspense } from "react";
+import AdminHeader from "../partials/AdminHeader";
+import Footer from "../partials/Footer";
+import apiInstance from "../../utils/axios";
+import UserData from "../plugin/UserData";
+import Toast from "../plugin/Toast";
 
 // Analytics Components
-import ContentGapWidget from '../../components/Analytics/ContentGapWidget';
-import AtRiskStudentsWidget from '../../components/Analytics/AtRiskStudentsWidget';
-import RecommendationMetricsWidget from '../../components/Analytics/RecommendationMetricsWidget';
-import SearchQualityWidget from '../../components/Analytics/SearchQualityWidget';
-import QueryTaxonomyWidget from '../../components/Analytics/QueryTaxonomyWidget';
+import ContentGapWidget from "../../components/Analytics/ContentGapWidget";
+import AtRiskStudentsWidget from "../../components/Analytics/AtRiskStudentsWidget";
+import RecommendationMetricsWidget from "../../components/Analytics/RecommendationMetricsWidget";
+import SearchQualityWidget from "../../components/Analytics/SearchQualityWidget";
+import QueryTaxonomyWidget from "../../components/Analytics/QueryTaxonomyWidget";
 
 // Lazy load Chart.js components (516 KB)
-const Line = lazy(() => import('react-chartjs-2').then(m => ({ default: m.Line })));
-const Bar = lazy(() => import('react-chartjs-2').then(m => ({ default: m.Bar })));
-const Doughnut = lazy(() => import('react-chartjs-2').then(m => ({ default: m.Doughnut })));
+const Line = lazy(() => import("react-chartjs-2").then(m => ({ default: m.Line })));
+const Bar = lazy(() => import("react-chartjs-2").then(m => ({ default: m.Bar })));
+const Doughnut = lazy(() => import("react-chartjs-2").then(m => ({ default: m.Doughnut })));
 
 import {
     Chart as ChartJS,
@@ -29,8 +29,8 @@ import {
     Tooltip,
     Legend,
     Filler,
-} from 'chart.js';
-import './DashboardAdmin.css';
+} from "chart.js";
+import "./DashboardAdmin.css";
 
 // Register Chart.js components
 ChartJS.register(
@@ -51,10 +51,10 @@ function DashboardAdmin() {
     const [enrollmentAnalytics, setEnrollmentAnalytics] = useState(null);
     const [systemHealth, setSystemHealth] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState("overview");
 
     const userData = UserData();
-    const isAdmin = userData?.role === 'admin';
+    const isAdmin = userData?.role === "admin";
     const isSuperAdmin = userData?.is_super_admin || false;
 
     useEffect(() => {
@@ -67,33 +67,33 @@ function DashboardAdmin() {
 
     const fetchDashboardData = async () => {
         try {
-            const response = await apiInstance.get('admin/dashboard-summary/');
+            const response = await apiInstance.get("admin/dashboard-summary/");
             setDashboardData(response.data);
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
+            console.error("Error fetching dashboard data:", error);
             Toast().fire({
-                icon: 'error',
-                title: 'Failed to load dashboard data'
+                icon: "error",
+                title: "Failed to load dashboard data"
             });
         }
     };
 
     const fetchEnrollmentAnalytics = async () => {
         try {
-            const response = await apiInstance.get('admin/enrollment-analytics/');
+            const response = await apiInstance.get("admin/enrollment-analytics/");
             setEnrollmentAnalytics(response.data);
         } catch (error) {
-            console.error('Error fetching enrollment analytics:', error);
+            console.error("Error fetching enrollment analytics:", error);
         }
     };
 
     const fetchSystemHealth = async () => {
         try {
-            const response = await apiInstance.get('admin/system-health/');
+            const response = await apiInstance.get("admin/system-health/");
             setSystemHealth(response.data);
             setLoading(false);
         } catch (error) {
-            console.error('Error fetching system health:', error);
+            console.error("Error fetching system health:", error);
             setLoading(false);
         }
     };
@@ -107,10 +107,10 @@ function DashboardAdmin() {
                 `${item.month.substring(0, 3)} ${item.year}`
             ),
             datasets: [{
-                label: 'Monthly Enrollments',
+                label: "Monthly Enrollments",
                 data: enrollmentAnalytics.monthly_enrollments.map(item => item.enrollments),
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: "rgb(75, 192, 192)",
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
                 tension: 0.4,
                 fill: true,
             }]
@@ -125,15 +125,15 @@ function DashboardAdmin() {
             datasets: [{
                 data: enrollmentAnalytics.category_distribution.map(item => item.enrollments),
                 backgroundColor: [
-                    '#FF6384',
-                    '#36A2EB',
-                    '#FFCE56',
-                    '#4BC0C0',
-                    '#9966FF',
-                    '#FF9F40'
+                    "#FF6384",
+                    "#36A2EB",
+                    "#FFCE56",
+                    "#4BC0C0",
+                    "#9966FF",
+                    "#FF9F40"
                 ],
                 borderWidth: 2,
-                borderColor: '#ffffff'
+                borderColor: "#ffffff"
             }]
         };
     };
@@ -143,13 +143,13 @@ function DashboardAdmin() {
 
         return {
             labels: enrollmentAnalytics.top_performing_courses.map(course => 
-                course.title.length > 20 ? course.title.substring(0, 20) + '...' : course.title
+                course.title.length > 20 ? course.title.substring(0, 20) + "..." : course.title
             ),
             datasets: [{
-                label: 'Enrollments',
+                label: "Enrollments",
                 data: enrollmentAnalytics.top_performing_courses.map(course => course.enrollments),
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: "rgba(54, 162, 235, 0.6)",
+                borderColor: "rgba(54, 162, 235, 1)",
                 borderWidth: 1,
             }]
         };
@@ -180,7 +180,7 @@ function DashboardAdmin() {
                 <div className="container-fluid mt-5 pt-5">
                     <div className="row justify-content-center">
                         <div className="col-md-6 text-center">
-                            <div className="spinner-border text-primary" style={{width: '3rem', height: '3rem'}}>
+                            <div className="spinner-border text-primary" style={{width: "3rem", height: "3rem"}}>
                                 <span className="visually-hidden">Loading...</span>
                             </div>
                             <p className="mt-3">Loading admin dashboard...</p>
@@ -193,7 +193,7 @@ function DashboardAdmin() {
     }
 
     return (
-        <div className="admin-page-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <AdminHeader />
                 
             <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
@@ -227,72 +227,72 @@ function DashboardAdmin() {
                     <ul className="nav nav-tabs admin-nav-tabs mb-4">
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('overview')}
+                                className={`nav-link ${activeTab === "overview" ? "active" : ""}`}
+                                onClick={() => setActiveTab("overview")}
                             >
                                 <i className="fas fa-chart-line me-2"></i>Overview
                             </button>
                         </li>
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${activeTab === 'analytics' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('analytics')}
+                                className={`nav-link ${activeTab === "analytics" ? "active" : ""}`}
+                                onClick={() => setActiveTab("analytics")}
                             >
                                 <i className="fas fa-chart-bar me-2"></i>Analytics
                             </button>
                         </li>
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${activeTab === 'system' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('system')}
+                                className={`nav-link ${activeTab === "system" ? "active" : ""}`}
+                                onClick={() => setActiveTab("system")}
                             >
                                 <i className="fas fa-server me-2"></i>System Health
                             </button>
                         </li>
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${activeTab === 'activity' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('activity')}
+                                className={`nav-link ${activeTab === "activity" ? "active" : ""}`}
+                                onClick={() => setActiveTab("activity")}
                             >
                                 <i className="fas fa-activity me-2"></i>Recent Activity
                             </button>
                         </li>
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${activeTab === 'content-gaps' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('content-gaps')}
+                                className={`nav-link ${activeTab === "content-gaps" ? "active" : ""}`}
+                                onClick={() => setActiveTab("content-gaps")}
                             >
                                 <i className="fas fa-search-minus me-2"></i>Content Gaps
                             </button>
                         </li>
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${activeTab === 'at-risk' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('at-risk')}
+                                className={`nav-link ${activeTab === "at-risk" ? "active" : ""}`}
+                                onClick={() => setActiveTab("at-risk")}
                             >
                                 <i className="fas fa-user-shield me-2"></i>At-Risk Students
                             </button>
                         </li>
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${activeTab === 'recommendations' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('recommendations')}
+                                className={`nav-link ${activeTab === "recommendations" ? "active" : ""}`}
+                                onClick={() => setActiveTab("recommendations")}
                             >
                                 <i className="fas fa-star me-2"></i>Recommendations
                             </button>
                         </li>
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${activeTab === 'search-quality' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('search-quality')}
+                                className={`nav-link ${activeTab === "search-quality" ? "active" : ""}`}
+                                onClick={() => setActiveTab("search-quality")}
                             >
                                 <i className="fas fa-chart-line me-2"></i>Search Quality
                             </button>
                         </li>
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${activeTab === 'query-taxonomy' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('query-taxonomy')}
+                                className={`nav-link ${activeTab === "query-taxonomy" ? "active" : ""}`}
+                                onClick={() => setActiveTab("query-taxonomy")}
                             >
                                 <i className="fas fa-tags me-2"></i>Query Taxonomy
                             </button>
@@ -302,7 +302,7 @@ function DashboardAdmin() {
                     {/* Tab Content */}
                     <div className="tab-content">
                         {/* Overview Tab */}
-                        {activeTab === 'overview' && (
+                        {activeTab === "overview" && (
                             <div className="tab-pane fade show active">
                                 {/* Statistics Cards */}
                                 <div className="row">
@@ -498,7 +498,7 @@ function DashboardAdmin() {
                         )}
 
                         {/* Analytics Tab */}
-                        {activeTab === 'analytics' && (
+                        {activeTab === "analytics" && (
                             <div className="tab-pane fade show active">
                                 <Suspense fallback={
                                     <div className="text-center py-5">
@@ -523,11 +523,11 @@ function DashboardAdmin() {
                                                             responsive: true,
                                                             plugins: {
                                                                 legend: {
-                                                                    position: 'top',
+                                                                    position: "top",
                                                                 },
                                                                 title: {
                                                                     display: true,
-                                                                    text: 'Monthly Enrollment Statistics'
+                                                                    text: "Monthly Enrollment Statistics"
                                                                 }
                                                             }
                                                         }}
@@ -551,7 +551,7 @@ function DashboardAdmin() {
                                                             responsive: true,
                                                             plugins: {
                                                                 legend: {
-                                                                    position: 'bottom',
+                                                                    position: "bottom",
                                                                 }
                                                             }
                                                         }}
@@ -579,7 +579,7 @@ function DashboardAdmin() {
                                                                 },
                                                                 title: {
                                                                     display: true,
-                                                                    text: 'Course Enrollment Numbers'
+                                                                    text: "Course Enrollment Numbers"
                                                                 }
                                                             }
                                                         }}
@@ -594,7 +594,7 @@ function DashboardAdmin() {
                         )}
 
                         {/* System Health Tab */}
-                        {activeTab === 'system' && systemHealth && (
+                        {activeTab === "system" && systemHealth && (
                             <div className="tab-pane fade show active">
                                 <div className="row">
                                     <div className="col-lg-8 mb-4">
@@ -615,7 +615,7 @@ function DashboardAdmin() {
                                                         <div key={key} className="col-md-4 mb-3">
                                                             <div className="metric-card">
                                                                 <h4>{value}</h4>
-                                                                <p>{key.replace(/_/g, ' ').toUpperCase()}</p>
+                                                                <p>{key.replace(/_/g, " ").toUpperCase()}</p>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -632,9 +632,9 @@ function DashboardAdmin() {
                                             <div className="server-info-list">
                                                 {Object.entries(systemHealth.server_information).map(([key, value]) => (
                                                     <div key={key} className="info-item">
-                                                        <span className="info-label">{key.replace(/_/g, ' ')}</span>
+                                                        <span className="info-label">{key.replace(/_/g, " ")}</span>
                                                         <span className="info-value">
-                                                            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value.toString()}
+                                                            {typeof value === "boolean" ? (value ? "Yes" : "No") : value.toString()}
                                                         </span>
                                                     </div>
                                                 ))}
@@ -646,7 +646,7 @@ function DashboardAdmin() {
                         )}
 
                         {/* Recent Activity Tab */}
-                        {activeTab === 'activity' && (
+                        {activeTab === "activity" && (
                             <div className="tab-pane fade show active">
                                 <div className="row">
                                     <div className="col-lg-6 mb-4">
@@ -725,35 +725,35 @@ function DashboardAdmin() {
                         )}
 
                         {/* Content Gaps Tab (TIER 1) */}
-                        {activeTab === 'content-gaps' && (
+                        {activeTab === "content-gaps" && (
                             <div className="tab-pane fade show active">
                                 <ContentGapWidget />
                             </div>
                         )}
 
                         {/* At-Risk Students Tab (TIER 1) */}
-                        {activeTab === 'at-risk' && (
+                        {activeTab === "at-risk" && (
                             <div className="tab-pane fade show active">
                                 <AtRiskStudentsWidget />
                             </div>
                         )}
 
                         {/* Recommendations Tab (TIER 1) */}
-                        {activeTab === 'recommendations' && (
+                        {activeTab === "recommendations" && (
                             <div className="tab-pane fade show active">
                                 <RecommendationMetricsWidget />
                             </div>
                         )}
 
                         {/* Search Quality Tab (PHASE 4.10) */}
-                        {activeTab === 'search-quality' && (
+                        {activeTab === "search-quality" && (
                             <div className="tab-pane fade show active">
                                 <SearchQualityWidget />
                             </div>
                         )}
 
                         {/* Query Taxonomy Tab (PHASE 4.10 TIER 1.2) */}
-                        {activeTab === 'query-taxonomy' && (
+                        {activeTab === "query-taxonomy" && (
                             <div className="tab-pane fade show active">
                                 <QueryTaxonomyWidget />
                             </div>

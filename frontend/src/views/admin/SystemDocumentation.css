@@ -6,14 +6,15 @@
     min-height: 100vh;
 }
 
-/* Footer Spacing - Match DashboardAdmin pattern */
-.admin-page-wrapper footer {
-    margin-top: 80px !important;
+/* Footer Spacing - Proper spacing without weird gaps */
+.system-documentation section {
+    margin-bottom: 40px;
 }
 
-/* Override Footer's inline marginTop for consistency */
-.admin-page-wrapper > footer {
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1) !important;
+.system-documentation footer {
+    margin-top: 0;
+    padding-top: 30px;
+    padding-bottom: 30px;
 }
 
 /* Section wrapper with proper spacing */
