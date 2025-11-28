@@ -31,10 +31,13 @@
 
 .footer-brand-name {
   font-weight: 700;
-  color: #343a40;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin-right: 0.5rem;
   display: inline;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .footer-brand-copyright {

@@ -27,8 +27,7 @@ function Footer() {
         <div className="footer-content-row">
           {/* Brand Section */}
           <div className="footer-brand-section">
-            <span className="footer-brand-name">{content.brand.name}</span>
-            <small className="footer-brand-copyright">{content.brand.copyright}</small>
+            <span className="footer-brand-name">{content.brand.name}</span> <small className="footer-brand-copyright">{content.brand.copyright}</small>
           </div>
 
           {/* Quick Links Section */}
