@@ -1003,3 +1003,107 @@
     height: 36px;
   }
 }
+
+/* ============================== */
+/* Responsive Content Column */
+/* Dashboard content column should fill available space when sidebar is */
+/* expanded or collapsed, providing smooth transitions */
+/* ============================== */
+
+/* Base: Desktop Large (lg breakpoint and up) */
+/* col-lg-3 sidebar + col-lg-9 content = 12 columns */
+@media (min-width: 992px) {
+  .modern-dashboard .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    width: 100%;
+  }
+
+  /* Sidebar column - maintains fixed width or collapses */
+  .modern-dashboard .row > .instructor-sidebar-column {
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Content column - expands to fill remaining space */
+  .modern-dashboard .row > .col-lg-9 {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Ensure content doesn't wrap under sidebar */
+  .modern-dashboard .row > .col-lg-9 {
+    min-width: 500px;
+  }
+
+  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
+    /* Fallback for browsers that don't support :has() */
+    .modern-dashboard .row > .col-lg-9 {
+      flex: 1;
+      width: auto;
+      max-width: 100%;
+    }
+  }
+}
+
+/* Tablet (md breakpoint) */
+/* col-md-4 sidebar + col-md-8 content = 12 columns */
+@media (min-width: 768px) and (max-width: 991px) {
+  .modern-dashboard .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    width: 100%;
+  }
+
+  /* Sidebar column - maintains fixed width or collapses */
+  .modern-dashboard .row > .instructor-sidebar-column {
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Content column - expands to fill remaining space */
+  .modern-dashboard .row > .col-md-8 {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Ensure content doesn't wrap under sidebar */
+  .modern-dashboard .row > .col-md-8 {
+    min-width: 400px;
+  }
+
+  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
+    /* Fallback for browsers that don't support :has() */
+    .modern-dashboard .row > .col-md-8 {
+      flex: 1;
+      width: auto;
+      max-width: 100%;
+    }
+  }
+}
+
+/* Mobile: Full width stacked */
+@media (max-width: 767px) {
+  .modern-dashboard .row {
+    flex-direction: column;
+  }
+
+  .modern-dashboard .row > [class*="col-"],
+  .modern-dashboard .row > .instructor-sidebar-column {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
+}
