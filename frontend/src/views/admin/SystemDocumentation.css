@@ -28,6 +28,11 @@
     padding: 0 30px;
 }
 
+/* Override container padding for footer - prevent col-md-4 padding inconsistency */
+.system-documentation footer .container {
+    padding: 0 !important;
+}
+
 /* Header Styles - Match DashboardAdmin header-modern */
 .documentation-header {
     background: white;
