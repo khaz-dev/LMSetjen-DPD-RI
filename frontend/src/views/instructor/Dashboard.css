@@ -23,6 +23,11 @@
   width: 100%; /* Ensure row fills container */
 }
 
+/* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
+.modern-dashboard .row:has(.instructor-sidebar-column) {
+  flex-wrap: nowrap;
+}
+
 .modern-dashboard .row > [class*="col-"] {
   margin-bottom: 0; /* Remove gap for columns */
   display: flex;
