@@ -79,11 +79,12 @@ function Footer() {
 
   return (
     <footer 
-      className="py-3"
       style={{
         background: 'white',
         borderTop: '1px solid #e9ecef',
-        boxShadow: '0 -4px 15px rgba(0, 0, 0, 0.1)'
+        boxShadow: '0 -4px 15px rgba(0, 0, 0, 0.1)',
+        paddingTop: '20px',
+        paddingBottom: '20px'
       }}
     >
       <div className="container">
