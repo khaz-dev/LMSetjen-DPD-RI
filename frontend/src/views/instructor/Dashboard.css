@@ -17,10 +17,16 @@
 /* Consistent vertical spacing for dashboard sections */
 .modern-dashboard .row {
   margin-bottom: 0; /* Remove gap below instructor-header-card */
+  display: flex; /* Enable flexbox layout for all rows - CRITICAL for sidebar collapse */
+  flex-wrap: wrap; /* Allow wrapping if needed */
+  gap: 0; /* Remove Bootstrap gap */
+  width: 100%; /* Ensure row fills container */
 }
 
 .modern-dashboard .row > [class*="col-"] {
   margin-bottom: 0; /* Remove gap for columns */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Override for specific spacing needs */
@@ -1013,13 +1019,6 @@
 /* Base: Desktop Large (lg breakpoint and up) */
 /* col-lg-3 sidebar + col-lg-9 content = 12 columns */
 @media (min-width: 992px) {
-  .modern-dashboard .row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0;
-    width: 100%;
-  }
-
   /* Sidebar column - maintains fixed width or collapses */
   .modern-dashboard .row > .instructor-sidebar-column {
     flex-basis: auto;
@@ -1055,13 +1054,6 @@
 /* Tablet (md breakpoint) */
 /* col-md-4 sidebar + col-md-8 content = 12 columns */
 @media (min-width: 768px) and (max-width: 991px) {
-  .modern-dashboard .row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0;
-    width: 100%;
-  }
-
   /* Sidebar column - maintains fixed width or collapses */
   .modern-dashboard .row > .instructor-sidebar-column {
     flex-basis: auto;
