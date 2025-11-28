@@ -6,6 +6,12 @@
     min-height: 100vh;
 }
 
+/* Footer Spacing - Match DashboardAdmin pattern */
+.system-documentation .modern-dashboard section + footer,
+.system-documentation section + footer {
+    margin-top: 80px;
+}
+
 /* Section wrapper with proper spacing */
 .system-documentation .modern-dashboard {
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);

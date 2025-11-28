@@ -605,10 +605,10 @@ function UsersAdmin() {
     }
 
     return (
-        <>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <AdminHeader />
             
-            <section className="pt-5 pb-5 modern-dashboard">
+            <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
                 <div className='container'>
                     {/* Modern Header Section */}
                     <div className="dashboard-header-modern">
@@ -1608,7 +1608,7 @@ function UsersAdmin() {
             )}
 
             <Footer /> 
-        </>
+        </div>
     );
 }
 
