@@ -1,23 +1,31 @@
 /* System Documentation Styles */
 
+/* Main Layout Structure - Match DashboardAdmin */
 .system-documentation {
     background: transparent;
     min-height: 100vh;
 }
 
-.documentation-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 100px 30px 50px;
+/* Section wrapper with proper spacing */
+.system-documentation .modern-dashboard {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100%;
 }
 
-/* Header Styles */
+/* Container should expand to full width with proper padding */
+.system-documentation .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 30px;
+}
+
+/* Header Styles - Match DashboardAdmin header-modern */
 .documentation-header {
     background: white;
-    padding: 40px;
+    padding: 30px;
     border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
     border: 1px solid #e3f2fd;
 }
 
@@ -38,7 +46,7 @@
 .documentation-header .page-title {
     color: #1e3a8a;
     font-weight: 700;
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     margin-bottom: 10px;
     display: flex;
     align-items: center;
@@ -140,12 +148,13 @@
     font-size: 1.1rem;
 }
 
-/* Documentation Content */
+/* Documentation Content Panel - Match DashboardAdmin styling */
 .documentation-content {
     background: white;
     padding: 50px;
     border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f1f5f9;
 }
 
 /* Table of Contents */
@@ -540,8 +549,8 @@
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-    .documentation-container {
-        padding: 80px 20px 40px;
+    .system-documentation .container {
+        padding: 0 20px;
     }
 
     .documentation-header {
@@ -562,8 +571,8 @@
 }
 
 @media (max-width: 768px) {
-    .documentation-container {
-        padding: 70px 15px 30px;
+    .system-documentation .container {
+        padding: 0 15px;
     }
 
     .documentation-header {

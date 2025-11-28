@@ -861,57 +861,58 @@ function SystemDocumentation() {
     };
 
     return (
-        <div className="system-documentation">
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <AdminHeader />
             
-            <div className="documentation-container">
-                {/* Header with Controls */}
-                <div className="documentation-header no-print">
-                    <div className="header-content">
-                        <div className="header-text">
-                            <h1 className="page-title">
-                                <FaBook className="title-icon" />
-                                {t.pageTitle}
-                            </h1>
-                            <p className="page-subtitle">{t.pageSubtitle}</p>
-                        </div>
-                        <div className="header-actions">
-                            <div className="language-toggle">
-                                <FaLanguage className="lang-icon" />
-                                <select 
-                                    value={language} 
-                                    onChange={(e) => setLanguage(e.target.value)}
-                                    className="language-select"
-                                >
-                                    <option value="en">English</option>
-                                    <option value="id">Bahasa Indonesia</option>
-                                </select>
+            <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
+                <div className="container">
+                    {/* Header with Controls */}
+                    <div className="documentation-header no-print">
+                        <div className="header-content">
+                            <div className="header-text">
+                                <h1 className="page-title">
+                                    <FaBook className="title-icon" />
+                                    {t.pageTitle}
+                                </h1>
+                                <p className="page-subtitle">{t.pageSubtitle}</p>
                             </div>
-                            <button className="btn-print" onClick={handlePrint}>
-                                <FaPrint />
-                                {t.printPDF}
-                            </button>
+                            <div className="header-actions">
+                                <div className="language-toggle">
+                                    <FaLanguage className="lang-icon" />
+                                    <select 
+                                        value={language} 
+                                        onChange={(e) => setLanguage(e.target.value)}
+                                        className="language-select"
+                                    >
+                                        <option value="en">English</option>
+                                        <option value="id">Bahasa Indonesia</option>
+                                    </select>
+                                </div>
+                                <button className="btn-print" onClick={handlePrint}>
+                                    <FaPrint />
+                                    {t.printPDF}
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div className="metadata">
+                            <span className="metadata-item">
+                                <FaInfoCircle />
+                                {t.version}: 1.0.0
+                            </span>
+                            <span className="metadata-item">
+                                <FaCheckCircle />
+                                {t.lastUpdated}: {new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                })}
+                            </span>
                         </div>
                     </div>
-                    
-                    <div className="metadata">
-                        <span className="metadata-item">
-                            <FaInfoCircle />
-                            {t.version}: 1.0.0
-                        </span>
-                        <span className="metadata-item">
-                            <FaCheckCircle />
-                            {t.lastUpdated}: {new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                            })}
-                        </span>
-                    </div>
-                </div>
 
-                {/* Main Documentation Content */}
-                <div className="documentation-content" ref={contentRef}>
+                    {/* Main Documentation Content */}
+                    <div className="documentation-content" ref={contentRef}>
                     {/* Table of Contents */}
                     <div className="toc-section no-print">
                         <h2 className="section-title">
@@ -1338,8 +1339,9 @@ function SystemDocumentation() {
                             ))}
                         </ul>
                     </section>
+                    </div>
                 </div>
-            </div>
+            </section>
 
             <Footer />
         </div>
