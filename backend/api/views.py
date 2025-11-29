@@ -4271,10 +4271,12 @@ class AdminUserManagementAPIView(generics.ListAPIView):
     Admin view to manage all users in the system - OPTIMIZED
     Returns only essential fields for list view
     Supports pagination and filtering
+    ✨ PHASE 4.14: Disable pagination to return ALL users for user management
     """
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = api_serializer.UserSerializer
+    pagination_class = None  # Disable pagination to return all users at once
     
     def get_queryset(self):
         # Verify admin access
