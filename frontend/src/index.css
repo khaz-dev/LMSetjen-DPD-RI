@@ -84,14 +84,10 @@ body::after {
   box-shadow: inset 0 0 6px rgba(102, 126, 234, 0.3);
 }
 
-/* Firefox scrollbar styling */
-* {
+/* Firefox scrollbar styling - Apply ONLY to html, not all elements */
+html {
   scrollbar-width: thin;
   scrollbar-color: #667eea #f8f9fc;
-}
-
-/* Explicitly show scrollbar on scrollable elements */
-html {
   overflow-y: scroll;
 }
 
