@@ -55,60 +55,112 @@ body::after {
 }
 
 /* ========================================
-   GLOBAL SCROLLBAR STYLING - PHASE 4.15
+   GLOBAL SCROLLBAR STYLING - PHASE 4.15+
    Visible scrollbars on all pages except landing (Index)
+   CRITICAL: Applied to html/body explicitly for maximum specificity
    ======================================== */
 
-/* Webkit browsers (Chrome, Edge, Safari) - Global scrollbar styling */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+/* ENSURE HTML AND BODY ARE SCROLLABLE */
+html,
+body {
+  scrollbar-width: thin;
+  scrollbar-color: #667eea #f8f9fc;
 }
 
-::-webkit-scrollbar-track {
+html {
+  overflow-y: scroll;
+  height: auto;
+  max-height: none;
+}
+
+body {
+  overflow-y: auto;
+  height: auto;
+  max-height: none;
+}
+
+/* Webkit browsers (Chrome, Edge, Safari) - Applied to html for maximum specificity */
+html::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  display: block !important;
+  visibility: visible !important;
+}
+
+html::-webkit-scrollbar-track {
   background: linear-gradient(180deg, #f8f9fc 0%, #f0f4ff 100%);
   border-radius: 10px;
+  display: block !important;
+  visibility: visible !important;
 }
 
-::-webkit-scrollbar-thumb {
+html::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: padding-box;
   transition: all 0.3s ease;
+  display: block !important;
+  visibility: visible !important;
+  min-height: 40px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+html::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
   background-clip: padding-box;
   box-shadow: inset 0 0 6px rgba(102, 126, 234, 0.3);
 }
 
-/* Firefox scrollbar styling - Apply ONLY to html, not all elements */
-html {
-  scrollbar-width: thin;
-  scrollbar-color: #667eea #f8f9fc;
-  overflow-y: scroll;
+/* ALSO APPLY TO BODY FOR FIREFOX COMPATIBILITY */
+body::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  display: block !important;
+  visibility: visible !important;
 }
 
-/* Hide scrollbar only on landing page (Index component) */
-.index-page,
+body::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, #f8f9fc 0%, #f0f4ff 100%);
+  border-radius: 10px;
+  display: block !important;
+  visibility: visible !important;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.3s ease;
+  display: block !important;
+  visibility: visible !important;
+  min-height: 40px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
+  background-clip: padding-box;
+  box-shadow: inset 0 0 6px rgba(102, 126, 234, 0.3);
+}
+
+/* Hide scrollbar ONLY on landing page (Index component) - Most Specific */
+.index-page {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
 .landing-page {
-  overflow-y: auto;
-  scrollbar-width: none;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
+/* Webkit - Hide on landing page */
 .index-page::-webkit-scrollbar,
 .landing-page::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
-}
-
-/* Firefox - Hide scrollbar on landing page */
-.index-page,
-.landing-page {
-  -ms-overflow-style: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  visibility: hidden !important;
 }
 
 /* Global Theme Variables */
