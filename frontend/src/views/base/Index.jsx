@@ -296,7 +296,7 @@ function Index() {
             </div>
 
             {/* Main Content */}
-            <main id="main-content" role="main">
+            <main id="main-content" role="main" className="index-page">
                 {/* Section Navigation Indicator */}
                 <div className="section-navigation">
                     {sections.map((section, index) => (
