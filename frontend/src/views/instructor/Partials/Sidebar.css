@@ -78,6 +78,10 @@
     padding-top: 0 !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
+    margin-left: 0 !important; /* Remove Bootstrap gutter left padding */
+    margin-right: 0 !important; /* Remove Bootstrap gutter right padding */
+    padding-left: 0 !important; /* Remove Bootstrap column padding-left */
+    padding-right: 0 !important; /* Remove Bootstrap column padding-right */
     display: flex;
     flex-direction: column;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);

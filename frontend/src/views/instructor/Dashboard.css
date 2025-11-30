@@ -1061,6 +1061,8 @@
     flex-grow: 0;
     flex-shrink: 0;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Sidebar now spans full column width without Bootstrap padding */
+    width: auto;
   }
 
   /* Content column - expands to fill remaining space */
@@ -1096,6 +1098,8 @@
     flex-grow: 0;
     flex-shrink: 0;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Sidebar now spans full column width without Bootstrap padding */
+    width: auto;
   }
 
   /* Content column - expands to fill remaining space */
