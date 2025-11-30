@@ -269,24 +269,25 @@
     letter-spacing: 0.5px;
 }
 
+/* Override badge-level globally to add specific colors for search results */
 .badge-level {
-    background: #e3f2fd;
-    color: #1976d2;
+    background: #e3f2fd !important;
+    color: #1976d2 !important;
 }
 
 .badge-level.badge-beginner {
-    background: #c8e6c9;
-    color: #2e7d32;
+    background: #c8e6c9 !important;
+    color: #2e7d32 !important;
 }
 
 .badge-level.badge-intermediate {
-    background: #fff9c4;
-    color: #f57f17;
+    background: #fff9c4 !important;
+    color: #f57f17 !important;
 }
 
 .badge-level.badge-advanced {
-    background: #ffccbc;
-    color: #d84315;
+    background: #ffccbc !important;
+    color: #d84315 !important;
 }
 
 .badge-featured {

@@ -761,3 +761,92 @@ section[style*="minHeight:calc(100vh - 120px)"] .row {
    END GLOBAL BADGE-MODERN STYLING
    ======================================== */
 
+/* ========================================
+   GLOBAL BADGE-LEVEL STYLING
+   Ensures badge-modern and badge-level are visually balanced
+   ======================================== */
+
+/* Primary selector - badge-level styling to match badge-modern dimensions */
+.badge-level {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: white !important;
+    border-radius: 16px !important;
+    padding: 0.5rem 1rem !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    border: 1.5px solid rgba(245, 87, 108, 0.3) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.4rem !important;
+    margin-bottom: 0.5rem !important;
+    user-select: none !important;
+    cursor: default !important;
+    white-space: nowrap !important;
+    transition: all 0.3s ease !important;
+    box-sizing: border-box !important;
+    min-height: 32px !important;
+    height: auto !important;
+    box-shadow: 0 2px 8px rgba(245, 87, 108, 0.15) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Override Bootstrap .badge class when combined with .badge-level */
+.badge.badge-level {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: white !important;
+    border-radius: 16px !important;
+    padding: 0.5rem 1rem !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    border: 1.5px solid rgba(245, 87, 108, 0.3) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.4rem !important;
+    margin-bottom: 0.5rem !important;
+    user-select: none !important;
+    cursor: default !important;
+    white-space: nowrap !important;
+    transition: all 0.3s ease !important;
+    box-sizing: border-box !important;
+    min-height: 32px !important;
+    height: auto !important;
+    position: relative !important;
+    vertical-align: baseline !important;
+    box-shadow: 0 2px 8px rgba(245, 87, 108, 0.15) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.badge-level i {
+    user-select: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 0.9em !important;
+    color: inherit !important;
+}
+
+.badge.badge-level i {
+    user-select: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 0.9em !important;
+    color: inherit !important;
+}
+
+.badge-level:hover {
+    background: linear-gradient(135deg, #f5b1ff 0%, #fa7181 100%) !important;
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.25) !important;
+    border-color: rgba(245, 87, 108, 0.5) !important;
+}
+
+.badge.badge-level:hover {
+    background: linear-gradient(135deg, #f5b1ff 0%, #fa7181 100%) !important;
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.25) !important;
+    border-color: rgba(245, 87, 108, 0.5) !important;
+}
+
+/* ========================================
+   END GLOBAL BADGE-LEVEL STYLING
+   ======================================== */
+
