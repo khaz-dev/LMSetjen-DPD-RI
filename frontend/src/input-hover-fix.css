@@ -29,6 +29,18 @@ select:hover:not(:disabled):not(:focus) {
     transition: all 0.2s ease-in-out !important;
 }
 
+/* ============================================
+   EXCEPTION: BaseHeader Search Input
+   The BaseHeader search input should NOT get the
+   default hover border as it has transparent styling
+   with its own focus/hover behavior defined in BaseHeader.css
+   ============================================ */
+.search-container .search-input:hover:not(:disabled):not(:focus) {
+    border-color: transparent !important;
+    background-color: transparent !important;
+    transition: all 0.3s ease !important;
+}
+
 /* File inputs */
 input[type="file"]:hover:not(:disabled) {
     border-color: #adb5bd !important;
