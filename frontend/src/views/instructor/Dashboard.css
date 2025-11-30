@@ -56,6 +56,13 @@
   width: calc(100% + var(--bs-gutter-x, 24px)) !important; /* Extend full width */
 }
 
+/* Inner rows inside col-lg-9: remove negative margins to prevent overlap */
+.modern-dashboard .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
+  margin-left: 0 !important; /* Don't extend beyond container left edge */
+  margin-right: 0 !important; /* Don't extend beyond container right edge */
+  width: 100% !important; /* Stay within container width */
+}
+
 /* Tablet: col-md-8 content wrapper (inside sidebar row) */
 .modern-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 {
   margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Counteract col padding-left */
@@ -63,6 +70,13 @@
   padding-left: 0 !important; /* Remove Bootstrap column padding */
   padding-right: 0 !important; /* Remove Bootstrap column padding */
   width: calc(100% + var(--bs-gutter-x, 24px)) !important; /* Extend full width */
+}
+
+/* Inner rows inside col-md-8: remove negative margins to prevent overlap */
+.modern-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
+  margin-left: 0 !important; /* Don't extend beyond container left edge */
+  margin-right: 0 !important; /* Don't extend beyond container right edge */
+  width: 100% !important; /* Stay within container width */
 }
 
 /* Override for specific spacing needs */
