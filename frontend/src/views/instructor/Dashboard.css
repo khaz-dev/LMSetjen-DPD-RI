@@ -17,6 +17,8 @@
 /* Consistent vertical spacing for dashboard sections */
 .modern-dashboard .row {
   margin-bottom: 0; /* Remove gap below instructor-header-card */
+  margin-left: 0 !important; /* CRITICAL: Override Bootstrap gutter negative margin */
+  margin-right: 0 !important; /* CRITICAL: Override Bootstrap gutter negative margin */
   display: flex; /* Enable flexbox layout for all rows - CRITICAL for sidebar collapse */
   flex-wrap: wrap; /* Allow wrapping if needed */
   gap: 0; /* Remove Bootstrap gap */
