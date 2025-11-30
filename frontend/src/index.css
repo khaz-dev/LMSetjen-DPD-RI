@@ -679,14 +679,14 @@ section[style*="minHeight:calc(100vh - 120px)"] .row {
 /* Primary selector - applies to both div and span elements */
 .badge-modern {
     /* Base styling - consistent badge component across all pages */
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%) !important;
-    color: white !important;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.08) 100%) !important;
+    color: #2d3748 !important;
     border-radius: 16px !important;
     padding: 0.5rem 1rem !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     font-size: 0.875rem !important;
-    backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(5px) !important;
+    border: 1.5px solid rgba(102, 126, 234, 0.25) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -699,18 +699,19 @@ section[style*="minHeight:calc(100vh - 120px)"] .row {
     box-sizing: border-box !important;
     min-height: 32px !important;
     height: auto !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1) !important;
 }
 
 /* Override Bootstrap .badge class when combined with .badge-modern */
 .badge.badge-modern {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%) !important;
-    color: white !important;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.08) 100%) !important;
+    color: #2d3748 !important;
     border-radius: 16px !important;
     padding: 0.5rem 1rem !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     font-size: 0.875rem !important;
-    backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(5px) !important;
+    border: 1.5px solid rgba(102, 126, 234, 0.25) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -725,6 +726,7 @@ section[style*="minHeight:calc(100vh - 120px)"] .row {
     height: auto !important;
     position: relative !important;
     vertical-align: baseline !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1) !important;
 }
 
 .badge-modern i {
@@ -732,6 +734,7 @@ section[style*="minHeight:calc(100vh - 120px)"] .row {
     display: inline-flex !important;
     align-items: center !important;
     font-size: 0.9em !important;
+    color: inherit !important;
 }
 
 .badge.badge-modern i {
@@ -739,16 +742,19 @@ section[style*="minHeight:calc(100vh - 120px)"] .row {
     display: inline-flex !important;
     align-items: center !important;
     font-size: 0.9em !important;
+    color: inherit !important;
 }
 
 .badge-modern:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.15) 100%) !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2) !important;
+    border-color: rgba(102, 126, 234, 0.4) !important;
 }
 
 .badge.badge-modern:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.15) 100%) !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2) !important;
+    border-color: rgba(102, 126, 234, 0.4) !important;
 }
 
 /* ========================================
