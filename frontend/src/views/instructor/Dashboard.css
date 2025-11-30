@@ -56,11 +56,11 @@
   width: 100% !important; /* Stay at exact container width, no expansion */
 }
 
-/* Inner rows inside col-lg-9: remove negative margins to prevent overlap */
+/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
 .modern-dashboard .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
-  margin-left: 0 !important; /* Don't extend beyond container left edge */
-  margin-right: 0 !important; /* Don't extend beyond container right edge */
-  width: 100% !important; /* Stay within container width */
+  margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull left by col padding to reach col-12 edge */
+  margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull right by col padding to reach col-12 edge */
+  width: calc(100% + var(--bs-gutter-x, 24px)) !important; /* Extend width to compensate for negative margins */
 }
 
 /* Tablet: col-md-8 content wrapper (inside sidebar row) */
@@ -72,11 +72,11 @@
   width: 100% !important; /* Stay at exact container width, no expansion */
 }
 
-/* Inner rows inside col-md-8: remove negative margins to prevent overlap */
+/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
 .modern-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
-  margin-left: 0 !important; /* Don't extend beyond container left edge */
-  margin-right: 0 !important; /* Don't extend beyond container right edge */
-  width: 100% !important; /* Stay within container width */
+  margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull left by col padding to reach col-12 edge */
+  margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull right by col padding to reach col-12 edge */
+  width: calc(100% + var(--bs-gutter-x, 24px)) !important; /* Extend width to compensate for negative margins */
 }
 
 /* Override for specific spacing needs */
@@ -109,10 +109,10 @@
   padding: 2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   border: 1px solid #e9ecef;
-  /* Align left/right edges with Content Creation Statistics card */
-  margin-left: calc(-1 * 12px) !important; /* Counteract col-12 default padding-left (12px) */
-  margin-right: calc(-1 * 12px) !important; /* Counteract col-12 default padding-right (12px) */
-  width: calc(100% + 24px) !important; /* Extend width by 24px to fill the padding gap */
+  /* Align with inner row > col-12 content (extend to match Content Creation Statistics width) */
+  margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull left by col padding */
+  margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull right by col padding */
+  width: calc(100% + var(--bs-gutter-x, 24px)) !important; /* Extend to match row width */
 }
 
 .dashboard-title {
