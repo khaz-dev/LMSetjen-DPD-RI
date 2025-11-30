@@ -42,6 +42,7 @@
     position: relative;
     user-select: none;
     cursor: default;
+    flex-shrink: 0;
 }
 
 .progress-circle::before {
@@ -1342,18 +1343,36 @@
     }
     
     .progress-circle {
-        width: 120px;
-        height: 120px;
+        width: 100px;
+        height: 100px;
+        margin-top: 1rem;
     }
     
     .progress-circle::before {
-        width: 90px;
-        height: 90px;
+        width: 75px;
+        height: 75px;
     }
     
     .progress-inner {
         position: relative;
         z-index: 2;
+    }
+    
+    .course-progress-card .row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    .course-progress-card .col-md-9,
+    .course-progress-card .col-md-3 {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    
+    .course-progress-card .col-md-3 {
+        justify-content: center !important;
     }
     
     .tab-content-modern {

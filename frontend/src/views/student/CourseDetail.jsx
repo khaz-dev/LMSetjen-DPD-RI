@@ -1295,7 +1295,7 @@ function CourseDetail() {
                                     <div className="course-progress-card-skeleton">
                                         <div className="progress-content">
                                             <div className="row align-items-center">
-                                                <div className="col-md-8">
+                                                <div className="col-md-9 pe-2">
                                                     <div className="skeleton-item skeleton-title mb-3"></div>
                                                     <div className="skeleton-item skeleton-text mb-3"></div>
                                                     <div className="d-flex align-items-center gap-3 flex-wrap">
@@ -1304,7 +1304,7 @@ function CourseDetail() {
                                                         <div className="skeleton-item skeleton-badge"></div>
                                                     </div>
                                                 </div>
-                                                <div className="col-md-4 text-center">
+                                                <div className="col-md-3 text-center d-flex align-items-center justify-content-end ps-0">
                                                     <div className="skeleton-item skeleton-circle"></div>
                                                 </div>
                                             </div>
@@ -1315,29 +1315,29 @@ function CourseDetail() {
                                     <div className="course-progress-card course-progress-card-loaded">
                                         <div className="progress-content">
                                             <div className="row align-items-center">
-                                                <div className="col-md-8">
+                                                <div className="col-md-9 pe-2">
                                                     <h2 className="fw-bold mb-3 course-title-animated">{course?.course?.title}</h2>
                                                     <p className="opacity-90 mb-3 course-subtitle-animated">
                                                         Continue your learning journey and track your progress
                                                     </p>
                                                     <div className="d-flex align-items-center gap-3 flex-wrap">
-                                                        <span className="badge bg-white text-primary px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: '0.1s' }}>
+                                                        <span className="badge bg-white text-primary px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: "0.1s" }}>
                                                             <i className="fas fa-book me-1"></i>
                                                             {completionStats.completedLessons}/{completionStats.totalLessons} Lessons
                                                         </span>
                                                         {completionStats.totalQuizzes > 0 && (
-                                                            <span className="badge bg-white text-success px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: '0.2s' }}>
+                                                            <span className="badge bg-white text-success px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: "0.2s" }}>
                                                                 <i className="fas fa-brain me-1"></i>
                                                                 {completionStats.passedQuizzes}/{completionStats.totalQuizzes} Quizzes
                                                             </span>
                                                         )}
-                                                        <span className="badge bg-white text-primary px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: '0.3s' }}>
+                                                        <span className="badge bg-white text-primary px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: "0.3s" }}>
                                                             <i className="fas fa-tag me-1"></i>
                                                             {course?.course?.category?.title}
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="col-md-4 text-center text-primary">
+                                                <div className="col-md-3 text-center text-primary d-flex align-items-center justify-content-end ps-0">
                                                     <div 
                                                         className="progress-circle progress-circle-animated"
                                                         style={{"--progress": completionPercentage || 0}}
