@@ -44,7 +44,8 @@
     margin-bottom: 1.5rem !important;
 }
 
-.search-input {
+/* SCOPED: Courses page search input only - NEVER affects BaseHeader */
+.modern-course-page .search-card .search-input {
     border: 2px solid #e9ecef;
     border-radius: 10px;
     padding: 0.75rem 1rem;
@@ -53,7 +54,7 @@
     background: #f8f9fa;
 }
 
-.search-input:focus {
+.modern-course-page .search-card .search-input:focus {
     border-color: var(--theme-primary);
     box-shadow: 0 0 0 0.2rem var(--theme-shadow-color);
     background: white;
