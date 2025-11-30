@@ -22,6 +22,7 @@ function CourseDetail() {
     // Course data and progress
     const [course, setCourse] = useState([]);
     const [isUpdatingCourse, setIsUpdatingCourse] = useState(false);
+    const [isProgressCardLoading, setIsProgressCardLoading] = useState(true); // Track progress card loading state
     const [completionPercentage, setCompletionPercentage] = useState(0);
     const [completionStats, setCompletionStats] = useState({
         totalLessons: 0,
@@ -495,6 +496,9 @@ function CourseDetail() {
             totalQuizzes,
             passedQuizzes
         });
+        
+        // Mark progress card as loaded
+        setIsProgressCardLoading(false);
         
         return Math.round(percentageCompleted);
     };
@@ -1286,47 +1290,70 @@ function CourseDetail() {
                             
                             <div className="col-lg-9 col-md-8 col-12">
                                 {/* Course Progress Card */}
-                                <div className="course-progress-card">
-                                    <div className="progress-content">
-                                        <div className="row align-items-center">
-                                            <div className="col-md-8">
-                                                <h2 className="fw-bold mb-3">{course?.course?.title}</h2>
-                                                <p className="opacity-90 mb-3">
-                                                    Continue your learning journey and track your progress
-                                                </p>
-                                                <div className="d-flex align-items-center gap-3 flex-wrap">
-                                                    <span className="badge bg-white text-primary px-3 py-2 rounded-pill">
-                                                        <i className="fas fa-book me-1"></i>
-                                                        {completionStats.completedLessons}/{completionStats.totalLessons} Lessons
-                                                    </span>
-                                                    {completionStats.totalQuizzes > 0 && (
-                                                        <span className="badge bg-white text-success px-3 py-2 rounded-pill">
-                                                            <i className="fas fa-brain me-1"></i>
-                                                            {completionStats.passedQuizzes}/{completionStats.totalQuizzes} Quizzes
-                                                        </span>
-                                                    )}
-                                                    <span className="badge bg-white text-primary px-3 py-2 rounded-pill">
-                                                        <i className="fas fa-tag me-1"></i>
-                                                        {course?.course?.category?.title}
-                                                    </span>
+                                {isProgressCardLoading ? (
+                                    // Skeleton Loading State
+                                    <div className="course-progress-card-skeleton">
+                                        <div className="progress-content">
+                                            <div className="row align-items-center">
+                                                <div className="col-md-8">
+                                                    <div className="skeleton-item skeleton-title mb-3"></div>
+                                                    <div className="skeleton-item skeleton-text mb-3"></div>
+                                                    <div className="d-flex align-items-center gap-3 flex-wrap">
+                                                        <div className="skeleton-item skeleton-badge"></div>
+                                                        <div className="skeleton-item skeleton-badge"></div>
+                                                        <div className="skeleton-item skeleton-badge"></div>
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-4 text-center">
+                                                    <div className="skeleton-item skeleton-circle"></div>
                                                 </div>
                                             </div>
-                                            <div className="col-md-4 text-center text-primary">
-                                                <div 
-                                                    className="progress-circle"
-                                                    style={{"--progress": completionPercentage || 0}}
-                                                >
-                                                    <div className="progress-inner">
-                                                        <div className="text-center">
-                                                            <div className="h3 fw-bold mb-0">{completionPercentage || 0}%</div>
-                                                            <small>Complete</small>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    // Actual Progress Card with Fade-In Animation
+                                    <div className="course-progress-card course-progress-card-loaded">
+                                        <div className="progress-content">
+                                            <div className="row align-items-center">
+                                                <div className="col-md-8">
+                                                    <h2 className="fw-bold mb-3 course-title-animated">{course?.course?.title}</h2>
+                                                    <p className="opacity-90 mb-3 course-subtitle-animated">
+                                                        Continue your learning journey and track your progress
+                                                    </p>
+                                                    <div className="d-flex align-items-center gap-3 flex-wrap">
+                                                        <span className="badge bg-white text-primary px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: '0.1s' }}>
+                                                            <i className="fas fa-book me-1"></i>
+                                                            {completionStats.completedLessons}/{completionStats.totalLessons} Lessons
+                                                        </span>
+                                                        {completionStats.totalQuizzes > 0 && (
+                                                            <span className="badge bg-white text-success px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: '0.2s' }}>
+                                                                <i className="fas fa-brain me-1"></i>
+                                                                {completionStats.passedQuizzes}/{completionStats.totalQuizzes} Quizzes
+                                                            </span>
+                                                        )}
+                                                        <span className="badge bg-white text-primary px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: '0.3s' }}>
+                                                            <i className="fas fa-tag me-1"></i>
+                                                            {course?.course?.category?.title}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-4 text-center text-primary">
+                                                    <div 
+                                                        className="progress-circle progress-circle-animated"
+                                                        style={{"--progress": completionPercentage || 0}}
+                                                    >
+                                                        <div className="progress-inner">
+                                                            <div className="text-center">
+                                                                <div className="h3 fw-bold mb-0">{completionPercentage || 0}%</div>
+                                                                <small>Complete</small>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                )}
 
                                 <div className="modern-tabs">
                                     {/* Tab Navigation */}
