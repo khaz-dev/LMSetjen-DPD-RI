@@ -426,7 +426,7 @@ function QA() {
                             const isCurrentUser = m.profile?.user_id === currentUser?.user_id || m.profile?.id === currentUser?.user_id;
                             return (
                                 <div key={m.id || `message-${index}`} className={`message-item-qa ${isCurrentUser ? "message-item-qa-current-user" : ""}`}>
-                                    <div className={`d-flex ${isCurrentUser ? "flex-row-reverse" : ""}`}>
+                                    <div className={`d-flex gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}>
                                         <div className="flex-shrink-0">
                                             {m.profile?.image ? (
                                                 <img
@@ -449,7 +449,7 @@ function QA() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className={`${isCurrentUser ? "me-3" : "ms-3"} flex-grow-1`}>
+                                        <div className="flex-grow-1">
                                             <div className={`message-content-qa ${isCurrentUser ? "message-content-qa-current-user" : ""}`}>
                                                 <div className="message-author-qa">
                                                     <div className="message-time-qa">
