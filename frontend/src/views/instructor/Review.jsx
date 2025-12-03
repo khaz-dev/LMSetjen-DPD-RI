@@ -29,8 +29,10 @@ function Review() {
                 throw new Error("Teacher ID not found");
             }
             const res = await useAxios.get(`teacher/review-lists/${userData.teacher_id}/`);
-            setReviews(res.data);
-            setFilteredReview(res.data);
+            // Extract results from paginated response
+            const reviewsData = res.data.results || res.data;
+            setReviews(reviewsData);
+            setFilteredReview(reviewsData);
         } catch (error) {
             console.error("Error fetching reviews:", error);
         } finally {
