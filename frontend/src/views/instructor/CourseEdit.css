@@ -4,6 +4,23 @@
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
 
+/* Main section container - ensure proper display and spacing */
+.instructor-course-edit-page {
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    min-height: 100vh;
+    background: transparent;
+    padding: 3rem 0;
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+}
+
 /* Ensure proper scroll context for sticky sidebar */
 .instructor-course-edit-page .container {
     position: relative;
@@ -89,10 +106,6 @@
 /* This ensures the sidebar sticks to the viewport when scrolling */
 /* Position: sticky is already set in Sidebar.css & performance.css */
 /* NO override or conflicting properties here */
-
-/* ================================
-   CURSOR POINTER FIXES
-   ================================ */
 
 /* Ensure all interactive elements and their children have proper cursor pointer */
 button, 
