@@ -982,6 +982,7 @@
    RESPONSIVE LAYOUT - Content Column Sizing
    ======================================== */
 
+/* Base: Desktop Large (lg breakpoint and up) */
 @media (min-width: 992px) {
   .instructor-course-edit-curriculum-page .row > .col-lg-9 {
     flex: 1 1 auto;
@@ -989,11 +990,87 @@
   }
 }
 
+/* Tablet (md breakpoint) */
 @media (min-width: 768px) and (max-width: 991px) {
   .instructor-course-edit-curriculum-page .row > .col-md-8 {
     flex: 1 1 auto;
     min-width: 400px;
   }
+}
+
+/* Mobile: Full width stacked */
+/* ========================================
+   MEDIA QUERIES - RESPONSIVE SIDEBAR LAYOUT
+   ======================================== */
+
+/* Base: Desktop Large (lg breakpoint and up) */
+@media (min-width: 992px) {
+    /* Sidebar column - maintains fixed width or collapses */
+    .instructor-course-edit-curriculum-page .row > .instructor-sidebar-column {
+        flex-basis: auto;
+        flex-grow: 0;
+        flex-shrink: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: auto;
+    }
+
+    /* Content column - expands to fill remaining space */
+    .instructor-course-edit-curriculum-page .row > .col-lg-9 {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        max-width: 100%;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Ensure content doesn't wrap under sidebar */
+    .instructor-course-edit-curriculum-page .row > .col-lg-9 {
+        min-width: 500px;
+    }
+}
+
+/* Tablet (md breakpoint) */
+@media (min-width: 768px) and (max-width: 991px) {
+    /* Sidebar column - maintains fixed width or collapses */
+    .instructor-course-edit-curriculum-page .row > .instructor-sidebar-column {
+        flex-basis: auto;
+        flex-grow: 0;
+        flex-shrink: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: auto;
+    }
+
+    /* Content column - expands to fill remaining space */
+    .instructor-course-edit-curriculum-page .row > .col-md-8 {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        max-width: 100%;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+/* Mobile: Full width stacked */
+@media (max-width: 767px) {
+    .instructor-course-edit-curriculum-page .row {
+        flex-wrap: wrap;
+    }
+
+    .instructor-course-edit-curriculum-page .row:has(.instructor-sidebar-column) {
+        flex-wrap: wrap;
+    }
+
+    .create-header-modern {
+        padding: 1rem;
+    }
+
+    .form-body-modern {
+        padding: 0;
+    }
+
+    .form-section {
+        padding: 1rem;
+    }
 }
 
 @media (max-width: 767px) {
