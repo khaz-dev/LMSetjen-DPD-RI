@@ -36,6 +36,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, APIView
+from rest_framework.pagination import PageNumberPagination
 
 # Import custom permissions
 from api.permissions import IsAdminUser
@@ -4348,7 +4349,7 @@ class AdminUserManagementAPIView(generics.ListAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = api_serializer.UserSerializer
-    pagination_class = rest_framework.pagination.PageNumberPagination  # Enable pagination
+    pagination_class = PageNumberPagination  # Enable pagination
     
     def get_queryset(self):
         # Verify admin access
