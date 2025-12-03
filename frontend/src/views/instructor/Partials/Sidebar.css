@@ -253,7 +253,7 @@
 
 /* Collapsed state: hide section titles cleanly */
 .instructor-sidebar.collapsed .nav-section-title,
-.instructor-sidebar.collapsed .section-title {
+.instructor-sidebar.collapsed .nav-section-title.section-title {
     opacity: 0;
     visibility: hidden;
     height: 0;
