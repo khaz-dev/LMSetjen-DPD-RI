@@ -14,6 +14,12 @@
     position: relative;
 }
 
+/* Add proper bottom padding for footer spacing */
+.instructor-course-quiz-page {
+    padding-bottom: 3rem !important;
+    margin-bottom: 0 !important;
+}
+
 /* Consistent vertical spacing for dashboard sections */
 .instructor-course-quiz-page .row {
     margin-bottom: 0;
@@ -152,6 +158,12 @@ button div,
     padding-top: 3rem !important;
     padding-bottom: 3rem !important;
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* Ensure modern-dashboard has proper footer spacing */
+.modern-dashboard {
+    padding-bottom: 3rem !important;
+    margin-bottom: 0 !important;
 }
 
 .quiz-loading {

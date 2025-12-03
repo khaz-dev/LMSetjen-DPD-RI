@@ -11,6 +11,15 @@
     position: relative;
 }
 
+/* Add proper bottom padding for footer spacing */
+.instructor-course-edit-curriculum-page {
+    min-height: 100vh;
+    padding: 3rem 0;
+    padding-bottom: 3rem !important;
+    margin-bottom: 0 !important;
+    background: transparent;
+}
+
 /* Consistent vertical spacing for dashboard sections */
 .instructor-course-edit-curriculum-page .row {
     margin-bottom: 0;
