@@ -1039,137 +1039,119 @@ button div,
 
 /* ================================
    SIDEBAR LAYOUT FIX - CourseQuiz Page
-   Ensures sidebar columns don't overflow
+   Ensures sidebar columns resize properly when sidebar collapses/expands
+   Unified with responsive design for all breakpoints
    ================================ */
+
+/* Base: Desktop Large (lg breakpoint and up) */
 @media (min-width: 992px) {
-    /* Expanded state */
-    .modern-dashboard .col-lg-3 {
-        flex: 0 0 auto !important;
-        width: 25% !important;
-        max-width: 25% !important;
+    /* Sidebar column - maintains fixed width or collapses */
+    .instructor-course-quiz-page .row > .instructor-sidebar-column {
+        flex-basis: auto;
+        flex-grow: 0;
+        flex-shrink: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: auto;
     }
-    
-    .modern-dashboard .col-lg-9 {
+
+    /* ================================
+       Expanded state: Sidebar NOT collapsed
+       col-lg-3 = 25% | col-lg-9 = 75%
+       ================================ */
+    .instructor-course-quiz-page .row > .col-lg-9 {
         flex: 0 0 auto !important;
         width: 75% !important;
         max-width: 75% !important;
+        min-width: 500px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
-    /* Collapsed state - when sidebar has .collapsed class */
-    .modern-dashboard .col-lg-3:has(.instructor-sidebar.collapsed) {
+
+    /* ================================
+       Collapsed state: Sidebar IS collapsed
+       col-lg-3 = 100px | col-lg-9 = calc(100% - 100px)
+       ================================ */
+    .instructor-course-quiz-page .row > .col-lg-9:has(~ .col-lg-3 .instructor-sidebar.collapsed),
+    .instructor-course-quiz-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9 {
+        flex: 1 1 auto !important;
+        width: calc(100% - 100px) !important;
+        max-width: calc(100% - 100px) !important;
+        min-width: auto;
+    }
+
+    /* ================================
+       Expanded state: Sidebar col-lg-3
+       ================================ */
+    .instructor-course-quiz-page .row > .col-lg-3 {
+        flex: 0 0 auto !important;
+        width: 25% !important;
+        max-width: 25% !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ================================
+       Collapsed state: Sidebar col-lg-3
+       ================================ */
+    .instructor-course-quiz-page .row > .col-lg-3:has(.instructor-sidebar.collapsed) {
         flex: 0 0 auto !important;
         width: auto !important;
         max-width: 100px !important;
         min-width: 100px !important;
     }
-    
-    .modern-dashboard .col-lg-9:has(~ .col-lg-3 .instructor-sidebar.collapsed),
-    .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-lg-9 {
-        flex: 1 1 auto !important;
-        width: calc(100% - 100px) !important;
-        max-width: calc(100% - 100px) !important;
-    }
 }
 
+/* Tablet (md breakpoint: 768px - 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
-    /* Expanded state */
-    .modern-dashboard .col-md-4 {
-        flex: 0 0 auto !important;
-        width: 33.333333% !important;
-        max-width: 33.333333% !important;
+    /* Sidebar column - maintains fixed width or collapses */
+    .instructor-course-quiz-page .row > .instructor-sidebar-column {
+        flex-basis: auto;
+        flex-grow: 0;
+        flex-shrink: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: auto;
     }
-    
-    .modern-dashboard .col-md-8 {
+
+    /* ================================
+       Expanded state: Sidebar NOT collapsed
+       col-md-4 = 33% | col-md-8 = 66%
+       ================================ */
+    .instructor-course-quiz-page .row > .col-md-8 {
         flex: 0 0 auto !important;
         width: 66.666667% !important;
         max-width: 66.666667% !important;
+        min-width: 400px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
-    /* Collapsed state */
-    .modern-dashboard .col-md-4:has(.instructor-sidebar.collapsed) {
+
+    /* ================================
+       Collapsed state: Sidebar IS collapsed
+       col-md-4 = 100px | col-md-8 = calc(100% - 100px)
+       ================================ */
+    .instructor-course-quiz-page .row > .col-md-8:has(~ .col-md-4 .instructor-sidebar.collapsed),
+    .instructor-course-quiz-page .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
+        flex: 1 1 auto !important;
+        width: calc(100% - 100px) !important;
+        max-width: calc(100% - 100px) !important;
+        min-width: auto;
+    }
+
+    /* ================================
+       Expanded state: Sidebar col-md-4
+       ================================ */
+    .instructor-course-quiz-page .row > .col-md-4 {
+        flex: 0 0 auto !important;
+        width: 33.333333% !important;
+        max-width: 33.333333% !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ================================
+       Collapsed state: Sidebar col-md-4
+       ================================ */
+    .instructor-course-quiz-page .row > .col-md-4:has(.instructor-sidebar.collapsed) {
         flex: 0 0 auto !important;
         width: auto !important;
         max-width: 100px !important;
         min-width: 100px !important;
-    }
-    
-    .modern-dashboard .col-md-8:has(~ .col-md-4 .instructor-sidebar.collapsed),
-    .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
-        flex: 1 1 auto !important;
-        width: calc(100% - 100px) !important;
-        max-width: calc(100% - 100px) !important;
-    }
-}
-
-/* ========================================
-   RESPONSIVE LAYOUT - Content Column Sizing
-   ======================================== */
-
-/* Base: Desktop Large (lg breakpoint and up) */
-@media (min-width: 992px) {
-  .instructor-course-quiz-page .row > .col-lg-9 {
-    flex: 1 1 auto;
-    min-width: 500px;
-  }
-}
-
-/* Tablet (md breakpoint) */
-@media (min-width: 768px) and (max-width: 991px) {
-  .instructor-course-quiz-page .row > .col-md-8 {
-    flex: 1 1 auto;
-    min-width: 400px;
-  }
-}
-
-/* Mobile: Full width stacked */
-/* ========================================
-   MEDIA QUERIES - RESPONSIVE SIDEBAR LAYOUT
-   ======================================== */
-
-/* Base: Desktop Large (lg breakpoint and up) */
-@media (min-width: 992px) {
-    /* Sidebar column - maintains fixed width or collapses */
-    .instructor-course-quiz-page .row > .instructor-sidebar-column {
-        flex-basis: auto;
-        flex-grow: 0;
-        flex-shrink: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        width: auto;
-    }
-
-    /* Content column - expands to fill remaining space */
-    .instructor-course-quiz-page .row > .col-lg-9 {
-        flex: 1 1 auto;
-        min-width: 0;
-        width: auto;
-        max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* Ensure content doesn't wrap under sidebar */
-    .instructor-course-quiz-page .row > .col-lg-9 {
-        min-width: 500px;
-    }
-}
-
-/* Tablet (md breakpoint) */
-@media (min-width: 768px) and (max-width: 991px) {
-    /* Sidebar column - maintains fixed width or collapses */
-    .instructor-course-quiz-page .row > .instructor-sidebar-column {
-        flex-basis: auto;
-        flex-grow: 0;
-        flex-shrink: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        width: auto;
-    }
-
-    /* Content column - expands to fill remaining space */
-    .instructor-course-quiz-page .row > .col-md-8 {
-        flex: 1 1 auto;
-        min-width: 0;
-        width: auto;
-        max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 }
 
