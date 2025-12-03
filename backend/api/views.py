@@ -2410,7 +2410,21 @@ class TeacherSummaryAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
+        
+        # Handle case where teacher_id is 0 or invalid
+        if not teacher_id or teacher_id == 0:
+            return [{
+                "total_courses": 0,
+                "total_students": 0,
+            }]
+        
+        try:
+            teacher = api_models.Teacher.objects.get(id=teacher_id)
+        except api_models.Teacher.DoesNotExist:
+            return [{
+                "total_courses": 0,
+                "total_students": 0,
+            }]
 
         one_month_ago = datetime.today() - timedelta(days=28)
 
@@ -2449,8 +2463,16 @@ class TeacherCourseListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-        return api_models.Course.objects.filter(teacher=teacher)
+        
+        # Handle case where teacher_id is 0 or invalid
+        if not teacher_id or teacher_id == 0:
+            return api_models.Course.objects.none()
+        
+        try:
+            teacher = api_models.Teacher.objects.get(id=teacher_id)
+            return api_models.Course.objects.filter(teacher=teacher)
+        except api_models.Teacher.DoesNotExist:
+            return api_models.Course.objects.none()
 
 class TeacherReviewListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.ReviewSerializer
@@ -2458,8 +2480,16 @@ class TeacherReviewListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-        return api_models.Review.objects.filter(course__teacher=teacher)
+        
+        # Handle case where teacher_id is 0 or invalid
+        if not teacher_id or teacher_id == 0:
+            return api_models.Review.objects.none()
+        
+        try:
+            teacher = api_models.Teacher.objects.get(id=teacher_id)
+            return api_models.Review.objects.filter(course__teacher=teacher)
+        except api_models.Teacher.DoesNotExist:
+            return api_models.Review.objects.none()
     
 @method_decorator(csrf_exempt, name='dispatch')
 class TeacherReviewDetailAPIView(generics.RetrieveUpdateAPIView):
@@ -2478,14 +2508,28 @@ class TeacherReviewDetailAPIView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         teacher_id = self.kwargs['teacher_id']
         review_id = self.kwargs['review_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-        return api_models.Review.objects.get(course__teacher=teacher, id=review_id)
+        
+        # Handle case where teacher_id is 0 or invalid
+        if not teacher_id or teacher_id == 0:
+            from rest_framework.exceptions import NotFound
+            raise NotFound('Teacher not found')
+        
+        try:
+            teacher = api_models.Teacher.objects.get(id=teacher_id)
+            return api_models.Review.objects.get(course__teacher=teacher, id=review_id)
+        except api_models.Teacher.DoesNotExist:
+            from rest_framework.exceptions import NotFound
+            raise NotFound('Teacher not found')
 
 class TeacherStudentsListAPIView(viewsets.ViewSet):
     permission_classes = [AllowAny]
     
     def list(self, request, teacher_id=None):
         try:
+            # Handle case where teacher_id is 0 or invalid
+            if not teacher_id or teacher_id == 0:
+                return Response([])
+            
             teacher = api_models.Teacher.objects.get(id=teacher_id)
 
             enrolled_courses = api_models.EnrolledCourse.objects.filter(teacher=teacher)
@@ -2562,6 +2606,10 @@ class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
 
     def list(self, request, teacher_id=None):
         try:
+            # Handle case where teacher_id is 0 or invalid
+            if not teacher_id or teacher_id == 0:
+                return Response([])
+            
             teacher = api_models.Teacher.objects.get(id=teacher_id)
             courses_with_sales = []
             courses = api_models.Course.objects.filter(teacher=teacher)
@@ -2601,9 +2649,16 @@ class TeacherCourseOrdersListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-
-        return api_models.EnrolledCourse.objects.filter(teacher=teacher)
+        
+        # Handle case where teacher_id is 0 or invalid
+        if not teacher_id or teacher_id == 0:
+            return api_models.EnrolledCourse.objects.none()
+        
+        try:
+            teacher = api_models.Teacher.objects.get(id=teacher_id)
+            return api_models.EnrolledCourse.objects.filter(teacher=teacher)
+        except api_models.Teacher.DoesNotExist:
+            return api_models.EnrolledCourse.objects.none()
 
 class TeacherQuestionAnswerListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.Question_AnswerSerializer
@@ -2611,8 +2666,16 @@ class TeacherQuestionAnswerListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-        return api_models.Question_Answer.objects.filter(course__teacher=teacher)
+        
+        # Handle case where teacher_id is 0 or invalid
+        if not teacher_id or teacher_id == 0:
+            return api_models.Question_Answer.objects.none()
+        
+        try:
+            teacher = api_models.Teacher.objects.get(id=teacher_id)
+            return api_models.Question_Answer.objects.filter(course__teacher=teacher)
+        except api_models.Teacher.DoesNotExist:
+            return api_models.Question_Answer.objects.none()
     
 class TeacherNotificationListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.NotificationSerializer
@@ -2620,8 +2683,16 @@ class TeacherNotificationListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-        return api_models.Notification.objects.filter(teacher=teacher, seen=False)
+        
+        # Handle case where teacher_id is 0 or invalid
+        if not teacher_id or teacher_id == 0:
+            return api_models.Notification.objects.none()
+        
+        try:
+            teacher = api_models.Teacher.objects.get(id=teacher_id)
+            return api_models.Notification.objects.filter(teacher=teacher, seen=False)
+        except api_models.Teacher.DoesNotExist:
+            return api_models.Notification.objects.none()
     
 @method_decorator(csrf_exempt, name='dispatch')
 class TeacherNotificationDetailAPIView(generics.RetrieveUpdateAPIView):

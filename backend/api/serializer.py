@@ -23,10 +23,36 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['role'] = user.role
         token['nip'] = user.nip  # Add NIP field for SSO identity
         
-        try:
-            token['teacher_id'] = user.teacher.id
-        except:
-            token['teacher_id'] = 0
+        # Auto-create Teacher object if user is instructor/teacher but doesn't have one yet
+        if user.role in ['instructor', 'teacher']:
+            try:
+                # Try to get existing teacher
+                teacher_id = user.teacher.id
+                token['teacher_id'] = teacher_id
+            except:
+                # Teacher doesn't exist - create it from profile
+                try:
+                    from userauths.models import Profile
+                    profile = Profile.objects.get(user=user)
+                    teacher = api_models.Teacher.create_from_profile(user)
+                    token['teacher_id'] = teacher.id
+                except:
+                    # Profile doesn't exist either - create a minimal teacher object
+                    try:
+                        teacher = api_models.Teacher.objects.create(
+                            user=user,
+                            full_name=user.full_name,
+                            image='',
+                            country=''
+                        )
+                        token['teacher_id'] = teacher.id
+                    except:
+                        token['teacher_id'] = 0
+        else:
+            try:
+                token['teacher_id'] = user.teacher.id
+            except:
+                token['teacher_id'] = 0
             
         try:
             token['admin_id'] = user.admin.id if hasattr(user, 'admin') else 0

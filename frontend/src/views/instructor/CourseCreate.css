@@ -1,5 +1,95 @@
 /* Course Create Page Styles - Modern UI/UX Design */
 
+/* ========================================
+   CRITICAL LAYOUT FIX - Row & Column Structure
+   ======================================== */
+
+/* Ensure proper scroll context for sticky sidebar */
+.instructor-course-create-page .container {
+    position: relative;
+}
+
+/* Consistent vertical spacing for dashboard sections */
+.instructor-course-create-page .row {
+    margin-bottom: 0;
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    width: calc(100% + var(--bs-gutter-x, 24px));
+}
+
+/* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
+.instructor-course-create-page .row:has(.instructor-sidebar-column) {
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.instructor-course-create-page .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
+/* Desktop: col-lg-9 content wrapper (inside sidebar row) */
+.instructor-course-create-page .row:has(.instructor-sidebar-column) > .col-lg-9 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    flex: 1 1 auto !important;
+}
+
+/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+.instructor-course-create-page .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Tablet: col-md-8 content wrapper (inside sidebar row) */
+.instructor-course-create-page .row:has(.instructor-sidebar-column) > .col-md-8 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    flex: 1 1 auto !important;
+}
+
+/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+.instructor-course-create-page .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Override for specific spacing needs */
+.instructor-course-create-page .row.mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+/* ============================== */
+/* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
+/* Ensure sticky positioning works on CourseCreate page */
+/* ============================== */
+.instructor-course-create-page .row > .instructor-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
+}
+
+/* Sidebar: sticky positioning defined in global performance.css */
+/* This ensures the sidebar sticks to the viewport when scrolling */
+/* Position: sticky is already set in Sidebar.css & performance.css */
+/* NO override or conflicting properties here */
+
 /* ================================
    DESIGN SYSTEM VARIABLES
    ================================ */
@@ -61,6 +151,17 @@
 /* ================================
    CONTAINER & LAYOUT
    ================================ */
+
+/* Main page container */
+.instructor-course-create-page {
+    min-height: 100vh;
+    background: transparent;
+    padding: 3rem 0;
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+}
+
+/* Deprecated: old class name (kept for compatibility) */
 .course-create-container {
     min-height: 100vh;
     background: transparent;
@@ -166,8 +267,8 @@
     transform: scaleX(1);
 }
 
-/* Enhanced Section Titles */
-.section-title {
+/* Enhanced Section Titles - SCOPED TO FORM SECTIONS ONLY (NOT SIDEBAR) */
+.form-section .section-title {
     color: var(--neutral-700);
     font-weight: 700;
     font-size: 1.5rem;
@@ -177,7 +278,7 @@
     display: inline-block;
 }
 
-.section-title::after {
+.form-section .section-title::after {
     content: '';
     position: absolute;
     bottom: 0;
@@ -188,7 +289,7 @@
     border-radius: 2px;
 }
 
-.section-title i {
+.form-section .section-title i {
     color: var(--instructor-primary);
     font-size: 1.2rem;
 }
@@ -761,7 +862,7 @@
         padding: 1rem;
     }
     
-    .section-title {
+    .form-section .section-title {
         font-size: 1.25rem;
     }
 }
@@ -1428,6 +1529,114 @@
     .crop-instructions small {
         color: #a0aec0;
     }
+}
+
+/* ========================================
+   RESPONSIVE LAYOUT - Content Column Sizing
+   ======================================== */
+
+/* Base: Desktop Large (lg breakpoint and up) */
+@media (min-width: 992px) {
+  .instructor-course-create-page .row > .col-lg-9 {
+    flex: 1 1 auto;
+    min-width: 500px;
+  }
+}
+
+/* Tablet (md breakpoint) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .instructor-course-create-page .row > .col-md-8 {
+    flex: 1 1 auto;
+    min-width: 400px;
+  }
+}
+
+/* Mobile: Full width stacked */
+/* ========================================
+   MEDIA QUERIES - RESPONSIVE SIDEBAR LAYOUT
+   ======================================== */
+
+/* Base: Desktop Large (lg breakpoint and up) */
+@media (min-width: 992px) {
+    /* Sidebar column - maintains fixed width or collapses */
+    .instructor-course-create-page .row > .instructor-sidebar-column {
+        flex-basis: auto;
+        flex-grow: 0;
+        flex-shrink: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: auto;
+    }
+
+    /* Content column - expands to fill remaining space */
+    .instructor-course-create-page .row > .col-lg-9 {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        max-width: 100%;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Ensure content doesn't wrap under sidebar */
+    .instructor-course-create-page .row > .col-lg-9 {
+        min-width: 500px;
+    }
+}
+
+/* Tablet (md breakpoint) */
+@media (min-width: 768px) and (max-width: 991px) {
+    /* Sidebar column - maintains fixed width or collapses */
+    .instructor-course-create-page .row > .instructor-sidebar-column {
+        flex-basis: auto;
+        flex-grow: 0;
+        flex-shrink: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: auto;
+    }
+
+    /* Content column - expands to fill remaining space */
+    .instructor-course-create-page .row > .col-md-8 {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        max-width: 100%;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+/* Mobile: Full width stacked */
+@media (max-width: 767px) {
+    .instructor-course-create-page .row {
+        flex-wrap: wrap;
+    }
+
+    .instructor-course-create-page .row:has(.instructor-sidebar-column) {
+        flex-wrap: wrap;
+    }
+
+    .create-header-modern {
+        padding: 1rem;
+    }
+
+    .form-body-modern {
+        padding: 0;
+    }
+
+    .form-section {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 767px) {
+  .instructor-course-create-page .row {
+    flex-direction: column;
+  }
+
+  .instructor-course-create-page .row > [class*="col-"],
+  .instructor-course-create-page .row > .instructor-sidebar-column {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 /* Print Styles (hide modal when printing) */

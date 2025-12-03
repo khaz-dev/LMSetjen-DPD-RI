@@ -1,5 +1,95 @@
 /* QA Component Styles */
 
+/* ========================================
+   CRITICAL LAYOUT FIX - Row & Column Structure
+   ======================================== */
+
+/* Ensure proper scroll context for sticky sidebar */
+.qa-bg-section .container {
+    position: relative;
+}
+
+/* Consistent vertical spacing for dashboard sections */
+.qa-bg-section .row {
+    margin-bottom: 0;
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    width: calc(100% + var(--bs-gutter-x, 24px));
+}
+
+/* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
+.qa-bg-section .row:has(.instructor-sidebar-column) {
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.qa-bg-section .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
+/* Desktop: col-lg-9 content wrapper (inside sidebar row) */
+.qa-bg-section .row:has(.instructor-sidebar-column) > .col-lg-9 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    flex: 1 1 auto !important;
+}
+
+/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+.qa-bg-section .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Tablet: col-md-8 content wrapper (inside sidebar row) */
+.qa-bg-section .row:has(.instructor-sidebar-column) > .col-md-8 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    flex: 1 1 auto !important;
+}
+
+/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+.qa-bg-section .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Override for specific spacing needs */
+.qa-bg-section .row.mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+/* ============================== */
+/* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
+/* Ensure sticky positioning works on QA page */
+/* ============================== */
+.qa-bg-section .row > .instructor-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
+}
+
+/* Sidebar: sticky positioning defined in global performance.css */
+/* This ensures the sidebar sticks to the viewport when scrolling */
+/* Position: sticky is already set in Sidebar.css & performance.css */
+/* NO override or conflicting properties here */
+
 /* Background Section */
 .qa-bg-section {
     min-height: 100vh;
@@ -458,4 +548,96 @@
     border-radius: 12px;
     font-size: 0.8rem;
     font-weight: 600;
+}
+
+/* ========================================
+   RESPONSIVE LAYOUT - Content Column Sizing
+   ======================================== */
+
+/* Base: Desktop Large (lg breakpoint and up) */
+/* col-lg-3 sidebar + col-lg-9 content = 12 columns */
+@media (min-width: 992px) {
+  /* Sidebar column - maintains fixed width or collapses */
+  .qa-bg-section .row > .instructor-sidebar-column {
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Sidebar now spans full column width without Bootstrap padding */
+    width: auto;
+  }
+
+  /* Content column - expands to fill remaining space */
+  .qa-bg-section .row > .col-lg-9 {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Ensure content doesn't wrap under sidebar */
+  .qa-bg-section .row > .col-lg-9 {
+    min-width: 500px;
+  }
+
+  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
+    /* Fallback for browsers that don't support :has() */
+    .qa-bg-section .row > .col-lg-9 {
+      flex: 1;
+      width: auto;
+      max-width: 100%;
+    }
+  }
+}
+
+/* Tablet (md breakpoint) */
+/* col-md-4 sidebar + col-md-8 content = 12 columns */
+@media (min-width: 768px) and (max-width: 991px) {
+  /* Sidebar column - maintains fixed width or collapses */
+  .qa-bg-section .row > .instructor-sidebar-column {
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Sidebar now spans full column width without Bootstrap padding */
+    width: auto;
+  }
+
+  /* Content column - expands to fill remaining space */
+  .qa-bg-section .row > .col-md-8 {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Ensure content doesn't wrap under sidebar */
+  .qa-bg-section .row > .col-md-8 {
+    min-width: 400px;
+  }
+
+  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
+    /* Fallback for browsers that don't support :has() */
+    .qa-bg-section .row > .col-md-8 {
+      flex: 1;
+      width: auto;
+      max-width: 100%;
+    }
+  }
+}
+
+/* Mobile: Full width stacked */
+@media (max-width: 767px) {
+  .qa-bg-section .row {
+    flex-direction: column;
+  }
+
+  .qa-bg-section .row > [class*="col-"],
+  .qa-bg-section .row > .instructor-sidebar-column {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
 }

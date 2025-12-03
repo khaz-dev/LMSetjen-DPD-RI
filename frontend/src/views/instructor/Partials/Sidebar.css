@@ -85,6 +85,7 @@
     display: flex;
     flex-direction: column;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: visible !important; /* ✅ Ensure sticky works - no scroll context on column */
 }
 
 /* ============================== */
@@ -96,12 +97,12 @@
     border-radius: 16px;
     box-shadow: 0 8px 30px rgba(52, 152, 219, 0.12);
     border: 1px solid rgba(52, 152, 219, 0.08);
-    overflow: visible;
-    position: sticky;
-    top: 0;
+    overflow: visible !important;
+    position: sticky !important;
+    top: calc(60px + 1rem + 1rem) !important;  /* BaseHeader (60px) + Header margin-top (1rem) + gap (1rem) */
     z-index: 100;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
-    max-height: 100vh;
+    max-height: calc(100vh - 60px - 1rem);
     align-self: flex-start;
     display: flex;
     flex-direction: column;
@@ -602,6 +603,7 @@
     .col-lg-3.instructor-sidebar-column .instructor-sidebar.collapsed {
         width: 85px !important;
     }
+    
 }
 
 /* Tablet: Medium screens (md: 768px - 991px) */
@@ -640,6 +642,8 @@
     .courses-container .row > .col-md-4,
     .course-create-container .row > .col-lg-3,
     .course-create-container .row > .col-md-4,
+    .instructor-course-create-page .row > .col-lg-3,
+    .instructor-course-create-page .row > .col-md-4,
     .course-edit-container .row > .col-lg-3,
     .course-edit-container .row > .col-md-4,
     .modern-students .row > .col-lg-3,

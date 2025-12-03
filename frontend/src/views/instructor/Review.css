@@ -1,0 +1,910 @@
+/* ========================================
+   INSTRUCTOR REVIEW STYLES
+   ======================================== */
+
+/* Main Page Layout */
+.instructor-review-page {
+    background: transparent;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+/* Ensure proper scroll context for sticky sidebar */
+.instructor-review-page .container {
+    position: relative;
+}
+
+/* ========================================
+   CRITICAL LAYOUT FIX - Row & Column Structure
+   ======================================== */
+
+/* Consistent vertical spacing for dashboard sections */
+.instructor-review-page .row {
+    margin-bottom: 0;
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    width: calc(100% + var(--bs-gutter-x, 24px));
+}
+
+/* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
+.instructor-review-page .row:has(.instructor-sidebar-column) {
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.instructor-review-page .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
+/* Desktop: col-lg-9 content wrapper (inside sidebar row) */
+.instructor-review-page .row:has(.instructor-sidebar-column) > .col-lg-9 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    flex: 1 1 auto !important;
+}
+
+/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+.instructor-review-page .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Tablet: col-md-8 content wrapper (inside sidebar row) */
+.instructor-review-page .row:has(.instructor-sidebar-column) > .col-md-8 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    flex: 1 1 auto !important;
+}
+
+/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+.instructor-review-page .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Override for specific spacing needs */
+.instructor-review-page .row.mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+/* ============================== */
+/* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
+/* Ensure sticky positioning works on Review page */
+/* ============================== */
+.instructor-review-page .row > .instructor-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
+}
+
+/* Sidebar: sticky positioning defined in global performance.css */
+/* This ensures the sidebar sticks to the viewport when scrolling */
+/* Position: sticky is already set in Sidebar.css & performance.css */
+/* NO override or conflicting properties here */
+
+/* ========================================
+   HEADER SECTION
+   ======================================== */
+.instructor-review-page .modern-header-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.instructor-review-page .header-decoration {
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(45deg, #3498db20, #2980b920);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.instructor-review-page .header-content {
+    position: relative;
+    z-index: 2;
+}
+
+.instructor-review-page .page-title {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.instructor-review-page .page-title-icon {
+    margin-right: 1rem;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.instructor-review-page .page-subtitle {
+    margin-bottom: 0;
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.instructor-review-page .stat-badge {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.instructor-review-page .stat-badge-icon {
+    margin-right: 0.5rem;
+}
+
+/* ========================================
+   FILTER SECTION
+   ======================================== */
+.instructor-review-page .modern-filter-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+}
+
+.instructor-review-page .modern-search-container {
+    position: relative;
+}
+
+.instructor-review-page .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3498db;
+    z-index: 2;
+}
+
+.instructor-review-page .modern-input {
+    padding-left: 45px;
+    height: 50px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.instructor-review-page .modern-input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    outline: none;
+}
+
+.instructor-review-page .modern-select {
+    height: 50px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.instructor-review-page .modern-select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    outline: none;
+}
+
+/* ========================================
+   REVIEWS CONTAINER
+   ======================================== */
+.instructor-review-page .modern-reviews-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* ========================================
+   REVIEW CARD
+   ======================================== */
+.instructor-review-page .modern-review-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.instructor-review-page .modern-review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* ========================================
+   AVATAR STYLES
+   ======================================== */
+.instructor-review-page .modern-avatar-container {
+    position: relative;
+    padding: 4px;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.instructor-review-page .reviewer-avatar {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border: 3px solid white;
+    border-radius: 50%;
+}
+
+.instructor-review-page .default-avatar {
+    width: 70px;
+    height: 70px;
+    background: #3498db;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 28px;
+    border: 3px solid white;
+}
+
+.instructor-review-page .avatar-status-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    background: #28a745;
+    border-radius: 50%;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.instructor-review-page .avatar-status-icon {
+    font-size: 8px;
+    color: white;
+}
+
+/* ========================================
+   REVIEW HEADER
+   ======================================== */
+.instructor-review-page .review-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.instructor-review-page .reviewer-info {
+    flex: 1;
+}
+
+.instructor-review-page .reviewer-name {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.instructor-review-page .review-date {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.instructor-review-page .review-date-icon {
+    margin-right: 0.5rem;
+}
+
+.instructor-review-page .report-btn {
+    border: none;
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.instructor-review-page .report-btn:hover {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+}
+
+/* ========================================
+   RATING DISPLAY
+   ======================================== */
+.instructor-review-page .rating-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+}
+
+.instructor-review-page .rating-label {
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+.instructor-review-page .course-title {
+    font-weight: bold;
+    color: #3498db;
+}
+
+/* ========================================
+   REVIEW CONTENT
+   ======================================== */
+.instructor-review-page .review-content {
+    background: rgba(102, 126, 234, 0.05);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.instructor-review-page .review-content-label {
+    display: flex;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.instructor-review-page .review-quote-icon {
+    color: #667eea;
+    font-size: 1.2rem;
+    margin-right: 10px;
+    margin-top: 2px;
+}
+
+.instructor-review-page .review-label-text {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.instructor-review-page .review-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* ========================================
+   RESPONSE SECTION
+   ======================================== */
+.instructor-review-page .response-content {
+    background: rgba(40, 167, 69, 0.05);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(40, 167, 69, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.instructor-review-page .response-content-label {
+    display: flex;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.instructor-review-page .response-icon {
+    color: #28a745;
+    font-size: 1.1rem;
+    margin-right: 10px;
+    margin-top: 2px;
+}
+
+.instructor-review-page .response-label-text {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.instructor-review-page .response-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* ========================================
+   REPLY BUTTON
+   ======================================== */
+.instructor-review-page .modern-reply-btn {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border: none;
+    color: white;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.instructor-review-page .modern-reply-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+.instructor-review-page .modern-reply-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.instructor-review-page .reply-icon {
+    margin-right: 0.5rem;
+}
+
+/* ========================================
+   RESPONSE FORM
+   ======================================== */
+.instructor-review-page .modern-response-form {
+    background: rgba(248, 249, 250, 0.8);
+    border-radius: 15px;
+    padding: 25px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 1.5rem;
+}
+
+.instructor-review-page .form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.instructor-review-page .form-label-icon {
+    color: #3498db;
+}
+
+.instructor-review-page .modern-textarea {
+    resize: vertical;
+    min-height: 120px;
+    font-size: 0.95rem;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 15px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.instructor-review-page .modern-textarea:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    outline: none;
+}
+
+.instructor-review-page .modern-textarea:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+.instructor-review-page .form-text {
+    margin-top: 0.5rem;
+    display: block;
+}
+
+.instructor-review-page .form-text-icon {
+    margin-right: 0.25rem;
+}
+
+/* ========================================
+   FORM BUTTONS
+   ======================================== */
+.instructor-review-page .form-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.instructor-review-page .cancel-btn {
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.instructor-review-page .submit-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.instructor-review-page .submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+    color: white;
+}
+
+.instructor-review-page .submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.instructor-review-page .submit-icon {
+    margin-right: 0.5rem;
+}
+
+/* ========================================
+   LOADING SPINNER
+   ======================================== */
+.instructor-review-page .submit-spinner {
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+}
+
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+.instructor-review-page .modern-empty-state {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 60px 40px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.instructor-review-page .empty-state-icon {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #667eea20, #764ba220);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.instructor-review-page .empty-state-icon-inner {
+    font-size: 2.5rem;
+    color: #667eea;
+}
+
+.instructor-review-page .empty-state-title {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.instructor-review-page .empty-state-text {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 768px) {
+    .instructor-review-page .modern-header-section {
+        padding: 20px;
+        margin-bottom: 1.25rem;
+    }
+
+    .instructor-review-page .page-title {
+        font-size: 2rem;
+    }
+
+    .instructor-review-page .page-subtitle {
+        font-size: 1rem;
+    }
+
+    .instructor-review-page .modern-filter-section {
+        padding: 20px;
+        margin-bottom: 1.25rem;
+    }
+
+    .instructor-review-page .modern-review-card {
+        padding: 20px;
+    }
+
+    .instructor-review-page .reviewer-avatar,
+    .instructor-review-page .default-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .instructor-review-page .review-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .instructor-review-page .report-btn {
+        width: 100%;
+    }
+
+    .instructor-review-page .modern-input,
+    .instructor-review-page .modern-select {
+        height: 45px;
+    }
+
+    .instructor-review-page .modern-textarea {
+        min-height: 100px;
+    }
+
+    .instructor-review-page .form-buttons {
+        flex-direction: column;
+    }
+
+    .instructor-review-page .cancel-btn,
+    .instructor-review-page .submit-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .instructor-review-page .modern-empty-state {
+        padding: 40px 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .instructor-review-page .page-title {
+        font-size: 1.75rem;
+    }
+
+    .instructor-review-page .page-subtitle {
+        font-size: 0.95rem;
+    }
+
+    .instructor-review-page .modern-header-section,
+    .instructor-review-page .modern-review-card {
+        padding: 15px;
+        border-radius: 15px;
+    }
+
+    .instructor-review-page .modern-filter-section {
+        padding: 15px;
+    }
+
+    .instructor-review-page .stat-badge {
+        padding: 10px 15px;
+        font-size: 0.85rem;
+    }
+
+    .instructor-review-page .reviewer-name {
+        font-size: 1rem;
+    }
+
+    .instructor-review-page .review-text,
+    .instructor-review-page .response-text {
+        font-size: 0.95rem;
+    }
+
+    .instructor-review-page .modern-input,
+    .instructor-review-page .modern-select,
+    .instructor-review-page .modern-textarea {
+        font-size: 0.9rem;
+    }
+
+    .instructor-review-page .modern-reply-btn {
+        padding: 10px 18px;
+        font-size: 0.85rem;
+    }
+
+    .instructor-review-page .modern-empty-state {
+        padding: 30px 15px;
+    }
+
+    .instructor-review-page .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+    }
+
+    .instructor-review-page .empty-state-icon-inner {
+        font-size: 2rem;
+    }
+
+    .instructor-review-page .empty-state-title {
+        font-size: 1.25rem;
+    }
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.instructor-review-page .fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.instructor-review-page .slide-in-up {
+    animation: slideInUp 0.5s ease-out;
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+    .instructor-review-page .modern-review-card,
+    .instructor-review-page .modern-reply-btn,
+    .instructor-review-page .modern-input,
+    .instructor-review-page .modern-select,
+    .instructor-review-page .modern-textarea,
+    .instructor-review-page .submit-btn {
+        transition: none;
+    }
+
+    .instructor-review-page .fade-in,
+    .instructor-review-page .slide-in-up {
+        animation: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .instructor-review-page .modern-input,
+    .instructor-review-page .modern-select,
+    .instructor-review-page .modern-textarea {
+        border-width: 3px;
+    }
+
+    .instructor-review-page .modern-reply-btn,
+    .instructor-review-page .submit-btn {
+        border: 2px solid #000;
+    }
+}
+
+/* ========================================
+   RESPONSIVE LAYOUT - Content Column Sizing
+   ======================================== */
+
+/* Base: Desktop Large (lg breakpoint and up) */
+/* col-lg-3 sidebar + col-lg-9 content = 12 columns */
+@media (min-width: 992px) {
+  /* Sidebar column - maintains fixed width or collapses */
+  .instructor-review-page .row > .instructor-sidebar-column {
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Sidebar now spans full column width without Bootstrap padding */
+    width: auto;
+  }
+
+  /* Content column - expands to fill remaining space */
+  .instructor-review-page .row > .col-lg-9 {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Ensure content doesn't wrap under sidebar */
+  .instructor-review-page .row > .col-lg-9 {
+    min-width: 500px;
+  }
+
+  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
+    /* Fallback for browsers that don't support :has() */
+    .instructor-review-page .row > .col-lg-9 {
+      flex: 1;
+      width: auto;
+      max-width: 100%;
+    }
+  }
+}
+
+/* Tablet (md breakpoint) */
+/* col-md-4 sidebar + col-md-8 content = 12 columns */
+@media (min-width: 768px) and (max-width: 991px) {
+  /* Sidebar column - maintains fixed width or collapses */
+  .instructor-review-page .row > .instructor-sidebar-column {
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Sidebar now spans full column width without Bootstrap padding */
+    width: auto;
+  }
+
+  /* Content column - expands to fill remaining space */
+  .instructor-review-page .row > .col-md-8 {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Ensure content doesn't wrap under sidebar */
+  .instructor-review-page .row > .col-md-8 {
+    min-width: 400px;
+  }
+
+  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
+    /* Fallback for browsers that don't support :has() */
+    .instructor-review-page .row > .col-md-8 {
+      flex: 1;
+      width: auto;
+      max-width: 100%;
+    }
+  }
+}
+
+/* Mobile: Full width stacked */
+@media (max-width: 767px) {
+  .instructor-review-page .row {
+    flex-direction: column;
+  }
+
+  .instructor-review-page .row > [class*="col-"],
+  .instructor-review-page .row > .instructor-sidebar-column {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
+}

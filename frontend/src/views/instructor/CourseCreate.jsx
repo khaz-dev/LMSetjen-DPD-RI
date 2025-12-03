@@ -51,14 +51,14 @@ function CourseCreate() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await useAxios.get(`course/category/`);
+                const response = await useAxios.get("course/category/");
                 // Normalize response: handle both array and paginated responses
                 const categoryData = Array.isArray(response.data) 
                     ? response.data 
                     : (response.data?.results || []);
                 setCategory(categoryData);
             } catch (error) {
-                console.error('Error fetching categories:', error);
+                console.error("Error fetching categories:", error);
                 Toast("error", "Failed to load categories");
             }
         };
@@ -80,25 +80,25 @@ function CourseCreate() {
         let fieldWarnings = [];
 
         switch (name) {
-            case 'title':
+            case "title":
                 const titleValidation = validateTitle(value);
                 fieldErrors = titleValidation.errors;
                 fieldWarnings = titleValidation.warnings;
                 break;
-            case 'description':
+            case "description":
                 const descValidation = validateDescription(value);
                 fieldErrors = descValidation.errors;
                 fieldWarnings = descValidation.warnings;
                 break;
-            case 'category':
+            case "category":
                 const categoryValidation = validateCategory(value);
                 fieldErrors = categoryValidation.errors;
                 break;
-            case 'level':
+            case "level":
                 const levelValidation = validateLevel(value);
                 fieldErrors = levelValidation.errors;
                 break;
-            case 'image':
+            case "image":
                 const imageValidation = validateImage(value);
                 fieldErrors = imageValidation.errors;
                 fieldWarnings = imageValidation.warnings;
@@ -144,7 +144,7 @@ function CourseCreate() {
         }));
 
         // Real-time validation for description
-        validateField('description', content);
+        validateField("description", content);
     };
 
     // Focus on first error field
@@ -161,8 +161,8 @@ function CourseCreate() {
             if (fieldRefs[field]?.current) {
                 fieldRefs[field].current.focus();
                 fieldRefs[field].current.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
+                    behavior: "smooth", 
+                    block: "center" 
                 });
                 break;
             }
@@ -198,7 +198,7 @@ function CourseCreate() {
         };
 
         try {
-            const response = await useAxios.post(`teacher/course-create/`, courseSubmissionData, {
+            const response = await useAxios.post("teacher/course-create/", courseSubmissionData, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -253,10 +253,10 @@ function CourseCreate() {
                 // Check for field-specific errors
                 const formattedErrors = {};
                 Object.keys(serverResponse).forEach(field => {
-                    if (field !== 'error') { // Skip the generic error field
+                    if (field !== "error") { // Skip the generic error field
                         if (Array.isArray(serverResponse[field])) {
                             formattedErrors[field] = serverResponse[field];
-                        } else if (typeof serverResponse[field] === 'string') {
+                        } else if (typeof serverResponse[field] === "string") {
                             formattedErrors[field] = [serverResponse[field]];
                         }
                     }
@@ -279,7 +279,7 @@ function CourseCreate() {
     return (
         <>
             <BaseHeader />
-            <section className="course-create-container">
+            <section className="instructor-course-create-page">
                 <div className="container">
                     <Header />
                     <div className="row">
@@ -308,8 +308,8 @@ function CourseCreate() {
                             <form onSubmit={handleSubmit} className="form-body-modern">
                                 {/* Draft Status Information */}
                                 <div className="alert alert-info d-flex align-items-start mb-4 border-0 shadow-sm" style={{ 
-                                    background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
-                                    borderLeft: '4px solid #2196f3'
+                                    background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+                                    borderLeft: "4px solid #2196f3"
                                 }}>
                                     <div className="me-3">
                                         <i className="fas fa-info-circle fa-2x text-primary"></i>
@@ -466,7 +466,7 @@ function CourseCreate() {
                                 </div>
 
                                 {/* Action Buttons Section */}
-                                <div style={{ marginTop: '20px', marginBottom: '10px' }}>
+                                <div style={{ marginTop: "20px", marginBottom: "10px" }}>
                                     <div className="d-flex justify-content-end gap-3">
                                         <Link to="/instructor/courses/" className="btn btn-outline-primary">
                                             <i className="fas fa-times me-2"></i>

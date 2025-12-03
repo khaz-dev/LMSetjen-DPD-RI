@@ -75,21 +75,21 @@ function Dashboard() {
         coursesData.slice(0, 5).forEach(course => {
             activities.push({
                 id: course.enrollment_id,
-                type: 'enrollment',
+                type: "enrollment",
                 title: `Enrolled in ${course.course.title}`,
                 date: course.date,
-                icon: 'fas fa-user-graduate',
-                color: 'success'
+                icon: "fas fa-user-graduate",
+                color: "success"
             });
             
             if (course.completed_lesson?.length > 0) {
                 activities.push({
                     id: `${course.enrollment_id}-progress`,
-                    type: 'progress',
+                    type: "progress",
                     title: `Completed ${course.completed_lesson.length} lessons in ${course.course.title}`,
                     date: course.date,
-                    icon: 'fas fa-check-circle',
-                    color: 'primary'
+                    icon: "fas fa-check-circle",
+                    color: "primary"
                 });
             }
         });
@@ -193,14 +193,14 @@ function Dashboard() {
         return (
             <>
                 <BaseHeader />
-                <section className="dashboard-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <section className="dashboard-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row mt-0 mt-md-4">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
                                     </div>
                                     <p className="mt-3 text-muted">Loading Dashboard...</p>
@@ -235,7 +235,7 @@ function Dashboard() {
                                         <div className="d-flex justify-content-md-end justify-content-center text-primary">
                                                 <div
                                                     className="progress-circle"
-                                                    style={{ '--progress': getAverageProgress() || 0 }}
+                                                    style={{ "--progress": getAverageProgress() || 0 }}
                                                 >
                                                     <div className="progress-inner">
                                                     <div className="text-center">
@@ -253,7 +253,7 @@ function Dashboard() {
                             {/* Enhanced Statistics Cards */}
                             <div className="row mb-2">
                                 <div className="col-lg-3 col-sm-6 mb-3">
-                                    <div className="dashboard-stat-card justify-content-end" style={{'--gradient-start': '#667eea', '--gradient-end': '#764ba2'}}>
+                                    <div className="dashboard-stat-card justify-content-end" style={{"--gradient-start": "#667eea", "--gradient-end": "#764ba2"}}>
                                         <div className="d-flex flex-column h-100 justify-content-between">
                                             <div className="d-flex flex-row align-items-center">
                                             <div className="stat-icon me-3">
@@ -269,7 +269,7 @@ function Dashboard() {
                                 </div>
 
                                 <div className="col-lg-3 col-sm-6 mb-3">
-                                    <div className="dashboard-stat-card justify-content-end" style={{'--gradient-start': '#667eea', '--gradient-end': '#764ba2'}}>
+                                    <div className="dashboard-stat-card justify-content-end" style={{"--gradient-start": "#667eea", "--gradient-end": "#764ba2"}}>
                                         <div className="d-flex flex-column h-100 justify-content-between">
                                             <div className="d-flex flex-row align-items-center">
                                             <div className="stat-icon me-3">
@@ -285,7 +285,7 @@ function Dashboard() {
                                 </div>
 
                                 <div className="col-lg-3 col-sm-6 mb-3">
-                                    <div className="dashboard-stat-card justify-content-end" style={{'--gradient-start': '#667eea', '--gradient-end': '#764ba2'}}>
+                                    <div className="dashboard-stat-card justify-content-end" style={{"--gradient-start": "#667eea", "--gradient-end": "#764ba2"}}>
                                         <div className="d-flex flex-column h-100 justify-content-between">
                                             <div className="d-flex flex-row align-items-center">
                                             <div className="stat-icon me-3">
@@ -301,7 +301,7 @@ function Dashboard() {
                                 </div>
 
                                 <div className="col-lg-3 col-sm-6 mb-3">
-                                    <div className="dashboard-stat-card justify-content-end" style={{'--gradient-start': '#667eea', '--gradient-end': '#764ba2'}}>
+                                    <div className="dashboard-stat-card justify-content-end" style={{"--gradient-start": "#667eea", "--gradient-end": "#764ba2"}}>
                                         <div className="d-flex flex-column h-100 justify-content-between">
                                             <div className="d-flex flex-row align-items-center">
                                             <div className="stat-icon me-3">
@@ -331,7 +331,7 @@ function Dashboard() {
                                                 <div className="col-md-4">
                                                     <div className="d-flex align-items-center p-3 bg-light rounded">
                                                         <div className="me-3">
-                                                            <i className="fas fa-hourglass-start text-primary" style={{fontSize: '2rem'}}></i>
+                                                            <i className="fas fa-hourglass-start text-primary" style={{fontSize: "2rem"}}></i>
                                                         </div>
                                                         <div>
                                                             <div className="h5 fw-bold mb-0">{getTotalLearningTime()}</div>
@@ -342,7 +342,7 @@ function Dashboard() {
                                                 <div className="col-md-4">
                                                     <div className="d-flex align-items-center p-3 bg-light rounded">
                                                         <div className="me-3">
-                                                            <i className="fas fa-check-circle text-success" style={{fontSize: '2rem'}}></i>
+                                                            <i className="fas fa-check-circle text-success" style={{fontSize: "2rem"}}></i>
                                                         </div>
                                                         <div>
                                                             <div className="h5 fw-bold mb-0">{getCompletedLearningTime()}</div>
@@ -353,7 +353,7 @@ function Dashboard() {
                                                 <div className="col-md-4">
                                                     <div className="d-flex align-items-center p-3 bg-light rounded">
                                                         <div className="me-3">
-                                                            <i className="fas fa-trophy text-warning" style={{fontSize: '2rem'}}></i>
+                                                            <i className="fas fa-trophy text-warning" style={{fontSize: "2rem"}}></i>
                                                         </div>
                                                         <div>
                                                             <div className="h5 fw-bold mb-0">{getAverageProgress()}%</div>
@@ -395,7 +395,7 @@ function Dashboard() {
                                                 ))
                                             ) : (
                                                 <div className="text-center py-4">
-                                                    <i className="fas fa-clock text-muted mb-3" style={{fontSize: '2rem', opacity: 0.3}}></i>
+                                                    <i className="fas fa-clock text-muted mb-3" style={{fontSize: "2rem", opacity: 0.3}}></i>
                                                     <p className="text-muted mb-0">No recent activity</p>
                                                     <small className="text-muted">Your learning activities will appear here</small>
                                                 </div>
@@ -440,11 +440,11 @@ function Dashboard() {
                                                                 <>
                                                                     <img
                                                                         src={course.course.image}
-                                                                        alt={course.course.title || 'Course'}
+                                                                        alt={course.course.title || "Course"}
                                                                         className="course-image"
                                                                         onError={(e) => {
-                                                                            e.target.style.display = 'none';
-                                                                            e.target.parentElement.querySelector('.course-placeholder').style.display = 'flex';
+                                                                            e.target.style.display = "none";
+                                                                            e.target.parentElement.querySelector(".course-placeholder").style.display = "flex";
                                                                         }}
                                                                     />
                                                                     <div className="course-image-overlay">
@@ -452,8 +452,8 @@ function Dashboard() {
                                                                     </div>
                                                                 </>
                                                             ) : (
-                                                                <div className="course-placeholder" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
-                                                                    <i className="fas fa-graduation-cap" style={{ fontSize: '48px', color: '#ccc' }}></i>
+                                                                <div className="course-placeholder" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px", backgroundColor: "#f0f0f0", borderRadius: "8px" }}>
+                                                                    <i className="fas fa-graduation-cap" style={{ fontSize: "48px", color: "#ccc" }}></i>
                                                                 </div>
                                                             )}
                                                         </div>                                                                        {/* Course Title */}
@@ -469,7 +469,7 @@ function Dashboard() {
                                                                         {/* Course Category */}
                                                                         <div className="course-category mb-3">
                                                                             <i className="fas fa-folder-open me-1"></i>
-                                                                            {course.course.category?.title || 'General'}
+                                                                            {course.course.category?.title || "General"}
                                                                         </div>
                                                                         
                                                                         {/* Course Meta Information */}
@@ -495,14 +495,14 @@ function Dashboard() {
                                                                                 </span>
                                                                             </div>
                                                                             
-                                                                            <div className="progress" style={{ height: '8px', borderRadius: '10px' }}>
+                                                                            <div className="progress" style={{ height: "8px", borderRadius: "10px" }}>
                                                                                 <div 
                                                                                     className="progress-bar" 
                                                                                     role="progressbar"
                                                                                     style={{
                                                                                         width: `${course.progressPercentage}%`,
-                                                                                        borderRadius: '10px',
-                                                                                        background: `linear-gradient(180deg, #28a745 0%, #20c997 100%)`
+                                                                                        borderRadius: "10px",
+                                                                                        background: "linear-gradient(180deg, #28a745 0%, #20c997 100%)"
                                                                                     }}
                                                                                 ></div>
                                                                             </div>
@@ -554,7 +554,7 @@ function Dashboard() {
                                                     </div>
                                                 ) : (
                                                     <div className="text-center py-5">
-                                                        <i className="fas fa-book-open text-muted" style={{fontSize: '3rem'}}></i>
+                                                        <i className="fas fa-book-open text-muted" style={{fontSize: "3rem"}}></i>
                                                         <h6 className="mt-3 mb-2">No courses enrolled yet</h6>
                                                         <p className="text-muted">Start your learning journey by enrolling in courses</p>
                                                         <Link to="/" className="btn btn-modern">

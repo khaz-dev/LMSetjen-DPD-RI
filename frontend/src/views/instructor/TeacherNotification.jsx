@@ -14,6 +14,7 @@ import Footer from "../partials/Footer";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
+import "./TeacherNotification.css";
 
 function TeacherNotification() {
     const [noti, setNoti] = useState([]);

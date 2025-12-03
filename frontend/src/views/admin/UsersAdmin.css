@@ -2524,7 +2524,7 @@
 .sync-progress-percentage {
     font-size: 18px;
     font-weight: 800;
-    background: var(--theme-gradient) !important;
+    background: var(--theme-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

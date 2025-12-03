@@ -1,4 +1,5 @@
-import React, { memo } from 'react'
+import React, { memo } from "react"
+import "./BaseFooter.css"
 
 function BaseFooter() {
   const currentYear = new Date().getFullYear();
@@ -6,23 +7,23 @@ function BaseFooter() {
   // Configuration data for easy maintenance
   const config = {
     brand: {
-      name: 'LMSetjen DPD RI',
-      tagline: 'Platform e-learning BPSDM OKK untuk Setjen DPD RI',
-      description: 'Platform e-learning berbasis LMS yang dikembangkan oleh BPSDM OKK untuk mendukung pelatihan digital pegawai dan anggota Setjen DPD RI.',
+      name: "LMSetjen DPD RI",
+      tagline: "Platform e-learning BPSDM OKK untuk Setjen DPD RI",
+      description: "Platform e-learning berbasis LMS yang dikembangkan oleh BPSDM OKK untuk mendukung pelatihan digital pegawai dan anggota Setjen DPD RI.",
       copyright: `© ${currentYear} BPSDM All rights reserved.`
     },
     contact: {
-      email: 'sdm@dpd.go.id',
-      phone: '(+62) 853 1586 9799',
-      address: 'Setjen DPD RI Senayan, Indonesia'
+      email: "sdm@dpd.go.id",
+      phone: "(+62) 853 1586 9799",
+      address: "Setjen DPD RI Senayan, Indonesia"
     },
     colors: {
-      primary: '#667eea',
-      secondary: '#764ba2',
-      accent: '#6c757d',
-      light: '#f8f9fa',
-      dark: '#343a40',
-      border: '#e9ecef'
+      primary: "#667eea",
+      secondary: "#764ba2",
+      accent: "#6c757d",
+      light: "#f8f9fa",
+      dark: "#343a40",
+      border: "#e9ecef"
     }
   };
 
@@ -31,10 +32,10 @@ function BaseFooter() {
       role="contentinfo"
       className="pt-5 pb-4"
       style={{
-        marginTop: '4rem',
-        background: 'white',
+        marginTop: "4rem",
+        background: "white",
         borderTop: `1px solid ${config.colors.border}`,
-        boxShadow: '0 -4px 15px rgba(0, 0, 0, 0.08)'
+        boxShadow: "0 -4px 15px rgba(0, 0, 0, 0.08)"
       }}
     >
       <div className="container">
@@ -46,16 +47,16 @@ function BaseFooter() {
                 className="fw-bold mb-3"
                 style={{
                   background: `linear-gradient(135deg, ${config.colors.primary} 0%, ${config.colors.secondary} 100%)`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  fontSize: '1.75rem'
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  fontSize: "1.75rem"
                 }}
               >
                 {config.brand.name}
               </h2>
               <div className="mt-3">
-                <p className="text-muted mb-4" style={{ lineHeight: '1.6' }}>
+                <p className="text-muted mb-4" style={{ lineHeight: "1.6" }}>
                   {config.brand.description}
                 </p>
                 {/* social media */}
@@ -65,24 +66,24 @@ function BaseFooter() {
                     href="#" 
                     className="d-flex align-items-center justify-content-center"
                     style={{
-                      width: '40px',
-                      height: '40px',
-                      background: 'white',
-                      borderRadius: '10px',
+                      width: "40px",
+                      height: "40px",
+                      background: "white",
+                      borderRadius: "10px",
                       border: `2px solid ${config.colors.border}`,
-                      color: '#1877F2',
-                      textDecoration: 'none',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                      color: "#1877F2",
+                      textDecoration: "none",
+                      transition: "all 0.3s ease",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)"
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(24, 119, 242, 0.3)';
-                      e.target.style.borderColor = '#1877F2';
+                      e.target.style.transform = "translateY(-2px)";
+                      e.target.style.boxShadow = "0 4px 15px rgba(24, 119, 242, 0.3)";
+                      e.target.style.borderColor = "#1877F2";
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                      e.target.style.transform = "translateY(0)";
+                      e.target.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
                       e.target.style.borderColor = config.colors.border;
                     }}
                   >
@@ -102,24 +103,24 @@ function BaseFooter() {
                     href="#" 
                     className="d-flex align-items-center justify-content-center"
                     style={{
-                      width: '40px',
-                      height: '40px',
-                      background: 'white',
-                      borderRadius: '10px',
+                      width: "40px",
+                      height: "40px",
+                      background: "white",
+                      borderRadius: "10px",
                       border: `2px solid ${config.colors.border}`,
-                      color: '#1DA1F2',
-                      textDecoration: 'none',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                      color: "#1DA1F2",
+                      textDecoration: "none",
+                      transition: "all 0.3s ease",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)"
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(29, 161, 242, 0.3)';
-                      e.target.style.borderColor = '#1DA1F2';
+                      e.target.style.transform = "translateY(-2px)";
+                      e.target.style.boxShadow = "0 4px 15px rgba(29, 161, 242, 0.3)";
+                      e.target.style.borderColor = "#1DA1F2";
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                      e.target.style.transform = "translateY(0)";
+                      e.target.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
                       e.target.style.borderColor = config.colors.border;
                     }}
                   >
@@ -139,24 +140,24 @@ function BaseFooter() {
                     href="#" 
                     className="d-flex align-items-center justify-content-center"
                     style={{
-                      width: '40px',
-                      height: '40px',
-                      background: 'white',
-                      borderRadius: '10px',
+                      width: "40px",
+                      height: "40px",
+                      background: "white",
+                      borderRadius: "10px",
                       border: `2px solid ${config.colors.border}`,
-                      color: '#333',
-                      textDecoration: 'none',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                      color: "#333",
+                      textDecoration: "none",
+                      transition: "all 0.3s ease",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)"
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(51, 51, 51, 0.3)';
-                      e.target.style.borderColor = '#333';
+                      e.target.style.transform = "translateY(-2px)";
+                      e.target.style.boxShadow = "0 4px 15px rgba(51, 51, 51, 0.3)";
+                      e.target.style.borderColor = "#333";
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                      e.target.style.transform = "translateY(0)";
+                      e.target.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
                       e.target.style.borderColor = config.colors.border;
                     }}
                   >
@@ -182,7 +183,7 @@ function BaseFooter() {
                 className="fw-bold mb-3" 
                 style={{ 
                   color: config.colors.dark,
-                  fontSize: '1.1rem'
+                  fontSize: "1.1rem"
                 }}
               >
                 Instansi
@@ -194,8 +195,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -209,8 +210,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -224,8 +225,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -239,8 +240,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -254,8 +255,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -273,7 +274,7 @@ function BaseFooter() {
                 className="fw-bold mb-3" 
                 style={{ 
                   color: config.colors.dark,
-                  fontSize: '1.1rem'
+                  fontSize: "1.1rem"
                 }}
               >
                 Dukungan
@@ -285,8 +286,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -300,8 +301,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -315,8 +316,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -330,8 +331,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -345,8 +346,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -364,7 +365,7 @@ function BaseFooter() {
                 className="fw-bold mb-3" 
                 style={{ 
                   color: config.colors.dark,
-                  fontSize: '1.1rem'
+                  fontSize: "1.1rem"
                 }}
               >
                 Hubungi Kami
@@ -375,10 +376,10 @@ function BaseFooter() {
                     className="fas fa-map-marker-alt me-2 mt-1" 
                     style={{ 
                       color: config.colors.primary,
-                      fontSize: '0.9rem'
+                      fontSize: "0.9rem"
                     }}
                   ></i>
-                  <span style={{ color: config.colors.accent, fontSize: '0.95rem' }}>
+                  <span style={{ color: config.colors.accent, fontSize: "0.95rem" }}>
                     {config.contact.address}
                   </span>
                 </p>
@@ -387,7 +388,7 @@ function BaseFooter() {
                     className="fas fa-envelope me-2" 
                     style={{ 
                       color: config.colors.primary,
-                      fontSize: '0.9rem'
+                      fontSize: "0.9rem"
                     }}
                   ></i>
                   <a 
@@ -395,8 +396,8 @@ function BaseFooter() {
                     className="text-decoration-none"
                     style={{
                       color: config.colors.accent,
-                      transition: 'color 0.3s ease',
-                      fontSize: '0.95rem'
+                      transition: "color 0.3s ease",
+                      fontSize: "0.95rem"
                     }}
                     onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                     onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -409,10 +410,10 @@ function BaseFooter() {
                     className="fas fa-phone me-2" 
                     style={{ 
                       color: config.colors.primary,
-                      fontSize: '0.9rem'
+                      fontSize: "0.9rem"
                     }}
                   ></i>
-                  <span style={{ color: config.colors.accent, fontSize: '0.95rem' }}>
+                  <span style={{ color: config.colors.accent, fontSize: "0.95rem" }}>
                     {config.contact.phone}
                   </span>
                 </p>
@@ -423,14 +424,14 @@ function BaseFooter() {
         
         {/* Bottom section with copyright and links */}
         <div 
-          className="row align-items-center pt-4 mt-4"
+          className="row align-items-center pt-4"
           style={{
             borderTop: `1px solid ${config.colors.border}`
           }}
         >
           {/* Copyright */}
           <div className="col-md-6 col-12 text-center text-md-start">
-            <span style={{ color: config.colors.accent, fontSize: '0.9rem' }}>
+            <span style={{ color: config.colors.accent, fontSize: "0.9rem" }}>
               {config.brand.copyright}
             </span>
           </div>
@@ -443,8 +444,8 @@ function BaseFooter() {
                 className="text-decoration-none"
                 style={{
                   color: config.colors.accent,
-                  transition: 'color 0.3s ease',
-                  fontSize: '0.9rem'
+                  transition: "color 0.3s ease",
+                  fontSize: "0.9rem"
                 }}
                 onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                 onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -456,8 +457,8 @@ function BaseFooter() {
                 className="text-decoration-none"
                 style={{
                   color: config.colors.accent,
-                  transition: 'color 0.3s ease',
-                  fontSize: '0.9rem'
+                  transition: "color 0.3s ease",
+                  fontSize: "0.9rem"
                 }}
                 onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                 onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -469,8 +470,8 @@ function BaseFooter() {
                 className="text-decoration-none d-none d-lg-inline"
                 style={{
                   color: config.colors.accent,
-                  transition: 'color 0.3s ease',
-                  fontSize: '0.9rem'
+                  transition: "color 0.3s ease",
+                  fontSize: "0.9rem"
                 }}
                 onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                 onMouseLeave={(e) => e.target.style.color = config.colors.accent}
@@ -482,8 +483,8 @@ function BaseFooter() {
                 className="text-decoration-none"
                 style={{
                   color: config.colors.accent,
-                  transition: 'color 0.3s ease',
-                  fontSize: '0.9rem'
+                  transition: "color 0.3s ease",
+                  fontSize: "0.9rem"
                 }}
                 onMouseEnter={(e) => e.target.style.color = config.colors.primary}
                 onMouseLeave={(e) => e.target.style.color = config.colors.accent}

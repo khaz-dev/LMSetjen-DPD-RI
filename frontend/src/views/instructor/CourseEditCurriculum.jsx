@@ -2856,7 +2856,7 @@ function CourseEditCurriculum() {
         return (
             <>
                 <BaseHeader />
-                <section className="course-edit-container" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <section className="instructor-course-edit-curriculum-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -2880,7 +2880,7 @@ function CourseEditCurriculum() {
     return (
         <>
             <BaseHeader />
-            <section className="course-edit-container">
+            <section className="instructor-course-edit-curriculum-page">
                 <div className="container">
                     <Header />
                     <div className="row">

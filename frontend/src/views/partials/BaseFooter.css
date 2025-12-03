@@ -1,0 +1,276 @@
+/* ========================================
+   BASE FOOTER STYLES
+   ======================================== */
+
+/* Color Variables */
+:root {
+  --footer-primary: #667eea;
+  --footer-secondary: #764ba2;
+  --footer-accent: #6c757d;
+  --footer-light: #f8f9fa;
+  --footer-dark: #343a40;
+  --footer-border: #e9ecef;
+  --footer-transition: all 0.3s ease;
+}
+
+/* ========================================
+   FOOTER CONTAINER
+   ======================================== */
+
+.base-footer {
+  margin-top: 4rem;
+  background: white;
+  border-top: 1px solid var(--footer-border);
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+  padding-top: 3rem;
+  padding-bottom: 1rem;
+}
+
+/* ========================================
+   BRAND SECTION
+   ======================================== */
+
+.footer-brand-title {
+  background: linear-gradient(135deg, var(--footer-primary) 0%, var(--footer-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.footer-brand-description {
+  color: var(--footer-accent);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+/* ========================================
+   SOCIAL MEDIA ICONS
+   ======================================== */
+
+.social-links {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 10px;
+  border: 2px solid var(--footer-border);
+  text-decoration: none;
+  transition: var(--footer-transition);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.social-link svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.social-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Facebook Link */
+.social-link.facebook {
+  color: #1877f2;
+}
+
+.social-link.facebook:hover {
+  border-color: #1877f2;
+  box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);
+}
+
+/* Twitter Link */
+.social-link.twitter {
+  color: #1da1f2;
+}
+
+.social-link.twitter:hover {
+  border-color: #1da1f2;
+  box-shadow: 0 4px 15px rgba(29, 161, 242, 0.3);
+}
+
+/* GitHub Link */
+.social-link.github {
+  color: #333;
+}
+
+.social-link.github:hover {
+  border-color: #333;
+  box-shadow: 0 4px 15px rgba(51, 51, 51, 0.3);
+}
+
+/* ========================================
+   FOOTER SECTIONS
+   ======================================== */
+
+.footer-section-title {
+  color: var(--footer-dark);
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.footer-section-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-section-list li {
+  margin-bottom: 0.5rem;
+}
+
+/* ========================================
+   FOOTER LINKS
+   ======================================== */
+
+.footer-link {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--footer-accent);
+  font-size: 0.95rem;
+  transition: var(--footer-transition);
+}
+
+.footer-link:hover {
+  color: var(--footer-primary);
+}
+
+.footer-link-sm {
+  font-size: 0.9rem;
+}
+
+.footer-link-sm:hover {
+  color: var(--footer-primary);
+}
+
+/* ========================================
+   CONTACT SECTION
+   ======================================== */
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.contact-item.icon-center {
+  align-items: center;
+}
+
+.contact-item.no-margin {
+  margin-bottom: 0;
+}
+
+.contact-icon {
+  color: var(--footer-primary);
+  font-size: 0.9rem;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.contact-item.icon-center .contact-icon {
+  margin-top: 0;
+}
+
+.contact-text {
+  color: var(--footer-accent);
+  font-size: 0.95rem;
+}
+
+.contact-link {
+  color: var(--footer-accent);
+  text-decoration: none;
+  transition: var(--footer-transition);
+  font-size: 0.95rem;
+}
+
+.contact-link:hover {
+  color: var(--footer-primary);
+}
+
+/* ========================================
+   FOOTER BOTTOM SECTION
+   ======================================== */
+
+.footer-bottom {
+  border-top: 1px solid var(--footer-border);
+  padding-top: 1rem;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-copyright {
+  color: var(--footer-accent);
+  font-size: 0.9rem;
+  text-align: center;
+  flex: 1 1 auto;
+}
+
+.footer-legal-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  flex: 1 1 auto;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 767px) {
+  .base-footer {
+    padding-top: 2rem;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-copyright {
+    order: 2;
+    width: 100%;
+  }
+
+  .footer-legal-links {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 991px) {
+  .footer-section-title {
+    font-size: 1rem;
+  }
+
+  .footer-link {
+    font-size: 0.9rem;
+  }
+}

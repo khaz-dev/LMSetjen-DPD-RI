@@ -13,7 +13,7 @@ import SearchSection from "../../components/SearchSection";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
-import "../../styles/Courses.css";
+import "./Courses.css";
 
 function Courses() {
     const [courses, setCourses] = useState([]);
@@ -55,17 +55,19 @@ function Courses() {
         return (
             <>
                 <BaseHeader />
-                <section className="courses-container" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
-                    <div className="container" style={{ flex: 1 }}>
-                        <Header />
-                        <div className="row">
-                            <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-                                <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
-                                        <span className="visually-hidden">Loading...</span>
+                <section className="courses-container courses-loading-section">
+                    <div className="courses-loading-container">
+                        <div className="container">
+                            <Header />
+                            <div className="row">
+                                <Sidebar />
+                                <div className="col-lg-9 col-md-8 col-12 courses-spinner-wrapper">
+                                    <div className="courses-spinner-center">
+                                        <div className="spinner-border text-primary courses-spinner" role="status">
+                                            <span className="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p className="mt-3 text-muted">Loading Courses...</p>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Courses...</p>
                                 </div>
                             </div>
                         </div>
@@ -80,38 +82,36 @@ function Courses() {
         <>
             <BaseHeader />
 
-            <section className="courses-container" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
+            <section className="courses-container courses-main-section">
                 <div className="container">
                     <Header />
                     <div className="row">
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
                             {/* Header Section */}
-                            <div className="modern-header-section mb-4">
-                                <div className="header-gradient-bg"></div>
-                                <div className="d-flex align-items-center justify-content-between position-relative" style={{ zIndex: 2 }}>
-                                    <div>
-                                        <h1 className="mb-2 header-title">
-                                            <i className="fas fa-graduation-cap me-3"></i>My Courses
+                            <div className="courses-header-section mb-4">
+                                <div className="courses-header-gradient"></div>
+                                <div className="courses-header-content">
+                                    <div className="courses-header-title-group">
+                                        <h1 className="courses-header-title">
+                                            <i className="fas fa-graduation-cap courses-header-icon"></i>My Courses
                                         </h1>
-                                        <p className="mb-0 text-muted" style={{ fontSize: '1.1rem' }}>
+                                        <p className="courses-header-subtitle">
                                             Manage and monitor your course collection
                                         </p>
                                     </div>
-                                    <div className="text-end">
-                                        <div className="d-flex align-items-center gap-3">
-                                            <div className="stat-badge">
-                                                <i className="fas fa-book me-2"></i>
-                                                {courses?.length || 0} Courses
-                                            </div>
-                                            <Link 
-                                                to="/instructor/create-course/" 
-                                                className="btn modern-create-btn"
-                                            >
-                                                <i className="fas fa-plus me-2"></i>
-                                                New Course
-                                            </Link>
+                                    <div className="courses-header-actions">
+                                        <div className="courses-stat-badge">
+                                            <i className="fas fa-book courses-stat-icon"></i>
+                                            {courses?.length || 0} Courses
                                         </div>
+                                        <Link 
+                                            to="/instructor/create-course/" 
+                                            className="courses-create-btn"
+                                        >
+                                            <i className="fas fa-plus courses-create-icon"></i>
+                                            New Course
+                                        </Link>
                                     </div>
                                 </div>
                             </div>

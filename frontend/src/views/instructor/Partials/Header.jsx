@@ -260,7 +260,7 @@ function Header() {
   );
 
   return (
-    <div className="row align-items-center">
+    <div className="row align-items-center instructor-header-row">
       <div className="col-xl-12 col-lg-12 col-md-12 col-12">
         <div className={`instructor-header-card ${isCollapsed ? 'collapsed' : ''}`}>
           {/* Collapse Toggle Button */}

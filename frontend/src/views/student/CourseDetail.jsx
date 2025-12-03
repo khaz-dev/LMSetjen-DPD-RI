@@ -15,7 +15,6 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import "./CourseDetail.css";
-import "./CourseDetailEnhanced.css";
 import apiInstance from "../../utils/axios";
 
 function CourseDetail() {

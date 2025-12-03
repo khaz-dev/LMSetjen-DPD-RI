@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { Route, Routes, BrowserRouter } from "react-router-dom";
-import { HelmetProvider } from 'react-helmet-async';
+import { HelmetProvider } from "react-helmet-async";
 
 import { ProfileContext, WishlistContext } from "./views/plugin/Context";
 import apiInstance from "./utils/axios";
@@ -14,6 +14,7 @@ import ThemeProvider from "./components/ThemeProvider";
 import "./views/plugin/toast-mobile.css";
 
 // ✨ PHASE 4.9: Import performance optimization styles
+// NOTE: Instructor sidebar CSS is embedded in performance.css to ensure global bundling
 import "./styles/performance.css";
 
 import MainWrapper from "./layouts/MainWrapper";
@@ -70,9 +71,9 @@ const LoadingFallback = () => (
     <div 
         className="d-flex justify-content-center align-items-center" 
         style={{ 
-            minHeight: '100vh',
-            background: 'rgba(255, 255, 255, 0.98)',
-            paddingTop: '85px'
+            minHeight: "100vh",
+            background: "rgba(255, 255, 255, 0.98)",
+            paddingTop: "85px"
         }}
     >
         <div className="text-center">
@@ -80,14 +81,14 @@ const LoadingFallback = () => (
                 className="spinner-border text-primary" 
                 role="status"
                 style={{
-                    width: '2.5rem',
-                    height: '2.5rem',
-                    borderWidth: '0.25rem'
+                    width: "2.5rem",
+                    height: "2.5rem",
+                    borderWidth: "0.25rem"
                 }}
             >
                 <span className="visually-hidden">Loading...</span>
             </div>
-            <p className="mt-3 text-muted" style={{ fontSize: '0.95rem' }}>Loading page...</p>
+            <p className="mt-3 text-muted" style={{ fontSize: "0.95rem" }}>Loading page...</p>
         </div>
     </div>
 );
@@ -122,7 +123,7 @@ function App() {
                 useAxios.get(`user/profile/${userData.user_id}/`).then((res) => {
                     setProfile(res.data);
                 }).catch((error) => {
-                    if (process.env.NODE_ENV === 'development') {
+                    if (process.env.NODE_ENV === "development") {
                         console.error("App.jsx: Error fetching profile:", error);
                     }
                     setProfile(null);
@@ -133,7 +134,7 @@ function App() {
                 setProfile(null);
             }
         } catch (error) {
-            if (process.env.NODE_ENV === 'development') {
+            if (process.env.NODE_ENV === "development") {
                 console.error("App.jsx: Error in useEffect:", error);
             }
             setWishlistCount(0);
@@ -180,7 +181,7 @@ function App() {
                                     path="/student/dashboard/"
                                     element={
                                         <PrivateRoute>
-                                            <RoleRoute allowedRoles={['student']}>
+                                            <RoleRoute allowedRoles={["student"]}>
                                                 <StudentDashboard />
                                             </RoleRoute>
                                         </PrivateRoute>
@@ -190,7 +191,7 @@ function App() {
                                     path="/student/courses/"
                                     element={
                                         <PrivateRoute>
-                                            <RoleRoute allowedRoles={['student']}>
+                                            <RoleRoute allowedRoles={["student"]}>
                                                 <StudentCourses />
                                             </RoleRoute>
                                         </PrivateRoute>
@@ -200,7 +201,7 @@ function App() {
                                     path="/student/courses/:enrollment_id/"
                                     element={
                                         <PrivateRoute>
-                                            <RoleRoute allowedRoles={['student']}>
+                                            <RoleRoute allowedRoles={["student"]}>
                                                 <StudentCourseDetail />
                                             </RoleRoute>
                                         </PrivateRoute>
@@ -210,7 +211,7 @@ function App() {
                                 path="/student/wishlist/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['student']}>
+                                        <RoleRoute allowedRoles={["student"]}>
                                             <Wishlist />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -220,7 +221,7 @@ function App() {
                                 path="/student/question-answer/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['student']}>
+                                        <RoleRoute allowedRoles={["student"]}>
                                             <StudentQA />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -230,7 +231,7 @@ function App() {
                                 path="/student/profile/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['student']}>
+                                        <RoleRoute allowedRoles={["student"]}>
                                             <StudentProfile />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -240,7 +241,7 @@ function App() {
                                 path="/student/change-password/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['student']}>
+                                        <RoleRoute allowedRoles={["student"]}>
                                             <StudentChangePassword />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -253,7 +254,7 @@ function App() {
                                 path="/instructor/dashboard/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <Dashboard />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -264,7 +265,7 @@ function App() {
                                 path="/instructor/courses/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <Courses />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -274,7 +275,7 @@ function App() {
                                 path="/instructor/reviews/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <Review />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -284,7 +285,7 @@ function App() {
                                 path="/instructor/students/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <Students />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -294,7 +295,7 @@ function App() {
                                 path="/instructor/notifications/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <TeacherNotification />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -304,7 +305,7 @@ function App() {
                                 path="/instructor/question-answer/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <QA />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -314,7 +315,7 @@ function App() {
                                 path="/instructor/change-password/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <ChangePassword />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -324,7 +325,7 @@ function App() {
                                 path="/instructor/profile/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <Profile />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -334,7 +335,7 @@ function App() {
                                 path="/instructor/create-course/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <CourseCreate />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -344,7 +345,7 @@ function App() {
                                 path="/instructor/edit-course/:course_id/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <CourseEdit />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -354,7 +355,7 @@ function App() {
                                 path="/instructor/edit-course/:course_id/curriculum/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <CourseEditCurriculum />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -364,7 +365,7 @@ function App() {
                                 path="/instructor/edit-course/:course_id/quiz/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['teacher', 'instructor']}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <CourseQuiz />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -376,7 +377,7 @@ function App() {
                                 path="/admin/dashboard/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['admin']}>
+                                        <RoleRoute allowedRoles={["admin"]}>
                                             <DashboardAdmin />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -386,7 +387,7 @@ function App() {
                                 path="/admin/users/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['admin']}>
+                                        <RoleRoute allowedRoles={["admin"]}>
                                             <UsersAdmin />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -396,7 +397,7 @@ function App() {
                                 path="/admin/documentation/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['admin']}>
+                                        <RoleRoute allowedRoles={["admin"]}>
                                             <SystemDocumentation />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -406,7 +407,7 @@ function App() {
                                 path="/admin/kelola-materi/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={['admin']}>
+                                        <RoleRoute allowedRoles={["admin"]}>
                                             <KelolaMaterialAdmin />
                                         </RoleRoute>
                                     </PrivateRoute>

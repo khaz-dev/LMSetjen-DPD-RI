@@ -453,3 +453,341 @@
 .skeleton-line.full {
   width: 100%;
 }
+
+/* ✨ PHASE 4.10: INSTRUCTOR SIDEBAR STICKY POSITIONING
+   Added globally here to ensure CSS is bundled in main chunk
+   This fixes sticky sidebar not working on first page load */
+
+.instructor-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  overflow: visible !important;
+}
+
+.instructor-sidebar {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(52, 152, 219, 0.12);
+  border: 1px solid rgba(52, 152, 219, 0.08);
+  overflow: visible !important;
+  position: sticky !important;
+  top: calc(60px + 1rem + 1rem) !important;  /* BaseHeader (60px) + Header margin-top (1rem) + gap (1rem) */
+  z-index: 100;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  max-height: calc(100vh - 60px - 1rem);
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0 !important;
+  margin-right: 1rem;
+  padding-top: 0 !important;
+  user-select: none;
+}
+
+.instructor-sidebar.collapsed {
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.08);
+}
+
+.instructor-sidebar:hover {
+  box-shadow: 0 12px 40px rgba(52, 152, 219, 0.16);
+}
+
+.instructor-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid rgba(52, 152, 219, 0.1);
+  transition: padding 0.3s ease;
+}
+
+.instructor-sidebar.collapsed .instructor-sidebar-header {
+  padding: 1rem;
+}
+
+.instructor-sidebar-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  transition: opacity 0.3s ease;
+}
+
+.instructor-sidebar.collapsed .instructor-sidebar-title {
+  display: none;
+}
+
+.instructor-sidebar-toggle {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #3498db;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: none;
+}
+
+.instructor-sidebar-toggle:hover {
+  background: rgba(52, 152, 219, 0.1);
+  transform: scale(1.1);
+}
+
+.instructor-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  transition: padding 0.3s ease;
+}
+
+.instructor-sidebar.collapsed .instructor-sidebar-body {
+  padding: 0.75rem;
+}
+
+.instructor-sidebar-section {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.instructor-sidebar-section:last-child {
+  margin-bottom: 0;
+}
+
+.instructor-sidebar-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+  transition: opacity 0.3s ease;
+}
+
+.instructor-sidebar.collapsed .instructor-sidebar-section-title {
+  display: none;
+}
+
+.instructor-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: #555;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  white-space: nowrap;
+}
+
+.instructor-sidebar-link:hover {
+  background: rgba(52, 152, 219, 0.08);
+  color: #3498db;
+  transform: translateX(4px);
+}
+
+.instructor-sidebar-link.active {
+  background: rgba(52, 152, 219, 0.15);
+  color: #3498db;
+  font-weight: 600;
+}
+
+.instructor-sidebar-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #3498db;
+  border-radius: 0 3px 3px 0;
+}
+
+.instructor-sidebar-link-icon {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.instructor-sidebar-link:hover .instructor-sidebar-link-icon {
+  transform: rotate(5deg);
+}
+
+.instructor-sidebar.collapsed .instructor-sidebar-link-text {
+  display: none;
+}
+
+.instructor-sidebar-footer {
+  border-top: 1px solid rgba(52, 152, 219, 0.1);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.instructor-sidebar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(52, 152, 219, 0.2);
+  background: rgba(52, 152, 219, 0.05);
+  color: #3498db;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.instructor-sidebar-button:hover {
+  background: rgba(52, 152, 219, 0.12);
+  border-color: rgba(52, 152, 219, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.1);
+}
+
+.instructor-sidebar-button.primary {
+  background: #3498db;
+  color: white;
+  border: none;
+}
+
+.instructor-sidebar-button.primary:hover {
+  background: #2980b9;
+  box-shadow: 0 4px 16px rgba(52, 152, 219, 0.3);
+}
+
+/* RESPONSIVE: Hide toggle on larger screens */
+@media (min-width: 992px) {
+  .instructor-sidebar-toggle {
+    display: none;
+  }
+}
+
+/* RESPONSIVE: Show toggle and collapse on medium screens */
+@media (max-width: 991px) {
+  .instructor-sidebar-toggle {
+    display: flex;
+  }
+
+  .instructor-sidebar {
+    position: static;
+    max-height: none;
+  }
+
+  .instructor-sidebar.collapsed {
+    max-height: 50px;
+    overflow: hidden;
+  }
+
+  .instructor-sidebar.collapsed .instructor-sidebar-body {
+    display: none;
+  }
+
+  .instructor-sidebar.collapsed .instructor-sidebar-footer {
+    display: none;
+  }
+}
+
+/* RESPONSIVE: Full width on mobile */
+@media (max-width: 767px) {
+  .instructor-sidebar {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+
+  .instructor-sidebar-header {
+    padding: 1rem 1rem 0.75rem 1rem;
+  }
+
+  .instructor-sidebar-body {
+    padding: 1rem;
+  }
+
+  .instructor-sidebar-footer {
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+  }
+}
+
+/* SCROLLBAR STYLING */
+.instructor-sidebar-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.instructor-sidebar-body::-webkit-scrollbar-track {
+  background: rgba(52, 152, 219, 0.05);
+  border-radius: 3px;
+}
+
+.instructor-sidebar-body::-webkit-scrollbar-thumb {
+  background: rgba(52, 152, 219, 0.2);
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.instructor-sidebar-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 152, 219, 0.4);
+}
+
+/* ACCESSIBILITY */
+@media (prefers-reduced-motion: reduce) {
+  .instructor-sidebar,
+  .instructor-sidebar-link,
+  .instructor-sidebar-button {
+    transition: none;
+  }
+
+  .instructor-sidebar-link:hover .instructor-sidebar-link-icon {
+    transform: none;
+  }
+}
+
+/* DARK MODE SUPPORT */
+@media (prefers-color-scheme: dark) {
+  .instructor-sidebar {
+    background: #1e1e1e;
+    border-color: rgba(52, 152, 219, 0.15);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .instructor-sidebar-title {
+    color: #f0f0f0;
+  }
+
+  .instructor-sidebar-section-title {
+    color: #999;
+  }
+
+  .instructor-sidebar-link {
+    color: #ccc;
+  }
+
+  .instructor-sidebar-link:hover {
+    background: rgba(52, 152, 219, 0.12);
+    color: #64b5f6;
+  }
+
+  .instructor-sidebar-link.active {
+    background: rgba(52, 152, 219, 0.2);
+    color: #64b5f6;
+  }
+
+  .instructor-sidebar-header,
+  .instructor-sidebar-footer {
+    border-color: rgba(52, 152, 219, 0.15);
+  }
+}

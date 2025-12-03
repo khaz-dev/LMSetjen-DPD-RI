@@ -7,7 +7,7 @@
   position: relative;
   overflow: hidden;
   box-shadow: 0 25px 50px var(--theme-shadow-color);
-  min-height: 180px;
+  min-height: auto;
   margin-top: 1rem !important;
   margin-bottom: 1rem !important;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -24,6 +24,8 @@
   transform: rotate(-15deg);
   z-index: 0;
   pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease;
 }
 
 .instructor-header-card::after {
@@ -36,6 +38,18 @@
   background: linear-gradient(225deg, rgba(255, 255, 255, 0.08), transparent);
   transform: rotate(15deg);
   z-index: 0;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* Hide pseudo-elements during loading state for cleaner shimmer effect */
+.instructor-header-card .loading-shimmer-instructor {
+  position: relative;
+  z-index: 1;
+}
+
+.instructor-header-card .loading-shimmer-instructor ~ * {
   pointer-events: none;
 }
 
@@ -76,6 +90,15 @@
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.instructor-default-avatar.loading-shimmer-instructor {
+  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 75%);
+  background-size: 200% 100%;
+  animation: shimmer-loading 2s infinite !important;
+  border: 6px solid rgba(255, 255, 255, 0.2);
 }
 
 .instructor-default-avatar:hover {
@@ -121,30 +144,17 @@
 .loading-shimmer-instructor {
   position: relative;
   overflow: hidden;
+  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 75%);
+  background-size: 200% 100%;
+  animation: shimmer-loading 2s infinite;
 }
 
-.loading-shimmer-instructor::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    left: -100%;
+@keyframes shimmer-loading {
+  0% { 
+    background-position: -200% 0; 
   }
-  100% {
-    left: 100%;
+  100% { 
+    background-position: 200% 0; 
   }
 }
 
@@ -221,17 +231,6 @@
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
-}
-
-.loading-shimmer-instructor {
-  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
 }
 
 .instructor-name {

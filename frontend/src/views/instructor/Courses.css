@@ -1,4 +1,4 @@
-/* Modern Courses Styles */
+/* Modern Courses Styles - Instructor Page */
 
 /* ========================================
    CRITICAL LAYOUT FIX - Row & Column Structure
@@ -9,8 +9,20 @@
     position: relative;
 }
 
+/* EXCLUDE Header row from aggressive margin/width rules */
+.courses-container{
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+}
+
 /* Consistent vertical spacing for dashboard sections */
-.courses-container .row {
+.courses-container .row:not(.instructor-header-row) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -18,6 +30,20 @@
     flex-wrap: wrap;
     gap: 0;
     width: calc(100% + var(--bs-gutter-x, 24px));
+    max-width: 100% !important;
+}
+
+/* Inside container, row should expand with negative margins */
+.courses-container .container > .row:not(.instructor-header-row) {
+    width: calc(100% + var(--bs-gutter-x, 24px));
+}
+
+/* Loading container - Handle header and sidebar rows separately */
+.courses-loading-container {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    display: block !important;
 }
 
 /* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
@@ -28,7 +54,7 @@
     margin-right: 0 !important;
 }
 
-.courses-container .row > [class*="col-"] {
+.courses-container {
     margin-bottom: 0;
     padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
     padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
@@ -75,6 +101,21 @@
     margin-bottom: 1rem !important;
 }
 
+/* ============================== */
+/* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
+/* Ensure sticky positioning works on Courses page */
+/* ============================== */
+.courses-container .row > .instructor-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
+}
+
+/* Sidebar: sticky positioning defined in global performance.css */
+/* This ensures the sidebar sticks to the viewport when scrolling */
+/* Position: sticky is already set in Sidebar.css & performance.css */
+/* NO override or conflicting properties here */
+
 /* ========================================
    PAGE LAYOUT STATES
    ======================================== */
@@ -82,24 +123,20 @@
 .courses-container {
     min-height: 100vh;
     background: transparent;
-    padding-top: 85px; /* Add top spacing for fixed header */
+    padding-top: 0 !important;
+    padding-bottom: 3rem !important;
 }
 
-/* Loading state - full height flex layout */
+/* Loading state - full height block layout */
 .courses-container.courses-loading-section {
-    display: flex;
-    align-items: center;
+    display: block !important;
     min-height: calc(100vh - 120px);
-}
-
-.courses-loading-container {
-    flex: 1;
-    width: 100%;
+    padding-top: 3rem !important;
 }
 
 /* Main section - with proper padding */
 .courses-container.courses-main-section {
-    padding: 3rem 0;
+    padding-top: 3rem !important;
 }
 
 /* Spinner wrapper - centered flex layout */
@@ -107,11 +144,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 60vh;
+    min-height: 50vh;
+    padding: 2rem 0 !important;
 }
 
 .courses-spinner-center {
     text-align: center;
+    width: 100%;
 }
 
 .courses-spinner {
@@ -463,4 +502,100 @@
 .empty-state-icon i {
     font-size: 2.5rem;
     color: #3498db;
+}
+
+/* ========================================
+   MEDIA QUERIES - RESPONSIVE LAYOUT
+   ======================================== */
+
+@media (min-width: 992px) {
+    /* Sidebar column - maintains fixed width or collapses */
+    .courses-container .row > .instructor-sidebar-column {
+        flex-basis: auto;
+        flex-grow: 0;
+        flex-shrink: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: auto;
+    }
+
+    /* Content column - expands to fill remaining space */
+    .courses-container .row > .col-lg-9 {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        max-width: 100%;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Ensure content doesn't wrap under sidebar */
+    .courses-container .row > .col-lg-9 {
+        min-width: 500px;
+    }
+}
+
+/* Tablet: Medium screens (md: 768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    /* Sidebar column - maintains fixed width or collapses */
+    .courses-container .row > .instructor-sidebar-column {
+        flex-basis: auto;
+        flex-grow: 0;
+        flex-shrink: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: auto;
+    }
+
+    /* Content column - expands to fill remaining space */
+    .courses-container .row > .col-md-8 {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        max-width: 100%;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Ensure content doesn't wrap under sidebar */
+    .courses-container .row > .col-md-8 {
+        min-width: 400px;
+    }
+}
+
+@media (max-width: 991px) {
+    .courses-container .row {
+        flex-wrap: wrap;
+    }
+
+    .courses-container .row:has(.instructor-sidebar-column) {
+        flex-wrap: wrap;
+    }
+
+    .courses-header-section {
+        padding: 20px;
+    }
+
+    .courses-header-title {
+        font-size: 1.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .courses-container {
+        padding-top: 70px;
+    }
+
+    .courses-header-section {
+        padding: 15px;
+        margin-bottom: 1.5rem;
+    }
+
+    .courses-header-title {
+        font-size: 1.5rem;
+    }
+
+    .modern-search-section {
+        padding: 15px;
+    }
+
+    .modern-courses-container {
+        padding: 0;
+    }
 }

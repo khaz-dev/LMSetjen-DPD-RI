@@ -2,6 +2,96 @@
    COURSE EDIT CURRICULUM - ENHANCED UI/UX
    ============================================ */
 
+/* ========================================
+   CRITICAL LAYOUT FIX - Row & Column Structure
+   ======================================== */
+
+/* Ensure proper scroll context for sticky sidebar */
+.instructor-course-edit-curriculum-page .container {
+    position: relative;
+}
+
+/* Consistent vertical spacing for dashboard sections */
+.instructor-course-edit-curriculum-page .row {
+    margin-bottom: 0;
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    width: calc(100% + var(--bs-gutter-x, 24px));
+}
+
+/* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
+.instructor-course-edit-curriculum-page .row:has(.instructor-sidebar-column) {
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.instructor-course-edit-curriculum-page .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
+/* Desktop: col-lg-9 content wrapper (inside sidebar row) */
+.instructor-course-edit-curriculum-page .row:has(.instructor-sidebar-column) > .col-lg-9 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    flex: 1 1 auto !important;
+}
+
+/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+.instructor-course-edit-curriculum-page .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Tablet: col-md-8 content wrapper (inside sidebar row) */
+.instructor-course-edit-curriculum-page .row:has(.instructor-sidebar-column) > .col-md-8 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    flex: 1 1 auto !important;
+}
+
+/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+.instructor-course-edit-curriculum-page .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Override for specific spacing needs */
+.instructor-course-edit-curriculum-page .row.mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+/* ============================== */
+/* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
+/* Ensure sticky positioning works on CourseEditCurriculum page */
+/* ============================== */
+.instructor-course-edit-curriculum-page .row > .instructor-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
+}
+
+/* Sidebar: sticky positioning defined in global performance.css */
+/* This ensures the sidebar sticks to the viewport when scrolling */
+/* Position: sticky is already set in Sidebar.css & performance.css */
+/* NO override or conflicting properties here */
+
 /* ============================================
    SECTION STYLING - Enhanced Visual Hierarchy
    ============================================ */
@@ -886,4 +976,35 @@
     button {
         display: none;
     }
+}
+
+/* ========================================
+   RESPONSIVE LAYOUT - Content Column Sizing
+   ======================================== */
+
+@media (min-width: 992px) {
+  .instructor-course-edit-curriculum-page .row > .col-lg-9 {
+    flex: 1 1 auto;
+    min-width: 500px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .instructor-course-edit-curriculum-page .row > .col-md-8 {
+    flex: 1 1 auto;
+    min-width: 400px;
+  }
+}
+
+@media (max-width: 767px) {
+  .instructor-course-edit-curriculum-page .row {
+    flex-direction: column;
+  }
+
+  .instructor-course-edit-curriculum-page .row > [class*="col-"],
+  .instructor-course-edit-curriculum-page .row > .instructor-sidebar-column {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
 }
