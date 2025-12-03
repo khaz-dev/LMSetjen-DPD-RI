@@ -407,6 +407,7 @@
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    gap: 1.5rem !important;
 }
 
 .modern-search-container {
@@ -454,6 +455,9 @@
     transition: all 0.3s ease;
     overflow: hidden;
     position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .modern-course-card:hover {
@@ -685,5 +689,6 @@
         margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
         margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
         width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+        gap: 1rem !important;
     }
 }
