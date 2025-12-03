@@ -11,6 +11,13 @@
     margin-bottom: 1rem !important;
 }
 
+/* Protect header card gap from parent overrides */
+.modern-dashboard .row > .col-12 > .instructor-header-card,
+.modern-dashboard .instructor-header-card {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
 /* Main Page Layout */
 .instructor-profile-page.modern-profile-page {
     background: transparent;
