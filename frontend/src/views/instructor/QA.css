@@ -643,9 +643,9 @@
     background: white;
     border: 1px solid #e9ecef;
     border-radius: 15px;
-    padding: 10px 14px;
+    padding: 12px 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    max-width: 75%;
+    max-width: 85%;
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
@@ -653,7 +653,7 @@
 .message-content-qa-current-user {
     border: none;
     box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-    padding: 10px 14px;
+    padding: 12px 16px;
 }
 
 /* Message author and time */
