@@ -245,6 +245,12 @@
     display: block !important;
 }
 
+/* Remove ::after underline from section-title when used in sidebar nav */
+.nav-section-title.section-title::after {
+    display: none !important;
+    content: none !important;
+}
+
 /* Collapsed state: hide section titles cleanly */
 .instructor-sidebar.collapsed .nav-section-title,
 .instructor-sidebar.collapsed .section-title {
