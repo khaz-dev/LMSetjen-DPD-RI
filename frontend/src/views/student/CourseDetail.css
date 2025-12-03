@@ -906,32 +906,28 @@
 }
 
 .modal-header-modern {
-    background: var(--theme-gradient) !important;
+    background: linear-gradient(135deg, #3498db, #2980b9) !important;
     color: white;
-    padding: 1.5rem 2rem;
-    border: none;
+    border: none !important;
+    border-bottom: none !important;
+    padding: 20px 24px !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
     position: relative;
-    overflow: hidden;
-    border-radius: 20px 20px 0 0;
+    z-index: 2;
 }
 
 .modal-header-modern::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
-    pointer-events: none;
+    display: none;
 }
 
 .modal-header-content {
+    flex: 1;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
     gap: 1rem;
-    position: relative;
     z-index: 1;
 }
 
@@ -939,67 +935,69 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex: 1;
 }
 
 .modal-icon-wrapper {
-    width: 45px;
-    height: 45px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
+    font-size: 1.5rem;
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
 }
 
-.modal-title-section h4 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 700;
+.modal-title-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.modal-title-modern {
+    font-size: 1.3rem;
+    font-weight: 600;
     color: white;
+    margin: 0;
 }
 
 .modal-subtitle {
-    margin: 0.5rem 0 0 0;
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 400;
+    font-size: 0.85rem;
+    opacity: 0.9;
+    color: white;
+    margin: 0;
 }
 
 .btn-close-modern {
-    background: rgba(255, 255, 255, 0.2);
+    background: transparent;
     border: none;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    backdrop-filter: blur(10px);
-    position: absolute;
-    top: 1.5rem;
-    right: 2rem;
-    z-index: 3;
+    transition: all 0.3s ease;
 }
 
 .btn-close-modern:hover {
-    background: rgba(255, 255, 255, 0.3);
+    opacity: 0.7;
+    transform: scale(1.1);
 }
 
 .modal-body-modern {
-    padding: 2rem;
-    background: white;
-    border-radius: 0;
-    flex: 1;
-    overflow: hidden;
+    padding: 20px 24px !important;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     display: flex;
     flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .form-group-modern {
@@ -1506,31 +1504,26 @@
     background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
     margin: 0;
     padding: 0;
-    max-width: 700px;
-    width: 100%;
-    height: 80vh;
     display: flex;
     flex-direction: column;
+    max-height: 80vh;
 }
 
 .conversation-modal-qa .modal-dialog {
-    max-width: 700px;
+    max-width: 700px !important;
+    width: 100%;
     margin: auto;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .messages-container-qa {
-    background: white;
-    border-radius: 15px;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    flex: 1;
+    max-height: calc(80vh - 250px);
     overflow-y: auto;
-    border: 1px solid #e9ecef;
-    position: relative;
+    padding: 20px;
+    background: rgba(248, 249, 250, 0.5);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .messages-container-qa::-webkit-scrollbar {
