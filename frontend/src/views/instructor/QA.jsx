@@ -14,8 +14,11 @@ import Footer from "../partials/Footer";
 // Utils
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
-import { getMediaUrl } from "../../utils/constants";
+import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import "./QA.css";
+
+// Constants
+const DEFAULT_AVATAR = DEFAULT_IMAGE_URL;
 
 function QA() {
     const [questions, setQuestions] = useState([]);
@@ -221,170 +224,157 @@ function QA() {
     return (
         <>
             <BaseHeader />
-            <section className="modern-qa-page">
+            <section className="qa-bg-section">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row">
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
-                            {/* Q&A Header Card */}
-                            <div className="qa-header-card">
-                                <div className="qa-header-content">
-                                    <div className="row align-items-center">
-                                        <div className="col-lg-8">
-                                            <h1 className="mb-3 fw-bold d-flex align-items-center">
-                                                <i className="fas fa-comments me-3 qa-page-icon"></i>
-                                                Student Questions & Answers
-                                            </h1>
-                                            <p className="mb-0 opacity-90 lead">
-                                                Respond to student inquiries, manage course discussions, and provide timely feedback to enhance learning experience.
-                                            </p>
-                                        </div>
-                                        <div className="col-lg-4">
-                                            <div className="stats-grid mt-0">
-                                                <div className="qa-stat-card">
-                                                    <div className="qa-stat-number justify-content-end">
-                                                        {questions?.length || 0}
-                                                    </div>
-                                                    <div className="stat-label">Total Discussions</div>
-                                                </div>
+                            {/* Modern Header Section */}
+                            <div className="qa-header-section mb-4">
+                                <div className="qa-header-bg"></div>
+                                <div className="qa-header-content d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h1 className="qa-header-title mb-2">
+                                            <i className="fas fa-question-circle me-3"></i>Course Q&A
+                                        </h1>
+                                        <p className="qa-header-desc mb-0 text-muted">
+                                            Connect with students and answer their questions
+                                        </p>
+                                    </div>
+                                    <div className="text-end">
+                                        <div className="d-flex align-items-center gap-3">
+                                            <div className="qa-stat-badge">
+                                                <i className="fas fa-comments me-2"></i>
+                                                {questions?.length || 0} Discussions
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Q&A Discussion Card */}
-                            <div className="qa-discussion-card">
-                                <div className="form-section-header">
-                                    <h3 className="mb-2 fw-bold text-dark">All Student Questions</h3>
-                                    <p className="mb-0 text-muted">Review and respond to all questions from your students</p>
+                            {/* Modern Search Section */}
+                            <div className="qa-search-section mb-4">
+                                <div className="qa-search-container">
+                                    <input 
+                                        type="search" 
+                                        className="form-control qa-search-input" 
+                                        placeholder="Search questions and discussions..." 
+                                        onChange={handleSearchQuestion}
+                                    />
                                 </div>
-                                
-                                <div className="p-4">
-                                    {/* Search Questions */}
-                                    <div className="search-card">
-                                        <div className="position-relative">
-                                            <input 
-                                                className="form-control form-control-modern" 
-                                                type="search" 
-                                                placeholder="Search questions, students, or courses..." 
-                                                onChange={handleSearchQuestion}
-                                            />
-                                            <i className="fas fa-search search-icon"></i>
-                                        </div>
-                                    </div>
+                            </div>
 
-                                    {/* Questions List */}
-                                    {loading ? (
-                                        <div className="empty-state">
-                                            <i className="fas fa-spinner fa-spin empty-icon" style={{fontSize: "3rem"}}></i>
-                                            <h4 className="mb-3">Loading Questions...</h4>
-                                            <p className="mb-0">Please wait while we fetch your Q&A discussions.</p>
+                            {/* Modern Questions Container */}
+                            <div className="modern-questions-container">
+                                {loading ? (
+                                    <div className="qa-empty-state">
+                                        <div className="qa-empty-state-icon mb-4">
+                                            <i className="fas fa-spinner fa-spin qa-empty-state-icon-i"></i>
                                         </div>
-                                    ) : error ? (
-                                        <div className="empty-state">
-                                            <i className="fas fa-exclamation-triangle empty-icon" style={{fontSize: "3rem", color: "#dc3545"}}></i>
-                                            <h4 className="mb-3">Error Loading Questions</h4>
-                                            <p className="mb-3">{error}</p>
-                                            <button 
-                                                className="btn btn-qa"
-                                                onClick={fetchQuestions}
-                                            >
-                                                <i className="fas fa-refresh me-1"></i>
-                                                Try Again
-                                            </button>
+                                        <h4 className="qa-empty-title mb-3">Loading Questions...</h4>
+                                        <p className="qa-empty-desc text-muted mb-0">
+                                            Please wait while we fetch your Q&A discussions.
+                                        </p>
+                                    </div>
+                                ) : error ? (
+                                    <div className="qa-empty-state">
+                                        <div className="qa-empty-state-icon mb-4">
+                                            <i className="fas fa-exclamation-triangle qa-empty-state-icon-i" style={{color: "#dc3545"}}></i>
                                         </div>
-                                    ) : !Array.isArray(questions) || questions.length === 0 ? (
-                                        <div className="empty-state">
-                                            <i className="fas fa-question-circle empty-icon"></i>
-                                            <h4 className="mb-3">No Questions Yet</h4>
-                                            <p className="mb-0">
-                                                When students ask questions about your courses, they will appear here for you to answer.
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <div className="row">
-                                            {questions.map((q, index) => (
-                                                <div key={q.qa_id || `question-${index}`} className="col-12">
-                                                    <div className="question-card">
-                                                        {/* Question Header */}
-                                                        <div className="question-header">
-                                                            <div className="question-avatar">
-                                                                {q.profile?.image ? (
-                                                                    <img
-                                                                        src={q.profile.image.startsWith("http") 
-                                                                            ? q.profile.image 
-                                                                            : getMediaUrl(q.profile.image)
-                                                                        }
-                                                                        className="avatar-modern"
-                                                                        alt={`${q.profile?.full_name || "User"} avatar`}
-                                                                        onError={(e) => {
-                                                                            e.target.style.display = "none";
-                                                                            e.target.nextSibling.style.display = "flex";
-                                                                        }}
-                                                                    />
-                                                                ) : null}
-                                                                <div 
-                                                                    className="avatar-placeholder question-profile-placeholder"
-                                                                    style={{ display: q.profile?.image ? "none" : "flex" }}
-                                                                >
-                                                                    <i className="fas fa-user"></i>
+                                        <h4 className="qa-empty-title mb-3">Error Loading Questions</h4>
+                                        <p className="qa-empty-desc text-muted mb-0">{error}</p>
+                                        <button 
+                                            className="btn qa-reply-btn mt-3"
+                                            onClick={fetchQuestions}
+                                        >
+                                            <i className="fas fa-refresh me-2"></i>
+                                            Try Again
+                                        </button>
+                                    </div>
+                                ) : questions?.length > 0 ? (
+                                    <div className="row g-4">
+                                        {questions.map((q, index) => (
+                                            <div key={q.id || q.qa_id || `question-${index}`} className="col-12">
+                                                <div className="modern-question-card qa-card-hover">
+                                                    <div className="d-flex align-items-start justify-content-between mb-3">
+                                                        <div className="d-flex align-items-center">
+                                                            <div className="qa-avatar-gradient">
+                                                                <img
+                                                                    src={q.profile?.image?.startsWith("http") ? q.profile.image : getMediaUrl(q.profile?.image || DEFAULT_AVATAR)}
+                                                                    className="rounded-circle qa-avatar-img"
+                                                                    alt={`${q.profile?.full_name || "User"} avatar`}
+                                                                    onError={(e) => {
+                                                                        e.target.src = DEFAULT_AVATAR;
+                                                                    }}
+                                                                />
+                                                                <div className="qa-avatar-status">
+                                                                    <i className="fas fa-question qa-avatar-status-icon"></i>
                                                                 </div>
                                                             </div>
-                                                            
-                                                            <div className="question-content">
-                                                                <h5 className="question-title">
-                                                                    {q.title || "No Title"}
-                                                                </h5>
-                                                                
-                                                                <div className="question-meta">
-                                                                    <div className="question-meta-item">
-                                                                        <i className="fas fa-user question-meta-icon"></i>
-                                                                        <span>{q.profile?.full_name || "Anonymous User"}</span>
-                                                                    </div>
-                                                                    <div className="question-meta-item">
-                                                                        <i className="fas fa-book question-meta-icon"></i>
-                                                                        <span>{q.course?.title || "Course"}</span>
-                                                                    </div>
-                                                                    <div className="question-meta-item">
-                                                                        <i className="fas fa-calendar-alt question-meta-icon"></i>
-                                                                        <span>{moment(q.date).format("DD MMM, YYYY")}</span>
-                                                                    </div>
-                                                                </div>
+                                                            <div className="ms-3">
+                                                                <h6 className="qa-user-name mb-1">
+                                                                    {q.profile?.full_name || "Anonymous User"}
+                                                                </h6>
+                                                                <small className="text-muted">
+                                                                    <i className="fas fa-clock me-1"></i>
+                                                                    {moment(q.date).format("DD MMM, YYYY")}
+                                                                </small>
                                                             </div>
                                                         </div>
-
-                                                        {/* Question Actions */}
-                                                        <div className="question-actions">
-                                                            <div className="question-stats">
-                                                                <span className="replies-badge">
-                                                                    {q.messages?.length || 0} Replies
-                                                                </span>
-                                                                
-                                                                {conversationMessages[q.qa_id || q.id] && (
-                                                                    <span className="draft-indicator">
-                                                                        <i className="fas fa-edit me-1"></i>
-                                                                        Draft Saved
-                                                                    </span>
-                                                                )}
+                                                        
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <div className="qa-replies-badge">
+                                                                <i className="fas fa-comments me-1"></i>
+                                                                {q.messages?.length || 0}
                                                             </div>
                                                             
-                                                            <button 
-                                                                className="join-discussion-primary" 
-                                                                onClick={() => handleConversationShow(q)}
-                                                            >
-                                                                <i className="fas fa-comment-dots"></i>
-                                                                View Discussion
-                                                                <i className="fas fa-arrow-right discussion-arrow"></i>
-                                                            </button>
+                                                            {conversationMessages[q.qa_id || q.id] && (
+                                                                <div className="qa-draft-badge">
+                                                                    <i className="fas fa-edit me-1"></i>
+                                                                    Draft
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
+                                                    
+                                                    <div className="question-content mb-4">
+                                                        <h5 className="qa-question-title mb-3">
+                                                            {q.title || "No Title"}
+                                                        </h5>
+                                                        {q.course?.title && (
+                                                            <div className="qa-course-badge">
+                                                                <i className="fas fa-book me-1"></i>
+                                                                {q.course.title}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    <div className="d-flex justify-content-end">
+                                                        <button 
+                                                            className="qa-reply-btn"
+                                                            onClick={() => handleConversationShow(q)}
+                                                        >
+                                                            <i className="fas fa-comments me-2"></i>
+                                                            Join Conversation
+                                                            <i className="fas fa-arrow-right ms-2"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="qa-empty-state">
+                                        <div className="qa-empty-state-icon mb-4">
+                                            <i className="fas fa-question-circle qa-empty-state-icon-i"></i>
                                         </div>
-                                    )}
-                                </div>
+                                        <h4 className="qa-empty-title mb-3">No Questions Yet</h4>
+                                        <p className="qa-empty-desc text-muted mb-0">
+                                            When students ask questions about your courses, they will appear here for discussion.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -459,7 +449,7 @@ function QA() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className={`${isCurrentUser ? "me-3" : "ms-3"} flex-grow-1`}>
+                                        <div className={`${isCurrentUser ? "me-2" : "ms-2"} flex-grow-1`}>
                                             <div className={`message-content-qa ${isCurrentUser ? "message-content-qa-current-user" : ""}`}>
                                                 <div className="message-author-qa">
                                                     <div className="message-time-qa">
