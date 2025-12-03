@@ -526,6 +526,8 @@ class Notification(models.Model):
     # Removed order and order_item references
     review = models.ForeignKey(Review, on_delete=models.SET_NULL, null=True, blank=True)
     type = models.CharField(max_length=100, choices=NOTI_TYPE)
+    title = models.CharField(max_length=1000, null=True, blank=True)  # Phase 4.36 - notification title
+    message = models.TextField(null=True, blank=True)  # Phase 4.36 - notification message/description
     seen = models.BooleanField(default=False)
     date = models.DateTimeField(default=timezone.now)  
 
