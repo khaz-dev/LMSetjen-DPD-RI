@@ -449,7 +449,7 @@ function QA() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className={`${isCurrentUser ? "me-1" : "ms-1"} flex-grow-1`}>
+                                        <div className={`${isCurrentUser ? "me-3" : "ms-3"} flex-grow-1`}>
                                             <div className={`message-content-qa ${isCurrentUser ? "message-content-qa-current-user" : ""}`}>
                                                 <div className="message-author-qa">
                                                     <div className="message-time-qa">
