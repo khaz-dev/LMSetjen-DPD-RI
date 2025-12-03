@@ -27,18 +27,18 @@ function CourseQuiz() {
     
     // Form States
     const [quizForm, setQuizForm] = useState({
-        title: '',
-        description: '',
+        title: "",
+        description: "",
         is_active: true
     });
     
     const [questionForm, setQuestionForm] = useState({
-        question_text: '',
+        question_text: "",
         choices: [
-            { choice_text: '', is_correct: false },
-            { choice_text: '', is_correct: false },
-            { choice_text: '', is_correct: false },
-            { choice_text: '', is_correct: false }
+            { choice_text: "", is_correct: false },
+            { choice_text: "", is_correct: false },
+            { choice_text: "", is_correct: false },
+            { choice_text: "", is_correct: false }
         ]
     });
     
@@ -47,7 +47,7 @@ function CourseQuiz() {
     const [showQuestionModal, setShowQuestionModal] = useState(false);
     const [editingQuiz, setEditingQuiz] = useState(null);
     const [editingQuestion, setEditingQuestion] = useState(null);
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState("overview");
     const [questionsAdded, setQuestionsAdded] = useState(0); // Track questions added in current session
     const [isContinuousAdd, setIsContinuousAdd] = useState(false); // Track if user wants to keep adding
     
@@ -75,10 +75,10 @@ function CourseQuiz() {
         try {
             setLoading(true);
             const response = await apiInstance.get(`quiz/list-create/?course_id=${course_id}`);
-            // Handle both direct array and paginated response
+            // Handle both array and paginated responses
             const data = Array.isArray(response.data) 
                 ? response.data 
-                : (response.data.results || []);
+                : (response.data?.results || []);
             setQuizzes(Array.isArray(data) ? data : []);
         } catch (error) {
             Toast().fire({
@@ -86,6 +86,7 @@ function CourseQuiz() {
                 title: "Failed to load quizzes"
             });
             console.error(error);
+            setQuizzes([]); // Set empty array on error
         } finally {
             setLoading(false);
         }
@@ -94,13 +95,18 @@ function CourseQuiz() {
     const fetchQuestions = async (quizId) => {
         try {
             const response = await apiInstance.get(`quiz/question/list-create/?quiz_id=${quizId}`);
-            setQuestions(response.data);
+            // Handle both array and paginated responses
+            const data = Array.isArray(response.data) 
+                ? response.data 
+                : (response.data?.results || []);
+            setQuestions(Array.isArray(data) ? data : []);
         } catch (error) {
             Toast().fire({
                 icon: "error",
                 title: "Failed to load questions"
             });
             console.error(error);
+            setQuestions([]); // Set empty array on error
         }
     };
 
@@ -129,7 +135,7 @@ function CourseQuiz() {
                     title: "Quiz updated successfully"
                 });
             } else {
-                await apiInstance.post('quiz/list-create/', quizData);
+                await apiInstance.post("quiz/list-create/", quizData);
                 Toast().fire({
                     icon: "success",
                     title: "Quiz created successfully"
@@ -222,7 +228,7 @@ function CourseQuiz() {
                 const response = await apiInstance.put(`quiz/question/detail/${editingQuestion.question_id}/`, questionData);
                 savedQuestion = response.data;
             } else {
-                const response = await apiInstance.post('quiz/question/list-create/', questionData);
+                const response = await apiInstance.post("quiz/question/list-create/", questionData);
                 savedQuestion = response.data;
             }
 
@@ -240,7 +246,7 @@ function CourseQuiz() {
 
             Toast().fire({
                 icon: "success", 
-                title: editingQuestion ? 'Question updated successfully' : 'Question added successfully'
+                title: editingQuestion ? "Question updated successfully" : "Question added successfully"
             });
 
             // If editing, close modal. If adding and continuous mode, reset form but keep modal open
@@ -253,7 +259,7 @@ function CourseQuiz() {
                 resetQuestionForm();
                 // Focus on question text area for convenience
                 setTimeout(() => {
-                    const textarea = document.querySelector('.modal-body textarea');
+                    const textarea = document.querySelector(".modal-body textarea");
                     if (textarea) textarea.focus();
                 }, 100);
             } else {
@@ -283,7 +289,7 @@ function CourseQuiz() {
 
             // Create new choices
             for (const [index, choice] of choices.entries()) {
-                await apiInstance.post('quiz/choice/list-create/', {
+                await apiInstance.post("quiz/choice/list-create/", {
                     question_id: questionId,
                     choice_text: choice.choice_text,
                     is_correct: choice.is_correct,
@@ -321,18 +327,18 @@ function CourseQuiz() {
 
     // Form Helpers
     const resetQuizForm = () => {
-        setQuizForm({ title: '', description: '', is_active: true });
+        setQuizForm({ title: "", description: "", is_active: true });
         setEditingQuiz(null);
     };
 
     const resetQuestionForm = () => {
         setQuestionForm({
-            question_text: '',
+            question_text: "",
             choices: [
-                { choice_text: '', is_correct: false },
-                { choice_text: '', is_correct: false },
-                { choice_text: '', is_correct: false },
-                { choice_text: '', is_correct: false }
+                { choice_text: "", is_correct: false },
+                { choice_text: "", is_correct: false },
+                { choice_text: "", is_correct: false },
+                { choice_text: "", is_correct: false }
             ]
         });
         setEditingQuestion(null);
@@ -342,7 +348,7 @@ function CourseQuiz() {
     const handleEditQuiz = (quiz) => {
         setQuizForm({
             title: quiz.title,
-            description: quiz.description || '',
+            description: quiz.description || "",
             is_active: quiz.is_active
         });
         setEditingQuiz(quiz);
@@ -356,7 +362,7 @@ function CourseQuiz() {
                 ? question.choices.slice(0, 4)
                 : [
                     ...question.choices,
-                    ...Array(4 - question.choices.length).fill({ choice_text: '', is_correct: false })
+                    ...Array(4 - question.choices.length).fill({ choice_text: "", is_correct: false })
                 ]
         });
         setEditingQuestion(question);
@@ -366,7 +372,7 @@ function CourseQuiz() {
 
     const handleChoiceChange = (index, field, value) => {
         const newChoices = [...questionForm.choices];
-        if (field === 'is_correct' && value) {
+        if (field === "is_correct" && value) {
             // Only one correct answer allowed
             newChoices.forEach((choice, i) => {
                 choice.is_correct = i === index;
@@ -379,7 +385,7 @@ function CourseQuiz() {
 
     const selectQuiz = (quiz) => {
         setCurrentQuiz(quiz);
-        setActiveTab('questions');
+        setActiveTab("questions");
         fetchQuestions(quiz.quiz_id);
     };
 
@@ -401,14 +407,14 @@ function CourseQuiz() {
         return (
             <>
                 <BaseHeader />
-                <div className="modern-dashboard" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <div className="modern-dashboard" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
                                     </div>
                                     <p className="mt-3 text-muted">Loading Quiz...</p>
@@ -449,7 +455,7 @@ function CourseQuiz() {
                                         </h3>
                                         
                                         <h3 className="text-white mb-2 fw-bold">
-                                            {course?.title || 'Course Quiz Management'}
+                                            {course?.title || "Course Quiz Management"}
                                         </h3>
 
                                         <p className="mb-0 text-white opacity-90">
@@ -488,7 +494,7 @@ function CourseQuiz() {
                                         </div>
                                         <div className="stat-content">
                                             <div className="stat-number">
-                                                {Array.isArray(quizzes) ? quizzes.reduce((total, quiz) => total + (quiz.total_questions || 0), 0) : 0}
+                                                {quizzes.reduce((total, quiz) => total + (quiz.total_questions || 0), 0)}
                                             </div>
                                             <div className="stat-label">Total Questions</div>
                                         </div>
@@ -501,7 +507,7 @@ function CourseQuiz() {
                                         </div>
                                         <div className="stat-content">
                                             <div className="stat-number">
-                                                {Array.isArray(quizzes) ? quizzes.filter(quiz => quiz.is_active).length : 0}
+                                                {quizzes.filter(quiz => quiz.is_active).length}
                                             </div>
                                             <div className="stat-label">Active Quizzes</div>
                                         </div>
@@ -514,7 +520,7 @@ function CourseQuiz() {
                                         </div>
                                         <div className="stat-content">
                                             <div className="stat-number">
-                                                {Array.isArray(quizzes) ? quizzes.filter(quiz => !quiz.is_active).length : 0}
+                                                {quizzes.filter(quiz => !quiz.is_active).length}
                                             </div>
                                             <div className="stat-label">Inactive Quizzes</div>
                                         </div>
@@ -526,15 +532,15 @@ function CourseQuiz() {
                             <div className="course-form-card mb-4">
                                 <div className="quiz-nav-tabs">
                                     <button 
-                                        className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('overview')}
+                                        className={`tab-btn ${activeTab === "overview" ? "active" : ""}`}
+                                        onClick={() => setActiveTab("overview")}
                                     >
                                         <i className="fas fa-chart-pie me-2"></i>
                                         Quiz Overview
                                     </button>
                                     <button 
-                                        className={`tab-btn ${activeTab === 'questions' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('questions')}
+                                        className={`tab-btn ${activeTab === "questions" ? "active" : ""}`}
+                                        onClick={() => setActiveTab("questions")}
                                         disabled={!currentQuiz}
                                     >
                                         <i className="fas fa-question me-2"></i>
@@ -544,7 +550,7 @@ function CourseQuiz() {
                             </div>
 
                             {/* Content Based on Active Tab */}
-                            {activeTab === 'overview' && (
+                            {activeTab === "overview" && (
                                 <div className="quiz-overview-section">
                                     {/* Action Bar */}
                                     <div className="mb-4">
@@ -565,7 +571,7 @@ function CourseQuiz() {
 
                                     {/* Quizzes List */}
                                     <div className="quizzes-grid">
-                                        {!Array.isArray(quizzes) || quizzes.length === 0 ? (
+                                        {quizzes.length === 0 ? (
                                             <div className="course-form-card text-center py-5">
                                                 <div className="empty-state">
                                                     <i className="fas fa-question-circle empty-icon"></i>
@@ -581,7 +587,7 @@ function CourseQuiz() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            Array.isArray(quizzes) && quizzes.map((quiz) => (
+                                            quizzes.map((quiz) => (
                                                 <div key={quiz.quiz_id} className="quiz-card">
                                                     <div className="quiz-card-header">
                                                         <div className="quiz-actions mb-0 pb-0">
@@ -601,9 +607,9 @@ function CourseQuiz() {
                                                             </button>
                                                         </div>
                                                         <div className="quiz-status">
-                                                            <span className={`status-badge ${quiz.is_active ? 'active' : 'inactive'}`}>
-                                                                <i className={`fas ${quiz.is_active ? 'fa-check-circle' : 'fa-pause-circle'}`}></i>
-                                                                {quiz.is_active ? 'Active' : 'Inactive'}
+                                                            <span className={`status-badge ${quiz.is_active ? "active" : "inactive"}`}>
+                                                                <i className={`fas ${quiz.is_active ? "fa-check-circle" : "fa-pause-circle"}`}></i>
+                                                                {quiz.is_active ? "Active" : "Inactive"}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -639,7 +645,7 @@ function CourseQuiz() {
                                 </div>
                             )}
 
-                            {activeTab === 'questions' && currentQuiz && (
+                            {activeTab === "questions" && currentQuiz && (
                                 <div className="quiz-questions-section">
                                     {/* Questions Header */}
                                     <div className="course-form-card mb-4">
@@ -700,7 +706,7 @@ function CourseQuiz() {
                                                         {question.choices?.map((choice, choiceIndex) => (
                                                             <div 
                                                                 key={choice.choice_id} 
-                                                                className={`choice-item ${choice.is_correct ? 'correct' : ''}`}
+                                                                className={`choice-item ${choice.is_correct ? "correct" : ""}`}
                                                             >
                                                                 <div className="choice-indicator">
                                                                     {choice.is_correct ? (
@@ -740,7 +746,7 @@ function CourseQuiz() {
                                 <div className="quiz-modal-overlay">
                                     <div className="quiz-modal">
                                         <div className="modal-header">
-                                            <h4>{editingQuiz ? 'Edit Quiz' : 'Create New Quiz'}</h4>
+                                            <h4>{editingQuiz ? "Edit Quiz" : "Create New Quiz"}</h4>
                                             <button 
                                                 className="btn-close"
                                                 onClick={() => {
@@ -806,7 +812,7 @@ function CourseQuiz() {
                                                     disabled={isSubmitting}
                                                 >
                                                     {isSubmitting && <span className="spinner-border spinner-border-sm me-2"></span>}
-                                                    {editingQuiz ? 'Update Quiz' : 'Create Quiz'}
+                                                    {editingQuiz ? "Update Quiz" : "Create Quiz"}
                                                 </button>
                                             </div>
                                         </form>
@@ -821,12 +827,12 @@ function CourseQuiz() {
                                         <div className="modal-header">
                                             <div>
                                                 <h4>
-                                                    {editingQuestion ? 'Edit Question' : `Add Question #${questions.length + 1}`}
+                                                    {editingQuestion ? "Edit Question" : `Add Question #${questions.length + 1}`}
                                                 </h4>
                                                 {!editingQuestion && isContinuousAdd && questionsAdded > 0 && (
-                                                    <p className="text-muted mb-0 mt-1" style={{ fontSize: '0.9rem' }}>
+                                                    <p className="text-muted mb-0 mt-1" style={{ fontSize: "0.9rem" }}>
                                                         <i className="fas fa-check-circle text-success me-2"></i>
-                                                        {questionsAdded} question{questionsAdded > 1 ? 's' : ''} successfully added in this session
+                                                        {questionsAdded} question{questionsAdded > 1 ? "s" : ""} successfully added in this session
                                                     </p>
                                                 )}
                                             </div>
@@ -862,7 +868,7 @@ function CourseQuiz() {
                                                                     type="radio"
                                                                     name="correct_answer"
                                                                     checked={choice.is_correct}
-                                                                    onChange={(e) => handleChoiceChange(index, 'is_correct', e.target.checked)}
+                                                                    onChange={(e) => handleChoiceChange(index, "is_correct", e.target.checked)}
                                                                 />
                                                                 <label className="choice-letter">
                                                                     {String.fromCharCode(65 + index)}.
@@ -872,7 +878,7 @@ function CourseQuiz() {
                                                                 type="text"
                                                                 className="form-control choice-input"
                                                                 value={choice.choice_text}
-                                                                onChange={(e) => handleChoiceChange(index, 'choice_text', e.target.value)}
+                                                                onChange={(e) => handleChoiceChange(index, "choice_text", e.target.value)}
                                                                 placeholder={`Choice ${String.fromCharCode(65 + index)}`}
                                                             />
                                                         </div>
@@ -886,7 +892,7 @@ function CourseQuiz() {
                                                     onClick={handleCloseQuestionModal}
                                                     disabled={isSubmitting}
                                                 >
-                                                    {editingQuestion ? 'Cancel' : 'Close & Finish'}
+                                                    {editingQuestion ? "Cancel" : "Close & Finish"}
                                                 </button>
                                                 
                                                 {!editingQuestion && (
