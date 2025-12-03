@@ -638,7 +638,7 @@ function CourseEdit() {
                                                     getValidationClass={getFieldValidationClass}
                                                     options={[
                                                         { value: "", label: "Select a category" },
-                                                        ...categories.map(cat => ({ value: cat.id, label: cat.title }))
+                                                        ...(Array.isArray(categories) ? categories : []).map(cat => ({ value: cat.id, label: cat.title }))
                                                     ]}
                                                     required
                                                     helpText="Choose the most relevant category for your course"

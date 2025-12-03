@@ -250,13 +250,20 @@ export const useCategories = () => {
                 const response = await useAxios.get("/course/category/");
                 
                 if (response?.data) {
-                    setCategories(response.data);
+                    // Handle both paginated and direct array responses
+                    const data = Array.isArray(response.data) 
+                        ? response.data 
+                        : (response.data.results || []);
+                    
+                    setCategories(Array.isArray(data) ? data : []);
                 } else {
                     setError("Failed to load categories");
+                    setCategories([]);
                 }
             } catch (error) {
                 console.error("Error fetching categories:", error);
                 setError("Failed to load categories");
+                setCategories([]);
             } finally {
                 setLoading(false);
             }
@@ -266,7 +273,7 @@ export const useCategories = () => {
     }, []);
 
     return {
-        categories,
+        categories: Array.isArray(categories) ? categories : [],
         loading,
         error
     };
