@@ -24,10 +24,18 @@ function Courses() {
         try {
             setLoading(true);
             const response = await useAxios.get(`teacher/course-lists/${UserData()?.teacher_id}/`);
-            setCourses(response.data);
-            setOriginalCourses(response.data);
+            
+            // Handle both array and paginated response formats
+            const coursesData = Array.isArray(response.data) 
+                ? response.data 
+                : (response.data?.results || []);
+            
+            setCourses(coursesData);
+            setOriginalCourses(coursesData);
         } catch (error) {
             console.error("Error fetching courses:", error);
+            setCourses([]);
+            setOriginalCourses([]);
         } finally {
             setLoading(false);
         }

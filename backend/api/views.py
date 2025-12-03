@@ -2461,6 +2461,7 @@ class TeacherSummaryAPIView(generics.ListAPIView):
 class TeacherCourseListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.CourseSerializer
     permission_classes = [AllowAny]
+    pagination_class = None  # ✨ PHASE 4 - Disable pagination for direct array response
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
