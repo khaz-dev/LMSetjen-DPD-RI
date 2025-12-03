@@ -16,17 +16,6 @@
     margin-bottom: 1rem !important;
 }
 
-/* Ensure gap on Header component inside modern-dashboard */
-.modern-dashboard .instructor-header-row {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
-}
-
-.modern-dashboard .instructor-header-row .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
-}
-
 /* ========================================
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
@@ -200,32 +189,47 @@
 
 .qa-search-container {
     position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
 }
 
 .qa-search-icon {
     position: absolute;
-    left: 18px;
+    left: 16px;
     top: 50%;
     transform: translateY(-50%);
     color: #3498db;
     z-index: 2;
-    font-size: 1.1rem;
+    font-size: 1rem;
+    pointer-events: none;
 }
 
 .qa-search-input {
-    padding-left: 50px;
-    height: 55px;
+    padding-left: 45px;
+    padding-right: 16px;
+    height: 48px;
     border: 2px solid #e9ecef;
-    border-radius: 15px;
-    font-size: 1rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
     transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.9);
+    width: 100%;
+}
+
+.qa-search-input::placeholder {
+    color: #adb5bd;
 }
 
 .qa-search-input:focus {
     border-color: #3498db;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.15);
     background: white;
+    outline: none;
+}
+
+.qa-search-input:focus::placeholder {
+    color: #ccc;
 }
 
 /* Question Cards */

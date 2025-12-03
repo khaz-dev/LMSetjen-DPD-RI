@@ -22,6 +22,7 @@ const DEFAULT_AVATAR = DEFAULT_IMAGE_URL;
 
 function QA() {
     const [questions, setQuestions] = useState([]);
+    const [allQuestions, setAllQuestions] = useState([]);  // Store original unfiltered questions
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [ConversationShow, setConversationShow] = useState(false);
     const [conversationMessages, setConversationMessages] = useState({});
@@ -58,6 +59,7 @@ function QA() {
             // Extract results from paginated response
             const questionsData = response.data.results || response.data;
             setQuestions(questionsData);
+            setAllQuestions(questionsData);  // Store unfiltered questions
         } catch (error) {
             console.error("Error fetching questions:", error);
             setError(error.message || 'Failed to fetch questions');
@@ -69,12 +71,14 @@ function QA() {
     const handleSearchQuestion = (event) => {
         const query = event.target.value.toLowerCase();
         
+        // If search is empty, show all questions without refetching
         if (!query.trim()) {
-            fetchQuestions();
+            setQuestions(allQuestions);
             return;
         }
         
-        const filtered = questions.filter(q => 
+        // Filter from all questions (not from current display)
+        const filtered = allQuestions.filter(q => 
             q.title?.toLowerCase().includes(query) || 
             q.profile?.full_name?.toLowerCase().includes(query) ||
             q.course?.title?.toLowerCase().includes(query)
@@ -251,11 +255,11 @@ function QA() {
 
                             {/* Modern Search Section */}
                             <div className="qa-search-section mb-4">
-                                <div className="modern-search-container">
-                                    <i className="fas fa-search search-icon"></i>
+                                <div className="qa-search-container">
+                                    <i className="fas fa-search qa-search-icon"></i>
                                     <input 
                                         type="search" 
-                                        className="form-control modern-search-input" 
+                                        className="form-control qa-search-input" 
                                         placeholder="Search questions and discussions..." 
                                         onChange={handleSearchQuestion}
                                     />
