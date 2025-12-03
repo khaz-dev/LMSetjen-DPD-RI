@@ -2692,7 +2692,8 @@ class TeacherNotificationListAPIView(generics.ListAPIView):
         
         try:
             teacher = api_models.Teacher.objects.get(id=teacher_id)
-            return api_models.Notification.objects.filter(teacher=teacher, seen=False)
+            # Return ALL notifications (both seen and unseen) - Phase 4.36
+            return api_models.Notification.objects.filter(teacher=teacher).order_by('-date')
         except api_models.Teacher.DoesNotExist:
             return api_models.Notification.objects.none()
     
