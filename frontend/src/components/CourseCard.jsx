@@ -65,7 +65,7 @@ const CourseCard = ({ course, index, onDelete }) => {
     const nextStep = getNextStep();
     
     return (
-        <div key={course.course_id || course.id || index} className="col-xl-6 col-lg-12 col-md-12">
+        <div key={course.course_id || course.id || index} className="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <div className="modern-course-card">
                 <div className="course-image-container mb-0" style={{ position: 'relative' }}>
                     <img
