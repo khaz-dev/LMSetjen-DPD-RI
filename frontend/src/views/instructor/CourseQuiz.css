@@ -198,6 +198,8 @@ button div,
     transition: var(--transition-normal);
     position: relative;
     overflow: hidden;
+    width: 100%;  /* Ensure card takes full width of column */
+    flex-direction: row;  /* Override any flex-direction: column from parent */
 }
 
 .quizstat-card::before {
@@ -227,6 +229,8 @@ button div,
     font-size: 1.5rem;
     margin-right: var(--space-lg);
     box-shadow: var(--shadow-sm);
+    flex-shrink: 0;  /* Prevent icon from shrinking */
+    min-width: 60px; /* Ensure minimum width is maintained */
 }
 
 .stat-content .stat-number {
@@ -234,6 +238,13 @@ button div,
     font-weight: 700;
     color: var(--neutral-800);
     line-height: 1;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;  /* Allow stat-content to grow and fill available space */
+    min-width: 0;  /* Allow flex to properly distribute space */
 }
 
 .stat-content .stat-label {
