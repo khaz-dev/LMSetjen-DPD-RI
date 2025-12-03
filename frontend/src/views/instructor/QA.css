@@ -1,6 +1,18 @@
 /* QA Component Styles */
 
 /* ================================
+   MAIN PAGE LAYOUT
+   ================================ */
+
+.modern-qa-page {
+    background: linear-gradient(135deg, #fafafa 0%, #f8f4ff 50%, #f0ebff 100%) !important;
+    min-height: 100vh;
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+    margin-top: 0 !important;
+}
+
+/* ================================
    GAP BETWEEN HEADER AND DASHBOARD
    ================================ */
 
@@ -115,64 +127,358 @@
     padding-bottom: 3rem !important;
 }
 
-/* Header Section */
-.qa-header-section {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+/* Header Card - Instructor Context */
+.qa-header-card {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     border-radius: 20px;
-    padding: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    color: white !important;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
     position: relative;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(52, 152, 219, 0.3) !important;
+}
+
+.qa-header-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 40%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(15deg);
+    z-index: 1;
+}
+
+.qa-header-content {
+    position: relative;
+    z-index: 2;
+}
+
+.qa-page-icon {
+    font-size: 2.5rem;
+}
+
+/* Discussion Card */
+.qa-discussion-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
     overflow: hidden;
 }
 
-.qa-header-bg {
+.form-section-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-bottom: 1px solid #e9ecef;
+    padding: 2rem;
+}
+
+.form-section-header h3 {
+    margin: 0;
+}
+
+.form-section-header p {
+    margin: 0;
+}
+
+/* Search Card */
+.search-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 15px;
+    border: 1px solid #e9ecef;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.form-control-modern {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 0.875rem 3rem 0.875rem 1.25rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.form-control-modern:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    background: white;
+}
+
+.search-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3498db;
+    z-index: 3;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: flex;
+    gap: 1rem;
+}
+
+.qa-stat-card {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 1rem;
+    flex: 1;
+    text-align: center;
+}
+
+.qa-stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    color: white;
+    margin-top: 0.5rem;
+}
+
+/* Empty State */
+.empty-state {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 60px 40px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: #bdc3c7;
+    opacity: 0.5;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.empty-state h4 {
+    color: #636e72;
+    font-weight: 600;
+}
+
+.empty-state p {
+    color: #95a5a6;
+    font-size: 0.9rem;
+}
+
+/* Button Styles */
+.btn-qa {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-qa:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+    color: white;
+}
+
+/* Question Card */
+.question-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #e9ecef;
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.question-card::before {
+    content: '';
     position: absolute;
     top: -50%;
     right: -20%;
     width: 300px;
     height: 300px;
-    background: linear-gradient(45deg, #3498db20, #2980b920);
+    background: linear-gradient(45deg, #3498db10, #2980b910);
     border-radius: 50%;
+    z-index: 0;
+    transition: all 0.5s ease;
+}
+
+.question-card:hover::before {
+    transform: scale(1.1);
+}
+
+.question-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    border-color: #3498db;
+}
+
+.question-header {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    position: relative;
     z-index: 1;
 }
 
-.qa-header-content {
-    z-index: 2;
+.question-avatar {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
 }
 
-.qa-header-title {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-    font-size: 2.5rem;
-    font-weight: bold;
+.avatar-modern {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #3498db;
 }
 
-.qa-header-desc {
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e9ecef, #dee2e6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #dee2e6;
+}
+
+.avatar-icon {
+    font-size: 24px;
+    color: #636e72;
+}
+
+.question-content {
+    flex: 1;
+}
+
+.question-title {
+    color: #2c3e50;
+    font-weight: 600;
     font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
 }
 
-.qa-stat-badge {
+.question-card:hover .question-title {
+    color: #3498db;
+}
+
+.question-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.question-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #636e72;
+}
+
+.question-meta-icon {
+    color: #3498db;
+}
+
+.question-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.question-stats {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.replies-badge {
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
-    padding: 12px 20px;
-    border-radius: 15px;
-    font-size: 0.9rem;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
     font-weight: 600;
 }
 
-/* Search Section */
-.qa-search-section {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 25px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+.question-card:hover .replies-badge {
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.draft-indicator {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.join-discussion-primary {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.question-card:hover .join-discussion-primary {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+}
+
+.discussion-arrow {
+    font-size: 0.7rem;
+    transition: all 0.3s ease;
+}
+
+.question-card:hover .discussion-arrow {
+    transform: translateX(3px);
 }
 
 /* ================================
@@ -192,180 +498,6 @@
     display: flex;
     align-items: center;
     width: 100%;
-}
-
-.qa-search-icon {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #3498db;
-    z-index: 2;
-    font-size: 1rem;
-    pointer-events: none;
-}
-
-.qa-search-input {
-    padding-left: 50px;
-    padding-right: 16px;
-    height: 48px;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.9);
-    width: 100%;
-}
-
-.qa-search-input::placeholder {
-    color: #adb5bd;
-}
-
-.qa-search-input:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.15);
-    background: white;
-    outline: none;
-}
-
-.qa-search-input:focus::placeholder {
-    color: #ccc;
-}
-
-/* Question Cards */
-.modern-question-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 18px;
-    padding: 25px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.qa-card-hover:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-}
-
-.qa-avatar-gradient {
-    position: relative;
-    padding: 3px;
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    border-radius: 50%;
-}
-
-.qa-avatar-img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border: 3px solid white;
-}
-
-.qa-avatar-status {
-    position: absolute;
-    bottom: 3px;
-    right: 3px;
-    width: 18px;
-    height: 18px;
-    background: #28a745;
-    border-radius: 50%;
-    border: 2px solid white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.qa-avatar-status-icon {
-    font-size: 8px;
-    color: white;
-}
-
-.qa-user-name {
-    color: #2c3e50;
-    font-weight: 600;
-}
-
-.qa-replies-badge {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-}
-
-.qa-question-title {
-    color: #2c3e50;
-    font-weight: 600;
-    font-size: 1.2rem;
-}
-
-.qa-question-message {
-    line-height: 1.6;
-    font-size: 0.95rem;
-}
-
-.qa-course-badge {
-    background: rgba(52, 152, 219, 0.1);
-    color: #3498db;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.qa-reply-btn {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    border: none;
-    color: white;
-    border-radius: 10px;
-    padding: 8px 16px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.qa-reply-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
-    color: white;
-}
-
-/* Empty State */
-.qa-empty-state {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 60px 40px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.qa-empty-state-icon {
-    width: 100px;
-    height: 100px;
-    background: linear-gradient(135deg, #3498db20, #2980b920);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-.qa-empty-state-icon-i {
-    font-size: 2.5rem;
-    color: #3498db;
-}
-
-.qa-empty-title {
-    color: #2c3e50;
-}
-
-.qa-empty-desc {
-    font-size: 1.1rem;
 }
 
 /* Modal Styles */
