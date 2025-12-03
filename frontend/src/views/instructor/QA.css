@@ -562,7 +562,6 @@
     flex-basis: auto;
     flex-grow: 0;
     flex-shrink: 0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     /* Sidebar now spans full column width without Bootstrap padding */
     width: auto;
   }
@@ -573,7 +572,6 @@
     min-width: 0;
     width: auto;
     max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Ensure content doesn't wrap under sidebar */
@@ -593,13 +591,10 @@
 
 /* Tablet (md breakpoint) */
 /* col-md-4 sidebar + col-md-8 content = 12 columns */
-@media (min-width: 768px) and (max-width: 991px) {
-  /* Sidebar column - maintains fixed width or collapses */
   .qa-bg-section .row > .instructor-sidebar-column {
     flex-basis: auto;
     flex-grow: 0;
     flex-shrink: 0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     /* Sidebar now spans full column width without Bootstrap padding */
     width: auto;
   }
@@ -610,7 +605,6 @@
     min-width: 0;
     width: auto;
     max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Ensure content doesn't wrap under sidebar */

@@ -1,17 +1,6 @@
 /* Modern Courses Styles - Instructor Page */
 
 /* ========================================
-   BOOTSTRAP GRID COLUMN PADDING
-   Ensures proper gutter spacing for all columns
-   ======================================== */
-
-.col-xl-6, .col-lg-6, .col-md-6, .col-sm-12, 
-[class*="col-"] {
-    padding-left: calc(var(--bs-gutter-x, 24px) * 0.5);
-    padding-right: calc(var(--bs-gutter-x, 24px) * 0.5);
-}
-
-/* ========================================
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
 
@@ -79,16 +68,15 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    width: 100% !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
 }
 
-/* Inner rows inside col-lg-9: simplified for proper layout */
+/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
 .courses-container .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    gap: 1.5rem !important;
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
 }
 
 /* Tablet: col-md-8 content wrapper (inside sidebar row) */
@@ -97,16 +85,15 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    width: 100% !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
 }
 
-/* Inner rows inside col-md-8: simplified for proper layout */
+/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
 .courses-container .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    gap: 1.5rem !important;
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
 }
 
 /* Override for specific spacing needs */
@@ -413,14 +400,13 @@
 
 .modern-courses-container {
     display: block;
-    width: 100%;
+    width: 102%;
 }
 
 .modern-courses-container .row {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 1.5rem !important;
-    width: 100% !important;
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
 }
 
 .modern-search-container {
@@ -468,9 +454,6 @@
     transition: all 0.3s ease;
     overflow: hidden;
     position: relative;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
 }
 
 .modern-course-card:hover {
@@ -605,13 +588,10 @@
    MEDIA QUERIES - RESPONSIVE LAYOUT
    ======================================== */
 
-@media (min-width: 992px) {
-    /* Sidebar column - maintains fixed width or collapses */
     .courses-container .row > .instructor-sidebar-column {
         flex-basis: auto;
         flex-grow: 0;
         flex-shrink: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         width: auto;
     }
 
@@ -621,7 +601,6 @@
         min-width: 0;
         width: auto;
         max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Ensure content doesn't wrap under sidebar */
@@ -631,13 +610,10 @@
 }
 
 /* Tablet: Medium screens (md: 768px - 991px) */
-@media (min-width: 768px) and (max-width: 991px) {
-    /* Sidebar column - maintains fixed width or collapses */
     .courses-container .row > .instructor-sidebar-column {
         flex-basis: auto;
         flex-grow: 0;
         flex-shrink: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         width: auto;
     }
 
@@ -647,7 +623,6 @@
         min-width: 0;
         width: auto;
         max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Ensure content doesn't wrap under sidebar */
@@ -699,9 +674,8 @@
     }
 
     .modern-courses-container .row {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 1rem !important;
-        width: 100% !important;
+        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
     }
 }

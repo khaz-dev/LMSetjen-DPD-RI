@@ -1563,7 +1563,6 @@
         flex-basis: auto;
         flex-grow: 0;
         flex-shrink: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         width: auto;
     }
 
@@ -1573,7 +1572,6 @@
         min-width: 0;
         width: auto;
         max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Ensure content doesn't wrap under sidebar */
@@ -1589,7 +1587,6 @@
         flex-basis: auto;
         flex-grow: 0;
         flex-shrink: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         width: auto;
     }
 
@@ -1599,7 +1596,6 @@
         min-width: 0;
         width: auto;
         max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 }
 

@@ -1057,12 +1057,10 @@ button div,
 
 /* Base: Desktop Large (lg breakpoint and up) */
 @media (min-width: 992px) {
-    /* Sidebar column - maintains fixed width or collapses */
     .modern-dashboard .row > .instructor-sidebar-column {
         flex-basis: auto;
         flex-grow: 0;
         flex-shrink: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         width: auto;
     }
 
@@ -1075,7 +1073,6 @@ button div,
         width: 75% !important;
         max-width: 75% !important;
         min-width: 500px;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ================================
@@ -1097,7 +1094,6 @@ button div,
         flex: 0 0 auto !important;
         width: 25% !important;
         max-width: 25% !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ================================
@@ -1113,12 +1109,10 @@ button div,
 
 /* Tablet (md breakpoint: 768px - 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
-    /* Sidebar column - maintains fixed width or collapses */
     .modern-dashboard .row > .instructor-sidebar-column {
         flex-basis: auto;
         flex-grow: 0;
         flex-shrink: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         width: auto;
     }
 
@@ -1131,7 +1125,6 @@ button div,
         width: 66.666667% !important;
         max-width: 66.666667% !important;
         min-width: 400px;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ================================
@@ -1153,7 +1146,6 @@ button div,
         flex: 0 0 auto !important;
         width: 33.333333% !important;
         max-width: 33.333333% !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ================================
