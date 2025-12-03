@@ -91,24 +91,51 @@ function UsersAdmin() {
 
     const api = useAxios;
 
-    // Fetch users and statistics - OPTIMIZED
+    // Fetch users and statistics - OPTIMIZED WITH PAGINATION SUPPORT
     const fetchUsers = useCallback(async () => {
         try {
-            // Fetch with query parameter optimization
-            const response = await api.get('/admin/user-management/?_t=' + Date.now());
-            const usersData = response.data;
+            let allUsers = [];
+            let nextPage = 1;
+            let hasMorePages = true;
+            let pageCount = 0;
+            const maxPages = 100; // Safety limit to prevent infinite loops
             
-            // Handle both array and paginated response
-            const users = Array.isArray(usersData) ? usersData : usersData.results || [];
+            // Fetch all pages of users
+            while (hasMorePages && pageCount < maxPages) {
+                const response = await api.get(`/admin/user-management/?page=${nextPage}&_t=${Date.now()}`);
+                const usersData = response.data;
+                
+                // Handle both array and paginated response
+                if (Array.isArray(usersData)) {
+                    // Direct array response (old behavior)
+                    allUsers = usersData;
+                    hasMorePages = false;
+                } else if (usersData.results) {
+                    // Paginated response (new behavior)
+                    allUsers = [...allUsers, ...usersData.results];
+                    pageCount++;
+                    
+                    // Check if there are more pages
+                    hasMorePages = usersData.next !== null;
+                    nextPage++;
+                    
+                    // Add a small delay between requests to avoid overwhelming the server
+                    if (hasMorePages) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                } else {
+                    // Unexpected format
+                    hasMorePages = false;
+                }
+            }
             
-            setUsers(users);
-            setFilteredUsers(users);
+            setUsers(allUsers);
+            setFilteredUsers(allUsers);
             setLoading(false);
         } catch (error) {
-            console.error('Error fetching users:', error);
             Toast().fire({
                 icon: "error",
-                title: 'Failed to fetch users'
+                title: "Failed to fetch users"
             });
             setLoading(false);
         }
