@@ -238,6 +238,7 @@ button div,
     font-weight: 700;
     color: var(--neutral-800);
     line-height: 1;
+    text-align: right;  /* Align number to the right */
 }
 
 .stat-content {
