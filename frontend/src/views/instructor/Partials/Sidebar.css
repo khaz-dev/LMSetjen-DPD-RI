@@ -158,6 +158,10 @@
     cursor: default;
     position: relative;
     z-index: 2;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .instructor-sidebar-header-collapsed {
