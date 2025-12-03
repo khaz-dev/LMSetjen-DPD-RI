@@ -279,6 +279,8 @@ function Review() {
                                                                     fillColor="#ffc107"
                                                                     emptyColor="#e4e5e9"
                                                                 />
+                                                            </div>
+                                                            <div className="course-info">
                                                                 <span className="rating-label">for</span>
                                                                 <span className="course-title">
                                                                     {r.course?.title}
