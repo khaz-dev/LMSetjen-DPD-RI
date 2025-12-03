@@ -1,5 +1,14 @@
 /* Dashboard.css - Modern Instructor Dashboard Styles */
 
+/* ================================
+   GAP BETWEEN HEADER AND DASHBOARD
+   ================================ */
+
+.instructor-header-card {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
 /* Main Dashboard Background */
 .modern-dashboard {
   min-height: 100vh;

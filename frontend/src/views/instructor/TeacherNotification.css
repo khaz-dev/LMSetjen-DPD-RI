@@ -2,6 +2,15 @@
    Teacher Notification Page Styles
    ============================================ */
 
+/* ================================
+   GAP BETWEEN HEADER AND DASHBOARD
+   ================================ */
+
+.instructor-header-card {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
 /* ========================================
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
