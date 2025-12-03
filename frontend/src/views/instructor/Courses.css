@@ -1,6 +1,17 @@
 /* Modern Courses Styles - Instructor Page */
 
 /* ========================================
+   BOOTSTRAP GRID COLUMN PADDING
+   Ensures proper gutter spacing for all columns
+   ======================================== */
+
+.col-xl-6, .col-lg-6, .col-md-6, .col-sm-12, 
+[class*="col-"] {
+    padding-left: calc(var(--bs-gutter-x, 24px) * 0.5);
+    padding-right: calc(var(--bs-gutter-x, 24px) * 0.5);
+}
+
+/* ========================================
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
 
@@ -68,15 +79,16 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    width: 100% !important;
     flex: 1 1 auto !important;
 }
 
-/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+/* Inner rows inside col-lg-9: simplified for proper layout */
 .courses-container .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 1.5rem !important;
 }
 
 /* Tablet: col-md-8 content wrapper (inside sidebar row) */
@@ -85,15 +97,16 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    width: 100% !important;
     flex: 1 1 auto !important;
 }
 
-/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+/* Inner rows inside col-md-8: simplified for proper layout */
 .courses-container .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 1.5rem !important;
 }
 
 /* Override for specific spacing needs */
@@ -404,10 +417,10 @@
 }
 
 .modern-courses-container .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
     gap: 1.5rem !important;
+    width: 100% !important;
 }
 
 .modern-search-container {
@@ -686,9 +699,9 @@
     }
 
     .modern-courses-container .row {
-        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
         gap: 1rem !important;
+        width: 100% !important;
     }
 }
