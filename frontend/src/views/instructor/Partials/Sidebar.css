@@ -226,6 +226,25 @@
     margin-top: 0.5rem;
 }
 
+/* When nav-section-title and section-title are combined, nav takes precedence */
+.nav-section-title.section-title {
+    /* Override .section-title styling to maintain nav-section-title appearance */
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #34495e !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    line-height: 1 !important;
+    height: auto !important;
+    margin-bottom: 0.75rem !important;
+    margin-top: 1.25rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    display: block !important;
+}
+
 /* Collapsed state: hide section titles cleanly */
 .instructor-sidebar.collapsed .nav-section-title,
 .instructor-sidebar.collapsed .section-title {
