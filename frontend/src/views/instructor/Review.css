@@ -445,26 +445,34 @@
     border-radius: 8px;
     border: 1px solid rgba(40, 167, 69, 0.1);
     margin-bottom: 0.6rem;
+    margin-left: auto;
+    margin-right: 0;
+    max-width: 90%;
+    text-align: right;
 }
 
 .instructor-review-page .response-content-label {
     display: flex;
     align-items: start;
     margin-bottom: 0.4rem;
+    justify-content: flex-end;
 }
 
 .instructor-review-page .response-icon {
     color: #28a745;
     font-size: 0.8rem;
-    margin-right: 6px;
+    margin-left: 6px;
+    margin-right: 0;
     margin-top: 0px;
     flex-shrink: 0;
+    order: 2;
 }
 
 .instructor-review-page .response-label-text {
     font-weight: bold;
     color: #2c3e50;
     font-size: 0.8rem;
+    order: 1;
 }
 
 .instructor-review-page .response-text {
@@ -472,6 +480,7 @@
     line-height: 1.4;
     color: #2c3e50;
     margin: 0;
+    text-align: right;
 }
 
 /* ========================================
