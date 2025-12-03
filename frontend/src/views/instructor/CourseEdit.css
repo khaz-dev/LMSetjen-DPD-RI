@@ -16,7 +16,7 @@
     display: block !important;
     min-height: 100vh;
     background: transparent;
-    padding: 3rem 0;
+    padding: 3rem 0 3rem 0;
     padding-top: 3rem !important;
     padding-bottom: 3rem !important;
 }
@@ -1408,12 +1408,14 @@ button div,
         flex: 0 0 auto !important;
         width: 25% !important;
         max-width: 25% !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .course-edit-container .col-lg-9 {
         flex: 0 0 auto !important;
         width: 75% !important;
         max-width: 75% !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     /* Collapsed state - when sidebar has .collapsed class */
@@ -1438,12 +1440,14 @@ button div,
         flex: 0 0 auto !important;
         width: 33.333333% !important;
         max-width: 33.333333% !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .course-edit-container .col-md-8 {
         flex: 0 0 auto !important;
         width: 66.666667% !important;
         max-width: 66.666667% !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     /* Collapsed state */
