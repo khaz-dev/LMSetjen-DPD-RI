@@ -1117,7 +1117,7 @@ button div,
     border-radius: 15px;
     /* position: sticky; */
     /* top: 90px; */
-    z-index: 100;
+    z-index: 10;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(52, 152, 219, 0.3);
     transition: box-shadow 0.3s ease, transform 0.3s ease;
