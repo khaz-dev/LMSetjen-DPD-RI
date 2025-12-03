@@ -10,18 +10,18 @@
    ======================================== */
 
 /* Ensure proper scroll context for sticky sidebar */
-.instructor-course-quiz-page .container {
+.modern-dashboard .container {
     position: relative;
 }
 
 /* Add proper bottom padding for footer spacing */
-.instructor-course-quiz-page {
+.modern-dashboard {
     padding-bottom: 3rem !important;
     margin-bottom: 0 !important;
 }
 
 /* Consistent vertical spacing for dashboard sections */
-.instructor-course-quiz-page .row {
+.modern-dashboard .row {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -32,14 +32,14 @@
 }
 
 /* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
-.instructor-course-quiz-page .row:has(.instructor-sidebar-column) {
+.modern-dashboard .row:has(.instructor-sidebar-column) {
     flex-wrap: nowrap;
     width: 100%;
     margin-left: 0 !important;
     margin-right: 0 !important;
 }
 
-.instructor-course-quiz-page .row > [class*="col-"] {
+.modern-dashboard .row > [class*="col-"] {
     margin-bottom: 0;
     padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
     padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
@@ -48,7 +48,7 @@
 }
 
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
-.instructor-course-quiz-page .row:has(.instructor-sidebar-column) > .col-lg-9 {
+.modern-dashboard .row:has(.instructor-sidebar-column) > .col-lg-9 {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -58,14 +58,14 @@
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
-.instructor-course-quiz-page .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
+.modern-dashboard .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     width: calc(100% + var(--bs-gutter-x, 24px)) !important;
 }
 
 /* Tablet: col-md-8 content wrapper (inside sidebar row) */
-.instructor-course-quiz-page .row:has(.instructor-sidebar-column) > .col-md-8 {
+.modern-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -75,14 +75,14 @@
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
-.instructor-course-quiz-page .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
+.modern-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     width: calc(100% + var(--bs-gutter-x, 24px)) !important;
 }
 
 /* Override for specific spacing needs */
-.instructor-course-quiz-page .row.mb-3 {
+.modern-dashboard .row.mb-3 {
     margin-bottom: 1rem !important;
 }
 
@@ -1046,7 +1046,7 @@ button div,
 /* Base: Desktop Large (lg breakpoint and up) */
 @media (min-width: 992px) {
     /* Sidebar column - maintains fixed width or collapses */
-    .instructor-course-quiz-page .row > .instructor-sidebar-column {
+    .modern-dashboard .row > .instructor-sidebar-column {
         flex-basis: auto;
         flex-grow: 0;
         flex-shrink: 0;
@@ -1058,7 +1058,7 @@ button div,
        Expanded state: Sidebar NOT collapsed
        col-lg-3 = 25% | col-lg-9 = 75%
        ================================ */
-    .instructor-course-quiz-page .row > .col-lg-9 {
+    .modern-dashboard .row > .col-lg-9 {
         flex: 0 0 auto !important;
         width: 75% !important;
         max-width: 75% !important;
@@ -1070,8 +1070,8 @@ button div,
        Collapsed state: Sidebar IS collapsed
        col-lg-3 = 100px | col-lg-9 = calc(100% - 100px)
        ================================ */
-    .instructor-course-quiz-page .row > .col-lg-9:has(~ .col-lg-3 .instructor-sidebar.collapsed),
-    .instructor-course-quiz-page .row:has(.instructor-sidebar.collapsed) > .col-lg-9 {
+    .modern-dashboard .row > .col-lg-9:has(~ .col-lg-3 .instructor-sidebar.collapsed),
+    .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-lg-9 {
         flex: 1 1 auto !important;
         width: calc(100% - 100px) !important;
         max-width: calc(100% - 100px) !important;
@@ -1081,7 +1081,7 @@ button div,
     /* ================================
        Expanded state: Sidebar col-lg-3
        ================================ */
-    .instructor-course-quiz-page .row > .col-lg-3 {
+    .modern-dashboard .row > .col-lg-3 {
         flex: 0 0 auto !important;
         width: 25% !important;
         max-width: 25% !important;
@@ -1091,7 +1091,7 @@ button div,
     /* ================================
        Collapsed state: Sidebar col-lg-3
        ================================ */
-    .instructor-course-quiz-page .row > .col-lg-3:has(.instructor-sidebar.collapsed) {
+    .modern-dashboard .row > .col-lg-3:has(.instructor-sidebar.collapsed) {
         flex: 0 0 auto !important;
         width: auto !important;
         max-width: 100px !important;
@@ -1102,7 +1102,7 @@ button div,
 /* Tablet (md breakpoint: 768px - 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
     /* Sidebar column - maintains fixed width or collapses */
-    .instructor-course-quiz-page .row > .instructor-sidebar-column {
+    .modern-dashboard .row > .instructor-sidebar-column {
         flex-basis: auto;
         flex-grow: 0;
         flex-shrink: 0;
@@ -1114,7 +1114,7 @@ button div,
        Expanded state: Sidebar NOT collapsed
        col-md-4 = 33% | col-md-8 = 66%
        ================================ */
-    .instructor-course-quiz-page .row > .col-md-8 {
+    .modern-dashboard .row > .col-md-8 {
         flex: 0 0 auto !important;
         width: 66.666667% !important;
         max-width: 66.666667% !important;
@@ -1126,8 +1126,8 @@ button div,
        Collapsed state: Sidebar IS collapsed
        col-md-4 = 100px | col-md-8 = calc(100% - 100px)
        ================================ */
-    .instructor-course-quiz-page .row > .col-md-8:has(~ .col-md-4 .instructor-sidebar.collapsed),
-    .instructor-course-quiz-page .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
+    .modern-dashboard .row > .col-md-8:has(~ .col-md-4 .instructor-sidebar.collapsed),
+    .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
         flex: 1 1 auto !important;
         width: calc(100% - 100px) !important;
         max-width: calc(100% - 100px) !important;
@@ -1137,7 +1137,7 @@ button div,
     /* ================================
        Expanded state: Sidebar col-md-4
        ================================ */
-    .instructor-course-quiz-page .row > .col-md-4 {
+    .modern-dashboard .row > .col-md-4 {
         flex: 0 0 auto !important;
         width: 33.333333% !important;
         max-width: 33.333333% !important;
@@ -1147,7 +1147,7 @@ button div,
     /* ================================
        Collapsed state: Sidebar col-md-4
        ================================ */
-    .instructor-course-quiz-page .row > .col-md-4:has(.instructor-sidebar.collapsed) {
+    .modern-dashboard .row > .col-md-4:has(.instructor-sidebar.collapsed) {
         flex: 0 0 auto !important;
         width: auto !important;
         max-width: 100px !important;
@@ -1157,11 +1157,11 @@ button div,
 
 /* Mobile: Full width stacked */
 @media (max-width: 767px) {
-    .instructor-course-quiz-page .row {
+    .modern-dashboard .row {
         flex-wrap: wrap;
     }
 
-    .instructor-course-quiz-page .row:has(.instructor-sidebar-column) {
+    .modern-dashboard .row:has(.instructor-sidebar-column) {
         flex-wrap: wrap;
     }
 
@@ -1179,12 +1179,12 @@ button div,
 }
 
 @media (max-width: 767px) {
-  .instructor-course-quiz-page .row {
+  .modern-dashboard .row {
     flex-direction: column;
   }
 
-  .instructor-course-quiz-page .row > [class*="col-"],
-  .instructor-course-quiz-page .row > .instructor-sidebar-column {
+  .modern-dashboard .row > [class*="col-"],
+  .modern-dashboard .row > .instructor-sidebar-column {
     flex: 0 0 100%;
     width: 100%;
     max-width: 100%;
