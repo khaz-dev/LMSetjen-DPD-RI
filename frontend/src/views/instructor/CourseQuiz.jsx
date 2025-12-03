@@ -75,7 +75,11 @@ function CourseQuiz() {
         try {
             setLoading(true);
             const response = await apiInstance.get(`quiz/list-create/?course_id=${course_id}`);
-            setQuizzes(response.data);
+            // Handle both direct array and paginated response
+            const data = Array.isArray(response.data) 
+                ? response.data 
+                : (response.data.results || []);
+            setQuizzes(Array.isArray(data) ? data : []);
         } catch (error) {
             Toast().fire({
                 icon: "error",
@@ -484,7 +488,7 @@ function CourseQuiz() {
                                         </div>
                                         <div className="stat-content">
                                             <div className="stat-number">
-                                                {quizzes.reduce((total, quiz) => total + (quiz.total_questions || 0), 0)}
+                                                {Array.isArray(quizzes) ? quizzes.reduce((total, quiz) => total + (quiz.total_questions || 0), 0) : 0}
                                             </div>
                                             <div className="stat-label">Total Questions</div>
                                         </div>
@@ -497,7 +501,7 @@ function CourseQuiz() {
                                         </div>
                                         <div className="stat-content">
                                             <div className="stat-number">
-                                                {quizzes.filter(quiz => quiz.is_active).length}
+                                                {Array.isArray(quizzes) ? quizzes.filter(quiz => quiz.is_active).length : 0}
                                             </div>
                                             <div className="stat-label">Active Quizzes</div>
                                         </div>
@@ -510,7 +514,7 @@ function CourseQuiz() {
                                         </div>
                                         <div className="stat-content">
                                             <div className="stat-number">
-                                                {quizzes.filter(quiz => !quiz.is_active).length}
+                                                {Array.isArray(quizzes) ? quizzes.filter(quiz => !quiz.is_active).length : 0}
                                             </div>
                                             <div className="stat-label">Inactive Quizzes</div>
                                         </div>
@@ -561,7 +565,7 @@ function CourseQuiz() {
 
                                     {/* Quizzes List */}
                                     <div className="quizzes-grid">
-                                        {quizzes.length === 0 ? (
+                                        {!Array.isArray(quizzes) || quizzes.length === 0 ? (
                                             <div className="course-form-card text-center py-5">
                                                 <div className="empty-state">
                                                     <i className="fas fa-question-circle empty-icon"></i>
@@ -577,7 +581,7 @@ function CourseQuiz() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            quizzes.map((quiz) => (
+                                            Array.isArray(quizzes) && quizzes.map((quiz) => (
                                                 <div key={quiz.quiz_id} className="quiz-card">
                                                     <div className="quiz-card-header">
                                                         <div className="quiz-actions mb-0 pb-0">
