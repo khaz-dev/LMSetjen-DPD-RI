@@ -395,6 +395,18 @@
     padding: 25px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1rem;
+}
+
+.modern-courses-container {
+    display: block;
+    width: 100%;
+}
+
+.modern-courses-container .row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
 }
 
 .modern-search-container {
@@ -661,9 +673,17 @@
 
     .modern-search-section {
         padding: 15px;
+        margin-bottom: 1rem;
     }
 
     .modern-courses-container {
-        padding: 0;
+        display: block;
+        width: 100%;
+    }
+
+    .modern-courses-container .row {
+        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
     }
 }
