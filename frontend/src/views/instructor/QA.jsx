@@ -55,7 +55,9 @@ function QA() {
             }
             
             const response = await useAxios.get(`teacher/question-answer-list/${teacherId}/`);
-            setQuestions(response.data);
+            // Extract results from paginated response
+            const questionsData = response.data.results || response.data;
+            setQuestions(questionsData);
         } catch (error) {
             console.error("Error fetching questions:", error);
             setError(error.message || 'Failed to fetch questions');
