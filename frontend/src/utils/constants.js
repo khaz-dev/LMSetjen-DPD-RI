@@ -24,27 +24,32 @@ export const API_BASE_URL = baseURL.startsWith('http')
 export const DEFAULT_IMAGE_URL = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
 
 // Helper function to get full media URL
+// ✨ PHASE 4.40: Fixed to return /media/ URLs directly (not /api/media/)
+// Media files are served by nginx directly, not through Django API endpoints
 export const getMediaUrl = (path) => {
     if (!path) return '';
+    
+    // If it's already a full URL, return as-is
     if (path.startsWith('http://') || path.startsWith('https://')) {
         return path;
     }
     
-    // Clean the path
-    let cleanPath = path;
+    // Media files are served directly from /media/ path (root level)
+    // NOT from /api/media/ - there is no /api/media/ endpoint
+    // Nginx handles /media/ directly from the filesystem volume
     
-    // If path already starts with /media/, use it as-is
-    if (cleanPath.startsWith('/media/')) {
-        return `${baseURL}${cleanPath}`;
+    if (path.startsWith('/media/')) {
+        // Already has correct /media/ prefix
+        return path;
     }
     
-    // If path starts with /, add /media prefix
-    if (cleanPath.startsWith('/')) {
-        return `${baseURL}/media${cleanPath}`;
+    if (path.startsWith('/')) {
+        // Add /media prefix (not /api/media)
+        return `/media${path}`;
     }
     
-    // Otherwise, add /media/ prefix
-    return `${baseURL}/media/${cleanPath}`;
+    // Otherwise, add /media/ prefix (not /api/media/)
+    return `/media/${path}`;
 };
 
 // NOTE: Do NOT export userId or teacherId at module load time!

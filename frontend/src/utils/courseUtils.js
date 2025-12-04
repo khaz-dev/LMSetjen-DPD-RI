@@ -19,12 +19,14 @@ export const getImageUrl = (imageUrl) => {
         return cleanUrl;
     }
     
-    // Extract just the filename if it's a nested URL structure (for relative paths)
+    // Extract the /media/... part if it's a nested URL structure (for relative paths)
+    // ✨ PHASE 4.40: Fixed to preserve /media/ prefix
     const mediaPattern = /\/media\//;
     if (mediaPattern.test(cleanUrl)) {
         const parts = cleanUrl.split('/media/');
         if (parts.length > 1) {
-            cleanUrl = parts[parts.length - 1];
+            // Keep the /media/ prefix!
+            cleanUrl = '/media/' + parts[parts.length - 1];
         }
     }
     
