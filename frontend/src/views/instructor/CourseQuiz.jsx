@@ -613,7 +613,7 @@ function CourseQuiz() {
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    <div className="quiz-card-body mb-0 pb-0">
+                                                    <div className="quiz-card-body mb-0">
                                                         <h4 className="quiz-title text-primary">{quiz.title}</h4>
                                                         {quiz.description && (
                                                             <p className="quiz-description text-secondary">{quiz.description}</p>

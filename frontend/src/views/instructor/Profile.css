@@ -18,17 +18,6 @@
     margin-bottom: 1rem !important;
 }
 
-/* Ensure gap on Header component inside modern-dashboard */
-.modern-dashboard .instructor-header-row {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
-}
-
-.modern-dashboard .instructor-header-row .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
-}
-
 /* Main Page Layout */
 .instructor-profile-page.modern-profile-page {
     background: transparent;

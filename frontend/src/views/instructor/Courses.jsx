@@ -130,7 +130,7 @@ function Courses() {
                             {/* Courses Grid */}
                             <div className="modern-courses-container">
                                 {courses?.length > 0 ? (
-                                    <div className="row g-4">
+                                    <div className="row g-3">
                                         {courses.map((course, index) => (
                                             <CourseCard 
                                                 key={course.course_id || course.id || index} 

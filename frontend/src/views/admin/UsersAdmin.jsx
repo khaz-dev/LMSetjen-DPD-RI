@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { 
     FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaUserGraduate, FaUserTie, 
     FaUsers, FaChartLine, FaUserCheck, FaUserTimes, FaFilter,
     FaCog, FaUserCog, FaChevronDown, FaBell, FaSpinner, FaArrowRight, FaTimes, FaCheck
-} from 'react-icons/fa';
+} from "react-icons/fa";
 import { 
     MdFilterList, MdCheckBox, MdCheckBoxOutlineBlank,
     MdPersonAdd, MdPeople, MdTrendingUp, MdDashboard, MdSync
-} from 'react-icons/md';
-import AdminHeader from '../partials/AdminHeader';
-import Footer from '../partials/Footer';
-import useAxios from '../../utils/useAxios';
+} from "react-icons/md";
+import AdminHeader from "../partials/AdminHeader";
+import Footer from "../partials/Footer";
+import useAxios from "../../utils/useAxios";
 import Toast, { DeleteConfirmation } from "../plugin/Toast";
-import dayjs from '../../utils/dayjs';
-import './UsersAdmin.css';
-import '../../styles/PasswordInput.css';
+import dayjs from "../../utils/dayjs";
+import "./UsersAdmin.css";
+import "../../styles/PasswordInput.css";
 
 function UsersAdmin() {
     const [users, setUsers] = useState([]);
@@ -23,8 +23,8 @@ function UsersAdmin() {
     const [syncing, setSyncing] = useState(false);
     const [syncProgress, setSyncProgress] = useState({
         show: false,
-        status: 'initializing', // initializing, syncing, completed, error, cancelled
-        message: 'Preparing to sync...',
+        status: "initializing", // initializing, syncing, completed, error, cancelled
+        message: "Preparing to sync...",
         created: 0,
         updated: 0,
         failed: 0,
@@ -33,18 +33,18 @@ function UsersAdmin() {
     });
     // Initialize from localStorage for persistence across sessions
     const [lastSuccessfulSyncTime, setLastSuccessfulSyncTime] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('lastSuccessfulSyncTime');
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("lastSuccessfulSyncTime");
         }
         return null;
     });
-    const [searchTerm, setSearchTerm] = useState('');
-    const [roleFilter, setRoleFilter] = useState('all');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [searchTerm, setSearchTerm] = useState("");
+    const [roleFilter, setRoleFilter] = useState("all");
+    const [statusFilter, setStatusFilter] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 25; // Display 25 users per page
     const [showModal, setShowModal] = useState(false);
-    const [modalType, setModalType] = useState('create'); // create, edit, view
+    const [modalType, setModalType] = useState("create"); // create, edit, view
     const [selectedUser, setSelectedUser] = useState(null);
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [showBulkActions, setShowBulkActions] = useState(false);
@@ -52,9 +52,9 @@ function UsersAdmin() {
     const stats = useMemo(() => ({
         total_users: users.length,
         active_users: users.filter(user => user.is_active).length,
-        students: users.filter(user => user.role === 'student').length,
-        teachers: users.filter(user => user.role === 'teacher').length,
-        admins: users.filter(user => user.role === 'admin').length
+        students: users.filter(user => user.role === "student").length,
+        teachers: users.filter(user => user.role === "teacher").length,
+        admins: users.filter(user => user.role === "admin").length
     }), [users]);
     
     // AbortController for cancelling sync
@@ -73,11 +73,11 @@ function UsersAdmin() {
     };
     
     const [formData, setFormData] = useState({
-        full_name: '',
-        email: '',
-        role: 'student',
-        password: '',
-        password2: ''
+        full_name: "",
+        email: "",
+        role: "student",
+        password: "",
+        password2: ""
     });
     
     const [passwordValidation, setPasswordValidation] = useState({
@@ -156,14 +156,14 @@ function UsersAdmin() {
         }
 
         // Role filter
-        if (roleFilter !== 'all') {
+        if (roleFilter !== "all") {
             filtered = filtered.filter(user => user.role === roleFilter);
         }
 
         // Status filter
-        if (statusFilter !== 'all') {
+        if (statusFilter !== "all") {
             filtered = filtered.filter(user => 
-                statusFilter === 'active' ? user.is_active : !user.is_active
+                statusFilter === "active" ? user.is_active : !user.is_active
             );
         }
 
@@ -189,7 +189,7 @@ function UsersAdmin() {
     
     // Validate password strength
     const validatePassword = useCallback((password) => {
-        const commonPasswords = ['password', '12345678', 'qwerty', 'abc123', 'password123', 'admin', 'letmein'];
+        const commonPasswords = ["password", "12345678", "qwerty", "abc123", "password123", "admin", "letmein"];
         
         setPasswordValidation({
             length: password.length >= 8,
@@ -206,17 +206,17 @@ function UsersAdmin() {
         e.preventDefault();
         
         try {
-            if (modalType === 'create') {
-                await api.post('/admin/user-create/', formData);
+            if (modalType === "create") {
+                await api.post("/admin/user-create/", formData);
                 Toast().fire({
                     icon: "success",
-                    title: 'User created successfully'
+                    title: "User created successfully"
                 });
-            } else if (modalType === 'edit') {
+            } else if (modalType === "edit") {
                 await api.put(`/admin/user-update/${selectedUser.id}/`, formData);
                 Toast().fire({
                     icon: "success",
-                    title: 'User updated successfully'
+                    title: "User updated successfully"
                 });
             }
             
@@ -224,10 +224,10 @@ function UsersAdmin() {
             resetForm();
             fetchUsers();
         } catch (error) {
-            console.error('Error saving user:', error);
+            console.error("Error saving user:", error);
             Toast().fire({
                 icon: "error",
-                title: error.response?.data?.message || 'Failed to save user'
+                title: error.response?.data?.message || "Failed to save user"
             });
         }
     }, [modalType, selectedUser, formData, api, fetchUsers]);
@@ -244,14 +244,14 @@ function UsersAdmin() {
             await api.delete(`/admin/user-delete/${userId}/`);
             Toast().fire({
                 icon: "success",
-                title: 'User deleted successfully'
+                title: "User deleted successfully"
             });
             fetchUsers();
         } catch (error) {
-            console.error('Error deleting user:', error);
+            console.error("Error deleting user:", error);
             Toast().fire({
                 icon: "error",
-                title: error.response?.data?.message || 'Failed to delete user'
+                title: error.response?.data?.message || "Failed to delete user"
             });
         }
     }, [api, fetchUsers]);
@@ -261,7 +261,7 @@ function UsersAdmin() {
         if (selectedUsers.length === 0) {
             Toast().fire({
                 icon: "warning",
-                title: 'Please select users first'
+                title: "Please select users first"
             });
             return;
         }
@@ -273,7 +273,7 @@ function UsersAdmin() {
         if (!confirm.isConfirmed) return;
 
         try {
-            await api.post('/admin/user-bulk-actions/', {
+            await api.post("/admin/user-bulk-actions/", {
                 action: action,
                 user_ids: selectedUsers
             });
@@ -286,10 +286,10 @@ function UsersAdmin() {
             setShowBulkActions(false);
             fetchUsers();
         } catch (error) {
-            console.error('Error performing bulk action:', error);
+            console.error("Error performing bulk action:", error);
             Toast().fire({
                 icon: "error",
-                title: error.response?.data?.message || 'Failed to perform bulk action'
+                title: error.response?.data?.message || "Failed to perform bulk action"
             });
         }
     }, [selectedUsers, api, fetchUsers]);
@@ -307,8 +307,8 @@ function UsersAdmin() {
         
         const initialProgress = {
             show: true,
-            status: 'initializing',
-            message: 'Connecting to external API...',
+            status: "initializing",
+            message: "Connecting to external API...",
             created: 0,
             updated: 0,
             failed: 0,
@@ -336,12 +336,12 @@ function UsersAdmin() {
             setSyncProgress(prev => ({
                 ...prev,
                 show: true,
-                status: 'syncing',
-                message: 'Syncing user data from external source...'
+                status: "syncing",
+                message: "Syncing user data from external source..."
             }));
             
             // Start the actual sync on backend
-            const syncPromise = api.post('/admin/sync-external-users/', {}, {
+            const syncPromise = api.post("/admin/sync-external-users/", {}, {
                 signal: abortControllerRef.current.signal
             });
             
@@ -351,7 +351,7 @@ function UsersAdmin() {
                 if (shouldStopPolling) return;
                 
                 try {
-                    const progressResponse = await api.get('/admin/sync-progress/');
+                    const progressResponse = await api.get("/admin/sync-progress/");
                     
                     if (progressResponse.data) {
                         setSyncProgress(prev => ({
@@ -371,19 +371,19 @@ function UsersAdmin() {
                         // SMART POLLING: Check if backend says sync is done
                         // Stop polling when backend explicitly signals completion
                         if (progressResponse.data.completion_timestamp && !progressResponse.data.is_syncing) {
-                            console.log('Backend completed sync, stopping polling');
+                            console.log("Backend completed sync, stopping polling");
                             shouldStopPolling = true;
                         }
                     }
                 } catch (pollError) {
                     // Silently fail on poll errors - polling is best-effort
-                    console.debug('Progress poll error (non-critical):', pollError);
+                    console.debug("Progress poll error (non-critical):", pollError);
                 }
             }, 500); // Poll every 500ms for real-time updates
             
             // TIMEOUT FALLBACK: If polling doesn't stop in 5 minutes, force completion
             pollTimeout = setTimeout(() => {
-                console.log('Polling timeout reached, forcing completion detection');
+                console.log("Polling timeout reached, forcing completion detection");
                 shouldStopPolling = true;
             }, 5 * 60 * 1000); // 5 minutes max
             
@@ -400,8 +400,8 @@ function UsersAdmin() {
             // Update progress with final results from server
             setSyncProgress(prev => ({
                 ...prev,
-                status: 'completed',
-                message: 'Sync completed successfully! ✓',
+                status: "completed",
+                message: "Sync completed successfully! ✓",
                 created: results.created || 0,
                 updated: results.updated || 0,
                 failed: results.failed || 0,
@@ -411,18 +411,18 @@ function UsersAdmin() {
             
             // Fetch the last sync info from database (source of truth)
             try {
-                const syncInfoResponse = await api.get('/admin/last-sync-info/');
+                const syncInfoResponse = await api.get("/admin/last-sync-info/");
                 if (syncInfoResponse.data && syncInfoResponse.data.last_sync_time) {
                     setLastSuccessfulSyncTime(syncInfoResponse.data.last_sync_time);
-                    localStorage.setItem('lastSuccessfulSyncTime', syncInfoResponse.data.last_sync_time);
-                    console.log('Updated last sync time from database:', syncInfoResponse.data.last_sync_time);
+                    localStorage.setItem("lastSuccessfulSyncTime", syncInfoResponse.data.last_sync_time);
+                    console.log("Updated last sync time from database:", syncInfoResponse.data.last_sync_time);
                 }
             } catch (error) {
-                console.debug('Failed to fetch updated sync info from database:', error);
+                console.debug("Failed to fetch updated sync info from database:", error);
                 // Fallback: use current time if database fetch fails
                 const now = new Date().toISOString();
                 setLastSuccessfulSyncTime(now);
-                localStorage.setItem('lastSuccessfulSyncTime', now);
+                localStorage.setItem("lastSuccessfulSyncTime", now);
             }
             
             Toast().fire({
@@ -431,13 +431,13 @@ function UsersAdmin() {
             });
             
             if (results.errors && results.errors.length > 0) {
-                console.warn('Sync errors:', results.errors);
+                console.warn("Sync errors:", results.errors);
             }
             
             // AUTO-CLOSE: Show completion screen for 2.5 seconds then auto-close
             // This gives user time to see the success message
             autoCloseTimeout = setTimeout(() => {
-                console.log('Auto-closing sync progress modal');
+                console.log("Auto-closing sync progress modal");
                 closeSyncProgress();
             }, 2500); // 2.5 seconds
             
@@ -451,16 +451,16 @@ function UsersAdmin() {
             if (pollTimeout) clearTimeout(pollTimeout);
             
             // Check if it was cancelled
-            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            if (error.name === "CanceledError" || error.code === "ERR_CANCELED") {
                 setSyncProgress(prev => ({
                     ...prev,
-                    status: 'cancelled',
-                    message: 'Sync operation was cancelled by user'
+                    status: "cancelled",
+                    message: "Sync operation was cancelled by user"
                 }));
                 
                 Toast().fire({
                     icon: "info",
-                    title: 'Sync operation cancelled'
+                    title: "Sync operation cancelled"
                 });
                 
                 // Auto-close cancelled after 1.5 seconds
@@ -468,18 +468,18 @@ function UsersAdmin() {
                     closeSyncProgress();
                 }, 1500);
             } else {
-                console.error('Error syncing external users:', error);
+                console.error("Error syncing external users:", error);
                 
                 setSyncProgress(prev => ({
                     ...prev,
-                    status: 'error',
-                    message: error.response?.data?.error || 'Failed to sync external users data',
+                    status: "error",
+                    message: error.response?.data?.error || "Failed to sync external users data",
                     errors: [error.response?.data?.error || error.message]
                 }));
                 
                 Toast().fire({
                     icon: "error",
-                    title: error.response?.data?.error || 'Failed to sync external users data'
+                    title: error.response?.data?.error || "Failed to sync external users data"
                 });
             }
         } finally {
@@ -514,20 +514,20 @@ function UsersAdmin() {
     // Modal handlers - optimized with useCallback
     const openCreateModal = useCallback(() => {
         setShowModal(true);
-        setModalType('create');
+        setModalType("create");
         resetForm();
     }, []);
 
     const openEditModal = useCallback((user) => {
         setShowModal(true);
-        setModalType('edit');
+        setModalType("edit");
         setSelectedUser(user);
         setFormData({
             full_name: user.full_name,
             email: user.email,
             role: user.role,
-            password: '',
-            password2: ''
+            password: "",
+            password2: ""
         });
     }, []);
 
@@ -536,23 +536,23 @@ function UsersAdmin() {
             const response = await api.get(`/admin/user-detail/${user.id}/`);
             setSelectedUser(response.data);
             setShowModal(true);
-            setModalType('view');
+            setModalType("view");
         } catch (error) {
-            console.error('Error fetching user details:', error);
+            console.error("Error fetching user details:", error);
             Toast().fire({
                 icon: "error",
-                title: 'Failed to load user details'
+                title: "Failed to load user details"
             });
         }
     }, [api]);
 
     const resetForm = useCallback(() => {
         setFormData({
-            full_name: '',
-            email: '',
-            role: 'student',
-            password: '',
-            password2: ''
+            full_name: "",
+            email: "",
+            role: "student",
+            password: "",
+            password2: ""
         });
         setSelectedUser(null);
     }, []);
@@ -586,19 +586,19 @@ function UsersAdmin() {
     useEffect(() => {
         const fetchLastSyncInfo = async () => {
             try {
-                const response = await api.get('/admin/last-sync-info/');
+                const response = await api.get("/admin/last-sync-info/");
                 if (response.data && response.data.last_sync_time) {
                     // Update state from database (source of truth)
                     setLastSuccessfulSyncTime(response.data.last_sync_time);
                     // Also update localStorage for consistency
-                    localStorage.setItem('lastSuccessfulSyncTime', response.data.last_sync_time);
-                    console.log('Loaded last sync time from database:', response.data.last_sync_time);
+                    localStorage.setItem("lastSuccessfulSyncTime", response.data.last_sync_time);
+                    console.log("Loaded last sync time from database:", response.data.last_sync_time);
                 }
             } catch (error) {
                 // Silently fail - this is non-critical
-                console.debug('Failed to fetch last sync info from database:', error);
+                console.debug("Failed to fetch last sync info from database:", error);
                 // Fall back to localStorage if available
-                const localTime = localStorage.getItem('lastSuccessfulSyncTime');
+                const localTime = localStorage.getItem("lastSuccessfulSyncTime");
                 if (localTime) {
                     setLastSuccessfulSyncTime(localTime);
                 }
@@ -632,7 +632,7 @@ function UsersAdmin() {
     }
 
     return (
-        <div className="admin-page-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <AdminHeader />
             
             <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
@@ -674,13 +674,13 @@ function UsersAdmin() {
                                         <div className="last-sync-info">
                                             <small className="last-sync-label">Last Sync:</small>
                                             <div className="last-sync-time">
-                                                {new Date(lastSuccessfulSyncTime).toLocaleString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                    second: '2-digit'
+                                                {new Date(lastSuccessfulSyncTime).toLocaleString("en-US", {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                    second: "2-digit"
                                                 })}
                                             </div>
                                         </div>
@@ -815,19 +815,19 @@ function UsersAdmin() {
                             <div className="bulk-actions-buttons">
                                 <button 
                                     className="bulk-btn"
-                                    onClick={() => handleBulkAction('activate')}
+                                    onClick={() => handleBulkAction("activate")}
                                 >
                                     <FaUserCheck /> Activate
                                 </button>
                                 <button 
                                     className="bulk-btn"
-                                    onClick={() => handleBulkAction('deactivate')}
+                                    onClick={() => handleBulkAction("deactivate")}
                                 >
                                     <FaUserTimes /> Deactivate
                                 </button>
                                 <button 
                                     className="bulk-btn"
-                                    onClick={() => handleBulkAction('delete')}
+                                    onClick={() => handleBulkAction("delete")}
                                 >
                                     <FaTrash /> Delete
                                 </button>
@@ -874,7 +874,7 @@ function UsersAdmin() {
                             </thead>
                             <tbody>
                                 {paginatedUsers.map((user) => (
-                                    <tr key={user.id} className={`user-row-modern ${selectedUsers.includes(user.id) ? 'selected-row' : ''}`}>
+                                    <tr key={user.id} className={`user-row-modern ${selectedUsers.includes(user.id) ? "selected-row" : ""}`}>
                                         <td className="select-cell">
                                             <div className="checkbox-modern">
                                                 {selectedUsers.includes(user.id) ? 
@@ -885,7 +885,7 @@ function UsersAdmin() {
                                                         role="checkbox"
                                                         aria-checked="true"
                                                         tabIndex="0"
-                                                        onKeyDown={(e) => e.key === 'Enter' && handleSelectUser(user.id)}
+                                                        onKeyDown={(e) => e.key === "Enter" && handleSelectUser(user.id)}
                                                     /> : 
                                                     <MdCheckBoxOutlineBlank 
                                                         className="checkbox-icon" 
@@ -894,7 +894,7 @@ function UsersAdmin() {
                                                         role="checkbox"
                                                         aria-checked="false"
                                                         tabIndex="0"
-                                                        onKeyDown={(e) => e.key === 'Enter' && handleSelectUser(user.id)}
+                                                        onKeyDown={(e) => e.key === "Enter" && handleSelectUser(user.id)}
                                                     />
                                                 }
                                             </div>
@@ -914,24 +914,24 @@ function UsersAdmin() {
                                         <td className="role-cell">
                                             <div className={`role-badge-modern ${user.role}`}>
                                                 <div className="role-icon">
-                                                    {user.role === 'student' && <FaUserGraduate />}
-                                                    {user.role === 'teacher' && <FaUserTie />}
-                                                    {user.role === 'admin' && <FaUserCog />}
+                                                    {user.role === "student" && <FaUserGraduate />}
+                                                    {user.role === "teacher" && <FaUserTie />}
+                                                    {user.role === "admin" && <FaUserCog />}
                                                 </div>
                                                 <div className="role-text">
                                                     <span className="role-name">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
                                                     <span className="role-desc">
-                                                        {user.role === 'student' && 'Learning Access'}
-                                                        {user.role === 'teacher' && 'Content Creator'}
-                                                        {user.role === 'admin' && 'Full Control'}
+                                                        {user.role === "student" && "Learning Access"}
+                                                        {user.role === "teacher" && "Content Creator"}
+                                                        {user.role === "admin" && "Full Control"}
                                                     </span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="status-cell">
-                                            <div className={`status-badge-modern ${user.is_active ? 'active' : 'inactive'}`}>
+                                            <div className={`status-badge-modern ${user.is_active ? "active" : "inactive"}`}>
                                                 <div className="status-indicator"></div>
-                                                <span className="status-text">{user.is_active ? 'Active' : 'Inactive'}</span>
+                                                <span className="status-text">{user.is_active ? "Active" : "Inactive"}</span>
                                             </div>
                                         </td>
                                         <td className="login-cell">
@@ -942,16 +942,16 @@ function UsersAdmin() {
                                         </td>
                                         <td className="date-cell">
                                             <div className="date-info-modern">
-                                                {new Date(user.date_joined).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric'
+                                                {new Date(user.date_joined).toLocaleDateString("en-US", {
+                                                    year: "numeric",
+                                                    month: "short",
+                                                    day: "numeric"
                                                 })}
                                             </div>
                                         </td>
                                         <td className="activity-cell">
                                             <div className="activity-metrics-modern">
-                                                {user.role === 'student' && (
+                                                {user.role === "student" && (
                                                     <>
                                                         <div className="metric-item">
                                                             <FaChartLine className="metric-icon" />
@@ -959,7 +959,7 @@ function UsersAdmin() {
                                                         </div>
                                                     </>
                                                 )}
-                                                {user.role === 'teacher' && (
+                                                {user.role === "teacher" && (
                                                     <>
                                                         <div className="metric-item">
                                                             <FaChartLine className="metric-icon" />
@@ -967,7 +967,7 @@ function UsersAdmin() {
                                                         </div>
                                                     </>
                                                 )}
-                                                {user.role === 'admin' && (
+                                                {user.role === "admin" && (
                                                     <div className="metric-item admin">
                                                         <FaCog className="metric-icon" />
                                                         <span>Administrator</span>
@@ -1060,7 +1060,7 @@ function UsersAdmin() {
                                 }).map(page => (
                                     <button
                                         key={page}
-                                        className={`pagination-page ${currentPage === page ? 'active' : ''}`}
+                                        className={`pagination-page ${currentPage === page ? "active" : ""}`}
                                         onClick={() => setCurrentPage(page)}
                                     >
                                         {page}
@@ -1098,20 +1098,20 @@ function UsersAdmin() {
                                 <div className="modal-header-modern">
                                     <div className="modal-title-section">
                                         <div className="modal-icon">
-                                            {modalType === 'create' && <MdPersonAdd />}
-                                            {modalType === 'edit' && <FaEdit />}
-                                            {modalType === 'view' && <FaEye />}
+                                            {modalType === "create" && <MdPersonAdd />}
+                                            {modalType === "edit" && <FaEdit />}
+                                            {modalType === "view" && <FaEye />}
                                         </div>
                                         <div className="modal-title-text">
                                             <h2>
-                                                {modalType === 'create' && 'Create New User Account'}
-                                                {modalType === 'edit' && 'Edit User Information'}
-                                                {modalType === 'view' && 'User Profile Details'}
+                                                {modalType === "create" && "Create New User Account"}
+                                                {modalType === "edit" && "Edit User Information"}
+                                                {modalType === "view" && "User Profile Details"}
                                             </h2>
                                             <p>
-                                                {modalType === 'create' && 'Add a new user to the learning management system'}
-                                                {modalType === 'edit' && 'Update user information and permissions'}
-                                                {modalType === 'view' && 'Comprehensive user profile and activity overview'}
+                                                {modalType === "create" && "Add a new user to the learning management system"}
+                                                {modalType === "edit" && "Update user information and permissions"}
+                                                {modalType === "view" && "Comprehensive user profile and activity overview"}
                                             </p>
                                         </div>
                                     </div>
@@ -1124,7 +1124,7 @@ function UsersAdmin() {
                                 </div>
                                 
                                 <div className="modal-body-modern">
-                                    {modalType === 'view' ? (
+                                    {modalType === "view" ? (
                                         <div className="user-details-view">
                                             {/* Basic Information Section */}
                                             <div className="detail-section">
@@ -1145,20 +1145,20 @@ function UsersAdmin() {
                                                     <div className="detail-item">
                                                         <label>User Role</label>
                                                         <span className={`role-badge ${selectedUser?.user_info?.role}`}>
-                                                            {selectedUser?.user_info?.role === 'student' && '🎓 Student'}
-                                                            {selectedUser?.user_info?.role === 'teacher' && '👨‍🏫 Teacher'}
-                                                            {selectedUser?.user_info?.role === 'admin' && '⚙️ Administrator'}
+                                                            {selectedUser?.user_info?.role === "student" && "🎓 Student"}
+                                                            {selectedUser?.user_info?.role === "teacher" && "👨‍🏫 Teacher"}
+                                                            {selectedUser?.user_info?.role === "admin" && "⚙️ Administrator"}
                                                         </span>
                                                     </div>
                                                     <div className="detail-item">
                                                         <label>Account Status</label>
-                                                        <span className={`status-badge ${selectedUser?.user_info?.is_active ? 'active' : 'inactive'}`}>
-                                                            {selectedUser?.user_info?.is_active ? '✓ Active' : '✕ Inactive'}
+                                                        <span className={`status-badge ${selectedUser?.user_info?.is_active ? "active" : "inactive"}`}>
+                                                            {selectedUser?.user_info?.is_active ? "✓ Active" : "✕ Inactive"}
                                                         </span>
                                                     </div>
                                                     <div className="detail-item">
                                                         <label>Member Since</label>
-                                                        <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'}) : 'N/A'}</span>
+                                                        <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleDateString("en-US", {year: "numeric", month: "short", day: "numeric"}) : "N/A"}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1169,17 +1169,17 @@ function UsersAdmin() {
                                                 <div className="detail-grid">
                                                     <div className="detail-item">
                                                         <label>Last Login</label>
-                                                        <span>{selectedUser?.user_info?.last_login ? new Date(selectedUser.user_info.last_login).toLocaleString('en-US', {year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : 'Never logged in'}</span>
+                                                        <span>{selectedUser?.user_info?.last_login ? new Date(selectedUser.user_info.last_login).toLocaleString("en-US", {year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"}) : "Never logged in"}</span>
                                                     </div>
                                                     <div className="detail-item">
                                                         <label>Account Created</label>
-                                                        <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleString('en-US', {year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : 'N/A'}</span>
+                                                        <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleString("en-US", {year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"}) : "N/A"}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Statistics Section - For Students */}
-                                            {selectedUser?.user_info?.role === 'student' && selectedUser?.enrollment_stats && (
+                                            {selectedUser?.user_info?.role === "student" && selectedUser?.enrollment_stats && (
                                                 <div className="detail-section">
                                                     <h3>📚 Learning Statistics</h3>
                                                     <div className="stats-grid-modal">
@@ -1204,7 +1204,7 @@ function UsersAdmin() {
                                             )}
 
                                             {/* Statistics Section - For Teachers */}
-                                            {selectedUser?.user_info?.role === 'teacher' && selectedUser?.teaching_stats && (
+                                            {selectedUser?.user_info?.role === "teacher" && selectedUser?.teaching_stats && (
                                                 <div className="detail-section">
                                                     <h3>🎓 Teaching Statistics</h3>
                                                     <div className="stats-grid-modal">
@@ -1286,7 +1286,7 @@ function UsersAdmin() {
                                                 </div>
                                             </div>
                                             
-                                            {modalType === 'create' && (
+                                            {modalType === "create" && (
                                                 <>
                                                     <div className="form-row">
                                                         <div className="form-group-modern">
@@ -1310,7 +1310,7 @@ function UsersAdmin() {
                                                                 <button
                                                                     type="button"
                                                                     className="password-visibility-toggle"
-                                                                    onClick={() => togglePasswordVisibility('password')}
+                                                                    onClick={() => togglePasswordVisibility("password")}
                                                                     aria-label="Toggle password visibility"
                                                                 >
                                                                     <i className={showPasswords.password ? "fas fa-eye-slash" : "fas fa-eye"}></i>
@@ -1319,27 +1319,27 @@ function UsersAdmin() {
                                                             <div className="password-requirements">
                                                                 <p className="requirements-title">Password must contain:</p>
                                                                 <div className="requirement-list">
-                                                                    <div className={`requirement-item ${passwordValidation.length ? 'valid' : ''}`}>
+                                                                    <div className={`requirement-item ${passwordValidation.length ? "valid" : ""}`}>
                                                                         {passwordValidation.length ? <FaCheck /> : <FaTimes />}
                                                                         <span>At least 8 characters</span>
                                                                     </div>
-                                                                    <div className={`requirement-item ${passwordValidation.uppercase ? 'valid' : ''}`}>
+                                                                    <div className={`requirement-item ${passwordValidation.uppercase ? "valid" : ""}`}>
                                                                         {passwordValidation.uppercase ? <FaCheck /> : <FaTimes />}
                                                                         <span>One uppercase letter (A-Z)</span>
                                                                     </div>
-                                                                    <div className={`requirement-item ${passwordValidation.lowercase ? 'valid' : ''}`}>
+                                                                    <div className={`requirement-item ${passwordValidation.lowercase ? "valid" : ""}`}>
                                                                         {passwordValidation.lowercase ? <FaCheck /> : <FaTimes />}
                                                                         <span>One lowercase letter (a-z)</span>
                                                                     </div>
-                                                                    <div className={`requirement-item ${passwordValidation.number ? 'valid' : ''}`}>
+                                                                    <div className={`requirement-item ${passwordValidation.number ? "valid" : ""}`}>
                                                                         {passwordValidation.number ? <FaCheck /> : <FaTimes />}
                                                                         <span>One number (0-9)</span>
                                                                     </div>
-                                                                    <div className={`requirement-item ${passwordValidation.special ? 'valid' : ''}`}>
+                                                                    <div className={`requirement-item ${passwordValidation.special ? "valid" : ""}`}>
                                                                         {passwordValidation.special ? <FaCheck /> : <FaTimes />}
                                                                         <span>One special character (!@#$%...)</span>
                                                                     </div>
-                                                                    <div className={`requirement-item ${passwordValidation.notCommon ? 'valid' : ''}`}>
+                                                                    <div className={`requirement-item ${passwordValidation.notCommon ? "valid" : ""}`}>
                                                                         {passwordValidation.notCommon ? <FaCheck /> : <FaTimes />}
                                                                         <span>Not a common password</span>
                                                                     </div>
@@ -1367,7 +1367,7 @@ function UsersAdmin() {
                                                                 <button
                                                                     type="button"
                                                                     className="password-visibility-toggle"
-                                                                    onClick={() => togglePasswordVisibility('password2')}
+                                                                    onClick={() => togglePasswordVisibility("password2")}
                                                                     aria-label="Toggle confirm password visibility"
                                                                 >
                                                                     <i className={showPasswords.password2 ? "fas fa-eye-slash" : "fas fa-eye"}></i>
@@ -1394,8 +1394,8 @@ function UsersAdmin() {
                                                 </button>
                                                 <button type="submit" className="btn-submit-modern">
                                                     <div className="btn-content">
-                                                        {modalType === 'create' ? <MdPersonAdd /> : <FaEdit />}
-                                                        <span>{modalType === 'create' ? 'Create User Account' : 'Update User Information'}</span>
+                                                        {modalType === "create" ? <MdPersonAdd /> : <FaEdit />}
+                                                        <span>{modalType === "create" ? "Create User Account" : "Update User Information"}</span>
                                                     </div>
                                                 </button>
                                             </div>
@@ -1416,20 +1416,20 @@ function UsersAdmin() {
                     <div className="sync-progress-modal">
                         {/* Modal Header */}
                         <div className={`sync-progress-header ${syncProgress.status}`}>
-                            <div className={`sync-header-icon ${syncing ? 'spinning' : ''}`}>
-                                {syncProgress.status === 'initializing' && <FaSpinner />}
-                                {syncProgress.status === 'syncing' && <MdSync />}
-                                {syncProgress.status === 'completed' && <FaCheck />}
-                                {syncProgress.status === 'error' && <FaTimes />}
-                                {syncProgress.status === 'cancelled' && <FaTimes />}
+                            <div className={`sync-header-icon ${syncing ? "spinning" : ""}`}>
+                                {syncProgress.status === "initializing" && <FaSpinner />}
+                                {syncProgress.status === "syncing" && <MdSync />}
+                                {syncProgress.status === "completed" && <FaCheck />}
+                                {syncProgress.status === "error" && <FaTimes />}
+                                {syncProgress.status === "cancelled" && <FaTimes />}
                             </div>
                             <div className="sync-header-text">
                                 <h3>
-                                    {syncProgress.status === 'initializing' && 'Initializing Sync...'}
-                                    {syncProgress.status === 'syncing' && 'Syncing Data...'}
-                                    {syncProgress.status === 'completed' && 'Sync Completed!'}
-                                    {syncProgress.status === 'error' && 'Sync Failed'}
-                                    {syncProgress.status === 'cancelled' && 'Sync Cancelled'}
+                                    {syncProgress.status === "initializing" && "Initializing Sync..."}
+                                    {syncProgress.status === "syncing" && "Syncing Data..."}
+                                    {syncProgress.status === "completed" && "Sync Completed!"}
+                                    {syncProgress.status === "error" && "Sync Failed"}
+                                    {syncProgress.status === "cancelled" && "Sync Cancelled"}
                                 </h3>
                                 <p>{syncProgress.message}</p>
                             </div>
@@ -1438,7 +1438,7 @@ function UsersAdmin() {
                         {/* Modal Body */}
                         <div className="sync-progress-body">
                             {/* Show stats during syncing and after completion */}
-                            {(syncProgress.status === 'syncing' || syncProgress.status === 'completed') && (
+                            {(syncProgress.status === "syncing" || syncProgress.status === "completed") && (
                                 <>
                                     {/* Comparison Results - Show after comparison complete */}
                                     {syncProgress.comparisonComplete && (
@@ -1501,7 +1501,7 @@ function UsersAdmin() {
                                                     style={{
                                                         width: syncProgress.total > 0 
                                                             ? `${Math.round(((syncProgress.created + syncProgress.updated) / syncProgress.total) * 100)}%`
-                                                            : '0%'
+                                                            : "0%"
                                                     }}
                                                 ></div>
                                             </div>
@@ -1511,7 +1511,7 @@ function UsersAdmin() {
                             )}
 
                             {/* Success Status Message */}
-                            {syncProgress.status === 'completed' && (
+                            {syncProgress.status === "completed" && (
                                 <div className="sync-status-message">
                                     <div className="sync-status-icon success">
                                         <FaCheck />
@@ -1526,7 +1526,7 @@ function UsersAdmin() {
                             )}
 
                             {/* Error Status Message */}
-                            {syncProgress.status === 'error' && (
+                            {syncProgress.status === "error" && (
                                 <div className="sync-status-message">
                                     <div className="sync-status-icon error">
                                         <FaTimes />
@@ -1537,7 +1537,7 @@ function UsersAdmin() {
                             )}
 
                             {/* Cancelled Status Message */}
-                            {syncProgress.status === 'cancelled' && (
+                            {syncProgress.status === "cancelled" && (
                                 <div className="sync-status-message">
                                     <div className="sync-status-icon cancelled">
                                         <FaTimes />
@@ -1558,7 +1558,7 @@ function UsersAdmin() {
                                         <div key={index} className="sync-error-item">
                                             <FaTimes />
                                             <span>
-                                                {typeof error === 'string' ? (
+                                                {typeof error === "string" ? (
                                                     error
                                                 ) : (
                                                     <>
@@ -1571,7 +1571,7 @@ function UsersAdmin() {
                                                         {error.email && (
                                                             <>Email: {error.email} | </>
                                                         )}
-                                                        {error.error ? error.error : (error.errors ? JSON.stringify(error.errors) : 'Unknown error')}
+                                                        {error.error ? error.error : (error.errors ? JSON.stringify(error.errors) : "Unknown error")}
                                                     </>
                                                 )}
                                             </span>
@@ -1598,7 +1598,7 @@ function UsersAdmin() {
                                     </button>
                                 )}
                                 
-                                {!syncing && syncProgress.status === 'completed' && (
+                                {!syncing && syncProgress.status === "completed" && (
                                     <button 
                                         className="sync-action-btn done"
                                         onClick={closeSyncProgress}
@@ -1608,7 +1608,7 @@ function UsersAdmin() {
                                     </button>
                                 )}
                                 
-                                {!syncing && (syncProgress.status === 'error' || syncProgress.status === 'cancelled') && (
+                                {!syncing && (syncProgress.status === "error" || syncProgress.status === "cancelled") && (
                                     <>
                                         <button 
                                             className="sync-action-btn retry"

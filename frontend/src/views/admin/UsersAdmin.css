@@ -1526,10 +1526,8 @@
 .stat-item span {
     font-size: 1.8rem;
     font-weight: 800;
-    background: var(--theme-gradient) !important;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--theme-primary);
+    line-height: 1.2;
 }
 
 .stat-item span:empty::after {

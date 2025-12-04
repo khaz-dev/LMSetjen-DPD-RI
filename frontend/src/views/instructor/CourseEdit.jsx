@@ -46,8 +46,8 @@ import Swal from "sweetalert2";
 
 function CourseEdit() {
     const [imagePreview, setImagePreview] = useState("");
-    const [submitStatus, setSubmitStatus] = useState('idle'); // idle, submitting, success, error
-    const [submitMessage, setSubmitMessage] = useState('');
+    const [submitStatus, setSubmitStatus] = useState("idle"); // idle, submitting, success, error
+    const [submitMessage, setSubmitMessage] = useState("");
     const [validationSummary, setValidationSummary] = useState({ errors: [], warnings: [] });
     const [isDirty, setIsDirty] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
@@ -157,24 +157,24 @@ function CourseEdit() {
         let actualValue = value;
         
         // Handle category field special case
-        if (fieldName === 'category') {
+        if (fieldName === "category") {
             actualValue = courseData?.category?.id || value;
         }
         
         switch (fieldName) {
-            case 'title':
+            case "title":
                 validationFunction = validateTitle;
                 break;
-            case 'description':
+            case "description":
                 validationFunction = validateDescription;
                 break;
-            case 'image':
+            case "image":
                 validationFunction = validateImage;
                 break;
-            case 'category':
+            case "category":
                 validationFunction = validateCategory;
                 break;
-            case 'level':
+            case "level":
                 validationFunction = validateLevel;
                 break;
             default:
@@ -194,23 +194,23 @@ function CourseEdit() {
         setTimeout(() => trackFormChanges(), 0);
         
         // Reset submit status when user makes changes after an error
-        if (submitStatus === 'error') {
-            setSubmitStatus('idle');
-            setSubmitMessage('');
+        if (submitStatus === "error") {
+            setSubmitStatus("idle");
+            setSubmitMessage("");
         }
     };
 
     // Enhanced description change handling
     const handleDescriptionChange = (content) => {
         updateCourseData({ description: content });
-        handleFieldValidation('description', content);
+        handleFieldValidation("description", content);
         
         // Defer dirty check to next tick so state updates first
         setTimeout(() => trackFormChanges(), 0);
         
-        if (submitStatus === 'error') {
-            setSubmitStatus('idle');
-            setSubmitMessage('');
+        if (submitStatus === "error") {
+            setSubmitStatus("idle");
+            setSubmitMessage("");
         }
     };
 
@@ -219,8 +219,8 @@ function CourseEdit() {
         event.preventDefault();
         
         // Set submitting state immediately
-        setSubmitStatus('submitting');
-        setSubmitMessage('Validating and updating your course...');
+        setSubmitStatus("submitting");
+        setSubmitMessage("Validating and updating your course...");
         clearAllErrors();
 
         try {
@@ -247,12 +247,12 @@ function CourseEdit() {
                 if (firstErrorField && eval(`${firstErrorField}Ref`)?.current) {
                     eval(`${firstErrorField}Ref`).current.focus();
                     eval(`${firstErrorField}Ref`).current.scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
+                        behavior: "smooth", 
+                        block: "center" 
                     });
                 }
 
-                setSubmitStatus('error');
+                setSubmitStatus("error");
                 setSubmitMessage(`Please fix ${Object.keys(validationResult.errors).filter(key => validationResult.errors[key].length > 0).length} validation error(s) before updating`);
 
                 Toast().fire({
@@ -266,15 +266,15 @@ function CourseEdit() {
             }
 
             // Update submit message for actual submission
-            setSubmitMessage('Saving your course updates...');
+            setSubmitMessage("Saving your course updates...");
 
             await submitCourse(
                 courseData, 
                 param?.course_id,
                 (data) => {
                     // Enhanced success callback
-                    setSubmitStatus('success');
-                    setSubmitMessage('Course updated successfully!');
+                    setSubmitStatus("success");
+                    setSubmitMessage("Course updated successfully!");
                     setIsDirty(false);
                     
                     // Update initial data to current data after successful save
@@ -291,16 +291,16 @@ function CourseEdit() {
 
                     // Reset to idle after showing success
                     setTimeout(() => {
-                        setSubmitStatus('idle');
-                        setSubmitMessage('');
+                        setSubmitStatus("idle");
+                        setSubmitMessage("");
                     }, 3000);
                 },
                 (error) => {
                     // Enhanced error callback
                     console.error("Failed to update course:", error);
-                    setSubmitStatus('error');
+                    setSubmitStatus("error");
                     
-                    let errorMessage = 'An unexpected error occurred while updating your course.';
+                    let errorMessage = "An unexpected error occurred while updating your course.";
                     
                     // Handle different types of errors
                     if (error.response?.data?.error) {
@@ -320,14 +320,14 @@ function CourseEdit() {
                         timer: 6000,
                         timerProgressBar: true,
                         showConfirmButton: true,
-                        confirmButtonText: 'Try Again'
+                        confirmButtonText: "Try Again"
                     });
                 }
             );
         } catch (error) {
             console.error("Submission error:", error);
-            setSubmitStatus('error');
-            setSubmitMessage('A network error occurred. Please check your connection and try again.');
+            setSubmitStatus("error");
+            setSubmitMessage("A network error occurred. Please check your connection and try again.");
             
             Toast().fire({
                 icon: "error",
@@ -336,7 +336,7 @@ function CourseEdit() {
                 timer: 6000,
                 timerProgressBar: true,
                 showConfirmButton: true,
-                confirmButtonText: 'Retry'
+                confirmButtonText: "Retry"
             });
         }
     };
@@ -351,7 +351,7 @@ function CourseEdit() {
         // Check minimum requirements
         if (!canPublish) {
             await Swal.fire({
-                title: 'Cannot Publish Course Yet',
+                title: "Cannot Publish Course Yet",
                 html: `
                     <div class="text-start">
                         <p class="mb-3">Your course <strong>"${courseData?.title}"</strong> doesn't meet the minimum requirements for publishing.</p>
@@ -359,33 +359,33 @@ function CourseEdit() {
                             <i class="fas fa-exclamation-circle me-2"></i>
                             <strong>Missing Requirements:</strong>
                             <ul class="mt-2 mb-0">
-                                ${curriculumCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> No curriculum sections added</li>' : ''}
-                                ${lecturesCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> No lessons uploaded</li>' : ''}
-                                ${quizzesCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> No quizzes added</li>' : ''}
+                                ${curriculumCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> No curriculum sections added</li>' : ""}
+                                ${lecturesCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> No lessons uploaded</li>' : ""}
+                                ${quizzesCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> No quizzes added</li>' : ""}
                             </ul>
                         </div>
                         <div class="alert alert-info mt-3">
                             <i class="fas fa-info-circle me-2"></i>
                             <strong>Next Steps:</strong>
                             <ol class="mt-2 mb-0">
-                                ${curriculumCount === 0 ? '<li>Click "Manage Curriculum" to add course sections</li>' : ''}
-                                ${lecturesCount === 0 ? '<li>Add lessons to your curriculum sections</li>' : ''}
-                                ${quizzesCount === 0 ? '<li>Click "Manage Quiz" to add quizzes for your course</li>' : ''}
+                                ${curriculumCount === 0 ? '<li>Click "Manage Curriculum" to add course sections</li>' : ""}
+                                ${lecturesCount === 0 ? "<li>Add lessons to your curriculum sections</li>" : ""}
+                                ${quizzesCount === 0 ? '<li>Click "Manage Quiz" to add quizzes for your course</li>' : ""}
                                 <li>Come back here and click "Publish Course"</li>
                             </ol>
                         </div>
                     </div>
                 `,
-                icon: 'warning',
-                confirmButtonText: 'Got It',
-                confirmButtonColor: '#3085d6',
+                icon: "warning",
+                confirmButtonText: "Got It",
+                confirmButtonColor: "#3085d6",
                 width: 600
             });
             return;
         }
         
         const result = await Swal.fire({
-            title: 'Publish Course?',
+            title: "Publish Course?",
             html: `
                 <div class="text-start">
                     <p class="mb-3">Are you ready to publish <strong>"${courseData?.title}"</strong>?</p>
@@ -393,20 +393,20 @@ function CourseEdit() {
                         <i class="fas fa-check-circle me-2"></i>
                         <strong>Your course includes:</strong>
                         <ul class="mt-2 mb-0">
-                            <li><i class="fas fa-check text-success me-1"></i> ${curriculumCount} curriculum section${curriculumCount !== 1 ? 's' : ''}</li>
-                            <li><i class="fas fa-check text-success me-1"></i> ${lecturesCount} lesson${lecturesCount !== 1 ? 's' : ''}</li>
-                            <li><i class="fas fa-check text-success me-1"></i> ${quizzesCount} quiz${quizzesCount !== 1 ? 'zes' : ''}</li>
+                            <li><i class="fas fa-check text-success me-1"></i> ${curriculumCount} curriculum section${curriculumCount !== 1 ? "s" : ""}</li>
+                            <li><i class="fas fa-check text-success me-1"></i> ${lecturesCount} lesson${lecturesCount !== 1 ? "s" : ""}</li>
+                            <li><i class="fas fa-check text-success me-1"></i> ${quizzesCount} quiz${quizzesCount !== 1 ? "zes" : ""}</li>
                         </ul>
                     </div>
                     <p class="text-muted mb-0"><small>Once published, students will be able to enroll in your course.</small></p>
                 </div>
             `,
-            icon: 'question',
+            icon: "question",
             showCancelButton: true,
-            confirmButtonColor: '#4CAF50',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, Publish Course',
-            cancelButtonText: 'Not Yet',
+            confirmButtonColor: "#4CAF50",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, Publish Course",
+            cancelButtonText: "Not Yet",
             width: 600
         });
         
@@ -419,12 +419,12 @@ function CourseEdit() {
                     // Update local course data
                     setCourseData({
                         ...courseData,
-                        teacher_course_status: 'Published',
-                        platform_status: 'Published'
+                        teacher_course_status: "Published",
+                        platform_status: "Published"
                     });
                     
                     await Swal.fire({
-                        title: 'Course Published!',
+                        title: "Course Published!",
                         html: `
                             <div class="text-start">
                                 <p class="mb-3"><strong>"${courseData?.title}"</strong> is now live!</p>
@@ -442,56 +442,56 @@ function CourseEdit() {
                                         <i class="fas fa-exclamation-triangle me-2"></i>
                                         <strong>Suggestions:</strong>
                                         <ul class="mt-2 mb-0">
-                                            ${response.data.warnings.map(w => `<li>${w}</li>`).join('')}
+                                            ${response.data.warnings.map(w => `<li>${w}</li>`).join("")}
                                         </ul>
                                     </div>
-                                ` : ''}
+                                ` : ""}
                             </div>
                         `,
-                        icon: 'success',
+                        icon: "success",
                         showCancelButton: true,
-                        confirmButtonText: 'View Course',
-                        cancelButtonText: 'Stay Here',
-                        confirmButtonColor: '#4CAF50'
+                        confirmButtonText: "View Course",
+                        cancelButtonText: "Stay Here",
+                        confirmButtonColor: "#4CAF50"
                     }).then((result) => {
                         if (result.isConfirmed) {
                             window.location.href = `/course-detail/${courseData?.slug}/`;
                         }
                     });
                 } else {
-                    throw new Error(response.data.message || 'Failed to publish course');
+                    throw new Error(response.data.message || "Failed to publish course");
                 }
             } catch (error) {
                 console.error("Error publishing course:", error);
                 const errorData = error.response?.data;
                 
                 await Swal.fire({
-                    title: 'Cannot Publish Course',
+                    title: "Cannot Publish Course",
                     html: `
                         <div class="text-start">
-                            <p class="mb-3">${errorData?.message || 'Failed to publish course'}</p>
+                            <p class="mb-3">${errorData?.message || "Failed to publish course"}</p>
                             ${errorData?.errors && errorData.errors.length > 0 ? `
                                 <div class="alert alert-danger">
                                     <i class="fas fa-exclamation-circle me-2"></i>
                                     <strong>Please fix these issues:</strong>
                                     <ul class="mt-2 mb-0">
-                                        ${errorData.errors.map(e => `<li>${e}</li>`).join('')}
+                                        ${errorData.errors.map(e => `<li>${e}</li>`).join("")}
                                     </ul>
                                 </div>
-                            ` : ''}
+                            ` : ""}
                             ${errorData?.warnings && errorData.warnings.length > 0 ? `
                                 <div class="alert alert-warning mt-2">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
                                     <strong>Suggestions:</strong>
                                     <ul class="mt-2 mb-0">
-                                        ${errorData.warnings.map(w => `<li>${w}</li>`).join('')}
+                                        ${errorData.warnings.map(w => `<li>${w}</li>`).join("")}
                                     </ul>
                                 </div>
-                            ` : ''}
+                            ` : ""}
                         </div>
                     `,
-                    icon: 'error',
-                    confirmButtonText: 'OK'
+                    icon: "error",
+                    confirmButtonText: "OK"
                 });
             } finally {
                 setIsPublishing(false);
@@ -504,14 +504,14 @@ function CourseEdit() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-course-edit-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <section className="instructor-course-edit-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
                                     </div>
                                     <p className="mt-3 text-muted">Loading Course...</p>
@@ -612,7 +612,7 @@ function CourseEdit() {
                                                     ref={titleRef}
                                                     label="Course Title"
                                                     name="title"
-                                                    value={courseData?.title || ''}
+                                                    value={courseData?.title || ""}
                                                     onChange={handleCourseInputChange}
                                                     errors={errors.title}
                                                     warnings={warnings.title}
@@ -631,7 +631,7 @@ function CourseEdit() {
                                                     label="Course Category"
                                                     name="category"
                                                     type="select"
-                                                    value={courseData?.category?.id || courseData?.category || ''}
+                                                    value={courseData?.category?.id || courseData?.category || ""}
                                                     onChange={handleCourseInputChange}
                                                     errors={errors.category}
                                                     warnings={warnings.category}
@@ -651,7 +651,7 @@ function CourseEdit() {
                                                     label="Course Level"
                                                     name="level"
                                                     type="select"
-                                                    value={courseData?.level || ''}
+                                                    value={courseData?.level || ""}
                                                     onChange={handleCourseInputChange}
                                                     errors={errors.level}
                                                     warnings={warnings.level}
@@ -672,22 +672,22 @@ function CourseEdit() {
                                                     label="Course Status"
                                                     name="teacher_course_status"
                                                     type="select"
-                                                    value={courseData?.teacher_course_status || 'Draft'}
+                                                    value={courseData?.teacher_course_status || "Draft"}
                                                     onChange={handleCourseInputChange}
                                                     options={COURSE_STATUS_OPTIONS}
                                                     helpText="Control course visibility"
                                                 />
                                             </div>
                                             <div className="col-md-6">
-                                                <div className="mb-3" style={{ marginTop: '32px' }}>
+                                                <div className="mb-3" style={{ marginTop: "32px" }}>
                                                     <label className="form-label">Current Status</label>
                                                     <div className="d-flex align-items-center">
-                                                        <span className={`status-badge ${courseData?.teacher_course_status?.toLowerCase() || 'draft'}`}>
+                                                        <span className={`status-badge ${courseData?.teacher_course_status?.toLowerCase() || "draft"}`}>
                                                             <i className={`fas ${
-                                                                courseData?.teacher_course_status === 'Published' ? 'fa-check-circle' :
-                                                                courseData?.teacher_course_status === 'Disabled' ? 'fa-times-circle' : 'fa-clock'
+                                                                courseData?.teacher_course_status === "Published" ? "fa-check-circle" :
+                                                                courseData?.teacher_course_status === "Disabled" ? "fa-times-circle" : "fa-clock"
                                                             } me-1`}></i>
-                                                            {courseData?.teacher_course_status || 'Draft'}
+                                                            {courseData?.teacher_course_status || "Draft"}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -712,7 +712,7 @@ function CourseEdit() {
                                         }>
                                             <RichTextEditor
                                                 label="Course Description"
-                                                value={courseData?.description || ''}
+                                                value={courseData?.description || ""}
                                                 onChange={handleDescriptionChange}
                                                 errors={errors.description}
                                                 warnings={warnings.description}
@@ -735,7 +735,7 @@ function CourseEdit() {
                                             <Link 
                                                 to={`/instructor/edit-course/${param?.course_id}/quiz/`} 
                                                 className="btn btn-update-course"
-                                                style={{ background: 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)' }}
+                                                style={{ background: "linear-gradient(135deg, #e67e22 0%, #d35400 100%)" }}
                                             >
                                                 <i className="fas fa-question-circle me-2"></i>
                                                 Manage Quiz
@@ -755,12 +755,12 @@ function CourseEdit() {
                                                         <i className="fas fa-exclamation-circle text-danger me-3 mt-1"></i>
                                                         <div className="flex-grow-1">
                                                             <h6 className="alert-heading mb-2 fw-bold">
-                                                                {validationSummary.errors.length} Error{validationSummary.errors.length !== 1 ? 's' : ''} Found
+                                                                {validationSummary.errors.length} Error{validationSummary.errors.length !== 1 ? "s" : ""} Found
                                                             </h6>
                                                             <ul className="mb-0 ps-3">
                                                                 {validationSummary.errors.map((errorGroup, index) => (
                                                                     <li key={index} className="mb-1">
-                                                                        <strong className="text-capitalize">{errorGroup.field}:</strong> {errorGroup.messages.join(', ')}
+                                                                        <strong className="text-capitalize">{errorGroup.field}:</strong> {errorGroup.messages.join(", ")}
                                                                     </li>
                                                                 ))}
                                                             </ul>
@@ -777,12 +777,12 @@ function CourseEdit() {
                                                         <i className="fas fa-exclamation-triangle text-warning me-3 mt-1"></i>
                                                         <div className="flex-grow-1">
                                                             <h6 className="alert-heading mb-2 fw-bold">
-                                                                {validationSummary.warnings.length} Warning{validationSummary.warnings.length !== 1 ? 's' : ''}
+                                                                {validationSummary.warnings.length} Warning{validationSummary.warnings.length !== 1 ? "s" : ""}
                                                             </h6>
                                                             <ul className="mb-0 ps-3">
                                                                 {validationSummary.warnings.map((warningGroup, index) => (
                                                                     <li key={index} className="mb-1">
-                                                                        <strong className="text-capitalize">{warningGroup.field}:</strong> {warningGroup.messages.join(', ')}
+                                                                        <strong className="text-capitalize">{warningGroup.field}:</strong> {warningGroup.messages.join(", ")}
                                                                     </li>
                                                                 ))}
                                                             </ul>
@@ -798,24 +798,24 @@ function CourseEdit() {
                                 {submitMessage && (
                                     <div className={`submit-status-message mb-3 ${submitStatus}`}>
                                         <div className={`alert ${
-                                            submitStatus === 'success' ? 'alert-success' : 
-                                            submitStatus === 'error' ? 'alert-danger' : 
-                                            'alert-info'
+                                            submitStatus === "success" ? "alert-success" : 
+                                            submitStatus === "error" ? "alert-danger" : 
+                                            "alert-info"
                                         } border-0 shadow-sm d-flex align-items-center`}>
                                             <div className="status-icon me-3">
-                                                {submitStatus === 'submitting' && (
+                                                {submitStatus === "submitting" && (
                                                     <div className="spinner-border spinner-border-sm text-primary"></div>
                                                 )}
-                                                {submitStatus === 'success' && (
+                                                {submitStatus === "success" && (
                                                     <i className="fas fa-check-circle text-success fs-5"></i>
                                                 )}
-                                                {submitStatus === 'error' && (
+                                                {submitStatus === "error" && (
                                                     <i className="fas fa-times-circle text-danger fs-5"></i>
                                                 )}
                                             </div>
                                             <div className="status-message">
                                                 <div className="fw-semibold">{submitMessage}</div>
-                                                {submitStatus === 'submitting' && (
+                                                {submitStatus === "submitting" && (
                                                     <small className="text-muted">Please don't close this page...</small>
                                                 )}
                                             </div>
@@ -826,13 +826,13 @@ function CourseEdit() {
                                 {/* Enhanced Action Buttons */}
                                 <div className="action-buttons d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
                                     <div className="form-status-info">
-                                        {isDirty && submitStatus !== 'submitting' && (
+                                        {isDirty && submitStatus !== "submitting" && (
                                             <div className="text-warning small">
                                                 <i className="fas fa-circle me-1"></i>
                                                 You have unsaved changes
                                             </div>
                                         )}
-                                        {!isDirty && submitStatus === 'idle' && (
+                                        {!isDirty && submitStatus === "idle" && (
                                             <div className="text-muted small">
                                                 <i className="fas fa-save me-1"></i>
                                                 All changes saved
@@ -846,7 +846,7 @@ function CourseEdit() {
                                             to={`/course-detail/${courseData?.slug}/`}
                                             target="_blank"
                                             className="btn btn-outline-primary"
-                                            disabled={submitStatus === 'submitting'}
+                                            disabled={submitStatus === "submitting"}
                                         >
                                             <i className="fas fa-eye me-2"></i>
                                             Preview Course
@@ -858,20 +858,20 @@ function CourseEdit() {
                                             type="submit"
                                             disabled={
                                                 isSubmitting || 
-                                                submitStatus === 'submitting' || 
+                                                submitStatus === "submitting" || 
                                                 validationSummary.errors.length > 0
                                             }
                                         >
                                             <div className="button-content d-flex align-items-center justify-content-center">
-                                                {submitStatus === 'submitting' ? (
+                                                {submitStatus === "submitting" ? (
                                                     <>
                                                         <div className="spinner-border spinner-border-sm me-2"></div>
                                                         <span className="button-text">
-                                                            {submitMessage.includes('Validating') ? 'Validating...' : 
-                                                             submitMessage.includes('Saving') ? 'Saving...' : 'Updating...'}
+                                                            {submitMessage.includes("Validating") ? "Validating..." : 
+                                                             submitMessage.includes("Saving") ? "Saving..." : "Updating..."}
                                                         </span>
                                                     </>
-                                                ) : submitStatus === 'success' ? (
+                                                ) : submitStatus === "success" ? (
                                                     <>
                                                         <i className="fas fa-check me-2"></i>
                                                         <span className="button-text">Updated Successfully!</span>
@@ -888,44 +888,44 @@ function CourseEdit() {
                                 </div>
                                 
                                 {/* Publish Course Button - Separate row, aligned to the right */}
-                                {courseData?.teacher_course_status === 'Draft' && (
+                                {courseData?.teacher_course_status === "Draft" && (
                                     <div className="d-flex justify-content-end mt-3">
                                         <div className="position-relative">
                                             <button 
                                                 type="button"
                                                 className="btn btn-publish-course"
                                                 onClick={handlePublishCourse}
-                                                disabled={isPublishing || submitStatus === 'submitting' || !canPublish}
+                                                disabled={isPublishing || submitStatus === "submitting" || !canPublish}
                                                 style={{
                                                     background: canPublish 
-                                                        ? 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)' 
-                                                        : 'linear-gradient(135deg, #9e9e9e 0%, #757575 100%)',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    padding: '12px 30px',
-                                                    borderRadius: '8px',
-                                                    fontWeight: '600',
-                                                    fontSize: '1rem',
+                                                        ? "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)" 
+                                                        : "linear-gradient(135deg, #9e9e9e 0%, #757575 100%)",
+                                                    color: "white",
+                                                    border: "none",
+                                                    padding: "12px 30px",
+                                                    borderRadius: "8px",
+                                                    fontWeight: "600",
+                                                    fontSize: "1rem",
                                                     boxShadow: canPublish 
-                                                        ? '0 4px 15px rgba(76, 175, 80, 0.3)' 
-                                                        : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                                    transition: 'all 0.3s ease',
-                                                    cursor: canPublish ? 'pointer' : 'not-allowed',
+                                                        ? "0 4px 15px rgba(76, 175, 80, 0.3)" 
+                                                        : "0 2px 8px rgba(0, 0, 0, 0.1)",
+                                                    transition: "all 0.3s ease",
+                                                    cursor: canPublish ? "pointer" : "not-allowed",
                                                     opacity: canPublish ? 1 : 0.6
                                                 }}
                                                 onMouseOver={(e) => {
-                                                    if (canPublish && !isPublishing && submitStatus !== 'submitting') {
-                                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(76, 175, 80, 0.4)';
+                                                    if (canPublish && !isPublishing && submitStatus !== "submitting") {
+                                                        e.currentTarget.style.transform = "translateY(-2px)";
+                                                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(76, 175, 80, 0.4)";
                                                     }
                                                 }}
                                                 onMouseOut={(e) => {
                                                     if (canPublish) {
-                                                        e.currentTarget.style.transform = 'translateY(0)';
-                                                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(76, 175, 80, 0.3)';
+                                                        e.currentTarget.style.transform = "translateY(0)";
+                                                        e.currentTarget.style.boxShadow = "0 4px 15px rgba(76, 175, 80, 0.3)";
                                                     }
                                                 }}
-                                                title={!canPublish ? 'Add curriculum, lessons, and quizzes before publishing' : 'Publish your course'}
+                                                title={!canPublish ? "Add curriculum, lessons, and quizzes before publishing" : "Publish your course"}
                                             >
                                                 {isPublishing ? (
                                                     <>
@@ -934,13 +934,13 @@ function CourseEdit() {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <i className={`fas ${canPublish ? 'fa-rocket' : 'fa-lock'} me-2`}></i>
+                                                        <i className={`fas ${canPublish ? "fa-rocket" : "fa-lock"} me-2`}></i>
                                                         <span>Publish Course</span>
                                                     </>
                                                 )}
                                             </button>
                                             {!canPublish && (
-                                                <small className="text-muted d-block mt-1 text-end" style={{ fontSize: '0.75rem' }}>
+                                                <small className="text-muted d-block mt-1 text-end" style={{ fontSize: "0.75rem" }}>
                                                     <i className="fas fa-info-circle me-1"></i>
                                                     Add curriculum, lessons & quizzes first
                                                 </small>
