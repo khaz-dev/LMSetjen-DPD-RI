@@ -41,18 +41,19 @@ function Dashboard() {
             cleanUrl = decodeURIComponent(cleanUrl);
         }
         
-        // Extract just the filename if it's a nested URL structure
+        // If it's already a complete URL, return as is
+        // Must check BEFORE trying to extract media path, since full URLs contain /media/
+        if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+            return cleanUrl;
+        }
+        
+        // Extract just the filename if it's a nested URL structure (for relative paths)
         if (cleanUrl.includes("/media/")) {
             const parts = cleanUrl.split("/media/");
             if (parts.length > 1) {
                 // Get the last part which should be the actual filename
                 cleanUrl = "/media/" + parts[parts.length - 1];
             }
-        }
-        
-        // If it's already a complete URL, return as is
-        if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
-            return cleanUrl;
         }
         
         // Use the centralized helper

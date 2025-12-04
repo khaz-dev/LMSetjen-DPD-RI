@@ -13,18 +13,19 @@ export const getImageUrl = (imageUrl) => {
         cleanUrl = decodeURIComponent(cleanUrl);
     }
     
-    // Extract just the filename if it's a nested URL structure
+    // If it's already a complete URL, return as is
+    // Must check BEFORE trying to extract media path, since full URLs contain /media/
+    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+        return cleanUrl;
+    }
+    
+    // Extract just the filename if it's a nested URL structure (for relative paths)
     const mediaPattern = /\/media\//;
     if (mediaPattern.test(cleanUrl)) {
         const parts = cleanUrl.split('/media/');
         if (parts.length > 1) {
             cleanUrl = parts[parts.length - 1];
         }
-    }
-    
-    // If it's already a complete URL, return as is
-    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
-        return cleanUrl;
     }
     
     // Use getMediaUrl from constants.js for proper URL construction
