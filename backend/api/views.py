@@ -3060,7 +3060,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
             
             # Find or create variant
             if variant_id:
-                existing_variant = course.variant_set.filter(variant_id=variant_id).first()
+                existing_variant = course.curriculum.filter(variant_id=variant_id).first()
             else:
                 existing_variant = None
             
@@ -3162,7 +3162,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
         # *** CRITICAL FIX: Delete orphaned variants and items to prevent duplicates ***
         
         # Get all variants for this course
-        all_course_variants = course.variant_set.all()
+        all_course_variants = course.curriculum.all()
         
         # Delete variants that weren't in the update (removed by user)
         deleted_variant_count = 0
@@ -3175,7 +3175,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
         # Delete orphaned items (items whose variant was updated but item wasn't)
         deleted_item_count = 0
         for variant_id in updated_variant_ids:
-            variant = course.variant_set.filter(variant_id=variant_id).first()
+            variant = course.curriculum.filter(variant_id=variant_id).first()
             if variant:
                 all_variant_items = variant.variant_items.all()  # Use related_name "variant_items"
                 for item in all_variant_items:
@@ -3223,7 +3223,7 @@ class CoursePublishAPIView(APIView):
                 errors.append("Course must have a category")
             
             # Check if course has curriculum
-            curriculum_count = course.variant_set.count()
+            curriculum_count = course.curriculum.count()
             if curriculum_count == 0:
                 errors.append("Course must have at least one curriculum section")
             

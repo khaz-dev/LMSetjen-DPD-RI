@@ -188,7 +188,7 @@ class Course(models.Model):
         return Review.objects.filter(course=self, active=True)
     
 class Variant(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="curriculum")
     title = models.CharField(max_length=1000)
     variant_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     order = models.IntegerField(default=0, db_index=True)  # For consistent ordering
