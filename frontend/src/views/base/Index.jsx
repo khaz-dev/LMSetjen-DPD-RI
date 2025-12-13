@@ -2,12 +2,13 @@ import { useEffect, useState, useContext, useCallback } from "react";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import { Link } from "react-router-dom";
-import { Rating } from 'react-simple-star-rating';
+import { Rating } from "react-simple-star-rating";
 
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { WishlistContext } from "../plugin/Context";
 import apiInstance from "../../utils/axios";
+import { getImageUrl } from "../../utils/fileUtils";
 import SEO from "../../components/SEO";
 import "./Index.css";
 
@@ -38,15 +39,15 @@ function Index() {
     const userData = UserData();
     const userId = userData?.user_id;
     const userRole = userData?.role; // Get user role from token
-    const isAdminOrTeacher = userRole === 'admin' || userRole === 'teacher' || userRole === 'instructor';
+    const isAdminOrTeacher = userRole === "admin" || userRole === "teacher" || userRole === "instructor";
 
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         try {
             // Fetch courses and categories in parallel for better performance
             const [coursesResponse, categoriesResponse] = await Promise.all([
-                apiInstance.get(`/course/course-list/`),
-                apiInstance.get(`/course/category/`)
+                apiInstance.get("/course/course-list/"),
+                apiInstance.get("/course/category/")
             ]);
 
             // Extract courses data - handle both paginated and non-paginated responses
@@ -78,7 +79,7 @@ function Index() {
     const fetchStatistics = useCallback(async () => {
         setIsStatsLoading(true);
         try {
-            const response = await apiInstance.get(`/statistics/public-stats/`);
+            const response = await apiInstance.get("/statistics/public-stats/");
             if (response.data) {
                 const newStats = {
                     total_courses: response.data.total_courses || 0,
@@ -186,18 +187,18 @@ function Index() {
 
     // Section navigation configuration
     const sections = [
-        { id: 'hero', label: 'Beranda', icon: 'home' },
-        { id: 'about', label: 'Tentang', icon: 'building' },
-        { id: 'statistics', label: 'Statistik', icon: 'chart-bar' },
-        { id: 'categories', label: 'Kategori', icon: 'th-large' },
-        { id: 'courses', label: 'Kursus', icon: 'graduation-cap' },
-        { id: 'cta', label: 'Daftar', icon: 'rocket' },
-        { id: 'testimonials', label: 'Testimoni', icon: 'quote-left' }
+        { id: "hero", label: "Beranda", icon: "home" },
+        { id: "about", label: "Tentang", icon: "building" },
+        { id: "statistics", label: "Statistik", icon: "chart-bar" },
+        { id: "categories", label: "Kategori", icon: "th-large" },
+        { id: "courses", label: "Kursus", icon: "graduation-cap" },
+        { id: "cta", label: "Daftar", icon: "rocket" },
+        { id: "testimonials", label: "Testimoni", icon: "quote-left" }
     ];
 
     // Handle scroll to track active section
     useEffect(() => {
-        const container = document.querySelector('.landing-page-container');
+        const container = document.querySelector(".landing-page-container");
         if (!container) return;
 
         let scrollTimeout;
@@ -207,7 +208,7 @@ function Index() {
             // Debounce scroll events for better performance
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
-                const sections = document.querySelectorAll('.snap-section');
+                const sections = document.querySelectorAll(".snap-section");
                 const scrollPosition = container.scrollTop + window.innerHeight / 2;
 
                 // Update active section for navigation dots
@@ -235,13 +236,13 @@ function Index() {
         };
         
         // Add scroll listener with passive for better performance
-        container.addEventListener('scroll', handleScroll, { passive: true });
+        container.addEventListener("scroll", handleScroll, { passive: true });
         
         // Initial check
         handleScroll();
 
         return () => {
-            container.removeEventListener('scroll', handleScroll);
+            container.removeEventListener("scroll", handleScroll);
             clearTimeout(scrollTimeout);
             if (hideTimeout) {
                 clearTimeout(hideTimeout);
@@ -251,7 +252,7 @@ function Index() {
 
     // Scroll to section with enhanced smooth behavior
     const scrollToSection = (index) => {
-        const sections = document.querySelectorAll('.snap-section');
+        const sections = document.querySelectorAll(".snap-section");
         if (sections[index]) {
             // Show label when user clicks to scroll
             setShowSectionLabel(true);
@@ -262,9 +263,9 @@ function Index() {
             }, 3000);
             
             sections[index].scrollIntoView({ 
-                behavior: 'smooth',
-                block: 'start',
-                inline: 'nearest'
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest"
             });
         }
     };
@@ -288,11 +289,11 @@ function Index() {
                     {sections.map((section, index) => (
                         <div
                             key={section.id}
-                            className={`section-nav-item ${activeSection === index ? 'active' : ''}`}
+                            className={`section-nav-item ${activeSection === index ? "active" : ""}`}
                             onClick={() => scrollToSection(index)}
                         >
                             <div className="section-nav-dot"></div>
-                        <div className={`section-nav-label ${showSectionLabel && activeSection === index ? 'visible' : ''}`}>
+                        <div className={`section-nav-label ${showSectionLabel && activeSection === index ? "visible" : ""}`}>
                             <i className={`fas fa-${section.icon} me-2`}></i>
                             {section.label}
                         </div>
@@ -349,7 +350,7 @@ function Index() {
                                     
                                     <button 
                                         className="btn btn-lg btn-outline-light px-4 py-3 hero-btn-secondary-outline"
-                                        onClick={() => document.getElementById('courses-section')?.scrollIntoView({ behavior: 'smooth' })}
+                                        onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
                                     >
                                         <i className="fas fa-search me-2"></i>
                                         Jelajahi Kursus
@@ -364,31 +365,31 @@ function Index() {
                                                 <>
                                                     <div 
                                                         style={{
-                                                            width: '50px',
-                                                            height: '32px',
-                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
-                                                            backgroundSize: '200% 100%',
-                                                            animation: 'shimmer 1.5s infinite',
-                                                            borderRadius: '4px',
-                                                            margin: '0 auto 0.5rem'
+                                                            width: "50px",
+                                                            height: "32px",
+                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite",
+                                                            borderRadius: "4px",
+                                                            margin: "0 auto 0.5rem"
                                                         }}
                                                     ></div>
                                                     <div 
                                                         style={{
-                                                            width: '40px',
-                                                            height: '12px',
-                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
-                                                            backgroundSize: '200% 100%',
-                                                            animation: 'shimmer 1.5s infinite',
-                                                            borderRadius: '4px',
-                                                            margin: '0 auto'
+                                                            width: "40px",
+                                                            height: "12px",
+                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite",
+                                                            borderRadius: "4px",
+                                                            margin: "0 auto"
                                                         }}
                                                     ></div>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.total_courses}+</h3>
-                                                    <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Kursus</small>
+                                                    <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.total_courses}+</h3>
+                                                    <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Kursus</small>
                                                 </>
                                             )}
                                         </div>
@@ -399,31 +400,31 @@ function Index() {
                                                 <>
                                                     <div 
                                                         style={{
-                                                            width: '50px',
-                                                            height: '32px',
-                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
-                                                            backgroundSize: '200% 100%',
-                                                            animation: 'shimmer 1.5s infinite',
-                                                            borderRadius: '4px',
-                                                            margin: '0 auto 0.5rem'
+                                                            width: "50px",
+                                                            height: "32px",
+                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite",
+                                                            borderRadius: "4px",
+                                                            margin: "0 auto 0.5rem"
                                                         }}
                                                     ></div>
                                                     <div 
                                                         style={{
-                                                            width: '40px',
-                                                            height: '12px',
-                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
-                                                            backgroundSize: '200% 100%',
-                                                            animation: 'shimmer 1.5s infinite',
-                                                            borderRadius: '4px',
-                                                            margin: '0 auto'
+                                                            width: "40px",
+                                                            height: "12px",
+                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite",
+                                                            borderRadius: "4px",
+                                                            margin: "0 auto"
                                                         }}
                                                     ></div>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.total_students}+</h3>
-                                                    <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Peserta</small>
+                                                    <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.total_students}+</h3>
+                                                    <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Peserta</small>
                                                 </>
                                             )}
                                         </div>
@@ -434,31 +435,31 @@ function Index() {
                                                 <>
                                                     <div 
                                                         style={{
-                                                            width: '50px',
-                                                            height: '32px',
-                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
-                                                            backgroundSize: '200% 100%',
-                                                            animation: 'shimmer 1.5s infinite',
-                                                            borderRadius: '4px',
-                                                            margin: '0 auto 0.5rem'
+                                                            width: "50px",
+                                                            height: "32px",
+                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite",
+                                                            borderRadius: "4px",
+                                                            margin: "0 auto 0.5rem"
                                                         }}
                                                     ></div>
                                                     <div 
                                                         style={{
-                                                            width: '40px',
-                                                            height: '12px',
-                                                            background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)',
-                                                            backgroundSize: '200% 100%',
-                                                            animation: 'shimmer 1.5s infinite',
-                                                            borderRadius: '4px',
-                                                            margin: '0 auto'
+                                                            width: "40px",
+                                                            height: "12px",
+                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite",
+                                                            borderRadius: "4px",
+                                                            margin: "0 auto"
                                                         }}
                                                     ></div>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <h3 className="fw-bold mb-0" style={{ fontSize: '1.5rem' }}>{stats.completion_rate}%</h3>
-                                                    <small className="opacity-75" style={{ fontSize: '0.75rem' }}>Tingkat Selesai</small>
+                                                    <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.completion_rate}%</h3>
+                                                    <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Tingkat Selesai</small>
                                                 </>
                                             )}
                                         </div>
@@ -473,18 +474,17 @@ function Index() {
                                 <div 
                                     className="hero-image-wrapper"
                                     style={{
-                                        background: 'rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '30px',
-                                        padding: '2rem',
-                                        backdropFilter: 'blur(10px)',
-                                        border: '1px solid rgba(255, 255, 255, 0.2)'
+                                        background: "rgba(255, 255, 255, 0.1)",
+                                        borderRadius: "30px",
+                                        padding: "2rem",
+                                        backdropFilter: "blur(10px)",
+                                        border: "1px solid rgba(255, 255, 255, 0.2)"
                                     }}
                                 >
                                     <img 
                                         src={heroImage}
                                         alt="LMS DPD RI" 
                                         className="img-fluid hero-right-image"
-                                        fetchpriority="high"
                                         loading="eager"
                                     />
                                 </div>
@@ -540,7 +540,7 @@ function Index() {
             </section>
 
             {/* About DPD RI Section */}
-            <section className="py-5 about-section snap-section" style={{ background: 'rgba(255,255,255,0.70)' }}>
+            <section className="py-5 about-section snap-section" style={{ background: "rgba(255,255,255,0.70)" }}>
                 <div className="container">
                     <div className="row align-items-center">
                         <div className="col-lg-6 mb-5 mb-lg-0">
@@ -611,10 +611,10 @@ function Index() {
                                         alt="Kantor Setjen DPD RI" 
                                         className="img-fluid"
                                         style={{ 
-                                            borderRadius: '15px',
-                                            objectFit: 'cover',
-                                            width: '100%',
-                                            height: '100%'
+                                            borderRadius: "15px",
+                                            objectFit: "cover",
+                                            width: "100%",
+                                            height: "100%"
                                         }}
                                         onError={(e) => {
                                             e.target.src = "https://geeksui.codescandy.com/geeks/assets/images/background/acedamy-img/about-img.jpg";
@@ -626,13 +626,13 @@ function Index() {
                                 <div 
                                     className="position-absolute"
                                     style={{
-                                        bottom: '15%',
-                                        right: '-10%',
-                                        background: 'white',
-                                        borderRadius: '20px',
-                                        padding: '1rem',
-                                        boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1)',
-                                        border: '1px solid #e9ecef'
+                                        bottom: "15%",
+                                        right: "-10%",
+                                        background: "white",
+                                        borderRadius: "20px",
+                                        padding: "1rem",
+                                        boxShadow: "0 15px 35px rgba(0, 0, 0, 0.1)",
+                                        border: "1px solid #e9ecef"
                                     }}
                                 >
                                     <div className="text-center">
@@ -648,7 +648,7 @@ function Index() {
             </section>
 
             {/* Statistics Section */}
-            <section className="py-5 statistics-section snap-section" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <section className="py-5 statistics-section snap-section" style={{ background: "rgba(255,255,255,0.2)" }}>
                 <div className="container">
                     <div className="text-center mb-5">
                         <div 
@@ -675,43 +675,43 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100 text-center"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        padding: '1.5rem'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        padding: "1.5rem"
                                     }}
                                 >
-                                    <div className="placeholder rounded-circle mx-auto mb-3" style={{ width: '50px', height: '50px', background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
-                                    <div className="placeholder rounded mx-auto mb-2" style={{ width: '60%', height: '24px', background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
-                                    <div className="placeholder rounded mx-auto" style={{ width: '70%', height: '14px', background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+                                    <div className="placeholder rounded-circle mx-auto mb-3" style={{ width: "50px", height: "50px", background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+                                    <div className="placeholder rounded mx-auto mb-2" style={{ width: "60%", height: "24px", background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+                                    <div className="placeholder rounded mx-auto" style={{ width: "70%", height: "14px", background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
                                 </div>
                             ) : (
                                 <div 
                                     className="card border-0 h-100 text-center"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        transition: 'all 0.3s ease'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        transition: "all 0.3s ease"
                                     }}
                                 >
                                     <div className="card-body p-3">
                                         <div 
                                             className="d-inline-flex align-items-center justify-content-center mb-2"
                                             style={{
-                                                width: '50px',
-                                                height: '50px',
-                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                borderRadius: '12px',
-                                                color: 'white',
-                                                fontSize: '1.3rem'
+                                                width: "50px",
+                                                height: "50px",
+                                                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                borderRadius: "12px",
+                                                color: "white",
+                                                fontSize: "1.3rem"
                                             }}
                                         >
                                             <i className="fas fa-book-open"></i>
                                         </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_courses}+</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Kursus Tersedia</p>
-                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_courses}+</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Kursus Tersedia</p>
+                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
                                             <i className="fas fa-arrow-up me-1"></i>
                                             +5 kursus baru
                                         </small>
@@ -725,43 +725,43 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        padding: '1.5rem'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        padding: "1.5rem"
                                     }}
                                 >
                                     <div 
                                         style={{
-                                            width: '50px',
-                                            height: '50px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '12px',
-                                            margin: '0 auto 1rem'
+                                            width: "50px",
+                                            height: "50px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "12px",
+                                            margin: "0 auto 1rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '80px',
-                                            height: '24px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto 0.5rem'
+                                            width: "80px",
+                                            height: "24px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto 0.5rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '100px',
-                                            height: '16px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto'
+                                            width: "100px",
+                                            height: "16px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto"
                                         }}
                                     ></div>
                                 </div>
@@ -769,29 +769,29 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100 text-center"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        transition: 'all 0.3s ease'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        transition: "all 0.3s ease"
                                     }}
                                 >
                                     <div className="card-body p-3">
                                         <div 
                                             className="d-inline-flex align-items-center justify-content-center mb-2"
                                             style={{
-                                                width: '50px',
-                                                height: '50px',
-                                                background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                                                borderRadius: '12px',
-                                                color: 'white',
-                                                fontSize: '1.3rem'
+                                                width: "50px",
+                                                height: "50px",
+                                                background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
+                                                borderRadius: "12px",
+                                                color: "white",
+                                                fontSize: "1.3rem"
                                             }}
                                         >
                                             <i className="fas fa-users"></i>
                                         </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_students}+</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Peserta Aktif</p>
-                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_students}+</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Peserta Aktif</p>
+                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
                                             <i className="fas fa-arrow-up me-1"></i>
                                             +12 peserta baru
                                         </small>
@@ -805,43 +805,43 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        padding: '1.5rem'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        padding: "1.5rem"
                                     }}
                                 >
                                     <div 
                                         style={{
-                                            width: '50px',
-                                            height: '50px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '12px',
-                                            margin: '0 auto 1rem'
+                                            width: "50px",
+                                            height: "50px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "12px",
+                                            margin: "0 auto 1rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '80px',
-                                            height: '24px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto 0.5rem'
+                                            width: "80px",
+                                            height: "24px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto 0.5rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '100px',
-                                            height: '16px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto'
+                                            width: "100px",
+                                            height: "16px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto"
                                         }}
                                     ></div>
                                 </div>
@@ -849,29 +849,29 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100 text-center"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        transition: 'all 0.3s ease'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        transition: "all 0.3s ease"
                                     }}
                                 >
                                     <div className="card-body p-3">
                                         <div 
                                             className="d-inline-flex align-items-center justify-content-center mb-2"
                                             style={{
-                                                width: '50px',
-                                                height: '50px',
-                                                background: 'linear-gradient(135deg, #ffc107 0%, #ff8800 100%)',
-                                                borderRadius: '12px',
-                                                color: 'white',
-                                                fontSize: '1.3rem'
+                                                width: "50px",
+                                                height: "50px",
+                                                background: "linear-gradient(135deg, #ffc107 0%, #ff8800 100%)",
+                                                borderRadius: "12px",
+                                                color: "white",
+                                                fontSize: "1.3rem"
                                             }}
                                         >
                                             <i className="fas fa-chalkboard-teacher"></i>
                                         </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_teachers}+</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Instruktur Ahli</p>
-                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_teachers}+</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Instruktur Ahli</p>
+                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
                                             <i className="fas fa-certificate me-1"></i>
                                             Tersertifikasi
                                         </small>
@@ -885,43 +885,43 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        padding: '1.5rem'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        padding: "1.5rem"
                                     }}
                                 >
                                     <div 
                                         style={{
-                                            width: '50px',
-                                            height: '50px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '12px',
-                                            margin: '0 auto 1rem'
+                                            width: "50px",
+                                            height: "50px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "12px",
+                                            margin: "0 auto 1rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '80px',
-                                            height: '24px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto 0.5rem'
+                                            width: "80px",
+                                            height: "24px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto 0.5rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '100px',
-                                            height: '16px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto'
+                                            width: "100px",
+                                            height: "16px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto"
                                         }}
                                     ></div>
                                 </div>
@@ -929,29 +929,29 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100 text-center"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        transition: 'all 0.3s ease'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        transition: "all 0.3s ease"
                                     }}
                                 >
                                     <div className="card-body p-3">
                                         <div 
                                             className="d-inline-flex align-items-center justify-content-center mb-2"
                                             style={{
-                                                width: '50px',
-                                                height: '50px',
-                                                background: 'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)',
-                                                borderRadius: '12px',
-                                                color: 'white',
-                                                fontSize: '1.3rem'
+                                                width: "50px",
+                                                height: "50px",
+                                                background: "linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)",
+                                                borderRadius: "12px",
+                                                color: "white",
+                                                fontSize: "1.3rem"
                                             }}
                                         >
                                             <i className="fas fa-chart-line"></i>
                                         </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.completion_rate}%</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Tingkat Kelulusan</p>
-                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.completion_rate}%</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Tingkat Kelulusan</p>
+                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
                                             <i className="fas fa-trophy me-1"></i>
                                             Rata-rata tinggi
                                         </small>
@@ -966,43 +966,43 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        padding: '1.5rem'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        padding: "1.5rem"
                                     }}
                                 >
                                     <div 
                                         style={{
-                                            width: '50px',
-                                            height: '50px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '12px',
-                                            margin: '0 auto 1rem'
+                                            width: "50px",
+                                            height: "50px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "12px",
+                                            margin: "0 auto 1rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '80px',
-                                            height: '24px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto 0.5rem'
+                                            width: "80px",
+                                            height: "24px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto 0.5rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '100px',
-                                            height: '16px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto'
+                                            width: "100px",
+                                            height: "16px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto"
                                         }}
                                     ></div>
                                 </div>
@@ -1010,29 +1010,29 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100 text-center"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        transition: 'all 0.3s ease'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        transition: "all 0.3s ease"
                                     }}
                                 >
                                     <div className="card-body p-3">
                                         <div 
                                             className="d-inline-flex align-items-center justify-content-center mb-2"
                                             style={{
-                                                width: '50px',
-                                                height: '50px',
-                                                background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
-                                                borderRadius: '12px',
-                                                color: 'white',
-                                                fontSize: '1.3rem'
+                                                width: "50px",
+                                                height: "50px",
+                                                background: "linear-gradient(135deg, #17a2b8 0%, #138496 100%)",
+                                                borderRadius: "12px",
+                                                color: "white",
+                                                fontSize: "1.3rem"
                                             }}
                                         >
                                             <i className="fas fa-certificate"></i>
                                         </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_certificates}+</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Sertifikat Diterbitkan</p>
-                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_certificates}+</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Sertifikat Diterbitkan</p>
+                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
                                             <i className="fas fa-arrow-up me-1"></i>
                                             Terus meningkat
                                         </small>
@@ -1046,43 +1046,43 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        padding: '1.5rem'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        padding: "1.5rem"
                                     }}
                                 >
                                     <div 
                                         style={{
-                                            width: '50px',
-                                            height: '50px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '12px',
-                                            margin: '0 auto 1rem'
+                                            width: "50px",
+                                            height: "50px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "12px",
+                                            margin: "0 auto 1rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '80px',
-                                            height: '24px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto 0.5rem'
+                                            width: "80px",
+                                            height: "24px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto 0.5rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '100px',
-                                            height: '16px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto'
+                                            width: "100px",
+                                            height: "16px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto"
                                         }}
                                     ></div>
                                 </div>
@@ -1090,29 +1090,29 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100 text-center"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        transition: 'all 0.3s ease'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        transition: "all 0.3s ease"
                                     }}
                                 >
                                     <div className="card-body p-3">
                                         <div 
                                             className="d-inline-flex align-items-center justify-content-center mb-2"
                                             style={{
-                                                width: '50px',
-                                                height: '50px',
-                                                background: 'linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)',
-                                                borderRadius: '12px',
-                                                color: 'white',
-                                                fontSize: '1.3rem'
+                                                width: "50px",
+                                                height: "50px",
+                                                background: "linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)",
+                                                borderRadius: "12px",
+                                                color: "white",
+                                                fontSize: "1.3rem"
                                             }}
                                         >
                                             <i className="fas fa-clock"></i>
                                         </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>24/7</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Akses Kapan Saja</p>
-                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>24/7</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Akses Kapan Saja</p>
+                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
                                             <i className="fas fa-check me-1"></i>
                                             Fleksibel
                                         </small>
@@ -1126,43 +1126,43 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        padding: '1.5rem'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        padding: "1.5rem"
                                     }}
                                 >
                                     <div 
                                         style={{
-                                            width: '50px',
-                                            height: '50px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '12px',
-                                            margin: '0 auto 1rem'
+                                            width: "50px",
+                                            height: "50px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "12px",
+                                            margin: "0 auto 1rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '80px',
-                                            height: '24px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto 0.5rem'
+                                            width: "80px",
+                                            height: "24px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto 0.5rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '100px',
-                                            height: '16px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto'
+                                            width: "100px",
+                                            height: "16px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto"
                                         }}
                                     ></div>
                                 </div>
@@ -1170,29 +1170,29 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100 text-center"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        transition: 'all 0.3s ease'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        transition: "all 0.3s ease"
                                     }}
                                 >
                                     <div className="card-body p-3">
                                         <div 
                                             className="d-inline-flex align-items-center justify-content-center mb-2"
                                             style={{
-                                                width: '50px',
-                                                height: '50px',
-                                                background: 'linear-gradient(135deg, #fd7e14 0%, #dc3545 100%)',
-                                                borderRadius: '12px',
-                                                color: 'white',
-                                                fontSize: '1.3rem'
+                                                width: "50px",
+                                                height: "50px",
+                                                background: "linear-gradient(135deg, #fd7e14 0%, #dc3545 100%)",
+                                                borderRadius: "12px",
+                                                color: "white",
+                                                fontSize: "1.3rem"
                                             }}
                                         >
                                             <i className="fas fa-video"></i>
                                         </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.total_materials}+</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Video Pembelajaran</p>
-                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_materials}+</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Video Pembelajaran</p>
+                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
                                             <i className="fas fa-play me-1"></i>
                                             HD Quality
                                         </small>
@@ -1206,43 +1206,43 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        padding: '1.5rem'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        padding: "1.5rem"
                                     }}
                                 >
                                     <div 
                                         style={{
-                                            width: '50px',
-                                            height: '50px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '12px',
-                                            margin: '0 auto 1rem'
+                                            width: "50px",
+                                            height: "50px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "12px",
+                                            margin: "0 auto 1rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '80px',
-                                            height: '24px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto 0.5rem'
+                                            width: "80px",
+                                            height: "24px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto 0.5rem"
                                         }}
                                     ></div>
                                     <div 
                                         style={{
-                                            width: '100px',
-                                            height: '16px',
-                                            background: 'linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)',
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 1.5s infinite',
-                                            borderRadius: '4px',
-                                            margin: '0 auto'
+                                            width: "100px",
+                                            height: "16px",
+                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 1.5s infinite",
+                                            borderRadius: "4px",
+                                            margin: "0 auto"
                                         }}
                                     ></div>
                                 </div>
@@ -1250,29 +1250,29 @@ function Index() {
                                 <div 
                                     className="card border-0 h-100 text-center"
                                     style={{
-                                        borderRadius: '16px',
-                                        background: 'white',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                        transition: 'all 0.3s ease'
+                                        borderRadius: "16px",
+                                        background: "white",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                        transition: "all 0.3s ease"
                                     }}
                                 >
                                     <div className="card-body p-3">
                                         <div 
                                             className="d-inline-flex align-items-center justify-content-center mb-2"
                                             style={{
-                                                width: '50px',
-                                                height: '50px',
-                                                background: 'linear-gradient(135deg, #20c997 0%, #28a745 100%)',
-                                                borderRadius: '12px',
-                                                color: 'white',
-                                                fontSize: '1.3rem'
+                                                width: "50px",
+                                                height: "50px",
+                                                background: "linear-gradient(135deg, #20c997 0%, #28a745 100%)",
+                                                borderRadius: "12px",
+                                                color: "white",
+                                                fontSize: "1.3rem"
                                             }}
                                         >
                                             <i className="fas fa-star"></i>
                                         </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: '1.5rem', color: '#2c3e50' }}>{stats.platform_rating}/5</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Rating Platform</p>
-                                        <small className="text-success" style={{ fontSize: '0.75rem' }}>
+                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.platform_rating}/5</h4>
+                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Rating Platform</p>
+                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
                                             <i className="fas fa-thumbs-up me-1"></i>
                                             Sangat memuaskan
                                         </small>
@@ -1285,24 +1285,24 @@ function Index() {
             </section>
 
             {/* Course Categories Section */}
-            <section className="py-5 snap-section" style={{ background: 'rgba(255,255,255,0.70)' }}>
+            <section className="py-5 snap-section" style={{ background: "rgba(255,255,255,0.70)" }}>
                 <div className="container">
                     <div className="text-center mb-4">
                         <div 
                             className="badge mb-3"
                             style={{
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                color: 'white',
-                                padding: '0.5rem 1rem',
-                                borderRadius: '50px',
-                                fontSize: '0.9rem'
+                                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                color: "white",
+                                padding: "0.5rem 1rem",
+                                borderRadius: "50px",
+                                fontSize: "0.9rem"
                             }}
                         >
                             <i className="fas fa-th-large me-2"></i>
                             Kategori Kursus
                         </div>
                         
-                        <h2 className="display-6 fw-bold mb-3" style={{ color: '#2c3e50' }}>
+                        <h2 className="display-6 fw-bold mb-3" style={{ color: "#2c3e50" }}>
                             Jelajahi Berdasarkan Kategori
                         </h2>
                         
@@ -1320,42 +1320,42 @@ function Index() {
                                     <div 
                                         className="card border-0"
                                         style={{
-                                            borderRadius: '16px',
-                                            background: 'white',
-                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                            height: '160px',
-                                            overflow: 'hidden'
+                                            borderRadius: "16px",
+                                            background: "white",
+                                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                            height: "160px",
+                                            overflow: "hidden"
                                         }}
                                     >
                                         <div className="card-body p-3 text-center d-flex flex-column justify-content-center">
                                             <div 
                                                 className="placeholder rounded-circle mx-auto mb-2"
                                                 style={{
-                                                    width: '50px',
-                                                    height: '50px',
-                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                                                    backgroundSize: '200% 100%',
-                                                    animation: 'shimmer 1.5s infinite'
+                                                    width: "50px",
+                                                    height: "50px",
+                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite"
                                                 }}
                                             />
                                             <div 
                                                 className="placeholder rounded mx-auto mb-2" 
                                                 style={{ 
-                                                    width: '70%', 
-                                                    height: '16px',
-                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                                                    backgroundSize: '200% 100%',
-                                                    animation: 'shimmer 1.5s infinite'
+                                                    width: "70%", 
+                                                    height: "16px",
+                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite"
                                                 }}
                                             />
                                             <div 
                                                 className="placeholder rounded mx-auto" 
                                                 style={{ 
-                                                    width: '50%', 
-                                                    height: '12px',
-                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                                                    backgroundSize: '200% 100%',
-                                                    animation: 'shimmer 1.5s infinite'
+                                                    width: "50%", 
+                                                    height: "12px",
+                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite"
                                                 }}
                                             />
                                         </div>
@@ -1372,65 +1372,65 @@ function Index() {
                                         <div 
                                             className="card border-0 h-100"
                                             style={{
-                                                borderRadius: '16px',
-                                                background: 'white',
-                                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                                transition: 'all 0.3s ease',
-                                                cursor: 'pointer'
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                transition: "all 0.3s ease",
+                                                cursor: "pointer"
                                             }}
                                             onMouseEnter={(e) => {
-                                                e.currentTarget.style.transform = 'translateY(-5px)';
-                                                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.12)';
+                                                e.currentTarget.style.transform = "translateY(-5px)";
+                                                e.currentTarget.style.boxShadow = "0 8px 20px rgba(0, 0, 0, 0.12)";
                                             }}
                                             onMouseLeave={(e) => {
-                                                e.currentTarget.style.transform = 'translateY(0)';
-                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.06)';
+                                                e.currentTarget.style.transform = "translateY(0)";
+                                                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.06)";
                                             }}
                                         >
                                             <div className="card-body p-3 text-center">
                                                 <div 
                                                     className="category-icon mx-auto mb-2"
                                                     style={{
-                                                        width: '50px',
-                                                        height: '50px',
+                                                        width: "50px",
+                                                        height: "50px",
                                                         background: `linear-gradient(135deg, ${
-                                                            ['#667eea, #764ba2', '#28a745, #20c997', '#ffc107, #ff8800', '#dc3545, #e83e8c', '#17a2b8, #138496', '#6f42c1, #e83e8c', '#fd7e14, #dc3545', '#20c997, #28a745'][index % 8]
+                                                            ["#667eea, #764ba2", "#28a745, #20c997", "#ffc107, #ff8800", "#dc3545, #e83e8c", "#17a2b8, #138496", "#6f42c1, #e83e8c", "#fd7e14, #dc3545", "#20c997, #28a745"][index % 8]
                                                         })`,
-                                                        borderRadius: '12px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        color: 'white',
-                                                        fontSize: '1.5rem'
+                                                        borderRadius: "12px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        color: "white",
+                                                        fontSize: "1.5rem"
                                                     }}
                                                 >
                                                     <i 
                                                         className={`fas ${
-                                                            ['fa-globe', 'fa-chart-line', 'fa-paint-brush', 'fa-code', 'fa-database', 'fa-tools', 'fa-brain', 'fa-graduation-cap'][index % 8]
+                                                            ["fa-globe", "fa-chart-line", "fa-paint-brush", "fa-code", "fa-database", "fa-tools", "fa-brain", "fa-graduation-cap"][index % 8]
                                                         }`}
                                                         style={{
-                                                            fontSize: '1.3rem'
+                                                            fontSize: "1.3rem"
                                                         }}
                                                     ></i>
                                                 </div>
                                                 
-                                                <h3 className="fw-bold mb-1" style={{ color: '#2c3e50', fontSize: '0.95rem' }}>
+                                                <h3 className="fw-bold mb-1" style={{ color: "#2c3e50", fontSize: "0.95rem" }}>
                                                     {category.title}
                                                 </h3>
                                                 
-                                                <p className="text-muted mb-2" style={{ fontSize: '0.8rem' }}>
+                                                <p className="text-muted mb-2" style={{ fontSize: "0.8rem" }}>
                                                     {category.course_count} kursus
                                                 </p>
                                                 
                                                 <div 
                                                     className="btn btn-sm"
                                                     style={{
-                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        borderRadius: '8px',
-                                                        fontWeight: '500',
-                                                        fontSize: '0.75rem',
+                                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                        color: "white",
+                                                        border: "none",
+                                                        borderRadius: "8px",
+                                                        fontWeight: "500",
+                                                        fontSize: "0.75rem",
                                                     }}
                                                 >
                                                     Lihat Kursus
@@ -1453,11 +1453,11 @@ function Index() {
                                 to="/search/"
                                 className="btn btn-lg px-4"
                                 style={{
-                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '15px',
-                                    fontWeight: '600'
+                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "15px",
+                                    fontWeight: "600"
                                 }}
                             >
                                 Lihat Semua Kategori
@@ -1468,24 +1468,24 @@ function Index() {
             </section>
 
             {/* Featured Courses Section */}
-            <section id="courses-section" className="py-5 snap-section" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <section id="courses-section" className="py-5 snap-section" style={{ background: "rgba(255,255,255,0.2)" }}>
                 <div className="container">
                     <div className="text-center mb-5">
                         <div 
                             className="badge mb-3"
                             style={{
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                color: 'white',
-                                padding: '0.5rem 1rem',
-                                borderRadius: '50px',
-                                fontSize: '0.9rem'
+                                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                color: "white",
+                                padding: "0.5rem 1rem",
+                                borderRadius: "50px",
+                                fontSize: "0.9rem"
                             }}
                         >
                             <i className="fas fa-star me-2"></i>
                             Kursus Populer
                         </div>
                         
-                        <h2 className="display-6 fw-bold mb-3" style={{ color: '#2c3e50' }}>
+                        <h2 className="display-6 fw-bold mb-3" style={{ color: "#2c3e50" }}>
                             Kursus Terfavorit
                         </h2>
                         
@@ -1503,83 +1503,83 @@ function Index() {
                                     <div 
                                         className="card border-0"
                                         style={{
-                                            borderRadius: '16px',
-                                            background: 'white',
-                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                            height: '380px',
-                                            overflow: 'hidden'
+                                            borderRadius: "16px",
+                                            background: "white",
+                                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                            height: "380px",
+                                            overflow: "hidden"
                                         }}
                                     >
                                         <div 
                                             className="placeholder" 
                                             style={{ 
-                                                height: '180px', 
-                                                background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                                                backgroundSize: '200% 100%',
-                                                animation: 'shimmer 1.5s infinite'
+                                                height: "180px", 
+                                                background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                backgroundSize: "200% 100%",
+                                                animation: "shimmer 1.5s infinite"
                                             }}
                                         />
                                         <div className="card-body p-3">
                                             <div 
                                                 className="placeholder rounded mb-2" 
                                                 style={{ 
-                                                    width: '60%', 
-                                                    height: '12px',
-                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                                                    backgroundSize: '200% 100%',
-                                                    animation: 'shimmer 1.5s infinite'
+                                                    width: "60%", 
+                                                    height: "12px",
+                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite"
                                                 }}
                                             />
                                             <div 
                                                 className="placeholder rounded mb-2" 
                                                 style={{ 
-                                                    width: '90%', 
-                                                    height: '18px',
-                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                                                    backgroundSize: '200% 100%',
-                                                    animation: 'shimmer 1.5s infinite'
+                                                    width: "90%", 
+                                                    height: "18px",
+                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite"
                                                 }}
                                             />
                                             <div 
                                                 className="placeholder rounded mb-3" 
                                                 style={{ 
-                                                    width: '70%', 
-                                                    height: '18px',
-                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                                                    backgroundSize: '200% 100%',
-                                                    animation: 'shimmer 1.5s infinite'
+                                                    width: "70%", 
+                                                    height: "18px",
+                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite"
                                                 }}
                                             />
                                             <div className="d-flex justify-content-between mb-2">
                                                 <div 
                                                     className="placeholder rounded" 
                                                     style={{ 
-                                                        width: '45%', 
-                                                        height: '14px',
-                                                        background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                                                        backgroundSize: '200% 100%',
-                                                        animation: 'shimmer 1.5s infinite'
+                                                        width: "45%", 
+                                                        height: "14px",
+                                                        background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                        backgroundSize: "200% 100%",
+                                                        animation: "shimmer 1.5s infinite"
                                                     }}
                                                 />
                                                 <div 
                                                     className="placeholder rounded" 
                                                     style={{ 
-                                                        width: '45%', 
-                                                        height: '14px',
-                                                        background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                                                        backgroundSize: '200% 100%',
-                                                        animation: 'shimmer 1.5s infinite'
+                                                        width: "45%", 
+                                                        height: "14px",
+                                                        background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                        backgroundSize: "200% 100%",
+                                                        animation: "shimmer 1.5s infinite"
                                                     }}
                                                 />
                                             </div>
                                             <div 
                                                 className="placeholder rounded" 
                                                 style={{ 
-                                                    width: '100%', 
-                                                    height: '40px',
-                                                    background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                                                    backgroundSize: '200% 100%',
-                                                    animation: 'shimmer 1.5s infinite'
+                                                    width: "100%", 
+                                                    height: "40px",
+                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite"
                                                 }}
                                             />
                                         </div>
@@ -1592,41 +1592,41 @@ function Index() {
                                     <div 
                                         className="card border-0 h-100 course-card"
                                         style={{
-                                            borderRadius: '16px',
-                                            background: 'white',
-                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-                                            transition: 'all 0.3s ease',
-                                            overflow: 'hidden',
-                                            position: 'relative'
+                                            borderRadius: "16px",
+                                            background: "white",
+                                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                            transition: "all 0.3s ease",
+                                            overflow: "hidden",
+                                            position: "relative"
                                         }}
                                     >
                                         {/* Gradient Overlay on Hover */}
                                         <div 
                                             className="card-gradient-overlay"
                                             style={{
-                                                position: 'absolute',
+                                                position: "absolute",
                                                 top: 0,
                                                 left: 0,
                                                 right: 0,
                                                 bottom: 0,
-                                                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+                                                background: "linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)",
                                                 opacity: 0,
-                                                transition: 'opacity 0.3s ease',
-                                                pointerEvents: 'none',
+                                                transition: "opacity 0.3s ease",
+                                                pointerEvents: "none",
                                                 zIndex: 1
                                             }}
                                         />
                                         
                                         {/* Course Image */}
-                                        <div className="position-relative" style={{ overflow: 'hidden' }}>
+                                        <div className="position-relative" style={{ overflow: "hidden" }}>
                                             <img 
                                                 src={getImageUrl(course.image) || "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png"} 
                                                 alt={course.title}
                                                 className="card-img-top course-card-image"
                                                 style={{ 
-                                                    height: '180px',
-                                                    objectFit: 'cover',
-                                                    transition: 'transform 0.3s ease'
+                                                    height: "180px",
+                                                    objectFit: "cover",
+                                                    transition: "transform 0.3s ease"
                                                 }}
                                                 onError={(e) => {
                                                     e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
@@ -1641,27 +1641,27 @@ function Index() {
                                                     title={isCourseInWishlist(course.id) ? "Hapus dari wishlist" : "Tambahkan ke wishlist"}
                                                     disabled={!userId}
                                                     style={{
-                                                        top: '10px',
-                                                        right: '10px',
-                                                        width: '36px',
-                                                        height: '36px',
-                                                        borderRadius: '50%',
-                                                        background: 'rgba(255, 255, 255, 0.95)',
-                                                        backdropFilter: 'blur(10px)',
-                                                        border: 'none',
-                                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        transition: 'all 0.3s ease',
+                                                        top: "10px",
+                                                        right: "10px",
+                                                        width: "36px",
+                                                        height: "36px",
+                                                        borderRadius: "50%",
+                                                        background: "rgba(255, 255, 255, 0.95)",
+                                                        backdropFilter: "blur(10px)",
+                                                        border: "none",
+                                                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        transition: "all 0.3s ease",
                                                         zIndex: 2
                                                     }}
                                                 >
                                                     <i 
-                                                        className={`${isCourseInWishlist(course.id) ? 'fas' : 'far'} fa-heart`}
+                                                        className={`${isCourseInWishlist(course.id) ? "fas" : "far"} fa-heart`}
                                                         style={{
-                                                            color: isCourseInWishlist(course.id) ? '#dc3545' : '#6c757d',
-                                                            fontSize: '0.95rem'
+                                                            color: isCourseInWishlist(course.id) ? "#dc3545" : "#6c757d",
+                                                            fontSize: "0.95rem"
                                                         }}
                                                     />
                                                 </button>
@@ -1671,21 +1671,21 @@ function Index() {
                                             <div 
                                                 className="position-absolute"
                                                 style={{
-                                                    bottom: '10px',
-                                                    left: '10px',
+                                                    bottom: "10px",
+                                                    left: "10px",
                                                     zIndex: 2
                                                 }}
                                             >
                                                 <span 
                                                     className="badge"
                                                     style={{
-                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                        color: 'white',
-                                                        padding: '0.35rem 0.75rem',
-                                                        borderRadius: '8px',
-                                                        fontSize: '0.7rem',
-                                                        fontWeight: '600',
-                                                        boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                        color: "white",
+                                                        padding: "0.35rem 0.75rem",
+                                                        borderRadius: "8px",
+                                                        fontSize: "0.7rem",
+                                                        fontWeight: "600",
+                                                        boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)"
                                                     }}
                                                 >
                                                     <i className="fas fa-signal me-1"></i>
@@ -1695,39 +1695,39 @@ function Index() {
                                         </div>
 
                                         {/* Card Body */}
-                                        <div className="card-body p-3" style={{ position: 'relative', zIndex: 2 }}>
+                                        <div className="card-body p-3" style={{ position: "relative", zIndex: 2 }}>
                                             {/* Category */}
                                             <div className="mb-2">
                                                 <span 
                                                     className="badge"
                                                     style={{
-                                                        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-                                                        color: '#667eea',
-                                                        border: '1px solid rgba(102, 126, 234, 0.2)',
-                                                        borderRadius: '8px',
-                                                        fontSize: '0.65rem',
-                                                        fontWeight: '600',
-                                                        padding: '0.3rem 0.6rem'
+                                                        background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
+                                                        color: "#667eea",
+                                                        border: "1px solid rgba(102, 126, 234, 0.2)",
+                                                        borderRadius: "8px",
+                                                        fontSize: "0.65rem",
+                                                        fontWeight: "600",
+                                                        padding: "0.3rem 0.6rem"
                                                     }}
                                                 >
                                                     <i className="fas fa-folder me-1"></i>
-                                                    {course.category?.title || 'General'}
+                                                    {course.category?.title || "General"}
                                                 </span>
                                             </div>
 
                                             {/* Course Title */}
-                                            <h3 className="fw-bold mb-2" style={{ minHeight: '42px', fontSize: '0.95rem' }}>
+                                            <h3 className="fw-bold mb-2" style={{ minHeight: "42px", fontSize: "0.95rem" }}>
                                                 <Link 
                                                     to={`/course-detail/${course.slug}/`}
                                                     className="text-decoration-none course-title-link"
                                                     style={{ 
-                                                        color: '#2c3e50',
-                                                        display: '-webkit-box',
-                                                        WebkitLineClamp: '2',
-                                                        WebkitBoxOrient: 'vertical',
-                                                        overflow: 'hidden',
-                                                        lineHeight: '1.4',
-                                                        transition: 'color 0.3s ease'
+                                                        color: "#2c3e50",
+                                                        display: "-webkit-box",
+                                                        WebkitLineClamp: "2",
+                                                        WebkitBoxOrient: "vertical",
+                                                        overflow: "hidden",
+                                                        lineHeight: "1.4",
+                                                        transition: "color 0.3s ease"
                                                     }}
                                                 >
                                                     {course.title}
@@ -1738,20 +1738,20 @@ function Index() {
                                             <div className="mb-2 d-flex align-items-center">
                                                 <div 
                                                     style={{
-                                                        width: '28px',
-                                                        height: '28px',
-                                                        borderRadius: '50%',
-                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        marginRight: '8px'
+                                                        width: "28px",
+                                                        height: "28px",
+                                                        borderRadius: "50%",
+                                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        marginRight: "8px"
                                                     }}
                                                 >
-                                                    <i className="fas fa-user-tie" style={{ color: 'white', fontSize: '0.7rem' }}></i>
+                                                    <i className="fas fa-user-tie" style={{ color: "white", fontSize: "0.7rem" }}></i>
                                                 </div>
-                                                <small className="text-muted" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                                                    {course.teacher?.full_name || 'Instruktur'}
+                                                <small className="text-muted" style={{ fontSize: "0.8rem", fontWeight: "500" }}>
+                                                    {course.teacher?.full_name || "Instruktur"}
                                                 </small>
                                             </div>
 
@@ -1759,8 +1759,8 @@ function Index() {
                                             <div 
                                                 className="d-flex align-items-center justify-content-between mb-2 p-2"
                                                 style={{
-                                                    background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-                                                    borderRadius: '8px'
+                                                    background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+                                                    borderRadius: "8px"
                                                 }}
                                             >
                                                 <div className="d-flex align-items-center">
@@ -1771,11 +1771,11 @@ function Index() {
                                                         fillColor="#ffc107"
                                                         emptyColor="#e4e5e9"
                                                     />
-                                                    <span className="text-warning fw-bold ms-1" style={{ fontSize: '0.8rem' }}>
+                                                    <span className="text-warning fw-bold ms-1" style={{ fontSize: "0.8rem" }}>
                                                         {course.average_rating || 0}
                                                     </span>
                                                 </div>
-                                                <small className="text-muted" style={{ fontSize: '0.7rem' }}>
+                                                <small className="text-muted" style={{ fontSize: "0.7rem" }}>
                                                     ({course.reviews?.length || 0})
                                                 </small>
                                             </div>
@@ -1784,16 +1784,16 @@ function Index() {
                                             <div 
                                                 className="d-flex align-items-center justify-content-between p-2 mb-2"
                                                 style={{
-                                                    background: 'rgba(40, 167, 69, 0.05)',
-                                                    borderRadius: '8px',
-                                                    border: '1px solid rgba(40, 167, 69, 0.1)'
+                                                    background: "rgba(40, 167, 69, 0.05)",
+                                                    borderRadius: "8px",
+                                                    border: "1px solid rgba(40, 167, 69, 0.1)"
                                                 }}
                                             >
-                                                <small className="fw-medium" style={{ fontSize: '0.8rem', color: '#146c43' }}>
+                                                <small className="fw-medium" style={{ fontSize: "0.8rem", color: "#146c43" }}>
                                                     <i className="fas fa-users me-1"></i>
                                                     {course.students?.length || 0} siswa
                                                 </small>
-                                                <small className="text-muted" style={{ fontSize: '0.7rem' }}>
+                                                <small className="text-muted" style={{ fontSize: "0.7rem" }}>
                                                     <i className="fas fa-book-open me-1"></i>
                                                     Aktif
                                                 </small>
@@ -1801,19 +1801,19 @@ function Index() {
                                         </div>
 
                                         {/* Card Footer */}
-                                        <div className="card-footer bg-transparent border-0 p-3 pt-0" style={{ position: 'relative', zIndex: 2 }}>
+                                        <div className="card-footer bg-transparent border-0 p-3 pt-0" style={{ position: "relative", zIndex: 2 }}>
                                             <Link 
                                                 to={`/course-detail/${course.slug}/`} 
                                                 className="btn w-100 fw-semibold course-detail-btn"
                                                 style={{
-                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                    border: 'none',
-                                                    borderRadius: '10px',
-                                                    color: 'white',
-                                                    transition: 'all 0.3s ease',
-                                                    padding: '0.6rem 1rem',
-                                                    fontSize: '0.85rem',
-                                                    boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                    border: "none",
+                                                    borderRadius: "10px",
+                                                    color: "white",
+                                                    transition: "all 0.3s ease",
+                                                    padding: "0.6rem 1rem",
+                                                    fontSize: "0.85rem",
+                                                    boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)"
                                                 }}
                                             >
                                                 <i className="fas fa-arrow-right me-2"></i>
@@ -1836,11 +1836,11 @@ function Index() {
                                 to="/search/"
                                 className="btn btn-lg px-4"
                                 style={{
-                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '15px',
-                                    fontWeight: '600'
+                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "15px",
+                                    fontWeight: "600"
                                 }}
                             >
                                 Lihat Semua Kursus
@@ -1852,15 +1852,15 @@ function Index() {
 
             {/* CTA Section */}
             <section className="py-5 snap-section cta-section" style={{ 
-                background: 'linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%)',
+                background: "linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%)",
             }}>
                 <div className="container">
                     <div className="row align-items-center">
                         <div className="col-lg-8">
-                            <h2 className="display-6 fw-bold mb-3" style={{ color: 'white' }}>
+                            <h2 className="display-6 fw-bold mb-3" style={{ color: "white" }}>
                                 Siap Memulai Perjalanan Pembelajaran Anda?
                             </h2>
-                            <p className="lead mb-0" style={{ color: 'white' }}>
+                            <p className="lead mb-0" style={{ color: "white" }}>
                                 Bergabunglah dengan ribuan pegawai Setjen DPD RI yang telah meningkatkan kompetensi mereka 
                                 melalui platform LMSetjen DPD RI. Daftar sekarang dan akses seluruh kursus secara gratis!
                             </p>
@@ -1870,19 +1870,19 @@ function Index() {
                                 to="/register"
                                 className="btn btn-lg px-4 py-3 cta-register-btn"
                                 style={{
-                                    background: 'white',
-                                    color: '#667eea',
-                                    border: 'none',
-                                    borderRadius: '15px',
-                                    fontWeight: '600',
-                                    boxShadow: '0 8px 25px rgba(255, 255, 255, 0.2)',
-                                    cursor: 'pointer',
-                                    pointerEvents: 'auto',
-                                    position: 'relative',
+                                    background: "white",
+                                    color: "#667eea",
+                                    border: "none",
+                                    borderRadius: "15px",
+                                    fontWeight: "600",
+                                    boxShadow: "0 8px 25px rgba(255, 255, 255, 0.2)",
+                                    cursor: "pointer",
+                                    pointerEvents: "auto",
+                                    position: "relative",
                                     zIndex: 10,
-                                    textDecoration: 'none',
-                                    display: 'inline-block',
-                                    transition: 'all 0.3s ease'
+                                    textDecoration: "none",
+                                    display: "inline-block",
+                                    transition: "all 0.3s ease"
                                 }}
                             >
                                 <i className="fas fa-rocket me-2"></i>
@@ -1894,28 +1894,28 @@ function Index() {
             </section>
 
             {/* Testimonials Section */}
-            <section className="py-5 snap-section" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <section className="py-5 snap-section" style={{ background: "rgba(255,255,255,0.2)" }}>
                 <div className="container">
                     <div className="text-center mb-5">
                         <div 
                             className="badge mb-3"
                             style={{
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                color: 'white',
-                                padding: '0.5rem 1rem',
-                                borderRadius: '50px',
-                                fontSize: '0.9rem'
+                                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                color: "white",
+                                padding: "0.5rem 1rem",
+                                borderRadius: "50px",
+                                fontSize: "0.9rem"
                             }}
                         >
                             <i className="fas fa-quote-left me-2"></i>
                             Testimoni
                         </div>
                         
-                        <h2 className="display-6 fw-bold mb-3" style={{ color: '#2c3e50', fontSize: '2.2rem' }}>
+                        <h2 className="display-6 fw-bold mb-3" style={{ color: "#2c3e50", fontSize: "2.2rem" }}>
                             Apa Kata Mereka?
                         </h2>
                         
-                        <p className="lead text-muted mb-0" style={{ fontSize: '1.1rem' }}>
+                        <p className="lead text-muted mb-0" style={{ fontSize: "1.1rem" }}>
                             Pengalaman nyata dari para peserta yang telah merasakan manfaat LMSetjen DPD RI
                         </p>
                     </div>
@@ -1926,10 +1926,10 @@ function Index() {
                             <div 
                                 className="card border-0 h-100"
                                 style={{
-                                    borderRadius: '20px',
-                                    background: 'white',
-                                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
-                                    border: '1px solid #e9ecef'
+                                    borderRadius: "20px",
+                                    background: "white",
+                                    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
+                                    border: "1px solid #e9ecef"
                                 }}
                             >
                                 <div className="card-body text-center p-4">
@@ -1937,22 +1937,22 @@ function Index() {
                                     <div 
                                         className="mx-auto mb-3"
                                         style={{
-                                            width: '70px',
-                                            height: '70px',
-                                            borderRadius: '50%',
-                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: 'white',
-                                            fontSize: '24px'
+                                            width: "70px",
+                                            height: "70px",
+                                            borderRadius: "50%",
+                                            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            color: "white",
+                                            fontSize: "24px"
                                         }}
                                     >
                                         <i className="fas fa-user"></i>
                                     </div>
                                     
                                     {/* Quote */}
-                                    <p className="mb-3 fst-italic" style={{ lineHeight: '1.7', color: '#6c757d', fontSize: '0.95rem' }}>
+                                    <p className="mb-3 fst-italic" style={{ lineHeight: "1.7", color: "#6c757d", fontSize: "0.95rem" }}>
                                         "Platform yang sangat membantu dalam pengembangan skill. 
                                         Materi yang disajikan berkualitas dan mudah dipahami. Saya berhasil 
                                         meningkatkan kemampuan analisis data dengan mengikuti kursus di sini."
@@ -1960,17 +1960,17 @@ function Index() {
                                     
                                     {/* Rating */}
                                     <div className="mb-3">
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <span className="text-warning fw-medium ms-2" style={{ fontSize: '0.95rem' }}>5.0</span>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <span className="text-warning fw-medium ms-2" style={{ fontSize: "0.95rem" }}>5.0</span>
                                     </div>
                                     
                                     {/* User Info */}
-                                    <h3 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Siti Rahayu, S.E.</h3>
-                                    <small className="text-muted" style={{ fontSize: '0.85rem' }}>Staff Keuangan Setjen DPD RI</small>
+                                    <h3 className="fw-bold mb-1" style={{ color: "#343a40", fontSize: "1rem" }}>Siti Rahayu, S.E.</h3>
+                                    <small className="text-muted" style={{ fontSize: "0.85rem" }}>Staff Keuangan Setjen DPD RI</small>
                                 </div>
                             </div>
                         </div>
@@ -1980,10 +1980,10 @@ function Index() {
                             <div 
                                 className="card border-0 h-100"
                                 style={{
-                                    borderRadius: '20px',
-                                    background: 'white',
-                                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
-                                    border: '1px solid #e9ecef'
+                                    borderRadius: "20px",
+                                    background: "white",
+                                    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
+                                    border: "1px solid #e9ecef"
                                 }}
                             >
                                 <div className="card-body text-center p-4">
@@ -1991,22 +1991,22 @@ function Index() {
                                     <div 
                                         className="mx-auto mb-3"
                                         style={{
-                                            width: '70px',
-                                            height: '70px',
-                                            borderRadius: '50%',
-                                            background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: 'white',
-                                            fontSize: '24px'
+                                            width: "70px",
+                                            height: "70px",
+                                            borderRadius: "50%",
+                                            background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            color: "white",
+                                            fontSize: "24px"
                                         }}
                                     >
                                         <i className="fas fa-user"></i>
                                     </div>
                                     
                                     {/* Quote */}
-                                    <p className="mb-3 fst-italic" style={{ lineHeight: '1.7', color: '#6c757d', fontSize: '0.95rem' }}>
+                                    <p className="mb-3 fst-italic" style={{ lineHeight: "1.7", color: "#6c757d", fontSize: "0.95rem" }}>
                                         "Sistem pembelajaran yang user-friendly dan instruktur yang kompeten. 
                                         Sangat recommended untuk pengembangan karir. Kursus manajemen proyek 
                                         membantu saya dalam mengorganisir pekerjaan dengan lebih efektif."
@@ -2014,17 +2014,17 @@ function Index() {
                                     
                                     {/* Rating */}
                                     <div className="mb-3">
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <span className="text-warning fw-medium ms-2" style={{ fontSize: '0.95rem' }}>5.0</span>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <span className="text-warning fw-medium ms-2" style={{ fontSize: "0.95rem" }}>5.0</span>
                                     </div>
                                     
                                     {/* User Info */}
-                                    <h3 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Ahmad Fauzi, S.H.</h3>
-                                    <small className="text-muted" style={{ fontSize: '0.85rem' }}>Analis Kebijakan Setjen DPD RI</small>
+                                    <h3 className="fw-bold mb-1" style={{ color: "#343a40", fontSize: "1rem" }}>Ahmad Fauzi, S.H.</h3>
+                                    <small className="text-muted" style={{ fontSize: "0.85rem" }}>Analis Kebijakan Setjen DPD RI</small>
                                 </div>
                             </div>
                         </div>
@@ -2034,10 +2034,10 @@ function Index() {
                             <div 
                                 className="card border-0 h-100"
                                 style={{
-                                    borderRadius: '20px',
-                                    background: 'white',
-                                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
-                                    border: '1px solid #e9ecef'
+                                    borderRadius: "20px",
+                                    background: "white",
+                                    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
+                                    border: "1px solid #e9ecef"
                                 }}
                             >
                                 <div className="card-body text-center p-4">
@@ -2045,22 +2045,22 @@ function Index() {
                                     <div 
                                         className="mx-auto mb-3"
                                         style={{
-                                            width: '70px',
-                                            height: '70px',
-                                            borderRadius: '50%',
-                                            background: 'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: 'white',
-                                            fontSize: '24px'
+                                            width: "70px",
+                                            height: "70px",
+                                            borderRadius: "50%",
+                                            background: "linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            color: "white",
+                                            fontSize: "24px"
                                         }}
                                     >
                                         <i className="fas fa-user"></i>
                                     </div>
                                     
                                     {/* Quote */}
-                                    <p className="mb-3 fst-italic" style={{ lineHeight: '1.7', color: '#6c757d', fontSize: '0.95rem' }}>
+                                    <p className="mb-3 fst-italic" style={{ lineHeight: "1.7", color: "#6c757d", fontSize: "0.95rem" }}>
                                         "Fitur-fitur pembelajaran yang lengkap dan user-friendly. Platform ini benar-benar 
                                         membantu dalam meningkatkan efektivitas proses pembelajaran di institusi. 
                                         Interface yang intuitif memudahkan navigasi untuk semua kalangan usia."
@@ -2068,17 +2068,17 @@ function Index() {
                                     
                                     {/* Rating */}
                                     <div className="mb-3">
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <i className="fas fa-star text-warning" style={{ fontSize: '0.9rem' }}></i>
-                                        <span className="text-warning fw-medium ms-2" style={{ fontSize: '0.95rem' }}>5.0</span>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <i className="fas fa-star text-warning" style={{ fontSize: "0.9rem" }}></i>
+                                        <span className="text-warning fw-medium ms-2" style={{ fontSize: "0.95rem" }}>5.0</span>
                                     </div>
                                     
                                     {/* User Info */}
-                                    <h3 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>Dr. Muhammad Sadli</h3>
-                                    <small className="text-muted" style={{ fontSize: '0.85rem' }}>Kepala Biro Umum Setjen DPD RI</small>
+                                    <h3 className="fw-bold mb-1" style={{ color: "#343a40", fontSize: "1rem" }}>Dr. Muhammad Sadli</h3>
+                                    <small className="text-muted" style={{ fontSize: "0.85rem" }}>Kepala Biro Umum Setjen DPD RI</small>
                                 </div>
                             </div>
                         </div>
