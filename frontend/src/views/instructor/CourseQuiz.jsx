@@ -407,7 +407,7 @@ function CourseQuiz() {
         return (
             <>
                 <BaseHeader />
-                <div className="modern-dashboard" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
+                <section className="modern-dashboard" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -422,7 +422,7 @@ function CourseQuiz() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
                 <Footer />
             </>
         );
@@ -432,7 +432,7 @@ function CourseQuiz() {
         <>
             <BaseHeader />
 
-            <div className="modern-dashboard">
+            <section className="modern-dashboard">
                 <div className="container">
                     <Header />
                     <div className="row">
@@ -939,7 +939,7 @@ function CourseQuiz() {
                         </div>
                     </div>
                 </div>
-            </div>  
+            </section>  
 
             <Footer />   
         </>
