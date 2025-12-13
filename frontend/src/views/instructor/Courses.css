@@ -141,6 +141,7 @@
     background: transparent;
     padding-top: 0 !important;
     padding-bottom: 3rem !important;
+    margin-bottom: 8rem;
 }
 
 /* Loading state - full height block layout */
