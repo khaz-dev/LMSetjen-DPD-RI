@@ -1099,8 +1099,9 @@
 /* expanded or collapsed, providing smooth transitions */
 /* ============================== */
 
-/* Base: Desktop Large (lg breakpoint and up) */
+/* Desktop Large (lg breakpoint: 992px and up) */
 /* col-lg-3 sidebar + col-lg-9 content = 12 columns */
+@media (min-width: 992px) {
   .modern-dashboard .row > .instructor-sidebar-column {
     flex-basis: auto;
     flex-grow: 0;
@@ -1112,14 +1113,9 @@
   /* Content column - expands to fill remaining space */
   .modern-dashboard .row > .col-lg-9 {
     flex: 1 1 auto;
-    min-width: 0;
+    min-width: 0 !important;   /* ✨ CRITICAL: Allow flex shrinking for smooth animation */
     width: auto;
     max-width: 100%;
-  }
-
-  /* Ensure content doesn't wrap under sidebar */
-  .modern-dashboard .row > .col-lg-9 {
-    min-width: 500px;
   }
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
@@ -1132,8 +1128,9 @@
   }
 }
 
-/* Tablet (md breakpoint) */
+/* Tablet (md breakpoint: 768px - 991px) */
 /* col-md-4 sidebar + col-md-8 content = 12 columns */
+@media (min-width: 768px) and (max-width: 991px) {
   .modern-dashboard .row > .instructor-sidebar-column {
     flex-basis: auto;
     flex-grow: 0;
@@ -1146,14 +1143,9 @@
   /* Content column - expands to fill remaining space */
   .modern-dashboard .row > .col-md-8 {
     flex: 1 1 auto;
-    min-width: 0;
+    min-width: 0 !important;   /* ✨ CRITICAL: Allow flex shrinking for smooth animation */
     width: auto;
     max-width: 100%;
-  }
-
-  /* Ensure content doesn't wrap under sidebar */
-  .modern-dashboard .row > .col-md-8 {
-    min-width: 400px;
   }
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
