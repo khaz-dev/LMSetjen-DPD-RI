@@ -691,11 +691,15 @@
   .instructor-sidebar {
     position: static;
     max-height: none;
+    width: 305px !important;  /* ✨ CRITICAL: Expanded state width */
+    min-width: 305px !important;
   }
 
   .instructor-sidebar.collapsed {
     max-height: 50px;
     overflow: hidden;
+    width: 85px !important;  /* ✨ CRITICAL: Collapsed state width */
+    min-width: 85px !important;
   }
 
   .instructor-sidebar.collapsed .instructor-sidebar-body {
