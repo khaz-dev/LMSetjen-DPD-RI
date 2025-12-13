@@ -11,6 +11,7 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { WishlistContext } from "../plugin/Context";
+import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import "./Wishlist.css";
 
 function Wishlist() {
@@ -18,6 +19,7 @@ function Wishlist() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [wishlistCount, setWishlistCount, refreshWishlistCount] = useContext(WishlistContext);
+    const isCollapsed = useSidebarCollapse();
 
     const fetchWishlist = async () => {
         try {
@@ -88,12 +90,12 @@ function Wishlist() {
         return (
             <>
                 <BaseHeader />
-                <section style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
-                    <div className="container" style={{ flex: 1 }}>
+                <section className="modern-wishlist-page" style={{ minHeight: 'calc(100vh - 120px)' }}>
+                    <div className="container">
                         <Header />
                         <div className="row mt-0 mt-md-4">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
                                         <span className="visually-hidden">Loading...</span>
@@ -118,7 +120,7 @@ function Wishlist() {
                     <Header />
                     <div className="row mt-0 mt-md-4">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Page Header */}
                             <div className="page-header-card">
                                 <div className="page-header-content">

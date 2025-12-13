@@ -11,6 +11,7 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { ProfileContext } from "../plugin/Context";
 import { getValidProfileImageUrl } from "../../utils/imageUtils";
+import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import "./Profile.css";
 
 // Constants
@@ -153,6 +154,7 @@ function Profile() {
     // Context and State Management
     const profileContext = useContext(ProfileContext);
     const [profile, setProfile] = profileContext || [null, () => {}];
+    const isCollapsed = useSidebarCollapse();
     
     const [profileData, setProfileData] = useState({
         image: "",
@@ -662,12 +664,12 @@ function Profile() {
         return (
             <>
                 <BaseHeader />
-                <section style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
+                <section className="student-profile-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row mt-0 mt-md-4">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
@@ -692,7 +694,7 @@ function Profile() {
                     <Header />
                     <div className="row mt-0 mt-md-4">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Modern Header Section */}
                             <div className="modern-header-section mb-4" style={{
                                 background: "rgba(255, 255, 255, 0.95)",

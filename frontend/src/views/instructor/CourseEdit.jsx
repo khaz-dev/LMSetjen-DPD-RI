@@ -10,6 +10,7 @@ import Footer from "../partials/Footer";
 
 // Custom hooks
 import { useCourseData, useCourseForm, useCourseSubmit, useCategories } from "./hooks/useCourse";
+import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 
 // Components
 import ImageUpload from "./components/ImageUpload";
@@ -56,6 +57,7 @@ function CourseEdit() {
     
     const navigate = useNavigate();
     const param = useParams();
+    const isCollapsed = useInstructorSidebarCollapse();
 
     // Custom hooks
     const { courseData, setCourseData, updateCourseData, loading } = useCourseData(param?.course_id);
@@ -509,7 +511,7 @@ function CourseEdit() {
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
@@ -533,7 +535,7 @@ function CourseEdit() {
                     <Header />
                     <div className="row">
                         <Sidebar />                        
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Workflow Stepper */}
                             <WorkflowStepper 
                                 currentStep={1} 

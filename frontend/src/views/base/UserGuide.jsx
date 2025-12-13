@@ -752,7 +752,7 @@ function UserGuide() {
         <>
             <BaseHeader />
             
-            <div className="user-guide-container">
+            <div className="user-guide-page user-guide-container">
                 {/* Header */}
                 <div className="guide-header no-print">
                     <div className="container">

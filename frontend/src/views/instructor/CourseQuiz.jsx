@@ -11,11 +11,13 @@ import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import WorkflowStepper from "../../components/WorkflowStepper";
+import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 
 function CourseQuiz() {
     const { course_id } = useParams();
     const navigate = useNavigate()
     const param = useParams();
+    const isCollapsed = useInstructorSidebarCollapse();
     
     // State Management
     const [course, setCourse] = useState(null);
@@ -412,7 +414,7 @@ function CourseQuiz() {
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
@@ -437,7 +439,7 @@ function CourseQuiz() {
                     <Header />
                     <div className="row">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Workflow Stepper */}
                             <WorkflowStepper 
                                 currentStep={3} 

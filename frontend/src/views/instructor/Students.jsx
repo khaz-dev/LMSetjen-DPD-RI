@@ -10,6 +10,7 @@ import Footer from "../partials/Footer";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
+import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import { getMediaUrl } from "../../utils/constants";
 
 // Import Students specific styles
@@ -19,6 +20,7 @@ function Students() {
     const [students, setStudents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const isCollapsed = useInstructorSidebarCollapse();
 
     useEffect(() => {
         fetchStudents();
@@ -103,7 +105,7 @@ function Students() {
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
                                         <span className="visually-hidden">Loading...</span>
@@ -128,7 +130,7 @@ function Students() {
                     <Header />
                     <div className="row">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Header Section */}
                             <div className="students-header mb-4">
                                 <div className="students-header-bg"></div>

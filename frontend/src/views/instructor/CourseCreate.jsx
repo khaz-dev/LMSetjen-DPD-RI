@@ -14,6 +14,7 @@ const RichTextEditor = lazy(() => import("./components/RichTextEditor"));
 
 import useAxios from "../../utils/useAxios";
 import Toast from "../plugin/Toast";
+import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import { 
   validateTitle, 
   validateDescription, 
@@ -40,6 +41,7 @@ function CourseCreate() {
     const [errors, setErrors] = useState({});
     const [warnings, setWarnings] = useState({});
     const navigate = useNavigate();
+    const isCollapsed = useInstructorSidebarCollapse();
 
     // Refs for focusing on error inputs
     const titleRef = useRef(null);
@@ -284,7 +286,7 @@ function CourseCreate() {
                     <Header />
                     <div className="row">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             <div className="create-header-modern">
                                 <div className="d-lg-flex align-items-center justify-content-between">
                                     <div className="mb-4 mb-lg-0">

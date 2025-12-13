@@ -13,12 +13,14 @@ import SearchSection from "../../components/SearchSection";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
+import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import "./Courses.css";
 
 function Courses() {
     const [courses, setCourses] = useState([]);
     const [originalCourses, setOriginalCourses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const isCollapsed = useInstructorSidebarCollapse();
 
     const fetchCourseData = async () => {
         try {
@@ -69,7 +71,7 @@ function Courses() {
                             <Header />
                             <div className="row">
                                 <Sidebar />
-                                <div className="col-lg-9 col-md-8 col-12 courses-spinner-wrapper">
+                                <div className={`col-lg-9 col-md-8 col-12 courses-spinner-wrapper ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                                     <div className="courses-spinner-center">
                                         <div className="spinner-border text-primary courses-spinner" role="status">
                                             <span className="visually-hidden">Loading...</span>
@@ -95,7 +97,7 @@ function Courses() {
                     <Header />
                     <div className="row">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Header Section */}
                             <div className="courses-header-section mb-4">
                                 <div className="courses-header-gradient"></div>

@@ -9,6 +9,7 @@ import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { calculateTotalDuration, parseDurationToSeconds } from "../../utils/durationUtils";
+import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import "./Dashboard.css";
 
 function Dashboard() {
@@ -17,6 +18,7 @@ function Dashboard() {
     const [fetching, setFetching] = useState(true);
     const [recentActivity, setRecentActivity] = useState([]);
     const [progressData, setProgressData] = useState([]);
+    const isCollapsed = useSidebarCollapse();
 
     const fetchData = () => {
         setFetching(true);
@@ -103,13 +105,43 @@ function Dashboard() {
         fetchData();
     }, []);
 
-    const handleSearch = (event) => {
+    const handleSearch = useCallback((event) => {
         const query = event.target.value.toLowerCase();
         if (query === "") {
-            // Reset to original data when search is cleared
-            fetchData();
+            // Reset to original data when search is cleared - NO API CALL
+            // Re-fetch the stored original data from state instead
+            useAxios.get(`student/course-list/${UserData()?.user_id}/`).then((res) => {
+                const courseData = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+                setCourses(courseData);
+                
+                // Recalculate progress data
+                const progressStats = courseData.map(course => {
+                    const totalLessons = course.lectures?.length || 0;
+                    const completedLessons = course.completed_lesson?.length || 0;
+                    const quizResults = course.quiz_results || [];
+                    const totalQuizzes = quizResults.length || 0;
+                    const passedQuizzes = quizResults.filter(q => q.passed).length || 0;
+                    const totalItems = totalLessons + totalQuizzes;
+                    const completedItems = completedLessons + passedQuizzes;
+                    let progressPercentage = 0;
+                    if (totalItems > 0) {
+                        progressPercentage = Math.round((completedItems / totalItems) * 100);
+                    }
+                    return {
+                        ...course,
+                        progressPercentage,
+                        totalLessons,
+                        completedLessons,
+                        totalQuizzes,
+                        completedQuizzes: passedQuizzes,
+                        quizProgress: totalQuizzes > 0 ? Math.round((passedQuizzes / totalQuizzes) * 100) : 0,
+                        lessonProgress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
+                    };
+                });
+                setProgressData(progressStats);
+            });
         } else {
-            // Filter both courses and progressData
+            // Filter both courses and progressData - NO API CALL
             const filteredCourses = courses.filter((c) => {
                 return c.course.title.toLowerCase().includes(query);
             });
@@ -121,7 +153,7 @@ function Dashboard() {
             });
             setProgressData(filteredProgressData);
         }
-    };
+    }, [courses, progressData]);
 
     // Memoized calculations for better performance
     const averageProgress = useMemo(() => {
@@ -193,8 +225,8 @@ function Dashboard() {
         return (
             <>
                 <BaseHeader />
-                <section className="dashboard-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
-                    <div className="container" style={{ flex: 1 }}>
+                <section className="dashboard-page" style={{ minHeight: "calc(100vh - 120px)" }}>
+                    <div className="container">
                         <Header />
                         <div className="row mt-0 mt-md-4">
                             <Sidebar />
@@ -223,7 +255,7 @@ function Dashboard() {
                     <Header />
                     <div className="row mt-0 mt-md-4">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Welcome Section */}
                             <div className="welcome-section">
                                 <div className="row align-items-center">
@@ -418,12 +450,6 @@ function Dashboard() {
                                                     placeholder="Search your courses..." 
                                                     onChange={handleSearch}
                                                 />
-                                                <button 
-                                                    onClick={handleSearch} 
-                                                    className="search-button"
-                                                >
-                                                    <i className="fas fa-search me-1"></i>
-                                                </button>
                                             </div>
                                         </div>
                                         
@@ -461,7 +487,7 @@ function Dashboard() {
                                                                             to={`/student/courses/${course.enrollment_id}/`}
                                                                             className="text-decoration-none"
                                                                         >
-                                                                            <h6 className="course-title mb-0 pb-0">
+                                                                            <h6 className="course-title pb-0">
                                                                                 {course.course.title}
                                                                             </h6>
                                                                         </Link>

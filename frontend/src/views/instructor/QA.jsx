@@ -14,6 +14,7 @@ import Footer from "../partials/Footer";
 // Utils
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
+import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import "./QA.css";
 
@@ -28,6 +29,7 @@ function QA() {
     const [conversationMessages, setConversationMessages] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const isCollapsed = useInstructorSidebarCollapse();
     const lastElementRef = useRef(null);
 
     const [messageLoading, setMessageLoading] = useState(false);
@@ -205,7 +207,7 @@ function QA() {
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
@@ -229,7 +231,7 @@ function QA() {
                     <Header />
                     <div className="row">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Modern Header Section */}
                             <div className="qa-header-section mb-4">
                                 <div className="qa-header-bg"></div>

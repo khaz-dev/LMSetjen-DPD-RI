@@ -3,10 +3,12 @@ import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
 import Sidebar from './Partials/Sidebar'
 import Header from './Partials/Header'
+import { useSidebarCollapse } from './Partials/useSidebarCollapse'
 
 import ReactPlayer from 'react-player'
 
 function StudentCourseLectureDetail() {
+    const isCollapsed = useSidebarCollapse();
     return (
         <>
             <BaseHeader />
@@ -18,7 +20,7 @@ function StudentCourseLectureDetail() {
                     <div className="row mt-0 mt-md-4">
                         {/* Sidebar Here */}
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             <section className="bg-blue py-7">
                                 <div className="container">
                                     <ReactPlayer url='https://www.youtube.com/watch?v=LXb3EKWsInQ' width={"100%"} height={600} />

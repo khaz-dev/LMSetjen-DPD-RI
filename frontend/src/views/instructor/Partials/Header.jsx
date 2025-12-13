@@ -17,8 +17,8 @@ function Header() {
   const [lastFetchTime, setLastFetchTime] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     // Initialize from localStorage - SEPARATE key for header
-    const saved = localStorage.getItem('instructorHeaderCollapsed');
-    return saved === 'true';
+    const saved = localStorage.getItem("instructorHeaderCollapsed");
+    return saved === "true";
   });
   const [isAnimating, setIsAnimating] = useState(false); // ✨ Only animate on user interaction, not on re-render
   const userData = UserData();
@@ -32,7 +32,7 @@ function Header() {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
     setIsAnimating(true); // ✨ Enable animation only when user clicks toggle
-    localStorage.setItem('instructorHeaderCollapsed', newState.toString());
+    localStorage.setItem("instructorHeaderCollapsed", newState.toString());
     // Reset animation state after it completes (600ms to match CSS animation duration)
     setTimeout(() => {
       setIsAnimating(false);
@@ -51,7 +51,7 @@ function Header() {
     if (!profile) return true;
     
     // Fetch if cache expired (only for profile page)
-    if (lastFetchTime && location.pathname === '/instructor/profile/') {
+    if (lastFetchTime && location.pathname === "/instructor/profile/") {
       const timeSinceLastFetch = Date.now() - lastFetchTime;
       return timeSinceLastFetch > CACHE_DURATION;
     }
@@ -128,7 +128,7 @@ function Header() {
   useEffect(() => {
     if (userData?.user_id) {
       // Only fetch if profile context is empty OR we're on profile page
-      if (!profile || location.pathname === '/instructor/profile/') {
+      if (!profile || location.pathname === "/instructor/profile/") {
         fetchProfile();
       }
     } else {
@@ -149,7 +149,7 @@ function Header() {
     const joinDate = profile?.date || userData?.date_joined;
     if (!joinDate) return "Recently joined";
     
-    const days = moment().diff(moment(joinDate), 'days');
+    const days = moment().diff(moment(joinDate), "days");
     if (days < 1) return "Teaching today";
     if (days < 30) return `${days} days teaching`;
     if (days < 365) return `${Math.floor(days/30)} months teaching`;
@@ -185,8 +185,8 @@ function Header() {
           <img
             src={imageUrl}
             className="instructor-profile-avatar"
-            alt={`${profile?.full_name || teacher?.full_name || 'Instructor'} avatar`}
-            onError={createImageErrorHandler('instructor')}
+            alt={`${profile?.full_name || teacher?.full_name || "Instructor"} avatar`}
+            onError={createImageErrorHandler("instructor")}
           />
           <div className="instructor-default-avatar instructor-fallback-icon">
             <i className="fas fa-chalkboard-teacher"></i>
@@ -230,14 +230,14 @@ function Header() {
 
   // Render instructor details
   const renderInstructorDetails = () => (
-    <div className="row mt-3 pt-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
+    <div className="row mt-3 pt-3" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.2)" }}>
       <div className="col-md-12">
         <div className="row">
           <div className="col-md-4 mb-3">
             <div className="instructor-detail-item">
               <div className="instructor-meta">
                 <i className="fas fa-check-circle"></i>
-                <span>Status: {teacher ? 'Active Instructor' : 'Profile Setup Required'}</span>
+                <span>Status: {teacher ? "Active Instructor" : "Profile Setup Required"}</span>
               </div>
             </div>
           </div>
@@ -255,7 +255,7 @@ function Header() {
             <div className="instructor-detail-item">
               <div className="instructor-meta">
                 <i className="fas fa-user-graduate"></i>
-                <span>Instructor: {teacher && teacher.bio ? 'Profile Complete' : 'Profile Incomplete'}</span>
+                <span>Instructor: {teacher && teacher.bio ? "Profile Complete" : "Profile Incomplete"}</span>
               </div>
             </div>
           </div>
@@ -267,7 +267,7 @@ function Header() {
   return (
     <div className="row align-items-center instructor-header-row">
       <div className="col-xl-12 col-lg-12 col-md-12 col-12">
-        <div className={`instructor-header-card ${isCollapsed ? 'collapsed' : ''} ${isAnimating ? 'animating' : ''}`}>
+        <div className={`instructor-header-card ${isCollapsed ? "collapsed" : ""} ${isAnimating ? "animating" : ""}`}>
           {/* Collapse Toggle Button */}
           <button
             className="instructor-header-toggle-btn"
@@ -275,7 +275,7 @@ function Header() {
             title={isCollapsed ? "Expand Header" : "Collapse Header"}
             aria-label={isCollapsed ? "Expand Header" : "Collapse Header"}
           >
-            <i className={`fas fa-chevron-${isCollapsed ? 'down' : 'up'}`}></i>
+            <i className={`fas fa-chevron-${isCollapsed ? "down" : "up"}`}></i>
           </button>
 
           {/* Collapsed Mini Header */}
@@ -324,7 +324,7 @@ function Header() {
           )}
 
           {/* Full Header Content */}
-          <div className={`instructor-header-content p-3 p-md-4 ${isAnimating ? (isCollapsed ? 'collapsed-state' : 'expanded-state') : (isCollapsed ? 'collapsed-visual' : 'expanded-visual')}`}>
+          <div className={`instructor-header-content p-3 p-md-4 ${isAnimating ? (isCollapsed ? "collapsed-state" : "expanded-state") : (isCollapsed ? "collapsed-visual" : "expanded-visual")}`}>
               <div className="row align-items-center">
                 {/* Profile Avatar Section */}
                 <div className="col-lg-3 col-md-4 mb-4 mb-lg-0">
@@ -381,7 +381,7 @@ function Header() {
                     <div className="d-flex flex-column flex-md-row flex-lg-column gap-3 justify-content-center justify-content-lg-end">
                       <Link
                         to="/instructor/create-course/"
-                        className={`btn-instructor-primary ${isActivePage('/instructor/create-course/') ? 'active' : ''}`}
+                        className={`btn-instructor-primary ${isActivePage("/instructor/create-course/") ? "active" : ""}`}
                         title="Create a new course"
                       >
                         <i className="fas fa-plus"></i>
@@ -390,7 +390,7 @@ function Header() {
                       
                       <Link
                         to="/instructor/profile/"
-                        className={`btn-instructor-outline ${isActivePage('/instructor/profile/') ? 'active' : ''}`}
+                        className={`btn-instructor-outline ${isActivePage("/instructor/profile/") ? "active" : ""}`}
                         title="Manage your instructor profile"
                       >
                         <i className="fas fa-user-cog"></i>

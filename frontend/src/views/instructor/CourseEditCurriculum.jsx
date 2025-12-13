@@ -39,6 +39,7 @@ import WorkflowStepper from "../../components/WorkflowStepper";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
+import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 
 // Styles
 import "./CourseEditCurriculum.css";
@@ -1000,6 +1001,7 @@ function CourseEditCurriculum() {
     // Navigation and params
     const navigate = useNavigate();
     const param = useParams();
+    const isCollapsed = useInstructorSidebarCollapse();
     
     // Refs for form management
     const formRef = useRef(null);
@@ -2861,7 +2863,7 @@ function CourseEditCurriculum() {
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
                                         <span className="visually-hidden">Loading...</span>
@@ -2885,7 +2887,7 @@ function CourseEditCurriculum() {
                     <Header />
                     <div className="row">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Workflow Stepper */}
                             <WorkflowStepper 
                                 currentStep={2} 

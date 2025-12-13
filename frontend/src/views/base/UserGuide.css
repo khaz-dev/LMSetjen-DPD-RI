@@ -44,7 +44,7 @@
     margin-bottom: 1rem;
 }
 
-.guide-meta {
+.user-guide-page .guide-meta {
     display: flex;
     gap: 2rem;
     font-size: 0.95rem;
@@ -52,13 +52,13 @@
     color: white !important;
 }
 
-.meta-item {
+.user-guide-page .meta-item {
     display: flex;
     align-items: center;
     color: white !important;
 }
 
-.meta-item i {
+.user-guide-page .meta-item i {
     color: white !important;
 }
 
@@ -167,7 +167,8 @@
     padding-bottom: 0;
 }
 
-.section-title {
+/* ✨ SCOPED: UserGuide page section-title only - prevents bleed to Sidebar */
+.user-guide-page .section-title {
     font-size: 2.2rem;
     font-weight: 700;
     color: #2c3e50;
@@ -502,7 +503,8 @@
         border-bottom: 1px solid #dee2e6;
     }
 
-    .section-title {
+    /* ✨ SCOPED: UserGuide page only */
+    .user-guide-page .section-title {
         color: #000;
         font-size: 1.8rem;
         margin-top: 1.5rem;
@@ -586,7 +588,8 @@
         padding: 2rem;
     }
 
-    .section-title {
+    /* ✨ SCOPED: UserGuide page only */
+    .user-guide-page .section-title {
         font-size: 1.9rem;
     }
 
@@ -636,7 +639,8 @@
         padding: 1.5rem;
     }
 
-    .section-title {
+    /* ✨ SCOPED: UserGuide page only */
+    .user-guide-page .section-title {
         font-size: 1.6rem;
     }
 
@@ -665,7 +669,8 @@
         font-size: 1.4rem;
     }
 
-    .section-title {
+    /* ✨ SCOPED: UserGuide page only */
+    .user-guide-page .section-title {
         font-size: 1.4rem;
         flex-direction: column;
         align-items: flex-start;

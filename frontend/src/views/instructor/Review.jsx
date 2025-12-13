@@ -12,6 +12,7 @@ import Footer from "../partials/Footer";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
+import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import "./Review.css";
 
 function Review() {
@@ -20,6 +21,7 @@ function Review() {
     const [filteredReviews, setFilteredReview] = useState([]);
     const [loadingReply, setLoadingReply] = useState({});
     const [loading, setLoading] = useState(true);
+    const isCollapsed = useInstructorSidebarCollapse();
 
     const fetchReviewsData = async () => {
         try {
@@ -130,7 +132,7 @@ function Review() {
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
                                         <span className="visually-hidden">Loading...</span>
@@ -157,7 +159,7 @@ function Review() {
                     <div className="row">
                         {/* Sidebar Here */}
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Modern Header Section */}
                             <div className="modern-header-section mb-4">
                                 <div className="header-decoration"></div>

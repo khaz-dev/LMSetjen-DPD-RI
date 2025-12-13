@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { logout } from "../../../utils/auth";
 import Toast, { LogoutConfirmation } from "../../plugin/Toast";
+import { triggerInstructorSidebarCollapseEvent } from "./useInstructorSidebarCollapse";
 import "./Sidebar.css";
 
 function Sidebar() {
@@ -15,6 +16,8 @@ function Sidebar() {
         const newState = !isCollapsed;
         setIsCollapsed(newState);
         localStorage.setItem('instructorSidebarCollapsed', newState.toString());
+        // ✨ Trigger event for all pages to adapt their layout
+        triggerInstructorSidebarCollapseEvent();
     };
     
     const isActive = (path) => location.pathname === path || location.pathname.startsWith(path);

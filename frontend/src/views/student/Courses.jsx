@@ -9,11 +9,13 @@ import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { SkeletonPage } from "../../components/skeletons";
+import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import "./Courses.css";
 
 function Courses() {
     const [courses, setCourses] = useState([]);
     const [fetching, setFetching] = useState(true);
+    const isCollapsed = useSidebarCollapse();
 
     const fetchData = () => {
         setFetching(true);
@@ -73,7 +75,7 @@ function Courses() {
         return (
             <>
                 <BaseHeader />
-                <section style={{ minHeight: "calc(100vh - 120px)" }}>
+                <section className="modern-course-page" style={{ minHeight: "calc(100vh - 120px)" }}>
                     <div className="container">
                         <Header />
                         <div className="row mt-0 mt-md-4">
@@ -96,7 +98,7 @@ function Courses() {
                     <Header />
                     <div className="row mt-0 mt-md-4">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Page Header */}
                             <div className="page-header-card">
                                 <div className="page-header-content">
@@ -199,95 +201,112 @@ function Courses() {
                                                     </Link>
                                                 </div>
                                             </div>                                                            
-                                            {/* Course Info */}
-                                                            <div className="col-lg-5 col-md-5 col-12 mb-2 mb-lg-0">
-                                                                <div className="d-flex gap-2 mb-1">
-                                                                    <span className="badge badge-modern">
-                                                                        <i className="fas fa-folder-open"></i>
-                                                                        {c.course.category?.title || "General"}
-                                                                    </span>
-                                                                    <span className="badge badge-level">
-                                                                        <i className="fas fa-signal"></i>
-                                                                        {c.course.level}
-                                                                    </span>
-                                                                </div>
-                                                                <h5 className="fw-bold mb-2">
-                                                                    <Link 
-                                                                        to={`/student/courses/${c.enrollment_id}/`} 
-                                                                        className="text-decoration-none text-dark"
-                                                                    >
-                                                                        {c.course.title}
-                                                                    </Link>
-                                                                </h5>
-                                                                <div className="d-flex flex-wrap gap-2 text-muted small">
-                                                                    <span>
-                                                                        <i className="fas fa-calendar me-1 text-primary"></i>
-                                                                        Enrolled: {moment(c.date).format("D MMM, YYYY")}
-                                                                    </span>
-                                                                    <span>
-                                                                        <i className="fas fa-play-circle me-1 text-success"></i>
-                                                                        {(c.lectures?.length || 0) + (c.quiz_results?.length || 0)} Total Items
-                                                                    </span>
-                                                                    <span>
-                                                                        <i className="fas fa-check-circle me-1 text-info"></i>
-                                                                        {(c.completed_lesson?.length || 0) + (c.quiz_results?.filter(q => q.passed)?.length || 0)} Completed
-                                                                    </span>
-                                                                </div>
+                                            {/* Course Info - Title Only - Expanded to fill remaining width */}
+                                                <div className="col-lg-9 col-md-9 col-12 mb-2 mb-lg-0">
+                                                    <h5 className="fw-bold mb-2">
+                                                        <Link 
+                                                            to={`/student/courses/${c.enrollment_id}/`} 
+                                                            className="text-decoration-none text-dark"
+                                                        >
+                                                            {c.course.title}
+                                                        </Link>
+                                                    </h5>
+
+                                                    {/* 🎯 REORGANIZED: Badges & Progress below title, to the right of image */}
+                                                    <div className="row align-items-center w-100 mt-2">
+                                                        {/* Badges on LEFT */}
+                                                        <div className="col-auto">
+                                                            <div className="d-flex gap-2">
+                                                                <span className="badge badge-modern">
+                                                                    <i className="fas fa-folder-open"></i>
+                                                                    {c.course.category?.title || "General"}
+                                                                </span>
+                                                                <span className="badge badge-level">
+                                                                    <i className="fas fa-signal"></i>
+                                                                    {c.course.level}
+                                                                </span>
                                                             </div>
+                                                        </div>
 
-                                                            {/* Progress & Action */}
-                                                            <div className="col-lg-4 col-md-4 col-12">
-                                                                <div className="text-md-end">
-                                                                    {/* Progress Bar */}
-                                                                    <div className="mb-2">
-                                                                        <div className="d-flex justify-content-between align-items-center mb-1">
-                                                                            <small className="text-muted">Progress</small>
-                                                                            <small className="fw-bold text-primary">
-                                                                                {calculateProgress(c)}%
-                                                                            </small>
-                                                                        </div>
-                                                                        <div className="progress" style={{ height: "6px", borderRadius: "10px" }}>
-                                                                            <div 
-                                                                                className="progress-bar"
-                                                                                role="progressbar"
-                                                                                style={{ 
-                                                                                    width: `${calculateProgress(c)}%`,
-                                                                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                                                                    borderRadius: "10px"
-                                                                                }}
-                                                                            ></div>
-                                                                        </div>
+                                                        {/* Progress on RIGHT */}
+                                                        <div className="col ms-auto">
+                                                            <div className="d-flex justify-content-end">
+                                                                <div style={{ minWidth: "180px" }}>
+                                                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                        <small className="text-muted">Progress</small>
+                                                                        <small className="fw-bold text-primary">
+                                                                            {calculateProgress(c)}%
+                                                                        </small>
                                                                     </div>
-
-                                                                    {/* Action Button */}
-                                                                    {calculateProgress(c) === 0 ? (
-                                                                        <Link 
-                                                                            to={`/student/courses/${c.enrollment_id}/`} 
-                                                                            className="course-btn btn-start"
-                                                                        >
-                                                                            <i className="fas fa-play"></i>
-                                                                            Start Learning
-                                                                        </Link>
-                                                                    ) : calculateProgress(c) === 100 ? (
-                                                                        <Link 
-                                                                            to={`/student/courses/${c.enrollment_id}/`} 
-                                                                            className="course-btn btn-completed"
-                                                                        >
-                                                                            <i className="fas fa-trophy"></i>
-                                                                            Course Completed
-                                                                        </Link>
-                                                                    ) : (
-                                                                        <Link 
-                                                                            to={`/student/courses/${c.enrollment_id}/`} 
-                                                                            className="course-btn btn-continue"
-                                                                        >
-                                                                            <i className="fas fa-arrow-right"></i>
-                                                                            Continue Learning
-                                                                        </Link>
-                                                                    )}
+                                                                    <div className="progress" style={{ height: "6px", borderRadius: "10px" }}>
+                                                                        <div 
+                                                                            className="progress-bar"
+                                                                            role="progressbar"
+                                                                            style={{ 
+                                                                                width: `${calculateProgress(c)}%`,
+                                                                                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                                                borderRadius: "10px"
+                                                                            }}
+                                                                        ></div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        {/* 🎯 REORGANIZED: Metadata & Button in one horizontal line */}
+                                        <div className="row align-items-center w-100 mt-2 mt-lg-2">
+                                            {/* Metadata on LEFT - Stick to bottom */}
+                                            <div className="col-auto align-self-end">
+                                                <div className="d-flex flex-wrap gap-2 text-muted small">
+                                                    <span>
+                                                        <i className="fas fa-calendar me-1 text-primary"></i>
+                                                        Enrolled: {moment(c.date).format("D MMM, YYYY")}
+                                                    </span>
+                                                    <span>
+                                                        <i className="fas fa-play-circle me-1 text-success"></i>
+                                                        {(c.lectures?.length || 0) + (c.quiz_results?.length || 0)} Total Items
+                                                    </span>
+                                                    <span>
+                                                        <i className="fas fa-check-circle me-1 text-info"></i>
+                                                        {(c.completed_lesson?.length || 0) + (c.quiz_results?.filter(q => q.passed)?.length || 0)} Completed
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Button on RIGHT */}
+                                            <div className="col ms-auto">
+                                                <div className="text-md-end">
+                                                    {calculateProgress(c) === 0 ? (
+                                                        <Link 
+                                                            to={`/student/courses/${c.enrollment_id}/`} 
+                                                            className="course-btn btn-start"
+                                                        >
+                                                            <i className="fas fa-play"></i>
+                                                            Start Learning
+                                                        </Link>
+                                                    ) : calculateProgress(c) === 100 ? (
+                                                        <Link 
+                                                            to={`/student/courses/${c.enrollment_id}/`} 
+                                                            className="course-btn btn-completed"
+                                                        >
+                                                            <i className="fas fa-trophy"></i>
+                                                            Course Completed
+                                                        </Link>
+                                                    ) : (
+                                                        <Link 
+                                                            to={`/student/courses/${c.enrollment_id}/`} 
+                                                            className="course-btn btn-continue"
+                                                        >
+                                                            <i className="fas fa-arrow-right"></i>
+                                                            Continue Learning
+                                                        </Link>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
                                                     </div>
                                                 </div>
                                             ))}

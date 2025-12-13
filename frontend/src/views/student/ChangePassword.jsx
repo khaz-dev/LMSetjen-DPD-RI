@@ -9,6 +9,7 @@ import useAxios from "../../utils/useAxios";
 import silentAxios from "../../utils/silentAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
+import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import "./ChangePassword.css";
 import "../../styles/PasswordInput.css";
 
@@ -86,6 +87,7 @@ function ChangePassword() {
     const [errors, setErrors] = useState({});
     const [isValidatingOldPassword, setIsValidatingOldPassword] = useState(false);
     const [showPasswords, setShowPasswords] = useState(INITIAL_VISIBILITY_STATE);
+    const isCollapsed = useSidebarCollapse();
 
     // Event Handlers
     const handlePasswordChange = (event) => {
@@ -380,7 +382,7 @@ function ChangePassword() {
                     <Header />
                     <div className="row mt-0 mt-md-4">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
 
                             {/* Page Header */}
                             <div className="student-password-header mb-4">

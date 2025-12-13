@@ -14,11 +14,13 @@ import Footer from "../partials/Footer";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
+import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import "./TeacherNotification.css";
 
 function TeacherNotification() {
     const [noti, setNoti] = useState([]);
     const [loading, setLoading] = useState(true);
+    const isCollapsed = useInstructorSidebarCollapse();
 
     const fetchNoti = async () => {
         try {
@@ -66,7 +68,7 @@ function TeacherNotification() {
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
                                         <span className="visually-hidden">Loading...</span>
@@ -93,7 +95,7 @@ function TeacherNotification() {
                     <div className="row">
                         {/* Sidebar Here */}
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Modern Header Section */}
                             <div className="modern-header-section mb-4" style={{
                                 background: 'rgba(255, 255, 255, 0.95)',

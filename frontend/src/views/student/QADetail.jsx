@@ -5,8 +5,10 @@ import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
+import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 
 function QADetail() {
+    const isCollapsed = useSidebarCollapse();
     return (
         <>
             <BaseHeader />
@@ -319,7 +321,7 @@ function QADetail() {
                     <div className="row mt-0 mt-md-4">
                         {/* Sidebar Here */}
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             <h4 className="mb-0 mb-4">
                                 {" "}
                                 <i className="fas fa-envelope"></i> Q/A - Angular Masterclass Course

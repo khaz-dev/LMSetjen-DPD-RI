@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Modal } from 'react-bootstrap';
-import ReactPlayer from 'react-player';
-import useAxios from '../../utils/useAxios';
-import apiInstance from '../../utils/axios';
-import UserData from '../../views/plugin/UserData';
-import Toast from '../../views/plugin/Toast';
-import { getMediaUrl, DEFAULT_IMAGE_URL } from '../../utils/constants';
-import './LecturesTab.css';
+import React, { useState, useRef, useEffect } from "react";
+import { Modal } from "react-bootstrap";
+import ReactPlayer from "react-player";
+import useAxios from "../../utils/useAxios";
+import apiInstance from "../../utils/axios";
+import UserData from "../../views/plugin/UserData";
+import Toast from "../../views/plugin/Toast";
+import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
+import "./LecturesTab.css";
 
 const LecturesTab = ({
     course,
@@ -57,75 +57,75 @@ const LecturesTab = ({
     const getFileIcon = (fileUrl) => {
         if (!fileUrl) return "fas fa-file";
         
-        const extension = fileUrl.toLowerCase().split('.').pop().split('?')[0];
+        const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0];
         const iconMap = {
             // Video files
-            'mp4': 'fas fa-play',
-            'avi': 'fas fa-play', 
-            'mov': 'fas fa-play',
-            'mkv': 'fas fa-play',
-            'webm': 'fas fa-play',
-            'ogg': 'fas fa-play',
+            "mp4": "fas fa-play",
+            "avi": "fas fa-play", 
+            "mov": "fas fa-play",
+            "mkv": "fas fa-play",
+            "webm": "fas fa-play",
+            "ogg": "fas fa-play",
             // Document files
-            'pdf': 'fas fa-file-pdf',
-            'doc': 'fas fa-file-word',
-            'docx': 'fas fa-file-word',
-            'txt': 'fas fa-file-alt',
+            "pdf": "fas fa-file-pdf",
+            "doc": "fas fa-file-word",
+            "docx": "fas fa-file-word",
+            "txt": "fas fa-file-alt",
             // Presentation files
-            'ppt': 'fas fa-file-powerpoint',
-            'pptx': 'fas fa-file-powerpoint',
+            "ppt": "fas fa-file-powerpoint",
+            "pptx": "fas fa-file-powerpoint",
             // Image files
-            'jpg': 'fas fa-image',
-            'jpeg': 'fas fa-image',
-            'png': 'fas fa-image',
-            'gif': 'fas fa-image',
-            'bmp': 'fas fa-image'
+            "jpg": "fas fa-image",
+            "jpeg": "fas fa-image",
+            "png": "fas fa-image",
+            "gif": "fas fa-image",
+            "bmp": "fas fa-image"
         };
         
-        return iconMap[extension] || 'fas fa-file';
+        return iconMap[extension] || "fas fa-file";
     };
 
     const getFileTypeIcon = (fileUrl) => {
         if (!fileUrl) return "fas fa-file";
         
-        const extension = fileUrl.toLowerCase().split('.').pop().split('?')[0];
+        const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0];
         const iconMap = {
-            'mp4': 'fas fa-video', 'avi': 'fas fa-video', 'mov': 'fas fa-video', 'mkv': 'fas fa-video', 'webm': 'fas fa-video', 'ogg': 'fas fa-video',
-            'pdf': 'fas fa-file-pdf', 'doc': 'fas fa-file-word', 'docx': 'fas fa-file-word', 'txt': 'fas fa-file-alt',
-            'ppt': 'fas fa-file-powerpoint', 'pptx': 'fas fa-file-powerpoint',
-            'jpg': 'fas fa-image', 'jpeg': 'fas fa-image', 'png': 'fas fa-image', 'gif': 'fas fa-image', 'bmp': 'fas fa-image'
+            "mp4": "fas fa-video", "avi": "fas fa-video", "mov": "fas fa-video", "mkv": "fas fa-video", "webm": "fas fa-video", "ogg": "fas fa-video",
+            "pdf": "fas fa-file-pdf", "doc": "fas fa-file-word", "docx": "fas fa-file-word", "txt": "fas fa-file-alt",
+            "ppt": "fas fa-file-powerpoint", "pptx": "fas fa-file-powerpoint",
+            "jpg": "fas fa-image", "jpeg": "fas fa-image", "png": "fas fa-image", "gif": "fas fa-image", "bmp": "fas fa-image"
         };
         
-        return iconMap[extension] || 'fas fa-file';
+        return iconMap[extension] || "fas fa-file";
     };
 
     const getFileTypeLabel = (fileUrl) => {
         if (!fileUrl) return "File";
         
-        const extension = fileUrl.toLowerCase().split('.').pop().split('?')[0];
+        const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0];
         const labelMap = {
-            'mp4': 'Video', 'avi': 'Video', 'mov': 'Video', 'mkv': 'Video', 'webm': 'Video', 'ogg': 'Video',
-            'pdf': 'PDF', 'doc': 'Document', 'docx': 'Document', 'txt': 'Text',
-            'ppt': 'Presentation', 'pptx': 'Presentation',
-            'jpg': 'Image', 'jpeg': 'Image', 'png': 'Image', 'gif': 'Image', 'bmp': 'Image'
+            "mp4": "Video", "avi": "Video", "mov": "Video", "mkv": "Video", "webm": "Video", "ogg": "Video",
+            "pdf": "PDF", "doc": "Document", "docx": "Document", "txt": "Text",
+            "ppt": "Presentation", "pptx": "Presentation",
+            "jpg": "Image", "jpeg": "Image", "png": "Image", "gif": "Image", "bmp": "Image"
         };
         
-        return labelMap[extension] || 'File';
+        return labelMap[extension] || "File";
     };
 
     const getFileTypeTitle = (fileUrl) => {
         const type = getFileTypeLabel(fileUrl);
-        return type === 'Video' ? 'Play video' : `Open ${type.toLowerCase()}`;
+        return type === "Video" ? "Play video" : `Open ${type.toLowerCase()}`;
     };
 
     // Helper function to get lesson progress status
     const getLessonProgressStatus = (variantItem) => {
-        if (!variantItem) return { status: 'not-started', percentage: 0 };
+        if (!variantItem) return { status: "not-started", percentage: 0 };
         
         // Check if lesson is completed first (from backend data)
         const isCompleted = isLessonCompleted(variantItem);
         if (isCompleted) {
-            return { status: 'completed', percentage: 100 };
+            return { status: "completed", percentage: 100 };
         }
         
         // Check if there's video progress data for this lesson
@@ -142,10 +142,10 @@ const LecturesTab = ({
         
         // For video files, show "Ready to watch" only if no progress exists
         if (isVideoFile(variantItem.file)) {
-            return { status: 'not-started', percentage: 0 };
+            return { status: "not-started", percentage: 0 };
         }
         
-        return { status: 'not-started', percentage: 0 };
+        return { status: "not-started", percentage: 0 };
     };
 
     // Helper function to count unique completed lessons
@@ -194,7 +194,7 @@ const LecturesTab = ({
             const progressPercentage = (position / duration) * 100;
 
             // Call backend API to save progress
-            await apiInstance.post('/student/video-progress/', {
+            await apiInstance.post("/student/video-progress/", {
                 user: UserData()?.user_id,
                 course: course.course.id,
                 variant_item: variantItemId,
@@ -215,7 +215,7 @@ const LecturesTab = ({
             
             return true;
         } catch (error) {
-            console.error('[Video Progress] Error saving:', error);
+            console.error("[Video Progress] Error saving:", error);
             return false;
         }
     };
@@ -274,7 +274,7 @@ const LecturesTab = ({
                     if (transformedData.duration > 1800 || transformedData.position > 60) {
                         const resumeMinutes = Math.floor(transformedData.position / 60);
                         const resumeSeconds = Math.floor(transformedData.position % 60);
-                        const timeString = `${resumeMinutes}:${resumeSeconds.toString().padStart(2, '0')}`;
+                        const timeString = `${resumeMinutes}:${resumeSeconds.toString().padStart(2, "0")}`;
                         
                         Toast().fire({
                             icon: "info",
@@ -282,7 +282,7 @@ const LecturesTab = ({
                             text: `Continuing from where you left off at ${timeString}`,
                             timer: 3000,
                             toast: true,
-                            position: 'top-end'
+                            position: "top-end"
                         });
                     }
                 }
@@ -306,19 +306,19 @@ const LecturesTab = ({
         if (!progressData) {
             setProgressStatus(prev => ({
                 ...prev,
-                [progressKey]: { status: 'not-started', percentage: 0 }
+                [progressKey]: { status: "not-started", percentage: 0 }
             }));
             return;
         }
 
         // Determine status based on progress data
-        let status = 'not-started';
-        let percentage = progressData.percentage || 0;
+        let status = "not-started";
+        const percentage = progressData.percentage || 0;
         
         if (progressData.isCompleted || percentage >= 99.8) {
-            status = 'completed';
+            status = "completed";
         } else if (progressData.isInProgress || percentage > 0) {
-            status = 'in-progress';
+            status = "in-progress";
         }
 
         setProgressStatus(prev => ({
@@ -340,7 +340,7 @@ const LecturesTab = ({
         // Reload all progress if lectures are available
         if (course?.curriculum?.length > 0) {
             // This will trigger the useEffect to reload progress
-            const event = new Event('courseUpdated');
+            const event = new Event("courseUpdated");
             window.dispatchEvent(event);
         }
     };
@@ -374,7 +374,7 @@ const LecturesTab = ({
             formdata.append("course_id", course.course?.id);
             formdata.append("variant_item_id", variantItemId);
 
-            const response = await useAxios.post(`student/course-completed/`, formdata);
+            const response = await useAxios.post("student/course-completed/", formdata);
             
             // Find the lesson item to check if it's a video
             let lessonItem = null;
@@ -420,7 +420,7 @@ const LecturesTab = ({
                         setProgressStatus(prevStatus => ({
                             ...prevStatus,
                             [progressKey]: { 
-                                status: 'completed', 
+                                status: "completed", 
                                 percentage: 100,
                                 position: 0,
                                 duration: 0
@@ -492,7 +492,7 @@ const LecturesTab = ({
     // Video file detection
     const isVideoFile = (filename) => {
         if (!filename) return false;
-        const videoExtensions = ['.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.m4v'];
+        const videoExtensions = [".mp4", ".webm", ".ogg", ".avi", ".mov", ".wmv", ".flv", ".mkv", ".m4v"];
         return videoExtensions.some(ext => filename.toLowerCase().includes(ext.toLowerCase()));
     };
 
@@ -561,7 +561,7 @@ const LecturesTab = ({
         
         // Seek to the new position
         if (playerRef.current) {
-            playerRef.current.seekTo(newPlayed, 'fraction');
+            playerRef.current.seekTo(newPlayed, "fraction");
         }
         
         // Clear seeking state after brief delay
@@ -601,7 +601,7 @@ const LecturesTab = ({
     };
 
     const toggleFullscreen = () => {
-        const videoContainer = document.querySelector('.video-container');
+        const videoContainer = document.querySelector(".video-container");
         if (!document.fullscreenElement) {
             if (videoContainer?.requestFullscreen) {
                 videoContainer.requestFullscreen();
@@ -681,35 +681,35 @@ const LecturesTab = ({
             if (!show || !isVideoFile(variantItem?.file)) return;
             
             switch (e.code) {
-                case 'Space':
+                case "Space":
                     e.preventDefault();
                     handlePlayPause();
                     break;
-                case 'ArrowLeft':
+                case "ArrowLeft":
                     e.preventDefault();
                     const backwardTime = Math.max(0, played - 0.05);
                     setPlayed(backwardTime);
                     playerRef.current?.seekTo(backwardTime);
                     break;
-                case 'ArrowRight':
+                case "ArrowRight":
                     e.preventDefault();
                     const forwardTime = Math.min(1, played + 0.05);
                     setPlayed(forwardTime);
                     playerRef.current?.seekTo(forwardTime);
                     break;
-                case 'ArrowUp':
+                case "ArrowUp":
                     e.preventDefault();
                     setVolume(Math.min(1, volume + 0.1));
                     break;
-                case 'ArrowDown':
+                case "ArrowDown":
                     e.preventDefault();
                     setVolume(Math.max(0, volume - 0.1));
                     break;
-                case 'KeyM':
+                case "KeyM":
                     e.preventDefault();
                     toggleMute();
                     break;
-                case 'KeyF':
+                case "KeyF":
                     e.preventDefault();
                     toggleFullscreen();
                     break;
@@ -718,8 +718,8 @@ const LecturesTab = ({
             }
         };
 
-        document.addEventListener('keydown', handleKeyPress);
-        return () => document.removeEventListener('keydown', handleKeyPress);
+        document.addEventListener("keydown", handleKeyPress);
+        return () => document.removeEventListener("keydown", handleKeyPress);
     }, [show, variantItem, playing, played, volume, muted]);
 
     // Handle fullscreen changes
@@ -728,21 +728,21 @@ const LecturesTab = ({
             setFullscreen(!!document.fullscreenElement);
         };
 
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+        return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
     }, []);
 
     // Format time helper
     const formatTime = (seconds) => {
-        if (!seconds || isNaN(seconds)) return '00:00';
+        if (!seconds || isNaN(seconds)) return "00:00";
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = Math.floor(seconds % 60);
         
         if (hours > 0) {
-            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
         }
-        return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        return `${minutes}:${secs.toString().padStart(2, "0")}`;
     };
 
     // Load progress for all video lessons when course loads
@@ -768,7 +768,7 @@ const LecturesTab = ({
                         }
                     }
                 } catch (error) {
-                    console.error('[Video Progress] Failed to load all progress:', error);
+                    console.error("[Video Progress] Failed to load all progress:", error);
                 }
             };
             
@@ -792,7 +792,7 @@ const LecturesTab = ({
     useEffect(() => {
         const performSeek = async (timeToSeek, maxRetries = 5) => {
             if (!playerRef.current || !timeToSeek || timeToSeek <= 0 || !duration) {
-                console.warn('[Video Resume] Invalid conditions for seeking');
+                console.warn("[Video Resume] Invalid conditions for seeking");
                 setSeekOnReady(null);
                 return;
             }
@@ -817,7 +817,7 @@ const LecturesTab = ({
                         setPlayed(seekPercentage);
                         
                         // Perform the seek
-                        playerRef.current.seekTo(seekPercentage, 'fraction');
+                        playerRef.current.seekTo(seekPercentage, "fraction");
                         
                         // Verify the seek worked after a delay
                         setTimeout(() => {
@@ -872,6 +872,33 @@ const LecturesTab = ({
         }
     }, [show, variantItem, duration, seekOnReady]);
 
+    // ✨ Handle aria-expanded attribute and chevron rotation on collapse toggle
+    useEffect(() => {
+        // Set initial aria-expanded state for all collapse buttons
+        const collapseButtons = document.querySelectorAll('[data-bs-toggle="collapse"]');
+        
+        collapseButtons.forEach(button => {
+            const target = button.getAttribute("data-bs-target");
+            if (target) {
+                const collapseElement = document.querySelector(target);
+                if (collapseElement) {
+                    // Set initial state based on whether collapse has 'show' class
+                    const isExpanded = collapseElement.classList.contains("show");
+                    button.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+                    
+                    // Listen for Bootstrap collapse events
+                    collapseElement.addEventListener("show.bs.collapse", () => {
+                        button.setAttribute("aria-expanded", "true");
+                    });
+                    
+                    collapseElement.addEventListener("hide.bs.collapse", () => {
+                        button.setAttribute("aria-expanded", "false");
+                    });
+                }
+            }
+        });
+    }, [course?.curriculum]);
+
     return (
         <div className="tab-pane fade show active" id="lectures" role="tabpanel">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -912,7 +939,7 @@ const LecturesTab = ({
                                     <div>
                                         <h5 className="mb-1">{c.title}</h5>
                                         <small className="opacity-90">
-                                            {c.variant_items?.length || 0} Lesson{(c.variant_items?.length || 0) !== 1 ? 's' : ''}
+                                            {c.variant_items?.length || 0} Lesson{(c.variant_items?.length || 0) !== 1 ? "s" : ""}
                                         </small>
                                     </div>
                                     <button
@@ -920,6 +947,9 @@ const LecturesTab = ({
                                         type="button"
                                         data-bs-toggle="collapse"
                                         data-bs-target={`#collapse-${c.variant_id}`}
+                                        aria-expanded="true"
+                                        aria-controls={`collapse-${c.variant_id}`}
+                                        title="Toggle section"
                                     >
                                         <i className="fas fa-chevron-down fa-lg"></i>
                                     </button>
@@ -931,14 +961,14 @@ const LecturesTab = ({
                             {c.variant_items?.map((l, lessonIndex) => {
                                 // Get detailed progress status
                                 const progressStatus = getLessonProgressStatus(l);
-                                const isCompleted = progressStatus.status === 'completed';
-                                const isInProgress = progressStatus.status === 'in-progress';
+                                const isCompleted = progressStatus.status === "completed";
+                                const isInProgress = progressStatus.status === "in-progress";
                                 const isVideoLesson = isVideoFile(l.file);
                                 const itemId = l.variant_item_id;
                                 
                                 return (
                                     <div key={l.variant_item_id || lessonIndex} className="mb-3">{/* Use only variant_item_id for key */}
-                                        <div className={`lesson-item ${isCompleted ? 'completed' : isInProgress ? 'in-progress' : ''} p-3 rounded-3 position-relative`}>
+                                        <div className={`lesson-item ${isCompleted ? "completed" : isInProgress ? "in-progress" : ""} p-3 rounded-3 position-relative`}>
                                             {/* Enhanced Progress indicator */}
                                             <div className={`lesson-progress-indicator ${progressStatus.status}`}>
                                                 {isInProgress && (
@@ -956,9 +986,9 @@ const LecturesTab = ({
                                                         className={`lesson-play-btn ${progressStatus.status}`}
                                                         title={getFileTypeTitle(l.file)}
                                                     >
-                                                        {progressStatus.status === 'completed' ? (
+                                                        {progressStatus.status === "completed" ? (
                                                             <i className="fas fa-check"></i>
-                                                        ) : progressStatus.status === 'in-progress' ? (
+                                                        ) : progressStatus.status === "in-progress" ? (
                                                             <i className="fas fa-play text-warning"></i>
                                                         ) : (
                                                             <i className={getFileIcon(l.file)}></i>
@@ -981,19 +1011,19 @@ const LecturesTab = ({
                                                             )}
                                                             
                                                             {/* Enhanced progress status badges */}
-                                                            {progressStatus.status === 'completed' && (
+                                                            {progressStatus.status === "completed" && (
                                                                 <small className="lesson-status-badge completed">
                                                                     <i className="fas fa-check-circle me-1"></i>
                                                                     Completed
                                                                 </small>
                                                             )}
-                                                            {progressStatus.status === 'in-progress' && (
+                                                            {progressStatus.status === "in-progress" && (
                                                                 <small className="lesson-status-badge in-progress">
                                                                     <i className="fas fa-play-circle me-1"></i>
                                                                     {progressStatus.percentage}% watched
                                                                 </small>
                                                             )}
-                                                            {isVideoLesson && progressStatus.status === 'not-started' && (
+                                                            {isVideoLesson && progressStatus.status === "not-started" && (
                                                                 <small className="lesson-status-badge not-started">
                                                                     <i className="fas fa-play me-1"></i>
                                                                     Ready to watch
@@ -1021,8 +1051,8 @@ const LecturesTab = ({
                                                                     />
                                                                     <label 
                                                                         htmlFor={`lesson-${l.variant_item_id}`}
-                                                                        className={`lesson-completion-label ${isUpdating ? 'updating' : ''}`}
-                                                                        title={isUpdating ? 'Updating...' : (isCompleted ? 'Mark as incomplete' : 'Mark as complete')}
+                                                                        className={`lesson-completion-label ${isUpdating ? "updating" : ""}`}
+                                                                        title={isUpdating ? "Updating..." : (isCompleted ? "Mark as incomplete" : "Mark as complete")}
                                                                     >
                                                                         {isUpdating ? (
                                                                             <div className="spinner-border spinner-border-sm text-primary" role="status">
@@ -1058,39 +1088,39 @@ const LecturesTab = ({
                 <Modal.Header 
                     className="border-0 text-white position-relative"
                     style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        padding: '1rem 2rem',
+                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        padding: "1rem 2rem",
                         zIndex: 10
                     }}
                 >
                     {/* Decorative background elements */}
                     <div 
                         style={{
-                            position: 'absolute',
-                            top: '-50%',
-                            right: '-20%',
-                            width: '40%',
-                            height: '200%',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            transform: 'rotate(15deg)',
+                            position: "absolute",
+                            top: "-50%",
+                            right: "-20%",
+                            width: "40%",
+                            height: "200%",
+                            background: "rgba(255, 255, 255, 0.1)",
+                            transform: "rotate(15deg)",
                             zIndex: -1
                         }}
                     ></div>
                     
-                    <Modal.Title className="d-flex align-items-center" style={{ zIndex: 2, position: 'relative' }}>
+                    <Modal.Title className="d-flex align-items-center" style={{ zIndex: 2, position: "relative" }}>
                         <div 
                             className="me-3"
                             style={{
-                                width: '50px',
-                                height: '50px',
-                                background: 'rgba(255, 255, 255, 0.2)',
-                                borderRadius: '15px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
+                                width: "50px",
+                                height: "50px",
+                                background: "rgba(255, 255, 255, 0.2)",
+                                borderRadius: "15px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
                             }}
                         >
-                            <i className={`${getFileTypeIcon(variantItem?.file)} text-white`} style={{ fontSize: '1.2rem' }}></i>
+                            <i className={`${getFileTypeIcon(variantItem?.file)} text-white`} style={{ fontSize: "1.2rem" }}></i>
                         </div>
                         <div>
                             <div className="fw-bold fs-4">{variantItem?.title}</div>
@@ -1107,9 +1137,9 @@ const LecturesTab = ({
                         aria-label="Close"
                         onClick={handleClose}
                         style={{
-                            position: 'absolute',
-                            top: '1.5rem',
-                            right: '1.5rem',
+                            position: "absolute",
+                            top: "1.5rem",
+                            right: "1.5rem",
                             zIndex: 100
                         }}
                     >
@@ -1127,21 +1157,21 @@ const LecturesTab = ({
                                 <div
                                     className="video-progress-badge"
                                     style={{
-                                        position: 'absolute',
-                                        top: '16px',
-                                        right: '24px',
-                                        background: 'rgba(0,0,0,0.7)',
-                                        color: '#fff',
-                                        padding: '6px 14px',
-                                        borderRadius: '18px',
-                                        fontSize: '0.95rem',
+                                        position: "absolute",
+                                        top: "16px",
+                                        right: "24px",
+                                        background: "rgba(0,0,0,0.7)",
+                                        color: "#fff",
+                                        padding: "6px 14px",
+                                        borderRadius: "18px",
+                                        fontSize: "0.95rem",
                                         zIndex: 2147483647,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        width: 'fit-content',
-                                        maxWidth: '200px',
-                                        whiteSpace: 'nowrap'
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        width: "fit-content",
+                                        maxWidth: "200px",
+                                        whiteSpace: "nowrap"
                                     }}
                                 >
                                     <i className="fas fa-chart-line"></i>
@@ -1152,7 +1182,7 @@ const LecturesTab = ({
                                         controls={true}
                                         playing={playing}
                                         width="100%"
-                                        height={'60vh'}
+                                        height={"60vh"}
                                         onProgress={handleProgress}
                                         ref={playerRef}
                                         onPause={() => {
@@ -1204,7 +1234,7 @@ const LecturesTab = ({
                                                             completeLesson();
                                                         }, 300);
                                                     }).catch((err) => {
-                                                        console.error('[Fullscreen] Error exiting fullscreen:', err);
+                                                        console.error("[Fullscreen] Error exiting fullscreen:", err);
                                                         // Show notification anyway if exit fails
                                                         completeLesson();
                                                     });
@@ -1221,10 +1251,10 @@ const LecturesTab = ({
                                 </div>
                             ) : (
                                 // File Preview for Non-Video Files
-                                <div className="p-4 text-center" style={{ minHeight: '400px' }}>
+                                <div className="p-4 text-center" style={{ minHeight: "400px" }}>
                                     <div className="file-preview-container">
                                         <div className="file-icon-large mb-3">
-                                            <i className={`${getFileTypeIcon(variantItem.file)} fa-4x`} style={{ color: '#667eea' }}></i>
+                                            <i className={`${getFileTypeIcon(variantItem.file)} fa-4x`} style={{ color: "#667eea" }}></i>
                                         </div>
                                         <h5 className="mb-2 text-white">{variantItem.title}</h5>
                                         <p className="text-muted mb-4">

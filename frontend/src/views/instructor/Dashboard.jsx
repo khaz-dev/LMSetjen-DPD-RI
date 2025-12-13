@@ -9,12 +9,14 @@ import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import { calculateTotalDuration, getDurationStats } from "../../utils/durationUtils";
+import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 
 function Dashboard() {
+    const isCollapsed = useInstructorSidebarCollapse();
     const [stats, setStats] = useState([]);
     const [courses, setCourses] = useState([]);
     const [students, setStudents] = useState([]);
@@ -233,7 +235,7 @@ function Dashboard() {
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
@@ -258,7 +260,7 @@ function Dashboard() {
                     <Header />
                     <div className="row">
                         <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
+                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Dashboard Header */}
                             <div className="dashboard-header-modern mb-3">
                                 <div className="d-flex justify-content-between align-items-center">
