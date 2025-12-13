@@ -882,14 +882,9 @@
   /* Content column - expands to fill remaining space */
   .qa-bg-section .row > .col-lg-9 {
     flex: 1 1 auto;
-    min-width: 0;
+    min-width: 0 !important;
     width: auto;
     max-width: 100%;
-  }
-
-  /* Ensure content doesn't wrap under sidebar */
-  .qa-bg-section .row > .col-lg-9 {
-    min-width: 500px;
   }
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
@@ -916,14 +911,9 @@
   /* Content column - expands to fill remaining space */
   .qa-bg-section .row > .col-md-8 {
     flex: 1 1 auto;
-    min-width: 0;
+    min-width: 0 !important;
     width: auto;
     max-width: 100%;
-  }
-
-  /* Ensure content doesn't wrap under sidebar */
-  .qa-bg-section .row > .col-md-8 {
-    min-width: 400px;
   }
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {

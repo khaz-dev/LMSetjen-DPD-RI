@@ -980,14 +980,9 @@
   /* Content column - expands to fill remaining space */
   .instructor-profile-page .row > .col-md-8 {
     flex: 1 1 auto;
-    min-width: 0;
+    min-width: 0 !important;
     width: auto;
     max-width: 100%;
-  }
-
-  /* Ensure content doesn't wrap under sidebar */
-  .instructor-profile-page .row > .col-md-8 {
-    min-width: 400px;
   }
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {

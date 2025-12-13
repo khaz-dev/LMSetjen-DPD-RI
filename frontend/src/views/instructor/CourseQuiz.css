@@ -1115,10 +1115,10 @@ button div,
        col-lg-3 = 25% | col-lg-9 = 75%
        ================================ */
     .modern-dashboard .row > .col-lg-9 {
-        flex: 0 0 auto !important;
-        width: 75% !important;
-        max-width: 75% !important;
-        min-width: 500px;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+        max-width: 100% !important;
     }
 
     /* ================================
@@ -1128,9 +1128,9 @@ button div,
     .modern-dashboard .row > .col-lg-9:has(~ .col-lg-3 .instructor-sidebar.collapsed),
     .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-lg-9 {
         flex: 1 1 auto !important;
-        width: calc(100% - 100px) !important;
-        max-width: calc(100% - 100px) !important;
-        min-width: auto;
+        width: auto !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
     }
 
     /* ================================
@@ -1167,10 +1167,10 @@ button div,
        col-md-4 = 33% | col-md-8 = 66%
        ================================ */
     .modern-dashboard .row > .col-md-8 {
-        flex: 0 0 auto !important;
-        width: 66.666667% !important;
-        max-width: 66.666667% !important;
-        min-width: 400px;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+        max-width: 100% !important;
     }
 
     /* ================================
@@ -1180,9 +1180,9 @@ button div,
     .modern-dashboard .row > .col-md-8:has(~ .col-md-4 .instructor-sidebar.collapsed),
     .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
         flex: 1 1 auto !important;
-        width: calc(100% - 100px) !important;
-        max-width: calc(100% - 100px) !important;
-        min-width: auto;
+        width: auto !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
     }
 
     /* ================================

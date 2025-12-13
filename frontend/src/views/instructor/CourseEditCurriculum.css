@@ -1041,18 +1041,14 @@
     /* Content column - expands to fill remaining space */
     .instructor-course-edit-curriculum-page .row > .col-lg-9 {
         flex: 1 1 auto;
-        min-width: 0;
+        min-width: 0 !important;
         width: auto;
         max-width: 100%;
-    }
-
-    /* Ensure content doesn't wrap under sidebar */
-    .instructor-course-edit-curriculum-page .row > .col-lg-9 {
-        min-width: 500px;
     }
 }
 
 /* Tablet (md breakpoint) */
+@media (min-width: 768px) and (max-width: 991px) {
     .instructor-course-edit-curriculum-page .row > .instructor-sidebar-column {
         flex-basis: auto;
         flex-grow: 0;
@@ -1063,7 +1059,7 @@
     /* Content column - expands to fill remaining space */
     .instructor-course-edit-curriculum-page .row > .col-md-8 {
         flex: 1 1 auto;
-        min-width: 0;
+        min-width: 0 !important;
         width: auto;
         max-width: 100%;
     }

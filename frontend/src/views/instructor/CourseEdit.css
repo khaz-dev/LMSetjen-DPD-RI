@@ -2357,14 +2357,9 @@ button div,
     /* Content column - expands to fill remaining space */
     .instructor-course-edit-page .row > .col-lg-9 {
         flex: 1 1 auto;
-        min-width: 0;
+        min-width: 0 !important;
         width: auto;
         max-width: 100%;
-    }
-
-    /* Ensure content doesn't wrap under sidebar */
-    .instructor-course-edit-page .row > .col-lg-9 {
-        min-width: 500px;
     }
 }
 
@@ -2381,7 +2376,7 @@ button div,
     /* Content column - expands to fill remaining space */
     .instructor-course-edit-page .row > .col-md-8 {
         flex: 1 1 auto;
-        min-width: 0;
+        min-width: 0 !important;
         width: auto;
         max-width: 100%;
     }

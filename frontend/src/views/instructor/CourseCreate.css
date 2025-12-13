@@ -1552,23 +1552,6 @@
    RESPONSIVE LAYOUT - Content Column Sizing
    ======================================== */
 
-/* Base: Desktop Large (lg breakpoint and up) */
-@media (min-width: 992px) {
-  .instructor-course-create-page .row > .col-lg-9 {
-    flex: 1 1 auto;
-    min-width: 500px;
-  }
-}
-
-/* Tablet (md breakpoint) */
-@media (min-width: 768px) and (max-width: 991px) {
-  .instructor-course-create-page .row > .col-md-8 {
-    flex: 1 1 auto;
-    min-width: 400px;
-  }
-}
-
-/* Mobile: Full width stacked */
 /* ========================================
    MEDIA QUERIES - RESPONSIVE SIDEBAR LAYOUT
    ======================================== */
@@ -1586,14 +1569,9 @@
     /* Content column - expands to fill remaining space */
     .instructor-course-create-page .row > .col-lg-9 {
         flex: 1 1 auto;
-        min-width: 0;
+        min-width: 0 !important;
         width: auto;
         max-width: 100%;
-    }
-
-    /* Ensure content doesn't wrap under sidebar */
-    .instructor-course-create-page .row > .col-lg-9 {
-        min-width: 500px;
     }
 }
 
@@ -1610,7 +1588,7 @@
     /* Content column - expands to fill remaining space */
     .instructor-course-create-page .row > .col-md-8 {
         flex: 1 1 auto;
-        min-width: 0;
+        min-width: 0 !important;
         width: auto;
         max-width: 100%;
     }

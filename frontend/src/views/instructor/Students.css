@@ -380,21 +380,18 @@
   /* Content column - expands to fill remaining space */
   .modern-students .row > .col-lg-9 {
     flex: 1 1 auto;
-    min-width: 0;
+    min-width: 0 !important;
     width: auto;
     max-width: 100%;
-  }
-
-  /* Ensure content doesn't wrap under sidebar */
-  .modern-students .row > .col-lg-9 {
-    min-width: 500px;
   }
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
   .modern-students .row > .col-md-8 {
     flex: 1 1 auto;
-    min-width: 400px;
+    min-width: 0 !important;
+    width: auto;
+    max-width: 100%;
   }
 }
 

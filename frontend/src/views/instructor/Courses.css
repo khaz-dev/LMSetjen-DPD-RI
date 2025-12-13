@@ -614,18 +614,14 @@
     /* Content column - expands to fill remaining space */
     .courses-container .row > .col-lg-9 {
         flex: 1 1 auto;
-        min-width: 0;
+        min-width: 0 !important;
         width: auto;
         max-width: 100%;
-    }
-
-    /* Ensure content doesn't wrap under sidebar */
-    .courses-container .row > .col-lg-9 {
-        min-width: 500px;
     }
 }
 
 /* Tablet: Medium screens (md: 768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
     .courses-container .row > .instructor-sidebar-column {
         flex-basis: auto;
         flex-grow: 0;
@@ -636,14 +632,9 @@
     /* Content column - expands to fill remaining space */
     .courses-container .row > .col-md-8 {
         flex: 1 1 auto;
-        min-width: 0;
+        min-width: 0 !important;
         width: auto;
         max-width: 100%;
-    }
-
-    /* Ensure content doesn't wrap under sidebar */
-    .courses-container .row > .col-md-8 {
-        min-width: 400px;
     }
 }
 
