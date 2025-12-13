@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext, useMemo, useCallback } from "react";
+import { useEffect, useState, useContext, useCallback } from "react";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import { Link } from "react-router-dom";
@@ -7,8 +7,7 @@ import { Rating } from 'react-simple-star-rating';
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { WishlistContext } from "../plugin/Context";
-import apiInstance, { getMediaURL } from "../../utils/axios";
-import { getImageUrl } from "../../utils/fileUtils";
+import apiInstance from "../../utils/axios";
 import SEO from "../../components/SEO";
 import "./Index.css";
 
@@ -25,7 +24,6 @@ function Index() {
     const [wishlistItems, setWishlistItems] = useState([]);
     const [activeSection, setActiveSection] = useState(0);
     const [showSectionLabel, setShowSectionLabel] = useState(false);
-    const [labelHideTimeout, setLabelHideTimeout] = useState(null);
     const [stats, setStats] = useState({
         total_courses: 0,
         total_teachers: 0,
@@ -67,7 +65,6 @@ function Index() {
             setFeaturedCourses(coursesArray.slice(0, 6));
 
         } catch (error) {
-            console.error('Error fetching data:', error);
             Toast().fire({
                 icon: "error",
                 title: "Failed to load data. Please refresh the page.",
@@ -82,7 +79,6 @@ function Index() {
         setIsStatsLoading(true);
         try {
             const response = await apiInstance.get(`/statistics/public-stats/`);
-            console.log('📊 Statistics API Response:', response.data); // DEBUG
             if (response.data) {
                 const newStats = {
                     total_courses: response.data.total_courses || 0,
@@ -93,11 +89,9 @@ function Index() {
                     total_materials: response.data.total_materials || 0,
                     platform_rating: response.data.platform_rating || 4.8
                 };
-                console.log('📊 Setting stats state:', newStats); // DEBUG
                 setStats(newStats);
             }
         } catch (error) {
-            console.error('❌ Error fetching statistics:', error);
             // Set default stats on error
             setStats({
                 total_courses: 0,
@@ -124,7 +118,6 @@ function Index() {
             const wishlistArray = Array.isArray(wishlistData) ? wishlistData : [];
             setWishlistItems(wishlistArray);
         } catch (error) {
-            console.error("Error fetching wishlist:", error);
             // Set empty array on error to prevent .some() errors
             setWishlistItems([]);
         }
@@ -184,7 +177,6 @@ function Index() {
             await fetchWishlistItems();
             refreshWishlistCount();
         } catch (error) {
-            console.error('Error adding to wishlist:', error);
             Toast().fire({
                 icon: "error",
                 title: "Terjadi kesalahan. Silakan coba lagi.",
@@ -264,16 +256,10 @@ function Index() {
             // Show label when user clicks to scroll
             setShowSectionLabel(true);
             
-            // Clear existing timeout
-            if (labelHideTimeout) {
-                clearTimeout(labelHideTimeout);
-            }
-            
             // Hide label after 3 seconds
-            const timeout = setTimeout(() => {
+            setTimeout(() => {
                 setShowSectionLabel(false);
             }, 3000);
-            setLabelHideTimeout(timeout);
             
             sections[index].scrollIntoView({ 
                 behavior: 'smooth',
