@@ -70,9 +70,8 @@
   margin-right: 0 !important; /* NO negative margin - prevents right overflow */
   padding-left: 0 !important; /* Remove Bootstrap column padding */
   padding-right: 0 !important; /* Remove Bootstrap column padding */
-  width: calc(100% - var(--bs-gutter-x, 24px)) !important; /* Account for outer row's negative margins */
   flex: 1 1 auto !important; /* Use flexbox to fill available space properly */
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* ✨ CRITICAL: Smooth animation when sidebar collapses/expands */
+  min-width: 0 !important; /* Allow flex shrinking below content width */
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
@@ -88,9 +87,8 @@
   margin-right: 0 !important; /* NO negative margin - prevents right overflow */
   padding-left: 0 !important; /* Remove Bootstrap column padding */
   padding-right: 0 !important; /* Remove Bootstrap column padding */
-  width: calc(100% - var(--bs-gutter-x, 24px)) !important; /* Account for outer row's negative margins */
   flex: 1 1 auto !important; /* Use flexbox to fill available space properly */
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* ✨ CRITICAL: Smooth animation when sidebar collapses/expands */
+  min-width: 0 !important; /* Allow flex shrinking below content width */
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
