@@ -1431,6 +1431,13 @@ function Index() {
                                                         borderRadius: "8px",
                                                         fontWeight: "500",
                                                         fontSize: "0.75rem",
+                                                        padding: "0.5rem 1rem",
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        height: "auto",
+                                                        cursor: "pointer",
+                                                        transition: "all 0.3s ease"
                                                     }}
                                                 >
                                                     Lihat Kursus
