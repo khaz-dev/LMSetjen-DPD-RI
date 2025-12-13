@@ -1116,6 +1116,7 @@
     min-width: 0 !important;   /* ✨ CRITICAL: Allow flex shrinking for smooth animation */
     width: auto;
     max-width: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;  /* ✨ CRITICAL: Smooth width animation */
   }
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
@@ -1146,6 +1147,7 @@
     min-width: 0 !important;   /* ✨ CRITICAL: Allow flex shrinking for smooth animation */
     width: auto;
     max-width: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;  /* ✨ CRITICAL: Smooth width animation */
   }
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {

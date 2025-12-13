@@ -1044,6 +1044,7 @@
         min-width: 0 !important;
         width: auto;
         max-width: 100%;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 }
 
@@ -1062,6 +1063,7 @@
         min-width: 0 !important;
         width: auto;
         max-width: 100%;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 }
 
