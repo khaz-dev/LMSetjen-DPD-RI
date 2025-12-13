@@ -86,9 +86,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    transition: width 0.3s ease-out !important;
+    min-width: 0 !important;
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
