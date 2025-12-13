@@ -482,9 +482,15 @@
   margin-right: 1rem;
   padding-top: 0 !important;
   user-select: none;
+  /* ✨ CRITICAL: Width for expanded state - enables animation */
+  width: 305px !important;
+  min-width: 305px !important;
 }
 
 .instructor-sidebar.collapsed {
+  /* ✨ CRITICAL: Width for collapsed state - completes animation */
+  width: 85px !important;
+  min-width: 85px !important;
   box-shadow: 0 4px 12px rgba(52, 152, 219, 0.08);
 }
 
