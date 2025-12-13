@@ -642,10 +642,13 @@
     /* Direct sidebar width control */
     .col-lg-3.instructor-sidebar-column .instructor-sidebar {
         transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 305px !important;  /* ✨ CRITICAL: Width for expanded state */
+        min-width: 305px !important;
     }
     
     .col-lg-3.instructor-sidebar-column .instructor-sidebar.collapsed {
-        width: 85px !important;
+        width: 85px !important;  /* ✨ CRITICAL: Width for collapsed state */
+        min-width: 85px !important;
     }
     
 }
@@ -659,10 +662,13 @@
     /* Direct sidebar width control */
     .col-md-4.instructor-sidebar-column .instructor-sidebar {
         transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 305px !important;  /* ✨ CRITICAL: Width for expanded state */
+        min-width: 305px !important;
     }
     
     .col-md-4.instructor-sidebar-column .instructor-sidebar.collapsed {
-        width: 85px !important;
+        width: 85px !important;  /* ✨ CRITICAL: Width for collapsed state */
+        min-width: 85px !important;
     }
 }
 
