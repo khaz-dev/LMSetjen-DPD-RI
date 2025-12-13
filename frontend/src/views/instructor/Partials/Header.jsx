@@ -20,6 +20,7 @@ function Header() {
     const saved = localStorage.getItem('instructorHeaderCollapsed');
     return saved === 'true';
   });
+  const [isAnimating, setIsAnimating] = useState(false); // ✨ Only animate on user interaction, not on re-render
   const userData = UserData();
   const location = useLocation();
 
@@ -30,8 +31,12 @@ function Header() {
   const toggleCollapse = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
+    setIsAnimating(true); // ✨ Enable animation only when user clicks toggle
     localStorage.setItem('instructorHeaderCollapsed', newState.toString());
-    // No event dispatching - header is now independent
+    // Reset animation state after it completes (600ms to match CSS animation duration)
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 600);
   };
 
   // Function to check if current page is active
@@ -262,7 +267,7 @@ function Header() {
   return (
     <div className="row align-items-center instructor-header-row">
       <div className="col-xl-12 col-lg-12 col-md-12 col-12">
-        <div className={`instructor-header-card ${isCollapsed ? 'collapsed' : ''}`}>
+        <div className={`instructor-header-card ${isCollapsed ? 'collapsed' : ''} ${isAnimating ? 'animating' : ''}`}>
           {/* Collapse Toggle Button */}
           <button
             className="instructor-header-toggle-btn"
@@ -319,8 +324,7 @@ function Header() {
           )}
 
           {/* Full Header Content */}
-          {!isCollapsed && (
-            <div className="instructor-header-content p-3 p-md-4">
+          <div className={`instructor-header-content p-3 p-md-4 ${isAnimating ? (isCollapsed ? 'collapsed-state' : 'expanded-state') : (isCollapsed ? 'collapsed-visual' : 'expanded-visual')}`}>
               <div className="row align-items-center">
                 {/* Profile Avatar Section */}
                 <div className="col-lg-3 col-md-4 mb-4 mb-lg-0">
@@ -400,7 +404,6 @@ function Header() {
               {/* Additional Instructor Details */}
               {renderInstructorDetails()}
             </div>
-          )}
         </div>
       </div>
     </div>

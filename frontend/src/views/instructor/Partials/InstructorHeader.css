@@ -463,19 +463,97 @@
 
 .instructor-header-toggle-btn i {
   font-size: 1rem;
-  transition: transform 0.3s ease;
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Chevron rotation on collapse */
+.instructor-header-card.collapsed .instructor-header-toggle-btn i {
+  transform: rotate(180deg);
 }
 
 /* Collapsed State */
-.instructor-header-card.collapsed {
-  min-height: auto;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+.instructor-header-card {
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.instructor-header-card.collapsed .instructor-header-content {
-  display: none;
+.instructor-header-card.collapsed {
+  min-height: auto;
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.instructor-header-content {
+  transform-origin: top;
+  overflow: hidden;
+  display: block;
+  visibility: visible;
+}
+
+/* ✨ PHASE 4.20: Animated states - only when user interacts with toggle */
+.instructor-header-content.collapsed-state {
+  animation: collapseHeader 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  max-height: 0;
   opacity: 0;
-  transform: translateY(-20px);
+  visibility: hidden;
+  overflow: hidden;
+  display: none;
+}
+
+.instructor-header-content.expanded-state {
+  animation: expandHeader 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  max-height: 700px;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ✨ PHASE 4.20: Visual states - no animation, used on page navigation */
+.instructor-header-content.collapsed-visual {
+  max-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  display: none;
+}
+
+.instructor-header-content.expanded-visual {
+  animation: none;
+  max-height: 700px;
+  opacity: 1;
+  visibility: visible;
+}
+
+@keyframes expandHeader {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  30% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 700px;
+  }
+}
+
+@keyframes collapseHeader {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 700px;
+  }
+  70% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
 }
 
 /* Hide main toggle button when collapsed */
@@ -544,6 +622,9 @@
   padding: 0.5rem 1rem;
   border-radius: 8px;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .instructor-header-collapsed .btn:hover {
