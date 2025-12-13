@@ -115,6 +115,12 @@
     box-shadow: 0 12px 40px rgba(52, 152, 219, 0.18);
 }
 
+/* Expanded state (default) */
+.instructor-sidebar:not(.collapsed) {
+    width: 305px !important;
+    min-width: 305px !important;
+}
+
 .instructor-sidebar.collapsed {
     /* margin-right is inherited from .instructor-sidebar (1rem) */
     width: 85px !important;
