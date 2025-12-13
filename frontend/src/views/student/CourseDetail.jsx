@@ -162,7 +162,6 @@ function CourseDetail() {
             setQuizResult(null);
             setIsQuizActive(false);
         } catch (error) {
-            console.error("Error fetching quiz details:", error);
             Toast().fire({
                 icon: "error",
                 title: "Failed to load quiz details"
@@ -392,8 +391,6 @@ function CourseDetail() {
                 await fetchCourseDetail(true); // true = prevent loading state
             }
         } catch (error) {
-            console.error("Error submitting quiz:", error);
-            console.error("Error details:", error.response?.data);
             Toast().fire({
                 icon: "error",
                 title: "Failed to submit quiz. Please try again."
@@ -465,8 +462,6 @@ function CourseDetail() {
                 });
             }
         } catch (error) {
-            console.error("Error auto-submitting quiz:", error);
-            console.error("Error details:", error.response?.data);
             Toast().fire({
                 icon: "error",
                 title: "Auto-submit failed",
