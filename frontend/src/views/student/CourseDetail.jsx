@@ -1272,11 +1272,10 @@ function CourseDetail() {
                 </div>
             )}
 
-            <div className="modern-student-course">
-                <section className="pt-5 pb-5">
-                    <div className="container">
-                        {/* Header Here */}
-                        <Header />
+            <section className="modern-student-course">
+                <div className="container">
+                    {/* Header Here */}
+                    <Header />
                         
                         <div className="row mt-0 mt-md-4">
                             {/* Sidebar Here */}
@@ -1918,7 +1917,6 @@ function CourseDetail() {
                         </div>
                     </div>
                 </section>
-            </div>
 
             {/* Add Note Modal */}
             <Modal show={noteShow} onHide={handleNoteClose} size="lg" centered className="add-note-modal">
