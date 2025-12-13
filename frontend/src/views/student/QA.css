@@ -51,11 +51,13 @@
 
 /* ===== MAIN PAGE STYLES ===== */
 .modern-qa-page {
-    background: linear-gradient(135deg, #fafafa 0%, #f8f4ff 50%, #f0ebff 100%) !important;
     min-height: 100vh;
+    background: transparent;
+    padding: 3rem 0;
     padding-top: 3rem !important;
     padding-bottom: 3rem !important;
     margin-top: 0 !important;
+    margin-bottom: 2rem;
 }
 
 .qa-header-card {
@@ -205,18 +207,20 @@
     width: 100%;
     height: 140px;
     overflow: hidden;
-    background: var(--theme-gradient) !important;
+    background: #f8f9fa;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    border-radius: 15px;  /* Match Dashboard consistency */
 }
 
 .course-image {
     width: 100%;
-    height: 100%;
+    height: 140px;  /* ✨ EXPLICIT HEIGHT - Override global Courses.css */
     object-fit: cover;
     transition: transform 0.4s ease;
+    border-radius: 15px;  /* Match container */
 }
 
 .student-qa-course-card:hover .course-image {
@@ -226,13 +230,14 @@
 .course-placeholder {
     width: 100%;
     height: 100%;
-    background: var(--theme-gradient) !important;
+    background: #e9ecef;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #6c757d;
     font-size: 3rem;
     position: relative;
+    border-radius: 15px;  /* Match container */
 }
 
 .course-placeholder::before {
@@ -240,6 +245,7 @@
     position: absolute;
     inset: 0;
     background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    border-radius: 15px;  /* Match container */
 }
 
 .course-placeholder i {
@@ -273,18 +279,24 @@
     color: #9b59b6;
 }
 
-.course-instructor {
-    color: #6c757d;
-    font-size: 0.8rem;
-    font-weight: 500;
-    margin-bottom: 0.75rem;
-    display: flex;
-    align-items: center;
-    transition: color 0.3s ease;
+/* ✨ SCOPED: Course instructor styles for QA page only - HIGH SPECIFICITY to override global conflicts */
+.modern-qa-page .student-qa-course-card .course-instructor,
+.student-qa-course-card .course-instructor {
+    color: #6c757d !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    margin-bottom: 0.75rem !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    transition: color 0.3s ease !important;
+    flex-direction: row !important;
+    line-height: 1.5 !important;
 }
 
 .student-qa-course-card:hover .course-instructor {
-    color: #9b59b6;
+    color: #9b59b6 !important;
 }
 
 .student-qa-course-meta {
@@ -298,16 +310,83 @@
 .qa-stats-badge {
     background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
     color: white;
-    padding: 0.35rem 0.8rem;
+    padding: 0.4rem 1rem;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.25);
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.3);
     transition: all 0.3s ease;
     white-space: nowrap;
+}
+
+/* ============================== */
+/* Adaptive Layout for Sidebar Collapse */
+/* ============================== */
+
+/* Monitor sidebar collapse state - when sidebar is collapsed, main content expands */
+/* ✨ SCOPED SELECTOR: Only target rows directly inside .container, not nested rows inside Header */
+.modern-qa-page > .container > .row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    gap: 0 !important;
+}
+
+/* Exception: Allow student-header-row to use its own negative margins for edge-to-edge expansion */
+.modern-qa-page .row.student-header-row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+.modern-qa-page > .container > .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 992px) {
+    .modern-qa-page .row:has(.student-sidebar-column) > .col-lg-9 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+    .modern-qa-page .row:has(.student-sidebar-column) > .col-lg-9 > .row {
+        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .modern-qa-page .row:has(.student-sidebar-column) > .col-md-8 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+    .modern-qa-page .row:has(.student-sidebar-column) > .col-md-8 > .row {
+        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    }
 }
 
 .qa-stats-badge i {
@@ -1439,12 +1518,6 @@
     }
 }
 /* ===== MODERN Q&A PAGE STYLES ===== */
-.modern-qa-page {
-    min-height: 100vh;
-    background: transparent !important;
-    padding: var(--space-xl) 0;
-}
-
 /* Conversation Card Styles */
 .conversation-card {
     background: white;

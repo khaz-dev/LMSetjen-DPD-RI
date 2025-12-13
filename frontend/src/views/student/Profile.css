@@ -10,6 +10,7 @@
     padding-top: 3rem !important;
     padding-bottom: 3rem !important;
     margin-top: 0 !important;
+    margin-bottom: 2rem;
 }
 
 /* ========================================
@@ -684,5 +685,78 @@
     .student-profile-page .slide-in,
     .student-profile-page .pulse-animation {
         animation: none;
+    }
+}
+
+/* ============================== */
+/* Adaptive Layout for Sidebar Collapse */
+/* ============================== */
+
+/* Monitor sidebar collapse state - when sidebar is collapsed, main content expands */
+/* SCOPED: Only applies to main layout rows (those with sidebar), not form rows (g-3) */
+.student-profile-page > .container > .row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    gap: 0 !important;
+}
+
+/* Exception: Allow student-header-row to use its own negative margins for edge-to-edge expansion */
+.student-profile-page .row.student-header-row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* SCOPED: Only applies to direct children of main layout row, not form fields */
+.student-profile-page > .container > .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
+/* RESTORE: Form rows (g-3) should display horizontally per Bootstrap defaults */
+.student-profile-page .row.g-3 {
+    flex-wrap: wrap !important;  /* Allow wrapping for responsive layout */
+}
+
+@media (min-width: 992px) {
+    .student-profile-page .row:has(.student-sidebar-column) > .col-lg-9 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+    .student-profile-page .row:has(.student-sidebar-column) > .col-lg-9 > .row {
+        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .student-profile-page .row:has(.student-sidebar-column) > .col-md-8 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+    .student-profile-page .row:has(.student-sidebar-column) > .col-md-8 > .row {
+        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
     }
 }

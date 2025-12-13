@@ -6,6 +6,7 @@
     padding-top: 3rem !important;
     padding-bottom: 3rem !important;
     margin-top: 0 !important;
+    margin-bottom: 2rem;
 }
 
 .page-header-card {
@@ -114,11 +115,48 @@
 
 /* ✨ badge-modern and badge-level are now consistently styled globally from index.css - applies to all pages */
 
+/* Card Body - Base styles WITHOUT flex overrides */
+.wishlist-card-body {
+    padding: 0;  /* Override p-3 if needed, or let Bootstrap handle it */
+    display: block;  /* Ensure card-body doesn't inherit card's flex-column */
+    width: 100%;
+}
+
+/* Badge container - ensure badges display horizontally */
+.wishlist-card-body .d-flex.flex-wrap.gap-2 {
+    display: flex !important;
+    flex-direction: row !important;  /* Explicitly set to row - CRITICAL */
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    width: 100%;
+    align-items: center;
+    min-width: 0;  /* Allow flex to compress content */
+}
+
+/* Badge styling - ensure they display inline horizontally */
+.wishlist-card-body .badge {
+    display: inline-flex !important;
+    flex-shrink: 1 !important;  /* Allow badges to shrink if needed */
+    flex-grow: 0 !important;  /* Don't grow */
+    white-space: nowrap;  /* Keep badges on one line */
+    margin-bottom: 0 !important;  /* CRITICAL: Remove margin-bottom that forces wrapping */
+}
+
+.wishlist-card-body .badge.badge-modern,
+.wishlist-card-body .badge.badge-level {
+    margin-bottom: 0 !important;  /* Override global margin-bottom */
+    padding: 0.35rem 0.7rem !important;  /* Reduce padding for narrow cards */
+    font-size: 0.8rem !important;  /* Slightly smaller font */
+    min-height: 28px !important;  /* Reduce min-height */
+    gap: 0.3rem !important;  /* Reduce gap between icon and text */
+}
+
 .badge-text {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
-    max-width: 100px;
+    max-width: none;  /* Remove width constraint to allow badges to flex naturally */
+    flex: 0 1 auto;   /* Allow text to shrink but not grow */
 }
 
 .empty-state {
@@ -251,5 +289,72 @@
     
     .stat-number {
         font-size: 1.5rem;
+    }
+}
+
+/* ============================== */
+/* Adaptive Layout for Sidebar Collapse */
+/* ============================== */
+
+/* Monitor sidebar collapse state - when sidebar is collapsed, main content expands */
+/* ✨ SCOPED SELECTOR: Only target rows directly inside .container, not nested rows inside Header */
+.modern-wishlist-page > .container > .row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    gap: 0 !important;
+}
+
+/* Exception: Allow student-header-row to use its own negative margins for edge-to-edge expansion */
+.modern-wishlist-page .row.student-header-row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+.modern-wishlist-page > .container > .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 992px) {
+    .modern-wishlist-page .row:has(.student-sidebar-column) > .col-lg-9 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+    .modern-wishlist-page .row:has(.student-sidebar-column) > .col-lg-9 > .row {
+        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .modern-wishlist-page .row:has(.student-sidebar-column) > .col-md-8 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+    .modern-wishlist-page .row:has(.student-sidebar-column) > .col-md-8 > .row {
+        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
     }
 }

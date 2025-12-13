@@ -5,6 +5,7 @@
     padding-top: 3rem !important;
     padding-bottom: 3rem !important;
     margin-top: 0 !important;
+    margin-bottom: 2rem;
 }
 
 .page-header-card {
@@ -42,6 +43,28 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
     border: 1px solid #e9ecef;
     margin-bottom: 1.5rem !important;
+}
+
+/* ✨ CRITICAL FIX: Keep page-header-card and search-card in their natural column width */
+/* Course cards row will align with them using same padding approach */
+@media (min-width: 992px) {
+    /* Ensure page-header-card and search-card don't overflow - keep them inside col padding */
+    .modern-course-page .row:has(.student-sidebar-column) > .col-lg-9 > .page-header-card,
+    .modern-course-page .row:has(.student-sidebar-column) > .col-lg-9 > .search-card {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    /* Ensure page-header-card and search-card don't overflow on tablet - keep them inside col padding */
+    .modern-course-page .row:has(.student-sidebar-column) > .col-md-8 > .page-header-card,
+    .modern-course-page .row:has(.student-sidebar-column) > .col-md-8 > .search-card {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
 }
 
 /* SCOPED: Courses page search input only - NEVER affects BaseHeader */
@@ -97,6 +120,9 @@
     color: rgba(255, 255, 255, 0.9) !important;
     font-weight: 500 !important;
     margin-top: 0.25rem !important;
+    text-align: right !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
 }
 
 /* More specific selector to ensure font-size changes take effect */
@@ -121,7 +147,7 @@
     border: 1px solid #e9ecef;
     position: relative;
     z-index: 1;
-    padding: 1rem !important;
+    padding: 1.5rem !important; /* ✨ Match search-card padding for consistent width appearance */
 }
 
 .modern-course-page .course-card:hover {
@@ -134,7 +160,7 @@
 .modern-course-page .course-image {
     width: 100%;
     height: 100px;
-    border-radius: 12px;
+    border-radius: 15px;
     object-fit: cover;
     transition: transform 0.3s ease;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -144,13 +170,13 @@
     transform: scale(1.05);
 }
 
-.course-image-wrapper {
+.modern-course-page .course-image-wrapper {
     position: relative;
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: 15px;
 }
 
-.course-image-overlay {
+.modern-course-page .course-image-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -162,18 +188,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: 15px;
+    user-select: none;
+    cursor: pointer;
+    pointer-events: auto;
 }
 
-/* Show overlay on hover */
-.course-image-wrapper:hover .course-image-overlay {
+/* Show overlay on card hover */
+.modern-course-page .course-card:hover .course-image-overlay {
     opacity: 1 !important;
 }
 
-.play-icon {
+.modern-course-page .play-icon {
     color: white;
     font-size: 2rem;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    animation: pulse 2s infinite;
+    user-select: none;
 }
 
 .modern-course-page .course-content {
@@ -443,6 +474,15 @@
         width: 100%;
         justify-content: center;
     }
+
+    /* ✨ ALIGNMENT FIX: Course cards row must align with search-card on mobile */
+    .modern-course-page .row.g-4:has(.col-12 > .course-card) {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
 }
 
 @media (max-width: 576px) {
@@ -491,4 +531,126 @@ input, textarea, .form-control {
     -webkit-user-select: text !important;
     -moz-user-select: text !important;
     -ms-user-select: text !important;
+}
+
+/* ============================== */
+/* Adaptive Layout for Sidebar Collapse */
+/* ============================== */
+
+/* Monitor sidebar collapse state - when sidebar is collapsed, main content expands */
+/* IMPORTANT: Don't apply flex-wrap: nowrap to ALL rows - course card row needs normal wrapping */
+.modern-course-page > .container > .row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    gap: 0 !important;
+}
+
+/* Exception: Allow student-header-row to use its own negative margins for edge-to-edge expansion */
+.modern-course-page .row.student-header-row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Column base styles - only for main layout row */
+.modern-course-page > .container > .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 992px) {
+    .modern-course-page .row:has(.student-sidebar-column) > .col-lg-9 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+    .modern-course-page .row:has(.student-sidebar-column) > .col-lg-9 > .row {
+        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        width: 100% !important;
+    }
+
+    /* ✨ ALIGNMENT FIX: Course cards row now aligns with page-header-card and search-card */
+    /* Don't use negative margins - keep it inside column like the other cards */
+    .modern-course-page .row.g-4:has(.col-12 > .course-card) {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* Ensure col-12 inside course-cards row has NO padding - let cards handle their spacing */
+    .modern-course-page .row.g-4:has(.col-12 > .course-card) > .col-12 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* IMPORTANT: Course card rows must display horizontally (3 cols layout) */
+    .modern-course-page .course-card > .row {
+        flex-wrap: wrap !important;
+        align-items: flex-start !important;
+    }
+    
+    /* Ensure course card columns display in row (horizontal) */
+    .modern-course-page .course-card > .row > [class*="col-"] {
+        flex-direction: row !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .modern-course-page .row:has(.student-sidebar-column) > .col-md-8 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+    .modern-course-page .row:has(.student-sidebar-column) > .col-md-8 > .row {
+        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+        width: 100% !important;
+    }
+
+    /* ✨ ALIGNMENT FIX: Course cards row now aligns with page-header-card and search-card on tablet */
+    /* Don't use negative margins - keep it inside column like the other cards */
+    .modern-course-page .row.g-4:has(.col-12 > .course-card) {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* Ensure col-12 inside course-cards row has NO padding - let cards handle their spacing */
+    .modern-course-page .row.g-4:has(.col-12 > .course-card) > .col-12 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* IMPORTANT: Course card rows must display horizontally (3 cols layout) on tablet */
+    .modern-course-page .course-card > .row {
+        flex-wrap: wrap !important;
+        align-items: flex-start !important;
+    }
+    
+    /* Ensure course card columns display in row (horizontal) */
+    .modern-course-page .course-card > .row > [class*="col-"] {
+        flex-direction: row !important;
+    }
 }

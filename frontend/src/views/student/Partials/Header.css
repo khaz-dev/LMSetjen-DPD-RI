@@ -1,4 +1,19 @@
 /* Student Header Component Styles */
+/* ✨ PHASE 4.20: Removed aggressive negative margins that caused width inconsistency */
+/* The header should stay within the container using normal Bootstrap grid, not break out */
+.student-header-row {
+    /* Removed: margin-left/right negative calculations and width expansion */
+    /* Now uses standard Bootstrap row behavior for consistent width across all pages */
+}
+
+.student-header-row > .col-xl-12,
+.student-header-row > .col-lg-12,
+.student-header-row > .col-md-12,
+.student-header-row > .col-12 {
+    margin-bottom: 0 !important;
+    /* Removed: padding-left/right compensation calculations - no longer needed */
+}
+
 .student-header-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 20px;
@@ -28,6 +43,39 @@
     z-index: 2;
 }
 
+/* Profile Avatar Container */
+.student-header-content .col-lg-3 {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ✨ PHASE 4.19: Only animate col-lg-3 when user interacts with toggle */
+.student-header-content.collapsed-state .col-lg-3 {
+    opacity: 0;
+    transform: scale(0.5) translateX(-20px);
+    visibility: hidden;
+}
+
+.student-header-content.expanded-state .col-lg-3 {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+    visibility: visible;
+}
+
+/* Visual states - no animation, for page navigation */
+.student-header-content.collapsed-visual .col-lg-3 {
+    opacity: 0;
+    transform: scale(0.5) translateX(-20px);
+    visibility: hidden;
+    transition: none;
+}
+
+.student-header-content.expanded-visual .col-lg-3 {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+    visibility: visible;
+    transition: none;
+}
+
 /* Profile Avatar Styles */
 .profile-avatar {
     width: 180px;
@@ -35,7 +83,7 @@
     border-radius: 50%;
     border: 6px solid rgba(255, 255, 255, 0.3);
     object-fit: cover;
-    transition: all 0.3s ease;
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     user-select: none; /* Prevent image selection */
     pointer-events: none; /* Prevent image interaction */
@@ -200,7 +248,7 @@
 
 /* Modern Buttons */
 .btn-modern-white {
-    background: rgba(255, 255, 255, 0.2);
+    background: transparent;
     border: 2px solid rgba(255, 255, 255, 0.4);
     color: white;
     font-weight: 600;
@@ -397,6 +445,302 @@
 @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
+}
+
+/* ========================================
+   Toggle Button Styles
+   ======================================== */
+
+/* Toggle Button */
+.student-header-toggle-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.student-header-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.student-header-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.student-header-toggle-btn i {
+  font-size: 1rem;
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Chevron rotation on collapse */
+.student-header-card.collapsed .student-header-toggle-btn i {
+  transform: rotate(180deg);
+}
+
+/* Collapsed State with Smooth Animation */
+.student-header-card {
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.student-header-card.collapsed {
+  min-height: auto;
+}
+
+.student-header-content {
+  transform-origin: top;
+  overflow: hidden;
+  display: block;
+  visibility: visible;
+}
+
+/* ✨ PHASE 4.19: Animated states - only when user interacts with toggle */
+.student-header-content.collapsed-state {
+  animation: collapseHeader 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  max-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  display: none;
+}
+
+.student-header-content.expanded-state {
+  animation: expandHeader 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  max-height: 700px;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ✨ PHASE 4.19: Visual states - no animation, used on page navigation */
+.student-header-content.collapsed-visual {
+  max-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  display: none;
+}
+
+.student-header-content.expanded-visual {
+  animation: none;
+  max-height: 700px;
+  opacity: 1;
+  visibility: visible;
+}
+
+@keyframes expandHeader {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  30% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 700px;
+  }
+}
+
+@keyframes collapseHeader {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 700px;
+  }
+  70% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+}
+
+/* Avatar transition animations */
+@keyframes avatarAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes avatarDisappear {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+/* Hide main toggle button when collapsed */
+.student-header-card.collapsed .student-header-toggle-btn {
+  display: none;
+}
+
+/* Collapsed Mini Header */
+.student-header-collapsed {
+  position: relative;
+  z-index: 10;
+}
+
+.student-header-collapsed .profile-avatar,
+.student-header-collapsed .student-default-avatar {
+  width: 50px;
+  height: 50px;
+  border-width: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Override avatar wrapper for collapsed state */
+.student-header-collapsed .student-avatar-wrapper {
+  width: auto;
+  height: auto;
+  margin: 0;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.student-header-collapsed .loading-shimmer {
+  width: 50px;
+  height: 50px;
+}
+
+.student-header-collapsed .spinner-border {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+.student-header-collapsed h5 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.student-header-collapsed small {
+  font-size: 0.85rem;
+}
+
+.student-header-collapsed .btn {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  min-height: 36px;
+}
+
+.student-header-collapsed .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.student-header-collapsed .btn-light {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.student-header-collapsed .btn-light:hover {
+  background: white;
+  color: #764ba2;
+}
+
+.student-header-collapsed .btn-outline-light {
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  background: transparent;
+}
+
+.student-header-collapsed .btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
+  color: white;
+}
+
+/* Inline toggle button for collapsed state */
+.student-header-toggle-btn-inline {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  font-size: 0.75rem;
+}
+
+.student-header-toggle-btn-inline:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
+}
+
+/* Mini avatar styles */
+.profile-avatar-mini {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ✨ PHASE 4.19: Only animate avatar when user interacts with toggle, not on re-render */
+/* Mini avatar appears when collapsed AND user is animating */
+.student-header-card.animating.collapsed .profile-avatar-mini {
+  animation: avatarAppear 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Mini avatar disappears when expanding AND user is animating */
+.student-header-card.animating:not(.collapsed) .profile-avatar-mini {
+  animation: avatarDisappear 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.profile-avatar-mini:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Responsive Design */

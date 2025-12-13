@@ -1,6 +1,643 @@
-/* Student Sidebar Component Styles */
+/* ============================== */
+/* Sidebar Container */
+/* ============================== */
 
-/* Modern Toast Styles */
+.student-sidebar-column {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex;
+    flex-direction: column;
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+
+/* ============================== */
+/* Main Sidebar */
+/* ============================== */
+
+.modern-sidebar {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border: none;
+    overflow: visible !important;
+    position: sticky !important;
+    top: calc(60px + 1rem + 1rem) !important;
+    z-index: 100;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    max-height: calc(100vh - 60px - 1rem);
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    margin-top: 0 !important;
+    margin-right: 1rem;
+    padding-top: 0 !important;
+    user-select: none;
+}
+
+.modern-sidebar:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Expanded state (default) */
+.modern-sidebar:not(.collapsed) {
+    width: 305px !important;
+    min-width: 305px !important;
+}
+
+.modern-sidebar.collapsed {
+    width: 85px !important;
+    min-width: 85px;
+}
+
+/* ============================== */
+/* Sidebar Header - Expanded State */
+/* ============================== */
+
+.sidebar-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    position: relative;
+    overflow: visible;
+    z-index: 1;
+    border-radius: 16px 16px 0 0;
+    user-select: none;
+    min-width: 0;
+}
+
+.sidebar-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 60%;
+    height: 200%;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(-15deg);
+}
+
+.sidebar-header h5,
+.sidebar-header p {
+    user-select: none;
+    cursor: default;
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Title container - limit flex growth so button always visible */
+.sidebar-header > div[style*="flex: 1"] {
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: calc(100% - 50px);
+}
+
+/* Sidebar Header - Collapsed State */
+.sidebar-header-collapsed {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: visible;
+    border-radius: 16px 16px 0 0;
+}
+
+/* ============================== */
+/* Sidebar Content */
+/* ============================== */
+
+.sidebar-content {
+    padding: 1rem 1.25rem 1.25rem 1.25rem;
+    position: relative;
+    z-index: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
+}
+
+.modern-sidebar.collapsed .sidebar-content {
+    padding: 0.5rem 0.25rem;
+}
+
+/* ============================== */
+/* Navigation Sections */
+/* ============================== */
+
+.nav-section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    line-height: 1;
+    height: auto;
+    margin-bottom: 0.75rem;
+    margin-top: 1.25rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0;
+    padding-bottom: 0;
+    user-select: none;
+    cursor: default;
+    display: block;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s ease, visibility 0.3s ease, height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+}
+
+.nav-section-title:first-child {
+    margin-top: 0;
+}
+
+.sidebar-divider + .nav-section-title {
+    margin-top: 0.5rem;
+}
+
+/* When nav-section-title and section-title are combined, nav takes precedence */
+.nav-section-title.section-title {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #6c757d !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    line-height: 1 !important;
+    height: auto !important;
+    margin-bottom: 0.75rem !important;
+    margin-top: 1.25rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    display: block !important;
+}
+
+/* Remove ::after underline from section-title when used in sidebar nav */
+.nav-section-title.section-title::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* Collapsed state: hide section titles completely */
+.modern-sidebar.collapsed .nav-section-title,
+.modern-sidebar.collapsed .nav-section-title.section-title {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    display: none !important;
+    pointer-events: none !important;
+}
+
+/* ============================== */
+/* Navigation Links */
+/* ============================== */
+
+.modern-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1rem;
+    color: #4a5568;
+    text-decoration: none;
+    border-radius: 10px;
+    margin-bottom: 0.25rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+    font-size: 0.9rem;
+    overflow: hidden;
+    user-select: none;
+    cursor: pointer;
+}
+
+.modern-nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
+}
+
+.modern-nav-link > * {
+    position: relative;
+    z-index: 1;
+}
+
+.modern-nav-link:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateX(4px);
+    box-shadow: 0 6px 18px rgba(102, 126, 234, 0.3);
+    text-decoration: none;
+}
+
+.modern-nav-link:hover::before {
+    width: 100%;
+}
+
+.modern-nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateX(4px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.modern-nav-link.active::before {
+    width: 100%;
+}
+
+/* Collapsed State */
+.modern-sidebar.collapsed .modern-nav-link {
+    padding: 0.875rem 0.5rem;
+    justify-content: center;
+    text-align: center;
+}
+
+.modern-sidebar.collapsed .nav-text {
+    display: none;
+}
+
+.modern-sidebar.collapsed .nav-icon {
+    margin: 0 auto;
+    font-size: 1.25rem;
+}
+
+.modern-sidebar.collapsed .modern-nav-link:hover {
+    color: white;
+}
+
+.modern-sidebar.collapsed .modern-nav-link:hover .nav-icon i {
+    color: #f8fafc !important;
+}
+
+.modern-sidebar.collapsed .modern-nav-link .nav-icon i {
+    color: #4a5568;
+}
+
+.modern-sidebar.collapsed .modern-nav-link.active .nav-icon i {
+    color: white !important;
+}
+
+/* Tooltip for collapsed items */
+.modern-sidebar.collapsed .modern-nav-link::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 10px;
+    padding: 8px 12px;
+    background: #2d3748;
+    color: white;
+    border-radius: 8px;
+    white-space: nowrap;
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modern-sidebar.collapsed .modern-nav-link::before {
+    content: '';
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 5px;
+    border: 5px solid transparent;
+    border-right-color: #2d3748;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.modern-sidebar.collapsed .modern-nav-link:hover::after,
+.modern-sidebar.collapsed .modern-nav-link:hover::before {
+    opacity: 1;
+}
+
+.nav-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.modern-nav-link:hover .nav-icon,
+.modern-nav-link.active .nav-icon {
+    transform: scale(1.1);
+}
+
+.nav-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============================== */
+/* Logout Button */
+/* ============================== */
+
+.modern-logout-btn {
+    background: transparent;
+    border: 1.5px solid #dc3545;
+    color: #dc3545;
+    width: 100%;
+    margin-top: 1rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 10px;
+    padding: 0.875rem 1rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+}
+
+.modern-logout-btn::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 100%;
+    background: #dc3545;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
+}
+
+.modern-logout-btn > * {
+    position: relative;
+    z-index: 1;
+}
+
+.modern-logout-btn:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+.modern-logout-btn:hover::before {
+    width: 100%;
+}
+
+.modern-logout-btn .nav-text {
+    flex: none;
+}
+
+.modern-logout-btn.collapsed {
+    padding: 0.875rem 0.5rem;
+    justify-content: center;
+}
+
+.modern-logout-btn.collapsed .nav-text {
+    display: none;
+}
+
+/* ============================== */
+/* Mobile Toggle Button */
+/* ============================== */
+
+.mobile-toggle {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    border-radius: 12px;
+    padding: 0.75rem;
+    margin: 1rem;
+    transition: all 0.3s ease;
+    user-select: none;
+    cursor: pointer;
+}
+
+.mobile-toggle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+.mobile-toggle:focus {
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* ============================== */
+/* Divider */
+/* ============================== */
+
+.sidebar-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #e9ecef 50%, transparent 100%);
+    margin: 1rem 0;
+    user-select: none;
+    pointer-events: none;
+}
+
+.modern-sidebar.collapsed .sidebar-divider {
+    margin: 0.5rem 0;
+    height: 0;
+    opacity: 0;
+}
+
+/* ============================== */
+/* Toggle Buttons */
+/* ============================== */
+
+.sidebar-toggle-btn,
+.sidebar-expand-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+    flex-basis: 36px;
+    user-select: none;
+    padding: 0;
+}
+
+.sidebar-toggle-btn:hover,
+.sidebar-expand-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.1);
+}
+
+.sidebar-expand-btn {
+    margin: 0 auto;
+}
+
+.sidebar-toggle-btn i,
+.sidebar-expand-btn i {
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+    color: white;
+    user-select: none;
+}
+
+.modern-sidebar.collapsed .sidebar-toggle-btn i {
+    transform: rotate(180deg);
+}
+
+/* ============================== */
+/* Responsive Design */
+/* ============================== */
+
+@media (max-width: 768px) {
+    .modern-sidebar {
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        margin-right: 0 !important;
+        top: auto !important;
+        position: relative !important;
+        max-height: none !important;
+    }
+    
+    .modern-sidebar.collapsed {
+        width: 100% !important;
+        min-width: auto;
+    }
+    
+    .sidebar-content {
+        padding: 1rem;
+    }
+    
+    .modern-nav-link {
+        padding: 0.75rem;
+    }
+    
+    .modern-nav-link.active {
+        transform: none;
+    }
+
+    .d-md-none {
+        display: block !important;
+    }
+
+    .d-none.d-md-flex,
+    .d-none.d-md-block {
+        display: none !important;
+    }
+}
+
+/* Remove top gaps only on mobile - allow mt-md-4 to work on larger screens */
+@media (max-width: 767px) {
+    .row.mt-0.mt-md-4 {
+        margin-top: 0 !important;
+    }
+}
+
+/* Desktop: Large screens (lg >= 992px) */
+@media (min-width: 992px) {
+    .modern-sidebar {
+        max-height: calc(100vh - 60px - 2rem - 2rem);
+    }
+
+    .modern-sidebar.collapsed {
+        width: 85px !important;
+    }
+}
+
+/* Tablet: Medium screens (md: 768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .modern-sidebar {
+        max-height: calc(100vh - 60px - 2rem - 2rem);
+    }
+
+    .modern-sidebar.collapsed {
+        width: 85px !important;
+    }
+}
+
+/* Mobile: Small screens - Always full width */
+@media (max-width: 767px) {
+    .student-sidebar-column {
+        margin-bottom: 2rem;
+        padding: 0 !important;
+    }
+
+    .modern-sidebar {
+        margin-right: 0 !important;
+        border-radius: 15px;
+        position: relative;
+        top: auto !important;
+        max-height: none !important;
+        width: 100% !important;
+    }
+
+    .modern-sidebar.collapsed {
+        width: 100% !important;
+    }
+
+    .sidebar-content {
+        padding: 1rem;
+    }
+
+    .modern-nav-link.active {
+        transform: none;
+    }
+}
+
+/* ============================== */
+/* Toast & Dialog Styles */
+/* ============================== */
+
 .modern-toast {
     border-radius: 15px !important;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
@@ -15,7 +652,6 @@
     height: 4px !important;
 }
 
-/* Modern Logout Dialog Styles */
 .modern-logout-dialog {
     border-radius: 20px !important;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
@@ -67,217 +703,66 @@
     box-shadow: 0 5px 15px rgba(229, 62, 62, 0.3) !important;
 }
 
-/* Sidebar Main Container */
-.modern-sidebar {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    border: none;
-    overflow: hidden;
-    position: sticky;
-    top: 90px;
-    user-select: none; /* Prevent text selection */
-}
+/* ============================== */
+/* Content Column Adaptation - CRITICAL FIX */
+/* ============================== */
 
-/* Sidebar Header */
-.sidebar-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1.5rem;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    user-select: none; /* Prevent text selection */
-}
+/*
+ * ✨ PHASE 4.11 FIX: Make content column adapt to sidebar collapse/expand
+ * Instead of using hooks, we use pure CSS with flex-grow to automatically
+ * expand the content column when sidebar collapses.
+ * 
+ * This approach works like instructor pages and is more reliable.
+ */
 
-.sidebar-header::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.sidebar-header h5,
-.sidebar-header h6,
-.sidebar-header p {
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-/* Sidebar Content */
-.sidebar-content {
-    padding: 1.5rem;
-}
-
-/* Navigation Section Titles */
-.nav-section-title {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 1rem;
-    margin-top: 1.5rem;
-    padding-left: 0.5rem;
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-.nav-section-title:first-child {
-    margin-top: 0;
-}
-
-/* Modern Navigation Links */
-.modern-nav-link {
-    display: flex;
-    align-items: center;
-    padding: 0.875rem 1rem;
-    color: #4a5568;
-    text-decoration: none;
-    border-radius: 12px;
-    margin-bottom: 0.5rem;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    position: relative;
-    overflow: hidden;
-    user-select: none; /* Prevent text selection */
-    cursor: pointer; /* Pointer cursor for clickable links */
-}
-
-.modern-nav-link::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    transition: width 0.3s ease;
-    z-index: 0;
-}
-
-.modern-nav-link > * {
-    position: relative;
-    z-index: 1;
-}
-
-.modern-nav-link:hover {
-    color: white;
-    transform: translateX(5px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-    text-decoration: none; /* Prevent underline on hover */
-}
-
-.modern-nav-link:hover::before {
-    width: 100%;
-}
-
-.modern-nav-link.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-    transform: translateX(5px);
-}
-
-.modern-nav-link.active::before {
-    width: 100%;
-}
-
-/* Navigation Icons */
-.nav-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    user-select: none; /* Prevent icon selection */
-}
-
-.modern-nav-link:hover .nav-icon,
-.modern-nav-link.active .nav-icon {
-    transform: scale(1.1);
-}
-
-.nav-icon i {
-    user-select: none; /* Prevent icon selection */
-}
-
-/* Logout Button */
-.logout-btn {
-    background: transparent;
-    border: 2px solid #dc3545;
-    color: #dc3545;
-    width: 100%;
-    margin-top: 1rem;
-    transition: all 0.3s ease;
-    user-select: none; /* Prevent text selection */
-    cursor: pointer; /* Pointer cursor for button */
-}
-
-.logout-btn:hover {
-    background: #dc3545;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
-}
-
-/* Mobile Toggle Button */
-.mobile-toggle {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-    border-radius: 12px;
-    padding: 0.75rem;
-    margin: 1rem;
-    transition: all 0.3s ease;
-    user-select: none; /* Prevent text selection */
-    cursor: pointer; /* Pointer cursor for button */
-}
-
-.mobile-toggle:hover {
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-    color: white; /* Maintain white color on hover */
-}
-
-.mobile-toggle:focus {
-    color: white; /* Maintain white color on focus */
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.mobile-toggle i {
-    user-select: none; /* Prevent icon selection */
-}
-
-/* Sidebar Divider */
-.sidebar-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent 0%, #e9ecef 50%, transparent 100%);
-    margin: 1rem 0;
-    user-select: none; /* Prevent selection */
-    pointer-events: none; /* Prevent interaction */
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .modern-sidebar {
-        border-radius: 15px;
-        margin-bottom: 2rem;
+/* Desktop: col-lg-9 adapts when sidebar collapses */
+@media (min-width: 992px) {
+    /* Target content columns in all student pages */
+    .dashboard-page .col-lg-9,
+    .modern-course-page .col-lg-9,
+    .student-password-page .col-lg-9,
+    .modern-qa-page .col-lg-9,
+    .modern-qa-detail-page .col-lg-9,
+    .student-profile-page .col-lg-9,
+    .modern-profile-page .col-lg-9,
+    .modern-wishlist-page .col-lg-9 {
+        flex: 1 1 auto !important; /* Flex-grow fills available space */
+        max-width: 100% !important; /* Remove Bootstrap's max-width constraint */
+        transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                    max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
-    .sidebar-content {
-        padding: 1rem;
+}
+
+/* Tablet: col-md-8 adapts when sidebar collapses */
+@media (min-width: 768px) and (max-width: 991px) {
+    /* Target content columns in all student pages */
+    .dashboard-page .col-md-8,
+    .modern-course-page .col-md-8,
+    .student-password-page .col-md-8,
+    .modern-qa-page .col-md-8,
+    .modern-qa-detail-page .col-md-8,
+    .student-profile-page .col-md-8,
+    .modern-profile-page .col-md-8,
+    .modern-wishlist-page .col-md-8 {
+        flex: 1 1 auto !important; /* Flex-grow fills available space */
+        max-width: 100% !important; /* Remove Bootstrap's max-width constraint */
+        transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                    max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
-    .modern-nav-link {
-        padding: 0.75rem;
+}
+
+/* Mobile: col-12 stays 100% width */
+@media (max-width: 767px) {
+    .col-12 {
+        flex: 0 0 100% !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
+}
+
+/* Keep the utility class for backward compatibility and smooth transitions */
+.sidebar-collapsed-adapted {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
