@@ -27,7 +27,6 @@
 
 /* EXCLUDE Header row from aggressive margin/width rules */
 .courses-container{
-    margin-bottom: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;

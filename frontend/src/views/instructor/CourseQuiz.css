@@ -28,6 +28,7 @@
   padding: 3rem 0;
   padding-top: 3rem !important;
   padding-bottom: 3rem !important;
+  margin-bottom: 8rem;
 }
 
 /* Ensure proper scroll context for sticky sidebar */
@@ -209,7 +210,6 @@ button div,
 /* Ensure modern-dashboard has proper footer spacing */
 .modern-dashboard {
     padding-bottom: 3rem !important;
-    margin-bottom: 0 !important;
 }
 
 .quiz-loading {
