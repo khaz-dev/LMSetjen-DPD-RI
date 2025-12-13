@@ -16,8 +16,11 @@ function Sidebar() {
         const newState = !isCollapsed;
         setIsCollapsed(newState);
         localStorage.setItem('instructorSidebarCollapsed', newState.toString());
-        // ✨ Trigger event for all pages to adapt their layout
-        triggerInstructorSidebarCollapseEvent();
+        // ✨ Delay event slightly to ensure sidebar class updates first (React async state)
+        // This is critical for smooth animations - the sidebar needs to change class BEFORE pages listen
+        setTimeout(() => {
+            triggerInstructorSidebarCollapseEvent();
+        }, 10);
     };
     
     const isActive = (path) => location.pathname === path || location.pathname.startsWith(path);
