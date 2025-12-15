@@ -73,6 +73,14 @@
     margin-right: 0 !important;
 }
 
+.courses-container .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
 .courses-container .row:has(.instructor-sidebar-column) > .col-lg-9 {
     margin-left: 0 !important;
