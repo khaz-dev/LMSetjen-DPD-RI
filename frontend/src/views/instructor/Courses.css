@@ -88,6 +88,33 @@
     margin-right: 0 !important;
 }
 
+/* ========================================
+   INNER ROWS INSIDE INSTRUCTOR-HEADER-CARD
+   ======================================== */
+/* Fix rows inside header card (like renderInstructorDetails row) */
+/* These inherit calc(100% + 24px) from general .row rule which makes them overflow left */
+/* Must be 100% width to fill their container evenly without leaning */
+.instructor-header-card .row {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Also fix inner rows inside col-12/col-md-12 within header */
+.instructor-header-card .row > .col-12,
+.instructor-header-card .row > [class*="col-md-"] {
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px)) !important;
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Inner rows within header columns - restore proper width and negative margins */
+.instructor-header-card .row > .col-md-12 > .row,
+.instructor-header-card .col-12 > .row {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
 .courses-container .row > [class*="col-"] {
     margin-bottom: 0;
     padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
