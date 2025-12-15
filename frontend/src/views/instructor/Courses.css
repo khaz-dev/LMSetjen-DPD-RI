@@ -602,6 +602,8 @@
    MEDIA QUERIES - RESPONSIVE LAYOUT
    ======================================== */
 
+/* Desktop: Large screens (lg: 992px and up) */
+@media (min-width: 992px) {
     .courses-container .row > .instructor-sidebar-column {
         flex-basis: auto;
         flex-grow: 0;
