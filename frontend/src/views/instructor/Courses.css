@@ -25,8 +25,12 @@
     position: relative;
 }
 
-/* EXCLUDE Header row from aggressive margin/width rules */
-.courses-container{
+/* ========================================
+   COURSES CONTAINER - MAIN SECTION LAYOUT
+   ======================================== */
+
+.courses-container {
+    /* Core layout */
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -34,6 +38,22 @@
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
+    
+    /* Page structure */
+    min-height: 100vh;
+    background: transparent;
+    padding-top: 0 !important;
+    padding-bottom: 3rem !important;
+    margin-bottom: 8rem;
+    
+    /* Flexbox layout for sections */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure proper scroll context for sticky sidebar */
+.courses-container .container {
+    position: relative;
 }
 
 /* Consistent vertical spacing for dashboard sections */
@@ -67,12 +87,6 @@
     width: 100%;
     margin-left: 0 !important;
     margin-right: 0 !important;
-}
-
-.courses-container {
-    margin-bottom: 8rem;
-    display: flex;
-    flex-direction: column;
 }
 
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
@@ -132,14 +146,6 @@
 /* ========================================
    PAGE LAYOUT STATES
    ======================================== */
-
-.courses-container {
-    min-height: 100vh;
-    background: transparent;
-    padding-top: 0 !important;
-    padding-bottom: 3rem !important;
-    margin-bottom: 8rem;
-}
 
 /* Loading state - full height block layout */
 .courses-container.courses-loading-section {
@@ -414,7 +420,7 @@
 
 .modern-courses-container {
     display: block;
-    width: 102%;
+    width: 100%;
 }
 
 .modern-courses-container .row {
@@ -675,11 +681,6 @@
     .modern-search-section {
         padding: 15px;
         margin-bottom: 1rem;
-    }
-
-    .modern-courses-container {
-        display: block;
-        width: 100%;
     }
 
     .modern-courses-container .row {

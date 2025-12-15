@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
-import LoadingSpinner from "./Partials/LoadingSpinner";
-import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import CourseCard from "../../components/CourseCard";
