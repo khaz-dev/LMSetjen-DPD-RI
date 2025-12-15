@@ -81,6 +81,13 @@
     margin-right: 0 !important;
 }
 
+/* CRITICAL: Header row must also be 100% width to align with sidebar row */
+.courses-container .row.instructor-header-row {
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
 .courses-container .row > [class*="col-"] {
     margin-bottom: 0;
     padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
