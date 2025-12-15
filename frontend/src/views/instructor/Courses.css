@@ -1,21 +1,5 @@
 /* Modern Courses Styles - Instructor Page */
 
-/* ================================
-   GAP BETWEEN HEADER AND DASHBOARD
-   ================================ */
-
-.instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
-}
-
-/* Protect header card gap from parent overrides */
-.modern-dashboard .row > .col-12 > .instructor-header-card,
-.modern-dashboard .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
-}
-
 /* ========================================
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
