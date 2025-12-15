@@ -42,13 +42,10 @@
     /* Page structure */
     min-height: 100vh;
     background: transparent;
-    padding-top: 0 !important;
+    padding: 3rem 0;
+    padding-top: 3rem !important;
     padding-bottom: 3rem !important;
     margin-bottom: 8rem;
-    
-    /* Flexbox layout for sections */
-    display: flex;
-    flex-direction: column;
 }
 
 /* Consistent vertical spacing for courses sections */
