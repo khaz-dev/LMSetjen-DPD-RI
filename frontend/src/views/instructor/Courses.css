@@ -92,6 +92,12 @@
     flex-direction: column;
 }
 
+/* CRITICAL: Remove padding from col-12 that wraps the header to ensure header spans full width */
+.courses-container .row > .col-12 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
 .courses-container .row:has(.instructor-sidebar-column) > .col-lg-9 {
     margin-left: 0 !important;
