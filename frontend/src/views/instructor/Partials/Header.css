@@ -425,9 +425,8 @@
     font-size: 1.1rem;
   }
 }
-/* =========================================
-   COLLAPSIBLE HEADER STYLES
-   ========================================= */
+
+/* COLLAPSIBLE HEADER STYLES */
 
 /* Toggle Button */
 .instructor-header-toggle-btn {
@@ -491,7 +490,7 @@
   visibility: visible;
 }
 
-/* ✨ PHASE 4.20: Animated states - only when user interacts with toggle */
+/* Animated states - only when user interacts with toggle */
 .instructor-header-content.collapsed-state {
   animation: collapseHeader 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   max-height: 0;
@@ -508,7 +507,7 @@
   visibility: visible;
 }
 
-/* ✨ PHASE 4.20: Visual states - no animation, used on page navigation */
+/* Visual states - no animation, used on page navigation */
 .instructor-header-content.collapsed-visual {
   max-height: 0;
   opacity: 0;
@@ -565,10 +564,8 @@
 .instructor-header-collapsed {
   position: relative;
   z-index: 10;
-  /* Animation removed - no animation on page load */
 }
 
-/* Keyframes kept for potential future use but not applied by default */
 @keyframes slideDownSmooth {
   from {
     opacity: 0;
@@ -668,30 +665,6 @@
 
 /* Expanded State - Animation removed for page load */
 .instructor-header-card:not(.collapsed) .instructor-header-content {
-  /* No animation on page load - only smooth transitions on collapse/expand */
   opacity: 1;
   transform: translateY(0);
-}
-
-/* ============================================
-   ✨ CRITICAL FIX: Constrain inner rows in header
-   ============================================ */
-
-/* Inner rows inside header-content should NOT get width expansion */
-.instructor-header-content .row {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-/* Ensure inner columns in header rows are properly constrained */
-.instructor-header-content .row > [class*="col-"] {
-  overflow: hidden;
-}
-
-/* Specific fix for details row (mt-3 pt-3) */
-.instructor-header-content > .row {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
 }
