@@ -672,3 +672,26 @@
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ============================================
+   ✨ CRITICAL FIX: Constrain inner rows in header
+   ============================================ */
+
+/* Inner rows inside header-content should NOT get width expansion */
+.instructor-header-content .row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure inner columns in header rows are properly constrained */
+.instructor-header-content .row > [class*="col-"] {
+  overflow: hidden;
+}
+
+/* Specific fix for details row (mt-3 pt-3) */
+.instructor-header-content > .row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}

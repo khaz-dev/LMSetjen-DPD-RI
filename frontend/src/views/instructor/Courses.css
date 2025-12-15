@@ -37,7 +37,8 @@
 }
 
 /* Consistent vertical spacing for dashboard sections */
-.courses-container .row:not(.instructor-header-row) {
+/* ✨ CRITICAL: Exclude inner rows inside instructor-header-card to prevent width overflow */
+.courses-container .row:not(.instructor-header-row):not(:has(.instructor-header-card *)) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -49,7 +50,8 @@
 }
 
 /* Inside container, row should expand with negative margins */
-.courses-container .container > .row:not(.instructor-header-row) {
+/* ✨ CRITICAL: Exclude inner rows inside instructor-header-card to prevent width overflow */
+.courses-container .container > .row:not(.instructor-header-row):not(:has(.instructor-header-card *)) {
     width: calc(100% + var(--bs-gutter-x, 24px));
 }
 
