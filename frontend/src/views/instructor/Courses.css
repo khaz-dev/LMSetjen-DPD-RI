@@ -1,5 +1,21 @@
 /* Modern Courses Styles - Instructor Page */
 
+/* ================================
+   GAP BETWEEN HEADER AND COURSES
+   ================================ */
+
+.instructor-header-card {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Protect header card gap from parent overrides */
+.courses-container .row > .col-12 > .instructor-header-card,
+.courses-container .instructor-header-card {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
 /* ========================================
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
@@ -33,11 +49,6 @@
     /* Flexbox layout for sections */
     display: flex;
     flex-direction: column;
-}
-
-/* Ensure proper scroll context for sticky sidebar */
-.courses-container .container {
-    position: relative;
 }
 
 /* Consistent vertical spacing for dashboard sections */
