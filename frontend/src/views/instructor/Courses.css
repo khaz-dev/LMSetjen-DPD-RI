@@ -51,8 +51,8 @@
     flex-direction: column;
 }
 
-/* Consistent vertical spacing for dashboard sections */
-.courses-container .row:not(.instructor-header-row) {
+/* Consistent vertical spacing for courses sections */
+.courses-container .row {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -64,7 +64,7 @@
 }
 
 /* Inside container, row should expand with negative margins */
-.courses-container .container > .row:not(.instructor-header-row) {
+.courses-container .container > .row {
     width: calc(100% + var(--bs-gutter-x, 24px));
 }
 
