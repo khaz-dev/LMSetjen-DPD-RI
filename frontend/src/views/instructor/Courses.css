@@ -16,6 +16,27 @@
     margin-bottom: 1rem !important;
 }
 
+/* Protect Header on Courses page (courses-container) from row CSS rules */
+.courses-container .row.instructor-header-row {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Ensure Header card maintains full width and spacing on Courses page */
+.courses-container .row.instructor-header-row > .col-xl-12,
+.courses-container .row.instructor-header-row > .col-lg-12,
+.courses-container .row.instructor-header-row > .col-md-12,
+.courses-container .row.instructor-header-row > .col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
 /* ========================================
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
