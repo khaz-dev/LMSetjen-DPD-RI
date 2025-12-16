@@ -1,7 +1,7 @@
 /* Modern Courses Styles - Instructor Page */
 
 /* ================================
-   GAP BETWEEN HEADER AND COURSES
+   GAP BETWEEN HEADER AND DASHBOARD
    ================================ */
 
 .instructor-header-card {
@@ -10,8 +10,8 @@
 }
 
 /* Protect header card gap from parent overrides */
-.courses-container .row > .col-12 > .instructor-header-card,
-.courses-container .instructor-header-card {
+.modern-dashboard .row > .col-12 > .instructor-header-card,
+.modern-dashboard .instructor-header-card {
     margin-top: 1rem !important;
     margin-bottom: 1rem !important;
 }
@@ -25,12 +25,8 @@
     position: relative;
 }
 
-/* ========================================
-   COURSES CONTAINER - MAIN SECTION LAYOUT
-   ======================================== */
-
+/* EXCLUDE Header row from aggressive margin/width rules */
 .courses-container {
-    /* Core layout */
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -38,18 +34,11 @@
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
-    
-    /* Page structure */
-    min-height: 100vh;
-    background: transparent;
-    padding: 3rem 0;
-    padding-top: 3rem !important;
-    padding-bottom: 3rem !important;
     margin-bottom: 8rem;
 }
 
-/* Consistent vertical spacing for courses sections */
-.courses-container .row {
+/* Consistent vertical spacing for dashboard sections */
+.courses-container .row:not(.instructor-header-row) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -61,7 +50,7 @@
 }
 
 /* Inside container, row should expand with negative margins */
-.courses-container .container > .row {
+.courses-container .container > .row:not(.instructor-header-row) {
     width: calc(100% + var(--bs-gutter-x, 24px));
 }
 
@@ -81,52 +70,9 @@
     margin-right: 0 !important;
 }
 
-/* CRITICAL: Header row must also be 100% width to align with sidebar row */
-.courses-container .row.instructor-header-row {
-    width: 100%;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-}
-
-/* ========================================
-   INNER ROWS INSIDE INSTRUCTOR-HEADER-CARD
-   ======================================== */
-/* Fix rows inside header card (like renderInstructorDetails row) */
-/* These inherit calc(100% + 24px) from general .row rule which makes them overflow left */
-/* Must be 100% width to fill their container evenly without leaning */
-.instructor-header-card .row {
-    width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-}
-
-/* Also fix inner rows inside col-12/col-md-12 within header */
-.instructor-header-card .row > .col-12,
-.instructor-header-card .row > [class*="col-md-"] {
-    padding-left: calc(0.5 * var(--bs-gutter-x, 24px)) !important;
-    padding-right: calc(0.5 * var(--bs-gutter-x, 24px)) !important;
-}
-
-/* Inner rows within header columns - restore proper width and negative margins */
-.instructor-header-card .row > .col-md-12 > .row,
-.instructor-header-card .col-12 > .row {
-    width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-}
-
-.courses-container .row > [class*="col-"] {
-    margin-bottom: 0;
-    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
-    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+.courses-container {
     display: flex;
     flex-direction: column;
-}
-
-/* CRITICAL: Remove padding from col-12 that wraps the header to ensure header spans full width */
-.courses-container .row > .col-12 {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
 }
 
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
@@ -135,8 +81,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
@@ -152,8 +98,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
@@ -186,6 +132,14 @@
 /* ========================================
    PAGE LAYOUT STATES
    ======================================== */
+
+.courses-container {
+    min-height: 100vh;
+    background: transparent;
+    padding-top: 0 !important;
+    padding-bottom: 3rem !important;
+    margin-bottom: 8rem;
+}
 
 /* Loading state - full height block layout */
 .courses-container.courses-loading-section {
@@ -460,7 +414,7 @@
 
 .modern-courses-container {
     display: block;
-    width: 100%;
+    width: 102%;
 }
 
 .modern-courses-container .row {
@@ -648,7 +602,7 @@
    MEDIA QUERIES - RESPONSIVE LAYOUT
    ======================================== */
 
-/* Desktop: Large screens (lg: 992px and up) */
+/* Desktop: Large screens (lg: 992px+) */
 @media (min-width: 992px) {
     .courses-container .row > .instructor-sidebar-column {
         flex-basis: auto;
@@ -660,10 +614,14 @@
     /* Content column - expands to fill remaining space */
     .courses-container .row > .col-lg-9 {
         flex: 1 1 auto;
-        min-width: 0 !important;
+        min-width: 0;
         width: auto;
         max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    /* Ensure content doesn't wrap under sidebar */
+    .courses-container .row > .col-lg-9 {
+        min-width: 500px;
     }
 }
 
@@ -679,10 +637,14 @@
     /* Content column - expands to fill remaining space */
     .courses-container .row > .col-md-8 {
         flex: 1 1 auto;
-        min-width: 0 !important;
+        min-width: 0;
         width: auto;
         max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    /* Ensure content doesn't wrap under sidebar */
+    .courses-container .row > .col-md-8 {
+        min-width: 400px;
     }
 }
 
@@ -721,6 +683,11 @@
     .modern-search-section {
         padding: 15px;
         margin-bottom: 1rem;
+    }
+
+    .modern-courses-container {
+        display: block;
+        width: 100%;
     }
 
     .modern-courses-container .row {
