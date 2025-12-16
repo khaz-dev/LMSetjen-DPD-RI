@@ -88,6 +88,17 @@
     width: calc(100% + var(--bs-gutter-x, 24px));
 }
 
+/* ✨ PHASE 4.21: CRITICAL FIX - Protect detail items row inside header card from width override */
+/* Detail items row (.row.mt-3.pt-3) gets clipped by overflow: hidden on instructor-header-card */
+/* This rule restores its width to 100% to match other pages */
+.instructor-header-card .row:not(.instructor-header-row) {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px)) !important;
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px)) !important;
+}
+
 /* Loading container - Handle header and sidebar rows separately */
 .courses-loading-container {
     width: 100% !important;
@@ -97,9 +108,12 @@
 }
 
 /* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
+/* ✨ PHASE 4.21: Fixed width discrepancy - override calc(100% + 24px) from line 75 */
 .courses-container .row:has(.instructor-sidebar-column) {
     flex-wrap: nowrap;
-    width: 100%;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
 }
