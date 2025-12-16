@@ -269,7 +269,7 @@ function Header() {
 
   // Render instructor details
   const renderInstructorDetails = () => (
-    <div className="row mt-3 pt-3" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.2)" }}>
+    <div className="row mt-3 pt-3 instructor-header-details-row" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.2)" }}>
       <div className="col-md-12">
         <div className="row">
           <div className="col-md-4 mb-3">
@@ -364,7 +364,7 @@ function Header() {
 
           {/* Full Header Content */}
           <div className={`instructor-header-content p-3 p-md-4 ${isAnimating ? (isCollapsed ? "collapsed-state" : "expanded-state") : (isCollapsed ? "collapsed-visual" : "expanded-visual")}`}>
-              <div className="row align-items-center">
+              <div className="row align-items-center instructor-header-main-row">
                 {/* Profile Avatar Section */}
                 <div className="col-lg-3 col-md-4 mb-4 mb-lg-0">
                   <div className="text-center position-relative">

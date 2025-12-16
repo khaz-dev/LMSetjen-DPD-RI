@@ -72,7 +72,8 @@
 }
 
 /* Consistent vertical spacing for dashboard sections */
-.courses-container .row:not(.instructor-header-row) {
+/* ✨ PHASE 4.21: Exclude header-specific rows to prevent style conflicts */
+.courses-container .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -86,18 +87,6 @@
 /* Inside container, row should expand with negative margins */
 .courses-container .container > .row:not(.instructor-header-row) {
     width: calc(100% + var(--bs-gutter-x, 24px));
-}
-
-/* ✨ PHASE 4.21: CRITICAL FIX - Protect detail items row inside header card from width override */
-/* Detail items row (.row.mt-3.pt-3) gets clipped by overflow: hidden on instructor-header-card */
-/* This rule restores its width to 100% to match other pages */
-/* Remove all margin/padding - they're not needed and cause misalignment */
-.instructor-header-card .row:not(.instructor-header-row) {
-    width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
 }
 
 /* Loading container - Handle header and sidebar rows separately */
