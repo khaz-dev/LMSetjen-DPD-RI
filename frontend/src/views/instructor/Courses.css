@@ -73,7 +73,7 @@
 
 /* Consistent vertical spacing for dashboard sections */
 /* ✨ PHASE 4.21: Exclude header-specific rows to prevent style conflicts */
-.courses-container .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row) {
+.courses-container .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.courses-sidebar-content-row):not(.courses-sidebar-content-row-loading):not(.courses-grid-row) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -89,6 +89,27 @@
     width: calc(100% + var(--bs-gutter-x, 24px));
 }
 
+/* ✨ PHASE 4.21: Sidebar-content rows - Proper layout without conflicts */
+.courses-container .row.courses-sidebar-content-row,
+.courses-container .row.courses-sidebar-content-row-loading {
+    flex-wrap: nowrap;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Courses grid row - Standard Bootstrap grid spacing */
+.courses-container .row.courses-grid-row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+}
+
 /* Loading container - Handle header and sidebar rows separately */
 .courses-loading-container {
     width: 100% !important;
@@ -98,8 +119,10 @@
 }
 
 /* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
-/* ✨ PHASE 4.21: Fixed width discrepancy - override calc(100% + 24px) from line 75 */
-.courses-container .row:has(.instructor-sidebar-column) {
+/* ✨ PHASE 4.21: Fixed width discrepancy - now using specific class names */
+.courses-container .row:has(.instructor-sidebar-column),
+.courses-container .row.courses-sidebar-content-row,
+.courses-container .row.courses-sidebar-content-row-loading {
     flex-wrap: nowrap;
     width: 100% !important;
     padding-left: 0 !important;

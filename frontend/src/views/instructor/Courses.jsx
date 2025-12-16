@@ -69,7 +69,7 @@ function Courses() {
                     <div className="courses-loading-container">
                         <div className="container">
                             <Header />
-                            <div className="row">
+                            <div className="row courses-sidebar-content-row-loading">
                                 <Sidebar />
                                 <div className={`col-lg-9 col-md-8 col-12 courses-spinner-wrapper ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                                     <div className="courses-spinner-center">
@@ -95,7 +95,7 @@ function Courses() {
             <section className="courses-container courses-main-section">
                 <div className="container">
                     <Header />
-                    <div className="row">
+                    <div className="row courses-sidebar-content-row">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Page Toolbar Section - Distinct from instructor Header */}
@@ -132,7 +132,7 @@ function Courses() {
                             {/* Courses Grid */}
                             <div className="modern-courses-container">
                                 {courses?.length > 0 ? (
-                                    <div className="row g-3">
+                                    <div className="row g-3 courses-grid-row">
                                         {courses.map((course, index) => (
                                             <CourseCard 
                                                 key={course.course_id || course.id || index} 
