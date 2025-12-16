@@ -44,6 +44,8 @@
 /* Ensure proper scroll context for sticky sidebar */
 .courses-container .container {
     position: relative;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 /* EXCLUDE Header row from aggressive margin/width rules */
@@ -56,6 +58,22 @@
     max-width: 100% !important;
     display: block !important;
     margin-bottom: 8rem;
+}
+
+/* CRITICAL: Protect Header Card itself from aggressive CSS rules */
+.courses-container .instructor-header-card {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* CRITICAL: Protect Header Card itself from aggressive CSS rules */
+.courses-container .instructor-header-card {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
 /* Consistent vertical spacing for dashboard sections */
@@ -91,9 +109,10 @@
     margin-right: 0 !important;
 }
 
-.courses-container {
-    display: flex;
-    flex-direction: column;
+/* Desktop and Tablet: Flex column layout for main container content */
+.courses-container > .container {
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
