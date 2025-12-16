@@ -1,670 +1,788 @@
-/* Instructor Header Styles */
+/* Instructor Header Component Styles */
+/* ✨ PHASE 4.21: Adopted student Header design with instructor branding */
+/* Instructor gradient uses blue/purple theme matching teacher identity */
+
+.instructor-header-row {
+    /* Uses standard Bootstrap row behavior for consistent width */
+}
+
+.instructor-header-row > .col-xl-12,
+.instructor-header-row > .col-lg-12,
+.instructor-header-row > .col-md-12,
+.instructor-header-row > .col-12 {
+    margin-bottom: 0 !important;
+}
+
+/* CSS Variables for flexible theming */
+:root {
+    --theme-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --theme-shadow-color: rgba(102, 126, 234, 0.3);
+    --theme-primary-dark: #667eea;
+    --theme-secondary: #764ba2;
+    --theme-hover-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+    --theme-card-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+}
+
 .instructor-header-card {
-  background: var(--theme-gradient);
-  border-radius: 25px;
-  border: none;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 25px 50px var(--theme-shadow-color);
-  min-height: auto;
-  margin-top: 1rem !important;
-  margin-bottom: 1rem !important;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--theme-gradient);
+    border-radius: 20px;
+    border: none;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--theme-card-shadow);
+    min-height: 160px;
+    user-select: none;
 }
 
 .instructor-header-card::before {
-  content: '';
-  position: absolute;
-  top: -30%;
-  left: -10%;
-  width: 30%;
-  height: 150%;
-  background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
-  transform: rotate(-15deg);
-  z-index: 0;
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 0.3s ease;
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 40%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(15deg);
+    z-index: 1;
+    pointer-events: none;
 }
 
 .instructor-header-card::after {
-  content: '';
-  position: absolute;
-  bottom: -30%;
-  right: -10%;
-  width: 25%;
-  height: 120%;
-  background: linear-gradient(225deg, rgba(255, 255, 255, 0.08), transparent);
-  transform: rotate(15deg);
-  z-index: 0;
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 0.3s ease;
-}
-
-/* Hide pseudo-elements during loading state for cleaner shimmer effect */
-.instructor-header-card .loading-shimmer-instructor {
-  position: relative;
-  z-index: 1;
-}
-
-.instructor-header-card .loading-shimmer-instructor ~ * {
-  pointer-events: none;
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -10%;
+    width: 35%;
+    height: 180%;
+    background: rgba(255, 255, 255, 0.08);
+    transform: rotate(-25deg);
+    z-index: 1;
+    pointer-events: none;
 }
 
 .instructor-header-content {
-  position: relative;
-  z-index: 1;
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
 }
 
+/* Profile Avatar Container */
+.instructor-header-content .col-lg-3 {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ✨ PHASE 4.21: Animated states - only when user interacts with toggle */
+.instructor-header-content.collapsed-state .col-lg-3 {
+    opacity: 0;
+    transform: scale(0.5) translateX(-20px);
+    visibility: hidden;
+}
+
+.instructor-header-content.expanded-state .col-lg-3 {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+    visibility: visible;
+}
+
+/* Visual states - no animation, for page navigation */
+.instructor-header-content.collapsed-visual .col-lg-3 {
+    opacity: 0;
+    transform: scale(0.5) translateX(-20px);
+    visibility: hidden;
+    transition: none;
+}
+
+.instructor-header-content.expanded-visual .col-lg-3 {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+    visibility: visible;
+    transition: none;
+}
+
+/* Profile Avatar Styles */
 .instructor-profile-avatar {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  border: 6px solid rgba(255, 255, 255, 0.3);
-  object-fit: cover;
-  object-position: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-  display: block;
-  flex-shrink: 0;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 6px solid rgba(255, 255, 255, 0.3);
+    object-fit: cover;
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    user-select: none;
+    pointer-events: none;
 }
 
 .instructor-profile-avatar:hover {
-  transform: scale(1.05);
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+}
+
+/* Avatar Wrapper */
+.instructor-avatar-wrapper {
+    transition: all 0.3s ease;
+}
+
+.instructor-avatar-wrapper:hover {
+    transform: translateY(-5px);
+}
+
+.instructor-avatar-wrapper:hover .instructor-profile-avatar {
+    transform: scale(1.08);
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+}
+
+.instructor-avatar-wrapper:hover .instructor-default-avatar {
+    transform: scale(1.08);
 }
 
 .instructor-default-avatar {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  border: 6px solid rgba(255, 255, 255, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-}
-
-.instructor-default-avatar.loading-shimmer-instructor {
-  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 75%);
-  background-size: 200% 100%;
-  animation: shimmer-loading 2s infinite !important;
-  border: 6px solid rgba(255, 255, 255, 0.2);
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: 6px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    user-select: none;
+    cursor: default;
 }
 
 .instructor-default-avatar:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
 }
 
-/* Avatar wrapper for proper positioning */
-.instructor-avatar-wrapper {
-  position: relative;
-  width: 180px;
-  height: 180px;
-  margin: 0 auto;
-  display: block;
+.instructor-fallback-icon {
+    display: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-.instructor-avatar-wrapper .instructor-profile-avatar {
-  position: relative;
-  z-index: 2;
-}
-
-.instructor-avatar-wrapper .instructor-default-avatar {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-  display: none;
-}
-
-.instructor-avatar-wrapper .instructor-fallback-icon {
-  width: 180px;
-  height: 180px;
-}
-
-.instructor-avatar-wrapper .instructor-fallback-icon i {
-  font-size: 4rem;
-  color: white;
-  opacity: 0.9;
-}
-
-/* Loading shimmer effect */
-.loading-shimmer-instructor {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 75%);
-  background-size: 200% 100%;
-  animation: shimmer-loading 2s infinite;
-}
-
-@keyframes shimmer-loading {
-  0% { 
-    background-position: -200% 0; 
-  }
-  100% { 
-    background-position: 200% 0; 
-  }
-}
-
+/* Instructor Badge */
 .instructor-badge {
-  position: absolute;
-  top: -5px;
-  right: 15px;
-  width: 55px;
-  height: 55px;
-  background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-secondary) 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 4px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 25px var(--theme-shadow-color);
-  z-index: 10;
-  transition: all 0.3s ease;
+    position: absolute;
+    top: -5px;
+    right: 15px;
+    width: 55px;
+    height: 55px;
+    background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-secondary) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 10px 25px var(--theme-shadow-color);
+    z-index: 10;
+    transition: all 0.3s ease;
+    user-select: none;
+    cursor: default;
 }
 
 .instructor-badge i {
-  color: white;
-  font-size: 1.4rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    color: white;
+    font-size: 1.4rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    user-select: none;
 }
 
 .instructor-badge:hover {
-  transform: scale(1.1) rotate(-10deg);
-  box-shadow: var(--theme-hover-shadow);
+    transform: scale(1.1) rotate(-10deg);
+    box-shadow: var(--theme-hover-shadow);
 }
 
-.instructor-info-card {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 2rem;
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  height: 100%;
-  transition: all 0.3s ease;
-}
-
-.instructor-info-card:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-5px);
-}
-
-.instructor-detail-item {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-.instructor-detail-item:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateX(5px);
-}
-
-.instructor-detail-item:last-child {
-  margin-bottom: 0;
-}
-
-.badge-instructor {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border-radius: 25px;
-  padding: 0.6rem 1.2rem;
-  font-weight: 500;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
+/* Profile Information */
 .instructor-name {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: white;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-  line-height: 1.2;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    line-height: 1.2;
+    user-select: none;
+    cursor: default;
 }
 
 .instructor-bio {
-  font-size: 1.1rem;
-  opacity: 0.9;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+    user-select: none;
+    cursor: default;
 }
 
 .instructor-meta {
-  font-size: 0.95rem;
-  opacity: 0.8;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+    font-size: 0.95rem;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    user-select: none;
+    cursor: default;
 }
 
 .instructor-meta i {
-  width: 16px;
-  text-align: center;
+    width: 16px;
+    text-align: center;
+    user-select: none;
 }
 
+/* Profile Info Card */
+.instructor-info-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    height: 100%;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.instructor-info-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-5px);
+}
+
+.instructor-detail-item {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    backdrop-filter: blur(12px);
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    cursor: default;
+}
+
+.instructor-detail-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+.instructor-detail-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateX(5px) translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.instructor-detail-item:hover::before {
+    left: 100%;
+}
+
+.instructor-detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.badge-instructor {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 25px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    user-select: none;
+    cursor: default;
+}
+
+/* Social Links */
 .social-links {
-  display: flex;
-  gap: 0.8rem;
-  margin: 0;
+    display: flex;
+    gap: 0.8rem;
+    margin: 0;
 }
 
 .social-link {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: 0.85rem;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.85rem;
 }
 
 .social-link:hover {
-  background: rgba(255, 255, 255, 0.3);
-  color: white;
-  transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    transform: translateY(-3px);
 }
 
+/* Instructor Buttons */
 .btn-instructor-primary {
-  background: var(--theme-gradient);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  font-weight: 600;
-  border-radius: 30px;
-  padding: 1rem 2.5rem;
-  transition: all 0.4s ease;
-  backdrop-filter: blur(10px);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--theme-card-shadow);
+    background: var(--theme-gradient);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-weight: 600;
+    border-radius: 30px;
+    padding: 1rem 2.5rem;
+    transition: all 0.4s ease;
+    backdrop-filter: blur(10px);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--theme-card-shadow);
+    user-select: none;
+    cursor: pointer;
 }
 
 .btn-instructor-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s ease;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
 }
 
 .btn-instructor-primary:hover {
-  background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-secondary) 100%);
-  border-color: rgba(255, 255, 255, 0.6);
-  color: white;
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: var(--theme-hover-shadow);
+    background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-secondary) 100%);
+    border-color: rgba(255, 255, 255, 0.6);
+    color: white;
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: var(--theme-hover-shadow);
+    text-decoration: none;
 }
 
 .btn-instructor-primary:hover::before {
-  left: 100%;
+    left: 100%;
 }
 
 .btn-instructor-primary.active {
-  background: rgba(255, 255, 255, 0.4);
-  border-color: rgba(255, 255, 255, 0.8);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.8);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .btn-instructor-outline {
-  background: transparent;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  color: white;
-  font-weight: 600;
-  border-radius: 30px;
-  padding: 1rem 2.5rem;
-  transition: all 0.4s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    font-weight: 600;
+    border-radius: 30px;
+    padding: 1rem 2.5rem;
+    transition: all 0.4s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    user-select: none;
+    cursor: pointer;
 }
 
 .btn-instructor-outline::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.6s ease;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.6s ease;
 }
 
 .btn-instructor-outline:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.8);
-  color: white;
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.8);
+    color: white;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
 }
 
 .btn-instructor-outline:hover::before {
-  left: 100%;
+    left: 100%;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .instructor-profile-avatar, .instructor-default-avatar {
-    width: 120px;
-    height: 120px;
-  }
-  
-  .instructor-name {
-    font-size: 2rem;
-  }
-  
-  .instructor-info-card {
-    padding: 1.5rem;
-    margin-top: 2rem;
-  }
-  
-  .btn-instructor-primary, .btn-instructor-outline {
-    padding: 0.8rem 1.8rem;
-    font-size: 0.9rem;
-  }
+/* Loading States */
+.loading-shimmer-instructor {
+    background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
 }
 
-@media (max-width: 576px) {
-  .instructor-profile-avatar, .instructor-default-avatar {
-    width: 100px;
-    height: 100px;
-  }
-  
-  .instructor-name {
-    font-size: 1.75rem;
-  }
-  
-  .instructor-header-card {
-    min-height: auto;
-  }
-  
-  .instructor-badge {
-    width: 45px;
-    height: 45px;
-    top: 10px;
-    right: 5px;
-  }
-  
-  .instructor-badge i {
-    font-size: 1.1rem;
-  }
+/* Animations */
+@keyframes activeGlow {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
 }
 
-/* COLLAPSIBLE HEADER STYLES */
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(102, 126, 234, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* ========================================
+   Toggle Button Styles
+   ======================================== */
 
 /* Toggle Button */
 .instructor-header-toggle-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .instructor-header-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .instructor-header-toggle-btn:active {
-  transform: scale(0.95);
+    transform: scale(0.95);
 }
 
 .instructor-header-toggle-btn i {
-  font-size: 1rem;
-  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+    font-size: 1rem;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Chevron rotation on collapse */
 .instructor-header-card.collapsed .instructor-header-toggle-btn i {
-  transform: rotate(180deg);
+    transform: rotate(180deg);
 }
 
-/* Collapsed State */
+/* Collapsed State with Smooth Animation */
 .instructor-header-card {
-  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .instructor-header-card.collapsed {
-  min-height: auto;
-  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    min-height: auto;
 }
 
 .instructor-header-content {
-  transform-origin: top;
-  overflow: hidden;
-  display: block;
-  visibility: visible;
+    transform-origin: top;
+    overflow: hidden;
+    display: block;
+    visibility: visible;
 }
 
-/* Animated states - only when user interacts with toggle */
+/* ✨ PHASE 4.21: Animated states - only when user interacts with toggle */
 .instructor-header-content.collapsed-state {
-  animation: collapseHeader 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  max-height: 0;
-  opacity: 0;
-  visibility: hidden;
-  overflow: hidden;
-  display: none;
+    animation: collapseHeader 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
+    display: none;
 }
 
 .instructor-header-content.expanded-state {
-  animation: expandHeader 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  max-height: 700px;
-  opacity: 1;
-  visibility: visible;
+    animation: expandHeader 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    max-height: 700px;
+    opacity: 1;
+    visibility: visible;
 }
 
-/* Visual states - no animation, used on page navigation */
+/* ✨ PHASE 4.21: Visual states - no animation, used on page navigation */
 .instructor-header-content.collapsed-visual {
-  max-height: 0;
-  opacity: 0;
-  visibility: hidden;
-  overflow: hidden;
-  display: none;
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
+    display: none;
 }
 
 .instructor-header-content.expanded-visual {
-  animation: none;
-  max-height: 700px;
-  opacity: 1;
-  visibility: visible;
+    animation: none;
+    max-height: 700px;
+    opacity: 1;
+    visibility: visible;
 }
 
 @keyframes expandHeader {
-  0% {
-    opacity: 0;
-    transform: translateY(-10px);
-    max-height: 0;
-  }
-  30% {
-    opacity: 0.3;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    max-height: 700px;
-  }
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+    30% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 700px;
+    }
 }
 
 @keyframes collapseHeader {
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-    max-height: 700px;
-  }
-  70% {
-    opacity: 0.3;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-10px);
-    max-height: 0;
-  }
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 700px;
+    }
+    70% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+}
+
+/* Avatar transition animations */
+@keyframes avatarAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes avatarDisappear {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
 }
 
 /* Hide main toggle button when collapsed */
 .instructor-header-card.collapsed .instructor-header-toggle-btn {
-  display: none;
+    display: none;
 }
 
 /* Collapsed Mini Header */
 .instructor-header-collapsed {
-  position: relative;
-  z-index: 10;
-}
-
-@keyframes slideDownSmooth {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    position: relative;
+    z-index: 10;
 }
 
 .instructor-header-collapsed .instructor-profile-avatar,
 .instructor-header-collapsed .instructor-default-avatar {
-  width: 50px;
-  height: 50px;
-  border-width: 3px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 50px;
+    height: 50px;
+    border-width: 3px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Override avatar wrapper for collapsed state */
 .instructor-header-collapsed .instructor-avatar-wrapper {
-  width: auto;
-  height: auto;
-  margin: 0;
-  display: flex;
-  flex-shrink: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    display: flex;
+    flex-shrink: 0;
 }
 
 .instructor-header-collapsed .loading-shimmer-instructor {
-  width: 50px;
-  height: 50px;
+    width: 50px;
+    height: 50px;
 }
 
 .instructor-header-collapsed .spinner-border {
-  width: 1.5rem !important;
-  height: 1.5rem !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
 }
 
 .instructor-header-collapsed h5 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
 }
 
 .instructor-header-collapsed small {
-  font-size: 0.85rem;
+    font-size: 0.85rem;
 }
 
 .instructor-header-collapsed .btn {
-  font-size: 0.875rem;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    min-height: 36px;
 }
 
 .instructor-header-collapsed .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Inline toggle button in collapsed header */
+.instructor-header-collapsed .btn-light {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    color: #667eea;
+    font-weight: 600;
+}
+
+.instructor-header-collapsed .btn-light:hover {
+    background: white;
+    color: #764ba2;
+}
+
+.instructor-header-collapsed .btn-outline-light {
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    background: transparent;
+}
+
+.instructor-header-collapsed .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: white;
+    color: white;
+}
+
+/* Inline toggle button for collapsed state */
 .instructor-header-toggle-btn-inline {
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+    font-size: 0.75rem;
+    flex-shrink: 0;
 }
 
 .instructor-header-toggle-btn-inline:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.1);
 }
 
-.instructor-header-toggle-btn-inline:active {
-  transform: scale(0.95);
+/* Mini avatar styles */
+.instructor-profile-avatar-mini {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    object-fit: cover;
+    display: block;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    opacity: 1;
+    transform: scale(1);
 }
 
-.instructor-header-toggle-btn-inline i {
-  font-size: 1rem;
-  transition: transform 0.3s ease;
+/* Mini avatar appears when collapsed AND user is animating */
+.instructor-header-card.animating.collapsed .instructor-profile-avatar-mini {
+    animation: avatarAppear 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-/* Expanded State - Animation removed for page load */
-.instructor-header-card:not(.collapsed) .instructor-header-content {
-  opacity: 1;
-  transform: translateY(0);
+/* Mini avatar disappears when expanding AND user is animating */
+.instructor-header-card.animating:not(.collapsed) .instructor-profile-avatar-mini {
+    animation: avatarDisappear 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.instructor-profile-avatar-mini:hover {
+    transform: scale(1.05);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .instructor-profile-avatar, .instructor-default-avatar {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .instructor-name {
+        font-size: 2rem;
+    }
+    
+    .instructor-info-card {
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .btn-instructor-primary, .btn-instructor-outline {
+        padding: 0.8rem 1.8rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .instructor-profile-avatar, .instructor-default-avatar {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .instructor-name {
+        font-size: 1.75rem;
+    }
+    
+    .instructor-header-card {
+        min-height: auto;
+    }
 }
