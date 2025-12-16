@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import LoadingSpinner from "./Partials/LoadingSpinner";
+import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import CourseCard from "../../components/CourseCard";
@@ -96,19 +98,19 @@ function Courses() {
                     <div className="row">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
-                            {/* Header Section */}
-                            <div className="courses-header-section mb-4">
-                                <div className="courses-header-gradient"></div>
-                                <div className="courses-header-content">
-                                    <div className="courses-header-title-group">
-                                        <h1 className="courses-header-title">
-                                            <i className="fas fa-graduation-cap courses-header-icon"></i>My Courses
+                            {/* Page Toolbar Section - Distinct from instructor Header */}
+                            <div className="courses-toolbar-section mb-4">
+                                <div className="courses-toolbar-gradient"></div>
+                                <div className="courses-toolbar-content">
+                                    <div className="courses-toolbar-title-group">
+                                        <h1 className="courses-toolbar-title">
+                                            <i className="fas fa-graduation-cap courses-toolbar-icon"></i>My Courses
                                         </h1>
-                                        <p className="courses-header-subtitle">
+                                        <p className="courses-toolbar-subtitle">
                                             Manage and monitor your course collection
                                         </p>
                                     </div>
-                                    <div className="courses-header-actions">
+                                    <div className="courses-toolbar-actions">
                                         <div className="courses-stat-badge">
                                             <i className="fas fa-book courses-stat-icon"></i>
                                             {courses?.length || 0} Courses

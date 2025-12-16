@@ -48,7 +48,7 @@
     flex-direction: column !important;
 }
 
-/* EXCLUDE Header row from aggressive margin/width rules */
+/* Main Courses Container - Base Layout */
 .courses-container {
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -58,17 +58,12 @@
     max-width: 100% !important;
     display: block !important;
     margin-bottom: 8rem;
+    min-height: 100vh;
+    background: transparent;
+    padding-bottom: 3rem !important;
 }
 
-/* CRITICAL: Protect Header Card itself from aggressive CSS rules */
-.courses-container .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-/* CRITICAL: Protect Header Card itself from aggressive CSS rules */
+/* Protect Header Card from aggressive CSS rules in .courses-container */
 .courses-container .instructor-header-card {
     margin-top: 1rem !important;
     margin-bottom: 1rem !important;
@@ -164,22 +159,16 @@
   overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
 }
 
-/* Sidebar: sticky positioning defined in global performance.css */
-/* This ensures the sidebar sticks to the viewport when scrolling */
-/* Position: sticky is already set in Sidebar.css & performance.css */
-/* NO override or conflicting properties here */
+/* Sidebar sticky positioning and flex layout */
+.courses-container .row > .instructor-sidebar-column {
+    display: flex;
+    flex-direction: column;
+    overflow: visible !important;
+}
 
 /* ========================================
    PAGE LAYOUT STATES
    ======================================== */
-
-.courses-container {
-    min-height: 100vh;
-    background: transparent;
-    padding-top: 0 !important;
-    padding-bottom: 3rem !important;
-    margin-bottom: 8rem;
-}
 
 /* Loading state - full height block layout */
 .courses-container.courses-loading-section {
@@ -213,10 +202,10 @@
 }
 
 /* ========================================
-   HEADER SECTION STYLES
+   TOOLBAR SECTION STYLES
    ======================================== */
 
-.courses-header-section {
+.courses-toolbar-section {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
@@ -227,7 +216,7 @@
     overflow: hidden;
 }
 
-.courses-header-gradient {
+.courses-toolbar-gradient {
     position: absolute;
     top: -50%;
     right: -20%;
@@ -238,7 +227,7 @@
     z-index: 1;
 }
 
-.courses-header-content {
+.courses-toolbar-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -247,11 +236,11 @@
     gap: 2rem;
 }
 
-.courses-header-title-group {
+.courses-toolbar-title-group {
     flex: 1;
 }
 
-.courses-header-title {
+.courses-toolbar-title {
     background: linear-gradient(135deg, #3498db, #2980b9);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -264,20 +253,20 @@
     gap: 1rem;
 }
 
-.courses-header-icon {
+.courses-toolbar-icon {
     background: linear-gradient(135deg, #3498db, #2980b9);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
-.courses-header-subtitle {
+.courses-toolbar-subtitle {
     margin-bottom: 0;
     color: #6c757d;
     font-size: 1.1rem;
 }
 
-.courses-header-actions {
+.courses-toolbar-actions {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -373,20 +362,20 @@
     margin-right: 0;
 }
 
-/* Responsive header layout */
+/* Responsive toolbar layout */
 @media (max-width: 991px) {
-    .courses-header-content {
+    .courses-toolbar-content {
         flex-direction: column;
         align-items: flex-start;
     }
 
-    .courses-header-actions {
+    .courses-toolbar-actions {
         width: 100%;
         justify-content: space-between;
         gap: 1rem;
     }
 
-    .courses-header-title {
+    .courses-toolbar-title {
         font-size: 2rem;
     }
 
@@ -399,13 +388,13 @@
 }
 
 @media (max-width: 767px) {
-    .courses-header-content {
+    .courses-toolbar-content {
         flex-direction: column;
         align-items: center;
         text-align: center;
     }
 
-    .courses-header-actions {
+    .courses-toolbar-actions {
         width: 100%;
         justify-content: center;
         flex-direction: column;
@@ -433,11 +422,11 @@
         transform: translateY(-2px) !important;
     }
 
-    .courses-header-title {
+    .courses-toolbar-title {
         font-size: 1.75rem;
     }
 
-    .courses-header-subtitle {
+    .courses-toolbar-subtitle {
         font-size: 1rem;
     }
 }
@@ -697,11 +686,11 @@
         flex-wrap: wrap;
     }
 
-    .courses-header-section {
+    .courses-toolbar-section {
         padding: 20px;
     }
 
-    .courses-header-title {
+    .courses-toolbar-title {
         font-size: 1.75rem;
     }
 }
@@ -711,12 +700,12 @@
         padding-top: 70px;
     }
 
-    .courses-header-section {
+    .courses-toolbar-section {
         padding: 15px;
         margin-bottom: 1.5rem;
     }
 
-    .courses-header-title {
+    .courses-toolbar-title {
         font-size: 1.5rem;
     }
 
