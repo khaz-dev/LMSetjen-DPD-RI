@@ -271,7 +271,7 @@ function Header() {
   const renderInstructorDetails = () => (
     <div className="row mt-3 pt-3 instructor-header-details-row" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.2)" }}>
       <div className="col-md-12">
-        <div className="row">
+        <div className="row instructor-header-details-items-row">
           <div className="col-md-4 mb-3">
             <div className="instructor-detail-item">
               <div className="instructor-meta">
