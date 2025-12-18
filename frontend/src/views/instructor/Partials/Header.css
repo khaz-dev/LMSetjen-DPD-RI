@@ -743,8 +743,8 @@
 /* ✨ PHASE 4.22: Active state for btn-outline-light inside collapsed header */
 .instructor-header-collapsed .btn-outline-light.active {
     background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.8);
-    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    color: #667eea;
     font-weight: 600;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
