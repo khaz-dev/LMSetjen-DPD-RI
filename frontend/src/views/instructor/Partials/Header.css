@@ -447,6 +447,20 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
+/* ✨ PHASE 4.21: Active state for btn-instructor-primary inside header-main-row */
+.instructor-header-main-row .btn-instructor-primary.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.8);
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ✨ PHASE 4.21: Active state for btn-instructor-outline inside header-main-row */
+.instructor-header-main-row .btn-instructor-outline.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
 /* Loading States */
 .loading-shimmer-instructor {
     background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 75%);
