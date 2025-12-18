@@ -379,14 +379,6 @@
     left: 100%;
 }
 
-.btn-instructor-primary.active {
-    background: rgba(255, 255, 255, 0.4);
-    border-color: rgba(255, 255, 255, 0.8);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
 .btn-instructor-outline {
     background: transparent;
     border: 2px solid rgba(255, 255, 255, 0.5);
@@ -428,6 +420,13 @@
 
 .btn-instructor-outline:hover::before {
     left: 100%;
+}
+
+/* ✨ PHASE 4.21: Unified active state for both button types - consistent styling across pages */
+.btn-instructor-primary.active,
+.btn-instructor-outline.active {
+    opacity: 1;
+    transform: scale(1);
 }
 
 /* Loading States */
