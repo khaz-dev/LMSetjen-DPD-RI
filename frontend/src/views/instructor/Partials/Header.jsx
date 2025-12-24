@@ -336,7 +336,7 @@ function Header() {
                 <div className="d-flex gap-2">
                   <Link
                     to="/instructor/create-course/"
-                    className={`btn btn-sm btn-light ${isActivePage("/instructor/create-course/") ? "active" : ""}`}
+                    className={`btn btn-sm btn-outline-light ${isActivePage("/instructor/create-course/") ? "active" : ""}`}
                     title="Create Course"
                   >
                     <i className="fas fa-plus me-1"></i>
