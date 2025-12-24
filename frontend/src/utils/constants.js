@@ -24,8 +24,9 @@ export const API_BASE_URL = baseURL.startsWith('http')
 export const DEFAULT_IMAGE_URL = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
 
 // Helper function to get full media URL
-// ✨ PHASE 4.40: Fixed to return /media/ URLs directly (not /api/media/)
-// Media files are served by nginx directly, not through Django API endpoints
+// ✨ PHASE 4.30: Fixed to use correct backend origin for media files in development
+// In development: points to http://127.0.0.1:8000/media/ (Django backend)
+// In production: points to /media/ (nginx serves from same origin as frontend)
 export const getMediaUrl = (path) => {
     if (!path) return '';
     
@@ -34,22 +35,35 @@ export const getMediaUrl = (path) => {
         return path;
     }
     
-    // Media files are served directly from /media/ path (root level)
-    // NOT from /api/media/ - there is no /api/media/ endpoint
-    // Nginx handles /media/ directly from the filesystem volume
+    // Get the backend base URL for media files
+    // In development: use http://127.0.0.1:8000 (or whatever backend is configured)
+    // In production: use relative /media/ (same origin as frontend via nginx)
+    const getBackendMediaUrl = () => {
+        // Extract backend origin from baseURL
+        if (baseURL.startsWith('http')) {
+            // Development mode: baseURL is full URL like http://127.0.0.1:8000
+            const baseOrigin = baseURL.split('/api')[0]; // Remove /api/v1/ part
+            return `${baseOrigin}/media/`;
+        }
+        // Production mode: relative path works (nginx serves both frontend and media)
+        return '/media/';
+    };
     
+    const backendMediaUrl = getBackendMediaUrl();
+    
+    // Handle paths that already have /media/ prefix
     if (path.startsWith('/media/')) {
-        // Already has correct /media/ prefix
-        return path;
+        return path; // Return as-is, it's already prefixed
     }
     
+    // Handle absolute paths
     if (path.startsWith('/')) {
-        // Add /media prefix (not /api/media)
-        return `/media${path}`;
+        return `${backendMediaUrl}${path.substring(1)}`;
     }
     
-    // Otherwise, add /media/ prefix (not /api/media/)
-    return `/media/${path}`;
+    // Handle relative paths (e.g., 'user_folder/pic.jpg')
+    // This is the most common case from Django's str(FileField)
+    return `${backendMediaUrl}${path}`;
 };
 
 // NOTE: Do NOT export userId or teacherId at module load time!
