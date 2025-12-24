@@ -895,7 +895,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                 Video is Active - Ready for Course Update
               </p>
               <div className="file-actions">
-                <label htmlFor="courseVideo" className="btn btn-outline-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+                <label htmlFor="courseVideo" className="btn btn-outline-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
                   <i className="fas fa-sync-alt me-1"></i>
                   Replace Video
                 </label>
@@ -907,7 +907,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                 <i className="fas fa-cloud-upload-alt" style={{ fontSize: '1.2rem' }}></i>
               </div>
               <p className="small mb-1">Upload Course Intro Video</p>
-              <label htmlFor="courseVideo" className="btn btn-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+              <label htmlFor="courseVideo" className="btn btn-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
                 <i className="fas fa-plus me-1"></i>
                 Choose Video File
               </label>
