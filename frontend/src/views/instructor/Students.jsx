@@ -61,15 +61,22 @@ function Students() {
     const getStudentImage = (student) => {
         // Check if student has image
         if (student?.image) {
-            // Handle absolute URLs
+            // Handle absolute URLs (full http/https URLs)
             if (student.image.startsWith('http://') || student.image.startsWith('https://')) {
                 return student.image;
             }
-            // Use centralized helper for relative URLs
+            
+            // Handle already-prefixed /media/ URLs (shouldn't happen, but safe check)
+            if (student.image.startsWith('/media/')) {
+                return student.image;
+            }
+            
+            // Handle relative paths (e.g., 'user_folder/pic.jpg')
+            // getMediaUrl() will add /media/ prefix
             return getMediaUrl(student.image);
         }
         
-        // Generate initials-based placeholder
+        // Generate initials-based placeholder when no image available
         const name = student?.full_name || 'Student';
         const initials = name
             .split(' ')

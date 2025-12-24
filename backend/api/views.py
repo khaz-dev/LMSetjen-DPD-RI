@@ -2554,10 +2554,12 @@ class TeacherStudentsListAPIView(viewsets.ViewSet):
                             full_name = profile.full_name if profile.full_name else None
                             country = profile.country if profile.country else None
                             
-                            # Safely get image URL
+                            # Safely get image path (not .url to avoid double /media/ prefix)
                             if profile.image:
                                 try:
-                                    image_url = profile.image.url
+                                    # Return just the path (e.g., 'user_folder/pic.jpg')
+                                    # Frontend's getMediaUrl() will add /media/ prefix
+                                    image_url = str(profile.image)
                                 except:
                                     image_url = None
                         
