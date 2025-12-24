@@ -613,6 +613,11 @@
     font-size: 0.85rem;
     font-weight: 600;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.5rem;
 }
 
 .course-action-btn:hover {
