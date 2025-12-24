@@ -478,9 +478,15 @@
     margin-bottom: 1rem;
 }
 
+/* ✨ PHASE 4.26: Align modern-courses-container with toolbar and search sections */
 .modern-courses-container {
     display: block;
-    width: 102%;
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .modern-courses-container .row {
