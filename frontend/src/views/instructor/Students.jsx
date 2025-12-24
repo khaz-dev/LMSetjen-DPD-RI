@@ -41,10 +41,27 @@ function Students() {
             // Validate and sanitize the response data
             const studentsData = Array.isArray(response.data) ? response.data : [];
             
+            // Log detailed debugging information
+            console.log("=== STUDENT LIST API RESPONSE ===");
+            console.log("Total students:", studentsData.length);
+            studentsData.slice(0, 3).forEach((student, index) => {
+                console.log(`Student ${index}:`, {
+                    user_id: student.user_id,
+                    full_name: student.full_name,
+                    image: student.image,
+                    image_type: typeof student.image,
+                    image_exists: !!student.image,
+                    country: student.country,
+                });
+            });
+            
             // Log any students with missing data for debugging
             studentsData.forEach((student, index) => {
                 if (!student.full_name) {
                     console.warn(`Student at index ${index} missing full_name:`, student);
+                }
+                if (!student.image) {
+                    console.warn(`Student at index ${index} missing image:`, student.full_name);
                 }
             });
             
@@ -59,33 +76,49 @@ function Students() {
     };
 
     const getStudentImage = (student) => {
+        // Log the input
+        console.log(`getStudentImage called for ${student?.full_name}:`, {
+            image: student?.image,
+            image_type: typeof student?.image,
+        });
+
         // Check if student has image
         if (student?.image) {
+            console.log(`  → Image exists: "${student.image}"`);
+            
             // Handle absolute URLs (full http/https URLs)
-            if (student.image.startsWith('http://') || student.image.startsWith('https://')) {
+            if (student.image.startsWith("http://") || student.image.startsWith("https://")) {
+                console.log(`  → Returning absolute URL: ${student.image}`);
                 return student.image;
             }
             
             // Handle already-prefixed /media/ URLs (shouldn't happen, but safe check)
-            if (student.image.startsWith('/media/')) {
+            if (student.image.startsWith("/media/")) {
+                console.log(`  → Returning /media/ prefixed URL: ${student.image}`);
                 return student.image;
             }
             
             // Handle relative paths (e.g., 'user_folder/pic.jpg')
             // getMediaUrl() will add /media/ prefix
-            return getMediaUrl(student.image);
+            const mediaUrl = getMediaUrl(student.image);
+            console.log(`  → Returning getMediaUrl result: ${mediaUrl}`);
+            return mediaUrl;
         }
         
+        console.log(`  → No image, using initials placeholder`);
+        
         // Generate initials-based placeholder when no image available
-        const name = student?.full_name || 'Student';
+        const name = student?.full_name || "Student";
         const initials = name
-            .split(' ')
+            .split(" ")
             .map(word => word.charAt(0).toUpperCase())
             .slice(0, 2)
-            .join('');
+            .join("");
         
         // Use initials in placeholder
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=667eea&color=ffffff&bold=true`;
+        const initialsUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=667eea&color=ffffff&bold=true`;
+        console.log(`  → Returning initials URL: ${initialsUrl}`);
+        return initialsUrl;
     };
 
     const getStudentName = (student) => {
@@ -94,12 +127,12 @@ function Students() {
             return student.full_name;
         }
         if (student?.email) {
-            return student.email.split('@')[0];
+            return student.email.split("@")[0];
         }
         if (student?.user_id) {
             return `Student #${student.user_id}`;
         }
-        return 'Unknown Student';
+        return "Unknown Student";
     };
 
     // Show full-page loading spinner on initial load
@@ -107,14 +140,14 @@ function Students() {
         return (
             <>
                 <BaseHeader />
-                <section className="modern-students" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <section className="modern-students" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
                                     </div>
                                     <p className="mt-3 text-muted">Loading Students...</p>
@@ -163,7 +196,7 @@ function Students() {
                             {/* Error State */}
                             {error && (
                                 <div className="error-state">
-                                    <i className="fas fa-exclamation-triangle text-warning mb-3" style={{ fontSize: '3rem' }}></i>
+                                    <i className="fas fa-exclamation-triangle text-warning mb-3" style={{ fontSize: "3rem" }}></i>
                                     <h5 className="text-danger mb-3">Error Loading Students</h5>
                                     <p className="text-muted mb-3">{error}</p>
                                     <button className="btn btn-primary" onClick={fetchStudents}>
@@ -185,15 +218,19 @@ function Students() {
                                                             className="student-avatar"
                                                             alt={`${getStudentName(student)} avatar`}
                                                             onError={(e) => {
-                                                                console.warn('Image load failed for student:', student);
+                                                                console.error(`❌ Image load FAILED for student: ${student.full_name}`);
+                                                                console.error(`   Attempted URL: ${e.target.src}`);
+                                                                console.error(`   Student data:`, student);
                                                                 const name = getStudentName(student);
-                                                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=667eea&color=ffffff&bold=true`;
+                                                                const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=667eea&color=ffffff&bold=true`;
+                                                                console.log(`   Fallback to initials: ${fallbackUrl}`);
+                                                                e.target.src = fallbackUrl;
                                                             }}
                                                         />
                                                         <h4 className="student-name">{getStudentName(student)}</h4>
                                                         <div className="student-location">
                                                             <i className="fas fa-map-marker-alt text-primary"></i>
-                                                            <span>{student.country || 'Location not specified'}</span>
+                                                            <span>{student.country || "Location not specified"}</span>
                                                         </div>
                                                     </div>
                                                     <div className="student-info">
