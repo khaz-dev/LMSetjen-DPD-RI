@@ -127,7 +127,7 @@ function Review() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-review-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <section className="instructor-review-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center', marginTop: '3rem', paddingTop: '3rem', paddingBottom: '3rem' }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -152,7 +152,7 @@ function Review() {
         <>
             <BaseHeader />
 
-            <section className="instructor-review-page" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
+            <section className="instructor-review-page" style={{ marginTop: '3rem', paddingTop: '3rem', paddingBottom: '3rem' }}>
                 <div className="container">
                     {/* Header Here */}
                     <Header />

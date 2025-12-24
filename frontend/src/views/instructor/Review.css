@@ -21,6 +21,7 @@
 /* Main Page Layout */
 .instructor-review-page {
     background: transparent;
+    margin-top: 3rem;
     padding-top: 3rem;
     padding-bottom: 3rem;
     margin-bottom: 8rem;
@@ -68,8 +69,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
@@ -85,8 +86,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
@@ -883,7 +884,6 @@
     min-width: 0;
     width: auto;
     max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 
   /* Ensure content doesn't wrap under sidebar */
@@ -917,7 +917,6 @@
     min-width: 0;
     width: auto;
     max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 
   /* Ensure content doesn't wrap under sidebar */
