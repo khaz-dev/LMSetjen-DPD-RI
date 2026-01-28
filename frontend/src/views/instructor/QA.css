@@ -5,20 +5,52 @@
    ================================ */
 
 .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Protect header card gap from parent overrides */
 .modern-dashboard .row > .col-12 > .instructor-header-card,
 .modern-dashboard .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
+}
+
+/* CRITICAL: Force qa-bg-section padding to be overridable by pt-5 and pb-5 classes */
+/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+.qa-bg-section.pt-5 {
+    padding-top: 50px !important;
+}
+
+.qa-bg-section.pb-5 {
+    padding-bottom: 3rem !important;
 }
 
 /* ========================================
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
+
+.qa-bg-section {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    margin-bottom: 8rem;
+    min-height: 100vh;
+    background: transparent;
+    padding: 3rem 0;
+    padding-top: calc(70px + 3rem) !important;
+    padding-bottom: 3rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: hidden;
+    overflow-y: visible;
+    /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
+    /* ✨ PHASE 7.3: Add overflow-x: hidden to prevent horizontal scroll */
+}
 
 /* Ensure proper scroll context for sticky sidebar */
 .qa-bg-section .container {
@@ -52,14 +84,46 @@
     flex-direction: column;
 }
 
+/* Protect Header on QA page from row CSS rules */
+.qa-bg-section .row.instructor-header-row {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Ensure Header card maintains full width and removes right gap */
+.qa-bg-section .row.instructor-header-row > .col-xl-12,
+.qa-bg-section .row.instructor-header-row > .col-lg-12,
+.qa-bg-section .row.instructor-header-row > .col-md-12,
+.qa-bg-section .row.instructor-header-row > .col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* ✨ PHASE 4.21: Sidebar-content rows - Proper layout without conflicts */
+.qa-bg-section .row.sidebar-content-row,
+.qa-bg-section .row.sidebar-content-row-loading {
+    flex-wrap: nowrap;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
 .qa-bg-section .row:has(.instructor-sidebar-column) > .col-lg-9 {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
@@ -75,8 +139,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
@@ -111,7 +175,7 @@
     min-height: 100vh;
     background: transparent;
     padding: 3rem 0;
-    padding-top: 3rem !important;
+    padding-top: calc(70px + 3rem) !important;
     padding-bottom: 3rem !important;
     margin-bottom: 8rem;
 }
@@ -157,6 +221,141 @@
     font-size: 1.1rem;
 }
 
+/* ========================================
+   COURSE HEADER BACK BUTTON & TITLE SECTION
+   ======================================== */
+
+/* Back Button + Course Title Container */
+.qa-course-header {
+    /* ✨ PHASE 4.16: Fixed header styling for course selection view */
+    /* ✨ PHASE 4.17: Now positioned inside qa-search-section */
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;  /* Reduced from 1.5rem for internal spacing within search section */
+    padding-bottom: 1rem;  /* Add internal padding to separate from search input */
+    border-bottom: 1px solid #e9ecef;  /* Visual divider between header and search */
+}
+
+/* Back Button - Fixed Sizing */
+.qa-course-header .btn.btn-light.rounded-circle {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    flex-shrink: 0;  /* Prevent button from shrinking */
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+.qa-course-header .btn.btn-light.rounded-circle:hover {
+    background-color: #e8e9ea !important;
+    border-color: #dee2e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.qa-course-header .btn.btn-light.rounded-circle:active {
+    transform: translateY(0);
+}
+
+.qa-course-header .btn.btn-light.rounded-circle i {
+    font-size: 1.1rem;
+    color: #495057;
+    transition: color 0.3s ease;
+}
+
+.qa-course-header .btn.btn-light.rounded-circle:hover i {
+    color: #2c3e50;
+}
+
+/* Course Title & Info Container */
+.qa-course-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;  /* Allow text to wrap properly */
+    flex: 1;
+    padding: 0.25rem 0;  /* Subtle padding for better vertical alignment */
+}
+
+.qa-course-info h3 {
+    margin: 0;
+    padding: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    line-height: 1.3;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.qa-course-info small {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+    margin-top: 0.1rem;
+    line-height: 1.4;
+}
+
+/* Responsive: Tablet and Below */
+@media (max-width: 768px) {
+    .qa-course-header {
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;  /* Reduced for tighter spacing */
+        padding-bottom: 0.75rem;
+    }
+
+    .qa-course-header .btn.btn-light.rounded-circle {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .qa-course-info h3 {
+        font-size: 1.25rem;
+    }
+
+    .qa-course-info small {
+        font-size: 0.8rem;
+    }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 480px) {
+    .qa-course-header {
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;  /* Reduced for mobile spacing */
+        padding-bottom: 0.75rem;
+    }
+
+    .qa-course-header .btn.btn-light.rounded-circle {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    .qa-course-header .btn.btn-light.rounded-circle i {
+        font-size: 1rem;
+    }
+
+    .qa-course-info h3 {
+        font-size: 1.1rem;
+    }
+
+    .qa-course-info small {
+        font-size: 0.75rem;
+    }
+}
+
 .qa-stat-badge {
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
@@ -176,6 +375,354 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* ========================================
+   COURSE SELECTION & CARD STYLES
+   ======================================== */
+
+.course-selection-card,
+.qa-discussion-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+}
+
+.form-section-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 2rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.search-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 15px;
+    border: 1px solid #e9ecef;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.form-control-modern {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 0.875rem 3rem 0.875rem 1.25rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.form-control-modern:focus {
+    border-color: #9b59b6;
+    box-shadow: 0 0 0 0.2rem rgba(155, 89, 182, 0.25);
+    background: white;
+}
+
+.search-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9b59b6;
+    z-index: 3;
+}
+
+/* ===== COURSE CARD STYLES ===== */
+.student-qa-course-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 1.2rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    animation: fadeInUp 0.6s ease-out;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.student-qa-course-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #9b59b6 0%, #3498db 50%, #e74c3c 100%);
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+    transform-origin: left;
+    z-index: 1;
+}
+
+.student-qa-course-card:hover::before {
+    transform: scaleX(1);
+}
+
+.student-qa-course-card:hover {
+    border-color: #9b59b6;
+    box-shadow: 0 12px 28px rgba(155, 89, 182, 0.15);
+    transform: translateY(-4px);
+}
+
+.course-image-container {
+    width: 100%;
+    height: 140px;
+    overflow: hidden;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 15px;
+}
+
+.course-image {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+    border-radius: 15px;
+}
+
+.student-qa-course-card:hover .course-image {
+    transform: scale(1.08);
+}
+
+.course-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 3rem;
+    position: relative;
+    border-radius: 15px;
+}
+
+.course-placeholder::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    border-radius: 15px;
+}
+
+.course-placeholder i {
+    position: relative;
+    z-index: 1;
+}
+
+.course-image-placeholder {
+    display: flex;
+}
+
+.question-profile-placeholder {
+    display: flex;
+}
+
+/* Course Info Section */
+.course-info {
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.student-qa-course-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 0.35rem 0;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.3s ease;
+}
+
+.student-qa-course-card:hover .student-qa-course-title {
+    color: #9b59b6;
+}
+
+.course-instructor {
+    color: #6c757d !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    margin-bottom: 0.75rem !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    transition: color 0.3s ease !important;
+    flex-direction: row !important;
+    line-height: 1.5 !important;
+}
+
+.student-qa-course-card:hover .course-instructor {
+    color: #9b59b6 !important;
+}
+
+.student-qa-course-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0;
+    margin-top: auto;
+}
+
+.qa-stats-badge {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.3);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.qa-stats-badge i {
+    font-size: 0.75rem;
+}
+
+.student-qa-course-card:hover .qa-stats-badge {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.35);
+}
+
+.discussion-activity {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    padding: 0.35rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.25);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.discussion-activity i {
+    font-size: 0.75rem;
+}
+
+.student-qa-course-card:hover .discussion-activity {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.35);
+}
+
+/* Course Action Area */
+.course-action-area {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #f0f0f0;
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.02) 0%, rgba(52, 152, 219, 0.02) 100%);
+}
+
+.join-discussion-btn {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    border: none;
+    padding: 0.55rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+    transform: translateX(0);
+    width: 100%;
+    max-width: 200px;
+    text-decoration: none;
+}
+
+.student-qa-course-card:hover .join-discussion-btn {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px rgba(231, 76, 60, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.join-discussion-arrow {
+    font-size: 0.85rem;
+    transition: transform 0.3s ease;
+}
+
+.student-qa-course-card:hover .join-discussion-arrow {
+    transform: translateX(3px);
+}
+
+/* ===== BUTTON STYLES ===== */
+.btn-qa {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 0.875rem 2rem;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-qa:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(155, 89, 182, 0.4);
+    color: white;
+}
+
+.btn-qa:disabled {
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #9b59b6;
+    opacity: 0.7;
+}
+
 /* ================================
    SHARED INSTRUCTOR PAGE STYLES
    ================================ */
@@ -185,7 +732,8 @@
     background: transparent;
     min-height: 100vh;
     padding: 2rem 0;
-    padding-top: 85px; /* Add top spacing for fixed header */
+    /* ✨ PHASE 5: Remove padding-top override to maintain consistent navbar gap */
+    /* Previously: padding-top: 85px; This was causing gap inconsistency when header collapsed */
 }
 
 .qa-search-container {
@@ -379,20 +927,26 @@
     background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
     margin: 0;
     padding: 0;
+    max-width: 700px;
+    width: 100%;
+    height: 80vh;
     display: flex;
     flex-direction: column;
-    max-height: 80vh;
 }
 
 .conversation-modal-qa .modal-dialog {
-    max-width: 700px !important;
-    width: 100%;
+    /* ✨ PHASE 4.17: Center modal both vertically and horizontally */
+    max-width: 700px;
     margin: auto;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 
 .qa-modal-header {
-    background: linear-gradient(135deg, #3498db, #2980b9) !important;
+    background: var(--theme-gradient) !important;
     color: white;
     border: none;
     border-radius: 15px 15px 0 0;
@@ -403,41 +957,56 @@
 }
 
 .modal-header-modern {
-    background: linear-gradient(135deg, #3498db, #2980b9) !important;
+    background: var(--theme-gradient) !important;
     color: white;
-    border: none !important;
-    border-bottom: none !important;
-    padding: 20px 24px !important;
+    padding: 1.5rem 2rem;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px 20px 0 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
 }
 
+.modal-header-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
 .modal-header-content {
-    flex: 1;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 1rem;
+    position: relative;
+    z-index: 1;
 }
 
 .modal-header-info {
     display: flex;
     align-items: center;
     gap: 1rem;
-    flex: 1;
 }
 
 .modal-icon-wrapper {
-    font-size: 1.5rem;
-    color: white;
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
+    font-size: 1.2rem;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .modal-title-section {
@@ -446,97 +1015,63 @@
     gap: 0.25rem;
 }
 
-.modal-title-modern {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: white;
+.modal-title-section h4 {
     margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
 }
 
 .modal-subtitle {
-    font-size: 0.85rem;
-    opacity: 0.9;
-    color: white;
-    margin: 0;
+    margin: 0.5rem 0 0 0;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 400;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-close-modern {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.2);
     border: none;
-    color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0;
-    width: 32px;
-    height: 32px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+    z-index: 3;
 }
 
 .btn-close-modern:hover {
-    opacity: 0.7;
-    transform: scale(1.1);
-}
-
-.qa-modal-title {
-    color: white;
-}
-
-.qa-modal-title-main {
-    font-size: 1.3rem;
-    font-weight: 600;
-}
-
-.qa-modal-title-desc {
-    opacity: 0.9;
-    font-size: 0.9rem;
-}
-
-.qa-draft-indicator {
-    background: rgba(255, 193, 7, 0.9);
-    color: #212529;
-    padding: 6px 12px;
-    border-radius: 10px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .modal-body-modern {
-    padding: 20px 24px !important;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 2rem;
+    background: white;
+    border-radius: 0;
+    flex: 1;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.qa-modal-body {
-    padding: 0;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border-radius: 0 0 15px 15px;
-}
-
-.qa-modal-inner {
-    padding: 25px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 15px;
-    margin: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .messages-container-qa {
-    max-height: calc(80vh - 250px);
+    background: white;
+    border-radius: 15px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    flex: 1;
     overflow-y: auto;
-    padding: 20px;
-    background: rgba(248, 249, 250, 0.5);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    border: 1px solid #e9ecef;
+    position: relative;
 }
 
 .messages-container-qa::-webkit-scrollbar {
@@ -646,20 +1181,27 @@
     position: relative;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    max-width: 85%;
 }
 
 .message-content-qa-current-user {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    border: 2px solid #2980b9;
-    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.25);
-    color: white;
+    background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+    border: 2px solid #81c784;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.15);
 }
 
 .message-item-qa-current-user .message-content-qa:hover {
-    border-color: #2980b9;
-    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.35);
+    border-color: #66bb6a;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.25);
     transform: translateY(-2px);
+}
+
+.message-item-qa-current-user .message-author-qa {
+    color: #2e7d32;
+    font-weight: 700;
+}
+
+.message-item-qa-current-user .message-text-qa {
+    color: #1b5e20;
 }
 
 .message-content-qa:hover {
@@ -668,9 +1210,8 @@
     transform: translateY(-2px);
 }
 
-/* Message author and time */
 .message-author-qa {
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #2c3e50;
     margin-bottom: 0.5rem;
@@ -680,7 +1221,7 @@
 }
 
 .message-time-qa {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: #6c757d;
     font-weight: 500;
     display: flex;
@@ -688,36 +1229,11 @@
     gap: 0.25rem;
 }
 
-.message-item-qa-current-user .message-author-qa {
-    color: rgba(255, 255, 255, 1);
-    opacity: 1;
-}
-
-.message-item-qa-current-user .message-time-qa {
-    color: rgba(255, 255, 255, 0.85);
-    font-weight: 500;
-}
-
-.message-author-qa span {
-    color: #1a252f;
-    font-weight: 700;
-}
-
-.message-item-qa-current-user .message-author-qa span {
-    color: white;
-}
-
-/* Message text */
 .message-text-qa {
     color: #495057;
     line-height: 1.6;
     margin-top: 0.75rem;
     font-size: 1rem;
-}
-
-.message-item-qa-current-user .message-text-qa {
-    color: white;
-    font-weight: 500;
 }
 
 /* Empty conversation state */
@@ -776,36 +1292,43 @@
 .message-form-qa {
     display: flex;
     gap: 1rem;
-    padding: 20px 24px;
-    background: white;
-    border-top: 1px solid #e9ecef;
-    border-radius: 0 0 15px 15px;
     align-items: flex-end;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    padding: 1rem;
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    transition: border-color 0.3s ease;
+}
+
+.message-form-qa:focus-within {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
 .message-textarea-qa {
     flex: 1;
     border: 2px solid #e9ecef;
     border-radius: 12px;
-    padding: 12px 16px;
-    font-size: 0.9rem;
-    resize: vertical;
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #2c3e50;
+    background: white;
     transition: all 0.3s ease;
+    resize: none;
+    min-height: 50px;
     font-family: inherit;
-    background: rgba(255, 255, 255, 0.9);
-    min-height: 44px;
-    max-height: 100px;
+    line-height: 1.4;
 }
 
 .message-textarea-qa:focus {
     border-color: #3498db;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.15);
-    background: white;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
     outline: none;
 }
 
 .qa-send-btn {
-    background: linear-gradient(135deg, #2980b9 0%, #1f6391 100%);
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
     color: white;
     border: none;
     padding: 0.875rem 1.5rem;
@@ -823,16 +1346,18 @@
 }
 
 .qa-send-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #2980b9 0%, #1f6391 100%);
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
 
 .qa-send-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed !important;
+    background: linear-gradient(135deg, #d8b3e8 0%, #c9a0d9 100%);
+    color: #6c4a7d;
+    cursor: not-allowed;
     transform: none;
-    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+    box-shadow: 0 2px 8px rgba(108, 74, 125, 0.2);
+    opacity: 1;
 }
 
 /* Message count and draft badges */
@@ -863,6 +1388,156 @@
     font-weight: 600;
 }
 
+.badge-draft-qa {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+}
+
+/* ========================================
+   MODAL RESPONSIVE CENTERING
+   ======================================== */
+
+/* Tablet: Adjust modal padding */
+@media (max-width: 991px) {
+    .conversation-modal-qa .modal-dialog {
+        height: auto;
+        padding: 1rem;
+    }
+
+    .conversation-modal-qa .modal-content {
+        max-height: 85vh;
+    }
+
+    .modal-header-modern {
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-body-modern {
+        padding: 1.5rem;
+    }
+
+    .messages-container-qa {
+        max-height: 300px;
+        padding: 0.75rem;
+    }
+
+    .message-form-qa {
+        padding: 0.75rem;
+    }
+}
+
+/* Mobile: Full responsive modal */
+@media (max-width: 768px) {
+    .conversation-modal-qa .modal-dialog {
+        height: auto;
+        padding: 1rem;
+    }
+
+    .conversation-modal-qa .modal-content {
+        max-height: 90vh;
+        border-radius: 15px;
+    }
+
+    .modal-header-modern {
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-body-modern {
+        padding: 1.5rem;
+    }
+
+    .modal-header-content {
+        gap: 0.75rem;
+    }
+
+    .modal-header-info {
+        gap: 0.75rem;
+    }
+
+    .modal-icon-wrapper {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .modal-title-section h4 {
+        font-size: 1.1rem;
+    }
+
+    .btn-close-modern {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+        top: 1rem;
+        right: 1.5rem;
+    }
+
+    .messages-container-qa {
+        max-height: 300px;
+        padding: 0.75rem;
+    }
+
+    .message-form-qa {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+
+    .message-send-btn-qa {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .message-avatar-qa {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Small mobile: Extra tight spacing */
+@media (max-width: 480px) {
+    .conversation-modal-qa .modal-dialog {
+        height: auto;
+        padding: 0.5rem;
+    }
+
+    .conversation-modal-qa .modal-content {
+        max-height: 95vh;
+        border-radius: 12px;
+    }
+
+    .modal-header-modern {
+        padding: 0.75rem 1rem;
+    }
+
+    .modal-body-modern {
+        padding: 1rem;
+    }
+
+    .message-textarea-qa {
+        font-size: 0.9rem;
+        rows: 2;
+    }
+
+    .message-form-qa {
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .empty-conversation-qa {
+        padding: 2rem 1rem;
+    }
+}
+
 /* ========================================
    RESPONSIVE LAYOUT - Content Column Sizing
    ======================================== */
@@ -882,11 +1557,13 @@
   /* Content column - expands to fill remaining space */
   .qa-bg-section .row > .col-lg-9 {
     flex: 1 1 auto;
-    min-width: 0 !important;
+    min-width: 0;
     width: auto;
     max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
+
+  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
+  /* Removed min-width: 500px to prevent gap shift when sidebar-collapsed-adapted is applied */
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
     /* Fallback for browsers that don't support :has() */
@@ -912,11 +1589,13 @@
   /* Content column - expands to fill remaining space */
   .qa-bg-section .row > .col-md-8 {
     flex: 1 1 auto;
-    min-width: 0 !important;
+    min-width: 0;
     width: auto;
     max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
+
+  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
+  /* Removed min-width: 400px to prevent gap shift when sidebar-collapsed-adapted is applied */
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
     /* Fallback for browsers that don't support :has() */

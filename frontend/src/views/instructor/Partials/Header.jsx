@@ -5,6 +5,7 @@ import { ProfileContext } from "../../plugin/Context";
 import UserData from "../../plugin/UserData";
 import useAxios from "../../../utils/useAxios";
 import { getSafeImageUrl, createImageErrorHandler, getFirstValidImageUrl } from "../../../utils/imageUtils";
+import RoleIndicator from "../../../components/RoleIndicator";
 import "./Header.css";
 
 function Header() {
@@ -63,7 +64,7 @@ function Header() {
 
   const fetchProfile = async () => {
     if (!userData?.user_id) {
-      setError("No user ID available");
+      setError("ID pengguna tidak tersedia");
       return;
     }
     
@@ -105,17 +106,17 @@ function Header() {
         
         setError(null);
       } else {
-        setError("Invalid response from server");
+        setError("Respons tidak valid dari server");
       }
     } catch (error) {
       console.error("[Header] Error fetching profile:", error);
-      setError(error.message || "Failed to fetch profile");
+      setError(error.message || "Gagal memuat profil");
       
       // Set fallback profile data from userData if available
       if (userData) {
         const fallbackProfile = {
           full_name: userData.full_name || "",
-          about: "Welcome to your instructor dashboard",
+          about: "Selamat datang di dasbor instruktur Anda",
           image: "",
           country: "",
         };
@@ -132,7 +133,7 @@ function Header() {
     if (userData?.user_id && !profile) {
       fetchProfile();
     } else if (!userData?.user_id) {
-      setError("User not authenticated");
+      setError("Pengguna tidak terautentikasi");
     }
   }, [userData?.user_id]);
 
@@ -164,18 +165,18 @@ function Header() {
       ? moment(profile.date).format("MMMM YYYY") 
       : userData?.date_joined 
         ? moment(userData.date_joined).format("MMMM YYYY") 
-        : "Recently";
+        : "Baru-baru ini";
   };
 
   const getJoinedDaysAgo = () => {
     const joinDate = profile?.date || userData?.date_joined;
-    if (!joinDate) return "Recently joined";
+    if (!joinDate) return "Baru saja bergabung";
     
     const days = moment().diff(moment(joinDate), "days");
-    if (days < 1) return "Teaching today";
-    if (days < 30) return `${days} days teaching`;
-    if (days < 365) return `${Math.floor(days/30)} months teaching`;
-    return `${Math.floor(days/365)} years teaching`;
+    if (days < 1) return "Mengajar hari ini";
+    if (days < 30) return `Mengajar ${days} hari`;
+    if (days < 365) return `Mengajar ${Math.floor(days/30)} bulan`;
+    return `Mengajar ${Math.floor(days/365)} tahun`;
   };
 
   // Render profile avatar with proper error handling
@@ -192,7 +193,7 @@ function Header() {
               flexShrink: 0 
             }}
           >
-            <span className="visually-hidden">Loading...</span>
+            <span className="visually-hidden">Memuat...</span>
           </div>
         </div>
       );
@@ -208,7 +209,7 @@ function Header() {
           <img
             src={imageUrl}
             className="instructor-profile-avatar"
-            alt={`${profile?.full_name || teacher?.full_name || "Instructor"} avatar`}
+            alt={`Avatar ${profile?.full_name || teacher?.full_name || "Instruktur"}`}
             onError={() => setImageError(true)} // ✨ PHASE 4.21: Enhanced error handling with state
           />
           <div className="instructor-default-avatar instructor-fallback-icon">
@@ -225,8 +226,8 @@ function Header() {
         <svg width="120" height="120" viewBox="0 0 200 200" style={{ flex: "0 0 auto" }}>
           <defs>
             <linearGradient id="instructorBg">
-              <stop offset="0%" style={{stopColor:"#667eea"}}/>
-              <stop offset="100%" style={{stopColor:"#764ba2"}}/>
+              <stop offset="0%" style={{stopColor:"#3498db"}}/>
+              <stop offset="100%" style={{stopColor:"#2980b9"}}/>
             </linearGradient>
           </defs>
           <circle cx="100" cy="100" r="100" fill="url(#instructorBg)" />
@@ -236,7 +237,7 @@ function Header() {
           <ellipse cx="100" cy="130" rx="35" ry="40" fill="#ffffff" opacity="0.9" />
           {/* Briefcase icon */}
           <rect x="85" y="155" width="30" height="25" fill="#ffffff" opacity="0.7" rx="2" />
-          <line x1="85" y1="165" x2="115" y2="165" stroke="#667eea" strokeWidth="2" />
+          <line x1="85" y1="165" x2="115" y2="165" stroke="#3498db" strokeWidth="2" />
         </svg>
       </div>
     );
@@ -272,29 +273,29 @@ function Header() {
     <div className="row mt-3 pt-3 instructor-header-details-row" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.2)" }}>
       <div className="col-md-12">
         <div className="row instructor-header-details-items-row">
-          <div className="col-md-4 mb-3">
+          <div className="col-md-4">
             <div className="instructor-detail-item">
               <div className="instructor-meta">
                 <i className="fas fa-check-circle"></i>
-                <span>Status: {teacher ? "Active Instructor" : "Profile Setup Required"}</span>
+                <span>Status: {teacher ? "Instruktur Aktif" : "Pengaturan Profil Diperlukan"}</span>
               </div>
             </div>
           </div>
           
-          <div className="col-md-4 mb-3">
+          <div className="col-md-4">
             <div className="instructor-detail-item">
               <div className="instructor-meta">
                 <i className="fas fa-clock"></i>
-                <span>Last active: Today</span>
+                <span>Aktif terakhir: Hari ini</span>
               </div>
             </div>
           </div>
           
-          <div className="col-md-4 mb-3">
+          <div className="col-md-4">
             <div className="instructor-detail-item">
               <div className="instructor-meta">
                 <i className="fas fa-user-graduate"></i>
-                <span>Instructor: {teacher && teacher.bio ? "Profile Complete" : "Profile Incomplete"}</span>
+                <span>Status Profil: {teacher && teacher.bio ? "Profil Lengkap" : "Profil Belum Lengkap"}</span>
               </div>
             </div>
           </div>
@@ -311,8 +312,8 @@ function Header() {
           <button
             className="instructor-header-toggle-btn"
             onClick={toggleCollapse}
-            title={isCollapsed ? "Expand Header" : "Collapse Header"}
-            aria-label={isCollapsed ? "Expand Header" : "Collapse Header"}
+            title={isCollapsed ? "Perluas Header" : "Tutup Header"}
+            aria-label={isCollapsed ? "Perluas Header" : "Tutup Header"}
           >
             <i className={`fas fa-chevron-${isCollapsed ? "down" : "up"}`}></i>
           </button>
@@ -323,37 +324,36 @@ function Header() {
               <div className="d-flex align-items-center justify-content-between">
                 <div className="instructor-avatar-wrapper d-flex align-items-center gap-2">
                   {renderProfileAvatar()}
-                  <div>
+                  <div className="d-flex align-items-center justify-content-between w-100 gap-2">
                     <h5 className="mb-0 text-white">
-                      {teacher?.full_name || profile?.full_name || userData?.full_name || "Instructor Dashboard"}
+                      {teacher?.full_name || profile?.full_name || userData?.full_name || "Dasbor Instruktur"}
                     </h5>
-                    <small className="text-white-50">
-                      <i className="fas fa-chalkboard-user me-1"></i>
-                      Instructor
-                    </small>
+                    <div style={{marginTop: '-2px', flexShrink: 0}}>
+                      <RoleIndicator compact={true} />
+                    </div>
                   </div>
                 </div>
                 <div className="d-flex gap-2">
                   <Link
                     to="/instructor/create-course/"
                     className={`btn btn-sm btn-outline-light ${isActivePage("/instructor/create-course/") ? "active" : ""}`}
-                    title="Create Course"
+                    title="Buat Kursus"
                   >
                     <i className="fas fa-plus me-1"></i>
-                    Create
+                    Buat
                   </Link>
                   <Link
                     to="/instructor/profile/"
                     className={`btn btn-sm btn-outline-light ${isActivePage("/instructor/profile/") ? "active" : ""}`}
-                    title="Profile"
+                    title="Profil"
                   >
                     <i className="fas fa-user-cog"></i>
                   </Link>
                   <button 
                     className="instructor-header-toggle-btn-inline"
                     onClick={toggleCollapse}
-                    title="Expand Header"
-                    aria-label="Expand Header"
+                    title="Perluas Header"
+                    aria-label="Perluas Header"
                   >
                     <i className="fas fa-chevron-down"></i>
                   </button>
@@ -381,33 +381,34 @@ function Header() {
                 <div className="col-lg-6 col-md-5 mb-4 mb-lg-0">
                   <div>
                     <h1 className="instructor-name">
-                      {teacher?.full_name || profile?.full_name || userData?.full_name || "Welcome Instructor!"}
+                      {teacher?.full_name || profile?.full_name || userData?.full_name || "Selamat Datang Instruktur!"}
                     </h1>
                     <p className="instructor-bio">
-                      {teacher?.bio || teacher?.about || profile?.about || "Welcome to your instructor dashboard! Create and manage your courses to educate students worldwide."}
+                      {teacher?.bio || teacher?.about || profile?.about || "Selamat datang di dasbor instruktur Anda! Buat dan kelola kursus Anda untuk mendidik siswa di seluruh dunia."}
                     </p>
                     
-                    <div className="d-flex flex-wrap gap-3 mb-3">
+                    <div className="d-flex flex-wrap gap-3 mb-1">
                       <div className="badge-instructor">
                         <i className="fas fa-calendar-alt"></i>
-                        Teaching since {getMemberSince()}
+                        Mengajar sejak {getMemberSince()}
                       </div>
                       <div className="badge-instructor">
                         <i className="fas fa-clock"></i>
                         {getJoinedDaysAgo()}
                       </div>
+                      <RoleIndicator compact={true} />
                     </div>
 
                     {(teacher?.country || profile?.country) ? (
-                      <div className="instructor-meta mb-3 d-flex justify-content-between align-items-center">
+                      <div className="instructor-meta d-flex justify-content-between align-items-center">
                         <div className="d-flex align-items-center gap-2">
                           <i className="fas fa-map-marker-alt"></i>
-                          <span>Based in {teacher?.country || profile?.country}</span>
+                          <span>Berbasis di {teacher?.country || profile?.country}</span>
                         </div>
                         {renderSocialLinks()}
                       </div>
                     ) : (
-                      <div className="instructor-meta mb-3 d-flex justify-content-end">
+                      <div className="instructor-meta d-flex justify-content-end">
                         {renderSocialLinks()}
                       </div>
                     )}
@@ -421,19 +422,19 @@ function Header() {
                       <Link
                         to="/instructor/create-course/"
                         className={`btn-instructor-primary ${isActivePage("/instructor/create-course/") ? "active" : ""}`}
-                        title="Create a new course"
+                        title="Buat kursus baru"
                       >
                         <i className="fas fa-plus"></i>
-                        Create Course
+                        Buat Kursus
                       </Link>
                       
                       <Link
                         to="/instructor/profile/"
                         className={`btn-instructor-outline ${isActivePage("/instructor/profile/") ? "active" : ""}`}
-                        title="Manage your instructor profile"
+                        title="Kelola profil instruktur Anda"
                       >
                         <i className="fas fa-user-cog"></i>
-                        Profile Settings
+                        Pengaturan Profil
                       </Link>
                     </div>
                   </div>

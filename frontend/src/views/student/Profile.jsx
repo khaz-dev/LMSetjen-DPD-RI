@@ -44,13 +44,13 @@ const CROP_CONFIG = {
 };
 
 const VALIDATION_MESSAGES = {
-    PROFILE_LOAD_ERROR: "Failed to load profile",
-    PROFILE_UPDATE_SUCCESS: "Profile updated successfully!",
-    PROFILE_UPDATE_ERROR: "Failed to update profile",
-    IMAGE_CROP_SUCCESS: "Image cropped successfully!",
-    IMAGE_CROP_ERROR: "Failed to crop image",
-    PICTURE_REMOVED: "Profile picture removed!",
-    CANVAS_EMPTY: "Canvas is empty"
+    PROFILE_LOAD_ERROR: "Gagal memuat profil",
+    PROFILE_UPDATE_SUCCESS: "Profil berhasil diperbarui!",
+    PROFILE_UPDATE_ERROR: "Gagal memperbarui profil",
+    IMAGE_CROP_SUCCESS: "Gambar berhasil dipotong!",
+    IMAGE_CROP_ERROR: "Gagal memotong gambar",
+    PICTURE_REMOVED: "Foto profil berhasil dihapus!",
+    CANVAS_EMPTY: "Canvas kosong"
 };
 
 const SOCIAL_PLATFORMS = {
@@ -408,9 +408,9 @@ function Profile() {
     const renderLoadingAvatar = () => (
         <div className="loading-avatar">
             <div className="spinner-border text-purple" role="status">
-                <span className="visually-hidden">Loading...</span>
+                <span className="visually-hidden">Memuat...</span>
             </div>
-            <small className="loading-text">Loading...</small>
+            <small className="loading-text">Memuat...</small>
         </div>
     );
 
@@ -441,7 +441,7 @@ function Profile() {
         <div className="modern-form-section">
             <h4 className="form-section-title">
                 <i className="fas fa-camera form-section-icon"></i>
-                Profile Picture
+                Foto Profil
             </h4>
             
             <div className="d-flex align-items-center">
@@ -451,9 +451,9 @@ function Profile() {
                 </div>
                 
                 <div className="avatar-content-section">
-                    <h5 className="avatar-section-title">Choose Your Avatar</h5>
+                    <h5 className="avatar-section-title">Pilih Avatar Anda</h5>
                     <p className="avatar-section-description">
-                        Upload a professional photo for your student profile
+                        Unggah foto profesional untuk profil siswa Anda
                     </p>
                     <div className="modern-file-upload">
                         <input 
@@ -465,14 +465,14 @@ function Profile() {
                             accept="image/*"
                             disabled={uiState.loading}
                         />
-                        <small className="file-help-text">PNG or JPG, max {IMAGE_CONFIG.MAX_SIZE}</small>
+                        <small className="file-help-text">PNG atau JPG, maks {IMAGE_CONFIG.MAX_SIZE}</small>
                     </div>
                     
                     {(imageState.fileName || uiState.imagePreview) && (
                         <div className="file-info">
                             <p className="file-info-text">
                                 <i className="fas fa-image file-info-icon"></i>
-                                <strong>Current Picture:</strong> {imageState.fileName || "Existing profile picture"}
+                                <strong>Foto Saat Ini:</strong> {imageState.fileName || "Foto profil yang ada"}
                             </p>
                         </div>
                     )}
@@ -486,10 +486,10 @@ function Profile() {
                                 disabled={uiState.loading}
                             >
                                 <i className="fas fa-trash-alt me-1"></i>
-                                Remove Picture
+                                Hapus Foto
                             </button>
                             <small className="picture-action-text">
-                                This will remove your current profile picture
+                                Ini akan menghapus foto profil Anda saat ini
                             </small>
                         </div>
                     )}
@@ -553,12 +553,12 @@ function Profile() {
         <div className="modern-form-section">
             <h4 className="form-section-title">
                 <i className="fas fa-info-circle form-section-icon"></i>
-                Personal Information
+                Informasi Pribadi
             </h4>
             
             <div className="row g-3">
-                {renderFormField("full_name", "Full Name", "fas fa-user", "text", "Enter your full name")}
-                {renderFormField("about", "About Me", "fas fa-edit", "textarea", "Tell us about yourself and your background...", 4)}
+                {renderFormField("full_name", "Nama Lengkap", "fas fa-user", "text", "Masukkan nama lengkap Anda")}
+                {renderFormField("about", "Tentang Saya", "fas fa-edit", "textarea", "Ceritakan tentang diri Anda dan latar belakang Anda...", 4)}
                 
                 {/* Country Selector with Search */}
                 <div className="col-12 form-field-container">
@@ -570,8 +570,8 @@ function Profile() {
                         id="country"
                         required={true}
                         disabled={uiState.loading}
-                        placeholder="Search for your country..."
-                        label="Country"
+                        placeholder="Cari negara Anda..."
+                        label="Negara"
                         icon="fas fa-globe"
                     />
                 </div>
@@ -583,28 +583,28 @@ function Profile() {
         <div className="modern-form-section">
             <h4 className="form-section-title">
                 <i className="fas fa-briefcase form-section-icon"></i>
-                Employee Information
-                <small className="text-muted ms-2">(Organization Details)</small>
+                Informasi Karyawan
+                <small className="text-muted ms-2">(Detail Organisasi)</small>
             </h4>
             
             <div className="row g-3">
                 <div className="col-md-6">
-                    {renderFormField("nip", "NIP (Employee ID)", "fas fa-id-card", "text", "Enter your NIP", null, false, true)}
+                    {renderFormField("nip", "NIP (ID Karyawan)", "fas fa-id-card", "text", "Masukkan NIP Anda", null, false, true)}
                 </div>
                 <div className="col-md-6">
-                    {renderFormField("golongan", "Golongan", "fas fa-layer-group", "text", "Enter your golongan", null, false, true)}
+                    {renderFormField("golongan", "Golongan", "fas fa-layer-group", "text", "Masukkan golongan Anda", null, false, true)}
                 </div>
                 <div className="col-md-6">
-                    {renderFormField("jenis_jabatan", "Jenis Jabatan", "fas fa-tags", "text", "Enter your jenis jabatan", null, false, true)}
+                    {renderFormField("jenis_jabatan", "Jenis Jabatan", "fas fa-tags", "text", "Masukkan jenis jabatan Anda", null, false, true)}
                 </div>
                 <div className="col-md-6">
-                    {renderFormField("organization_unit_name", "Organization Unit", "fas fa-building", "text", "Organization unit name", null, false, true)}
+                    {renderFormField("organization_unit_name", "Unit Organisasi", "fas fa-building", "text", "Nama unit organisasi", null, false, true)}
                 </div>
                 <div className="col-md-6">
-                    {renderFormField("position_name", "Position", "fas fa-user-tie", "text", "Position title", null, false, true)}
+                    {renderFormField("position_name", "Posisi", "fas fa-user-tie", "text", "Judul posisi", null, false, true)}
                 </div>
             </div>
-            <small className="field-help-text">Employee information is automatically synchronized from the organization system</small>
+            <small className="field-help-text">Informasi karyawan secara otomatis disinkronkan dari sistem organisasi</small>
         </div>
     );
 
@@ -612,13 +612,13 @@ function Profile() {
         <div className="modern-form-section">
             <h4 className="form-section-title">
                 <i className="fas fa-graduation-cap form-section-icon"></i>
-                Student Profile
+                Profil Siswa
             </h4>
             
             <div className="row g-3">
-                {renderFormField("bio", "Bio", false, "textarea", "Share your learning goals, interests, and academic background...", 4)}
+                {renderFormField("bio", "Bio", false, "textarea", "Bagikan tujuan pembelajaran, minat, dan latar belakang akademik Anda...", 4)}
             </div>
-            <small className="field-help-text">Help instructors understand your learning journey and goals</small>
+            <small className="field-help-text">Bantu instruktur memahami perjalanan belajar dan tujuan Anda</small>
         </div>
     );
 
@@ -626,8 +626,8 @@ function Profile() {
         <div className="modern-form-section">
             <h4 className="form-section-title">
                 <i className="fas fa-share-alt form-section-icon"></i>
-                Social Media Links
-                <small className="text-muted ms-2">(Optional)</small>
+                Tautan Media Sosial
+                <small className="text-muted ms-2">(Opsional)</small>
             </h4>
             
             <div className="row g-3">
@@ -648,12 +648,12 @@ function Profile() {
                 {uiState.loading ? (
                     <>
                         <span className="spinner-border spinner-border-sm loading-spinner-sm" role="status" aria-hidden="true"></span>
-                        <strong>Updating Profile...</strong>
+                        <strong>Memperbarui Profil...</strong>
                     </>
                 ) : (
                     <>
                         <i className="fas fa-save submit-icon"></i>
-                        Update Profile
+                        Perbarui Profil
                     </>
                 )}
             </button>
@@ -664,17 +664,17 @@ function Profile() {
         return (
             <>
                 <BaseHeader />
-                <section className="student-profile-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
+                <section className="pt-5 pb-5 student-profile-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
-                        <div className="row mt-0 mt-md-4">
+                        <div className="row mt-0 md-4">
                             <Sidebar />
                             <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Profile...</p>
+                                    <p className="mt-3 text-muted">Memuat Profil...</p>
                                 </div>
                             </div>
                         </div>
@@ -689,10 +689,10 @@ function Profile() {
         <>
             <BaseHeader />
 
-            <section className="student-profile-page modern-profile-page">
+            <section className="pt-5 pb-5 student-profile-page modern-profile-page">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row mt-0 md-4">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Modern Header Section */}
@@ -725,10 +725,10 @@ function Profile() {
                                             fontSize: "2.5rem",
                                             fontWeight: "bold"
                                         }}>
-                                            <i className="fas fa-user-edit me-3"></i>Profile Settings
+                                            <i className="fas fa-user-edit me-3"></i>Pengaturan Profil
                                         </h1>
                                         <p className="mb-0 text-muted" style={{ fontSize: "1.1rem" }}>
-                                            Manage your account information and student profile
+                                            Kelola informasi akun dan profil siswa Anda
                                         </p>
                                     </div>
                                 </div>

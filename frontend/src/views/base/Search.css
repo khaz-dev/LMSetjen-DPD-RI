@@ -7,8 +7,9 @@
     background: transparent;
     min-height: calc(100vh - 200px);
     margin-top: -5px;
-    padding-bottom: 0rem; /* Removed bottom padding for tighter layout */
+    padding-bottom: 3rem; /* Added proper bottom padding for gap with footer */
     padding-top: 0px; /* Add top spacing for fixed header */
+    margin-bottom: 2rem; /* Added margin-bottom for gap with footer */
 }
 
 /* ==========================================
@@ -331,6 +332,63 @@
     display: inline-block;
 }
 
+/* ==========================================
+   LOADING SKELETON STYLES
+   ========================================== */
+
+.skeleton-card {
+    border-radius: 16px;
+    background: #f8f9fa;
+    overflow: hidden;
+}
+
+.skeleton-placeholder {
+    background: #e9ecef;
+    border-radius: 4px;
+    animation: skeleton-loading 1.5s infinite ease-in-out;
+}
+
+.skeleton-placeholder-image {
+    height: 200px;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.skeleton-placeholder-title {
+    width: 70%;
+    height: 20px;
+    margin-bottom: 0.75rem;
+}
+
+.skeleton-placeholder-line {
+    width: 100%;
+    height: 16px;
+    margin-bottom: 0.75rem;
+}
+
+.skeleton-placeholder-line-last {
+    width: 90%;
+    height: 16px;
+    margin-bottom: 0.75rem;
+}
+
+.skeleton-placeholder-meta {
+    width: 45%;
+    height: 14px;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
 .loading-spinner-wrapper {
     display: flex;
     align-items: center;
@@ -470,6 +528,13 @@
     padding: 0 !important;
     border: none !important;
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hide broken images gracefully */
+.course-image-modern:invalid,
+.course-image-modern[src=""],
+.course-image-modern[src="null"] {
+    display: none !important;
 }
 
 .course-card-modern:hover .course-image-modern {
@@ -777,12 +842,13 @@
 .cta-section {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 25px;
-    padding: 2.5rem;
-    margin: 2.5rem 0 0 0; /* Increased top margin, removed bottom margin */
+    padding: 2.5rem 1.5rem;
+    margin-top: 3rem;
+    margin-bottom: 0;
     color: white;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 15px 45px rgba(102, 126, 234, 0.3); /* Added shadow for depth */
+    box-shadow: 0 15px 45px rgba(102, 126, 234, 0.3);
 }
 
 .cta-section::before {
@@ -802,6 +868,18 @@
     z-index: 2;
 }
 
+/* Align cta-section content with results-header-card */
+.cta-section .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.cta-section .col-lg-8,
+.cta-section .col-lg-4 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 .btn-cta {
     background: white;
     color: #667eea;
@@ -809,6 +887,7 @@
     border-radius: 12px;
     padding: 1rem 2rem;
     font-weight: 700;
+    cursor: pointer;
     transition: all 0.3s ease;
     text-decoration: none;
     display: inline-flex;

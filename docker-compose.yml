@@ -23,7 +23,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - lms_network
     healthcheck:
@@ -41,7 +41,7 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - "6380:6379"
     networks:
       - lms_network
     healthcheck:
@@ -60,7 +60,7 @@ services:
     restart: unless-stopped
     environment:
       # Database
-      DB_NAME: ${DB_NAME:-django_lms_db}
+      DB_NAME: ${DB_NAME:-lms_db}
       DB_USER: ${DB_USER:-lms_user}
       DB_PASSWORD: ${DB_PASSWORD:-secure_password}
       DB_HOST: postgres
@@ -88,7 +88,7 @@ services:
       - static_files:/app/staticfiles
       - backend_logs:/app/logs
     ports:
-      - "8000:8000"
+      - "9000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -113,14 +113,11 @@ services:
   # React Frontend
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: production
-      args:
-        VITE_API_BASE_URL: /api
+      context: .
+      dockerfile: ./frontend/Dockerfile.prod
     container_name: lms_frontend
     restart: unless-stopped
-    # Note: No BACKEND_URL env var - nginx must always proxy to internal Docker network (http://backend:8000)
+    # Note: Uses pre-built dist folder for faster deployment
     volumes:
       # SSL certificates (read-only)
       - /etc/letsencrypt:/etc/letsencrypt:ro
@@ -130,8 +127,8 @@ services:
       # Django media files - served directly by nginx for performance  
       - media_files:/usr/share/nginx/html/media:ro
     ports:
-      - "80:80"
-      - "443:443"
+      - "3000:80"
+      - "3443:443"
     depends_on:
       - backend
     networks:

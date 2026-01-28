@@ -1,11 +1,11 @@
 import React from "react";
 
 const COURSE_TABS = [
-    { key: "overview", label: "Overview", shortLabel: "Info", icon: "fas fa-info-circle" },
-    { key: "curriculum", label: "Curriculum", shortLabel: "Lessons", icon: "fas fa-list" },
-    { key: "instructor", label: "Instructor", shortLabel: "Teacher", icon: "fas fa-chalkboard-teacher" },
-    { key: "reviews", label: "Reviews", shortLabel: "Reviews", icon: "fas fa-star" },
-    { key: "faq", label: "FAQ", shortLabel: "FAQ", icon: "fas fa-question-circle" },
+    { key: "overview", label: "Gambaran Umum", shortLabel: "Info", icon: "fas fa-info-circle" },
+    { key: "curriculum", label: "Kurikulum", shortLabel: "Pelajaran", icon: "fas fa-list" },
+    { key: "instructor", label: "Instruktur", shortLabel: "Pengajar", icon: "fas fa-chalkboard-teacher" },
+    { key: "reviews", label: "Ulasan", shortLabel: "Ulasan", icon: "fas fa-star" },
+    { key: "faq", label: "Tanya Jawab", shortLabel: "Tanya Jawab", icon: "fas fa-question-circle" },
 ];
 
 const CourseTabNavigation = ({ activeTab, setActiveTab }) => {

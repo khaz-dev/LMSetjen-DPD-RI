@@ -105,7 +105,7 @@ function Students() {
             return mediaUrl;
         }
         
-        console.log(`  → No image, using initials placeholder`);
+        console.log("  → No image, using initials placeholder");
         
         // Generate initials-based placeholder when no image available
         const name = student?.full_name || "Student";
@@ -140,7 +140,7 @@ function Students() {
         return (
             <>
                 <BaseHeader />
-                <section className="modern-students" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
+                <section className="modern-students pt-5 pb-5" style={{ display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -148,9 +148,9 @@ function Students() {
                             <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Students...</p>
+                                    <p className="mt-3 text-muted">Memuat Siswa...</p>
                                 </div>
                             </div>
                         </div>
@@ -165,7 +165,7 @@ function Students() {
         <>
             <BaseHeader />
 
-            <section className="modern-students">
+            <section className="modern-students pt-5 pb-5">
                 <div className="container">
                     <Header />
                     <div className="row">
@@ -178,15 +178,15 @@ function Students() {
                                     <div className="mb-3 mb-md-0">
                                         <h3 className="students-header-title mb-2">
                                             <i className="fas fa-users me-3"></i>
-                                            My Students
+                                            Siswa Saya
                                         </h3>
-                                        <p className="students-header-desc text-muted mb-0">Connect with learners who are taking your courses</p>
+                                        <p className="students-header-desc text-muted mb-0">Terhubung dengan peserta didik yang mengikuti kursus Anda</p>
                                     </div>
                                     <div className="text-end">
                                         <div className="d-flex align-items-center gap-3">
                                         <div className="students-stat-badge">
                                             <i className="fas fa-user-graduate me-2"></i>
-                                            {students.length} Total Students
+                                            {students.length} Total Siswa
                                         </div>
                                     </div>
                                     </div>
@@ -197,10 +197,10 @@ function Students() {
                             {error && (
                                 <div className="error-state">
                                     <i className="fas fa-exclamation-triangle text-warning mb-3" style={{ fontSize: "3rem" }}></i>
-                                    <h5 className="text-danger mb-3">Error Loading Students</h5>
+                                    <h5 className="text-danger mb-3">Kesalahan Memuat Siswa</h5>
                                     <p className="text-muted mb-3">{error}</p>
                                     <button className="btn btn-primary" onClick={fetchStudents}>
-                                        <i className="fas fa-redo me-2"></i>Try Again
+                                        <i className="fas fa-redo me-2"></i>Coba Lagi
                                     </button>
                                 </div>
                             )}
@@ -220,7 +220,7 @@ function Students() {
                                                             onError={(e) => {
                                                                 console.error(`❌ Image load FAILED for student: ${student.full_name}`);
                                                                 console.error(`   Attempted URL: ${e.target.src}`);
-                                                                console.error(`   Student data:`, student);
+                                                                console.error("   Student data:", student);
                                                                 const name = getStudentName(student);
                                                                 const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=667eea&color=ffffff&bold=true`;
                                                                 console.log(`   Fallback to initials: ${fallbackUrl}`);
@@ -230,14 +230,14 @@ function Students() {
                                                         <h4 className="student-name">{getStudentName(student)}</h4>
                                                         <div className="student-location">
                                                             <i className="fas fa-map-marker-alt text-primary"></i>
-                                                            <span>{student.country || "Location not specified"}</span>
+                                                            <span>{student.country || "Lokasi tidak ditentukan"}</span>
                                                         </div>
                                                     </div>
                                                     <div className="student-info">
                                                         <div className="student-date">
                                                             <span className="text-muted">
                                                                 <i className="fas fa-calendar-alt me-2"></i>
-                                                                Enrolled
+                                                                Terdaftar
                                                             </span>
                                                             <span className="fw-bold text-dark">
                                                                 {moment(student.date).format("MMM DD, YYYY")}
@@ -251,10 +251,10 @@ function Students() {
                                         <div className="col-12">
                                             <div className="empty-state">
                                                 <i className="fas fa-user-graduate"></i>
-                                                <h5 className="text-secondary mb-3">No Students Enrolled Yet</h5>
+                                                <h5 className="text-secondary mb-3">Belum Ada Siswa Terdaftar</h5>
                                                 <p className="text-muted">
-                                                    When students start enrolling in your courses, you'll see them here. 
-                                                    Create engaging content to attract more learners!
+                                                    Ketika siswa mulai mendaftar di kursus Anda, mereka akan muncul di sini. 
+                                                    Buatlah konten yang menarik untuk menarik lebih banyak peserta didik!
                                                 </p>
                                             </div>
                                         </div>

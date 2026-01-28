@@ -31,6 +31,21 @@
     padding: 2rem;
     user-select: none; /* Prevent text selection on body */
 }
+
+/* Login card header styling */
+.login-card-header {
+    border: none;
+    background: transparent;
+    padding: 0;
+}
+
+/* Login card footer styling */
+.login-card-footer {
+    border: none;
+    background: transparent;
+    padding: 0;
+}
+
 /* Password input container */
 .password-input-wrapper {
     position: relative;
@@ -486,6 +501,12 @@
 .login-sso-btn i {
     font-size: 1.1rem;
     margin-right: 0.5rem;
+}
+
+/* Google and NUSA SSO Button text sizing */
+.sso-google-btn,
+.sso-nusa-btn {
+    font-size: 0.9rem !important;
 }
 
 /* Responsive SSO button */

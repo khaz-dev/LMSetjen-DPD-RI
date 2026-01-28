@@ -7,9 +7,9 @@ const CourseStatistics = ({ course, enrolledStudents = [] }) => {
     const durationStats = getDurationStats(course?.lectures || []);
     // Sample data for demonstration
     const completionData = [
-        { name: 'Completed', value: 65, color: '#28a745' },
-        { name: 'In Progress', value: 25, color: '#ffc107' },
-        { name: 'Not Started', value: 10, color: '#6c757d' }
+        { name: 'Selesai', value: 65, color: '#28a745' },
+        { name: 'Sedang Berlangsung', value: 25, color: '#ffc107' },
+        { name: 'Belum Dimulai', value: 10, color: '#6c757d' }
     ];
 
     const enrollmentData = [
@@ -39,7 +39,7 @@ const CourseStatistics = ({ course, enrolledStudents = [] }) => {
                     >
                         <i className="fas fa-chart-bar text-white"></i>
                     </div>
-                    <span style={{ color: '#2c3e50' }}>Course Analytics & Statistics</span>
+                    <span style={{ color: '#2c3e50' }}>Analitik & Statistik Kursus</span>
                 </h3>
 
                 {/* Key Metrics */}
@@ -48,28 +48,28 @@ const CourseStatistics = ({ course, enrolledStudents = [] }) => {
                         <div className="bg-primary bg-gradient rounded-3 p-2 p-md-3 text-white text-center">
                             <i className="fas fa-users fa-lg fa-md-2x mb-1 mb-md-2"></i>
                             <div className="h5 h3-md fw-bold mb-1">{Array.isArray(course?.students) ? course.students.length : (course?.students_count || 1250)}</div>
-                            <small style={{ fontSize: '0.8rem' }}>Total Students</small>
+                            <small style={{ fontSize: '0.8rem' }}>Total Peserta</small>
                         </div>
                     </div>
                     <div className="col-6 col-md-3">
                         <div className="bg-success bg-gradient rounded-3 p-2 p-md-3 text-white text-center">
                             <i className="fas fa-graduation-cap fa-lg fa-md-2x mb-1 mb-md-2"></i>
                             <div className="h5 h3-md fw-bold mb-1">89%</div>
-                            <small style={{ fontSize: '0.8rem' }}>Completion Rate</small>
+                            <small style={{ fontSize: '0.8rem' }}>Tingkat Penyelesaian</small>
                         </div>
                     </div>
                     <div className="col-6 col-md-3">
                         <div className="bg-warning bg-gradient rounded-3 p-2 p-md-3 text-white text-center">
                             <i className="fas fa-star fa-lg fa-md-2x mb-1 mb-md-2"></i>
                             <div className="h5 h3-md fw-bold mb-1">{course?.average_rating || 4.8}</div>
-                            <small style={{ fontSize: '0.8rem' }}>Average Rating</small>
+                            <small style={{ fontSize: '0.8rem' }}>Rata-Rata Rating</small>
                         </div>
                     </div>
                     <div className="col-6 col-md-3">
                         <div className="bg-info bg-gradient rounded-3 p-2 p-md-3 text-white text-center">
                             <i className="fas fa-clock fa-lg fa-md-2x mb-1 mb-md-2"></i>
                             <div className="h5 h3-md fw-bold mb-1">{durationStats.total || "0m"}</div>
-                            <small style={{ fontSize: '0.8rem' }}>Total Content Duration</small>
+                            <small style={{ fontSize: '0.8rem' }}>Total Durasi Konten</small>
                         </div>
                     </div>
                 </div>
@@ -78,7 +78,7 @@ const CourseStatistics = ({ course, enrolledStudents = [] }) => {
                     {/* Completion Status Chart */}
                     <div className="col-lg-6">
                         <div className="bg-light rounded-3 p-3">
-                            <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>Student Progress Distribution</h6>
+                            <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>Distribusi Kemajuan Peserta</h6>
                             <div style={{ width: '100%', height: '200px' }}>
                                 <ResponsiveContainer>
                                     <PieChart>
@@ -119,7 +119,7 @@ const CourseStatistics = ({ course, enrolledStudents = [] }) => {
                     {/* Enrollment Trend Chart */}
                     <div className="col-lg-6">
                         <div className="bg-light rounded-3 p-3">
-                            <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>Monthly Enrollment Trend</h6>
+                            <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>Tren Pendaftaran Bulanan</h6>
                             <div style={{ width: '100%', height: '200px' }}>
                                 <ResponsiveContainer>
                                     <BarChart data={enrollmentData}>
@@ -141,35 +141,35 @@ const CourseStatistics = ({ course, enrolledStudents = [] }) => {
                         <div className="bg-light rounded-3 p-3">
                             <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>
                                 <i className="fas fa-clock text-info me-2"></i>
-                                Content Duration Analytics
+                                Analitik Durasi Konten
                             </h6>
                             <div className="row g-2 mb-2">
                                 <div className="col-6 col-md-3">
                                     <div className="text-center p-2 border rounded">
                                         <i className="fas fa-film text-primary mb-1" style={{ fontSize: '0.9rem' }}></i>
                                         <div className="h6 fw-bold mb-1">{durationStats.count || 0}</div>
-                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Total Lectures</small>
+                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Total Pelajaran</small>
                                     </div>
                                 </div>
                                 <div className="col-6 col-md-3">
                                     <div className="text-center p-2 border rounded">
                                         <i className="fas fa-hourglass-half text-info mb-1" style={{ fontSize: '0.9rem' }}></i>
                                         <div className="h6 fw-bold mb-1">{durationStats.average || "0m"}</div>
-                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Average Duration</small>
+                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Rata-Rata Durasi</small>
                                     </div>
                                 </div>
                                 <div className="col-6 col-md-3">
                                     <div className="text-center p-2 border rounded">
                                         <i className="fas fa-bolt text-warning mb-1" style={{ fontSize: '0.9rem' }}></i>
                                         <div className="h6 fw-bold mb-1">{durationStats.min || "0m"}</div>
-                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Shortest Lecture</small>
+                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Pelajaran Terpendek</small>
                                     </div>
                                 </div>
                                 <div className="col-6 col-md-3">
                                     <div className="text-center p-2 border rounded">
                                         <i className="fas fa-fire text-danger mb-1" style={{ fontSize: '0.9rem' }}></i>
                                         <div className="h6 fw-bold mb-1">{durationStats.max || "0m"}</div>
-                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Longest Lecture</small>
+                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Pelajaran Terpanjang</small>
                                     </div>
                                 </div>
                             </div>
@@ -181,33 +181,33 @@ const CourseStatistics = ({ course, enrolledStudents = [] }) => {
                 <div className="row mt-3">
                     <div className="col-12">
                         <div className="bg-light rounded-3 p-3">
-                            <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>Learning Outcomes & Success Metrics</h6>
+                            <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>Hasil Pembelajaran & Metrik Kesuksesan</h6>
                             <div className="mb-2">
                                 <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
                                     <span className="d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
                                         <i className="fas fa-check-circle text-success me-2"></i>
-                                        Course Completion
+                                        Penyelesaian Kursus
                                     </span>
                                     <span className="fw-bold text-success" style={{ fontSize: '0.9rem' }}>89%</span>
                                 </div>
                                 <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
                                     <span className="d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
                                         <i className="fas fa-trophy text-warning me-2"></i>
-                                        Skill Mastery
+                                        Penguasaan Keterampilan
                                     </span>
                                     <span className="fw-bold text-warning" style={{ fontSize: '0.9rem' }}>94%</span>
                                 </div>
                                 <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
                                     <span className="d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
                                         <i className="fas fa-briefcase text-info me-2"></i>
-                                        Career Advancement
+                                        Pengembangan Karir
                                     </span>
                                     <span className="fw-bold text-info" style={{ fontSize: '0.9rem' }}>76%</span>
                                 </div>
                                 <div className="d-flex justify-content-between align-items-center py-2">
                                     <span className="d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
                                         <i className="fas fa-thumbs-up text-primary me-2"></i>
-                                        Student Satisfaction
+                                        Kepuasan Peserta
                                     </span>
                                     <span className="fw-bold text-primary" style={{ fontSize: '0.9rem' }}>96%</span>
                                 </div>

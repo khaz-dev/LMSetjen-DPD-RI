@@ -39,12 +39,15 @@ const RichTextEditor = forwardRef(({
             // Ensure value is a string
             const newValue = typeof value === 'string' ? value : (value || '');
             
+            // Ensure currentData is a string (guard against undefined)
+            const currentDataStr = typeof currentData === 'string' ? currentData : '';
+            
             // Only update if it's a significant external change
             // (not just from typing - e.g., form reset, loading saved data)
-            const isSignificantChange = newValue !== currentData && (
-                currentData === '' ||  // Editor is empty
+            const isSignificantChange = newValue !== currentDataStr && (
+                currentDataStr === '' ||  // Editor is empty
                 newValue === '' ||        // Value is being cleared
-                Math.abs(newValue.length - currentData.length) > 50  // Large difference
+                Math.abs(newValue.length - currentDataStr.length) > 50  // Large difference
             );
 
             if (isSignificantChange) {
@@ -199,7 +202,7 @@ const RichTextEditor = forwardRef(({
                 </div>
                 <small className="text-muted">
                     <i className="fas fa-keyboard me-1"></i>
-                    {getCharacterCount()} characters
+                    {getCharacterCount()} karakter
                 </small>
             </div>
             

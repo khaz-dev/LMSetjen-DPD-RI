@@ -575,7 +575,7 @@ function SortableSection({
                             {...listeners}
                             {...attributes}
                             className="drag-handle drag-handle-section"
-                            title="Drag to reorder sections"
+                            title="Seret untuk menata ulang bagian"
                             style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
                         >
                             <i className="fas fa-grip-vertical"></i>
@@ -604,7 +604,7 @@ function SortableSection({
                                 className="btn btn-outline-light"
                                 onClick={() => moveSectionUp(variantIndex)}
                                 disabled={variantIndex === 0 || uiState.isSubmitting}
-                                title="Move section up"
+                                title="Pindahkan bagian ke atas"
                                 style={{ 
                                     fontSize: '0.75rem',
                                     padding: '2px 8px',
@@ -618,7 +618,7 @@ function SortableSection({
                                 className="btn btn-outline-light"
                                 onClick={() => moveSectionDown(variantIndex)}
                                 disabled={variantIndex === variants.length - 1 || uiState.isSubmitting}
-                                title="Move section down"
+                                title="Pindahkan bagian ke bawah"
                                 style={{ 
                                     fontSize: '0.75rem',
                                     padding: '2px 8px',
@@ -632,15 +632,15 @@ function SortableSection({
                         {/* Section Badge and Title */}
                         <div className="section-number-badge">
                             <i className="fas fa-folder-open me-2"></i>
-                            Section {variantIndex + 1}
+                            Bagian {variantIndex + 1}
                         </div>
                         <h5 className="mb-0 section-title-text">
-                            {variant?.title || "Untitled Section"}
+                            {variant?.title || "Bagian Tanpa Judul"}
                         </h5>
                     </div>
                     <div className="d-flex align-items-center gap-2">
                         <span className="badge bg-light text-dark">
-                            {variant?.items?.length || 0} Lesson{(variant?.items?.length || 0) !== 1 ? 's' : ''}
+                            {variant?.items?.length || 0} Pelajaran{(variant?.items?.length || 0) !== 1 ? 's' : ''}
                         </span>
                         {variants.length > 1 && (
                             <button
@@ -760,7 +760,7 @@ function SortableLessonItem({
                             {...listeners}
                             {...attributes}
                             className="drag-handle drag-handle-lesson"
-                            title="Drag to reorder lessons"
+                            title="Seret untuk menata ulang pelajaran"
                             style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
                         >
                             <i className="fas fa-grip-vertical"></i>
@@ -773,7 +773,7 @@ function SortableLessonItem({
                                 className="btn btn-outline-secondary"
                                 onClick={() => moveLessonUp(variantIndex, itemIndex)}
                                 disabled={itemIndex === 0 || uiState.isSubmitting}
-                                title="Move lesson up"
+                                title="Pindahkan pelajaran ke atas"
                                 style={{ 
                                     fontSize: '0.7rem',
                                     padding: '1px 6px',
@@ -787,7 +787,7 @@ function SortableLessonItem({
                                 className="btn btn-outline-secondary"
                                 onClick={() => moveLessonDown(variantIndex, itemIndex)}
                                 disabled={itemIndex === variant.items.length - 1 || uiState.isSubmitting}
-                                title="Move lesson down"
+                                title="Pindahkan pelajaran ke bawah"
                                 style={{ 
                                     fontSize: '0.7rem',
                                     padding: '1px 6px',
@@ -800,10 +800,10 @@ function SortableLessonItem({
                         
                         <span className="lesson-number-badge">
                             <i className="fas fa-play-circle me-1"></i>
-                            Lesson {itemIndex + 1}
+                            Pelajaran {itemIndex + 1}
                         </span>
                         <h6 className="mb-0 lesson-title-preview">
-                            {item?.title || "Untitled Lesson"}
+                            {item?.title || "Pelajaran Tanpa Judul"}
                         </h6>
                     </div>
                     {variant.items.length > 1 && (
@@ -814,7 +814,7 @@ function SortableLessonItem({
                             disabled={uiState.isSubmitting}
                         >
                             <i className="fas fa-times me-1"></i>
-                            Remove
+                            Hapus
                         </button>
                     )}
                 </div>
@@ -825,7 +825,7 @@ function SortableLessonItem({
                 <div className="mb-3">
                     <label className="form-label fw-bold">
                         <i className="fas fa-heading me-2 text-primary"></i>
-                        Lesson Title
+                        Judul Pelajaran
                     </label>
                     <input
                         type="text"
@@ -835,7 +835,7 @@ function SortableLessonItem({
                         )}`}
                         value={item?.title || ""}
                         onChange={(e) => handleLessonChange(variantIndex, itemIndex, "title", e.target.value)}
-                        placeholder="e.g., Introduction to Variables"
+                        placeholder="Misalnya: Pengenalan Variabel"
                     />
                     {validationState.errors[`item_${variantIndex}_${itemIndex}_title`] && (
                         <div className="curriculum-invalid-feedback">
@@ -851,7 +851,7 @@ function SortableLessonItem({
                         <div className="mb-3">
                             <label className="form-label fw-bold">
                                 <i className="fas fa-align-left me-2 text-primary"></i>
-                                Lesson Description (Optional)
+                                Deskripsi Pelajaran (Opsional)
                             </label>
                             <textarea
                                 className={`curriculum-form-control ${getValidationClass(
@@ -861,7 +861,7 @@ function SortableLessonItem({
                                 value={item?.description || ""}
                                 onChange={(e) => handleLessonChange(variantIndex, itemIndex, "description", e.target.value)}
                                 rows="8"
-                                placeholder="Describe what students will learn in this lesson..."
+                                placeholder="Jelaskan apa yang akan dipelajari siswa dalam pelajaran ini..."
                             />
                             {validationState.errors[`item_${variantIndex}_${itemIndex}_description`] && (
                                 <div className="curriculum-invalid-feedback">
@@ -881,7 +881,7 @@ function SortableLessonItem({
                             />
                             <label className="form-check-label" htmlFor={`preview-${variantIndex}-${itemIndex}`} style={{paddingLeft: 0}}>
                                 <i className="fas fa-eye me-2"></i>
-                                Allow preview (Students can view this lesson before enrolling)
+                                Izinkan Pratinjau (Siswa dapat melihat pelajaran ini sebelum mendaftar)
                             </label>
                         </div>
                     </div>
@@ -890,7 +890,7 @@ function SortableLessonItem({
                     <div className="col-md-6 mb-3">
                         <label className="form-label fw-bold">
                             <i className="fas fa-file-upload me-2 text-primary"></i>
-                            Lesson File
+                            File Pelajaran
                         </label>
                         <input
                             type="file"
@@ -911,7 +911,7 @@ function SortableLessonItem({
                                     </div>
                                 </div>
                                 <small className="text-muted d-block mt-1">
-                                    {uploadState.message || 'Uploading...'}
+                                    {uploadState.message || 'Mengunggah...'}
                                 </small>
                             </div>
                         )}
@@ -948,7 +948,7 @@ function SortableLessonItem({
                                                 preload="metadata"
                                                 style={{ width: '100%', maxHeight: '200px' }}
                                             >
-                                                Your browser does not support the video tag.
+                                                Browser Anda tidak mendukung tag video.
                                             </video>
                                         ) : (
                                             <img 
@@ -968,20 +968,20 @@ function SortableLessonItem({
                                         className="btn btn-sm btn-outline-primary"
                                     >
                                         <i className="fas fa-external-link-alt me-1"></i>
-                                        View File
+                                        Lihat File
                                     </a>
                                     <button
                                         type="button"
                                         className="btn btn-sm btn-outline-danger"
                                         onClick={() => {
-                                            if (window.confirm('Are you sure you want to remove this file?')) {
+                                            if (window.confirm('Apakah Anda yakin ingin menghapus file ini?')) {
                                                 handleLessonChange(variantIndex, itemIndex, "file", "");
                                             }
                                         }}
                                         disabled={uiState.isSubmitting}
                                     >
                                         <i className="fas fa-trash me-1"></i>
-                                        Remove File
+                                        Hapus File
                                     </button>
                                 </div>
                             </div>
@@ -1161,13 +1161,13 @@ function CourseEditCurriculum() {
         if (!variant) return { errors: variantErrors, warnings: variantWarnings };
 
         if (!variant.title || variant.title.trim().length < VALIDATION_RULES.VARIANT_TITLE_MIN_LENGTH) {
-            variantErrors.title = `Section title must be at least ${VALIDATION_RULES.VARIANT_TITLE_MIN_LENGTH} characters long`;
+            variantErrors.title = `Judul bagian harus minimal ${VALIDATION_RULES.VARIANT_TITLE_MIN_LENGTH} karakter`;
         } else if (variant.title.trim().length > VALIDATION_RULES.VARIANT_TITLE_MAX_LENGTH) {
-            variantWarnings.title = 'Section title is quite long. Consider shortening it.';
+            variantWarnings.title = 'Judul bagian cukup panjang. Pertimbangkan untuk mempersingkatnya.';
         }
 
         if (!variant.items || variant.items.length === 0) {
-            variantErrors.items = 'Section must have at least one lesson';
+            variantErrors.items = 'Bagian harus memiliki setidaknya satu pelajaran';
         }
 
         return { errors: variantErrors, warnings: variantWarnings };
@@ -1181,22 +1181,22 @@ function CourseEditCurriculum() {
         if (!item) return { errors: itemErrors, warnings: itemWarnings };
 
         if (!item.title || item.title.trim().length < VALIDATION_RULES.ITEM_TITLE_MIN_LENGTH) {
-            itemErrors.title = `Lesson title must be at least ${VALIDATION_RULES.ITEM_TITLE_MIN_LENGTH} characters long`;
+            itemErrors.title = `Judul pelajaran harus minimal ${VALIDATION_RULES.ITEM_TITLE_MIN_LENGTH} karakter`;
         } else if (item.title.trim().length > VALIDATION_RULES.ITEM_TITLE_MAX_LENGTH) {
-            itemWarnings.title = 'Lesson title is quite long. Consider shortening it.';
+            itemWarnings.title = 'Judul pelajaran cukup panjang. Pertimbangkan untuk mempersingkatnya.';
         }
 
         // Description is now optional - only validate if provided
         if (item.description && item.description.trim().length > 0) {
             if (item.description.trim().length < VALIDATION_RULES.ITEM_DESCRIPTION_MIN_LENGTH) {
-                itemWarnings.description = `Description is a bit short. Consider adding more details (at least ${VALIDATION_RULES.ITEM_DESCRIPTION_MIN_LENGTH} characters recommended).`;
+                itemWarnings.description = `Deskripsi sedikit pendek. Pertimbangkan untuk menambahkan lebih banyak detail (minimal ${VALIDATION_RULES.ITEM_DESCRIPTION_MIN_LENGTH} karakter disarankan).`;
             } else if (item.description.trim().length > VALIDATION_RULES.ITEM_DESCRIPTION_MAX_LENGTH) {
-                itemWarnings.description = 'Lesson description is quite long. Consider shortening it.';
+                itemWarnings.description = 'Deskripsi pelajaran cukup panjang. Pertimbangkan untuk mempersingkatnya.';
             }
         }
 
         if (!item.file && !item.id) {
-            itemErrors.file = 'Please upload a lesson file';
+            itemErrors.file = 'Silakan unggah file pelajaran';
         }
 
         return { errors: itemErrors, warnings: itemWarnings };
@@ -1379,7 +1379,7 @@ function CourseEditCurriculum() {
         const handleBeforeUnload = (e) => {
             if (uiState.hasUnsavedChanges) {
                 e.preventDefault();
-                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                e.returnValue = 'Anda memiliki perubahan yang belum disimpan. Apakah Anda yakin ingin pergi?';
                 return e.returnValue;
             }
         };
@@ -1477,8 +1477,8 @@ function CourseEditCurriculum() {
             
             Toast().fire({
                 icon: "error",
-                title: "Failed to load course details",
-                text: error.response?.data?.message || "Please try refreshing the page.",
+                title: "Gagal memuat detail kursus",
+                text: error.response?.data?.message || "Silakan coba menyegarkan halaman.",
             });
             
             // Set default values on error
@@ -1578,7 +1578,7 @@ function CourseEditCurriculum() {
 
         if (file.size > config.maxSize) {
             const maxSizeMB = Math.round(config.maxSize / (1024 * 1024));
-            return { isValid: false, error: `File size must be less than ${maxSizeMB}MB` };
+            return { isValid: false, error: `Ukuran file harus kurang dari ${maxSizeMB}MB` };
         }
 
         return { isValid: true };
@@ -1643,7 +1643,7 @@ function CourseEditCurriculum() {
 
                 Toast().fire({
                     icon: "success",
-                    title: "Image uploaded successfully!",
+                    title: "Gambar berhasil diunggah!",
                 });
                 
                 trackFormChanges();
@@ -1659,7 +1659,7 @@ function CourseEditCurriculum() {
             }));
             Toast().fire({
                 icon: "error",
-                title: "Failed to upload image. Please try again.",
+                title: "Gagal mengunggah gambar. Silakan coba lagi.",
             });
         } finally {
             setUiState(prev => ({ ...prev, loading: false, uploadProgress: 0 }));
@@ -1756,7 +1756,7 @@ function CourseEditCurriculum() {
         if (typeof variantIndex !== 'number' || typeof itemIndex !== 'number') {
             Toast().fire({
                 icon: "error",
-                title: "Invalid lesson parameters. Please refresh the page.",
+                title: "Parameter pelajaran tidak valid. Silakan segarkan halaman.",
             });
             return;
         }
@@ -1775,7 +1775,7 @@ function CourseEditCurriculum() {
             itemIndex < 0 || itemIndex >= currentVariant.items.length) {
             Toast().fire({
                 icon: "error",
-                title: "Invalid lesson. Please refresh the page.",
+                title: "Pelajaran tidak valid. Silakan segarkan halaman.",
             });
             return;
         }
@@ -1841,7 +1841,7 @@ function CourseEditCurriculum() {
         if (!file) {
             Toast().fire({
                 icon: "error",
-                title: "No file selected. Please choose a file to upload.",
+                title: "Tidak ada file yang dipilih. Silakan pilih file untuk diunggah.",
             });
             return false;
         }
@@ -1924,11 +1924,11 @@ function CourseEditCurriculum() {
                     : `<p class="text-info"><i class="fas fa-clock me-1"></i> <strong>This should only take a few seconds</strong></p>`;
 
                 const result = await Swal.fire({
-                    title: 'File Size Too Large',
+                    title: 'Ukuran File Terlalu Besar',
                     html: `
                         <div class="text-start">
-                            <p>Your ${isVideo ? 'video' : 'image'} file is <strong>${fileSizeMB}MB</strong>, which exceeds the <strong>${maxSizeMB}MB</strong> limit.</p>
-                            <p>Would you like to automatically compress it before uploading?</p>
+                            <p>File ${isVideo ? 'video' : 'gambar'} Anda adalah <strong>${fileSizeMB}MB</strong>, yang melebihi batas <strong>${maxSizeMB}MB</strong>.</p>
+                            <p>Apakah Anda ingin secara otomatis mengompresinya sebelum mengunggah?</p>
                             ${timeWarning}
                             <div class="alert alert-info mt-3" style="font-size: 0.9rem;">
                                 <i class="fas fa-info-circle me-1"></i>
@@ -1940,8 +1940,8 @@ function CourseEditCurriculum() {
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: '<i class="fas fa-compress-alt me-2"></i>Yes, compress it!',
-                    cancelButtonText: '<i class="fas fa-times me-2"></i>Cancel upload',
+                    confirmButtonText: '<i class="fas fa-compress-alt me-2"></i>Ya, kompresi!',
+                    cancelButtonText: '<i class="fas fa-times me-2"></i>Batalkan unggahan',
                     allowOutsideClick: false,
                     customClass: {
                         confirmButton: 'btn btn-primary btn-lg',
@@ -1958,7 +1958,7 @@ function CourseEditCurriculum() {
 
                 // Show compression progress with cancel button
                 const compressionDialog = Swal.fire({
-                    title: isVideo ? 'Compressing Video...' : 'Compressing Image...',
+                    title: isVideo ? 'Mengompresi Video...' : 'Mengompresi Gambar...',
                     html: `
                         <div class="text-center">
                             <div class="mb-3">
@@ -1977,7 +1977,7 @@ function CourseEditCurriculum() {
                     icon: 'info',
                     showCancelButton: true,
                     confirmButtonText: 'Running...',
-                    cancelButtonText: '<i class="fas fa-stop-circle me-2"></i>Cancel Compression',
+                    cancelButtonText: '<i class="fas fa-stop-circle me-2"></i>Batalkan Kompresi',
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     showConfirmButton: false,
@@ -1993,7 +1993,7 @@ function CourseEditCurriculum() {
                             
                             Toast().fire({
                                 icon: 'info',
-                                title: 'Compression cancelled by user',
+                                title: 'Kompresi dibatalkan oleh pengguna',
                             });
 
                             // Reset file upload state
@@ -2287,7 +2287,7 @@ function CourseEditCurriculum() {
         
         Toast().fire({
             icon: "success",
-            title: "New section added successfully!",
+            title: "Bagian baru berhasil ditambahkan!",
         });
     };
 
@@ -2315,13 +2315,13 @@ function CourseEditCurriculum() {
                 
                 Toast().fire({
                     icon: "success",
-                    title: "Section deleted successfully from database",
+                    title: "Bagian berhasil dihapus dari database",
                 });
             } else {
                 // If it's a new unsaved section, just show success message
                 Toast().fire({
                     icon: "success",
-                    title: "Section removed successfully",
+                    title: "Bagian berhasil dihapus",
                 });
             }
 
@@ -2413,13 +2413,13 @@ function CourseEditCurriculum() {
                 
                 Toast().fire({
                     icon: "success",
-                    title: "Lesson deleted successfully from database",
+                    title: "Pelajaran berhasil dihapus dari database",
                 });
             } else {
                 // If it's a new unsaved lesson, just show success message
                 Toast().fire({
                     icon: "success",
-                    title: "Lesson removed successfully",
+                    title: "Pelajaran berhasil dihapus",
                 });
             }
 
@@ -2474,7 +2474,7 @@ function CourseEditCurriculum() {
 
         Toast().fire({
             icon: "success",
-            title: "Section order updated!",
+            title: "Urutan bagian diperbarui!",
             timer: 1500
         });
     };
@@ -2506,7 +2506,7 @@ function CourseEditCurriculum() {
 
         Toast().fire({
             icon: "success",
-            title: "Lesson order updated!",
+            title: "Urutan pelajaran diperbarui!",
             timer: 1500
         });
     };
@@ -2604,7 +2604,7 @@ function CourseEditCurriculum() {
         setUiState(prev => ({ 
             ...prev, 
             submitStatus: SUBMIT_STATUS.SUBMITTING,
-            submitMessage: 'Validating curriculum...',
+            submitMessage: 'Memvalidasi kurikulum...',
             isSubmitting: true
         }));
 
@@ -2671,19 +2671,19 @@ function CourseEditCurriculum() {
                 setUiState(prev => ({ 
                     ...prev, 
                     submitStatus: SUBMIT_STATUS.ERROR,
-                    submitMessage: 'Please fix the validation errors below',
+                    submitMessage: 'Silakan perbaiki kesalahan validasi di bawah',
                     isSubmitting: false
                 }));
                 
                 Toast().fire({
                     icon: "error",
-                    title: "Validation Error",
-                    text: "Please fix the validation errors before submitting.",
+                    title: "Kesalahan Validasi",
+                    text: "Silakan perbaiki kesalahan validasi sebelum mengirim.",
                 });
                 return;
             }
 
-            setUiState(prev => ({ ...prev, submitMessage: 'Updating curriculum...' }));
+            setUiState(prev => ({ ...prev, submitMessage: 'Memperbarui kurikulum...' }));
 
             // Prepare form data
             const formData = new FormData();
@@ -2830,7 +2830,7 @@ function CourseEditCurriculum() {
 
             Toast().fire({
                 icon: "success",
-                title: "Curriculum Updated!",
+                title: "Kurikulum Diperbarui!",
                 html: successDetails.replace(/\n/g, '<br>'),
             });
 
@@ -2847,8 +2847,8 @@ function CourseEditCurriculum() {
 
             Toast().fire({
                 icon: "error",
-                title: "Update Failed",
-                text: error.response?.data?.message || "Failed to update course curriculum. Please try again.",
+                title: "Pembaruan Gagal",
+                text: error.response?.data?.message || "Gagal memperbarui kurikulum kursus. Silakan coba lagi.",
             });
         }
     };
@@ -2858,7 +2858,7 @@ function CourseEditCurriculum() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-course-edit-curriculum-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <section className="instructor-course-edit-curriculum-page pt-5 pb-5" style={{ display: 'flex', alignItems: 'center' }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -2866,9 +2866,9 @@ function CourseEditCurriculum() {
                             <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Curriculum...</p>
+                                    <p className="mt-3 text-muted">Memuat Kurikulum...</p>
                                 </div>
                             </div>
                         </div>
@@ -2882,7 +2882,7 @@ function CourseEditCurriculum() {
     return (
         <>
             <BaseHeader />
-            <section className="instructor-course-edit-curriculum-page">
+            <section className="instructor-course-edit-curriculum-page pt-5 pb-5">
                 <div className="container">
                     <Header />
                     <div className="row">
@@ -2900,15 +2900,15 @@ function CourseEditCurriculum() {
                                     <div className="mb-4 mb-lg-0">
                                         <h3 className="text-white mb-2 fw-bold">
                                             <i className="fas fa-list me-3"></i>
-                                            Edit Course Curriculum
+                                            Edit Kurikulum Kursus
                                         </h3>
 
                                         <h3 className="text-white mb-2 fw-bold">
-                                            {course?.title || 'Course Quiz Management'}
+                                            {course?.title || 'Manajemen Kuis Kursus'}
                                         </h3>
 
                                         <p className="mb-0 text-white opacity-90">
-                                            Organize your course content into structured sections and engaging lessons
+                                            Atur konten kursus Anda ke dalam bagian terstruktur dan pelajaran yang menarik
                                         </p>
                                     </div>
                                     <div className="d-flex flex-column gap-3">
@@ -2917,7 +2917,7 @@ function CourseEditCurriculum() {
                                             className="btn btn-outline-light border border-2 border-light"
                                         >
                                             <i className="fas fa-arrow-left me-2"></i>
-                                            Update Course
+                                            Perbarui Kursus
                                         </Link>
                                         <button
                                             type="button"
@@ -2926,7 +2926,7 @@ function CourseEditCurriculum() {
                                             disabled={uiState.isSubmitting}
                                         >
                                             <i className="fas fa-plus me-2"></i>
-                                            Add New Section
+                                            Tambah Bagian Baru
                                         </button>
                                     </div>
                                 </div>
@@ -2962,7 +2962,7 @@ function CourseEditCurriculum() {
                                         <div className="d-flex align-items-center text-warning">
                                             <i className="fas fa-exclamation-circle me-2"></i>
                                             <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
-                                                Unsaved changes (auto-save in {3} seconds)
+                                                Perubahan belum disimpan (auto-save dalam {3} detik)
                                             </span>
                                         </div>
                                     )}
@@ -2972,7 +2972,7 @@ function CourseEditCurriculum() {
                                         <div className="d-flex align-items-center text-success">
                                             <i className="fas fa-check-circle me-2"></i>
                                             <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
-                                                All changes saved
+                                                Semua perubahan tersimpan
                                             </span>
                                         </div>
                                     )}
@@ -2995,7 +2995,7 @@ function CourseEditCurriculum() {
                                 {!uiState.lastSaved && !uiState.hasUnsavedChanges && (
                                     <div className="text-muted" style={{ fontSize: '0.85rem' }}>
                                         <i className="fas fa-info-circle me-1"></i>
-                                        Changes will auto-save after 3 seconds
+                                        Perubahan akan menyimpan otomatis setelah 3 detik
                                     </div>
                                 )}
                             </div>
@@ -3065,9 +3065,8 @@ function CourseEditCurriculum() {
                                                         <div className="lessons-container">
                                                             <h6 className="lessons-header">
                                                                 <i className="fas fa-book-reader me-2"></i>
-                                                                Lessons
+                                                                Pelajaran
                                                             </h6>
-                                                            
                                                             {/* Drag and Drop for Lessons */}
                                                             <DndContext
                                                                 sensors={sensors}
@@ -3130,7 +3129,7 @@ function CourseEditCurriculum() {
                                         disabled={uiState.isSubmitting}
                                     >
                                         <i className="fas fa-plus me-2"></i>
-                                        Add New Section
+                                        Tambah Bagian Baru
                                     </button>
                                 </div>
 
@@ -3140,8 +3139,8 @@ function CourseEditCurriculum() {
                                     <div className="alert alert-info d-flex align-items-start mb-3">
                                         <i className="fas fa-info-circle mt-1 me-2"></i>
                                         <div>
-                                            <strong>Note:</strong> Blank sections and lessons will be automatically ignored when you save. 
-                                            You don't need to fill in or delete empty fields before updating.
+                                            <strong>Catatan:</strong> Bagian dan pelajaran kosong akan secara otomatis diabaikan saat Anda menyimpan. 
+                                            Anda tidak perlu mengisi atau menghapus bidang kosong sebelum memperbarui.
                                         </div>
                                     </div>
 
@@ -3151,7 +3150,7 @@ function CourseEditCurriculum() {
                                             <div className="validation-errors">
                                                 <strong>
                                                     <i className="fas fa-exclamation-triangle me-2 text-danger"></i>
-                                                    Please fix the following errors:
+                                                    Silakan perbaiki kesalahan berikut:
                                                 </strong>
                                                 <ul className="mt-2 mb-0">
                                                     {validationState.summary.errors.map((error, index) => (
@@ -3171,7 +3170,7 @@ function CourseEditCurriculum() {
                                             style={{ fontSize: "1rem" }}
                                         >
                                             <i className="fas fa-info-circle me-2"></i>
-                                            Make changes to enable the save button
+                                            Buat perubahan untuk mengaktifkan tombol simpan
                                         </div>
                                         )}
                                         {/* Button on the far right */}
@@ -3188,7 +3187,7 @@ function CourseEditCurriculum() {
                                             </div>
                                         )}
                                         <i className={`fas ${uiState.isSubmitting ? "fa-spinner fa-spin" : "fa-save"} me-2`}></i>
-                                        {uiState.isSubmitting ? "Updating Curriculum..." : "Update Curriculum"}
+                                        {uiState.isSubmitting ? "Memperbarui Kurikulum..." : "Perbarui Kurikulum"}
                                         </button>
                                     </div>
                                 </div>

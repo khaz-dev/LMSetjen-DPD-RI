@@ -1,5 +1,8 @@
 /* Admin Dashboard Styles */
 
+/* CRITICAL: Ensure admin dashboard styles are not overridden by theme variables */
+/* When user navigates from instructor dashboard, theme classes may affect styling */
+
 .modern-dashboard {
     min-height: calc(100vh - 100px);
     display: flex;
@@ -119,7 +122,7 @@
     overflow: hidden;
 }
 
-.admin-nav-tabs .nav-link:hover {
+.admin-nav-tabs .nav-link:hover:not(.active) {
     color: var(--theme-primary) !important;
     background: rgba(102, 126, 234, 0.1);
 }
@@ -237,6 +240,36 @@
     margin: 5px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* CRITICAL: Force stat-label color to always be consistent in admin dashboard */
+/* Prevents instructor-theme color variables from overriding */
+.stat-card-body .stat-label,
+.stat-card .stat-label {
+    color: #64748b !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* CRITICAL: Force stat-card-body padding and spacing in admin dashboard */
+/* Prevents theme changes from affecting admin card layout */
+.stat-card-body {
+    padding: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+/* CRITICAL: Force modern-dashboard padding to never be overridden */
+/* Bootstrap pt-5 pb-5 should always be preserved */
+.modern-dashboard.pt-5 {
+    padding-top: 3rem !important;
+}
+
+.modern-dashboard.pb-5 {
+    padding-bottom: 3rem !important;
 }
 
 .stat-change {

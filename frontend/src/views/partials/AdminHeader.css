@@ -104,11 +104,25 @@
     min-height: 60px;
     padding: 0.45rem 0;
     user-select: none;
-}
-
-/* Body padding for admin header */
-body {
-    padding-top: 80px !important;
+    
+    /* CRITICAL: Reset all theme CSS variables for admin context */
+    /* Prevents instructor/student theme variables from affecting admin header/dropdown */
+    --theme-primary: #f39c12 !important;
+    --theme-primary-dark: #e67e22 !important;
+    --theme-primary-light: #f5b041 !important;
+    --theme-primary-lighter: #fad7a0 !important;
+    --theme-secondary: #e67e22 !important;
+    --theme-accent: #f39c12 !important;
+    --theme-gradient: linear-gradient(135deg, #1a1a2e, #16213e) !important;
+    --theme-gradient-start: #1a1a2e !important;
+    --theme-gradient-end: #16213e !important;
+    --theme-gradient-horizontal: linear-gradient(90deg, #1a1a2e, #16213e) !important;
+    --theme-gradient-light: linear-gradient(135deg, rgba(26, 26, 46, 0.1), rgba(22, 33, 62, 0.1)) !important;
+    --theme-shadow-color: rgba(0, 0, 0, 0.3) !important;
+    --theme-hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+    --theme-card-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    --theme-text-on-primary: #ffffff !important;
+    --theme-border-color: rgba(243, 156, 18, 0.2) !important;
 }
 
 /* Admin Brand Styles */
@@ -185,6 +199,15 @@ body {
     font-weight: 500;
 }
 
+/* CRITICAL: Admin Header Stat Label - Scoped to navbar context */
+/* This prevents Bootstrap and other global styles from overriding stat labels */
+.admin-header .stat-label {
+    font-weight: 600;
+    color: #ffffff;
+    font-size: 0.9rem;
+    opacity: 0.95;
+}
+
 /* Notifications */
 .admin-notifications {
     position: relative;
@@ -251,27 +274,320 @@ body {
     background: #f8f9fa;
 }
 
-/* Admin Profile Dropdown */
-.admin-profile-dropdown {
-    position: relative;
+/* CRITICAL: Admin Header Dropdown Menu - Prevent all global overrides */
+.admin-header .dropdown-menu {
+    background-color: #ffffff !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 0.25rem !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    
+    /* CRITICAL: Reset theme variables in dropdown context */
+    --theme-primary: #f39c12 !important;
+    --theme-gradient: linear-gradient(135deg, #1a1a2e, #16213e) !important;
+    --theme-shadow-color: rgba(0, 0, 0, 0.3) !important;
 }
 
-.admin-profile-btn {
+/* CRITICAL: Admin Header Dropdown Header - Scoped to navbar context */
+/* This prevents Bootstrap and other global styles from overriding admin dropdown headers */
+.admin-header .dropdown-header {
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    padding: 0.75rem 1rem !important;
+    margin: 0 !important;
+    letter-spacing: 0.5px !important;
+    user-select: none !important;
+}
+
+/* CRITICAL: Admin Header Dropdown Divider - Scoped to navbar context */
+/* This ensures dividers are consistently styled within admin header */
+.admin-header .dropdown-divider {
+    height: 1px !important;
+    background-color: #e9ecef !important;
+    margin: 0.5rem 0 !important;
+    opacity: 1 !important;
+}
+
+/* CRITICAL: Admin Header Dropdown Item - Scoped to navbar context */
+/* This prevents Bootstrap default dropdown-item styles from overriding admin dropdown items */
+/* CRITICAL OVERRIDES FOR ALL CONFLICTING GLOBAL RULES */
+.admin-header .dropdown-item {
+    padding: 0.75rem 1rem !important;
+    color: #495057 !important;
+    background-color: transparent !important;
+    border: none !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    user-select: none !important;
+    min-height: auto !important;
+}
+
+.admin-header .dropdown-item:hover {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    padding-left: 1.25rem !important;
+}
+
+.admin-header .dropdown-item.active,
+.admin-header .dropdown-item.active-item {
+    background-color: #f39c12 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.admin-header .dropdown-item.active i,
+.admin-header .dropdown-item.active-item i,
+.admin-header .dropdown-item.active:first-child,
+.admin-header .dropdown-item.active-item:first-child {
+    color: #ffffff !important;
+}
+
+.admin-header .dropdown-item:disabled {
+    color: #6c757d !important;
+    background-color: transparent !important;
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+}
+
+.admin-header .dropdown-item.logout-item {
+    color: #e74c3c !important;
+    border-top: 1px solid #e9ecef !important;
+    margin-top: 0.5rem !important;
+    padding-top: 1rem !important;
+}
+
+.admin-header .dropdown-item.logout-item:hover {
+    background-color: #ffe5e1 !important;
+    color: #c0392b !important;
+}
+
+/* CRITICAL: Override accessibility-fixes.css global dropdown-item rules */
+/* These ensure admin dropdown items are never affected by global accessibility styles */
+.admin-header .dropdown-menu .dropdown-item {
+    color: #495057 !important;
+}
+
+.admin-header .dropdown-menu .dropdown-item:hover {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+/* Admin Profile Dropdown */
+/* ============================================
+   ADMIN PROFILE & STATUS SECTION
+   ============================================ */
+
+/* Admin Profile Display with Dropdown */
+.admin-profile-display {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Profile Role Status Separator - Between Notifications and Profile */
+.profile-role-status-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* ============================================================================
+   ADMIN THEME: ROLE DROPDOWN COMPACT STYLING
+   =========================================================================== */
+
+/* Override role dropdown menu compact for admin header dark theme */
+.profile-role-status-separator .role-indicator.compact {
+    z-index: 1050;
+}
+
+.profile-role-status-separator .role-badge-compact {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 600;
+    border-radius: 6px !important;
+    transition: all 0.2s ease;
+}
+
+.profile-role-status-separator .role-badge-compact:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.25) !important;
+    border-color: rgba(243, 156, 18, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.profile-role-status-separator .role-badge-compact:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* UNIQUE ADMIN DROPDOWN MENU - Uses .admin-role-dropdown-menu class */
+/* CRITICAL: Complete override with !important to prevent all global interference */
+/* MATCHED TO ADMIN DASHBOARD THEME: White background with blue/purple accents */
+.admin-role-dropdown-menu {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: 0 !important;
+    right: auto !important;
+    width: 200px !important;
+    background: #ffffff !important;
+    border: 1px solid #e3f2fd !important;
+    border-radius: 6px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    z-index: 1050 !important;
+    padding: 0.4rem 0 !important;
+    margin: 0 !important;
+    list-style: none !important;
+    animation: compactDropdownFadeIn 0.2s ease-out !important;
+    
+    /* CRITICAL: Reset theme variables for admin role dropdown context */
+    --theme-primary: #6366f1 !important;
+    --theme-gradient: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    --theme-shadow-color: rgba(99, 102, 241, 0.2) !important;
+}
+
+/* UNIQUE ADMIN DROPDOWN HEADER - Uses .admin-role-dropdown-header class */
+/* CRITICAL: Complete override with !important - Blue header matching dashboard */
+.admin-role-dropdown-header {
+    padding: 0.6rem 0.8rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    color: #1e3a8a !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    background: none !important;
+    border: none !important;
+    margin: 0 !important;
+    user-select: none !important;
+}
+
+/* UNIQUE ADMIN DROPDOWN DIVIDER - Uses .admin-role-dropdown-divider class */
+/* CRITICAL: Complete override with !important */
+.admin-role-dropdown-divider {
+    height: 1px !important;
+    background: #e3f2fd !important;
+    margin: 0.4rem 0 !important;
+    border: none !important;
+    opacity: 1 !important;
+}
+
+/* UNIQUE ADMIN DROPDOWN ITEM - Uses .admin-role-dropdown-item class */
+/* CRITICAL: Complete override with !important to prevent RoleIndicator.css interference */
+/* MATCHED TO ADMIN DASHBOARD: Dark blue text on white background */
+.admin-role-dropdown-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.6rem !important;
+    padding: 0.6rem 0.8rem !important;
+    border: none !important;
+    background: none !important;
+    color: #1e3a8a !important;
+    font-size: 0.85rem !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    text-align: left !important;
+    width: 100% !important;
+    user-select: none !important;
+}
+
+.admin-role-dropdown-item:hover:not(:disabled) {
+    background: #f0f9ff !important;
+    padding-left: 1rem !important;
+    color: #6366f1 !important;
+}
+
+.admin-role-dropdown-item i:first-child {
+    font-size: 0.9rem !important;
+    width: 18px !important;
+    text-align: center !important;
+    color: #6366f1 !important;
+}
+
+.admin-role-dropdown-item .admin-role-label {
+    flex-grow: 1 !important;
+    font-weight: 500 !important;
+}
+
+.admin-role-dropdown-item.active {
+    background: linear-gradient(135deg, #eff6ff, #f0f9ff) !important;
+    color: #6366f1 !important;
+    font-weight: 600 !important;
+    border-left: 3px solid #6366f1 !important;
+    padding-left: calc(0.8rem - 3px) !important;
+}
+
+.admin-role-dropdown-item.active i:first-child {
+    color: #6366f1 !important;
+}
+
+.admin-role-dropdown-item:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+}
+
+/* Double-layer override: target with dropdown-menu ancestor */
+.profile-role-status-separator .admin-role-dropdown-menu .admin-role-dropdown-item {
+    color: #1e3a8a !important;
+    background: none !important;
+}
+
+.profile-role-status-separator .admin-role-dropdown-menu .admin-role-dropdown-item:hover {
+    background: #f0f9ff !important;
+    color: #6366f1 !important;
+}
+
+/* ============================================================================
+   END ADMIN ROLE DROPDOWN STYLING
+   =========================================================================== */
+
+/* Profile Dropdown Button - Avatar and Name Only */
+.profile-dropdown-btn {
     background: none !important;
     border: none !important;
     color: #ffffff !important;
-    padding: 0.5rem 1rem !important;
+    padding: 0.5rem 0.75rem !important;
     border-radius: 25px !important;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    min-width: 200px;
+    white-space: nowrap;
+    cursor: pointer;
+    font-size: 0.9rem;
+    min-width: auto;
 }
 
-.admin-profile-btn:hover {
+.profile-dropdown-btn:hover {
     background: rgba(255, 255, 255, 0.1) !important;
-    transform: translateY(-1px);
+}
+
+.profile-dropdown-btn:focus {
+    outline: 2px solid #f39c12;
+    outline-offset: 2px;
+}
+
+/* Profile Role Status Container */
+.profile-role-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.profile-role-status i:last-child {
+    font-size: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.profile-dropdown-btn[aria-expanded="true"] .profile-role-status i:last-child {
+    transform: rotate(180deg);
 }
 
 .admin-avatar {
@@ -308,121 +624,147 @@ body {
     margin: 0;
 }
 
-.admin-role {
-    font-size: 0.8rem;
-    color: #f39c12;
-    font-weight: 500;
-    margin: 0;
-}
-
-/* Admin Dropdown Menu */
-.admin-dropdown {
+/* Admin Profile Dropdown Menu - ✨ PHASE 4.15 */
+/* CRITICAL: Complete override with unique naming to prevent style conflicts */
+/* MATCHED TO ADMIN DASHBOARD THEME: White background with blue/purple accents */
+.admin-profile-dropdown {
     position: absolute !important;
-    top: calc(100% + 8px) !important; /* Position directly below the button */
+    top: calc(100% + 8px) !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
-    width: 280px;
-    max-width: calc(100vw - 32px) !important; /* Account for padding on both sides */
-    border: none;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.2);
-    border-radius: 15px;
-    padding: 0.5rem 0;
-    background: white;
+    width: 280px !important;
+    max-width: calc(100vw - 32px) !important;
+    border: 1px solid #e3f2fd !important;
+    box-shadow: 0 15px 50px rgba(99, 102, 241, 0.15) !important;
+    border-radius: 15px !important;
+    padding: 0.5rem 0 !important;
+    background: #ffffff !important;
     margin: 0 !important;
-    backdrop-filter: blur(20px);
-    z-index: 1050;
-    max-height: 70vh;
-    overflow-y: auto;
-    overflow-x: hidden !important; /* Prevent horizontal scroll */
+    backdrop-filter: blur(20px) !important;
+    z-index: 1050 !important;
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    
+    /* CRITICAL: Reset theme variables to match Admin Dashboard */
+    /* White background with blue/purple accents */
+    --theme-primary: #6366f1 !important;
+    --theme-gradient: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    --theme-shadow-color: rgba(99, 102, 241, 0.2) !important;
 }
 
-.admin-dropdown::before {
-    content: '';
-    position: absolute;
-    top: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-bottom: 8px solid white;
-    right: auto;
+.admin-profile-dropdown::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -8px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-left: 8px solid transparent !important;
+    border-right: 8px solid transparent !important;
+    border-bottom: 8px solid #ffffff !important;
 }
 
-.admin-dropdown .dropdown-header {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    color: #f39c12;
-    font-weight: 700;
-    font-size: 0.9rem;
-    padding: 1rem 1.25rem;
-    margin: -0.5rem 0 0.5rem 0;
-    border-radius: 15px 15px 0 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+/* CRITICAL: Admin Profile Dropdown Header with complete !important overrides */
+.admin-profile-dropdown .dropdown-header {
+    background: none !important;
+    color: #1e3a8a !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    padding: 1rem 1.25rem !important;
+    margin: -0.5rem 0 0.5rem 0 !important;
+    border-radius: 15px 15px 0 0 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    user-select: none !important;
 }
 
-.admin-dropdown .dropdown-item {
-    padding: 0.85rem 1.25rem;
-    font-size: 0.95rem;
-    color: #2c3e50;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
+/* CRITICAL: Admin Profile Dropdown Item with complete !important overrides */
+.admin-profile-dropdown .dropdown-item {
+    padding: 0.85rem 1.25rem !important;
+    font-size: 0.95rem !important;
+    color: #1e3a8a !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    border: none !important;
+    background: none !important;
+    width: 100% !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    user-select: none !important;
 }
 
-.admin-dropdown .dropdown-item:hover {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    color: #1a1a2e;
-    padding-left: 1.5rem;
-    transform: translateX(5px);
+.admin-profile-dropdown .dropdown-item:hover {
+    background: #f0f9ff !important;
+    color: #6366f1 !important;
+    padding-left: 1.5rem !important;
 }
 
-.admin-dropdown .dropdown-item i {
-    font-size: 1rem;
-    width: 20px;
-    text-align: center;
-    color: #f39c12;
+.admin-profile-dropdown .dropdown-item i {
+    font-size: 1rem !important;
+    width: 20px !important;
+    text-align: center !important;
+    color: #6366f1 !important;
 }
 
-.admin-dropdown .dropdown-item.active-item {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-    color: white;
-    font-weight: 600;
+.admin-profile-dropdown .dropdown-item.active-item {
+    background: linear-gradient(135deg, #eff6ff, #f0f9ff) !important;
+    color: #6366f1 !important;
+    font-weight: 600 !important;
 }
 
-.admin-dropdown .dropdown-item.active-item i {
-    color: white;
+.admin-profile-dropdown .dropdown-item.active-item i {
+    color: #6366f1 !important;
 }
 
-.admin-dropdown .dropdown-item.logout-item {
-    color: #e74c3c;
-    border-top: 1px solid #f8f9fa;
-    margin-top: 0.5rem;
+.admin-profile-dropdown .dropdown-item.logout-item {
+    color: #e74c3c !important;
+    border-top: 1px solid #e3f2fd !important;
+    margin-top: 0.5rem !important;
 }
 
-.admin-dropdown .dropdown-item.logout-item:hover {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
+.admin-profile-dropdown .dropdown-item.logout-item:hover {
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
 }
 
-.admin-dropdown .dropdown-item.logout-item i {
-    color: inherit;
+.admin-profile-dropdown .dropdown-item.logout-item i {
+    color: inherit !important;
 }
 
-/* System Status */
+/* CRITICAL: Double-layer override rules for .admin-profile-dropdown */
+/* Prevents any conflict with .admin-header .dropdown-item rules */
+/* Priority chain: .admin-profile-dropdown > .admin-header .dropdown-item */
+.admin-profile-dropdown.dropdown-menu .dropdown-item {
+    color: #1e3a8a !important;
+    background: none !important;
+    padding: 0.85rem 1.25rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.admin-profile-dropdown.dropdown-menu .dropdown-item:hover {
+    background: #f0f9ff !important;
+    color: #6366f1 !important;
+    padding-left: 1.5rem !important;
+}
+
+.admin-profile-dropdown.dropdown-menu .dropdown-item.active-item,
+.admin-profile-dropdown.dropdown-menu .dropdown-item.active {
+    background: linear-gradient(135deg, #eff6ff, #f0f9ff) !important;
+    color: #6366f1 !important;
+    font-weight: 600 !important;
+}
+
+/* System Status (updated for role dropdown context) */
 .admin-status {
     display: flex;
     align-items: center;
-    margin-left: 1rem;
-    padding-left: 1rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    margin-left: 0.5rem;
 }
 
 .system-status {
@@ -480,7 +822,7 @@ body {
     }
 }
 
-.admin-dropdown.show {
+.admin-profile-dropdown.show {
     animation: adminDropdownFadeIn 0.3s ease-out;
 }
 
@@ -490,24 +832,24 @@ body {
 
 /* Medium laptops (1024px - 1199px) - Adjust dropdown to prevent header expansion */
 @media (max-width: 1199px) and (min-width: 1024px) {
-    .admin-dropdown {
+    .admin-profile-dropdown {
         position: absolute !important;
         top: calc(100% + 8px) !important;
-        left: 50% !important;
-        right: auto !important;
-        transform: translateX(-50%) !important;
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
         width: 260px;
         max-width: calc(100vw - 32px) !important;
         max-height: 70vh;
         overflow-y: auto;
         overflow-x: hidden !important;
         border-radius: 12px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        box-shadow: 0 15px 40px rgba(99, 102, 241, 0.15) !important;
         z-index: 1050;
         margin: 0 !important;
     }
 
-    .admin-dropdown::before {
+    .admin-profile-dropdown::before {
         content: '';
         position: absolute;
         top: -8px;
@@ -518,27 +860,26 @@ body {
         border-left: 8px solid transparent;
         border-right: 8px solid transparent;
         border-bottom: 8px solid white;
-        right: auto;
     }
 
-    .admin-dropdown .dropdown-header {
+    .admin-profile-dropdown .dropdown-header {
         padding: 0.9rem 1.2rem;
         font-size: 0.9rem;
     }
 
-    .admin-dropdown .dropdown-item {
+    .admin-profile-dropdown .dropdown-item {
         padding: 0.75rem 1.1rem;
         font-size: 0.9rem;
     }
 
-    .admin-profile-btn {
+    .profile-dropdown-btn {
         min-width: 180px;
     }
 }
 
 /* Small laptops (768px - 1023px) */
 @media (max-width: 1023px) {
-    .admin-dropdown {
+    .admin-profile-dropdown {
         position: absolute !important;
         top: calc(100% + 8px) !important;
         left: 50% !important;
@@ -550,12 +891,20 @@ body {
         overflow-y: auto;
         overflow-x: hidden !important;
         border-radius: 10px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        box-shadow: 0 15px 40px rgba(99, 102, 241, 0.2) !important;
         margin: 0 !important;
     }
 
-    .admin-dropdown::before {
+    .admin-profile-dropdown::before {
         display: none; /* Hide arrow on smaller screens */
+    }
+
+    .admin-profile-display {
+        gap: 0.5rem;
+    }
+
+    .profile-dropdown-btn {
+        padding: 0.4rem 0.6rem !important;
     }
 }
 
@@ -577,21 +926,21 @@ body {
         font-size: 0.75rem;
     }
     
-    .admin-quick-stats,
-    .admin-status {
+    .admin-quick-stats {
         display: none;
     }
     
-    .admin-profile-btn {
+    .admin-profile-display {
         min-width: auto;
     }
     
-    .admin-info {
-        display: none;
+    .profile-dropdown-btn {
+        min-width: auto;
+        padding: 0.4rem 0.6rem !important;
     }
     
     .notification-dropdown,
-    .admin-dropdown {
+    .admin-profile-dropdown {
         position: absolute !important;
         top: calc(100% + 8px) !important;
         left: 50% !important;
@@ -605,7 +954,7 @@ body {
         margin: 0 !important;
     }
 
-    .admin-dropdown::before,
+    .admin-profile-dropdown::before,
     .notification-dropdown::before {
         display: none;
     }
@@ -625,7 +974,7 @@ body {
     }
     
     .notification-dropdown,
-    .admin-dropdown {
+    .admin-profile-dropdown {
         position: absolute !important;
         top: calc(100% + 8px) !important;
         left: 50% !important;
@@ -640,17 +989,17 @@ body {
         border-radius: 8px;
     }
 
-    .admin-dropdown::before,
+    .admin-profile-dropdown::before,
     .notification-dropdown::before {
         display: none;
     }
 
-    .admin-dropdown .dropdown-header {
+    .admin-profile-dropdown .dropdown-header {
         padding: 0.8rem 1rem;
         font-size: 0.85rem;
     }
 
-    .admin-dropdown .dropdown-item {
+    .admin-profile-dropdown .dropdown-item {
         padding: 0.7rem 1rem;
         font-size: 0.85rem;
     }

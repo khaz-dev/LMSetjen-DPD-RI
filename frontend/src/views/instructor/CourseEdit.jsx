@@ -255,12 +255,12 @@ function CourseEdit() {
                 }
 
                 setSubmitStatus("error");
-                setSubmitMessage(`Please fix ${Object.keys(validationResult.errors).filter(key => validationResult.errors[key].length > 0).length} validation error(s) before updating`);
+                setSubmitMessage(`Silakan perbaiki ${Object.keys(validationResult.errors).filter(key => validationResult.errors[key].length > 0).length} kesalahan validasi sebelum memperbarui`);
 
                 Toast().fire({
                     icon: "error",
-                    title: "Validation Failed",
-                    text: "Please review and fix the highlighted errors",
+                    title: "Validasi Gagal",
+                    text: "Silakan tinjau dan perbaiki kesalahan yang disorot",
                     timer: 5000,
                     timerProgressBar: true
                 });
@@ -268,7 +268,7 @@ function CourseEdit() {
             }
 
             // Update submit message for actual submission
-            setSubmitMessage("Saving your course updates...");
+            setSubmitMessage("Menyimpan pembaruan kursus Anda...");
 
             await submitCourse(
                 courseData, 
@@ -276,7 +276,7 @@ function CourseEdit() {
                 (data) => {
                     // Enhanced success callback
                     setSubmitStatus("success");
-                    setSubmitMessage("Course updated successfully!");
+                    setSubmitMessage("Kursus berhasil diperbarui!");
                     setIsDirty(false);
                     
                     // Update initial data to current data after successful save
@@ -284,8 +284,8 @@ function CourseEdit() {
                     
                     Toast().fire({
                         icon: "success",
-                        title: "Course Updated!",
-                        text: "Your course has been successfully updated and saved.",
+                        title: "Kursus Diperbarui!",
+                        text: "Kursus Anda telah berhasil diperbarui dan disimpan.",
                         timer: 4000,
                         timerProgressBar: true,
                         showConfirmButton: false
@@ -302,7 +302,7 @@ function CourseEdit() {
                     console.error("Failed to update course:", error);
                     setSubmitStatus("error");
                     
-                    let errorMessage = "An unexpected error occurred while updating your course.";
+                    let errorMessage = "Terjadi kesalahan tak terduga saat memperbarui kursus Anda.";
                     
                     // Handle different types of errors
                     if (error.response?.data?.error) {
@@ -317,28 +317,28 @@ function CourseEdit() {
                     
                     Toast().fire({
                         icon: "error",
-                        title: "Update Failed",
+                        title: "Pembaruan Gagal",
                         text: errorMessage,
                         timer: 6000,
                         timerProgressBar: true,
                         showConfirmButton: true,
-                        confirmButtonText: "Try Again"
+                        confirmButtonText: "Coba Lagi"
                     });
                 }
             );
         } catch (error) {
             console.error("Submission error:", error);
             setSubmitStatus("error");
-            setSubmitMessage("A network error occurred. Please check your connection and try again.");
+            setSubmitMessage("Terjadi kesalahan jaringan. Silakan periksa koneksi Anda dan coba lagi.");
             
             Toast().fire({
                 icon: "error",
-                title: "Network Error",
-                text: "Unable to connect to the server. Please check your internet connection.",
+                title: "Kesalahan Jaringan",
+                text: "Tidak dapat terhubung ke server. Silakan periksa koneksi internet Anda.",
                 timer: 6000,
                 timerProgressBar: true,
                 showConfirmButton: true,
-                confirmButtonText: "Retry"
+                confirmButtonText: "Coba Lagi"
             });
         }
     };
@@ -353,33 +353,33 @@ function CourseEdit() {
         // Check minimum requirements
         if (!canPublish) {
             await Swal.fire({
-                title: "Cannot Publish Course Yet",
+                title: "Tidak Dapat Menerbitkan Kursus Belum",
                 html: `
                     <div class="text-start">
-                        <p class="mb-3">Your course <strong>"${courseData?.title}"</strong> doesn't meet the minimum requirements for publishing.</p>
+                        <p class="mb-3">Kursus Anda <strong>"${courseData?.title}"</strong> tidak memenuhi persyaratan minimum untuk penerbitan.</p>
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-circle me-2"></i>
-                            <strong>Missing Requirements:</strong>
+                            <strong>Persyaratan yang Hilang:</strong>
                             <ul class="mt-2 mb-0">
-                                ${curriculumCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> No curriculum sections added</li>' : ""}
-                                ${lecturesCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> No lessons uploaded</li>' : ""}
-                                ${quizzesCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> No quizzes added</li>' : ""}
+                                ${curriculumCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> Tidak ada bagian kurikulum yang ditambahkan</li>' : ""}
+                                ${lecturesCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> Tidak ada pelajaran yang diunggah</li>' : ""}
+                                ${quizzesCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> Tidak ada kuis yang ditambahkan</li>' : ""}
                             </ul>
                         </div>
                         <div class="alert alert-info mt-3">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Next Steps:</strong>
+                            <strong>Langkah Selanjutnya:</strong>
                             <ol class="mt-2 mb-0">
-                                ${curriculumCount === 0 ? '<li>Click "Manage Curriculum" to add course sections</li>' : ""}
-                                ${lecturesCount === 0 ? "<li>Add lessons to your curriculum sections</li>" : ""}
-                                ${quizzesCount === 0 ? '<li>Click "Manage Quiz" to add quizzes for your course</li>' : ""}
-                                <li>Come back here and click "Publish Course"</li>
+                                ${curriculumCount === 0 ? '<li>Klik "Kelola Kurikulum" untuk menambahkan bagian kursus</li>' : ""}
+                                ${lecturesCount === 0 ? "<li>Tambahkan pelajaran ke bagian kurikulum Anda</li>" : ""}
+                                ${quizzesCount === 0 ? '<li>Klik "Kelola Kuis" untuk menambahkan kuis untuk kursus Anda</li>' : ""}
+                                <li>Kembali ke sini dan klik "Terbitkan Kursus"</li>
                             </ol>
                         </div>
                     </div>
                 `,
                 icon: "warning",
-                confirmButtonText: "Got It",
+                confirmButtonText: "Mengerti",
                 confirmButtonColor: "#3085d6",
                 width: 600
             });
@@ -387,28 +387,28 @@ function CourseEdit() {
         }
         
         const result = await Swal.fire({
-            title: "Publish Course?",
+            title: "Terbitkan Kursus?",
             html: `
                 <div class="text-start">
-                    <p class="mb-3">Are you ready to publish <strong>"${courseData?.title}"</strong>?</p>
+                    <p class="mb-3">Apakah Anda siap untuk menerbitkan <strong>"${courseData?.title}"</strong>?</p>
                     <div class="alert alert-success">
                         <i class="fas fa-check-circle me-2"></i>
-                        <strong>Your course includes:</strong>
+                        <strong>Kursus Anda mencakup:</strong>
                         <ul class="mt-2 mb-0">
-                            <li><i class="fas fa-check text-success me-1"></i> ${curriculumCount} curriculum section${curriculumCount !== 1 ? "s" : ""}</li>
-                            <li><i class="fas fa-check text-success me-1"></i> ${lecturesCount} lesson${lecturesCount !== 1 ? "s" : ""}</li>
-                            <li><i class="fas fa-check text-success me-1"></i> ${quizzesCount} quiz${quizzesCount !== 1 ? "zes" : ""}</li>
+                            <li><i class="fas fa-check text-success me-1"></i> ${curriculumCount} bagian kurikulum${curriculumCount !== 1 ? "" : ""}</li>
+                            <li><i class="fas fa-check text-success me-1"></i> ${lecturesCount} pelajaran${lecturesCount !== 1 ? "" : ""}</li>
+                            <li><i class="fas fa-check text-success me-1"></i> ${quizzesCount} kuis${quizzesCount !== 1 ? "" : ""}</li>
                         </ul>
                     </div>
-                    <p class="text-muted mb-0"><small>Once published, students will be able to enroll in your course.</small></p>
+                    <p class="text-muted mb-0"><small>Setelah diterbitkan, siswa akan dapat mendaftar di kursus Anda.</small></p>
                 </div>
             `,
             icon: "question",
             showCancelButton: true,
             confirmButtonColor: "#4CAF50",
             cancelButtonColor: "#6c757d",
-            confirmButtonText: "Yes, Publish Course",
-            cancelButtonText: "Not Yet",
+            confirmButtonText: "Ya, Terbitkan Kursus",
+            cancelButtonText: "Belum",
             width: 600
         });
         
@@ -426,23 +426,23 @@ function CourseEdit() {
                     });
                     
                     await Swal.fire({
-                        title: "Course Published!",
+                        title: "Kursus Diterbitkan!",
                         html: `
                             <div class="text-start">
-                                <p class="mb-3"><strong>"${courseData?.title}"</strong> is now live!</p>
+                                <p class="mb-3"><strong>"${courseData?.title}"</strong> sekarang aktif!</p>
                                 <div class="alert alert-success">
                                     <i class="fas fa-check-circle me-2"></i>
-                                    <strong>Your course is ready:</strong>
+                                    <strong>Kursus Anda siap:</strong>
                                     <ul class="mt-2 mb-0">
-                                        <li>${response.data.course.curriculum_sections} curriculum sections</li>
-                                        <li>${response.data.course.lessons} lessons</li>
-                                        <li>Published and available to students</li>
+                                        <li>${response.data.course.curriculum_sections} bagian kurikulum</li>
+                                        <li>${response.data.course.lessons} pelajaran</li>
+                                        <li>Diterbitkan dan tersedia untuk siswa</li>
                                     </ul>
                                 </div>
                                 ${response.data.warnings && response.data.warnings.length > 0 ? `
                                     <div class="alert alert-warning mt-2">
                                         <i class="fas fa-exclamation-triangle me-2"></i>
-                                        <strong>Suggestions:</strong>
+                                        <strong>Saran:</strong>
                                         <ul class="mt-2 mb-0">
                                             ${response.data.warnings.map(w => `<li>${w}</li>`).join("")}
                                         </ul>
@@ -452,8 +452,8 @@ function CourseEdit() {
                         `,
                         icon: "success",
                         showCancelButton: true,
-                        confirmButtonText: "View Course",
-                        cancelButtonText: "Stay Here",
+                        confirmButtonText: "Lihat Kursus",
+                        cancelButtonText: "Tetap di Sini",
                         confirmButtonColor: "#4CAF50"
                     }).then((result) => {
                         if (result.isConfirmed) {
@@ -461,21 +461,21 @@ function CourseEdit() {
                         }
                     });
                 } else {
-                    throw new Error(response.data.message || "Failed to publish course");
+                    throw new Error(response.data.message || "Gagal menerbitkan kursus");
                 }
             } catch (error) {
                 console.error("Error publishing course:", error);
                 const errorData = error.response?.data;
                 
                 await Swal.fire({
-                    title: "Cannot Publish Course",
+                    title: "Tidak Dapat Menerbitkan Kursus",
                     html: `
                         <div class="text-start">
-                            <p class="mb-3">${errorData?.message || "Failed to publish course"}</p>
+                            <p class="mb-3">${errorData?.message || "Gagal menerbitkan kursus"}</p>
                             ${errorData?.errors && errorData.errors.length > 0 ? `
                                 <div class="alert alert-danger">
                                     <i class="fas fa-exclamation-circle me-2"></i>
-                                    <strong>Please fix these issues:</strong>
+                                    <strong>Silakan perbaiki masalah ini:</strong>
                                     <ul class="mt-2 mb-0">
                                         ${errorData.errors.map(e => `<li>${e}</li>`).join("")}
                                     </ul>
@@ -484,7 +484,7 @@ function CourseEdit() {
                             ${errorData?.warnings && errorData.warnings.length > 0 ? `
                                 <div class="alert alert-warning mt-2">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
-                                    <strong>Suggestions:</strong>
+                                    <strong>Saran:</strong>
                                     <ul class="mt-2 mb-0">
                                         ${errorData.warnings.map(w => `<li>${w}</li>`).join("")}
                                     </ul>
@@ -506,7 +506,7 @@ function CourseEdit() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-course-edit-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
+                <section className="instructor-course-edit-page pt-5 pb-5" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -514,9 +514,9 @@ function CourseEdit() {
                             <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Course...</p>
+                                    <p className="mt-3 text-muted">Memuat Kursus...</p>
                                 </div>
                             </div>
                         </div>
@@ -530,7 +530,7 @@ function CourseEdit() {
     return (
         <>
             <BaseHeader />         
-            <section className="instructor-course-edit-page">
+            <section className="instructor-course-edit-page pt-5 pb-5">
                 <div className="container">
                     <Header />
                     <div className="row">
@@ -548,10 +548,10 @@ function CourseEdit() {
                                     <div className="mb-4 mb-lg-0">
                                         <h1 className="text-white mb-2 fw-bold">
                                             <i className="fas fa-edit me-2"></i>
-                                            Edit Course
+                                            Edit Kursus
                                         </h1>
                                         <p className="mb-0 text-white opacity-90">
-                                            Update your course information and content to provide the best learning experience
+                                            Perbarui informasi dan konten kursus Anda untuk memberikan pengalaman belajar terbaik
                                         </p>
                                     </div>
                                     <div className="d-flex flex-column gap-3">
@@ -560,14 +560,14 @@ function CourseEdit() {
                                             className="btn btn-outline-light border border-2 border-light"
                                         >
                                             <i className="fas fa-list me-2"></i>
-                                            Manage Curriculum
+                                            Kelola Kurikulum
                                         </Link>
                                         <Link 
                                             to={`/instructor/edit-course/${param?.course_id}/quiz/`} 
                                             className="btn btn-outline-light border border-2 border-light"
                                         >
                                             <i className="fas fa-question-circle me-2"></i>
-                                            Manage Quiz
+                                            Kelola Kuis
                                         </Link>
                                     </div>
                                 </div>
@@ -579,7 +579,7 @@ function CourseEdit() {
                                     <div className="form-section">
                                         <h5 className="section-title mb-3">
                                             <i className="fas fa-images me-2"></i>
-                                            Media Files
+                                            File Media
                                         </h5>
                                         
                                         <ImageUpload
@@ -605,14 +605,14 @@ function CourseEdit() {
                                     <div className="form-section">
                                         <h5 className="section-title mb-3">
                                             <i className="fas fa-info-circle me-2"></i>
-                                            Basic Information
+                                            Informasi Dasar
                                         </h5>
                                         
                                         <div className="row">
                                             <div className="col-12">
                                                 <FormField
                                                     ref={titleRef}
-                                                    label="Course Title"
+                                                    label="Judul Kursus"
                                                     name="title"
                                                     value={courseData?.title || ""}
                                                     onChange={handleCourseInputChange}
@@ -620,8 +620,8 @@ function CourseEdit() {
                                                     warnings={warnings.title}
                                                     getValidationClass={getFieldValidationClass}
                                                     required
-                                                    placeholder="Enter a compelling course title..."
-                                                    helpText="Create a title that accurately describes your course and attracts students"
+                                                    placeholder="Masukkan judul kursus yang menarik..."
+                                                    helpText="Buat judul yang dengan akurat menggambarkan kursus Anda dan menarik siswa"
                                                 />
                                             </div>
                                         </div>
@@ -630,7 +630,7 @@ function CourseEdit() {
                                             <div className="col-md-6">
                                                 <FormField
                                                     ref={categoryRef}
-                                                    label="Course Category"
+                                                    label="Kategori Kursus"
                                                     name="category"
                                                     type="select"
                                                     value={courseData?.category?.id || courseData?.category || ""}
@@ -639,18 +639,18 @@ function CourseEdit() {
                                                     warnings={warnings.category}
                                                     getValidationClass={getFieldValidationClass}
                                                     options={[
-                                                        { value: "", label: "Select a category" },
+                                                        { value: "", label: "Pilih kategori" },
                                                         ...(Array.isArray(categories) ? categories : []).map(cat => ({ value: cat.id, label: cat.title }))
                                                     ]}
                                                     required
-                                                    helpText="Choose the most relevant category for your course"
+                                                    helpText="Pilih kategori paling relevan untuk kursus Anda"
                                                 />
                                             </div>
 
                                             <div className="col-md-6">
                                                 <FormField
                                                     ref={levelRef}
-                                                    label="Course Level"
+                                                    label="Level Kursus"
                                                     name="level"
                                                     type="select"
                                                     value={courseData?.level || ""}
@@ -659,11 +659,11 @@ function CourseEdit() {
                                                     warnings={warnings.level}
                                                     getValidationClass={getFieldValidationClass}
                                                     options={[
-                                                        { value: "", label: "Select level" },
+                                                        { value: "", label: "Pilih level" },
                                                         ...COURSE_LEVELS
                                                     ]}
                                                     required
-                                                    helpText="Indicate the difficulty level"
+                                                    helpText="Tentukan tingkat kesulitan"
                                                 />
                                             </div>
                                         </div>
@@ -671,18 +671,18 @@ function CourseEdit() {
                                         <div className="row">
                                             <div className="col-md-6">
                                                 <FormField
-                                                    label="Course Status"
+                                                    label="Status Kursus"
                                                     name="teacher_course_status"
                                                     type="select"
                                                     value={courseData?.teacher_course_status || "Draft"}
                                                     onChange={handleCourseInputChange}
                                                     options={COURSE_STATUS_OPTIONS}
-                                                    helpText="Control course visibility"
+                                                    helpText="Kontrol visibilitas kursus"
                                                 />
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="mb-3" style={{ marginTop: "32px" }}>
-                                                    <label className="form-label">Current Status</label>
+                                                    <label className="form-label">Status Saat Ini</label>
                                                     <div className="d-flex align-items-center">
                                                         <span className={`status-badge ${courseData?.teacher_course_status?.toLowerCase() || "draft"}`}>
                                                             <i className={`fas ${
@@ -701,26 +701,26 @@ function CourseEdit() {
                                     <div className="form-section">
                                         <h5 className="section-title mb-3">
                                             <i className="fas fa-align-left me-2"></i>
-                                            Course Description
+                                            Deskripsi Kursus
                                         </h5>
                                         
                                         <Suspense fallback={
                                             <div className="text-center py-4">
                                                 <div className="spinner-border text-primary" role="status">
-                                                    <span className="visually-hidden">Loading editor...</span>
+                                                    <span className="visually-hidden">Memuat editor...</span>
                                                 </div>
-                                                <p className="mt-2 text-muted">Loading rich text editor...</p>
+                                                <p className="mt-2 text-muted">Memuat editor teks kaya...</p>
                                             </div>
                                         }>
                                             <RichTextEditor
-                                                label="Course Description"
+                                                label="Deskripsi Kursus"
                                                 value={courseData?.description || ""}
                                                 onChange={handleDescriptionChange}
                                                 errors={errors.description}
                                                 warnings={warnings.description}
                                                 required
-                                                placeholder="Describe what students will learn in this course..."
-                                                helpText="Provide a comprehensive overview of your course content and learning outcomes"
+                                                placeholder="Deskripsikan apa yang akan dipelajari siswa di kursus ini..."
+                                                helpText="Berikan ringkasan komprehensif tentang konten kursus Anda dan hasil pembelajaran"
                                             />
                                         </Suspense>
                                         
@@ -732,7 +732,7 @@ function CourseEdit() {
                                             
                                             >
                                                 <i className="fas fa-list me-2"></i>
-                                                Manage Curriculum
+                                                Kelola Kurikulum
                                             </Link>
                                             <Link 
                                                 to={`/instructor/edit-course/${param?.course_id}/quiz/`} 
@@ -740,7 +740,7 @@ function CourseEdit() {
                                                 style={{ background: "linear-gradient(135deg, #e67e22 0%, #d35400 100%)" }}
                                             >
                                                 <i className="fas fa-question-circle me-2"></i>
-                                                Manage Quiz
+                                                Kelola Kuis
                                             </Link>
                                         </div>
                                     </div>
@@ -757,7 +757,7 @@ function CourseEdit() {
                                                         <i className="fas fa-exclamation-circle text-danger me-3 mt-1"></i>
                                                         <div className="flex-grow-1">
                                                             <h6 className="alert-heading mb-2 fw-bold">
-                                                                {validationSummary.errors.length} Error{validationSummary.errors.length !== 1 ? "s" : ""} Found
+                                                                {validationSummary.errors.length} Kesalahan{validationSummary.errors.length !== 1 ? "" : ""} Ditemukan
                                                             </h6>
                                                             <ul className="mb-0 ps-3">
                                                                 {validationSummary.errors.map((errorGroup, index) => (
@@ -779,7 +779,7 @@ function CourseEdit() {
                                                         <i className="fas fa-exclamation-triangle text-warning me-3 mt-1"></i>
                                                         <div className="flex-grow-1">
                                                             <h6 className="alert-heading mb-2 fw-bold">
-                                                                {validationSummary.warnings.length} Warning{validationSummary.warnings.length !== 1 ? "s" : ""}
+                                                                {validationSummary.warnings.length} Peringatan{validationSummary.warnings.length !== 1 ? "" : ""}
                                                             </h6>
                                                             <ul className="mb-0 ps-3">
                                                                 {validationSummary.warnings.map((warningGroup, index) => (
@@ -818,7 +818,7 @@ function CourseEdit() {
                                             <div className="status-message">
                                                 <div className="fw-semibold">{submitMessage}</div>
                                                 {submitStatus === "submitting" && (
-                                                    <small className="text-muted">Please don't close this page...</small>
+                                                    <small className="text-muted">Jangan tutup halaman ini...</small>
                                                 )}
                                             </div>
                                         </div>
@@ -831,13 +831,13 @@ function CourseEdit() {
                                         {isDirty && submitStatus !== "submitting" && (
                                             <div className="text-warning small">
                                                 <i className="fas fa-circle me-1"></i>
-                                                You have unsaved changes
+                                                Anda memiliki perubahan yang belum disimpan
                                             </div>
                                         )}
                                         {!isDirty && submitStatus === "idle" && (
                                             <div className="text-muted small">
                                                 <i className="fas fa-save me-1"></i>
-                                                All changes saved
+                                                Semua perubahan tersimpan
                                             </div>
                                         )}
                                     </div>
@@ -851,7 +851,7 @@ function CourseEdit() {
                                             disabled={submitStatus === "submitting"}
                                         >
                                             <i className="fas fa-eye me-2"></i>
-                                            Preview Course
+                                            Pratinjau Kursus
                                         </Link>
                                         
                                         {/* Enhanced Update Course Button */}
@@ -869,19 +869,19 @@ function CourseEdit() {
                                                     <>
                                                         <div className="spinner-border spinner-border-sm me-2"></div>
                                                         <span className="button-text">
-                                                            {submitMessage.includes("Validating") ? "Validating..." : 
-                                                             submitMessage.includes("Saving") ? "Saving..." : "Updating..."}
+                                                            {submitMessage.includes("Validating") ? "Memvalidasi..." : 
+                                                             submitMessage.includes("Saving") ? "Menyimpan..." : "Memperbarui..."}
                                                         </span>
                                                     </>
                                                 ) : submitStatus === "success" ? (
                                                     <>
                                                         <i className="fas fa-check me-2"></i>
-                                                        <span className="button-text">Updated Successfully!</span>
+                                                        <span className="button-text">Berhasil Diperbarui!</span>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <i className="fas fa-save me-2"></i>
-                                                        <span className="button-text">Update Course</span>
+                                                        <span className="button-text">Perbarui Kursus</span>
                                                     </>
                                                 )}
                                             </div>
@@ -927,24 +927,24 @@ function CourseEdit() {
                                                         e.currentTarget.style.boxShadow = "0 4px 15px rgba(76, 175, 80, 0.3)";
                                                     }
                                                 }}
-                                                title={!canPublish ? "Add curriculum, lessons, and quizzes before publishing" : "Publish your course"}
+                                                title={!canPublish ? "Tambahkan kurikulum, pelajaran, dan kuis sebelum menerbitkan" : "Terbitkan kursus Anda"}
                                             >
                                                 {isPublishing ? (
                                                     <>
                                                         <div className="spinner-border spinner-border-sm me-2"></div>
-                                                        <span>Publishing...</span>
+                                                        <span>Menerbitkan...</span>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <i className={`fas ${canPublish ? "fa-rocket" : "fa-lock"} me-2`}></i>
-                                                        <span>Publish Course</span>
+                                                        <span>Terbitkan Kursus</span>
                                                     </>
                                                 )}
                                             </button>
                                             {!canPublish && (
                                                 <small className="text-muted d-block mt-1 text-end" style={{ fontSize: "0.75rem" }}>
                                                     <i className="fas fa-info-circle me-1"></i>
-                                                    Add curriculum, lessons & quizzes first
+                                                    Tambahkan kurikulum, pelajaran & kuis terlebih dahulu
                                                 </small>
                                             )}
                                         </div>
@@ -955,7 +955,7 @@ function CourseEdit() {
                                 <div className="form-helper-text text-center mt-3">
                                     <small className="text-muted">
                                         <i className="fas fa-info-circle me-1"></i>
-                                        Changes are automatically validated. Fix any errors before updating your course.
+                                        Perubahan secara otomatis divalidasi. Perbaiki kesalahan apa pun sebelum memperbarui kursus Anda.
                                     </small>
                                 </div>
                             </div>

@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { Link } from "react-router-dom";
 import "./Footer.css";
 
 function Footer() {
@@ -14,10 +15,10 @@ function Footer() {
       email: "sdm@dpd.go.id"
     },
     links: [
-      { name: "Kebijakan Privasi", url: "#" },
-      { name: "Syarat & Ketentuan", url: "#" },
-      { name: "Bantuan", url: "#" },
-      { name: "Kontak", url: "#" }
+      { name: "Kebijakan Privasi", url: "/privacy-policy/" },
+      { name: "Syarat & Ketentuan", url: "/terms-and-conditions/" },
+      { name: "Informasi Cookie", url: "/cookie-policy/" },
+      { name: "Kontak", url: "/contact/" }
     ]
   };
 
@@ -27,7 +28,7 @@ function Footer() {
         <div className="footer-content-row">
           {/* Brand Section */}
           <div className="footer-brand-section">
-            <span className="footer-brand-name">{content.brand.name}</span> <small className="footer-brand-copyright">{content.brand.copyright}</small>
+            <Link to="/" className="footer-brand-name">{content.brand.name}</Link> <small className="footer-brand-copyright">{content.brand.copyright}</small>
           </div>
 
           {/* Quick Links Section */}

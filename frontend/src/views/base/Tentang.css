@@ -1,0 +1,249 @@
+.tentang-container {
+  min-height: 100vh;
+  background: transparent;
+  padding: 40px 0;
+}
+
+.tentang-content {
+  background: white;
+  border-radius: 12px;
+  padding: 60px 40px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tentang-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.tentang-subtitle {
+  text-align: center;
+  color: #666;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.tentang-section {
+  margin-bottom: 50px;
+}
+
+.tentang-section h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid #0066cc;
+}
+
+.tentang-section h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+
+.tentang-section p {
+  color: #555;
+  line-height: 1.8;
+  font-size: 1rem;
+  margin-bottom: 15px;
+}
+
+.tentang-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tentang-section li {
+  color: #555;
+  line-height: 1.8;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+  padding-left: 30px;
+  position: relative;
+}
+
+.tentang-section li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #0066cc;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.tentang-section a {
+  color: #0066cc;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.tentang-section a:hover {
+  color: #0052a3;
+  text-decoration: underline;
+}
+
+/* Info Box */
+.info-box {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 30px;
+  border-left: 4px solid #0066cc;
+}
+
+.info-box-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 20px;
+}
+
+.info-item {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.info-item i {
+  color: #0066cc;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.info-item strong {
+  color: #1a1a2e;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.95rem;
+}
+
+.info-item p {
+  color: #555;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.info-item a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.info-item a:hover {
+  text-decoration: underline;
+}
+
+/* Quick Stats */
+.quick-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  color: white;
+}
+
+.stat-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  opacity: 0.95;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tentang-content {
+    padding: 40px 20px;
+  }
+
+  .tentang-title {
+    font-size: 2rem;
+  }
+
+  .tentang-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .tentang-section h3 {
+    font-size: 1.05rem;
+  }
+
+  .tentang-section p {
+    font-size: 0.95rem;
+  }
+
+  .tentang-section li {
+    font-size: 0.9rem;
+  }
+
+  .info-box {
+    margin-top: 30px;
+  }
+}
+
+@media (max-width: 576px) {
+  .tentang-container {
+    padding: 20px 0;
+  }
+
+  .tentang-content {
+    padding: 30px 15px;
+    border-radius: 8px;
+  }
+
+  .tentang-title {
+    font-size: 1.5rem;
+  }
+
+  .tentang-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .tentang-section {
+    margin-bottom: 30px;
+  }
+
+  .tentang-section h2 {
+    font-size: 1.2rem;
+  }
+
+  .tentang-section h3 {
+    font-size: 1rem;
+  }
+
+  .tentang-section p {
+    font-size: 0.9rem;
+  }
+
+  .info-item {
+    gap: 10px;
+  }
+
+  .info-item i {
+    font-size: 1.1rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+  }
+}

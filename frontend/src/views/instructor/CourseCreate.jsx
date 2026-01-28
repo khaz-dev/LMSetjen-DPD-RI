@@ -60,8 +60,8 @@ function CourseCreate() {
                     : (response.data?.results || []);
                 setCategory(categoryData);
             } catch (error) {
-                console.error("Error fetching categories:", error);
-                Toast("error", "Failed to load categories");
+                console.error("Kesalahan mengambil kategori:", error);
+                Toast("error", "Gagal memuat kategori");
             }
         };
         fetchCategories();
@@ -211,23 +211,23 @@ function CourseCreate() {
             // Show success message with draft status information
             Toast().fire({
                 icon: "success",
-                title: "Course Created Successfully!",
+                title: "Kursus Berhasil Dibuat!",
                 html: `
                     <div class="text-start">
-                        <p class="mb-2"><strong>Status:</strong> <span class="badge bg-warning text-dark">Draft</span></p>
-                        <p class="mb-2"><small>Your course has been created but is not yet published.</small></p>
+                        <p class="mb-2"><strong>Status:</strong> <span class="badge bg-warning text-dark">Draf</span></p>
+                        <p class="mb-2"><small>Kursus Anda telah dibuat tetapi belum dipublikasikan.</small></p>
                         <hr class="my-2">
-                        <p class="mb-1"><strong>Next Steps:</strong></p>
+                        <p class="mb-1"><strong>Langkah Selanjutnya:</strong></p>
                         <ul class="small mb-0 ps-3">
-                            <li>Complete course information</li>
-                            <li>Add curriculum and lessons</li>
-                            <li>Create quizzes and assessments</li>
-                            <li>Review and publish your course</li>
+                            <li>Lengkapi informasi kursus</li>
+                            <li>Tambah kurikulum dan pelajaran</li>
+                            <li>Buat kuis dan penilaian</li>
+                            <li>Tinjau dan publikasikan kursus Anda</li>
                         </ul>
                     </div>
                 `,
                 width: 500,
-                confirmButtonText: "Continue Editing",
+                confirmButtonText: "Lanjutkan Mengedit",
                 showConfirmButton: true,
                 timer: 3000,
                 timerProgressBar: true
@@ -281,7 +281,7 @@ function CourseCreate() {
     return (
         <>
             <BaseHeader />
-            <section className="instructor-course-create-page">
+            <section className="instructor-course-create-page pt-5 pb-5">
                 <div className="container">
                     <Header />
                     <div className="row">
@@ -292,16 +292,16 @@ function CourseCreate() {
                                     <div className="mb-4 mb-lg-0">
                                         <h1 className="text-white mb-2 fw-bold">
                                             <i className="fas fa-plus-circle me-2"></i>
-                                            Create New Course
+                                            Buat Kursus Baru
                                         </h1>
                                         <p className="mb-0 text-white opacity-90">
-                                            Design and build an engaging learning experience for your students
+                                            Desain dan bangun pengalaman belajar yang menarik untuk siswa Anda
                                         </p>
                                     </div>
                                     <div className="d-flex gap-3 align-items-center">
                                         <Link to="/instructor/courses/" className="btn btn-outline-light border border-2 border-light">
                                             <i className="fas fa-arrow-left me-2"></i>
-                                            Back to Courses
+                                            Kembali ke Kursus
                                         </Link>
                                     </div>
                                 </div>
@@ -319,28 +319,28 @@ function CourseCreate() {
                                     <div className="flex-grow-1">
                                         <h6 className="alert-heading mb-2 fw-bold text-primary">
                                             <i className="fas fa-edit me-2"></i>
-                                            Creating a Draft Course
+                                            Membuat Kursus Draf
                                         </h6>
                                         <p className="mb-2 small">
-                                            Your course will be created in <span className="badge bg-warning text-dark fw-bold">Draft</span> status. 
-                                            This means it won't be visible to students until you complete the following steps:
+                                            Kursus Anda akan dibuat dalam status <span className="badge bg-warning text-dark fw-bold">Draf</span>. 
+                                            Ini berarti tidak akan terlihat oleh siswa sampai Anda menyelesaikan langkah-langkah berikut:
                                         </p>
                                         <ul className="mb-0 small ps-3">
                                             <li className="mb-1">
                                                 <i className="fas fa-check-circle text-success me-1"></i>
-                                                <strong>Add Course Information</strong> (You're doing this now!)
+                                                <strong>Tambah Informasi Kursus</strong> (Anda melakukan ini sekarang!)
                                             </li>
                                             <li className="mb-1">
                                                 <i className="fas fa-list text-muted me-1"></i>
-                                                <strong>Build Curriculum</strong> - Add sections and lessons
+                                                <strong>Bangun Kurikulum</strong> - Tambah bagian dan pelajaran
                                             </li>
                                             <li className="mb-1">
                                                 <i className="fas fa-question-circle text-muted me-1"></i>
-                                                <strong>Create Quizzes</strong> - Add assessments and tests
+                                                <strong>Buat Kuis</strong> - Tambah penilaian dan tes
                                             </li>
                                             <li>
                                                 <i className="fas fa-rocket text-muted me-1"></i>
-                                                <strong>Publish Course</strong> - Make it available to students
+                                                <strong>Publikasikan Kursus</strong> - Buat tersedia untuk siswa
                                             </li>
                                         </ul>
                                     </div>
@@ -350,7 +350,7 @@ function CourseCreate() {
                                 <div className="form-section">
                                     <h5 className="section-title mb-3">
                                         <i className="fas fa-images me-2"></i>
-                                        Media Files
+                                        File Media
                                     </h5>
                                     
                                     <ImageUpload 
@@ -377,22 +377,22 @@ function CourseCreate() {
                                 <div className="form-section">
                                     <h5 className="section-title mb-3">
                                         <i className="fas fa-info-circle me-2"></i>
-                                        Basic Information
+                                        Informasi Dasar
                                     </h5>
                                     
                                     <div className="row">
                                         <div className="col-12">
                                             <FormField 
                                                 ref={titleRef}
-                                                label="Course Title"
+                                                label="Judul Kursus"
                                                 name="title"
                                                 value={courseData.title}
                                                 onChange={handleCourseInputChange}
                                                 errors={errors.title || []}
                                                 warnings={warnings.title || []}
                                                 required
-                                                placeholder="Enter a compelling course title..."
-                                                helpText="Create a title that accurately describes your course and attracts students"
+                                                placeholder="Masukkan judul kursus yang menarik..."
+                                                helpText="Buat judul yang secara akurat menggambarkan kursus Anda dan menarik siswa"
                                             />
                                         </div>
                                     </div>
@@ -401,7 +401,7 @@ function CourseCreate() {
                                         <div className="col-md-6">
                                             <FormField 
                                                 ref={categoryRef}
-                                                label="Course Category"
+                                                label="Kategori Kursus"
                                                 name="category"
                                                 type="select"
                                                 value={courseData.category}
@@ -409,18 +409,18 @@ function CourseCreate() {
                                                 errors={errors.category || []}
                                                 warnings={warnings.category || []}
                                                 options={[
-                                                    { value: "", label: "Select a category" },
+                                                    { value: "", label: "Pilih kategori" },
                                                     ...((Array.isArray(category) ? category : [])?.map(cat => ({ value: cat.id, label: cat.title })) || [])
                                                 ]}
                                                 required
-                                                helpText="Choose the most relevant category for your course"
+                                                helpText="Pilih kategori paling relevan untuk kursus Anda"
                                             />
                                         </div>
 
                                         <div className="col-md-6">
                                             <FormField 
                                                 ref={levelRef}
-                                                label="Course Level"
+                                                label="Tingkat Kursus"
                                                 name="level"
                                                 type="select"
                                                 value={courseData.level}
@@ -428,11 +428,11 @@ function CourseCreate() {
                                                 errors={errors.level || []}
                                                 warnings={warnings.level || []}
                                                 options={[
-                                                    { value: "", label: "Select level" },
+                                                    { value: "", label: "Pilih tingkat" },
                                                     ...COURSE_LEVELS
                                                 ]}
                                                 required
-                                                helpText="Indicate the difficulty level"
+                                                helpText="Tunjukkan tingkat kesulitan"
                                             />
                                         </div>
                                     </div>
@@ -442,27 +442,27 @@ function CourseCreate() {
                                 <div className="form-section">
                                     <h5 className="section-title mb-3">
                                         <i className="fas fa-align-left me-2"></i>
-                                        Course Description
+                                        Deskripsi Kursus
                                     </h5>
                                     
                                     <Suspense fallback={
                                         <div className="text-center py-4">
                                             <div className="spinner-border text-primary" role="status">
-                                                <span className="visually-hidden">Loading editor...</span>
+                                                <span className="visually-hidden">Memuat editor...</span>
                                             </div>
-                                            <p className="mt-2 text-muted">Loading rich text editor...</p>
+                                            <p className="mt-2 text-muted">Memuat editor teks kaya...</p>
                                         </div>
                                     }>
                                         <RichTextEditor
                                             ref={ckeditorRef}
-                                            label="Course Description"
+                                            label="Deskripsi Kursus"
                                             value={courseData.description || ""}
                                             onChange={handleCKEditorChange}
                                             errors={errors.description || []}
                                             warnings={warnings.description || []}
                                             required
-                                            placeholder="Describe what students will learn in this course..."
-                                            helpText="Provide a comprehensive overview of your course content and learning outcomes"
+                                            placeholder="Jelaskan apa yang akan dipelajari siswa dalam kursus ini..."
+                                            helpText="Berikan ringkasan komprehensif tentang konten kursus dan hasil pembelajaran Anda"
                                         />
                                     </Suspense>
                                 </div>
@@ -472,7 +472,7 @@ function CourseCreate() {
                                     <div className="d-flex justify-content-end gap-3">
                                         <Link to="/instructor/courses/" className="btn btn-outline-primary">
                                             <i className="fas fa-times me-2"></i>
-                                            Cancel
+                                            Batal
                                         </Link>
                                         <button 
                                             type="submit" 
@@ -482,12 +482,12 @@ function CourseCreate() {
                                             {loading ? (
                                                 <>
                                                     <span className="spinner-border spinner-border-sm me-2"></span>
-                                                    <strong>Creating Course...</strong>
+                                                    <strong>Membuat Kursus...</strong>
                                                 </>
                                             ) : (
                                                 <>
                                                     <i className="fas fa-save me-2"></i>
-                                                    Create Course
+                                                    Buat Kursus
                                                 </>
                                             )}
                                         </button>

@@ -115,7 +115,7 @@ function Dashboard() {
             );
             
         } catch (error) {
-            console.error("Error fetching dashboard data:", error);
+            console.error("Kesalahan mengambil data dasbor:", error);
         } finally {
             setLoading(false);
         }
@@ -134,7 +134,7 @@ function Dashboard() {
             if (student?.full_name) {
                 activities.push({
                     type: "enrollment",
-                    title: `${student.full_name} enrolled in a course`,
+                    title: `${student.full_name} terdaftar dalam kursus`,
                     time: moment(student.date).fromNow(),
                     icon: "fas fa-user-plus",
                     color: "#10b981"
@@ -147,7 +147,7 @@ function Dashboard() {
             if (review?.rating) {
                 activities.push({
                     type: "review",
-                    title: `New ${review.rating}★ review received`,
+                    title: `Ulasan baru ${review.rating}★ diterima`,
                     time: moment(review.date).fromNow(),
                     icon: "fas fa-star",
                     color: "#f59e0b"
@@ -160,7 +160,7 @@ function Dashboard() {
             if (question?.title) {
                 activities.push({
                     type: "question",
-                    title: `New question: ${question.title}`,
+                    title: `Pertanyaan baru: ${question.title}`,
                     time: moment(question.date).fromNow(),
                     icon: "fas fa-question-circle",
                     color: "#3b82f6"
@@ -230,7 +230,7 @@ function Dashboard() {
         return (
             <>
                 <BaseHeader />
-                <section className="modern-dashboard" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
+                <section className="pt-5 pb-5 modern-dashboard" style={{ display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -238,9 +238,9 @@ function Dashboard() {
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Dashboard...</p>
+                                    <p className="mt-3 text-muted">Memuat Dasbor...</p>
                                 </div>
                             </div>
                         </div>
@@ -255,7 +255,7 @@ function Dashboard() {
         <>
             <BaseHeader />
 
-            <section className="modern-dashboard">
+            <section className="pt-5 pb-5 modern-dashboard">
                 <div className="container">
                     <Header />
                     <div className="row">
@@ -267,10 +267,10 @@ function Dashboard() {
                                     <div>
                                         <h2 className="dashboard-title">
                                             <i className="bi bi-speedometer2 me-3"></i>
-                                            Instructor Dashboard
+                                            Dasbor Instruktur
                                         </h2>
                                         <p className="dashboard-subtitle">
-                                            Welcome back! Here's what's happening with your courses today.
+                                            Selamat kembali! Berikut apa yang terjadi dengan kursus Anda hari ini.
                                         </p>
                                     </div>
                                 </div>
@@ -286,9 +286,9 @@ function Dashboard() {
                                         </div>
                                         <div className="stat-content">
                                             <div className="stat-number-enhanced">{stats.total_courses || 0}</div>
-                                            <div className="stat-label-enhanced">Total Courses</div>
+                                            <div className="stat-label-enhanced">Total Kursus</div>
                                             <div className="stat-change positive">
-                                                <i className="fas fa-arrow-up"></i> +2 this month
+                                                <i className="fas fa-arrow-up"></i> +2 bulan ini
                                             </div>
                                         </div>
                                     </div>
@@ -301,9 +301,9 @@ function Dashboard() {
                                         </div>
                                         <div className="stat-content">
                                             <div className="stat-number-enhanced">{stats.total_students || 0}</div>
-                                            <div className="stat-label-enhanced">Total Students</div>
+                                            <div className="stat-label-enhanced">Total Siswa</div>
                                             <div className="stat-change positive">
-                                                <i className="fas fa-arrow-up"></i> +{students.length > 5 ? students.length - 5 : 0} this week
+                                                <i className="fas fa-arrow-up"></i> +{students.length > 5 ? students.length - 5 : 0} minggu ini
                                             </div>
                                         </div>
                                     </div>
@@ -316,9 +316,9 @@ function Dashboard() {
                                         </div>
                                         <div className="stat-content">
                                             <div className="stat-number-enhanced">{enhancedStats.averageRating}</div>
-                                            <div className="stat-label-enhanced">Avg Rating</div>
+                                            <div className="stat-label-enhanced">Rating Rata-rata</div>
                                             <div className="stat-change neutral">
-                                                <i className="fas fa-star"></i> {enhancedStats.totalReviews} reviews
+                                                <i className="fas fa-star"></i> {enhancedStats.totalReviews} ulasan
                                             </div>
                                         </div>
                                     </div>
@@ -334,7 +334,7 @@ function Dashboard() {
                                         </div>
                                         <div className="mini-stat-content">
                                             <div className="mini-stat-number">{enhancedStats.unreadNotifications}</div>
-                                            <div className="mini-stat-label">Unread Notifications</div>
+                                            <div className="mini-stat-label">Notifikasi Belum Dibaca</div>
                                         </div>
                                     </div>
                                 </div>
@@ -346,19 +346,19 @@ function Dashboard() {
                                         </div>
                                         <div className="mini-stat-content">
                                             <div className="mini-stat-number">{enhancedStats.pendingQuestions}</div>
-                                            <div className="mini-stat-label">Pending Questions</div>
+                                            <div className="mini-stat-label">Pertanyaan Tertunda</div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="col-xl-4 col-lg-6 col-sm-6 mb-2 mt-2">
                                     <div className="mini-stat-card">
-                                        <div className="mini-stat-icon" >
+                                        <div className="mini-stat-icon text-success">
                                             <i className="fas fa-chart-line"></i>
                                         </div>
                                         <div className="mini-stat-content">
                                             <div className="mini-stat-number">{courses.filter(c => c.platform_status === "Published").length}</div>
-                                            <div className="mini-stat-label">Published Courses</div>
+                                            <div className="mini-stat-label">Kursus Dipublikasikan</div>
                                         </div>
                                     </div>
                                 </div>
@@ -371,35 +371,35 @@ function Dashboard() {
                                         <div className="card-body p-3">
                                             <h5 className="mb-3 fw-bold">
                                                 <i className="fas fa-clock me-2"></i>
-                                                Content Creation Overview
+                                                Ringkasan Pembuatan Konten
                                             </h5>
                                             <div className="row g-3">
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-hourglass-half text-primary mb-2" style={{fontSize: "2rem"}}></i>
                                                         <div className="h5 fw-bold mb-0">{totalContentDuration}</div>
-                                                        <small className="text-muted">Total Content Created</small>
+                                                        <small className="text-muted">Total Konten Dibuat</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-film text-info mb-2" style={{fontSize: "2rem"}}></i>
                                                         <div className="h5 fw-bold mb-0">{courseDurationStats.count || 0}</div>
-                                                        <small className="text-muted">Total Lectures</small>
+                                                        <small className="text-muted">Total Kuliah</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-chart-line text-success mb-2" style={{fontSize: "2rem"}}></i>
                                                         <div className="h5 fw-bold mb-0">{courseDurationStats.average || "0m"}</div>
-                                                        <small className="text-muted">Avg Lecture Length</small>
+                                                        <small className="text-muted">Durasi Rata-rata Kuliah</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-fire text-danger mb-2" style={{fontSize: "2rem"}}></i>
                                                         <div className="h5 fw-bold mb-0">{courseDurationStats.max || "0m"}</div>
-                                                        <small className="text-muted">Longest Lecture</small>
+                                                        <small className="text-muted">Kuliah Terlama</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -416,9 +416,9 @@ function Dashboard() {
                                         <div className="panel-header">
                                             <h5 className="panel-title">
                                                 <i className="fas fa-clock me-2"></i>
-                                                Recent Activity
+                                                Aktivitas Terbaru
                                             </h5>
-                                            <a href="/instructor/notifications/" className="view-all-link">View All</a>
+                                            <a href="/instructor/notifications/" className="view-all-link">Lihat Semua</a>
                                         </div>
                                         <div className="activity-list">
                                             {recentActivity.length > 0 ? (
@@ -436,7 +436,7 @@ function Dashboard() {
                                             ) : (
                                                 <div className="empty-activity">
                                                     <i className="fas fa-history"></i>
-                                                    <p>No recent activity</p>
+                                                    <p>Tidak ada aktivitas terbaru</p>
                                                 </div>
                                             )}
                                         </div>
@@ -449,13 +449,13 @@ function Dashboard() {
                                         <div className="panel-header">
                                             <h5 className="panel-title">
                                                 <i className="fas fa-analytics me-2"></i>
-                                                Course Analytics
+                                                Analitik Kursus
                                             </h5>
                                             <div className="analytics-filters">
                                                 <select className="form-select form-select-sm">
-                                                    <option>Last 7 days</option>
-                                                    <option>Last 30 days</option>
-                                                    <option>Last 3 months</option>
+                                                    <option>7 hari terakhir</option>
+                                                    <option>30 hari terakhir</option>
+                                                    <option>3 bulan terakhir</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -465,7 +465,7 @@ function Dashboard() {
                                                 <div className="col-md-6 mb-3">
                                                     <div className="analytics-metric">
                                                         <div className="metric-value">{courses.filter(c => c.platform_status === "Published").length}</div>
-                                                        <div className="metric-label">Published</div>
+                                                        <div className="metric-label">Dipublikasikan</div>
                                                         <div className="metric-chart">
                                                             <div className="chart-bar" style={{width: "85%", backgroundColor: "#10b981"}}></div>
                                                         </div>
@@ -474,7 +474,7 @@ function Dashboard() {
                                                 <div className="col-md-6 mb-3">
                                                     <div className="analytics-metric">
                                                         <div className="metric-value">{courses.filter(c => c.platform_status === "Draft").length}</div>
-                                                        <div className="metric-label">Drafts</div>
+                                                        <div className="metric-label">Draf</div>
                                                         <div className="metric-chart">
                                                             <div className="chart-bar" style={{width: "45%", backgroundColor: "#f59e0b"}}></div>
                                                         </div>
@@ -483,7 +483,7 @@ function Dashboard() {
                                                 <div className="col-md-6 mb-3">
                                                     <div className="analytics-metric">
                                                         <div className="metric-value">{courses.filter(c => c.platform_status === "Review").length}</div>
-                                                        <div className="metric-label">In Review</div>
+                                                        <div className="metric-label">Sedang Ditinjau</div>
                                                         <div className="metric-chart">
                                                             <div className="chart-bar" style={{width: "25%", backgroundColor: "#3498db"}}></div>
                                                         </div>
@@ -492,7 +492,7 @@ function Dashboard() {
                                                 <div className="col-md-6 mb-3">
                                                     <div className="analytics-metric">
                                                         <div className="metric-value">{courses.reduce((sum, c) => sum + (c.students?.length || 0), 0)}</div>
-                                                        <div className="metric-label">Total Enrollments</div>
+                                                        <div className="metric-label">Total Pendaftaran</div>
                                                         <div className="metric-chart">
                                                             <div className="chart-bar" style={{width: "100%", backgroundColor: "#2980b9"}}></div>
                                                         </div>
@@ -512,9 +512,9 @@ function Dashboard() {
                                         <div className="panel-header">
                                             <h5 className="panel-title">
                                                 <i className="fas fa-chart-line me-2"></i>
-                                                Top Performing Courses
+                                                Kursus Berkinerja Terbaik
                                             </h5>
-                                            <a href="/instructor/courses/" className="view-all-link">View All</a>
+                                            <a href="/instructor/courses/" className="view-all-link">Lihat Semua</a>
                                         </div>
                                         <div className="performance-content">
                                             {bestCourses.length > 0 ? (
@@ -536,7 +536,7 @@ function Dashboard() {
                                                                     <div className="course-metrics">
                                                                         <div className="metric">
                                                                             <i className="fas fa-users"></i>
-                                                                            <span>{course.students?.length || 0} students</span>
+                                                                            <span>{course.students?.length || 0} siswa</span>
                                                                         </div>
                                                                         <div className="metric">
                                                                             <i className="fas fa-star"></i>
@@ -551,8 +551,8 @@ function Dashboard() {
                                             ) : (
                                                 <div className="empty-performance">
                                                     <i className="fas fa-chart-bar"></i>
-                                                    <h6>No performance data yet</h6>
-                                                    <p>Create and publish courses to see performance metrics</p>
+                                                    <h6>Belum ada data kinerja</h6>
+                                                    <p>Buat dan publikasikan kursus untuk melihat metrik kinerja</p>
                                                 </div>
                                             )}
                                         </div>

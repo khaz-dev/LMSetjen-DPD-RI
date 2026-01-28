@@ -5,25 +5,49 @@
    ================================ */
 
 .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Protect header card gap from parent overrides */
 .modern-dashboard .row > .col-12 > .instructor-header-card,
 .modern-dashboard .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Main Dashboard Background */
 .modern-dashboard {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  margin-bottom: 8rem;
   min-height: 100vh;
   background: transparent;
   padding: 3rem 0;
-  padding-top: 3rem !important;
+  padding-top: calc(70px + 3rem) !important;
   padding-bottom: 3rem !important;
-  margin-bottom: 8rem;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  overflow-x: hidden;
+  overflow-y: visible;
+  /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
+  /* ✨ PHASE 7.3: Add overflow-x: hidden to prevent horizontal scroll from row width calc */
+}
+
+/* CRITICAL: Force modern-dashboard padding to be overridable by pt-5 and pb-5 classes */
+/* Allow Bootstrap utility classes to override hardcoded padding */
+/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+.modern-dashboard.pt-5 {
+  padding-top: 50px !important;
+}
+
+.modern-dashboard.pb-5 {
+  padding-bottom: 3rem !important;
 }
 
 /* Ensure proper scroll context for sticky sidebar */
@@ -70,8 +94,8 @@
   margin-right: 0 !important; /* NO negative margin - prevents right overflow */
   padding-left: 0 !important; /* Remove Bootstrap column padding */
   padding-right: 0 !important; /* Remove Bootstrap column padding */
+  width: calc(100% - var(--bs-gutter-x, 24px)) !important; /* Account for outer row's negative margins */
   flex: 1 1 auto !important; /* Use flexbox to fill available space properly */
-  min-width: 0 !important; /* Allow flex shrinking below content width */
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
@@ -87,8 +111,8 @@
   margin-right: 0 !important; /* NO negative margin - prevents right overflow */
   padding-left: 0 !important; /* Remove Bootstrap column padding */
   padding-right: 0 !important; /* Remove Bootstrap column padding */
+  width: calc(100% - var(--bs-gutter-x, 24px)) !important; /* Account for outer row's negative margins */
   flex: 1 1 auto !important; /* Use flexbox to fill available space properly */
-  min-width: 0 !important; /* Allow flex shrinking below content width */
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
@@ -1099,9 +1123,8 @@
 /* expanded or collapsed, providing smooth transitions */
 /* ============================== */
 
-/* Desktop Large (lg breakpoint: 992px and up) */
+/* Base: Desktop Large (lg breakpoint and up) */
 /* col-lg-3 sidebar + col-lg-9 content = 12 columns */
-@media (min-width: 992px) {
   .modern-dashboard .row > .instructor-sidebar-column {
     flex-basis: auto;
     flex-grow: 0;
@@ -1113,11 +1136,13 @@
   /* Content column - expands to fill remaining space */
   .modern-dashboard .row > .col-lg-9 {
     flex: 1 1 auto;
-    min-width: 0 !important;   /* ✨ CRITICAL: Allow flex shrinking for smooth animation */
+    min-width: 0;
     width: auto;
     max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;  /* ✨ CRITICAL: Smooth width animation */
   }
+
+  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
+  /* Removed min-width: 500px to prevent gap shift when sidebar-collapsed-adapted is applied */
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
     /* Fallback for browsers that don't support :has() */
@@ -1129,9 +1154,8 @@
   }
 }
 
-/* Tablet (md breakpoint: 768px - 991px) */
+/* Tablet (md breakpoint) */
 /* col-md-4 sidebar + col-md-8 content = 12 columns */
-@media (min-width: 768px) and (max-width: 991px) {
   .modern-dashboard .row > .instructor-sidebar-column {
     flex-basis: auto;
     flex-grow: 0;
@@ -1144,11 +1168,13 @@
   /* Content column - expands to fill remaining space */
   .modern-dashboard .row > .col-md-8 {
     flex: 1 1 auto;
-    min-width: 0 !important;   /* ✨ CRITICAL: Allow flex shrinking for smooth animation */
+    min-width: 0;
     width: auto;
     max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;  /* ✨ CRITICAL: Smooth width animation */
   }
+
+  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
+  /* Removed min-width: 400px to prevent gap shift when sidebar-collapsed-adapted is applied */
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
     /* Fallback for browsers that don't support :has() */

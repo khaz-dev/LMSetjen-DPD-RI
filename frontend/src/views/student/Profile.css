@@ -7,10 +7,20 @@
     min-height: 100vh;
     background: transparent;
     padding: 3rem 0;
-    padding-top: 3rem !important;
+    padding-top: calc(70px + 3rem) !important;
     padding-bottom: 3rem !important;
     margin-top: 0 !important;
     margin-bottom: 8rem;
+    overflow-x: hidden; /* ✨ PHASE 8b: Prevent horizontal scroll from row width calc */
+}
+
+/* ✨ PHASE 8b: Force padding-top to be overridable by pt-5 utility class */
+.student-profile-page.modern-profile-page.pt-5 {
+    padding-top: 50px !important;
+}
+
+.student-profile-page.modern-profile-page.pb-5 {
+    padding-bottom: 3rem !important;
 }
 
 /* ========================================

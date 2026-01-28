@@ -30,8 +30,9 @@ RUN echo "========================================" && \
     echo "========================================" && \
     env | grep VITE
 
-# Build application
-RUN npm run build
+# Build application - only if dist doesn't exist
+COPY . .
+RUN if [ ! -d "dist" ]; then npm run build; fi
 
 # ============================================
 # Stage 2: Production Stage with Nginx

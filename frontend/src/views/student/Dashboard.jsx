@@ -78,7 +78,7 @@ function Dashboard() {
             activities.push({
                 id: course.enrollment_id,
                 type: "enrollment",
-                title: `Enrolled in ${course.course.title}`,
+                title: `Terdaftar di ${course.course.title}`,
                 date: course.date,
                 icon: "fas fa-user-graduate",
                 color: "success"
@@ -88,7 +88,7 @@ function Dashboard() {
                 activities.push({
                     id: `${course.enrollment_id}-progress`,
                     type: "progress",
-                    title: `Completed ${course.completed_lesson.length} lessons in ${course.course.title}`,
+                    title: `Menyelesaikan ${course.completed_lesson.length} pelajaran di ${course.course.title}`,
                     date: course.date,
                     icon: "fas fa-check-circle",
                     color: "primary"
@@ -225,17 +225,17 @@ function Dashboard() {
         return (
             <>
                 <BaseHeader />
-                <section className="dashboard-page" style={{ minHeight: "calc(100vh - 120px)" }}>
+                <section className="pt-5 pb-5 dashboard-page" style={{ minHeight: "calc(100vh - 120px)" }}>
                     <div className="container">
                         <Header />
-                        <div className="row mt-0 mt-md-4">
+                        <div className="row mt-0 md-4">
                             <Sidebar />
                             <div className="col-lg-9 col-md-8 col-12" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">Sedang memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Dashboard...</p>
+                                    <p className="mt-3 text-muted">Memuat Dasbor...</p>
                                 </div>
                             </div>
                         </div>
@@ -250,18 +250,18 @@ function Dashboard() {
         <>
             <BaseHeader />
 
-            <section className="dashboard-page">
+            <section className="pt-5 pb-5 dashboard-page">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row mt-0 md-4">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Welcome Section */}
                             <div className="welcome-section">
                                 <div className="row align-items-center">
                                     <div className="col-md-8">
-                                        <h2 className="mb-2 fw-bold">Welcome back! 👋</h2>
-                                        <p className="mb-0 opacity-90">Ready to continue your learning journey? Let's pick up where you left off.</p>
+                                        <h2 className="mb-2 fw-bold">Selamat kembali! 👋</h2>
+                                        <p className="mb-0 opacity-90">Siap melanjutkan perjalanan belajar Anda? Mari kita lanjutkan dari mana kita tinggalkan.</p>
                                     </div>
                                     <div className="col-md-4 text-md-end mt-3 mt-md-0">
                                         <div className="d-flex justify-content-md-end justify-content-center text-primary">
@@ -272,12 +272,12 @@ function Dashboard() {
                                                     <div className="progress-inner">
                                                     <div className="text-center">
                                                         <div className="h3 fw-bold mb-0">{getAverageProgress() || 0}%</div>
-                                                        <small>Complete</small>
+                                                        <small>Selesai</small>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <h5 className="mt-2 mb-0 opacity-90 medium text-md-end text-center">Average Progress</h5>
+                                        <h5 className="mt-2 mb-0 opacity-90 medium text-md-end text-center">Kemajuan Rata-rata</h5>
                                     </div>
                                 </div>
                             </div>
@@ -294,7 +294,7 @@ function Dashboard() {
                                             <div className="dashboard-stat-number">{stats.total_courses || 0}</div>
                                             </div>
                                             <div className="stat-label mt-2">{/* or mt-1 for less space */}
-                                            Total Courses
+                                            Total Kursus
                                             </div>
                                         </div>
                                     </div>
@@ -310,7 +310,7 @@ function Dashboard() {
                                             <div className="dashboard-stat-number">{getActiveCoursesCount()}</div>
                                             </div>
                                             <div className="stat-label mt-2">{/* or mt-1 for less space */}
-                                            Active Courses
+                                            Kursus Aktif
                                             </div>
                                         </div>
                                     </div>
@@ -326,7 +326,7 @@ function Dashboard() {
                                             <div className="dashboard-stat-number">{stats.completed_lessons || 0}</div>
                                             </div>
                                             <div className="stat-label mt-2">{/* or mt-1 for less space */}
-                                            Completed Lessons
+                                            Pelajaran Selesai
                                             </div>
                                         </div>
                                     </div>
@@ -342,7 +342,7 @@ function Dashboard() {
                                             <div className="dashboard-stat-number">{getCompletedCoursesCount()}</div>
                                             </div>
                                             <div className="stat-label mt-2">{/* or mt-1 for less space */}
-                                            Completed Courses
+                                            Kursus Selesai
                                             </div>
                                         </div>
                                     </div>
@@ -352,45 +352,43 @@ function Dashboard() {
 
                             {/* Learning Time Statistics */}
                             <div className="row mb-4">
-                                <div className="col-12">
-                                    <div className="dashboard-card">
-                                        <div className="card-body p-4">
-                                            <h5 className="mb-3 fw-bold">
-                                                <i className="fas fa-clock me-2"></i>
-                                                Learning Progress
-                                            </h5>
-                                            <div className="row g-3">
-                                                <div className="col-md-4">
-                                                    <div className="d-flex align-items-center p-3 bg-light rounded">
-                                                        <div className="me-3">
-                                                            <i className="fas fa-hourglass-start text-primary" style={{fontSize: "2rem"}}></i>
-                                                        </div>
-                                                        <div>
-                                                            <div className="h5 fw-bold mb-0">{getTotalLearningTime()}</div>
-                                                            <small className="text-muted">Total Content</small>
-                                                        </div>
+                                <div className="dashboard-card">
+                                    <div className="card-body p-4">
+                                        <h5 className="mb-3 fw-bold">
+                                            <i className="fas fa-clock me-2"></i>
+                                            Kemajuan Belajar
+                                        </h5>
+                                        <div className="row g-3">
+                                            <div className="col-md-4">
+                                                <div className="d-flex align-items-center p-3 bg-light rounded">
+                                                    <div className="me-3">
+                                                        <i className="fas fa-hourglass-start text-primary" style={{fontSize: "2rem"}}></i>
+                                                    </div>
+                                                    <div>
+                                                        <div className="h5 fw-bold mb-0">{getTotalLearningTime()}</div>
+                                                        <small className="text-muted">Total Konten</small>
                                                     </div>
                                                 </div>
-                                                <div className="col-md-4">
-                                                    <div className="d-flex align-items-center p-3 bg-light rounded">
-                                                        <div className="me-3">
-                                                            <i className="fas fa-check-circle text-success" style={{fontSize: "2rem"}}></i>
-                                                        </div>
-                                                        <div>
-                                                            <div className="h5 fw-bold mb-0">{getCompletedLearningTime()}</div>
-                                                            <small className="text-muted">Completed</small>
-                                                        </div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <div className="d-flex align-items-center p-3 bg-light rounded">
+                                                    <div className="me-3">
+                                                        <i className="fas fa-check-circle text-success" style={{fontSize: "2rem"}}></i>
+                                                    </div>
+                                                    <div>
+                                                        <div className="h5 fw-bold mb-0">{getCompletedLearningTime()}</div>
+                                                        <small className="text-muted">Selesai</small>
                                                     </div>
                                                 </div>
-                                                <div className="col-md-4">
-                                                    <div className="d-flex align-items-center p-3 bg-light rounded">
-                                                        <div className="me-3">
-                                                            <i className="fas fa-trophy text-warning" style={{fontSize: "2rem"}}></i>
-                                                        </div>
-                                                        <div>
-                                                            <div className="h5 fw-bold mb-0">{getAverageProgress()}%</div>
-                                                            <small className="text-muted">Average Progress</small>
-                                                        </div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <div className="d-flex align-items-center p-3 bg-light rounded">
+                                                    <div className="me-3">
+                                                        <i className="fas fa-trophy text-warning" style={{fontSize: "2rem"}}></i>
+                                                    </div>
+                                                    <div>
+                                                        <div className="h5 fw-bold mb-0">{getAverageProgress()}%</div>
+                                                        <small className="text-muted">Kemajuan Rata-rata</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -406,7 +404,7 @@ function Dashboard() {
                                         <div className="card-header bg-transparent border-0">
                                             <h5 className="mb-0 fw-bold">
                                                 <i className="fas fa-clock"></i>
-                                                Recent Activity
+                                                Aktivitas Terbaru
                                             </h5>
                                         </div>
                                             {recentActivity.length > 0 ? (
@@ -428,8 +426,8 @@ function Dashboard() {
                                             ) : (
                                                 <div className="text-center py-4">
                                                     <i className="fas fa-clock text-muted mb-3" style={{fontSize: "2rem", opacity: 0.3}}></i>
-                                                    <p className="text-muted mb-0">No recent activity</p>
-                                                    <small className="text-muted">Your learning activities will appear here</small>
+                                                    <p className="text-muted mb-0">Tidak ada aktivitas terbaru</p>
+                                                    <small className="text-muted">Aktivitas pembelajaran Anda akan muncul di sini</small>
                                                 </div>
                                             )}
                                     </div>
@@ -441,13 +439,13 @@ function Dashboard() {
                                         <div className="card-header bg-transparent border-0 p-4 d-flex justify-content-between align-items-center">
                                             <h5 className="mb-0 fw-bold">
                                                 <i className="fas fa-chart-line me-2"></i>
-                                                My Courses
+                                                Kursus Saya
                                             </h5>
                                             <div className="search-container">
                                                 <input 
                                                     type="search" 
                                                     className="search-input" 
-                                                    placeholder="Search your courses..." 
+                                                    placeholder="Cari kursus Anda..." 
                                                     onChange={handleSearch}
                                                 />
                                             </div>
@@ -495,18 +493,18 @@ function Dashboard() {
                                                                         {/* Course Category */}
                                                                         <div className="course-category mb-3">
                                                                             <i className="fas fa-folder-open me-1"></i>
-                                                                            {course.course.category?.title || "General"}
+                                                                            {course.course.category?.title || "Umum"}
                                                                         </div>
                                                                         
                                                                         {/* Course Meta Information */}
                                                                         <div className="course-meta mb-3">
                                                                             <div className="meta-item">
                                                                                 <i className="fas fa-book-open meta-icon"></i>
-                                                                                <span>{course.totalLessons} lessons</span>
+                                                                                <span>{course.totalLessons} pelajaran</span>
                                                                             </div>
                                                                             <div className="meta-item">
                                                                                 <i className="fas fa-clock meta-icon"></i>
-                                                                                <span>Self-paced</span>
+                                                                                <span>Bergerak sendiri</span>
                                                                             </div>
                                                                         </div>
                                                                         
@@ -514,7 +512,7 @@ function Dashboard() {
                                                                         <div className="progress-container mb-2">
                                                                             <div className="progress-header">
                                                                                 <span className="progress-label">
-                                                                                    Progress
+                                                                                    Kemajuan
                                                                                 </span>
                                                                                 <span className="progress-percentage text-white">
                                                                                     {course.progressPercentage}%
@@ -536,11 +534,11 @@ function Dashboard() {
                                                                             <div className="course-stats">
                                                                                 <div className="lesson-count">
                                                                                     <i className="fas fa-check-circle text-success"></i>
-                                                                                    <span>{course.completedLessons} completed</span>
+                                                                                    <span>{course.completedLessons} selesai</span>
                                                                                 </div>
                                                                                 <div className="lesson-count">
                                                                                     <i className="fas fa-list text-muted"></i>
-                                                                                    <span>{course.totalLessons - course.completedLessons} remaining</span>
+                                                                                    <span>{course.totalLessons - course.completedLessons} tersisa</span>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -553,7 +551,7 @@ function Dashboard() {
                                                                                     className="course-btn btn-start"
                                                                                 >
                                                                                     <i className="fas fa-play"></i>
-                                                                                    Start Learning
+                                                                                    Mulai Belajar
                                                                                 </Link>
                                                                             ) : course.progressPercentage === 100 ? (
                                                                                 <Link 
@@ -561,7 +559,7 @@ function Dashboard() {
                                                                                     className="course-btn btn-completed"
                                                                                 >
                                                                                     <i className="fas fa-trophy"></i>
-                                                                                    Course Completed
+                                                                                    Kursus Selesai
                                                                                 </Link>
                                                                             ) : (
                                                                                 <Link 
@@ -569,7 +567,7 @@ function Dashboard() {
                                                                                     className="course-btn btn-continue"
                                                                                 >
                                                                                     <i className="fas fa-arrow-right"></i>
-                                                                                    Continue Learning
+                                                                                    Lanjutkan Belajar
                                                                                 </Link>
                                                                             )}
                                                                         </div>
@@ -581,10 +579,10 @@ function Dashboard() {
                                                 ) : (
                                                     <div className="text-center py-5">
                                                         <i className="fas fa-book-open text-muted" style={{fontSize: "3rem"}}></i>
-                                                        <h6 className="mt-3 mb-2">No courses enrolled yet</h6>
-                                                        <p className="text-muted">Start your learning journey by enrolling in courses</p>
-                                                        <Link to="/" className="btn btn-modern">
-                                                            Browse Courses
+                                                    <h6 className="mt-3 mb-2">Belum ada kursus terdaftar</h6>
+                                                    <p className="text-muted">Mulai perjalanan belajar Anda dengan mendaftar di kursus</p>
+                                                    <Link to="/" className="btn btn-modern">
+                                                        Jelajahi Kursus
                                                         </Link>
                                                     </div>
                                                 )}
@@ -592,7 +590,7 @@ function Dashboard() {
                                                 {progressData.length > 6 && (
                                                     <div className="text-center mt-4">
                                                         <Link to="/student/courses/" className="btn btn-outline-primary">
-                                                            View All Courses ({progressData.length})
+                                                            Lihat Semua Kursus ({progressData.length})
                                                         </Link>
                                                     </div>
                                                 )}

@@ -5,15 +5,17 @@
    ================================ */
 
 .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Protect header card gap from parent overrides */
 .modern-dashboard .row > .col-12 > .instructor-header-card,
 .modern-dashboard .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Protect Header on Courses page (courses-container) from row CSS rules */
@@ -52,23 +54,42 @@
 .courses-container {
     margin-left: 0 !important;
     margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
     margin-bottom: 8rem;
     min-height: 100vh;
     background: transparent;
+    padding: 3rem 0;
+    padding-top: calc(70px + 3rem) !important;
     padding-bottom: 3rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: hidden;
+    overflow-y: visible;
+    /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
+    /* ✨ PHASE 7.3: Add overflow-x: hidden to prevent horizontal scroll */
+}
 }
 
 /* Protect Header Card from aggressive CSS rules in .courses-container */
 .courses-container .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
     width: 100% !important;
     max-width: 100% !important;
+}
+
+/* CRITICAL: Force courses-container padding to be overridable by pt-5 and pb-5 classes */
+/* Allow Bootstrap utility classes to override hardcoded padding */
+/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+.courses-container.pt-5 {
+    padding-top: 50px !important;
+}
+
+.courses-container.pb-5 {
+    padding-bottom: 3rem !important;
 }
 
 /* Consistent vertical spacing for dashboard sections */
@@ -80,13 +101,13 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0;
-    width: calc(100% + var(--bs-gutter-x, 24px));
+    width: 100%;
     max-width: 100% !important;
 }
 
 /* Inside container, row should expand with negative margins */
 .courses-container .container > .row:not(.instructor-header-row) {
-    width: calc(100% + var(--bs-gutter-x, 24px));
+    width: 100%;
 }
 
 /* ✨ PHASE 4.21: Sidebar-content rows - Proper layout without conflicts */
@@ -96,6 +117,7 @@
     width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+    margin-bottom: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
 }
@@ -153,7 +175,7 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    width: 100% !important;
     flex: 1 1 auto !important;
 }
 
@@ -161,7 +183,7 @@
 .courses-container .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    width: 100% !important;
 }
 
 /* Tablet: col-md-8 content wrapper (inside sidebar row) */
@@ -170,7 +192,7 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    width: 100% !important;
     flex: 1 1 auto !important;
 }
 
@@ -211,13 +233,19 @@
 .courses-container.courses-loading-section {
     display: block !important;
     min-height: calc(100vh - 120px);
-    padding-top: 3rem !important;
 }
 
-/* Main section - with proper padding */
-.courses-container.courses-main-section {
-    padding-top: 3rem !important;
+/* Loading section override for Bootstrap utility classes */
+/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+.courses-container.courses-loading-section.pt-5 {
+    padding-top: 50px !important;
 }
+
+.courses-container.courses-loading-section.pb-5 {
+    padding-bottom: 3rem !important;
+}
+
+/* Main section - no additional padding needed (base .courses-container already has it) */
 
 /* Spinner wrapper - centered flex layout */
 .courses-spinner-wrapper {
@@ -745,7 +773,8 @@
 
 @media (max-width: 768px) {
     .courses-container {
-        padding-top: 70px;
+        /* ✨ PHASE 5: Remove padding-top override to maintain consistent navbar gap */
+        /* Previously: padding-top: 70px; This was causing gap inconsistency when header collapsed */
     }
 
     .courses-toolbar-section {

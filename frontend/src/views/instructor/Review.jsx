@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import dayjs, { moment } from "../../utils/dayjs";
-import { Rating } from 'react-simple-star-rating';
+import { Rating } from "react-simple-star-rating";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
@@ -64,7 +64,7 @@ function Review() {
             fetchReviewsData();
             Toast().fire({
                 icon: "success",
-                title: "Reply sent successfully!",
+                title: "Balasan terkirim berhasil!",
             });
             
             // Clear only the specific reply
@@ -81,7 +81,7 @@ function Review() {
             console.error("Error sending reply:", error);
             Toast().fire({
                 icon: "error",
-                title: "Failed to send reply. Please try again.",
+                title: "Gagal mengirim balasan. Silakan coba lagi.",
             });
         } finally {
             setLoadingReply({...loadingReply, [reviewId]: false});
@@ -90,7 +90,7 @@ function Review() {
 
     const handleSortByDate = (e) => {
         const sortValue = e.target.value;
-        let sortedReview = [...filteredReviews];
+        const sortedReview = [...filteredReviews];
         if (sortValue === "Newest") {
             sortedReview.sort((a, b) => new Date(b.date) - new Date(a.date));
         } else {
@@ -127,17 +127,17 @@ function Review() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-review-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center', paddingTop: '3rem', paddingBottom: '3rem' }}>
+                <section className="instructor-review-page pt-5 pb-5" style={{ display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
-                                        <span className="visually-hidden">Loading...</span>
+                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
+                                        <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Reviews...</p>
+                                    <p className="mt-3 text-muted">Memuat Ulasan...</p>
                                 </div>
                             </div>
                         </div>
@@ -152,7 +152,7 @@ function Review() {
         <>
             <BaseHeader />
 
-            <section className="instructor-review-page" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
+            <section className="instructor-review-page pt-5 pb-5">
                 <div className="container">
                     {/* Header Here */}
                     <Header />
@@ -166,17 +166,17 @@ function Review() {
                                 <div className="d-flex align-items-center justify-content-between header-content">
                                     <div>
                                         <h1 className="mb-2 page-title">
-                                            <i className="fas fa-star-half-alt me-3 page-title-icon"></i>Course Reviews
+                                            <i className="fas fa-star-half-alt me-3 page-title-icon"></i>Ulasan Kursus
                                         </h1>
                                         <p className="mb-0 text-muted page-subtitle">
-                                            Monitor feedback and engage with your students
+                                            Pantau umpan balik dan berkomunikasi dengan siswa Anda
                                         </p>
                                     </div>
                                     <div className="text-end">
                                         <div className="d-flex align-items-center gap-3">
                                             <div className="stat-badge">
                                                 <i className="fas fa-comments stat-badge-icon"></i>
-                                                {filteredReviews?.length || 0} Reviews
+                                                {filteredReviews?.length || 0} Ulasan
                                             </div>
                                         </div>
                                     </div>
@@ -192,7 +192,7 @@ function Review() {
                                             <input 
                                                 type="text" 
                                                 className="form-control modern-input" 
-                                                placeholder="Search by course name..." 
+                                                placeholder="Cari berdasarkan nama kursus..." 
                                                 onChange={handleFilterByCourse}
                                             />
                                         </div>
@@ -202,12 +202,12 @@ function Review() {
                                             className="form-select modern-select" 
                                             onChange={handleSortByRatingChange}
                                         >
-                                            <option value={0}>All Ratings</option>
-                                            <option value={5}>5 Stars</option>
-                                            <option value={4}>4 Stars</option>
-                                            <option value={3}>3 Stars</option>
-                                            <option value={2}>2 Stars</option>
-                                            <option value={1}>1 Star</option>
+                                            <option value={0}>Semua Rating</option>
+                                            <option value={5}>5 Bintang</option>
+                                            <option value={4}>4 Bintang</option>
+                                            <option value={3}>3 Bintang</option>
+                                            <option value={2}>2 Bintang</option>
+                                            <option value={1}>1 Bintang</option>
                                         </select>
                                     </div>
                                     <div className="col-xl-3 col-lg-3 col-md-4 col-12">
@@ -215,9 +215,9 @@ function Review() {
                                             className="form-select modern-select" 
                                             onChange={handleSortByDate}
                                         >
-                                            <option value="">Sort by Date</option>
-                                            <option value="Newest">Newest First</option>
-                                            <option value="Oldest">Oldest First</option>
+                                            <option value="">Urutkan Berdasarkan Tanggal</option>
+                                            <option value="Newest">Terbaru Dulu</option>
+                                            <option value="Oldest">Tertua Dulu</option>
                                         </select>
                                     </div>
                                 </div>
@@ -238,7 +238,7 @@ function Review() {
                                                                         alt="avatar"
                                                                         className="reviewer-avatar rounded-circle"
                                                                         onError={(e) => {
-                                                                            e.target.style.display = 'none';
+                                                                            e.target.style.display = "none";
                                                                             e.target.parentElement.innerHTML = '<div class="default-avatar"><i class="fas fa-user"></i></div>';
                                                                         }}
                                                                     />
@@ -283,7 +283,7 @@ function Review() {
                                                                 />
                                                             </div>
                                                             <div className="course-info">
-                                                                <span className="rating-label">for</span>
+                                                                <span className="rating-label">untuk</span>
                                                                 <span className="course-title">
                                                                     {r.course?.title}
                                                                 </span>
@@ -292,7 +292,7 @@ function Review() {
                                                             <div className="review-content">
                                                                 <div className="review-content-label">
                                                                     <i className="fas fa-quote-left review-quote-icon"></i>
-                                                                    <span className="review-label-text">Student Review</span>
+                                                                    <span className="review-label-text">Ulasan Siswa</span>
                                                                 </div>
                                                                 <p className="review-text">
                                                                     {r.review}
@@ -303,7 +303,7 @@ function Review() {
                                                                 <div className="response-content">
                                                                     <div className="response-content-label">
                                                                         <i className="fas fa-reply response-icon"></i>
-                                                                        <span className="response-label-text">Your Response</span>
+                                                                        <span className="response-label-text">Respons Anda</span>
                                                                     </div>
                                                                     <p className="response-text">
                                                                         {r.reply}
@@ -321,7 +321,7 @@ function Review() {
                                                                     aria-controls={`collapse${r.id}`}
                                                                 >
                                                                     <i className="fas fa-reply reply-icon"></i>
-                                                                    {r.reply ? 'Update Response' : 'Send Response'}
+                                                                    {r.reply ? "Perbarui Respons" : "Kirim Respons"}
                                                                 </button>
                                                             </div>
                                                             
@@ -331,7 +331,7 @@ function Review() {
                                                                     <div className="mb-3">
                                                                         <label htmlFor={`response-${r.id}`} className="form-label">
                                                                             <i className="fas fa-pen-fancy form-label-icon"></i>
-                                                                            Write Your Response
+                                                                            Tulis Respons Anda
                                                                         </label>
                                                                         <textarea 
                                                                             id={`response-${r.id}`}
@@ -339,13 +339,13 @@ function Review() {
                                                                             rows="4" 
                                                                             value={replies[r.id] || ""}
                                                                             onChange={(e) => setReplies({...replies, [r.id]: e.target.value})}
-                                                                            placeholder="Share your thoughts and appreciation for this review..."
+                                                                            placeholder="Bagikan pemikiran dan apresiasi Anda untuk ulasan ini..."
                                                                             disabled={loadingReply[r.id]}
                                                                         ></textarea>
                                                                         <div className="form-text">
                                                                             <small className="text-muted">
                                                                                 <i className="fas fa-info-circle form-text-icon"></i>
-                                                                                Your response will be visible to the student and help build better relationships.
+                                                                                Respons Anda akan terlihat oleh siswa dan membantu membangun hubungan yang lebih baik.
                                                                             </small>
                                                                         </div>
                                                                     </div>
@@ -358,8 +358,8 @@ function Review() {
                                                                             data-bs-target={`#collapse${r.id}`}
                                                                             disabled={loadingReply[r.id]}
                                                                         >
-                                                                            <i className="fas fa-times"></i>
-                                                                            Cancel
+                                                                            <i className="fas fa-times cancel-icon"></i>
+                                                                            Batal
                                                                         </button>
                                                                         
                                                                         <button 
@@ -371,12 +371,12 @@ function Review() {
                                                                             {loadingReply[r.id] ? (
                                                                                 <>
                                                                                     <span className="spinner-border spinner-border-sm submit-spinner" role="status" aria-hidden="true"></span>
-                                                                                    <strong>Sending...</strong>
+                                                                                    <strong>Mengirim...</strong>
                                                                                 </>
                                                                             ) : (
                                                                                 <>
                                                                                     <i className="fas fa-paper-plane submit-icon"></i>
-                                                                                    Send Response
+                                                                                    Kirim Respons
                                                                                 </>
                                                                             )}
                                                                         </button>
@@ -394,9 +394,9 @@ function Review() {
                                         <div className="empty-state-icon">
                                             <i className="fas fa-star empty-state-icon-inner"></i>
                                         </div>
-                                        <h4 className="empty-state-title">No Reviews Found</h4>
+                                        <h4 className="empty-state-title">Tidak Ada Ulasan Ditemukan</h4>
                                         <p className="empty-state-text">
-                                            When students review your courses, they'll appear here for you to respond to.
+                                            Ketika siswa memberi ulasan pada kursus Anda, mereka akan muncul di sini untuk Anda respons.
                                         </p>
                                     </div>
                                 )}

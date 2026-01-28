@@ -40,6 +40,7 @@ from rest_framework.pagination import PageNumberPagination
 
 # Import custom permissions
 from api.permissions import IsAdminUser
+from api.serializer import MyTokenObtainPairSerializer
 
 
 import random
@@ -113,6 +114,34 @@ def get_sync_state():
     """Get current sync state"""
     global _SYNC_STATE
     return _SYNC_STATE.copy()
+
+
+# ============================================================
+# JWT TOKEN GENERATION - Custom helper with role information
+# ============================================================
+
+def generate_tokens_with_role(user):
+    """
+    Generate JWT tokens (access and refresh) with user role information.
+    
+    This uses MyTokenObtainPairSerializer to ensure role/current_role is included.
+    Required for multi-role system where current_role must be in JWT.
+    
+    Args:
+        user: User instance
+        
+    Returns:
+        dict with 'access_token' and 'refresh_token' keys
+    """
+    refresh = RefreshToken.for_user(user)
+    # Add user fields to tokens using the serializer's method
+    MyTokenObtainPairSerializer._add_user_fields(refresh, user)
+    MyTokenObtainPairSerializer._add_user_fields(refresh.access_token, user)
+    
+    return {
+        'access_token': str(refresh.access_token),
+        'refresh_token': str(refresh)
+    }
 
 
 # API Root View
@@ -302,6 +331,11 @@ class SSOTokenVerifyAPIView(APIView):
                         "role": user.role,
                         "nip": user.nip,
                         "is_active": user.is_active,
+                        # 🔥 CRITICAL FIX: Use boolean roles for role selector (supports instructor/teacher)
+                        "available_roles": user.get_available_boolean_roles(),
+                        "current_role": user.current_role,
+                        "roles": user.roles,
+                        "has_multiple_roles": len(user.get_available_boolean_roles()) > 1,
                     },
                     "created": created,
                     "message": "SSO login successful"
@@ -371,49 +405,142 @@ class SSOLoginRedirectAPIView(APIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class RegisterView(generics.CreateAPIView):
+class GoogleOAuthAPIView(APIView):
     """
-    User Registration API
+    Google OAuth Login Handler
+    
+    Endpoint: /api/v1/auth/google/
+    Method: POST
+    
+    Request:
+    {
+        "access_token": "google_access_token_or_id_token",
+        "token_type": "access_token" or "id_token"
+    }
+    
+    Response:
+    {
+        "access": "lms_jwt_access_token",
+        "refresh": "lms_jwt_refresh_token",
+        "user": {
+            "id": 1,
+            "email": "user@gmail.com",
+            "full_name": "User Name",
+            "role": "student"
+        }
+    }
     
     CSRF exempt because:
-    - Public registration endpoint
-    - Uses JWT authentication for subsequent requests
-    - Data validated by RegisterSerializer
+    - Public OAuth endpoint
+    - Uses OAuth tokens for verification
+    - External authentication integration
     """
-    queryset = User.objects.all()
     permission_classes = [AllowAny]
     authentication_classes = []
-    serializer_class = api_serializer.RegisterSerializer
     
-    def create(self, request, *args, **kwargs):
-        """Override create to add error handling and logging"""
+    def options(self, request, *args, **kwargs):
+        """Handle CORS preflight requests"""
+        return Response(status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        """Verify Google token and create/update user"""
+        from .sso_utils import GoogleOAuthVerifier, GoogleOAuthUserManager
         import logging
+        
         logger = logging.getLogger(__name__)
         
+        # Get token from request
+        access_token = request.data.get('access_token') or request.data.get('token')
+        token_type = request.data.get('token_type', 'access_token')
+        
+        logger.info("🔐 Google OAuth Verification Started")
+        logger.info(f"Token type: {token_type}")
+        logger.info(f"Token received: {access_token[:20] if access_token else 'MISSING'}...")
+        
+        if not access_token:
+            logger.error("❌ Google token is missing from request")
+            return Response(
+                {"error": "Google token is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         try:
-            logger.info(f"Registration request received: {request.data}")
+            logger.info("📤 Verifying Google token...")
             
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
+            # Verify token with Google
+            if token_type == 'id_token':
+                google_client_id = settings.GOOGLE_CLIENT_ID
+                user_info = GoogleOAuthVerifier.verify_id_token(access_token, google_client_id)
+            else:
+                user_info = GoogleOAuthVerifier.verify_token(access_token)
             
-            self.perform_create(serializer)
+            logger.info(f"✅ Google token verified successfully")
+            logger.info(f"Google user info: {user_info}")
             
-            logger.info(f"User registered successfully: {serializer.data.get('email')}")
+            # Extract user data from Google response
+            logger.info("📊 Extracting user data from Google token...")
+            google_data = GoogleOAuthVerifier.get_user_data_from_token(user_info)
             
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            # Get or create user from Google data
+            logger.info("👤 Getting or creating user from Google data...")
+            user, created = GoogleOAuthUserManager.get_or_create_user_from_google(google_data)
             
-        except serializers.ValidationError as e:
-            logger.error(f"Validation error during registration: {str(e)}")
-            return Response({"error": "Validation failed", "details": e.detail}, status=status.HTTP_400_BAD_REQUEST)
+            logger.info(f"✅ User found/created: {user.id}, created={created}")
+            logger.info(f"User details: email={user.email}, role={user.role}")
+            
+            # Generate JWT tokens for LMS
+            logger.info("🔑 Generating JWT tokens for LMS...")
+            refresh = RefreshToken.for_user(user)
+            
+            # Add custom fields to tokens using serializer
+            api_serializer.MyTokenObtainPairSerializer._add_user_fields(refresh.access_token, user)
+            api_serializer.MyTokenObtainPairSerializer._add_user_fields(refresh, user)
+            
+            # Add is_active field
+            refresh.access_token['is_active'] = user.is_active
+            refresh['is_active'] = user.is_active
+            
+            logger.info("✅ JWT tokens generated successfully")
+            logger.info(f"🎉 Google OAuth login successful for user: {user.email}")
+            
+            return Response(
+                {
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                    "user": {
+                        "id": user.id,
+                        "email": user.email,
+                        "full_name": user.full_name,
+                        "role": user.role,
+                        "is_active": user.is_active,
+                        # 🔥 CRITICAL FIX: Use boolean roles for role selector (supports instructor/teacher)
+                        "available_roles": user.get_available_boolean_roles(),
+                        "current_role": user.current_role,
+                        "roles": user.roles,
+                        "has_multiple_roles": len(user.get_available_boolean_roles()) > 1,
+                    },
+                    "created": created,
+                    "message": "Google OAuth login successful"
+                },
+                status=status.HTTP_200_OK
+            )
+        
+        except ValueError as e:
+            logger.error(f"❌ Google token verification error: {str(e)}")
+            return Response(
+                {"error": f"Google authentication error: {str(e)}"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         except Exception as e:
-            logger.error(f"Unexpected error during registration: {str(e)}")
+            logger.error(f"❌ Google OAuth verification failed: {str(e)}")
             logger.exception("Full traceback:")
             return Response(
-                {"error": "Registration failed", "details": str(e)},
+                {"error": f"Google OAuth verification failed: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 def generate_random_otp(length=7):
     otp = ''.join([str(random.randint(0, 9)) for _ in range(length)])
     return otp
@@ -2247,8 +2374,8 @@ class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-            # Check if user is a teacher
-            if user.role == 'teacher':
+            # Check if user is a teacher (instructor)
+            if user.is_instructor:
                 return Response(
                     {"message": "Instructors cannot add courses to wishlist"}, 
                     status=status.HTTP_403_FORBIDDEN
@@ -2440,7 +2567,7 @@ class TeacherSummaryAPIView(generics.ListAPIView):
                 user = User.objects.get(id=course.user_id)
                 student = {
                     "full_name": user.profile.full_name,
-                    "image": user.profile.image.url,
+                    "image": user.profile.image.url if user.profile.image else None,
                     "country": user.profile.country,
                     "date": course.date
                 }
@@ -4197,13 +4324,15 @@ class AdminSummaryAPIView(generics.RetrieveAPIView):
     Admin Dashboard Summary with comprehensive system statistics
     """
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = api_serializer.AdminSummarySerializer
     
     def get(self, request):
         try:
-            # Verify admin access
-            if not hasattr(request.user, 'role') or request.user.role != 'admin':
+            # IsAdminUser permission class already verified access above
+            # Additional verification as backup
+            if not (hasattr(request.user, 'is_admin') and request.user.is_admin) and \
+               not (hasattr(request.user, 'current_role') and request.user.current_role == 'admin'):
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             # Calculate statistics
@@ -4357,17 +4486,21 @@ class AdminUserManagementAPIView(generics.ListAPIView):
     
     def get_queryset(self):
         # Verify admin access
-        if not hasattr(self.request.user, 'role') or self.request.user.role != 'admin':
+        if not (hasattr(self.request.user, 'is_admin') and self.request.user.is_admin):
             return User.objects.none()
         
         # Only select necessary fields from database (database-level optimization)
         # Using .only() reduces query payload by 60-70%
+        # PHASE 4.10: Added is_student, is_instructor, is_admin for Multi Role support
         queryset = User.objects.all().only(
             'id',
             'username', 
             'email',
             'full_name',
             'role',
+            'is_student',
+            'is_instructor',
+            'is_admin',
             'is_active',
             'last_login',
             'date_joined'
@@ -4398,7 +4531,7 @@ class AdminCourseManagementAPIView(generics.ListAPIView):
     
     def get_queryset(self):
         # Verify admin access
-        if not hasattr(self.request.user, 'role') or self.request.user.role != 'admin':
+        if not (hasattr(self.request.user, 'is_admin') and self.request.user.is_admin):
             return api_models.Course.objects.none()
         
         status_filter = self.request.query_params.get('status', None)
@@ -4412,12 +4545,14 @@ class AdminEnrollmentAnalyticsAPIView(generics.RetrieveAPIView):
     Admin enrollment analytics and trends
     """
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get(self, request):
         try:
-            # Verify admin access
-            if not hasattr(request.user, 'role') or request.user.role != 'admin':
+            # IsAdminUser permission class already verified access above
+            # Additional verification as backup
+            if not (hasattr(request.user, 'is_admin') and request.user.is_admin) and \
+               not (hasattr(request.user, 'current_role') and request.user.current_role == 'admin'):
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             from django.utils import timezone
@@ -4489,12 +4624,14 @@ class AdminSystemHealthAPIView(generics.RetrieveAPIView):
     System health monitoring for admins
     """
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get(self, request):
         try:
-            # Verify admin access
-            if not hasattr(request.user, 'role') or request.user.role != 'admin':
+            # IsAdminUser permission class already verified access above
+            # Additional verification as backup
+            if not (hasattr(request.user, 'is_admin') and request.user.is_admin) and \
+               not (hasattr(request.user, 'current_role') and request.user.current_role == 'admin'):
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             import os
@@ -4555,7 +4692,7 @@ class AdminUserDetailAPIView(generics.RetrieveAPIView):
     
     def get_object(self):
         # Verify admin access
-        if not hasattr(self.request.user, 'role') or self.request.user.role != 'admin':
+        if not (hasattr(self.request.user, 'is_admin') and self.request.user.is_admin):
             raise Http404("Admin access required")
         
         user_id = self.kwargs.get('user_id')
@@ -4574,7 +4711,7 @@ class AdminUserDetailAPIView(generics.RetrieveAPIView):
             response_data = {'user_info': user_info}
             
             # Add enrollment statistics if user is a student
-            if user.role == 'student':
+            if user.is_student:
                 enrollments = api_models.EnrolledCourse.objects.filter(user=user)
                 
                 # Calculate completed courses using the is_course_completed() method
@@ -4590,8 +4727,8 @@ class AdminUserDetailAPIView(generics.RetrieveAPIView):
                     'certificates_earned': api_models.Certificate.objects.filter(user=user).count()
                 }
             
-            # Add teaching statistics if user is a teacher
-            elif user.role == 'teacher':
+            # ✨ PHASE 4.10 - Add teaching statistics if user is an instructor (changed from elif to if for Multi Role support)
+            if user.is_instructor:
                 try:
                     teacher = api_models.Teacher.objects.get(user=user)
                     courses = api_models.Course.objects.filter(teacher=teacher)
@@ -4624,7 +4761,7 @@ class AdminUserCreateAPIView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         try:
             # Verify admin access
-            if not hasattr(request.user, 'role') or request.user.role != 'admin':
+            if not hasattr(request.user, 'role') or not (request.user.is_admin):
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             # Extract role before validation (serializer doesn't accept it)
@@ -4637,8 +4774,24 @@ class AdminUserCreateAPIView(generics.CreateAPIView):
             if serializer.is_valid():
                 user = serializer.save()
                 
-                # Set user role
-                user.role = role
+                # Set user boolean roles based on role parameter
+                if role == 'student':
+                    user.is_student = True
+                    user.is_instructor = False
+                    user.is_admin = False
+                elif role == 'teacher':
+                    user.is_student = False
+                    user.is_instructor = True
+                    user.is_admin = False
+                elif role == 'admin':
+                    user.is_student = False
+                    user.is_instructor = False
+                    user.is_admin = True
+                
+                # Set current_role and roles for multi-role support
+                user.current_role = role
+                user.roles = role
+                user.role = role  # Keep for backward compatibility during migration
                 user.save()
                 
                 # Create teacher profile if role is teacher
@@ -4675,7 +4828,7 @@ class AdminUserUpdateAPIView(generics.UpdateAPIView):
     
     def get_object(self):
         # Verify admin access
-        if not hasattr(self.request.user, 'role') or self.request.user.role != 'admin':
+        if not (hasattr(self.request.user, 'is_admin') and self.request.user.is_admin):
             raise Http404("Admin access required")
         
         user_id = self.kwargs.get('user_id')
@@ -4689,7 +4842,7 @@ class AdminUserUpdateAPIView(generics.UpdateAPIView):
             user = self.get_object()
             
             # Prevent modifying super admin by regular admin
-            if user.role == 'admin' and hasattr(user, 'admin') and user.admin.is_super_admin:
+            if user.is_admin and hasattr(user, 'admin') and user.admin.is_super_admin:
                 if not (hasattr(request.user, 'admin') and request.user.admin.is_super_admin):
                     return Response({'error': 'Cannot modify super admin account'}, status=status.HTTP_403_FORBIDDEN)
             
@@ -4698,10 +4851,58 @@ class AdminUserUpdateAPIView(generics.UpdateAPIView):
                 if field in request.data:
                     setattr(user, field, request.data[field])
             
-            # Handle role change
+            # ✨ PHASE 4.10 - Handle Multi Role boolean fields (NEW)
+            old_is_instructor = user.is_instructor
+            if 'is_student' in request.data:
+                user.is_student = request.data['is_student']
+            if 'is_instructor' in request.data:
+                user.is_instructor = request.data['is_instructor']
+            if 'is_admin' in request.data:
+                user.is_admin = request.data['is_admin']
+            
+            # Update legacy role field for backward compatibility
+            if user.is_admin:
+                user.role = 'admin'
+            elif user.is_instructor:
+                user.role = 'teacher'
+            elif user.is_student:
+                user.role = 'student'
+            
+            # Handle teacher profile creation/deletion based on instructor role
+            if user.is_instructor and not old_is_instructor:
+                api_models.Teacher.objects.get_or_create(
+                    user=user,
+                    defaults={'full_name': user.full_name}
+                )
+            elif not user.is_instructor and old_is_instructor:
+                try:
+                    teacher = api_models.Teacher.objects.get(user=user)
+                    teacher.delete()
+                except api_models.Teacher.DoesNotExist:
+                    pass
+            
+            # Handle legacy role change (if frontend still sends it)
             if 'role' in request.data:
                 new_role = request.data['role']
-                old_role = user.role
+                old_role = user.current_role if user.current_role else user.role
+                
+                # Update boolean role fields
+                if new_role == 'student':
+                    user.is_student = True
+                    user.is_instructor = False
+                    user.is_admin = False
+                elif new_role == 'teacher':
+                    user.is_student = False
+                    user.is_instructor = True
+                    user.is_admin = False
+                elif new_role == 'admin':
+                    user.is_student = False
+                    user.is_instructor = False
+                    user.is_admin = True
+                
+                # Update role tracking fields
+                user.current_role = new_role
+                user.roles = new_role
                 user.role = new_role
                 
                 # Handle teacher profile creation/deletion
@@ -4737,7 +4938,7 @@ class AdminUserDeleteAPIView(generics.DestroyAPIView):
     
     def get_object(self):
         # Verify admin access
-        if not hasattr(self.request.user, 'role') or self.request.user.role != 'admin':
+        if not (hasattr(self.request.user, 'is_admin') and self.request.user.is_admin):
             raise Http404("Admin access required")
         
         user_id = self.kwargs.get('user_id')
@@ -4751,7 +4952,7 @@ class AdminUserDeleteAPIView(generics.DestroyAPIView):
             user = self.get_object()
             
             # Prevent deleting super admin
-            if user.role == 'admin' and hasattr(user, 'admin') and user.admin.is_super_admin:
+            if user.is_admin and hasattr(user, 'admin') and user.admin.is_super_admin:
                 return Response({'error': 'Cannot delete super admin account'}, status=status.HTTP_403_FORBIDDEN)
             
             # Prevent deleting self
@@ -4779,7 +4980,7 @@ class AdminUserBulkActionsAPIView(APIView):
     def post(self, request):
         try:
             # Verify admin access
-            if not hasattr(request.user, 'role') or request.user.role != 'admin':
+            if not hasattr(request.user, 'role') or not (request.user.is_admin):
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             action = request.data.get('action')
@@ -4835,7 +5036,7 @@ class AdminCategoryListCreateAPIView(generics.ListCreateAPIView):
     def get_queryset(self):
         """Get all categories for admin management"""
         # Verify admin access
-        if not (hasattr(self.request.user, 'role') and self.request.user.role == 'admin'):
+        if not (hasattr(self.request.user, 'role') and self.request.user.is_admin):
             return api_models.Category.objects.none()
         return api_models.Category.objects.all().order_by('-id')
     
@@ -4843,7 +5044,7 @@ class AdminCategoryListCreateAPIView(generics.ListCreateAPIView):
         """Create new course category - Admin only"""
         try:
             # Verify admin access
-            if not (hasattr(request.user, 'role') and request.user.role == 'admin'):
+            if not (hasattr(request.user, 'role') and request.user.is_admin):
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             serializer = self.get_serializer(data=request.data)
@@ -4877,7 +5078,7 @@ class AdminCategoryDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         """Update category details"""
         try:
             # Verify admin access
-            if not (hasattr(request.user, 'role') and request.user.role == 'admin'):
+            if not (hasattr(request.user, 'role') and request.user.is_admin):
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             instance = self.get_object()
@@ -4900,7 +5101,7 @@ class AdminCategoryDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         """Delete category - only if no courses assigned"""
         try:
             # Verify admin access
-            if not (hasattr(request.user, 'role') and request.user.role == 'admin'):
+            if not (hasattr(request.user, 'role') and request.user.is_admin):
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             instance = self.get_object()
@@ -5057,7 +5258,7 @@ class SyncExternalUsersAPIView(APIView):
     
     def post(self, request):
         # Verify admin access
-        if not hasattr(request.user, 'role') or request.user.role != 'admin':
+        if not hasattr(request.user, 'role') or not (request.user.is_admin):
             return Response(
                 {'error': 'Admin access required. Only admins can sync external users.'},
                 status=status.HTTP_403_FORBIDDEN
@@ -5433,7 +5634,7 @@ class SyncProgressAPIView(APIView):
     def get(self, request):
         """Get current sync progress"""
         # Verify admin access
-        if not hasattr(request.user, 'role') or request.user.role != 'admin':
+        if not hasattr(request.user, 'role') or not (request.user.is_admin):
             return Response(
                 {'error': 'Admin access required. Only admins can view sync progress.'},
                 status=status.HTTP_403_FORBIDDEN
@@ -6242,4 +6443,175 @@ class QueryAnalysisByTimeView(generics.GenericAPIView):
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
 
+
+# ============================================================
+# ✨ PHASE 3: MULTI-ROLE AUTHENTICATION ENDPOINTS
+# ============================================================
+
+class AvailableRolesAPIView(APIView):
+    """
+    Get list of available roles for the authenticated user
+    
+    Endpoint: /api/v1/auth/available-roles/
+    Method: GET
+    Authentication: Required (JWT Token)
+    Permission: IsAuthenticated
+    
+    Response:
+    {
+        "available_roles": ["student", "instructor", "admin"],
+        "is_student": true,
+        "is_instructor": false,
+        "is_admin": false,
+        "current_role": "student",
+        "user_id": 1,
+        "email": "user@example.com"
+    }
+    
+    Purpose:
+    - Frontend uses this to display role selection options
+    - Returns boolean role fields (is_student, is_instructor, is_admin)
+    - Includes current active role for UI state
+    - PHASE 4.15+: Uses boolean fields instead of CSV roles field
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    
+    def get(self, request):
+        """Get available roles for current user"""
+        try:
+            user = request.user
+            
+            # PHASE 4.15+: Get available roles from boolean fields (source of truth)
+            available_roles = user.get_available_boolean_roles()
+            
+            return Response({
+                'success': True,
+                'available_roles': available_roles,
+                'is_student': user.is_student,
+                'is_instructor': user.is_instructor,
+                'is_admin': user.is_admin,
+                'current_role': user.current_role,
+                'user_id': user.id,
+                'email': user.email,
+                'full_name': user.full_name,
+                'has_multiple_roles': len(available_roles) > 1,
+                'timestamp': timezone.now()
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SelectRoleAPIView(APIView):
+    """
+    Switch/select user's current active role
+    
+    Endpoint: /api/v1/auth/select-role/
+    Method: POST
+    Authentication: Required (JWT Token)
+    Permission: IsAuthenticated
+    
+    Request Body:
+    {
+        "role": "admin"
+    }
+    
+    Response:
+    {
+        "success": true,
+        "message": "Role switched successfully",
+        "current_role": "admin",
+        "available_roles": ["student", "teacher", "admin"],
+        "user_id": 1,
+        "access_token": "new_jwt_token_with_updated_role",
+        "refresh_token": "refresh_token"
+    }
+    
+    Purpose:
+    - Allow multi-role users to switch between roles
+    - Update current_role in database
+    - Generate new JWT token with updated role info
+    - Validates that user actually has the requested role
+    
+    Error Cases:
+    - User doesn't have requested role (400 Bad Request)
+    - Invalid role format (400 Bad Request)
+    - Role not in choices (400 Bad Request)
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    
+    def post(self, request):
+        """Switch user's current active role"""
+        try:
+            user = request.user
+            requested_role = request.data.get('role', '').strip().lower()
+            
+            # Validate role is provided
+            if not requested_role:
+                return Response({
+                    'success': False,
+                    'error': 'Role parameter is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate role is in valid choices
+            # Accept both 'instructor' and 'teacher' for instructor role
+            valid_roles = ['student', 'teacher', 'instructor', 'admin']
+            if requested_role not in valid_roles:
+                return Response({
+                    'success': False,
+                    'error': 'Invalid role. Valid roles are: student, instructor, admin'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Normalize 'teacher' to 'instructor' for internal consistency
+            if requested_role == 'teacher':
+                requested_role = 'instructor'
+            
+            # Check if user has this role (use boolean check which handles both instructor/teacher)
+            if not user.has_boolean_role(requested_role):
+                available_roles = user.get_available_boolean_roles()
+                return Response({
+                    'success': False,
+                    'error': f'User does not have {requested_role} role',
+                    'available_roles': available_roles,
+                    'current_role': user.current_role
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Switch role
+            user.current_role = requested_role
+            user.save(update_fields=['current_role'])
+            user.refresh_from_db()
+            
+            # Generate new tokens with updated role using custom serializer
+            tokens = generate_tokens_with_role(user)
+            
+            return Response({
+                'success': True,
+                'message': f'Successfully switched to {requested_role} role',
+                'current_role': user.current_role,
+                'available_roles': user.get_available_boolean_roles(),
+                'user_id': user.id,
+                'email': user.email,
+                'access_token': tokens['access_token'],
+                'refresh_token': tokens['refresh_token'],
+                'timestamp': timezone.now()
+            }, status=status.HTTP_200_OK)
+            
+        except ValueError as e:
+            # Raised by set_current_role if role validation fails
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 

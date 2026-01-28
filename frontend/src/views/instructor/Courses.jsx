@@ -35,7 +35,7 @@ function Courses() {
             setCourses(coursesData);
             setOriginalCourses(coursesData);
         } catch (error) {
-            console.error("Error fetching courses:", error);
+            console.error("Kesalahan mengambil kursus:", error);
             setCourses([]);
             setOriginalCourses([]);
         } finally {
@@ -65,7 +65,7 @@ function Courses() {
         return (
             <>
                 <BaseHeader />
-                <section className="courses-container courses-loading-section">
+                <section className="courses-container courses-loading-section pt-5 pb-5">
                     <div className="courses-loading-container">
                         <div className="container">
                             <Header />
@@ -74,9 +74,9 @@ function Courses() {
                                 <div className={`col-lg-9 col-md-8 col-12 courses-spinner-wrapper ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                                     <div className="courses-spinner-center">
                                         <div className="spinner-border text-primary courses-spinner" role="status">
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">Memuat...</span>
                                         </div>
-                                        <p className="mt-3 text-muted">Loading Courses...</p>
+                                        <p className="mt-3 text-muted">Memuat Kursus...</p>
                                     </div>
                                 </div>
                             </div>
@@ -92,7 +92,7 @@ function Courses() {
         <>
             <BaseHeader />
 
-            <section className="courses-container courses-main-section">
+            <section className="courses-container courses-main-section pt-5 pb-5">
                 <div className="container">
                     <Header />
                     <div className="row courses-sidebar-content-row">
@@ -104,23 +104,23 @@ function Courses() {
                                 <div className="courses-toolbar-content">
                                     <div className="courses-toolbar-title-group">
                                         <h1 className="courses-toolbar-title">
-                                            <i className="fas fa-graduation-cap courses-toolbar-icon"></i>My Courses
+                                            <i className="fas fa-graduation-cap courses-toolbar-icon"></i>Kursus Saya
                                         </h1>
                                         <p className="courses-toolbar-subtitle">
-                                            Manage and monitor your course collection
+                                            Kelola dan pantau koleksi kursus Anda
                                         </p>
                                     </div>
                                     <div className="courses-toolbar-actions">
                                         <div className="courses-stat-badge">
                                             <i className="fas fa-book courses-stat-icon"></i>
-                                            {courses?.length || 0} Courses
+                                            {courses?.length || 0} Kursus
                                         </div>
                                         <Link 
                                             to="/instructor/create-course/" 
                                             className="courses-create-btn"
                                         >
                                             <i className="fas fa-plus courses-create-icon"></i>
-                                            New Course
+                                            Kursus Baru
                                         </Link>
                                     </div>
                                 </div>

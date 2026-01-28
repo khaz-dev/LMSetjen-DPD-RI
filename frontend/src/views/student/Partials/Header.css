@@ -4,6 +4,12 @@
 .student-header-row {
     /* Removed: margin-left/right negative calculations and width expansion */
     /* Now uses standard Bootstrap row behavior for consistent width across all pages */
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
 }
 
 .student-header-row > .col-xl-12,
@@ -20,10 +26,14 @@
     border: none;
     color: white;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
     min-height: 160px;
     user-select: none; /* Prevent text selection */
+    z-index: 101;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 7.2: Changed overflow from hidden to visible to allow dropdown menu to display */
+    /* ✨ PHASE 40.1: Added margin-bottom to match other header cards (page-header-card, qa-header-card, course-progress-card) */
 }
 
 .student-header-card::before {
@@ -36,6 +46,20 @@
     background: rgba(255, 255, 255, 0.1);
     transform: rotate(15deg);
     z-index: 1;
+    pointer-events: none;
+}
+
+.student-header-card::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -10%;
+    width: 35%;
+    height: 180%;
+    background: rgba(255, 255, 255, 0.08);
+    transform: rotate(-25deg);
+    z-index: 1;
+    pointer-events: none;
 }
 
 .student-header-content {
@@ -76,6 +100,14 @@
     transition: none;
 }
 
+/* ✨ PHASE 4.29: Action Buttons Column - Align to bottom-end instead of center */
+.student-header-content .row .col-lg-3:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    align-self: flex-end !important;
+}
+
 /* Profile Avatar Styles */
 .profile-avatar {
     width: 180px;
@@ -114,7 +146,7 @@
     transform: scale(1.08);
 }
 
-.default-avatar {
+.student-default-avatar {
     width: 180px;
     height: 180px;
     border-radius: 50%;
@@ -129,7 +161,7 @@
     cursor: default; /* Default cursor */
 }
 
-.default-avatar:hover {
+.student-default-avatar:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: scale(1.05);
 }
@@ -246,131 +278,116 @@
     margin-bottom: 0;
 }
 
-/* Modern Buttons */
+/* Modern Buttons - Styled like instructor buttons */
 .btn-modern-white {
-    background: transparent;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    color: white;
-    font-weight: 600;
-    border-radius: 25px;
-    padding: 0.875rem 2rem;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    position: relative;
-    overflow: hidden;
-    user-select: none; /* Prevent text selection */
-    cursor: pointer; /* Pointer cursor for clickable buttons */
+    background: transparent !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 30px !important;
+    padding: 1rem 2.5rem !important;
+    transition: all 0.4s ease !important;
+    backdrop-filter: blur(10px) !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+    user-select: none !important;
+    cursor: pointer !important;
 }
 
 .btn-modern-white::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+    transition: left 0.6s ease !important;
 }
 
 .btn-modern-white:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.6);
-    color: white;
-    transform: translateY(-3px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-    text-decoration: none; /* Prevent underline on hover */
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    color: white !important;
+    transform: translateY(-4px) scale(1.05) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+    text-decoration: none !important;
 }
 
 .btn-modern-white:hover::before {
-    left: 100%;
+    left: 100% !important;
 }
 
 .btn-modern-white.active {
-    background: rgba(255, 255, 255, 0.4);
-    border-color: rgba(255, 255, 255, 0.8);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    color: white !important;
+    opacity: 1 !important;
+    transform: scale(1) !important;
 }
 
 .btn-modern-white.active::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3));
-    border-radius: 25px;
-    z-index: -1;
-    animation: activeGlow 2s ease-in-out infinite alternate;
+    display: none;
 }
 
 .btn-outline-white {
-    background: transparent;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    color: white;
-    font-weight: 600;
-    border-radius: 25px;
-    padding: 0.875rem 2rem;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    position: relative;
-    overflow: hidden;
-    user-select: none; /* Prevent text selection */
-    cursor: pointer; /* Pointer cursor for clickable buttons */
+    background: transparent !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 30px !important;
+    padding: 1rem 2.5rem !important;
+    transition: all 0.4s ease !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+    user-select: none !important;
+    cursor: pointer !important;
 }
 
 .btn-outline-white::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: left 0.5s ease;
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent) !important;
+    transition: left 0.6s ease !important;
 }
 
 .btn-outline-white:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.6);
-    color: white;
-    transform: translateY(-2px);
-    text-decoration: none; /* Prevent underline on hover */
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    color: white !important;
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+    text-decoration: none !important;
 }
 
 .btn-outline-white:hover::before {
-    left: 100%;
+    left: 100% !important;
 }
 
 .btn-outline-white.active {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.8);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    color: white !important;
+    opacity: 1 !important;
+    transform: scale(1) !important;
 }
 
 .btn-outline-white.active::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2));
-    border-radius: 25px;
-    z-index: -1;
-    animation: activeGlow 2s ease-in-out infinite alternate;
+    display: none;
 }
 
 /* Active Indicator */
@@ -386,41 +403,179 @@
     animation: pulse 2s infinite;
 }
 
-/* Badge Styles - HIGH SPECIFICITY to prevent page-level overrides */
+/* Badge Styles - Match role-indicator compact styling exactly */
 .student-header-card .badge-modern {
-    /* Base styling - consistent badge component across all pages */
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%) !important;
+    /* Copy of role-badge-compact style - for consistency */
+    /* Override global badge-modern from index.css with !important */
+    background: rgba(255, 255, 255, 0.2) !important;
     color: white !important;
-    border-radius: 16px !important;
-    padding: 0.5rem 1rem !important;
+    border-radius: 25px !important;
+    padding: 0.6rem 1.2rem !important;
     font-weight: 500 !important;
     font-size: 0.875rem !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     display: inline-flex !important;
     align-items: center !important;
-    justify-content: center !important;
-    gap: 0.4rem !important;
+    gap: 0.5rem !important;
     margin-bottom: 0.5rem !important;
     user-select: none !important;
     cursor: default !important;
-    white-space: nowrap !important;
-    transition: all 0.3s ease !important;
-    box-sizing: border-box !important;
-    min-height: 32px !important;
-    height: auto !important;
+    box-shadow: none !important;
 }
 
 .student-header-card .badge-modern i {
     user-select: none !important;
     display: inline-flex !important;
     align-items: center !important;
-    font-size: 0.9em !important;
+    color: white !important;
 }
 
 .student-header-card .badge-modern:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Role Indicator in Header - Match Badge Instructor Styling */
+.student-header-card .role-indicator.compact {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.student-header-card .role-indicator.compact .role-badge-compact {
+    /* Copy of badge-instructor style from instructor header */
+    /* Override global badge-modern from index.css with !important */
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border-radius: 25px !important;
+    padding: 0.6rem 1.2rem !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+}
+
+.student-header-card .role-indicator.compact .role-badge-compact i {
+    user-select: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    color: white !important;
+}
+
+.student-header-card .role-indicator.compact .role-badge-compact:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ✨ PHASE 4.29: Role Dropdown Menu - Blend with student header color theme (purple gradient) */
+.student-header-card .role-indicator.compact .role-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: auto;
+    width: 220px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+    border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.35), 0 5px 15px rgba(0, 0, 0, 0.2);
+    z-index: 2002;
+    padding: 0.5rem 0;
+    margin: 0;
+    list-style: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.student-header-card .role-indicator.compact .role-dropdown-header {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(118, 75, 162, 0.3);
+    font-weight: 700;
+}
+
+.student-header-card .role-indicator.compact .role-dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 0.5rem 0;
+}
+
+.student-header-card .role-indicator.compact .role-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+}
+
+.student-header-card .role-indicator.compact .role-dropdown-item:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    padding-left: 1.25rem;
+    color: white;
+    border-radius: 8px;
+}
+
+.student-header-card .role-indicator.compact .role-dropdown-item i:first-child {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    transition: color 0.2s ease;
+}
+
+.student-header-card .role-indicator.compact .role-dropdown-item:hover:not(:disabled) i:first-child {
+    color: white;
+}
+
+.student-header-card .role-indicator.compact .role-dropdown-item.active {
+    background: rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    border-radius: 8px !important;
+    margin: 0 0.5rem !important;
+    padding-left: 1.25rem !important;
+    border-left: 3px solid #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.student-header-card .role-indicator.compact .role-dropdown-item.active i:first-child {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+}
+
+/* ✨ PHASE 4.38: Override RoleIndicator.css global active state with student header colors */
+.student-header-card .role-indicator.compact .role-dropdown-item.active .role-label {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+}
+
+.student-header-card .role-indicator.compact .role-dropdown-item.active * {
+    color: #ffffff !important;
+    background-color: transparent !important;
+}
+
+.student-header-card .role-indicator.compact .role-dropdown-item:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 /* Loading States */
@@ -507,7 +662,7 @@
 
 .student-header-content {
   transform-origin: top;
-  overflow: hidden;
+  overflow: visible;
   display: block;
   visibility: visible;
 }
@@ -690,6 +845,78 @@
   color: white;
 }
 
+/* ========================================
+   COLLAPSED HEADER BUTTON STYLES - UNIFIED & CONSISTENT
+   ======================================== */
+
+/* Base Unified Button Style */
+.btn-collapsed-header {
+  /* ✨ PHASE 4.20: Unified button style for collapsed header - normal state */
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  min-height: 36px;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-collapsed-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+/* Normal State - Outline style */
+.btn-collapsed-header:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
+  color: white;
+  transform: translateY(-2px);
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-collapsed-header:hover::before {
+  left: 100%;
+}
+
+/* Active State - Solid filled style */
+.btn-collapsed-header.active {
+  /* ✨ PHASE 4.20: Active button state for current page */
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  color: #667eea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-collapsed-header.active:hover {
+  background: white;
+  color: #764ba2;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  border: none;
+}
+
+.btn-collapsed-header.active::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+}
+
 /* Inline toggle button for collapsed state */
 .student-header-toggle-btn-inline {
   background: rgba(255, 255, 255, 0.2);
@@ -760,9 +987,52 @@
     }
     
     .btn-modern-white, .btn-outline-white {
-        padding: 0.75rem 1.5rem;
+        padding: 0.8rem 1.8rem;
         font-size: 0.9rem;
     }
+}
+
+/* ========================================
+   INLINE STYLES MIGRATION - Moved from JSX
+   ======================================== */
+
+/* Loading Spinner - Large (Full Avatar Loading State) */
+.spinner-loading-lg {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+}
+
+/* Mini Avatar Container - Collapsed State */
+.avatar-container-mini {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading Spinner - Small (Mini Avatar Loading State) */
+.spinner-loading-sm {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Mini User Icon - Fallback Avatar Icon */
+.icon-user-mini {
+  font-size: 1.2rem;
+  color: white;
+  opacity: 0.9;
+}
+
+/* Action Buttons - Position Relative for Indicators */
+.btn-with-indicator {
+  position: relative;
+}
+
+/* Details Row Separator */
+.student-details-separator {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 @media (max-width: 576px) {

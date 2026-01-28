@@ -1,0 +1,213 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                                                                               ║
+║              🔧 MULTI-ROLE SYSTEM - CRITICAL BUG FOUND & FIXED               ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+🚨 THE CULPRIT
+═══════════════════════════════════════════════════════════════════════════════
+
+  File: backend/api/permissions.py
+  Issue: Broken fallback logic in permission classes
+  Severity: 🔴 CRITICAL (prevented role-based access control)
+  
+  Classes Affected:
+    • IsAdminUser (line ~25-33)
+    • IsTeacherUser (line ~60-68)
+    • IsStudentUser (line ~95-103)
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 THE PROBLEM
+═══════════════════════════════════════════════════════════════════════════════
+
+Multi-role users in database:
+  ┌────────────────────────────────────────────┐
+  │ user.role = 'student'   (always 'student') │
+  │ user.roles = 'student,teacher,admin'       │
+  │ user.current_role = 'teacher' (switches)   │
+  └────────────────────────────────────────────┘
+
+❌ BROKEN PERMISSION CHECK:
+
+  IsStudentUser.has_permission():
+    1. Check: current_role == 'student'? → NO (it's 'teacher')
+    2. Fallback: role == 'student'? → YES! 
+    3. Result: ✅ ALLOWED (WRONG!)
+    
+  Effect:
+    • Teachers could access student endpoints
+    • Admins could access student endpoints
+    • All role checks failed
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ THE FIX
+═══════════════════════════════════════════════════════════════════════════════
+
+Removed the broken fallback:
+
+  ❌ Before:
+     if hasattr(request.user, 'current_role') and request.user.current_role == 'admin':
+         return True
+     if hasattr(request.user, 'role') and request.user.role == 'admin':  ← BAD!
+         return True
+
+  ✅ After:
+     # Only check current_role, not the deprecated role field
+     # The role field is always 'student' for multi-role users
+     if hasattr(request.user, 'current_role') and request.user.current_role == 'admin':
+         return True
+     return False
+
+Applied to all 3 permission classes:
+  ✓ IsAdminUser - Fixed
+  ✓ IsTeacherUser - Fixed
+  ✓ IsStudentUser - Fixed
+
+═══════════════════════════════════════════════════════════════════════════════
+🧪 BEFORE vs AFTER TEST RESULTS
+═══════════════════════════════════════════════════════════════════════════════
+
+BEFORE FIX:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ When current_role='teacher':                                            │
+│   IsStudentUser: True  ❌ WRONG - teacher allowed as student!           │
+│   IsTeacherUser: True  ✓                                                │
+│   IsAdminUser: False   ✓                                                │
+│                                                                          │
+│ When current_role='admin':                                              │
+│   IsStudentUser: True  ❌ WRONG - admin allowed as student!             │
+│   IsTeacherUser: False ✓                                                │
+│   IsAdminUser: True    ✓                                                │
+│                                                                          │
+│ Result: ❌ FAIL - Permission system broken                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+AFTER FIX:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ When current_role='teacher':                                            │
+│   IsStudentUser: False ✓ CORRECT                                        │
+│   IsTeacherUser: True  ✓                                                │
+│   IsAdminUser: False   ✓                                                │
+│                                                                          │
+│ When current_role='admin':                                              │
+│   IsStudentUser: False ✓ CORRECT                                        │
+│   IsTeacherUser: False ✓                                                │
+│   IsAdminUser: True    ✓                                                │
+│                                                                          │
+│ Result: ✅ PASS - Permission system working!                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+✨ MULTI-ROLE SYSTEM NOW WORKS CORRECTLY
+═══════════════════════════════════════════════════════════════════════════════
+
+✓ TEST 1: User Roles Database
+  ✓ User has all 3 roles: student, teacher, admin
+  ✓ get_available_roles() works
+  ✓ has_role() validates properly
+  ✓ set_current_role() updates correctly
+
+✓ TEST 2: JWT Tokens
+  ✓ Tokens generated with role information
+  ✓ Access tokens work for API calls
+
+✓ TEST 4: Permission Classes (FIXED!)
+  ✓ IsStudentUser only allows student
+  ✓ IsTeacherUser only allows teacher
+  ✓ IsAdminUser only allows admin
+  ✓ No role bleeding between endpoints
+
+✓ INTEGRATION TEST: Frontend Workflow
+  ✓ Login with JWT token
+  ✓ Switch role via API: /api/v1/auth/select-role/
+  ✓ Get new JWT with updated role
+  ✓ Database reflects changes
+  ✓ Permission checks enforce new role
+
+═══════════════════════════════════════════════════════════════════════════════
+🚀 ROLE SWITCHING NOW WORKS
+═══════════════════════════════════════════════════════════════════════════════
+
+Complete Flow:
+
+  1. User logs in as 'student'
+     └─ current_role = 'student'
+
+  2. Frontend calls: POST /api/v1/auth/select-role/
+     Body: {"role": "teacher"}
+
+  3. Backend switches role:
+     └─ Validates role in user.roles ✓
+     └─ Updates current_role = 'teacher'
+     └─ Generates new JWT token
+
+  4. Frontend updates with new token
+     └─ Stores in localStorage
+     └─ Uses for next API calls
+
+  5. Permission checks now work:
+     └─ IsTeacherUser → checks current_role == 'teacher' → TRUE ✓
+     └─ IsStudentUser → checks current_role == 'student' → FALSE ✓
+
+═══════════════════════════════════════════════════════════════════════════════
+📋 SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+WHAT WAS WRONG:
+  ❌ Permission classes had fallback to deprecated role field
+  ❌ This allowed users to access roles they weren't in current role
+  ❌ Multi-role system couldn't enforce access control
+
+ROOT CAUSE:
+  The deprecated role field is 'student' for ALL multi-role users
+  The fallback logic checked this field, bypassing current_role check
+
+THE FIX:
+  ✓ Removed fallback to deprecated role field
+  ✓ Now only check current_role for multi-role access control
+  ✓ This properly enforces which role user is currently in
+
+RESULT:
+  ✅ Multi-role system now fully functional
+  ✅ Role switching works properly
+  ✅ Permission classes enforce roles correctly
+  ✅ Users can test all 3 roles: student, teacher, admin
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 WHAT YOU CAN NOW TEST
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Login to http://localhost:5173
+   Email: khairilazmiashari@gmail.com
+   Password: your_password
+
+2. You'll be in 'student' role by default
+   → Can access student features (courses, Q&A, wishlist)
+   → Cannot access admin/teacher panels
+
+3. Click header dropdown → Select 'Teacher'
+   → Can now access teacher features (create course, manage)
+   → Cannot access student/admin features
+
+4. Switch to 'Admin'
+   → Can now access admin features (dashboard, analytics)
+   → Cannot access student/teacher features
+
+5. Switch back to 'Student'
+   → Back to student features
+   → Cycle works seamlessly
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ STATUS: COMPLETE AND VERIFIED
+═══════════════════════════════════════════════════════════════════════════════
+
+Date Fixed: January 25, 2026
+Test Results: ALL TESTS PASSING ✓
+System Status: MULTI-ROLE SYSTEM FULLY OPERATIONAL ✓
+
+Files Modified: 1
+  • backend/api/permissions.py (3 classes fixed)
+
+Severity Reduction: 🔴 CRITICAL → ✅ RESOLVED
+
+═══════════════════════════════════════════════════════════════════════════════

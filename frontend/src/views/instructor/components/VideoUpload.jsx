@@ -29,14 +29,14 @@ const VideoUpload = ({ courseData, setCourseData }) => {
     if (!file) return;
 
     // Validate video file
-    const validation = validateFileType(file, 'video');
+    const validation = validateFileType(file, "video");
     if (!validation.isValid) {
       Toast().fire({
         icon: "error",
-        title: "Invalid File",
+        title: "File Tidak Valid",
         text: validation.error,
       });
-      event.target.value = '';
+      event.target.value = "";
       return;
     }
     
@@ -49,8 +49,8 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       // Show file size warning
       Toast().fire({
         icon: "warning",
-        title: "Large File Detected",
-        text: `Video size: ${fileSizeMB.toFixed(1)}MB. Compression confirmation required.`,
+        title: "File Besar Terdeteksi",
+        text: `Ukuran video: ${fileSizeMB.toFixed(1)}MB. Konfirmasi kompresi diperlukan.`,
         timer: 3000,
         showConfirmButton: false
       });
@@ -60,7 +60,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
     }
     
     // Clear input value to allow re-selecting same file
-    event.target.value = '';
+    event.target.value = "";
   };
 
   const handleCompressionConfirm = async () => {
@@ -102,12 +102,12 @@ const VideoUpload = ({ courseData, setCourseData }) => {
     if (!videoElement) return;
     
     // Set optimal video attributes for seeking
-    videoElement.preload = 'auto';
-    videoElement.crossOrigin = 'anonymous';
+    videoElement.preload = "auto";
+    videoElement.crossOrigin = "anonymous";
     videoElement.playsInline = true;
     
     // Log video URL and format for debugging
-    console.log('[VideoPreview] Initializing video:', {
+    console.log("[VideoPreview] Initializing video:", {
       url: courseData.file,
       detected_format: getVideoFormat(courseData.file)
     });
@@ -118,24 +118,24 @@ const VideoUpload = ({ courseData, setCourseData }) => {
 
   // Helper function to detect video format from URL or filename
   const getVideoFormat = (url) => {
-    if (!url) return 'unknown';
+    if (!url) return "unknown";
     
     const urlLower = url.toLowerCase();
     
     // Check for compressed video indicators
-    if (urlLower.includes('_compressed')) {
-      if (urlLower.includes('.mp4')) return 'compressed_mp4';
-      if (urlLower.includes('.webm')) return 'compressed_webm';
-      return 'compressed_unknown';
+    if (urlLower.includes("_compressed")) {
+      if (urlLower.includes(".mp4")) return "compressed_mp4";
+      if (urlLower.includes(".webm")) return "compressed_webm";
+      return "compressed_unknown";
     }
     
     // Check for standard formats
-    if (urlLower.endsWith('.mp4')) return 'mp4';
-    if (urlLower.endsWith('.webm')) return 'webm';
-    if (urlLower.endsWith('.mov')) return 'mov';
-    if (urlLower.endsWith('.avi')) return 'avi';
+    if (urlLower.endsWith(".mp4")) return "mp4";
+    if (urlLower.endsWith(".webm")) return "webm";
+    if (urlLower.endsWith(".mov")) return "mov";
+    if (urlLower.endsWith(".avi")) return "avi";
     
-    return 'unknown';
+    return "unknown";
   };
 
   // Generate appropriate source elements based on detected format
@@ -144,49 +144,49 @@ const VideoUpload = ({ courseData, setCourseData }) => {
     const sources = [];
     
     // Prioritize sources based on detected format
-    if (format.includes('mp4') || format === 'unknown') {
+    if (format.includes("mp4") || format === "unknown") {
       // MP4 or unknown - try MP4 variants first
       sources.push(
         { src: videoUrl, type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"' },
-        { src: videoUrl, type: 'video/mp4' }
+        { src: videoUrl, type: "video/mp4" }
       );
     }
     
-    if (format.includes('webm')) {
+    if (format.includes("webm")) {
       // WebM - try WebM variants first
       sources.push(
         { src: videoUrl, type: 'video/webm; codecs="vp9, opus"' },
         { src: videoUrl, type: 'video/webm; codecs="vp8, vorbis"' },
-        { src: videoUrl, type: 'video/webm' }
+        { src: videoUrl, type: "video/webm" }
       );
     }
     
     // Always add fallback sources for maximum compatibility
-    if (!format.includes('mp4')) {
+    if (!format.includes("mp4")) {
       sources.push(
-        { src: videoUrl, type: 'video/mp4' },
+        { src: videoUrl, type: "video/mp4" },
         { src: videoUrl, type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"' }
       );
     }
     
-    if (!format.includes('webm')) {
+    if (!format.includes("webm")) {
       sources.push(
         { src: videoUrl, type: 'video/webm; codecs="vp9, opus"' },
-        { src: videoUrl, type: 'video/webm' }
+        { src: videoUrl, type: "video/webm" }
       );
     }
     
     // Add other format fallbacks
     sources.push(
-      { src: videoUrl, type: 'video/quicktime' },
-      { src: videoUrl, type: 'video/x-msvideo' }
+      { src: videoUrl, type: "video/quicktime" },
+      { src: videoUrl, type: "video/x-msvideo" }
     );
     
     return sources;
   };
 
   const handleVideoLoadStart = () => {
-    console.log('[VideoPreview] Starting to load video...');
+    console.log("[VideoPreview] Starting to load video...");
     setVideoLoading(true);
     setVideoError(null);
     setVideoReady(false);
@@ -194,7 +194,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
 
   const handleVideoLoadedMetadata = (e) => {
     const video = e.target;
-    console.log('[VideoPreview] Metadata loaded:', {
+    console.log("[VideoPreview] Metadata loaded:", {
       duration: video.duration,
       videoWidth: video.videoWidth,
       videoHeight: video.videoHeight,
@@ -202,7 +202,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       networkState: video.networkState,
       seekable: video.seekable.length > 0 ? 
         `${video.seekable.start(0).toFixed(2)}s - ${video.seekable.end(0).toFixed(2)}s` : 
-        'No seekable ranges yet'
+        "No seekable ranges yet"
     });
     
     // Enable seeking by setting current time
@@ -213,31 +213,31 @@ const VideoUpload = ({ courseData, setCourseData }) => {
           video.currentTime = 0; // Reset to start
         }, 100);
       } catch (e) {
-        console.warn('[VideoPreview] Could not set initial time:', e);
+        console.warn("[VideoPreview] Could not set initial time:", e);
       }
     }
   };
 
   const handleVideoLoadedData = (e) => {
     const video = e.target;
-    console.log('[VideoPreview] Video data loaded - ready for playback');
+    console.log("[VideoPreview] Video data loaded - ready for playback");
     setVideoLoading(false);
     setVideoReady(true);
     
     // Final check for seeking capability
     if (video.seekable.length > 0) {
-      console.log('[VideoPreview] Video is seekable from', 
-        video.seekable.start(0).toFixed(2), 'to', video.seekable.end(0).toFixed(2));
+      console.log("[VideoPreview] Video is seekable from", 
+        video.seekable.start(0).toFixed(2), "to", video.seekable.end(0).toFixed(2));
     }
   };
 
   const handleVideoCanPlay = () => {
-    console.log('[VideoPreview] Video can start playing');
+    console.log("[VideoPreview] Video can start playing");
     setVideoLoading(false);
   };
 
   const handleVideoCanPlayThrough = () => {
-    console.log('[VideoPreview] Video can play through without buffering');
+    console.log("[VideoPreview] Video can play through without buffering");
     setVideoLoading(false);
     setVideoReady(true);
   };
@@ -255,19 +255,19 @@ const VideoUpload = ({ courseData, setCourseData }) => {
   };
 
   const handleVideoSeeking = (e) => {
-    console.log('[VideoPreview] Seeking to:', e.target.currentTime.toFixed(2));
+    console.log("[VideoPreview] Seeking to:", e.target.currentTime.toFixed(2));
   };
 
   const handleVideoSeeked = (e) => {
-    console.log('[VideoPreview] Seeked to:', e.target.currentTime.toFixed(2));
+    console.log("[VideoPreview] Seeked to:", e.target.currentTime.toFixed(2));
   };
 
   const handleVideoError = (e) => {
     const video = e.target;
     const format = getVideoFormat(video.src);
-    const isCompressed = format.includes('compressed');
+    const isCompressed = format.includes("compressed");
     
-    console.error('[VideoPreview] Video error:', {
+    console.error("[VideoPreview] Video error:", {
       error: video.error,
       networkState: video.networkState,
       readyState: video.readyState,
@@ -284,49 +284,49 @@ const VideoUpload = ({ courseData, setCourseData }) => {
     setVideoLoading(false);
     setVideoReady(false);
     
-    let errorMessage = 'Unable to load video.';
-    let suggestions = [];
+    let errorMessage = "Unable to load video.";
+    const suggestions = [];
     
     if (video.error) {
       switch (video.error.code) {
         case video.error.MEDIA_ERR_ABORTED:
-          errorMessage = 'Video loading was aborted. Please try again.';
-          suggestions.push('Click retry to attempt loading again');
+          errorMessage = "Video loading was aborted. Please try again.";
+          suggestions.push("Click retry to attempt loading again");
           break;
         case video.error.MEDIA_ERR_NETWORK:
-          errorMessage = 'Network error while loading video. Check your connection.';
-          suggestions.push('Verify your internet connection');
-          suggestions.push('Try refreshing the page');
+          errorMessage = "Network error while loading video. Check your connection.";
+          suggestions.push("Verify your internet connection");
+          suggestions.push("Try refreshing the page");
           break;
         case video.error.MEDIA_ERR_DECODE:
           if (isCompressed) {
-            errorMessage = 'Compressed video format has playback issues.';
-            suggestions.push('Try uploading the original video again');
-            suggestions.push('The compression may have created an incompatible format');
+            errorMessage = "Compressed video format has playback issues.";
+            suggestions.push("Try uploading the original video again");
+            suggestions.push("The compression may have created an incompatible format");
             suggestions.push('Click "Upload Original" to replace with a new video');
           } else {
-            errorMessage = 'Video format is corrupted or not supported.';
-            suggestions.push('Try converting to MP4 format');
+            errorMessage = "Video format is corrupted or not supported.";
+            suggestions.push("Try converting to MP4 format");
           }
           break;
         case video.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
           if (isCompressed) {
-            errorMessage = 'Compressed video format is not supported by your browser.';
-            suggestions.push('Your browser may not support the compressed format');
+            errorMessage = "Compressed video format is not supported by your browser.";
+            suggestions.push("Your browser may not support the compressed format");
             suggestions.push('Click "Upload Original" to use a different video');
-            suggestions.push('Try a different browser (Chrome recommended for compressed videos)');
+            suggestions.push("Try a different browser (Chrome recommended for compressed videos)");
           } else {
-            errorMessage = 'Video format is not supported by your browser.';
-            suggestions.push('Convert video to MP4 format for better compatibility');
-            suggestions.push('Try using Chrome or Firefox browser');
+            errorMessage = "Video format is not supported by your browser.";
+            suggestions.push("Convert video to MP4 format for better compatibility");
+            suggestions.push("Try using Chrome or Firefox browser");
           }
           break;
         default:
-          errorMessage = 'Unknown error occurred while loading video.';
+          errorMessage = "Unknown error occurred while loading video.";
           if (isCompressed) {
-            suggestions.push('Compressed video may have compatibility issues');
-            suggestions.push('Try uploading the original video');
-            suggestions.push('Use Chrome browser for better compressed video support');
+            suggestions.push("Compressed video may have compatibility issues");
+            suggestions.push("Try uploading the original video");
+            suggestions.push("Use Chrome browser for better compressed video support");
           }
       }
     }
@@ -354,7 +354,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
   // Initialize video when URL changes
   useEffect(() => {
     if (courseData.file && videoRef.current) {
-      console.log('[VideoPreview] Initializing video with URL:', courseData.file);
+      console.log("[VideoPreview] Initializing video with URL:", courseData.file);
       initializeVideo(videoRef.current);
       
       // Reset states
@@ -385,8 +385,8 @@ const VideoUpload = ({ courseData, setCourseData }) => {
 
         Toast().fire({
           icon: "info",
-          title: "Compressing Video",
-          text: `File size is ${fileSizeMB.toFixed(1)}MB. Compression is required and may take several minutes...`,
+          title: "Mengompresi Video",
+          text: `Ukuran file ${fileSizeMB.toFixed(1)}MB. Kompresi diperlukan dan mungkin memakan waktu beberapa menit...`,
           timer: 3000,
           showConfirmButton: false
         });
@@ -399,7 +399,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
             (progress) => {
               // Check if compression was cancelled
               if (controller.signal.aborted) {
-                throw new Error('Compression cancelled by user');
+                throw new Error("Compression cancelled by user");
               }
               
               setCompressionStatus(prev => ({
@@ -413,7 +413,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
 
           // Check one more time if cancelled
           if (controller.signal.aborted) {
-            throw new Error('Compression cancelled by user');
+            throw new Error("Compression cancelled by user");
           }
 
           const compressedSizeMB = VideoCompressionUtils.getFileSizeMB(fileToUpload);
@@ -426,14 +426,14 @@ const VideoUpload = ({ courseData, setCourseData }) => {
 
           Toast().fire({
             icon: "success",
-            title: "Compression Complete",
-            text: `Video compressed from ${fileSizeMB.toFixed(1)}MB to ${compressedSizeMB.toFixed(1)}MB`,
+            title: "Kompresi Selesai",
+            text: `Video dikompres dari ${fileSizeMB.toFixed(1)}MB menjadi ${compressedSizeMB.toFixed(1)}MB`,
             timer: 2000,
             showConfirmButton: false
           });
           
         } catch (compressionError) {
-          if (compressionError.message === 'Compression cancelled by user') {
+          if (compressionError.message === "Compression cancelled by user") {
             return; // Exit early for user cancellation
           }
           
@@ -441,8 +441,8 @@ const VideoUpload = ({ courseData, setCourseData }) => {
           
           Toast().fire({
             icon: "error",
-            title: "Compression Failed",
-            text: "Video compression failed. Please try with a different file or contact support.",
+            title: "Kompresi Gagal",
+            text: "Kompresi video gagal. Silakan coba dengan file berbeda atau hubungi dukungan.",
             timer: 4000,
             showConfirmButton: false
           });
@@ -456,8 +456,8 @@ const VideoUpload = ({ courseData, setCourseData }) => {
         // Large file without compression is not allowed
         Toast().fire({
           icon: "error",
-          title: "File Too Large",
-          text: "Files over 100MB must be compressed. Please use the compression option or choose a smaller file.",
+          title: "File Terlalu Besar",
+          text: "File di atas 100MB harus dikompres. Silakan gunakan opsi kompresi atau pilih file yang lebih kecil.",
           timer: 4000,
           showConfirmButton: false
         });
@@ -505,8 +505,8 @@ const VideoUpload = ({ courseData, setCourseData }) => {
         
         Toast().fire({
           icon: "success",
-          title: "Video Uploaded",
-          text: "Course intro video uploaded successfully!",
+          title: "Video Diunggah",
+          text: "Video pengantar kursus berhasil diunggah!",
           timer: 2000,
           showConfirmButton: false
         });
@@ -515,8 +515,8 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       console.error("Error uploading course intro:", error);
       Toast().fire({
         icon: "error",
-        title: "Upload Failed",
-        text: error.response?.data?.message || "Failed to upload video. Please try again.",
+        title: "Unggahan Gagal",
+        text: error.response?.data?.message || "Gagal mengunggah video. Silakan coba lagi.",
       });
     } finally {
       setFileLoading(false);
@@ -534,8 +534,8 @@ const VideoUpload = ({ courseData, setCourseData }) => {
     <div className="video-upload-container">
       <label htmlFor="courseVideo" className="form-label">
         <i className="fas fa-video me-2"></i>
-        Course Intro Video
-        <span className="text-muted ms-1">(Optional)</span>
+        Video Pengantar Kursus
+        <span className="text-muted ms-1">(Opsional)</span>
       </label>
       
       {/* Enhanced Video Preview with Better Seeking Support */}
@@ -544,11 +544,11 @@ const VideoUpload = ({ courseData, setCourseData }) => {
           ref={containerRef}
           className="video-preview mb-3" 
           style={{ 
-            height: '400px', 
-            position: 'relative',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+            height: "400px", 
+            position: "relative",
+            borderRadius: "12px",
+            overflow: "hidden",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)"
           }}
         >
           {/* Video Loading Overlay - Only shows when loading, doesn't interfere with controls */}
@@ -556,18 +556,18 @@ const VideoUpload = ({ courseData, setCourseData }) => {
             <div 
               className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
               style={{ 
-                backgroundColor: 'rgba(0,0,0,0.8)', 
+                backgroundColor: "rgba(0,0,0,0.8)", 
                 zIndex: 100,
-                backdropFilter: 'blur(4px)',
-                pointerEvents: 'auto'
+                backdropFilter: "blur(4px)",
+                pointerEvents: "auto"
               }}
             >
               <div className="text-center text-white">
-                <div className="spinner-border mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
-                  <span className="visually-hidden">Loading video...</span>
+                <div className="spinner-border mb-3" role="status" style={{ width: "3rem", height: "3rem" }}>
+                  <span className="visually-hidden">Memuat video...</span>
                 </div>
-                <h6 className="mb-2">Loading Video Preview</h6>
-                <p className="small mb-0 opacity-75">Preparing video for playback...</p>
+                <h6 className="mb-2">Memuat Pratinjau Video</h6>
+                <p className="small mb-0 opacity-75">Menyiapkan video untuk pemutaran...</p>
               </div>
             </div>
           )}
@@ -577,36 +577,36 @@ const VideoUpload = ({ courseData, setCourseData }) => {
             <div 
               className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
               style={{ 
-                backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                border: '3px solid #dc3545',
+                backgroundColor: "rgba(220, 53, 69, 0.1)",
+                border: "3px solid #dc3545",
                 zIndex: 100,
-                pointerEvents: 'auto'
+                pointerEvents: "auto"
               }}
             >
-              <div className="text-center p-4" style={{ maxWidth: '400px' }}>
-                <i className="fas fa-exclamation-triangle text-danger mb-3" style={{ fontSize: '3rem' }}></i>
+              <div className="text-center p-4" style={{ maxWidth: "400px" }}>
+                <i className="fas fa-exclamation-triangle text-danger mb-3" style={{ fontSize: "3rem" }}></i>
                 
-                <h6 className="text-danger mb-2">Video Preview Error</h6>
+                <h6 className="text-danger mb-2">Kesalahan Pratinjau Video</h6>
                 
                 <p className="text-danger mb-2 small">
-                  {typeof videoError === 'string' ? videoError : videoError.message}
+                  {typeof videoError === "string" ? videoError : videoError.message}
                 </p>
                 
                 {/* Show format information for troubleshooting */}
-                {typeof videoError === 'object' && (
+                {typeof videoError === "object" && (
                   <div className="mb-3">
                     <div className="badge bg-secondary mb-2">
                       Format: {videoError.format}
-                      {videoError.isCompressed && ' (Compressed)'}
+                      {videoError.isCompressed && " (Compressed)"}
                     </div>
                     
                     {/* Show suggestions if available */}
                     {videoError.suggestions && videoError.suggestions.length > 0 && (
                       <div className="text-start">
                         <small className="text-muted d-block mb-2">
-                          <strong>Troubleshooting suggestions:</strong>
+                          <strong>Saran penyelesaian masalah:</strong>
                         </small>
-                        <ul className="text-muted small text-start" style={{ paddingLeft: '1.2rem' }}>
+                        <ul className="text-muted small text-start" style={{ paddingLeft: "1.2rem" }}>
                           {videoError.suggestions.map((suggestion, index) => (
                             <li key={index}>{suggestion}</li>
                           ))}
@@ -627,11 +627,11 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                     }}
                   >
                     <i className="fas fa-redo me-1"></i>
-                    Retry
+                    Coba Lagi
                   </button>
                   
                   {/* Show re-upload option for compressed videos */}
-                  {typeof videoError === 'object' && videoError.isCompressed && (
+                  {typeof videoError === "object" && videoError.isCompressed && (
                     <button 
                       className="btn btn-outline-primary btn-sm"
                       onClick={() => {
@@ -639,13 +639,13 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                         setCourseData(prev => ({ ...prev, file: null }));
                         Toast().fire({
                           icon: "info",
-                          title: "Upload New Video",
-                          text: "Please upload your original video file again.",
+                          title: "Unggah Video Baru",
+                          text: "Silakan unggah file video asli Anda lagi.",
                         });
                       }}
                     >
                       <i className="fas fa-upload me-1"></i>
-                      Upload Original
+                      Unggah Asli
                     </button>
                   )}
                 </div>
@@ -658,20 +658,20 @@ const VideoUpload = ({ courseData, setCourseData }) => {
             <div 
               className="position-absolute"
               style={{ 
-                top: '10px',
-                right: '10px', 
+                top: "10px",
+                right: "10px", 
                 zIndex: 5,
-                backgroundColor: 'rgba(40, 167, 69, 0.9)',
-                color: 'white',
-                padding: '4px 8px',
-                borderRadius: '12px',
-                fontSize: '0.75rem',
-                fontWeight: '600',
-                pointerEvents: 'none'
+                backgroundColor: "rgba(40, 167, 69, 0.9)",
+                color: "white",
+                padding: "4px 8px",
+                borderRadius: "12px",
+                fontSize: "0.75rem",
+                fontWeight: "600",
+                pointerEvents: "none"
               }}
             >
               <i className="fas fa-check-circle me-1"></i>
-              Ready
+              Siap
             </div>
           )}
           
@@ -696,14 +696,14 @@ const VideoUpload = ({ courseData, setCourseData }) => {
             onSeeked={handleVideoSeeked}
             onError={handleVideoError}
             style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              backgroundColor: '#000',
-              border: videoError ? '3px solid #dc3545' : 
-                      videoReady ? '3px solid #28a745' : 
-                      '3px solid #6c757d',
-              position: 'relative',
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              backgroundColor: "#000",
+              border: videoError ? "3px solid #dc3545" : 
+                      videoReady ? "3px solid #28a745" : 
+                      "3px solid #6c757d",
+              position: "relative",
               zIndex: 1
             }}
           >
@@ -719,7 +719,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
             {/* Fallback message for unsupported browsers */}
             <div className="d-flex align-items-center justify-content-center h-100 text-muted">
               <div className="text-center">
-                <i className="fas fa-video-slash mb-2" style={{ fontSize: '2rem' }}></i>
+                <i className="fas fa-video-slash mb-2" style={{ fontSize: "2rem" }}></i>
                 <div className="mb-2">
                   <strong>Video Playback Not Supported</strong>
                 </div>
@@ -745,14 +745,14 @@ const VideoUpload = ({ courseData, setCourseData }) => {
               <i className="fas fa-info-circle text-primary me-2"></i>
               <div className="small">
                 {videoLoading && (
-                  <span className="text-muted">Loading video preview...</span>
+                  <span className="text-muted">Memuat pratinjau video...</span>
                 )}
                 {videoError && (
                   <div>
                     <span className="text-danger">
-                      Video preview error - {typeof videoError === 'string' ? 'see details above' : videoError.isCompressed ? 'compressed video issue' : 'format compatibility issue'}
+                      Kesalahan pratinjau video - {typeof videoError === "string" ? "lihat rincian di atas" : videoError.isCompressed ? "masalah video terkompresi" : "masalah kompatibilitas format"}
                     </span>
-                    {typeof videoError === 'object' && (
+                    {typeof videoError === "object" && (
                       <div className="mt-1">
                         <span className="badge bg-warning text-dark">
                           {videoError.format}
@@ -763,7 +763,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                 )}
                 {videoReady && !videoLoading && !videoError && (
                   <div>
-                    <span className="text-success">✓ Video preview ready - Timeline seeking enabled</span>
+                    <span className="text-success">✓ Pratinjau video siap - Pencarian timeline diaktifkan</span>
                     <div className="mt-1">
                       <span className="badge bg-info">
                         {getVideoFormat(courseData.file)}
@@ -773,7 +773,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                 )}
                 {!videoLoading && !videoError && !videoReady && (
                   <div>
-                    <span className="text-muted">Video initializing...</span>
+                    <span className="text-muted">Video sedang diinisialisasi...</span>
                     <div className="mt-1">
                       <span className="badge bg-secondary">
                         {getVideoFormat(courseData.file)}
@@ -787,13 +787,13 @@ const VideoUpload = ({ courseData, setCourseData }) => {
               {videoReady && !videoLoading && !videoError && (
                 <span className="badge bg-success">
                   <i className="fas fa-video me-1"></i>
-                  Seekable
+                  Dapat Dicari
                 </span>
               )}
-              {getVideoFormat(courseData.file).includes('compressed') && (
+              {getVideoFormat(courseData.file).includes("compressed") && (
                 <span className="badge bg-warning text-dark">
                   <i className="fas fa-compress-arrows-alt me-1"></i>
-                  Compressed
+                  Dikompres
                 </span>
               )}
             </div>
@@ -807,20 +807,20 @@ const VideoUpload = ({ courseData, setCourseData }) => {
           <div className="d-flex align-items-center">
             <i className="fas fa-video text-primary me-2"></i>
             <div className="flex-grow-1">
-              <strong className="text-dark">Current Video File:</strong>
+              <strong className="text-dark">File Video Saat Ini:</strong>
               <br />
               <small className="text-muted text-break">{courseData.file}</small>
             </div>
             <span className="badge bg-success ms-2">
               <i className="fas fa-play me-1"></i>
-              Active
+              Aktif
             </span>
           </div>
         </div>
       )}
       
-      <div className={`file-upload-area ${fileLoading ? 'uploading' : ''} ${courseData.file ? 'has-file' : ''}`}
-           style={{ minHeight: courseData.file ? '40px' : '50px' }}>
+      <div className={`file-upload-area ${fileLoading ? "uploading" : ""} ${courseData.file ? "has-file" : ""}`}
+           style={{ minHeight: courseData.file ? "40px" : "50px" }}>
         <input 
           id="courseVideo" 
           className="file-input"
@@ -829,28 +829,28 @@ const VideoUpload = ({ courseData, setCourseData }) => {
           onChange={handleFileUpload}
           accept="video/*"
           disabled={fileLoading}
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
         />
         
-        <div className="upload-content" style={{ padding: courseData.file ? '0.5rem' : '0.75rem' }}>
+        <div className="upload-content" style={{ padding: courseData.file ? "0.5rem" : "0.75rem" }}>
           {fileLoading ? (
             <div className="upload-loading text-center">
               <div 
                 className="spinner-border spinner-border-sm text-primary mb-1" 
                 role="status"
                 style={{ 
-                  width: '1.5rem', 
-                  height: '1.5rem',
+                  width: "1.5rem", 
+                  height: "1.5rem",
                   flexShrink: 0,
-                  borderWidth: '0.2em'
+                  borderWidth: "0.2em"
                 }}
               >
-                <span className="visually-hidden">Loading...</span>
+                <span className="visually-hidden">Memuat...</span>
               </div>
               
               {compressionStatus.isCompressing ? (
                 <>
-                  <div className="progress mt-2 mb-2" style={{ height: '6px' }}>
+                  <div className="progress mt-2 mb-2" style={{ height: "6px" }}>
                     <div 
                       className="progress-bar progress-bar-striped progress-bar-animated bg-info" 
                       style={{ width: `${compressionStatus.progress}%` }}
@@ -863,15 +863,15 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                   <button 
                     className="btn btn-outline-danger btn-sm"
                     onClick={cancelCompression}
-                    style={{ fontSize: '0.7rem', padding: '0.2rem 0.4rem' }}
+                    style={{ fontSize: "0.7rem", padding: "0.2rem 0.4rem" }}
                   >
                     <i className="fas fa-times me-1"></i>
-                    Cancel Compression
+                    Batalkan Kompresi
                   </button>
                 </>
               ) : uploadProgress > 0 ? (
                 <>
-                  <div className="progress mt-2 mb-2" style={{ height: '6px' }}>
+                  <div className="progress mt-2 mb-2" style={{ height: "6px" }}>
                     <div 
                       className="progress-bar progress-bar-striped progress-bar-animated bg-success" 
                       style={{ width: `${uploadProgress}%` }}
@@ -879,12 +879,12 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                   </div>
                   <p className="small mb-0 text-success">
                     <i className="fas fa-cloud-upload-alt me-1"></i>
-                    Uploading: {uploadProgress}%
+                    Mengunggah: {uploadProgress}%
                   </p>
                 </>
               ) : (
                 <p className="small mb-0">
-                  {compressionStatus.message || "Uploading Video..."}
+                  {compressionStatus.message || "Mengunggah Video..."}
                 </p>
               )}
             </div>
@@ -892,24 +892,24 @@ const VideoUpload = ({ courseData, setCourseData }) => {
             <div className="upload-success text-center">
               <p className="text-success small mb-1">
                 <i className="fas fa-check-circle me-1"></i>
-                Video is Active - Ready for Course Update
+                Video Aktif - Siap untuk Pembaruan Kursus
               </p>
               <div className="file-actions">
-                <label htmlFor="courseVideo" className="btn btn-outline-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+                <label htmlFor="courseVideo" className="btn btn-outline-primary btn-sm" style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem" }}>
                   <i className="fas fa-sync-alt me-1"></i>
-                  Replace Video
+                  Ganti Video
                 </label>
               </div>
             </div>
           ) : (
             <div className="upload-prompt text-center">
               <div className="upload-icon mb-1">
-                <i className="fas fa-cloud-upload-alt" style={{ fontSize: '1.2rem' }}></i>
+                <i className="fas fa-cloud-upload-alt" style={{ fontSize: "1.2rem" }}></i>
               </div>
-              <p className="small mb-1">Upload Course Intro Video</p>
-              <label htmlFor="courseVideo" className="btn btn-primary btn-sm" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+              <p className="small mb-1">Unggah Video Pengantar Kursus</p>
+              <label htmlFor="courseVideo" className="btn btn-primary btn-sm" style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem" }}>
                 <i className="fas fa-plus me-1"></i>
-                Choose Video File
+                Pilih File Video
               </label>
             </div>
           )}
@@ -919,53 +919,53 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       <div className="file-help">
         <small className="text-muted">
           <i className="fas fa-info-circle me-1"></i>
-          Supported formats: MP4, WebM, MOV • Files under 100MB upload directly
+          Format yang didukung: MP4, WebM, MOV • File di bawah 100MB diunggah langsung
           <br />
           <i className="fas fa-compress-arrows-alt me-1 text-warning"></i>
-          <strong>Compression mandatory</strong> - Files over 100MB must be compressed to save storage space!
+          <strong>Kompresi wajib</strong> - File di atas 100MB harus dikompres untuk menghemat ruang penyimpanan!
         </small>
       </div>
 
       {/* Compression Confirmation Modal */}
       {showCompressionConfirm && pendingFile && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header bg-warning text-dark">
                 <h5 className="modal-title">
                   <i className="fas fa-exclamation-triangle me-2"></i>
-                  Large Video File Detected
+                  File Video Besar Terdeteksi
                 </h5>
               </div>
               <div className="modal-body">
                 <div className="text-center mb-3">
-                  <i className="fas fa-file-video text-warning" style={{ fontSize: '3rem' }}></i>
+                  <i className="fas fa-file-video text-warning" style={{ fontSize: "3rem" }}></i>
                 </div>
                 
                 <div className="alert alert-info">
-                  <h6><i className="fas fa-info-circle me-1"></i>File Information:</h6>
+                  <h6><i className="fas fa-info-circle me-1"></i>Informasi File:</h6>
                   <ul className="mb-0">
-                    <li><strong>File Size:</strong> {VideoCompressionUtils.getFileSizeMB(pendingFile).toFixed(1)}MB</li>
-                    <li><strong>File Name:</strong> {pendingFile.name}</li>
-                    <li><strong>File Type:</strong> {pendingFile.type}</li>
+                    <li><strong>Ukuran File:</strong> {VideoCompressionUtils.getFileSizeMB(pendingFile).toFixed(1)}MB</li>
+                    <li><strong>Nama File:</strong> {pendingFile.name}</li>
+                    <li><strong>Jenis File:</strong> {pendingFile.type}</li>
                   </ul>
                 </div>
 
                 <div className="alert alert-warning">
-                  <h6><i className="fas fa-clock me-1"></i>Compression Required:</h6>
+                  <h6><i className="fas fa-clock me-1"></i>Kompresi Diperlukan:</h6>
                   <ul className="mb-0">
-                    <li><strong>Files over 100MB must be compressed</strong> to save storage space</li>
-                    <li><strong>This process may take 3-10 minutes</strong> depending on video length</li>
-                    <li>You can cancel compression at any time</li>
-                    <li>Original quality will be preserved as much as possible</li>
+                    <li><strong>File di atas 100MB harus dikompres</strong> untuk menghemat ruang penyimpanan</li>
+                    <li><strong>Proses ini dapat memakan waktu 3-10 menit</strong> tergantung panjang video</li>
+                    <li>Anda dapat membatalkan kompresi kapan saja</li>
+                    <li>Kualitas asli akan dipertahankan sejauh mungkin</li>
                   </ul>
                 </div>
 
                 <div className="alert alert-danger">
-                  <h6><i className="fas fa-exclamation-circle me-1"></i>Storage Policy:</h6>
+                  <h6><i className="fas fa-exclamation-circle me-1"></i>Kebijakan Penyimpanan:</h6>
                   <p className="mb-0">
-                    <strong>Compression is mandatory for files over 100MB</strong> to manage server storage efficiently. 
-                    This ensures optimal performance and prevents storage overflow.
+                    <strong>Kompresi wajib untuk file di atas 100MB</strong> untuk mengelola penyimpanan server secara efisien. 
+                    Ini memastikan kinerja optimal dan mencegah overflow penyimpanan.
                   </p>
                 </div>
               </div>
@@ -977,7 +977,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                   onClick={() => handleCompressionConfirm()}
                 >
                   <i className="fas fa-compress-arrows-alt me-1"></i>
-                  Proceed with Compression
+                  Lanjutkan dengan Kompresi
                 </button>
                 <button 
                   type="button" 
@@ -988,7 +988,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                   }}
                 >
                   <i className="fas fa-times me-1"></i>
-                  Cancel & Choose Different File
+                  Batalkan & Pilih File Lain
                 </button>
               </div>
             </div>

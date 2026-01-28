@@ -7,15 +7,36 @@
    ================================ */
 
 .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Protect header card gap from parent overrides */
 .modern-dashboard .row > .col-12 > .instructor-header-card,
 .modern-dashboard .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
+}
+
+/* Ensure header card maintains consistent width on curriculum edit page */
+.instructor-course-edit-curriculum-page .instructor-header-card {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* CRITICAL: Force instructor-course-edit-curriculum-page padding to be overridable by pt-5 and pb-5 classes */
+/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+.instructor-course-edit-curriculum-page.pt-5 {
+    padding-top: 50px !important;
+}
+
+.instructor-course-edit-curriculum-page.pb-5 {
+    padding-bottom: 3rem !important;
 }
 
 /* ========================================
@@ -29,11 +50,21 @@
 
 /* Add proper bottom padding for footer spacing */
 .instructor-course-edit-curriculum-page {
-    min-height: 100vh;
-    padding: 3rem 0;
-    padding-bottom: 3rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
     margin-bottom: 8rem;
+    min-height: 100vh;
     background: transparent;
+    padding: 3rem 0;
+    padding-top: calc(70px + 3rem) !important;
+    padding-bottom: 3rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: hidden;
+    /* ✨ PHASE 7.3: Add overflow-x: hidden to prevent horizontal scroll */
 }
 
 /* Consistent vertical spacing for dashboard sections */
@@ -45,6 +76,27 @@
     flex-wrap: wrap;
     gap: 0;
     width: calc(100% + var(--bs-gutter-x, 24px));
+}
+
+/* Protect Header on curriculum edit page from row CSS rules */
+.instructor-course-edit-curriculum-page .row.instructor-header-row {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Ensure Header card maintains full width and removes right gap */
+.instructor-course-edit-curriculum-page .row.instructor-header-row > .col-xl-12,
+.instructor-course-edit-curriculum-page .row.instructor-header-row > .col-lg-12,
+.instructor-course-edit-curriculum-page .row.instructor-header-row > .col-md-12,
+.instructor-course-edit-curriculum-page .row.instructor-header-row > .col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
 /* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
@@ -69,8 +121,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
@@ -86,8 +138,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
@@ -812,70 +864,6 @@
     margin: 0;
 }
 
-/* ================================
-   SIDEBAR LAYOUT FIX
-   Ensures sidebar columns don't overflow
-   ================================ */
-@media (min-width: 992px) {
-    /* Expanded state */
-    .course-edit-container .col-lg-3 {
-        flex: 0 0 auto !important;
-        width: 25% !important;
-        max-width: 25% !important;
-    }
-    
-    .course-edit-container .col-lg-9 {
-        flex: 0 0 auto !important;
-        width: 75% !important;
-        max-width: 75% !important;
-    }
-    
-    /* Collapsed state - when sidebar has .collapsed class */
-    .course-edit-container .col-lg-3:has(.instructor-sidebar.collapsed) {
-        flex: 0 0 auto !important;
-        width: auto !important;
-        max-width: 100px !important;
-        min-width: 100px !important;
-    }
-    
-    .course-edit-container .col-lg-9:has(~ .col-lg-3 .instructor-sidebar.collapsed),
-    .course-edit-container .row:has(.instructor-sidebar.collapsed) > .col-lg-9 {
-        flex: 1 1 auto !important;
-        width: calc(100% - 100px) !important;
-        max-width: calc(100% - 100px) !important;
-    }
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-    /* Expanded state */
-    .course-edit-container .col-md-4 {
-        flex: 0 0 auto !important;
-        width: 33.333333% !important;
-        max-width: 33.333333% !important;
-    }
-    
-    .course-edit-container .col-md-8 {
-        flex: 0 0 auto !important;
-        width: 66.666667% !important;
-        max-width: 66.666667% !important;
-    }
-    
-    /* Collapsed state */
-    .course-edit-container .col-md-4:has(.instructor-sidebar.collapsed) {
-        flex: 0 0 auto !important;
-        width: auto !important;
-        max-width: 100px !important;
-        min-width: 100px !important;
-    }
-    
-    .course-edit-container .col-md-8:has(~ .col-md-4 .instructor-sidebar.collapsed),
-    .course-edit-container .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
-        flex: 1 1 auto !important;
-        width: calc(100% - 100px) !important;
-        max-width: calc(100% - 100px) !important;
-    }
-}
-
 .validation-errors ul li {
     padding: 6px 0;
     padding-left: 24px;
@@ -1008,64 +996,46 @@
    ======================================== */
 
 /* Base: Desktop Large (lg breakpoint and up) */
-@media (min-width: 992px) {
-  .instructor-course-edit-curriculum-page .row > .col-lg-9 {
-    flex: 1 1 auto;
-    min-width: 500px;
-  }
+/* col-lg-3 sidebar + col-lg-9 content = 12 columns */
+.instructor-course-edit-curriculum-page .row > .instructor-sidebar-column {
+  flex-basis: auto;
+  flex-grow: 0;
+  flex-shrink: 0;
+  /* Sidebar now spans full column width without Bootstrap padding */
+  width: auto;
 }
+
+/* Content column - expands to fill remaining space */
+.instructor-course-edit-curriculum-page .row > .col-lg-9 {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  max-width: 100%;
+}
+
+/* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
+/* Removed min-width: 500px to prevent gap shift when sidebar-collapsed-adapted is applied */
 
 /* Tablet (md breakpoint) */
-@media (min-width: 768px) and (max-width: 991px) {
-  .instructor-course-edit-curriculum-page .row > .col-md-8 {
-    flex: 1 1 auto;
-    min-width: 400px;
-  }
+/* col-md-4 sidebar + col-md-8 content = 12 columns */
+.instructor-course-edit-curriculum-page .row > .instructor-sidebar-column {
+  flex-basis: auto;
+  flex-grow: 0;
+  flex-shrink: 0;
+  /* Sidebar now spans full column width without Bootstrap padding */
+  width: auto;
 }
 
-/* Mobile: Full width stacked */
-/* ========================================
-   MEDIA QUERIES - RESPONSIVE SIDEBAR LAYOUT
-   ======================================== */
-
-/* Base: Desktop Large (lg breakpoint and up) */
-@media (min-width: 992px) {
-    /* Sidebar column - maintains fixed width or collapses */
-    .instructor-course-edit-curriculum-page .row > .instructor-sidebar-column {
-        flex-basis: auto;
-        flex-grow: 0;
-        flex-shrink: 0;
-        width: auto;
-    }
-
-    /* Content column - expands to fill remaining space */
-    .instructor-course-edit-curriculum-page .row > .col-lg-9 {
-        flex: 1 1 auto;
-        min-width: 0 !important;
-        width: auto;
-        max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
+/* Content column - expands to fill remaining space */
+.instructor-course-edit-curriculum-page .row > .col-md-8 {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  max-width: 100%;
 }
 
-/* Tablet (md breakpoint) */
-@media (min-width: 768px) and (max-width: 991px) {
-    .instructor-course-edit-curriculum-page .row > .instructor-sidebar-column {
-        flex-basis: auto;
-        flex-grow: 0;
-        flex-shrink: 0;
-        width: auto;
-    }
-
-    /* Content column - expands to fill remaining space */
-    .instructor-course-edit-curriculum-page .row > .col-md-8 {
-        flex: 1 1 auto;
-        min-width: 0 !important;
-        width: auto;
-        max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
-}
+/* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
+/* Removed min-width: 400px to prevent gap shift when sidebar-collapsed-adapted is applied */
 
 /* Mobile: Full width stacked */
 @media (max-width: 767px) {

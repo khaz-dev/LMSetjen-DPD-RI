@@ -32,10 +32,10 @@ export default function SearchQualityWidget() {
         setReport(response.data);
       }
     } catch (error) {
-      console.error('Failed to fetch quality report:', error);
+      console.error('Gagal mengambil laporan kualitas:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Failed to fetch search quality metrics'
+        title: 'Gagal mengambil metrik kualitas pencarian'
       });
     }
     setLoading(false);
@@ -54,10 +54,10 @@ export default function SearchQualityWidget() {
         setCourses(response.data.results);
       }
     } catch (error) {
-      console.error('Failed to fetch courses:', error);
+      console.error('Gagal mengambil kursus:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Failed to fetch course metrics'
+        title: 'Gagal mengambil metrik kursus'
       });
     }
     setLoading(false);
@@ -100,15 +100,15 @@ export default function SearchQualityWidget() {
   };
 
   if (loading && !report && activeTab === 'overview') {
-    return <div className="sq-widget card"><div className="card-body text-center">Loading...</div></div>;
+    return <div className="sq-widget card"><div className="card-body text-center">Memuat...</div></div>;
   }
 
   return (
     <div className="sq-widget card">
       <div className="card-header bg-light border-bottom">
-        <h5 className="mb-0">📊 Search Quality Metrics</h5>
+        <h5 className="mb-0">📊 Metrik Kualitas Pencarian</h5>
         <small className="text-muted">
-          Real-time visibility into course search performance and CTR analytics
+          Visibilitas real-time ke kinerja pencarian kursus dan analitik CTR
         </small>
       </div>
 
@@ -122,7 +122,7 @@ export default function SearchQualityWidget() {
               setActiveTab('overview');
             }}
           >
-            Overview
+            Ringkasan
           </a>
         </li>
         <li className="nav-item">
@@ -134,7 +134,7 @@ export default function SearchQualityWidget() {
               setActiveTab('courses');
             }}
           >
-            Course Metrics
+            Metrik Kursus
           </a>
         </li>
         <li className="nav-item">
@@ -146,7 +146,7 @@ export default function SearchQualityWidget() {
               setActiveTab('distribution');
             }}
           >
-            CTR Distribution
+            Distribusi CTR
           </a>
         </li>
       </ul>
@@ -158,25 +158,25 @@ export default function SearchQualityWidget() {
             <div className="row mb-4">
               <div className="col-md-3 mb-3">
                 <div className="metric-card">
-                  <div className="metric-label">Total Courses</div>
+                  <div className="metric-label">Total Kursus</div>
                   <div className="metric-value">{report.report.total_courses}</div>
                 </div>
               </div>
               <div className="col-md-3 mb-3">
                 <div className="metric-card">
-                  <div className="metric-label">Total Impressions</div>
+                  <div className="metric-label">Total Penayangan</div>
                   <div className="metric-value">{report.report.total_impressions}</div>
                 </div>
               </div>
               <div className="col-md-3 mb-3">
                 <div className="metric-card">
-                  <div className="metric-label">Total Clicks</div>
+                  <div className="metric-label">Total Klik</div>
                   <div className="metric-value">{report.report.total_clicks}</div>
                 </div>
               </div>
               <div className="col-md-3 mb-3">
                 <div className="metric-card highlight">
-                  <div className="metric-label">Overall CTR</div>
+                  <div className="metric-label">CTR Keseluruhan</div>
                   <div className="metric-value">{report.report.overall_ctr.toFixed(2)}%</div>
                 </div>
               </div>
@@ -186,7 +186,7 @@ export default function SearchQualityWidget() {
               <div className="col-md-4 mb-3">
                 <div className="status-card success">
                   <div className="status-icon">✓</div>
-                  <div className="status-label">High Performers</div>
+                  <div className="status-label">Performa Tinggi</div>
                   <div className="status-value">{report.report.high_performers}</div>
                   <small>CTR ≥ 5%</small>
                 </div>
@@ -194,28 +194,28 @@ export default function SearchQualityWidget() {
               <div className="col-md-4 mb-3">
                 <div className="status-card warning">
                   <div className="status-icon">⚠</div>
-                  <div className="status-label">Low Performers</div>
+                  <div className="status-label">Performa Rendah</div>
                   <div className="status-value">{report.report.low_performers}</div>
-                  <small>CTR &lt; 1% (with impressions)</small>
+                  <small>CTR &lt; 1% (dengan penayangan)</small>
                 </div>
               </div>
               <div className="col-md-4 mb-3">
                 <div className="status-card danger">
                   <div className="status-icon">✗</div>
-                  <div className="status-label">Hidden Courses</div>
+                  <div className="status-label">Kursus Tersembunyi</div>
                   <div className="status-value">{report.report.no_impression_courses}</div>
-                  <small>0 impressions</small>
+                  <small>0 penayangan</small>
                 </div>
               </div>
             </div>
 
             {report.recommendations && report.recommendations.length > 0 && (
               <div className="recommendations-section">
-                <h6 className="mb-3">🎯 Recommendations</h6>
+                <h6 className="mb-3">🎯 Rekomendasi</h6>
                 {report.recommendations.map((rec, idx) => (
                   <div key={idx} className={`alert alert-${rec.priority === 'HIGH' ? 'danger' : 'warning'}`} role="alert">
                     <strong>{rec.action}</strong>: {rec.description}
-                    {rec.affected_count && <small> ({rec.affected_count} courses affected)</small>}
+                    {rec.affected_count && <small> ({rec.affected_count} kursus terpengaruh)</small>}
                   </div>
                 ))}
               </div>
@@ -229,27 +229,27 @@ export default function SearchQualityWidget() {
             <div className="filter-section mb-4">
               <div className="row">
                 <div className="col-md-4">
-                  <label className="form-label">Performance</label>
+                  <label className="form-label">Performa</label>
                   <select
                     className="form-select"
                     value={filterIndicator || ''}
                     onChange={(e) => setFilterIndicator(e.target.value || null)}
                   >
-                    <option value="">All Performances</option>
-                    <option value="HIGH">High (CTR ≥ 5%)</option>
+                    <option value="">Semua Performa</option>
+                    <option value="HIGH">Tinggi (CTR ≥ 5%)</option>
                     <option value="NORMAL">Normal (1-5%)</option>
-                    <option value="LOW">Low (&lt; 1%)</option>
-                    <option value="HIDDEN">Hidden (0 impressions)</option>
+                    <option value="LOW">Rendah (&lt; 1%)</option>
+                    <option value="HIDDEN">Tersembunyi (0 penayangan)</option>
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Category</label>
+                  <label className="form-label">Kategori</label>
                   <select
                     className="form-select"
                     value={categoryFilter || ''}
                     onChange={(e) => setCategoryFilter(e.target.value || null)}
                   >
-                    <option value="">All Categories</option>
+                    <option value="">Semua Kategori</option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.title}
@@ -258,34 +258,34 @@ export default function SearchQualityWidget() {
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Sort By</label>
+                  <label className="form-label">Urutkan Berdasarkan</label>
                   <select
                     className="form-select"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                   >
-                    <option value="-search_impressions">Most Impressions</option>
-                    <option value="-search_clicks">Most Clicks</option>
-                    <option value="-click_through_rate">Highest CTR</option>
-                    <option value="click_through_rate">Lowest CTR</option>
+                    <option value="-search_impressions">Penayangan Terbanyak</option>
+                    <option value="-search_clicks">Klik Terbanyak</option>
+                    <option value="-click_through_rate">CTR Tertinggi</option>
+                    <option value="click_through_rate">CTR Terendah</option>
                   </select>
                 </div>
               </div>
             </div>
 
             {loading ? (
-              <div className="text-center">Loading...</div>
+              <div className="text-center">Memuat...</div>
             ) : courses.length === 0 ? (
-              <div className="alert alert-info">No courses found with selected filters</div>
+              <div className="alert alert-info">Tidak ada kursus yang ditemukan dengan filter yang dipilih</div>
             ) : (
               <div className="table-responsive">
                 <table className="table table-hover">
                   <thead className="table-light">
                     <tr>
-                      <th>Course Title</th>
-                      <th>Category</th>
-                      <th>Impressions</th>
-                      <th>Clicks</th>
+                      <th>Judul Kursus</th>
+                      <th>Kategori</th>
+                      <th>Penayangan</th>
+                      <th>Klik</th>
                       <th>CTR</th>
                       <th>Status</th>
                     </tr>
@@ -321,7 +321,7 @@ export default function SearchQualityWidget() {
         {/* Distribution Tab */}
         {activeTab === 'distribution' && report && (
           <div className="sq-distribution">
-            <h6 className="mb-4">Course Distribution by CTR Range</h6>
+            <h6 className="mb-4">Distribusi Kursus berdasarkan Rentang CTR</h6>
             <div className="row">
               {[
                 { label: '0-1%', value: report.ctr_distribution.range_0_1, color: '#dc3545' },
@@ -343,7 +343,7 @@ export default function SearchQualityWidget() {
                     </div>
                     <div className="distribution-label">
                       <strong>{item.label}</strong>
-                      <span className="distribution-count">{item.value} courses</span>
+                      <span className="distribution-count">{item.value} kursus</span>
                     </div>
                   </div>
                 </div>
@@ -359,7 +359,7 @@ export default function SearchQualityWidget() {
           onClick={fetchQualityReport}
           disabled={loading}
         >
-          {loading ? 'Refreshing...' : 'Refresh'}
+          {loading ? 'Menyegarkan...' : 'Segarkan'}
         </button>
       </div>
     </div>

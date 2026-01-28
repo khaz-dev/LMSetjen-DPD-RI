@@ -1,0 +1,256 @@
+# Phase 5 - Role Selection Components - VISUAL SUMMARY
+
+## What Was Built
+
+### RoleSelectionModal Component
+```
+┌─────────────────────────────────────────┐
+│  ✕ Pilih Peran Anda                     │
+│     Selamat datang, Nama User!          │
+│     user@example.com                    │
+├─────────────────────────────────────────┤
+│                                         │
+│  Pilih peran untuk melanjutkan:         │
+│                                         │
+│  ┌─ 👨‍🎓 ─────────────────────────────┐ │
+│  │ Peserta                              │ │
+│  │ Akses sebagai peserta kursus      ✓ │ │
+│  └─────────────────────────────────────┘ │
+│                                         │
+│  ┌─ 🎓 ─────────────────────────────┐  │
+│  │ Instruktur                         │ │
+│  │ Akses sebagai instruktur          │ │
+│  └─────────────────────────────────────┘ │
+│                                         │
+│  ┌─ 🛡️ ─────────────────────────────┐  │
+│  │ Administrator                      │ │
+│  │ Akses administrasi sistem         │ │
+│  └─────────────────────────────────────┘ │
+│                                         │
+│  ℹ️ Anda dapat mengubah peran kapan│
+│     saja dari menu profil anda.       │
+├─────────────────────────────────────────┤
+│  Pilih peran di atas untuk melanjutkan   │
+└─────────────────────────────────────────┘
+```
+
+## Login Flow Integration
+
+```
+User navigates to /login
+         ↓
+    Clicks "Login dengan Google"
+         ↓
+    OAuth popup opens
+         ↓
+    User authenticates with Google
+         ↓
+    Popup sends result to parent
+         ↓
+    Backend returns tokens + available_roles
+         ↓
+    Frontend checks: Single or Multiple roles?
+         ├─ Single Role
+         │  └─→ Toast success + Direct redirect
+         │      └─→ User sees dashboard
+         │
+         └─ Multiple Roles
+            └─→ Show RoleSelectionModal
+                └─→ User selects role
+                    └─→ Switch role via API
+                        └─→ Redirect to selected dashboard
+```
+
+## SSOLogin Flow Integration
+
+```
+User redirected from Nusa DPD
+    with sso_token
+         ↓
+    SSOLogin component receives token
+         ↓
+    Frontend POSTs to /api/v1/sso/verify/
+         ↓
+    Backend validates & returns tokens + roles
+         ↓
+    Frontend checks: Single or Multiple roles?
+         ├─ Single Role
+         │  └─→ Direct redirect
+         │
+         └─ Multiple Roles
+            └─→ Show RoleSelectionModal
+                └─→ User selects role
+                    └─→ Redirect to selected dashboard
+```
+
+## Role Selection Logic
+
+```javascript
+// After successful authentication
+const response = await auth();
+
+if (response.user.available_roles.length > 1) {
+    // Multi-role: Show modal
+    setShowRoleModal(true);
+    setAvailableRoles(response.user.available_roles);
+} else {
+    // Single-role: Direct redirect
+    redirectUserByRole(response.user.role);
+}
+
+// When user selects role from modal
+const handleRoleSelected = (role) => {
+    switchRole(role);      // API call
+    redirectUserByRole(role); // Navigate to dashboard
+};
+```
+
+## File Structure
+
+```
+frontend/src/
+├── components/
+│   ├── RoleSelectionModal.jsx          ✨ NEW
+│   ├── RoleSelectionModal.css          ✨ NEW
+│   └── [other components...]
+├── views/
+│   └── auth/
+│       ├── Login.jsx                   📝 MODIFIED
+│       ├── SSOLogin.jsx                📝 MODIFIED
+│       └── [other auth files...]
+└── utils/
+    ├── roleUtils.js                    (Phase 4)
+    ├── auth.js                         (existing)
+    └── [other utilities...]
+```
+
+## API Integration Points
+
+### Existing Endpoints (Phase 3)
+```
+POST /api/v1/auth/google/
+├─ Input: { token, token_type }
+└─ Output: { access, refresh, user: { available_roles: [...] } }
+
+POST /api/v1/sso/verify/
+├─ Input: { sso_token }
+└─ Output: { access, refresh, user: { available_roles: [...] } }
+```
+
+### New Modal Interaction
+```
+RoleSelectionModal.handleSelectRole(role)
+    ↓
+switchRole(role)  [roleUtils.js]
+    ↓
+POST /api/v1/auth/select-role/
+├─ Input: { role }
+└─ Output: { success, current_role, access_token (updated) }
+    ↓
+redirectUserByRole(role)
+    ↓
+Navigate to appropriate dashboard
+```
+
+## User Experience
+
+### Multi-Role User Journey
+
+1. **Before Phase 5:**
+   - User logs in
+   - Only sees one dashboard
+   - Cannot access other roles
+   - ❌ Frustrating
+
+2. **After Phase 5:**
+   - User logs in
+   - Beautiful modal shows all roles
+   - User clicks their preferred role
+   - Dashboard loads for that role
+   - ✅ Seamless experience
+
+### Modal Features
+
+✅ Visual role selection with icons
+✅ User information display
+✅ Role descriptions in Indonesian
+✅ Smooth animations
+✅ Loading states during switching
+✅ Error handling with toast notifications
+✅ Mobile responsive
+✅ Dark mode support
+✅ Cancel option with logout
+
+## Technical Details
+
+### Component Props
+```javascript
+<RoleSelectionModal
+  show={true}                           // Show/hide modal
+  roles={['student', 'teacher']}        // Available roles
+  currentRole="student"                 // Currently selected
+  user={{
+    full_name: "Nama User",
+    email: "email@example.com",
+    nip: "12345"
+  }}
+  onRoleSelected={(role) => {}}         // Selection callback
+  onCancel={() => {}}                   // Cancel callback
+/>
+```
+
+### State Management
+```javascript
+// In Login.jsx
+const [showRoleModal, setShowRoleModal] = useState(false);
+const [availableRoles, setAvailableRoles] = useState([]);
+const [currentUser, setCurrentUser] = useState(null);
+
+// Set when login succeeds with multi-role response
+setAvailableRoles(response.user.available_roles);
+setCurrentUser({ full_name, email, nip });
+setShowRoleModal(true);
+```
+
+### Error Scenarios
+
+| Scenario | Behavior |
+|----------|----------|
+| Network error on role switch | Show error toast, keep modal open |
+| Invalid role selection | Show error toast, reset selection |
+| User cancels modal | Show warning toast, logout, redirect to login |
+| Missing available_roles | Show single-role UI (backward compat) |
+| API timeout | Show timeout error, allow retry |
+
+## Performance
+
+✅ Component memoized (React.memo)
+✅ Event handlers optimized
+✅ No unnecessary re-renders
+✅ CSS animations use GPU acceleration
+✅ Loading states prevent race conditions
+✅ Async operations properly handled
+
+## Next Phase Preview
+
+### Phase 6: Routing Updates
+```javascript
+// Create RoleRoute wrapper
+<RoleRoute role="admin">
+  <AdminDashboard />
+</RoleRoute>
+
+// Checks:
+// 1. Is user authenticated?
+// 2. Is user's current_role = "admin"?
+// 3. If yes, show AdminDashboard
+// 4. If no, redirect to appropriate dashboard
+```
+
+This will ensure users can only access dashboards for their selected role.
+
+---
+
+**Status: PHASE 5 ✅ COMPLETE**
+**Ready for: PHASE 6 - Routing Updates**
+

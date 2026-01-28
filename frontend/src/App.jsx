@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { Route, Routes, BrowserRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 
-import { ProfileContext, WishlistContext } from "./views/plugin/Context";
+import { ProfileContext, WishlistContext, RolesContext } from "./views/plugin/Context";
 import apiInstance from "./utils/axios";
 import useAxios from "./utils/useAxios";
 import UserData from "./views/plugin/UserData";
@@ -23,7 +23,6 @@ import RoleRoute from "./layouts/RoleRoute";
 
 // Lazy load all route components for better performance
 // Auth Routes
-const Register = lazy(() => import("./views/auth/Register"));
 const Login = lazy(() => import("./views/auth/Login"));
 const SSOLogin = lazy(() => import("./views/auth/SSOLogin"));
 const ForgotPassword = lazy(() => import("./views/auth/ForgotPassword"));
@@ -34,7 +33,13 @@ const Index = lazy(() => import("./views/base/Index"));
 const CourseDetail = lazy(() => import("./views/base/CourseDetail"));
 const Search = lazy(() => import("./views/base/Search"));
 const UserGuide = lazy(() => import("./views/base/UserGuide"));
+const Contact = lazy(() => import("./views/base/Contact"));
+const Tentang = lazy(() => import("./views/base/Tentang"));
+const Capaian = lazy(() => import("./views/base/Capaian"));
 const CertificateValidation = lazy(() => import("./views/base/CertificateValidation"));
+const PrivacyPolicy = lazy(() => import("./views/base/PrivacyPolicy"));
+const TermsAndConditions = lazy(() => import("./views/base/TermsAndConditions"));
+const CookiePolicy = lazy(() => import("./views/base/CookiePolicy"));
 const NotFound = lazy(() => import("./views/base/NotFound"));
 
 // Student Routes
@@ -44,7 +49,6 @@ const StudentCourseDetail = lazy(() => import("./views/student/CourseDetail"));
 const Wishlist = lazy(() => import("./views/student/Wishlist"));
 const StudentQA = lazy(() => import("./views/student/QA"));
 const StudentProfile = lazy(() => import("./views/student/Profile"));
-const StudentChangePassword = lazy(() => import("./views/student/ChangePassword"));
 
 // Instructor Routes
 const Dashboard = lazy(() => import("./views/instructor/Dashboard"));
@@ -53,7 +57,6 @@ const Review = lazy(() => import("./views/instructor/Review"));
 const Students = lazy(() => import("./views/instructor/Students"));
 const TeacherNotification = lazy(() => import("./views/instructor/TeacherNotification"));
 const QA = lazy(() => import("./views/instructor/QA"));
-const ChangePassword = lazy(() => import("./views/instructor/ChangePassword"));
 const Profile = lazy(() => import("./views/instructor/Profile"));
 const CourseCreate = lazy(() => import("./views/instructor/CourseCreate"));
 const CourseEdit = lazy(() => import("./views/instructor/CourseEdit"));
@@ -96,6 +99,38 @@ const LoadingFallback = () => (
 function App() {
     const [wishlistCount, setWishlistCount] = useState(0);
     const [profile, setProfile] = useState(null);
+    // PHASE 4: State for multi-role support
+    const [availableRoles, setAvailableRoles] = useState([]);
+    const [currentRole, setCurrentRole] = useState(null);
+    const [rolesLoading, setRolesLoading] = useState(false);
+
+    // PHASE 4: Fetch available roles for multi-role users
+    const fetchAvailableRoles = () => {
+        try {
+            const userData = UserData();
+            if (userData?.user_id) {
+                setRolesLoading(true);
+                useAxios.get(`auth/available-roles/`).then((res) => {
+                    console.log("PHASE 4: Available roles fetched:", res.data.available_roles);
+                    setAvailableRoles(res.data.available_roles || []);
+                    setCurrentRole(res.data.current_role || null);
+                    setRolesLoading(false);
+                }).catch((error) => {
+                    console.error("PHASE 4: Error fetching available roles:", error);
+                    // Fallback: try to get roles from user data
+                    if (userData?.roles) {
+                        const roles = userData.roles.split(',').map(r => r.trim());
+                        setAvailableRoles(roles);
+                        setCurrentRole(userData.current_role || userData.role || roles[0]);
+                    }
+                    setRolesLoading(false);
+                });
+            }
+        } catch (error) {
+            console.error("PHASE 4: Error in fetchAvailableRoles:", error);
+            setRolesLoading(false);
+        }
+    };
 
     const refreshWishlistCount = () => {
         try {
@@ -119,6 +154,8 @@ function App() {
             // Only fetch user data if user is logged in
             if (userData?.user_id) {
                 refreshWishlistCount();
+                // PHASE 4: Fetch available roles for multi-role support
+                fetchAvailableRoles();
                 
                 useAxios.get(`user/profile/${userData.user_id}/`).then((res) => {
                     setProfile(res.data);
@@ -153,16 +190,22 @@ function App() {
         [profile]
     );
 
+    // PHASE 4: Memoize roles context value
+    const rolesContextValue = useMemo(
+        () => ({ availableRoles, currentRole, rolesLoading, fetchAvailableRoles }),
+        [availableRoles, currentRole, rolesLoading]
+    );
+
     return (
         <HelmetProvider>
             <WishlistContext.Provider value={wishlistContextValue}>
                 <ProfileContext.Provider value={profileContextValue}>
-                <BrowserRouter>
-                    <ThemeProvider>
+                    <RolesContext.Provider value={rolesContextValue}>
+                    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                        <ThemeProvider>
                         <MainWrapper>
                             <Suspense fallback={<LoadingFallback />}>
                                 <Routes>
-                                    <Route path="/register/" element={<Register />} />
                                     <Route path="/login/" element={<Login />} />
                                     <Route path="/sso/:sso_token/" element={<SSOLogin />} />
                                     <Route path="/sso/login/:sso_token/" element={<SSOLogin />} />
@@ -174,7 +217,13 @@ function App() {
                                 <Route path="/course-detail/:slug/" element={<CourseDetail />} />
                                 <Route path="/search/" element={<Search />} />
                                 <Route path="/user-guide/" element={<UserGuide />} />
+                                <Route path="/contact/" element={<Contact />} />
+                                <Route path="/tentang/" element={<Tentang />} />
+                                <Route path="/capaian/" element={<Capaian />} />
                                 <Route path="/certificate/validate/:validation_token/" element={<CertificateValidation />} />
+                                <Route path="/privacy-policy/" element={<PrivacyPolicy />} />
+                                <Route path="/terms-and-conditions/" element={<TermsAndConditions />} />
+                                <Route path="/cookie-policy/" element={<CookiePolicy />} />
 
                                 {/* Student Routes */}
                                 <Route
@@ -237,17 +286,7 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
-                            <Route
-                                path="/student/change-password/"
-                                element={
-                                    <PrivateRoute>
-                                        <RoleRoute allowedRoles={["student"]}>
-                                            <StudentChangePassword />
-                                        </RoleRoute>
-                                    </PrivateRoute>
-                                }
-                            />
-
+                            
                             {/* Instructor Routes */}
 
                             <Route
@@ -307,16 +346,6 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <QA />
-                                        </RoleRoute>
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/change-password/"
-                                element={
-                                    <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
-                                            <ChangePassword />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }
@@ -420,7 +449,8 @@ function App() {
                         </Suspense>
                     </MainWrapper>
                 </ThemeProvider>
-                </BrowserRouter>
+                    </BrowserRouter>
+                    </RolesContext.Provider>
             </ProfileContext.Provider>
         </WishlistContext.Provider>
         </HelmetProvider>

@@ -63,9 +63,9 @@ const CourseSidebar = ({
         if (!userData?.user_id) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Login Required',
-                text: 'Please login to enroll in this course',
-                confirmButtonText: 'Go to Login',
+                title: 'Login Diperlukan',
+                text: 'Silakan login untuk mendaftar di kursus ini',
+                confirmButtonText: 'Ke Halaman Login',
                 confirmButtonColor: '#667eea'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -85,8 +85,8 @@ const CourseSidebar = ({
             
             Swal.fire({
                 icon: 'success',
-                title: 'Enrollment Successful!',
-                text: 'You have successfully enrolled in this course',
+                title: 'Pendaftaran Berhasil!',
+                text: 'Anda telah berhasil mendaftar di kursus ini',
                 confirmButtonColor: '#667eea'
             });
 
@@ -101,8 +101,8 @@ const CourseSidebar = ({
             console.error("Enrollment error:", error);
             Swal.fire({
                 icon: 'error',
-                title: 'Enrollment Failed',
-                text: error.response?.data?.message || 'Failed to enroll in course. Please try again.',
+                title: 'Pendaftaran Gagal',
+                text: error.response?.data?.message || 'Gagal mendaftar di kursus. Silakan coba lagi.',
                 confirmButtonColor: '#dc3545'
             });
         } finally {
@@ -122,9 +122,9 @@ const CourseSidebar = ({
         if (!userData?.user_id) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Login Required',
-                text: 'Please login to add courses to your wishlist',
-                confirmButtonText: 'Go to Login',
+                title: 'Login Diperlukan',
+                text: 'Silakan login untuk menambahkan kursus ke wishlist Anda',
+                confirmButtonText: 'Ke Halaman Login',
                 confirmButtonColor: '#667eea'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -178,9 +178,15 @@ const CourseSidebar = ({
     };
 
     // Check if user is instructor and owns this course
-    const isInstructorCourse = userData?.teacher_id && course?.teacher?.id === userData.teacher_id;
+    // ✨ PHASE 8c: Fixed - Filter out students (teacher_id = 0) before comparing IDs
+    const isInstructorCourse = userData?.teacher_id > 0 && course?.teacher?.id === userData.teacher_id;
     // Fix: Check if teacher_id is a valid positive number (students have teacher_id = 0)
     const isInstructor = userData?.teacher_id && userData.teacher_id > 0;
+    
+    // ✨ PHASE 8d: Multi-role support - Check if user is currently in student mode
+    // For multi-role users, use current_role if available, fallback to role
+    const currentRole = userData?.current_role || userData?.role;
+    const isStudentMode = currentRole === "student";
 
     // ✅ ALL HARDCODED DATA REMOVED - Now using backend data:
     // - course.features (replaces courseFeatures)
@@ -253,8 +259,9 @@ const CourseSidebar = ({
 
                     {/* Action Buttons */}
                     <div className="d-grid gap-2 mb-3">
-                        {/* Show Edit Course button if instructor owns this course */}
-                        {isInstructorCourse ? (
+                        {/* ✨ PHASE 8d: For student mode, show enrollment buttons regardless of instructor status */}
+                        {/* Show Edit Course button if instructor owns this course AND not in student mode */}
+                        {isInstructorCourse && !isStudentMode ? (
                             <button 
                                 onClick={() => navigate(`/instructor/edit-course/${course.course_id}/`)}
                                 className="btn"
@@ -309,7 +316,7 @@ const CourseSidebar = ({
                                 {loading ? (
                                     <>
                                         <i className="fas fa-spinner fa-spin me-2"></i>
-                                        Processing...
+                                        Memproses...
                                     </>
                                 ) : (
                                     <>
@@ -341,12 +348,12 @@ const CourseSidebar = ({
                                 {isLoadingWishlist ? (
                                     <>
                                         <i className="fas fa-spinner fa-spin me-2"></i>
-                                        Processing...
+                                        Memproses...
                                     </>
                                 ) : (
                                     <>
                                         <i className={`${isInWishlist ? 'fas fa-heart-broken' : 'far fa-heart'} me-2`}></i>
-                                        {isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                                        {isInWishlist ? 'Hapus dari Wishlist' : 'Tambah ke Wishlist'}
                                     </>
                                 )}
                             </button>

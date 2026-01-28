@@ -40,6 +40,12 @@
   margin-right: 0.5rem;
   display: inline;
   transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.footer-brand-name:hover {
+  opacity: 0.8;
+  text-decoration: none;
 }
 
 .footer-brand-copyright {

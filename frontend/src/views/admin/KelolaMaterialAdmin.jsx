@@ -36,7 +36,7 @@ function KelolaMaterialAdmin() {
             console.error("Error fetching categories:", error);
             Toast().fire({
                 icon: "error",
-                title: "Failed to load categories"
+                title: "Gagal memuat kategori"
             });
         } finally {
             setLoading(false);
@@ -81,10 +81,10 @@ function KelolaMaterialAdmin() {
     const validateForm = () => {
         const errors = {};
         if (!formData.title || formData.title.trim() === "") {
-            errors.title = "Category name is required";
+            errors.title = "Nama kategori wajib diisi";
         }
         if (formData.title.trim().length < 2) {
-            errors.title = "Category name must be at least 2 characters";
+            errors.title = "Nama kategori setidaknya harus 2 karakter";
         }
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -104,13 +104,13 @@ function KelolaMaterialAdmin() {
                 await apiInstance.post("admin/category/", payload);
                 Toast().fire({
                     icon: "success",
-                    title: "Category created successfully"
+                    title: "Kategori berhasil dibuat"
                 });
             } else {
                 await apiInstance.put(`admin/category/${selectedCategory.id}/`, payload);
                 Toast().fire({
                     icon: "success",
-                    title: "Category updated successfully"
+                    title: "Kategori berhasil diperbarui"
                 });
             }
 
@@ -129,7 +129,7 @@ function KelolaMaterialAdmin() {
     };
 
     const handleDeleteCategory = async (category) => {
-        if (!window.confirm(`Are you sure you want to delete "${category.title}"? This action cannot be undone.`)) {
+        if (!window.confirm(`Apakah Anda yakin ingin menghapus "${category.title}"? Tindakan ini tidak dapat dibatalkan.`)) {
             return;
         }
 
@@ -140,7 +140,7 @@ function KelolaMaterialAdmin() {
             if (response.status === 204 || response.status === 200) {
                 Toast().fire({
                     icon: "success",
-                    title: "Category deleted successfully"
+                    title: "Kategori berhasil dihapus"
                 });
                 fetchCategories();
             }
@@ -150,7 +150,7 @@ function KelolaMaterialAdmin() {
             // Handle different error scenarios
             if (error.response?.status === 400) {
                 // Category has courses
-                const errorMsg = error.response?.data?.error || "Cannot delete category with courses";
+                const errorMsg = error.response?.data?.error || "Tidak dapat menghapus kategori yang memiliki kursus";
                 Toast().fire({
                     icon: "warning",
                     title: errorMsg
@@ -158,16 +158,16 @@ function KelolaMaterialAdmin() {
             } else if (error.response?.status === 404) {
                 Toast().fire({
                     icon: "error",
-                    title: "Category not found"
+                    title: "Kategori tidak ditemukan"
                 });
                 fetchCategories();
             } else if (error.response?.status === 403) {
                 Toast().fire({
                     icon: "error",
-                    title: "You do not have permission to delete this category"
+                    title: "Anda tidak memiliki izin untuk menghapus kategori ini"
                 });
             } else {
-                const errorMsg = error.response?.data?.error || error.response?.data?.detail || "Failed to delete category";
+                const errorMsg = error.response?.data?.error || error.response?.data?.detail || "Gagal menghapus kategori";
                 Toast().fire({
                     icon: "error",
                     title: errorMsg
@@ -195,7 +195,7 @@ function KelolaMaterialAdmin() {
                 <div className="container mt-5">
                     <div className="alert alert-danger">
                         <i className="fas fa-lock me-2"></i>
-                        You do not have permission to access this page
+                        Anda tidak memiliki izin untuk mengakses halaman ini
                     </div>
                 </div>
                 <Footer />
@@ -204,7 +204,7 @@ function KelolaMaterialAdmin() {
     }
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <div className="kelola-material-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <AdminHeader />
 
             <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
@@ -217,7 +217,7 @@ function KelolaMaterialAdmin() {
                                     <i className="fas fa-book-atlas me-3"></i>Kelola Materi
                                 </h1>
                                 <p className="dashboard-subtitle">
-                                    Manage course categories with full control over content organization
+                                    Kelola kategori kursus dengan kontrol penuh atas organisasi konten
                                 </p>
                             </div>
                             <div className="dashboard-actions">
@@ -225,7 +225,7 @@ function KelolaMaterialAdmin() {
                                     className="btn btn-primary"
                                     onClick={handleAddCategory}
                                 >
-                                    <i className="fas fa-plus me-2"></i>Add Category
+                                    <i className="fas fa-plus me-2"></i>Tambah Kategori
                                 </button>
                             </div>
                         </div>
@@ -235,14 +235,14 @@ function KelolaMaterialAdmin() {
                     <div className="row mb-4">
                         <div className="col-lg-3 col-md-6 mb-3">
                             <div className="stat-card stat-card-primary">
-                                <div className="stat-card-body">
+                                <div className="material-stat-card-body">
                                     <div className="stat-icon">
                                         <i className="fas fa-layer-group"></i>
                                     </div>
                                     <div className="stat-info">
                                         <h4 className="stat-number">{stats.total}</h4>
-                                        <p className="stat-label">Total Categories</p>
-                                        <span className="stat-change neutral">All categories</span>
+                                        <p className="stat-label">Total Kategori</p>
+                                        <span className="stat-change neutral">Semua kategori</span>
                                     </div>
                                 </div>
                             </div>
@@ -250,14 +250,14 @@ function KelolaMaterialAdmin() {
 
                         <div className="col-lg-3 col-md-6 mb-3">
                             <div className="stat-card stat-card-success">
-                                <div className="stat-card-body">
+                                <div className="material-stat-card-body">
                                     <div className="stat-icon">
                                         <i className="fas fa-check-circle"></i>
                                     </div>
                                     <div className="stat-info">
                                         <h4 className="stat-number">{stats.active}</h4>
-                                        <p className="stat-label">Active</p>
-                                        <span className="stat-change positive">Visible</span>
+                                        <p className="stat-label">Aktif</p>
+                                        <span className="stat-change positive">Terlihat</span>
                                     </div>
                                 </div>
                             </div>
@@ -265,14 +265,14 @@ function KelolaMaterialAdmin() {
 
                         <div className="col-lg-3 col-md-6 mb-3">
                             <div className="stat-card stat-card-warning">
-                                <div className="stat-card-body">
+                                <div className="material-stat-card-body">
                                     <div className="stat-icon">
                                         <i className="fas fa-book"></i>
                                     </div>
                                     <div className="stat-info">
                                         <h4 className="stat-number">{stats.withCourses}</h4>
-                                        <p className="stat-label">With Courses</p>
-                                        <span className="stat-change neutral">{stats.totalCourses} courses</span>
+                                        <p className="stat-label">Dengan Kursus</p>
+                                        <span className="stat-change neutral">{stats.totalCourses} kursus</span>
                                     </div>
                                 </div>
                             </div>
@@ -280,14 +280,14 @@ function KelolaMaterialAdmin() {
 
                         <div className="col-lg-3 col-md-6 mb-3">
                             <div className="stat-card stat-card-info">
-                                <div className="stat-card-body">
+                                <div className="material-stat-card-body">
                                     <div className="stat-icon">
                                         <i className="fas fa-graduation-cap"></i>
                                     </div>
                                     <div className="stat-info">
                                         <h4 className="stat-number">{stats.totalCourses}</h4>
-                                        <p className="stat-label">Total Courses</p>
-                                        <span className="stat-change neutral">Assigned</span>
+                                        <p className="stat-label">Total Kursus</p>
+                                        <span className="stat-change neutral">Ditugaskan</span>
                                     </div>
                                 </div>
                             </div>
@@ -304,7 +304,7 @@ function KelolaMaterialAdmin() {
                                 <input
                                     type="text"
                                     className="form-control border-start-0"
-                                    placeholder="Search categories..."
+                                    placeholder="Cari kategori..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -312,7 +312,7 @@ function KelolaMaterialAdmin() {
                         </div>
                         <div className="col-md-6 text-end">
                             <span className="text-muted">
-                                Showing <strong>{filteredCategories.length}</strong> of <strong>{categories.length}</strong> categories
+                                Menampilkan <strong>{filteredCategories.length}</strong> dari <strong>{categories.length}</strong> kategori
                             </span>
                         </div>
                     </div>
@@ -322,9 +322,9 @@ function KelolaMaterialAdmin() {
                         <div className="activity-panel">
                             <div className="text-center py-5">
                                 <div className="spinner-border text-primary" role="status">
-                                    <span className="visually-hidden">Loading...</span>
+                                    <span className="visually-hidden">Memuat...</span>
                                 </div>
-                                <p className="mt-3 text-muted">Loading categories...</p>
+                                <p className="mt-3 text-muted">Memuat kategori...</p>
                             </div>
                         </div>
                     ) : filteredCategories.length === 0 ? (
@@ -333,16 +333,16 @@ function KelolaMaterialAdmin() {
                                 <div className="empty-state-icon">
                                     <i className="fas fa-inbox"></i>
                                 </div>
-                                <h4>No Categories Found</h4>
+                                <h4>Kategori Tidak Ditemukan</h4>
                                 <p className="text-muted">
-                                    {searchTerm ? "Your search didn't match any categories" : "Create your first category to get started"}
+                                    {searchTerm ? "Pencarian Anda tidak cocok dengan kategori apapun" : "Buat kategori pertama Anda untuk memulai"}
                                 </p>
                                 {!searchTerm && (
                                     <button 
                                         className="btn btn-primary mt-3"
                                         onClick={handleAddCategory}
                                     >
-                                        <i className="fas fa-plus me-2"></i>Create Category
+                                        <i className="fas fa-plus me-2"></i>Buat Kategori
                                     </button>
                                 )}
                             </div>
@@ -353,10 +353,10 @@ function KelolaMaterialAdmin() {
                                 <table className="categories-table">
                                     <thead>
                                         <tr>
-                                            <th>Category Name</th>
+                                            <th>Nama Kategori</th>
                                             <th>Status</th>
-                                            <th>Courses</th>
-                                            <th className="text-end">Actions</th>
+                                            <th>Kursus</th>
+                                            <th className="text-end">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -383,11 +383,11 @@ function KelolaMaterialAdmin() {
                                                 <td>
                                                     {category.active ? (
                                                         <span className="badge bg-success">
-                                                            <i className="fas fa-check-circle me-1"></i>Active
+                                                            <i className="fas fa-check-circle me-1"></i>Aktif
                                                         </span>
                                                     ) : (
                                                         <span className="badge bg-secondary">
-                                                            <i className="fas fa-times-circle me-1"></i>Inactive
+                                                            <i className="fas fa-times-circle me-1"></i>Tidak Aktif
                                                         </span>
                                                     )}
                                                 </td>
@@ -402,7 +402,7 @@ function KelolaMaterialAdmin() {
                                                         <button
                                                             className="btn btn-sm btn-outline-primary action-btn"
                                                             onClick={() => handleEditCategory(category)}
-                                                            title="Edit category"
+                                                            title="Edit kategori"
                                                         >
                                                             <i className="fas fa-edit"></i>
                                                         </button>
@@ -410,7 +410,7 @@ function KelolaMaterialAdmin() {
                                                             className="btn btn-sm btn-outline-danger action-btn"
                                                             onClick={() => handleDeleteCategory(category)}
                                                             disabled={category.course_count > 0}
-                                                            title={category.course_count > 0 ? "Cannot delete category with courses" : "Delete category"}
+                                                            title={category.course_count > 0 ? "Tidak dapat menghapus kategori yang memiliki kursus" : "Hapus kategori"}
                                                         >
                                                             <i className="fas fa-trash"></i>
                                                         </button>
@@ -434,7 +434,7 @@ function KelolaMaterialAdmin() {
                             <div className="modal-header modern-modal-header">
                                 <h5 className="modal-title">
                                     <i className={`fas fa-${modalMode === "add" ? "plus-circle" : "edit"} me-2`}></i>
-                                    {modalMode === "add" ? "Add New Category" : "Edit Category"}
+                                    {modalMode === "add" ? "Tambah Kategori Baru" : "Edit Kategori"}
                                 </h5>
                                 <button
                                     type="button"
@@ -453,7 +453,7 @@ function KelolaMaterialAdmin() {
                                 
                                 <div className="mb-4">
                                     <label htmlFor="categoryTitle" className="form-label modern-form-label">
-                                        Category Name <span className="text-danger">*</span>
+                                        Nama Kategori <span className="text-danger">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -462,7 +462,7 @@ function KelolaMaterialAdmin() {
                                         name="title"
                                         value={formData.title}
                                         onChange={handleFormChange}
-                                        placeholder="e.g., Programming, Design, Business"
+                                        placeholder="Misalnya, Pemrograman, Desain, Bisnis"
                                     />
                                     {formErrors.title && (
                                         <div className="invalid-feedback d-block">
@@ -473,7 +473,7 @@ function KelolaMaterialAdmin() {
 
                                 <div className="mb-4">
                                     <label htmlFor="categoryImage" className="form-label modern-form-label">
-                                        Image URL
+                                        URL Gambar
                                     </label>
                                     <input
                                         type="url"
@@ -482,11 +482,11 @@ function KelolaMaterialAdmin() {
                                         name="image"
                                         value={formData.image}
                                         onChange={handleFormChange}
-                                        placeholder="https://example.com/image.jpg"
+                                        placeholder="https://contoh.com/gambar.jpg"
                                     />
                                     <small className="text-muted d-block mt-2">
                                         <i className="fas fa-info-circle me-1"></i>
-                                        Enter a full URL to an image file (JPG, PNG, GIF)
+                                        Masukkan URL lengkap ke file gambar (JPG, PNG, GIF)
                                     </small>
                                     {formData.image && (
                                         <div className="mt-3">
@@ -514,7 +514,7 @@ function KelolaMaterialAdmin() {
                                         />
                                         <label className="form-check-label" htmlFor="categoryActive">
                                             <i className="fas fa-eye me-2"></i>
-                                            Make this category visible on the platform
+                                            Buat kategori ini terlihat di platform
                                         </label>
                                     </div>
                                 </div>
@@ -525,7 +525,7 @@ function KelolaMaterialAdmin() {
                                     className="btn btn-outline-secondary"
                                     onClick={() => setShowModal(false)}
                                 >
-                                    <i className="fas fa-times me-2"></i>Cancel
+                                    <i className="fas fa-times me-2"></i>Batal
                                 </button>
                                 <button
                                     type="button"
@@ -533,7 +533,7 @@ function KelolaMaterialAdmin() {
                                     onClick={handleSaveCategory}
                                 >
                                     <i className={`fas fa-${modalMode === "add" ? "check" : "save"} me-2`}></i>
-                                    {modalMode === "add" ? "Create Category" : "Save Changes"}
+                                    {modalMode === "add" ? "Buat Kategori" : "Simpan Perubahan"}
                                 </button>
                             </div>
                         </div>

@@ -57,26 +57,46 @@ export const login = async (email, password) => {
 
 export const redirectUserByRole = (userData) => {
     try {
-        if (!userData || !userData.role) {
+        // Handle both string role and user object (Phase 4.15 multi-role fix)
+        let role = null;
+        
+        if (typeof userData === 'string') {
+            // userData is a string role like 'instructor' or 'teacher'
+            role = userData.toLowerCase().trim();
+            console.log('PHASE 4.15: Redirect by role string:', role);
+        } else if (userData && userData.role) {
+            // userData is a user object with role property
+            role = userData.role.toLowerCase().trim();
+            console.log('PHASE 4.15: Redirect by user object role:', role);
+        }
+        
+        if (!role) {
             // Default redirect for users without role
+            console.log('PHASE 4.15: No role found, redirecting to student dashboard');
             window.location.href = '/student/dashboard/';
             return;
         }
 
-        switch (userData.role) {
+        // Switch based on role (support both 'teacher' and 'instructor')
+        switch (role) {
             case 'admin':
+                console.log('PHASE 4.15: Redirecting admin to /admin/dashboard/');
                 window.location.href = '/admin/dashboard/';
                 break;
             case 'teacher':
+            case 'instructor':
+                console.log('PHASE 4.15: Redirecting instructor/teacher to /instructor/dashboard/');
                 window.location.href = '/instructor/dashboard/';
                 break;
             case 'student':
             default:
+                console.log('PHASE 4.15: Redirecting student to /student/dashboard/');
                 window.location.href = '/student/dashboard/';
                 break;
         }
     } catch (error) {
         // Fallback redirect
+        console.error('PHASE 4.15: Error in redirectUserByRole:', error);
         window.location.href = '/student/dashboard/';
     }
 };

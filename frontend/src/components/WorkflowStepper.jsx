@@ -74,34 +74,34 @@ const WorkflowStepper = ({ currentStep, courseId, courseData }) => {
     const steps = [
         {
             id: 1,
-            name: 'Basic Info',
+            name: 'Informasi Dasar',
             icon: 'fa-info-circle',
             path: `/instructor/edit-course/${courseId}/`,
-            description: 'Course details',
+            description: 'Detail kursus',
             isComplete: hasBasicInfo()
         },
         {
             id: 2,
-            name: 'Curriculum',
+            name: 'Kurikulum',
             icon: 'fa-list',
             path: `/instructor/edit-course/${courseId}/curriculum/`,
-            description: 'Sections & lessons',
+            description: 'Bagian & pelajaran',
             isComplete: hasCurriculumContent()
         },
         {
             id: 3,
-            name: 'Quiz',
+            name: 'Kuis',
             icon: 'fa-question-circle',
             path: `/instructor/edit-course/${courseId}/quiz/`,
-            description: 'Assessments',
+            description: 'Penilaian',
             isComplete: hasQuizzes()
         },
         {
             id: 4,
-            name: 'Publish',
+            name: 'Publikasikan',
             icon: 'fa-rocket',
             path: `/instructor/edit-course/${courseId}/`,
-            description: 'Go live',
+            description: 'Buat aktif',
             isComplete: course.teacher_course_status === 'Published' || course.platform_status === 'Published'
         }
     ];

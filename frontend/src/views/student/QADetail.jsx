@@ -324,17 +324,17 @@ function QADetail() {
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             <h4 className="mb-0 mb-4">
                                 {" "}
-                                <i className="fas fa-envelope"></i> Q/A - Angular Masterclass Course
+                                <i className="fas fa-envelope"></i> T&J - Kursus Angular Masterclass
                             </h4>
 
                             <div className="card mb-4">
                                 <div className="card-header">
                                     <span>
-                                        Course: <b>Angular Masterclass Course</b>
+                                        Kursus: <b>Kursus Angular Masterclass</b>
                                     </span>{" "}
                                     <br />
                                     <span>
-                                        Questions: <b>16</b>
+                                        Pertanyaan: <b>16</b>
                                     </span>
                                 </div>
                                 <div className="p-2 p-sm-4">
@@ -357,9 +357,9 @@ function QADetail() {
                                                                         Jenny Adga{" "}
                                                                     </a>
                                                                     <br />
-                                                                    <span style={{ fontSize: "12px", color: "gray" }}>5hrs Ago</span>
+                                                                    <span style={{ fontSize: "12px", color: "gray" }}>5 jam yang lalu</span>
                                                                 </h6>
-                                                                <p className="mb-0 mt-3  ">Removed demands expense account</p>
+                                                                <p className="mb-0 mt-3  ">Persyaratan dihapus dari akun pengeluaran</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -385,9 +385,9 @@ function QADetail() {
                                                                         Sam Freddy{" "}
                                                                     </a>
                                                                     <br />
-                                                                    <span style={{ fontSize: "12px", color: "gray" }}>5hrs Ago</span>
+                                                                    <span style={{ fontSize: "12px", color: "gray" }}>5 jam yang lalu</span>
                                                                 </h6>
-                                                                <p className="mb-0 mt-3  ">Removed demands expense account from the debby building in a hall town tak with</p>
+                                                                <p className="mb-0 mt-3  ">Persyaratan dihapus dari akun pengeluaran dari gedung debby di kota hall dengan</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -413,9 +413,9 @@ function QADetail() {
                                                                         Louis Ferguson{" "}
                                                                     </a>
                                                                     <br />
-                                                                    <span style={{ fontSize: "12px", color: "gray" }}>5hrs Ago</span>
+                                                                    <span style={{ fontSize: "12px", color: "gray" }}>5 jam yang lalu</span>
                                                                 </h6>
-                                                                <p className="mb-0 mt-3  ">Removed demands expense account</p>
+                                                                <p className="mb-0 mt-3  ">Persyaratan dihapus dari akun pengeluaran</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -441,9 +441,9 @@ function QADetail() {
                                                                         Louis Ferguson{" "}
                                                                     </a>
                                                                     <br />
-                                                                    <span style={{ fontSize: "12px", color: "gray" }}>5hrs Ago</span>
+                                                                    <span style={{ fontSize: "12px", color: "gray" }}>5 jam yang lalu</span>
                                                                 </h6>
-                                                                <p className="mb-0 mt-3  ">Removed demands expense account</p>
+                                                                <p className="mb-0 mt-3  ">Persyaratan dihapus dari akun pengeluaran</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -454,11 +454,11 @@ function QADetail() {
 
                                     <form class="w-100 row">
                                         <div className="col-lg-10">
-                                            <textarea class="one form-control pe-4 bg-light w-100" id="autoheighttextarea" rows="2" placeholder="Write a message..."></textarea>
+                                            <textarea class="one form-control pe-4 bg-light w-100" id="autoheighttextarea" rows="2" placeholder="Tulis pesan..."></textarea>
                                         </div>
                                         <div className="col-lg-2">
                                             <button class="btn btn-primary ms-2 mb-0 w-100" type="button">
-                                                Post <i className="fas fa-paper-plane"></i>
+                                                Kirim <i className="fas fa-paper-plane"></i>
                                             </button>
                                         </div>
                                     </form>

@@ -27,7 +27,7 @@ const VALIDATION_MESSAGES = {
     NETWORK_ERROR: "Network error. Please check your connection",
     PASSWORD_CHANGE_SUCCESS: "Password changed successfully!",
     PASSWORD_CHANGE_ERROR: "Failed to change password. Please try again.",
-    UNABLE_TO_VERIFY: "Unable to verify password. Please login again."
+    UNABLE_TO_VERIFY: "Tidak dapat memverifikasi kata sandi. Silakan masuk kembali."
 };
 
 const INITIAL_PASSWORD_STATE = {

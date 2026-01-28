@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth';
 import UserData from '../plugin/UserData';
 import { useComingSoon } from '../../components/ComingSoonModal';
+import RoleIndicator from '../../components/RoleIndicator';
 import './AdminHeader.css';
 
 function AdminHeader() {
@@ -68,7 +69,7 @@ function AdminHeader() {
         { to: "/admin/users/", icon: "fas fa-users", text: "Kelola Pengguna", requiresSuperAdmin: false },
         { to: "/admin/documentation/", icon: "fas fa-book", text: "Dokumentasi Sistem", requiresSuperAdmin: false },
         { to: "/admin/kelola-materi/", icon: "fas fa-book-atlas", text: "Kelola Materi", requiresSuperAdmin: false },
-        { to: "/admin/analytics/", icon: "fas fa-chart-line", text: "Analytics", requiresSuperAdmin: false },
+        { to: "/admin/analytics/", icon: "fas fa-chart-line", text: "Analitik", requiresSuperAdmin: false },
         { to: "/admin/reports/", icon: "fas fa-file-alt", text: "Laporan", requiresSuperAdmin: false },
         { to: "/admin/system/", icon: "fas fa-cogs", text: "Pengaturan Sistem", requiresSuperAdmin: true },
         { to: "/admin/profile/", icon: "fas fa-user-cog", text: "Profil Admin", requiresSuperAdmin: false },
@@ -146,7 +147,7 @@ function AdminHeader() {
                         <div className="nav-item admin-quick-stats">
                             <span className="quick-stat-item">
                                 <i className="fas fa-users text-primary"></i>
-                                <span className="stat-label">Users Online</span>
+                                <span className="stat-label">Pengguna Online</span>
                             </span>
                         </div>
 
@@ -161,25 +162,33 @@ function AdminHeader() {
                                 <span className="notification-badge">3</span>
                             </button>
                             <ul className="dropdown-menu notification-dropdown">
-                                <li><h6 className="dropdown-header">Notifications</h6></li>
+                                <li><h6 className="dropdown-header">Notifikasi</h6></li>
                                 <li><hr className="dropdown-divider" /></li>
-                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>New user registered</a></li>
-                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>Course requires approval</a></li>
-                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>System backup completed</a></li>
+                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>Pengguna baru terdaftar</a></li>
+                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>Kursus memerlukan persetujuan</a></li>
+                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>Backup sistem selesai</a></li>
                                 <li><hr className="dropdown-divider" /></li>
-                                <li><a className="dropdown-item text-center" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>View all notifications</a></li>
+                                <li><a className="dropdown-item text-center" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>Lihat semua notifikasi</a></li>
                             </ul>
                         </div>
 
-                        {/* Admin Profile Dropdown */}
+                        {/* ✨ PHASE 4.15: Role Status Indicator - Separated from Profile */}
+                        {isLoggedIn() && isAdmin && (
+                            <span className="nav-item profile-role-status-separator">
+                                <RoleIndicator compact={true} isAdmin={true} />
+                            </span>
+                        )}
+
+                        {/* Admin Profile Display with Dropdown */}
                         {isLoggedIn() && isAdmin && (
                             <div 
-                                className="nav-item dropdown admin-profile-dropdown"
+                                className="nav-item dropdown admin-profile-display"
                                 onMouseEnter={handleMouseEnter}
                                 onMouseLeave={handleMouseLeave}
                             >
-                                <button 
-                                    className="nav-link dropdown-toggle admin-profile-btn"
+                                {/* Profile Display + Dropdown Toggle */}
+                                <button
+                                    className="nav-link dropdown-toggle profile-dropdown-btn"
                                     type="button"
                                     data-bs-toggle="dropdown"
                                     aria-expanded={dropdownOpen}
@@ -192,34 +201,24 @@ function AdminHeader() {
                                                 className="avatar-img"
                                             />
                                         ) : (
-                                            <i className="fas fa-user-shield"></i>
+                                            <i className="fas fa-user"></i>
                                         )}
                                     </div>
                                     <div className="admin-info">
                                         <span className="admin-name">{getDisplayName()}</span>
-                                        <span className="admin-role">
-                                            {isSuperAdmin ? 'Super Admin' : 'Admin'}
-                                        </span>
                                     </div>
                                 </button>
                                 
-                                <ul className={`dropdown-menu admin-dropdown ${dropdownOpen ? 'show' : ''}`}>
+                                {/* Dropdown Menu for Admin Panel */}
+                                <ul className={`dropdown-menu admin-profile-dropdown ${dropdownOpen ? 'show' : ''}`}>
                                     <li><h6 className="dropdown-header">
                                         <i className="fas fa-shield-alt me-2"></i>
-                                        Admin Panel
+                                        Panel Admin
                                     </h6></li>
                                     {renderDropdownItems(filteredMenuItems)}
                                 </ul>
                             </div>
                         )}
-
-                        {/* System Status Indicator */}
-                        <div className="nav-item admin-status">
-                            <div className="system-status online">
-                                <span className="status-dot"></span>
-                                <span className="status-text">System Online</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

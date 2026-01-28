@@ -1,5 +1,5 @@
 /* ========================================
-   BASE FOOTER STYLES
+   BASE FOOTER STYLES - COMPREHENSIVE
    ======================================== */
 
 /* Color Variables */
@@ -7,7 +7,6 @@
   --footer-primary: #667eea;
   --footer-secondary: #764ba2;
   --footer-accent: #6c757d;
-  --footer-light: #f8f9fa;
   --footer-dark: #343a40;
   --footer-border: #e9ecef;
   --footer-transition: all 0.3s ease;
@@ -22,8 +21,17 @@
   background: white;
   border-top: 1px solid var(--footer-border);
   box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
-  padding-top: 3rem;
+  padding-top: 2rem;
   padding-bottom: 1rem;
+  width: 100%;
+}
+
+/* Override container to match header width */
+.base-footer .container {
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 /* ========================================
@@ -36,8 +44,18 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-size: 1.75rem;
-  font-weight: bold;
+  font-weight: 700;
   margin-bottom: 1rem;
+  display: inline-block;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--footer-transition);
+}
+
+.footer-brand-title:hover {
+  opacity: 0.8;
+  transform: translateY(-2px);
+  text-decoration: none;
 }
 
 .footer-brand-description {
@@ -71,18 +89,18 @@
   flex-shrink: 0;
 }
 
+.social-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
 .social-link svg {
   width: 18px;
   height: 18px;
   fill: currentColor;
 }
 
-.social-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-}
-
-/* Facebook Link */
+/* Facebook */
 .social-link.facebook {
   color: #1877f2;
 }
@@ -92,7 +110,7 @@
   box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);
 }
 
-/* Twitter Link */
+/* Twitter */
 .social-link.twitter {
   color: #1da1f2;
 }
@@ -102,7 +120,7 @@
   box-shadow: 0 4px 15px rgba(29, 161, 242, 0.3);
 }
 
-/* GitHub Link */
+/* GitHub */
 .social-link.github {
   color: #333;
 }
@@ -119,7 +137,7 @@
 .footer-section-title {
   color: var(--footer-dark);
   font-size: 1.1rem;
-  font-weight: bold;
+  font-weight: 700;
   margin-bottom: 1rem;
 }
 
@@ -138,11 +156,13 @@
    ======================================== */
 
 .footer-link {
-  display: inline-block;
+  display: inline;
   text-decoration: none;
   color: var(--footer-accent);
   font-size: 0.95rem;
   transition: var(--footer-transition);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .footer-link:hover {
@@ -169,33 +189,27 @@
 
 .contact-item {
   display: flex;
-  align-items: flex-start;
   margin-bottom: 0.5rem;
 }
 
-.contact-item.icon-center {
-  align-items: center;
+.contact-item.align-items-start {
+  align-items: flex-start;
 }
 
-.contact-item.no-margin {
-  margin-bottom: 0;
+.contact-item.align-items-center {
+  align-items: center;
 }
 
 .contact-icon {
   color: var(--footer-primary);
   font-size: 0.9rem;
-  margin-right: 0.5rem;
   flex-shrink: 0;
-  margin-top: 0.25rem;
-}
-
-.contact-item.icon-center .contact-icon {
-  margin-top: 0;
 }
 
 .contact-text {
   color: var(--footer-accent);
   font-size: 0.95rem;
+  line-height: 1.4;
 }
 
 .contact-link {
@@ -214,29 +228,24 @@
    ======================================== */
 
 .footer-bottom {
-  border-top: 1px solid var(--footer-border);
-  padding-top: 1rem;
-  margin-top: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
+  border-top: 2px solid var(--footer-border);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .footer-copyright {
   color: var(--footer-accent);
   font-size: 0.9rem;
   text-align: center;
-  flex: 1 1 auto;
 }
 
 .footer-legal-links {
   display: flex;
   justify-content: center;
-  flex-wrap: wrap;
+  align-items: center;
+  flex-wrap: nowrap;
   gap: 1rem;
-  flex: 1 1 auto;
+  width: 100%;
 }
 
 /* ========================================
@@ -245,23 +254,34 @@
 
 @media (max-width: 767px) {
   .base-footer {
-    padding-top: 2rem;
+    padding-top: 1.5rem;
   }
 
   .footer-bottom {
+    grid-template-columns: 1fr;
     flex-direction: column;
-    text-align: center;
   }
 
   .footer-copyright {
-    order: 2;
     width: 100%;
+    order: 2;
   }
 
   .footer-legal-links {
-    order: 1;
     width: 100%;
+    order: 1;
     justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .social-links {
+    gap: 0.5rem;
+  }
+
+  .social-link {
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -271,6 +291,14 @@
   }
 
   .footer-link {
+    font-size: 0.9rem;
+  }
+
+  .footer-brand-title {
+    font-size: 1.5rem;
+  }
+
+  .footer-brand-description {
     font-size: 0.9rem;
   }
 }

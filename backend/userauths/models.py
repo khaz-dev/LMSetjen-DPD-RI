@@ -46,7 +46,18 @@ class User(AbstractUser):
     username = models.CharField(unique=True, max_length=100)
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=100)
-    role = models.CharField(max_length=10, choices=USER_ROLE_CHOICES, default='student')
+    # DEPRECATED: Use roles and current_role fields instead. Keep for backward compatibility during migration.
+    role = models.CharField(max_length=10, choices=USER_ROLE_CHOICES, default='student', null=True, blank=True, help_text="DEPRECATED: Use roles field instead")
+    # NEW: Multiple roles support (comma-separated: student,teacher,admin)
+    roles = models.CharField(max_length=50, default='student', help_text="Comma-separated roles: student,teacher,admin")
+    # NEW: Currently active role for this session
+    current_role = models.CharField(max_length=10, choices=USER_ROLE_CHOICES, default='student', help_text="Currently active role for this session")
+    
+    # ✨ PHASE 4.10: BOOLEAN ROLE SYSTEM (new primary role mechanism)
+    is_student = models.BooleanField(default=True, help_text="User can access student role features")
+    is_instructor = models.BooleanField(default=False, help_text="User can access instructor/teacher role features")
+    is_admin = models.BooleanField(default=False, help_text="User can access admin role features")
+    
     otp = models.CharField(max_length=100, null=True, blank=True)
     refresh_token = models.CharField(max_length=1000, null=True, blank=True)
     
@@ -69,22 +80,150 @@ class User(AbstractUser):
         # Add database indexes for frequently queried fields
         indexes = [
             models.Index(fields=['role']),
+            models.Index(fields=['current_role']),
             models.Index(fields=['is_active']),
             models.Index(fields=['-date_joined']),
             models.Index(fields=['role', 'is_active']),
+            models.Index(fields=['current_role', 'is_active']),
+            # ✨ PHASE 4.10: New indexes for boolean role fields
+            # Note: These will be added via migration once fields exist
         ]
 
     def __str__(self):
         return self.email
     
-    def is_admin(self):
-        return self.role == 'admin'
+    # DEPRECATED: Use has_admin_role() instead
+    # Renamed from is_admin() to is_admin_deprecated() to avoid conflict with is_admin field
+    def is_admin_deprecated(self):
+        """Deprecated: Check current_role first, fallback to role for backward compatibility"""
+        if self.current_role == 'admin':
+            return True
+        if self.role == 'admin':
+            return True
+        return False
     
-    def is_teacher(self):
-        return self.role == 'teacher'
+    # DEPRECATED: Use has_teacher_role() instead
+    # Renamed from is_teacher() to is_teacher_deprecated() to avoid conflict
+    def is_teacher_deprecated(self):
+        """Deprecated: Check current_role first, fallback to role for backward compatibility"""
+        if self.current_role == 'teacher':
+            return True
+        if self.role == 'teacher':
+            return True
+        return False
     
-    def is_student(self):
-        return self.role == 'student'
+    # DEPRECATED: Use has_student_role() instead
+    # Renamed from is_student() to is_student_deprecated() to avoid conflict with is_student field
+    def is_student_deprecated(self):
+        """Deprecated: Check current_role first, fallback to role for backward compatibility"""
+        if self.current_role == 'student':
+            return True
+        if self.role == 'student':
+            return True
+        return False
+    
+    # NEW: Check if currently active role is admin
+    def is_admin_current(self):
+        return self.current_role == 'admin'
+    
+    # NEW: Check if user has admin role in their roles
+    def has_admin_role(self):
+        return 'admin' in self.get_available_roles()
+    
+    # NEW: Check if currently active role is teacher
+    def is_teacher_current(self):
+        return self.current_role == 'teacher'
+    
+    # NEW: Check if user has teacher role in their roles
+    def has_teacher_role(self):
+        return 'teacher' in self.get_available_roles()
+    
+    # NEW: Check if currently active role is student
+    def is_student_current(self):
+        return self.current_role == 'student'
+    
+    # NEW: Check if user has student role in their roles
+    def has_student_role(self):
+        return 'student' in self.get_available_roles()
+    
+    # NEW: Get list of available roles as a Python list
+    def get_available_roles(self):
+        """Returns a list of roles the user has"""
+        return [r.strip() for r in self.roles.split(',') if r.strip()]
+    
+    # NEW: Check if user has a specific role
+    def has_role(self, role):
+        """Check if user has a specific role"""
+        return role in self.get_available_roles()
+    
+    # NEW: Set current role with validation
+    def set_current_role(self, role):
+        """Set the current active role (must be in user's available roles)"""
+        if not self.has_role(role):
+            raise ValueError(f"User does not have {role} role. Available roles: {', '.join(self.get_available_roles())}")
+        self.current_role = role
+        self.save()
+    
+    # ✨ PHASE 4.10: BOOLEAN ROLE METHODS
+    def get_available_boolean_roles(self):
+        """Returns list of role names based on boolean fields"""
+        roles = []
+        if self.is_student:
+            roles.append('student')
+        if self.is_instructor:
+            roles.append('instructor')
+        if self.is_admin:
+            roles.append('admin')
+        return roles
+    
+    def has_boolean_role(self, role_name):
+        """Check if user has a specific role using boolean fields"""
+        if role_name == 'student':
+            return self.is_student
+        elif role_name in ['instructor', 'teacher']:
+            return self.is_instructor
+        elif role_name == 'admin':
+            return self.is_admin
+        return False
+    
+    def set_roles_from_boolean(self):
+        """Sync the CSV roles field from boolean fields for backward compatibility"""
+        roles = self.get_available_boolean_roles()
+        self.roles = ','.join(roles) if roles else 'student'
+        
+        # Set role field to first available role or current_role if valid
+        if self.current_role in roles:
+            self.role = self.current_role
+        elif roles:
+            self.role = roles[0]
+        else:
+            self.role = 'student'
+    
+    def grant_role(self, role_name):
+        """Grant a role to the user (uses boolean fields)"""
+        if role_name == 'student':
+            self.is_student = True
+        elif role_name in ['instructor', 'teacher']:
+            self.is_instructor = True
+        elif role_name == 'admin':
+            self.is_admin = True
+        self.set_roles_from_boolean()
+        self.save()
+    
+    def revoke_role(self, role_name):
+        """Revoke a role from the user (uses boolean fields)"""
+        if role_name == 'student':
+            self.is_student = False
+        elif role_name in ['instructor', 'teacher']:
+            self.is_instructor = False
+        elif role_name == 'admin':
+            self.is_admin = False
+        self.set_roles_from_boolean()
+        # Ensure current_role is still valid after revoking
+        if not self.has_boolean_role(self.current_role):
+            available = self.get_available_boolean_roles()
+            self.current_role = available[0] if available else 'student'
+        self.save()
     
     def save(self, *args, **kwargs):
         # Safely split email with error handling

@@ -8,7 +8,7 @@ const SearchSection = ({ onSearch }) => {
                 <input 
                     type="search" 
                     className="form-control modern-search-input" 
-                    placeholder="Search your courses by title..." 
+                    placeholder="Cari kursus Anda berdasarkan judul..." 
                     onChange={onSearch}
                 />
             </div>

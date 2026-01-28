@@ -10,9 +10,17 @@ class IsAdminUser(permissions.BasePermission):
     """
     Custom permission to only allow admin users to access the view.
     
+    ✨ PHASE 4.10: Updated to use boolean role field (is_admin)
+    
     This permission checks:
     1. User is authenticated
-    2. User has 'admin' role
+    2. User has is_admin = True (new boolean system)
+    3. Falls back to current_role == 'admin' if boolean field not available (backward compat)
+    
+    Supports multi-role system:
+    - Checks is_admin boolean field (primary method)
+    - Falls back to current_role for users migrating from old system
+    - Type-safe boolean check instead of string comparison
     
     Usage:
         permission_classes = [IsAdminUser]
@@ -23,8 +31,15 @@ class IsAdminUser(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # Check if user has admin role
-        return hasattr(request.user, 'role') and request.user.role == 'admin'
+        # NEW: Check boolean is_admin field (primary check)
+        if hasattr(request.user, 'is_admin') and request.user.is_admin:
+            return True
+        
+        # FALLBACK: Check current_role for backward compatibility (users in transition)
+        if hasattr(request.user, 'current_role') and request.user.current_role == 'admin':
+            return True
+        
+        return False
     
     message = 'Admin access required. Only users with admin role can access this endpoint.'
 
@@ -33,9 +48,17 @@ class IsTeacherUser(permissions.BasePermission):
     """
     Custom permission to only allow teacher/instructor users to access the view.
     
+    ✨ PHASE 4.10: Updated to use boolean role field (is_instructor)
+    
     This permission checks:
     1. User is authenticated
-    2. User has 'teacher' or 'instructor' role
+    2. User has is_instructor = True (new boolean system)
+    3. Falls back to current_role in ['teacher', 'instructor'] if not available (backward compat)
+    
+    Supports multi-role system:
+    - Checks is_instructor boolean field (primary method)
+    - Falls back to current_role for users migrating from old system
+    - Type-safe boolean check instead of string comparison
     
     Usage:
         permission_classes = [IsTeacherUser]
@@ -46,8 +69,15 @@ class IsTeacherUser(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # Check if user has teacher or instructor role
-        return hasattr(request.user, 'role') and request.user.role in ['teacher', 'instructor']
+        # NEW: Check boolean is_instructor field (primary check)
+        if hasattr(request.user, 'is_instructor') and request.user.is_instructor:
+            return True
+        
+        # FALLBACK: Check current_role for backward compatibility (users in transition)
+        if hasattr(request.user, 'current_role') and request.user.current_role in ['teacher', 'instructor']:
+            return True
+        
+        return False
     
     message = 'Teacher access required. Only users with teacher or instructor role can access this endpoint.'
 
@@ -56,9 +86,17 @@ class IsStudentUser(permissions.BasePermission):
     """
     Custom permission to only allow student users to access the view.
     
+    ✨ PHASE 4.10: Updated to use boolean role field (is_student)
+    
     This permission checks:
     1. User is authenticated
-    2. User has 'student' role
+    2. User has is_student = True (new boolean system)
+    3. Falls back to current_role == 'student' if boolean field not available (backward compat)
+    
+    Supports multi-role system:
+    - Checks is_student boolean field (primary method)
+    - Falls back to current_role for users migrating from old system
+    - Type-safe boolean check instead of string comparison
     
     Usage:
         permission_classes = [IsStudentUser]
@@ -69,8 +107,15 @@ class IsStudentUser(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # Check if user has student role
-        return hasattr(request.user, 'role') and request.user.role == 'student'
+        # NEW: Check boolean is_student field (primary check)
+        if hasattr(request.user, 'is_student') and request.user.is_student:
+            return True
+        
+        # FALLBACK: Check current_role for backward compatibility (users in transition)
+        if hasattr(request.user, 'current_role') and request.user.current_role == 'student':
+            return True
+        
+        return False
     
     message = 'Student access required. Only users with student role can access this endpoint.'
 
@@ -83,6 +128,10 @@ class IsOwnerOrAdmin(permissions.BasePermission):
     1. User is authenticated
     2. User is the owner of the object (user == object.user) OR user is admin
     
+    Supports multi-role system:
+    - Checks current_role field if user has multiple roles
+    - Falls back to role field for single-role users (backward compatible)
+    
     Usage:
         permission_classes = [IsOwnerOrAdmin]
     
@@ -94,8 +143,8 @@ class IsOwnerOrAdmin(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # Allow if user is admin
-        if hasattr(request.user, 'role') and request.user.role == 'admin':
+        # Check if user is admin (use boolean field)
+        if hasattr(request.user, 'is_admin') and request.user.is_admin:
             return True
         
         # Allow if user is the owner
@@ -110,8 +159,12 @@ class IsSuperAdmin(permissions.BasePermission):
     
     This permission checks:
     1. User is authenticated
-    2. User has 'admin' role
+    2. User has 'admin' role (checks current_role first, fallback to role)
     3. User has is_super_admin=True in Admin model
+    
+    Supports multi-role system:
+    - Checks current_role field if user has multiple roles
+    - Falls back to role field for single-role users (backward compatible)
     
     Usage:
         permission_classes = [IsSuperAdmin]
@@ -122,8 +175,8 @@ class IsSuperAdmin(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # Check if user has admin role
-        if not (hasattr(request.user, 'role') and request.user.role == 'admin'):
+        # Check if user has admin role (use boolean field)
+        if not (hasattr(request.user, 'is_admin') and request.user.is_admin):
             return False
         
         # Check if user is super admin
@@ -157,7 +210,12 @@ class IsTeacherOrAdmin(permissions.BasePermission):
     
     This permission checks:
     1. User is authenticated
-    2. User has 'teacher', 'instructor', or 'admin' role
+    2. User has 'teacher', 'instructor', or 'admin' role (checks current_role first, fallback to role)
+    
+    Supports multi-role system:
+    - Checks current_role field if user has multiple roles
+    - Falls back to role field for single-role users (backward compatible)
+    - Works with both old and new systems during transition
     
     Usage:
         permission_classes = [IsTeacherOrAdmin]
@@ -168,7 +226,12 @@ class IsTeacherOrAdmin(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # Check if user has teacher, instructor, or admin role
-        return hasattr(request.user, 'role') and request.user.role in ['teacher', 'instructor', 'admin']
+        # Check boolean role fields (new multi-role system)
+        if hasattr(request.user, 'is_instructor') and request.user.is_instructor:
+            return True
+        if hasattr(request.user, 'is_admin') and request.user.is_admin:
+            return True
+        
+        return False
     
     message = 'Teacher or admin access required.'

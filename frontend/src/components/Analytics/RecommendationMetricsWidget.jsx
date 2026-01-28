@@ -28,7 +28,7 @@ export default function RecommendationMetricsWidget() {
       console.error('Failed to fetch metrics:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Failed to fetch recommendation metrics'
+        title: 'Gagal mengambil metrik rekomendasi'
       });
     }
     setLoading(false);
@@ -53,11 +53,11 @@ export default function RecommendationMetricsWidget() {
 
   const getReasonLabel = (reason) => {
     const labels = {
-      'similar_content': 'Similar Content',
-      'trending': 'Trending Course',
-      'personalized': 'Personalized',
-      'popular': 'Popular',
-      'completed_prerequisite': 'Prerequisite Completed'
+      'similar_content': 'Konten Serupa',
+      'trending': 'Kursus Trending',
+      'personalized': 'Dipersonalisasi',
+      'popular': 'Populer',
+      'completed_prerequisite': 'Prasyarat Selesai'
     };
     return labels[reason] || reason;
   };
@@ -73,9 +73,9 @@ export default function RecommendationMetricsWidget() {
         <div>
           <h3>
             <i className="fas fa-star me-2"></i>
-            Recommendation Performance
+            Performa Rekomendasi
           </h3>
-          <p className="text-muted">Track course recommendation effectiveness</p>
+          <p className="text-muted">Lacak efektivitas rekomendasi kursus</p>
         </div>
         <button 
           onClick={fetchMetrics} 
@@ -83,7 +83,7 @@ export default function RecommendationMetricsWidget() {
           className="btn btn-primary"
         >
           <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-sync-alt'} me-2`}></i>
-          Refresh
+          Segarkan
         </button>
       </div>
 
@@ -94,9 +94,9 @@ export default function RecommendationMetricsWidget() {
             <i className="fas fa-bullseye"></i>
           </div>
           <div className="kpi-content">
-            <p className="kpi-label">Total Recommendations</p>
+            <p className="kpi-label">Total Rekomendasi</p>
             <h3 className="kpi-value">{stats?.total_recommendations || 0}</h3>
-            <small className="kpi-percent">all time</small>
+            <small className="kpi-percent">sepanjang waktu</small>
           </div>
         </div>
 
@@ -105,9 +105,9 @@ export default function RecommendationMetricsWidget() {
             <i className="fas fa-mouse"></i>
           </div>
           <div className="kpi-content">
-            <p className="kpi-label">Click Through Rate</p>
+            <p className="kpi-label">Tingkat Klik</p>
             <h3 className="kpi-value">{(stats?.ctr_percent || 0).toFixed(1)}%</h3>
-            <small className="kpi-percent">{stats?.total_clicks || 0} clicks</small>
+            <small className="kpi-percent">{stats?.total_clicks || 0} klik</small>
           </div>
         </div>
 
@@ -116,9 +116,9 @@ export default function RecommendationMetricsWidget() {
             <i className="fas fa-graduation-cap"></i>
           </div>
           <div className="kpi-content">
-            <p className="kpi-label">Conversion Rate</p>
+            <p className="kpi-label">Tingkat Konversi</p>
             <h3 className="kpi-value">{(stats?.conversion_percent || 0).toFixed(1)}%</h3>
-            <small className="kpi-percent">{stats?.total_enrollments || 0} enrollments</small>
+            <small className="kpi-percent">{stats?.total_enrollments || 0} pendaftaran</small>
           </div>
         </div>
 
@@ -127,14 +127,14 @@ export default function RecommendationMetricsWidget() {
             <i className="fas fa-chart-line"></i>
           </div>
           <div className="kpi-content">
-            <p className="kpi-label">Avg Score</p>
+            <p className="kpi-label">Skor Rata-rata</p>
             <h3 className="kpi-value">
               {recommendations.length > 0 
                 ? (recommendations.reduce((sum, r) => sum + r.score, 0) / recommendations.length).toFixed(1)
                 : '0'
               }
             </h3>
-            <small className="kpi-percent">out of 100</small>
+            <small className="kpi-percent">dari 100</small>
           </div>
         </div>
       </div>
@@ -147,12 +147,12 @@ export default function RecommendationMetricsWidget() {
             onChange={(e) => setFilterReason(e.target.value)}
             className="form-control"
           >
-            <option value="">All Recommendation Reasons</option>
-            <option value="similar_content">Similar Content</option>
+            <option value="">Semua Alasan Rekomendasi</option>
+            <option value="similar_content">Konten Serupa</option>
             <option value="trending">Trending</option>
-            <option value="personalized">Personalized</option>
-            <option value="popular">Popular</option>
-            <option value="completed_prerequisite">Prerequisite Completed</option>
+            <option value="personalized">Dipersonalisasi</option>
+            <option value="popular">Populer</option>
+            <option value="completed_prerequisite">Prasyarat Selesai</option>
           </select>
         </div>
         <div className="control-group">
@@ -161,8 +161,8 @@ export default function RecommendationMetricsWidget() {
             onChange={(e) => setSortBy(e.target.value)}
             className="form-control"
           >
-            <option value="created_at">Sort by Recent</option>
-            <option value="score">Sort by Score</option>
+            <option value="created_at">Urutkan berdasarkan Terbaru</option>
+            <option value="score">Urutkan berdasarkan Skor</option>
           </select>
         </div>
       </div>
@@ -170,7 +170,7 @@ export default function RecommendationMetricsWidget() {
       {/* Performance Chart */}
       {stats?.by_reason && Object.keys(stats.by_reason).length > 0 && (
         <div className="performance-chart">
-          <h4 className="chart-title">Performance by Recommendation Reason</h4>
+          <h4 className="chart-title">Performa menurut Alasan Rekomendasi</h4>
           <div className="reason-stats">
             {Object.entries(stats.by_reason).map(([reason, data]) => (
               <div key={reason} className="reason-stat">
@@ -181,10 +181,10 @@ export default function RecommendationMetricsWidget() {
                 </div>
                 <div className="reason-bar">
                   <div className="bar-segment clicks" style={{width: (data.clicks / Math.max(...Object.values(stats.by_reason).map(d => d.clicks)) || 1) * 100 + '%'}}>
-                    <span className="bar-label">{data.clicks} clicks</span>
+                    <span className="bar-label">{data.clicks} klik</span>
                   </div>
                   <div className="bar-segment enrollments" style={{width: (data.enrollments / Math.max(...Object.values(stats.by_reason).map(d => d.enrollments)) || 1) * 100 + '%'}}>
-                    <span className="bar-label">{data.enrollments} enroll</span>
+                    <span className="bar-label">{data.enrollments} daftar</span>
                   </div>
                 </div>
                 <div className="reason-rates">
@@ -201,27 +201,27 @@ export default function RecommendationMetricsWidget() {
       {loading ? (
         <div className="loading-state">
           <div className="spinner-border"></div>
-          <p>Loading recommendations...</p>
+          <p>Memuat rekomendasi...</p>
         </div>
       ) : filteredRecs.length === 0 ? (
         <div className="empty-state">
           <i className="fas fa-inbox"></i>
-          <p>No recommendations found</p>
-          <small>Recommendations will appear here</small>
+          <p>Tidak ada rekomendasi yang ditemukan</p>
+          <small>Rekomendasi akan muncul di sini</small>
         </div>
       ) : (
         <div className="table-responsive">
           <table className="recommendations-table">
             <thead>
               <tr>
-                <th>User</th>
-                <th>Course</th>
-                <th>Reason</th>
-                <th>Score</th>
+                <th>Pengguna</th>
+                <th>Kursus</th>
+                <th>Alasan</th>
+                <th>Skor</th>
                 <th>Status</th>
-                <th>Clicked</th>
-                <th>Enrolled</th>
-                <th>Created</th>
+                <th>Diklik</th>
+                <th>Terdaftar</th>
+                <th>Dibuat</th>
               </tr>
             </thead>
             <tbody>
@@ -248,22 +248,22 @@ export default function RecommendationMetricsWidget() {
                   <td>
                     {rec.enrolled ? (
                       <span className="badge bg-success">
-                        <i className="fas fa-check me-1"></i>Enrolled
+                        <i className="fas fa-check me-1"></i>Terdaftar
                       </span>
                     ) : rec.clicked ? (
                       <span className="badge bg-info">
-                        <i className="fas fa-eye me-1"></i>Viewed
+                        <i className="fas fa-eye me-1"></i>Dilihat
                       </span>
                     ) : (
                       <span className="badge bg-secondary">
-                        <i className="fas fa-clock me-1"></i>New
+                        <i className="fas fa-clock me-1"></i>Baru
                       </span>
                     )}
                   </td>
                   <td>
                     {rec.clicked ? (
                       <>
-                        <i className="fas fa-check text-success"></i> {rec.click_date ? new Date(rec.click_date).toLocaleDateString() : 'Yes'}
+                        <i className="fas fa-check text-success"></i> {rec.click_date ? new Date(rec.click_date).toLocaleDateString() : 'Ya'}
                       </>
                     ) : (
                       <span className="text-muted">-</span>
@@ -272,7 +272,7 @@ export default function RecommendationMetricsWidget() {
                   <td>
                     {rec.enrolled ? (
                       <>
-                        <i className="fas fa-check text-success"></i> {rec.enroll_date ? new Date(rec.enroll_date).toLocaleDateString() : 'Yes'}
+                        <i className="fas fa-check text-success"></i> {rec.enroll_date ? new Date(rec.enroll_date).toLocaleDateString() : 'Ya'}
                       </>
                     ) : (
                       <span className="text-muted">-</span>
@@ -287,7 +287,7 @@ export default function RecommendationMetricsWidget() {
           </table>
           {filteredRecs.length > 50 && (
             <div className="table-footer">
-              <small className="text-muted">Showing 50 of {filteredRecs.length} recommendations</small>
+              <small className="text-muted">Menampilkan 50 dari {filteredRecs.length} rekomendasi</small>
             </div>
           )}
         </div>

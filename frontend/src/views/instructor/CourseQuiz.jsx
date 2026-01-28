@@ -67,7 +67,7 @@ function CourseQuiz() {
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to load course data"
+                title: "Gagal memuat data kursus"
             });
             console.error(error);
         }
@@ -85,7 +85,7 @@ function CourseQuiz() {
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to load quizzes"
+                title: "Gagal memuat kuis"
             });
             console.error(error);
             setQuizzes([]); // Set empty array on error
@@ -151,7 +151,7 @@ function CourseQuiz() {
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to save quiz"
+                title: "Gagal menyimpan kuis"
             });
             console.error(error);
         } finally {
@@ -161,8 +161,8 @@ function CourseQuiz() {
 
     const handleDeleteQuiz = async (quizId) => {
         const confirm = await DeleteConfirmation({
-            title: "Delete Quiz",
-            text: "Are you sure you want to delete this quiz? This action cannot be undone."
+            title: "Hapus Kuis",
+            text: "Apakah Anda yakin ingin menghapus kuis ini? Tindakan ini tidak dapat dibatalkan."
         });
         if (!confirm.isConfirmed) return;
 
@@ -170,7 +170,7 @@ function CourseQuiz() {
             await apiInstance.delete(`quiz/detail/${quizId}/`);
             Toast().fire({
                 icon: "success",
-                title: "Quiz deleted successfully"
+                title: "Kuis berhasil dihapus"
             });
             await fetchQuizzes();
             await fetchCourseData(); // Refresh course data for workflow stepper
@@ -181,7 +181,7 @@ function CourseQuiz() {
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to delete quiz"
+                title: "Gagal menghapus kuis"
             });
             console.error(error);
         }
@@ -193,7 +193,7 @@ function CourseQuiz() {
         if (!questionForm.question_text.trim()) {
             Toast().fire({
                 icon: "error",
-                title: "Question text is required"
+                title: "Teks pertanyaan wajib diisi"
             });
             return;
         }
@@ -203,7 +203,7 @@ function CourseQuiz() {
         if (!hasCorrectAnswer) {
             Toast().fire({
                 icon: "error",
-                title: "Please mark at least one choice as correct"
+                title: "Tandai setidaknya satu pilihan sebagai jawaban benar"
             });
             return;
         }
@@ -213,7 +213,7 @@ function CourseQuiz() {
         if (validChoices.length < 2) {
             Toast().fire({
                 icon: "error",
-                title: "Please provide at least 2 answer choices"
+                title: "Berikan setidaknya 2 pilihan jawaban"
             });
             return;
         }
@@ -248,7 +248,7 @@ function CourseQuiz() {
 
             Toast().fire({
                 icon: "success", 
-                title: editingQuestion ? "Question updated successfully" : "Question added successfully"
+                title: editingQuestion ? "Pertanyaan diperbarui dengan sukses" : "Pertanyaan ditambahkan dengan sukses"
             });
 
             // If editing, close modal. If adding and continuous mode, reset form but keep modal open
@@ -273,7 +273,7 @@ function CourseQuiz() {
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to save question"
+                title: "Gagal menyimpan pertanyaan"
             });
             console.error(error);
         } finally {
@@ -305,8 +305,8 @@ function CourseQuiz() {
 
     const handleDeleteQuestion = async (questionId) => {
         const confirm = await DeleteConfirmation({
-            title: "Delete Question",
-            text: "Are you sure you want to delete this question? This action cannot be undone."
+            title: "Hapus Pertanyaan",
+            text: "Apakah Anda yakin ingin menghapus pertanyaan ini? Tindakan ini tidak dapat dibatalkan."
         });
         if (!confirm.isConfirmed) return;
 
@@ -314,14 +314,14 @@ function CourseQuiz() {
             await apiInstance.delete(`quiz/question/detail/${questionId}/`);
             Toast().fire({
                 icon: "success",
-                title: "Question deleted successfully"
+                title: "Pertanyaan berhasil dihapus"
             });
             fetchQuestions(currentQuiz.quiz_id);
             fetchQuizzes();
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to delete question"
+                title: "Gagal menghapus pertanyaan"
             });
             console.error(error);
         }
@@ -409,17 +409,17 @@ function CourseQuiz() {
         return (
             <>
                 <BaseHeader />
-                <section className="modern-dashboard" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
-                    <div className="container" style={{ flex: 1 }}>
+                <section className="pt-5 pb-5 course-quiz-container course-quiz-loading-section">
+                    <div className="container course-quiz-loading-container">
                         <Header />
                         <div className="row">
                             <Sidebar />
-                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""} course-quiz-content-column`}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Loading...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Quiz...</p>
+                                    <p className="mt-3 text-muted course-quiz-loading-text">Loading Quiz...</p>
                                 </div>
                             </div>
                         </div>
@@ -434,7 +434,7 @@ function CourseQuiz() {
         <>
             <BaseHeader />
 
-            <section className="modern-dashboard">
+            <section className="pt-5 pb-5 course-quiz-container">
                 <div className="container">
                     <Header />
                     <div className="row">
@@ -448,12 +448,12 @@ function CourseQuiz() {
                             />
                             
                             {/* Header Section */}
-                            <div className="create-header-modern">
+                            <div className="quiz-header-modern">
                                 <div className="d-lg-flex align-items-center justify-content-between">
                                     <div className="mb-4 mb-lg-0">
                                         <h3 className="text-white mb-2">
                                             <i className="fas fa-question-circle me-3"></i>
-                                            Quiz Management
+                                            Manajemen Kuis
                                         </h3>
                                         
                                         <h3 className="text-white mb-2 fw-bold">
@@ -461,7 +461,7 @@ function CourseQuiz() {
                                         </h3>
 
                                         <p className="mb-0 text-white opacity-90">
-                                            Create and manage quizzes for your course
+                                            Buat dan kelola kuis untuk kursus Anda
                                         </p>
                                     </div>
                                     <div className="d-flex flex-column gap-3">
@@ -470,14 +470,14 @@ function CourseQuiz() {
                                             className="btn btn-outline-light border border-2 border-light"
                                         >
                                             <i className="fas fa-arrow-left me-2"></i>
-                                            Update Course
+                                            Perbarui Kursus
                                         </Link>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Stats Overview */}
-                            <div className="row g-3 mb-4">
+                            <div className="quiz-stats-overview row g-3 mb-4">
                                 <div className="col-md-3">
                                     <div className="quiz-stat-card">
                                         <div className="stat-icon">
@@ -485,7 +485,7 @@ function CourseQuiz() {
                                         </div>
                                         <div className="stat-content">
                                             <div className="stat-number">{quizzes.length}</div>
-                                            <div className="stat-label">Total Quizzes</div>
+                                            <div className="stat-label">Total Kuis</div>
                                         </div>
                                     </div>
                                 </div>
@@ -498,7 +498,7 @@ function CourseQuiz() {
                                             <div className="stat-number">
                                                 {quizzes.reduce((total, quiz) => total + (quiz.total_questions || 0), 0)}
                                             </div>
-                                            <div className="stat-label">Total Questions</div>
+                                            <div className="stat-label">Total Pertanyaan</div>
                                         </div>
                                     </div>
                                 </div>
@@ -511,7 +511,7 @@ function CourseQuiz() {
                                             <div className="stat-number">
                                                 {quizzes.filter(quiz => quiz.is_active).length}
                                             </div>
-                                            <div className="stat-label">Active Quizzes</div>
+                                            <div className="stat-label">Kuis Aktif</div>
                                         </div>
                                     </div>
                                 </div>
@@ -524,21 +524,21 @@ function CourseQuiz() {
                                             <div className="stat-number">
                                                 {quizzes.filter(quiz => !quiz.is_active).length}
                                             </div>
-                                            <div className="stat-label">Inactive Quizzes</div>
+                                            <div className="stat-label">Kuis Tidak Aktif</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Navigation Tabs */}
-                            <div className="course-form-card mb-4">
+                            <div className="quiz-nav-card mb-4">
                                 <div className="quiz-nav-tabs">
                                     <button 
                                         className={`tab-btn ${activeTab === "overview" ? "active" : ""}`}
                                         onClick={() => setActiveTab("overview")}
                                     >
                                         <i className="fas fa-chart-pie me-2"></i>
-                                        Quiz Overview
+                                        Ringkasan Kuis
                                     </button>
                                     <button 
                                         className={`tab-btn ${activeTab === "questions" ? "active" : ""}`}
@@ -546,14 +546,14 @@ function CourseQuiz() {
                                         disabled={!currentQuiz}
                                     >
                                         <i className="fas fa-question me-2"></i>
-                                        Questions {currentQuiz && `(${currentQuiz.title})`}
+                                        Pertanyaan {currentQuiz && `(${currentQuiz.title})`}
                                     </button>
                                 </div>
                             </div>
 
                             {/* Content Based on Active Tab */}
                             {activeTab === "overview" && (
-                                <div className="quiz-overview-section">
+                                <div className="quiz-overview-wrapper">
                                     {/* Action Bar */}
                                     <div className="mb-4">
                                         <div className="d-flex justify-content-between align-items-center">
@@ -574,7 +574,7 @@ function CourseQuiz() {
                                     {/* Quizzes List */}
                                     <div className="quizzes-grid">
                                         {quizzes.length === 0 ? (
-                                            <div className="course-form-card text-center py-5">
+                                            <div className="quiz-empty-card text-center py-5">
                                                 <div className="empty-state">
                                                     <i className="fas fa-question-circle empty-icon"></i>
                                                     <h4>No Quizzes Yet</h4>
@@ -603,7 +603,7 @@ function CourseQuiz() {
                                                             <button 
                                                                 className="btn-icon btn-danger"
                                                                 onClick={() => handleDeleteQuiz(quiz.quiz_id)}
-                                                                title="Delete Quiz"
+                                                                title="Hapus Kuis"
                                                             >
                                                                 <i className="fas fa-trash"></i>
                                                             </button>
@@ -611,7 +611,7 @@ function CourseQuiz() {
                                                         <div className="quiz-status">
                                                             <span className={`status-badge ${quiz.is_active ? "active" : "inactive"}`}>
                                                                 <i className={`fas ${quiz.is_active ? "fa-check-circle" : "fa-pause-circle"}`}></i>
-                                                                {quiz.is_active ? "Active" : "Inactive"}
+                                                                {quiz.is_active ? "Aktif" : "Tidak Aktif"}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -623,7 +623,7 @@ function CourseQuiz() {
                                                         <div className="quiz-stats">
                                                             <div className="stat-item">
                                                                 <i className="fas fa-question text-primary"></i>
-                                                                <span>{quiz.total_questions || 0} Questions</span>
+                                                                <span>{quiz.total_questions || 0} Pertanyaan</span>
                                                             </div>
                                                             <div className="stat-item">
                                                                 <i className="fas fa-calendar text-success"></i>
@@ -637,7 +637,7 @@ function CourseQuiz() {
                                                             onClick={() => selectQuiz(quiz)}
                                                         >
                                                             <i className="fas fa-cog me-2"></i>
-                                                            Manage Questions
+                                                            Kelola Pertanyaan
                                                         </button>
                                                     </div>
                                                 </div>
@@ -650,7 +650,7 @@ function CourseQuiz() {
                             {activeTab === "questions" && currentQuiz && (
                                 <div className="quiz-questions-section">
                                     {/* Questions Header */}
-                                    <div className="course-form-card mb-4">
+                                    <div className="quiz-questions-header mb-4">
                                         <div className="quiz-header">
                                             <div className="quiz-info">
                                                 <h3 className="quiz-title">{currentQuiz.title}</h3>
@@ -663,17 +663,17 @@ function CourseQuiz() {
                                     {/* Questions List */}
                                     <div className="questions-list">
                                         {questions.length === 0 ? (
-                                            <div className="course-form-card text-center py-5">
+                                            <div className="quiz-empty-card text-center py-5">
                                                 <div className="empty-state">
                                                     <i className="fas fa-question empty-icon"></i>
-                                                    <h4>No Questions Yet</h4>
-                                                    <p className="text-muted">Add your first question to this quiz</p>
+                                                    <h4>Belum Ada Pertanyaan</h4>
+                                                    <p className="text-muted">Tambahkan pertanyaan pertama Anda ke kuis ini</p>
                                                     <button 
                                                         className="btn btn-update-course"
                                                         onClick={handleOpenQuestionModal}
                                                     >
                                                         <i className="fas fa-plus me-2"></i>
-                                                        Add Question
+                                                        Tambah Pertanyaan
                                                     </button>
                                                 </div>
                                             </div>
@@ -691,14 +691,14 @@ function CourseQuiz() {
                                                             <button 
                                                                 className="btn-icon"
                                                                 onClick={() => handleEditQuestion(question)}
-                                                                title="Edit Question"
+                                                                title="Edit Pertanyaan"
                                                             >
                                                                 <i className="fas fa-edit"></i>
                                                             </button>
                                                             <button 
                                                                 className="btn-icon btn-danger"
                                                                 onClick={() => handleDeleteQuestion(question.question_id)}
-                                                                title="Delete Question"
+                                                                title="Hapus Pertanyaan"
                                                             >
                                                                 <i className="fas fa-trash"></i>
                                                             </button>
@@ -748,7 +748,7 @@ function CourseQuiz() {
                                 <div className="quiz-modal-overlay">
                                     <div className="quiz-modal">
                                         <div className="modal-header">
-                                            <h4>{editingQuiz ? "Edit Quiz" : "Create New Quiz"}</h4>
+                                            <h4>{editingQuiz ? "Edit Kuis" : "Buat Kuis Baru"}</h4>
                                             <button 
                                                 className="btn-close"
                                                 onClick={() => {
@@ -762,24 +762,24 @@ function CourseQuiz() {
                                         <form onSubmit={handleCreateQuiz}>
                                             <div className="modal-body">
                                                 <div className="form-group">
-                                                    <label className="form-label">Quiz Title *</label>
+                                                    <label className="form-label">Judul Kuis *</label>
                                                     <input
                                                         type="text"
                                                         className="form-control"
                                                         value={quizForm.title}
                                                         onChange={(e) => setQuizForm({...quizForm, title: e.target.value})}
-                                                        placeholder="Enter quiz title"
+                                                        placeholder="Masukkan judul kuis"
                                                         required
                                                     />
                                                 </div>
                                                 <div className="form-group">
-                                                    <label className="form-label">Description</label>
+                                                    <label className="form-label">Deskripsi</label>
                                                     <textarea
                                                         className="form-control"
                                                         rows="3"
                                                         value={quizForm.description}
                                                         onChange={(e) => setQuizForm({...quizForm, description: e.target.value})}
-                                                        placeholder="Enter quiz description (optional)"
+                                                        placeholder="Masukkan deskripsi kuis (opsional)"
                                                     />
                                                 </div>
                                                 <div className="form-group">
@@ -792,7 +792,7 @@ function CourseQuiz() {
                                                             onChange={(e) => setQuizForm({...quizForm, is_active: e.target.checked})}
                                                         />
                                                         <label className="form-check-label" htmlFor="isActive">
-                                                            Active Quiz (visible to students)
+                                                            Kuis Aktif (terlihat oleh siswa)
                                                         </label>
                                                     </div>
                                                 </div>
@@ -806,7 +806,7 @@ function CourseQuiz() {
                                                         resetQuizForm();
                                                     }}
                                                 >
-                                                    Cancel
+                                                    Batalkan
                                                 </button>
                                                 <button 
                                                     type="submit" 
@@ -814,7 +814,7 @@ function CourseQuiz() {
                                                     disabled={isSubmitting}
                                                 >
                                                     {isSubmitting && <span className="spinner-border spinner-border-sm me-2"></span>}
-                                                    {editingQuiz ? "Update Quiz" : "Create Quiz"}
+                                                    {editingQuiz ? "Perbarui Kuis" : "Buat Kuis"}
                                                 </button>
                                             </div>
                                         </form>
@@ -829,12 +829,12 @@ function CourseQuiz() {
                                         <div className="modal-header">
                                             <div>
                                                 <h4>
-                                                    {editingQuestion ? "Edit Question" : `Add Question #${questions.length + 1}`}
+                                                    {editingQuestion ? "Edit Pertanyaan" : `Tambah Pertanyaan #${questions.length + 1}`}
                                                 </h4>
                                                 {!editingQuestion && isContinuousAdd && questionsAdded > 0 && (
                                                     <p className="text-muted mb-0 mt-1" style={{ fontSize: "0.9rem" }}>
                                                         <i className="fas fa-check-circle text-success me-2"></i>
-                                                        {questionsAdded} question{questionsAdded > 1 ? "s" : ""} successfully added in this session
+                                                        {questionsAdded} pertanyaan{questionsAdded > 1 ? "" : ""} berhasil ditambahkan dalam sesi ini
                                                     </p>
                                                 )}
                                             </div>
@@ -848,20 +848,20 @@ function CourseQuiz() {
                                         <form onSubmit={handleCreateQuestion}>
                                             <div className="modal-body">
                                                 <div className="form-group">
-                                                    <label className="form-label">Question Text *</label>
+                                                    <label className="form-label">Teks Pertanyaan *</label>
                                                     <textarea
                                                         className="form-control"
                                                         rows="3"
                                                         value={questionForm.question_text}
                                                         onChange={(e) => setQuestionForm({...questionForm, question_text: e.target.value})}
-                                                        placeholder="Enter your question"
+                                                        placeholder="Masukkan pertanyaan Anda"
                                                         required
                                                     />
                                                 </div>
                                                 
                                                 <div className="form-group">
-                                                    <label className="form-label">Answer Choices *</label>
-                                                    <p className="form-help">Mark the correct answer by clicking the radio button</p>
+                                                    <label className="form-label">Pilihan Jawaban *</label>
+                                                    <p className="form-help">Tandai jawaban yang benar dengan mengklik tombol radio</p>
                                                     
                                                     {questionForm.choices.map((choice, index) => (
                                                         <div key={index} className="choice-input-group">
@@ -881,7 +881,7 @@ function CourseQuiz() {
                                                                 className="form-control choice-input"
                                                                 value={choice.choice_text}
                                                                 onChange={(e) => handleChoiceChange(index, "choice_text", e.target.value)}
-                                                                placeholder={`Choice ${String.fromCharCode(65 + index)}`}
+                                                                placeholder={`Pilihan ${String.fromCharCode(65 + index)}`}
                                                             />
                                                         </div>
                                                     ))}
@@ -894,7 +894,7 @@ function CourseQuiz() {
                                                     onClick={handleCloseQuestionModal}
                                                     disabled={isSubmitting}
                                                 >
-                                                    {editingQuestion ? "Cancel" : "Close & Finish"}
+                                                    {editingQuestion ? "Batalkan" : "Tutup & Selesai"}
                                                 </button>
                                                 
                                                 {!editingQuestion && (
@@ -907,7 +907,7 @@ function CourseQuiz() {
                                                         >
                                                             {isSubmitting && <span className="spinner-border spinner-border-sm me-2"></span>}
                                                             <i className="fas fa-plus me-2"></i>
-                                                            Add & Continue
+                                                            Tambah & Lanjutkan
                                                         </button>
                                                         <button 
                                                             type="submit" 
@@ -917,7 +917,7 @@ function CourseQuiz() {
                                                         >
                                                             {isSubmitting && <span className="spinner-border spinner-border-sm me-2"></span>}
                                                             <i className="fas fa-check me-2"></i>
-                                                            Add & Close
+                                                            Tambah & Tutup
                                                         </button>
                                                     </div>
                                                 )}
@@ -930,7 +930,7 @@ function CourseQuiz() {
                                                     >
                                                         {isSubmitting && <span className="spinner-border spinner-border-sm me-2"></span>}
                                                         <i className="fas fa-save me-2"></i>
-                                                        Update Question
+                                                        Perbarui Pertanyaan
                                                     </button>
                                                 )}
                                             </div>

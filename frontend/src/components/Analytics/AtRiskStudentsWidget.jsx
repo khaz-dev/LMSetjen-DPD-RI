@@ -29,7 +29,7 @@ export default function AtRiskStudentsWidget() {
       console.error('Failed to fetch risk data:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Failed to fetch at-risk students'
+        title: 'Gagal mengambil data siswa berisiko'
       });
     }
     setLoading(false);
@@ -42,14 +42,14 @@ export default function AtRiskStudentsWidget() {
       await fetchRiskData();
       Toast().fire({
         icon: 'success',
-        title: response.data.message || 'Assessment triggered',
+        title: response.data.message || 'Penilaian dipicu',
         timer: 2000
       });
     } catch (error) {
       console.error('Assessment failed:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Assessment failed'
+        title: 'Penilaian gagal'
       });
     }
     setLoading(false);
@@ -82,9 +82,9 @@ export default function AtRiskStudentsWidget() {
         <div>
           <h3>
             <i className="fas fa-user-shield me-2"></i>
-            At-Risk Students
+            Siswa Berisiko
           </h3>
-          <p className="text-muted">Monitor students at risk of dropout</p>
+          <p className="text-muted">Pantau siswa yang berisiko putus sekolah</p>
         </div>
         <button 
           onClick={handleTriggerAssessment} 
@@ -92,7 +92,7 @@ export default function AtRiskStudentsWidget() {
           className="btn btn-primary"
         >
           <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-heartbeat'} me-2`}></i>
-          {loading ? 'Assessing...' : 'Assess Now'}
+          {loading ? 'Menilai...' : 'Nilai Sekarang'}
         </button>
       </div>
 
@@ -103,7 +103,7 @@ export default function AtRiskStudentsWidget() {
             <i className="fas fa-exclamation-circle"></i>
           </div>
           <div className="kpi-content">
-            <p className="kpi-label">HIGH Risk</p>
+            <p className="kpi-label">Risiko TINGGI</p>
             <h3 className="kpi-value">{summary?.high_risk || 0}</h3>
             <small className="kpi-percent">{summary?.total_students > 0 ? ((summary.high_risk / summary.total_students) * 100).toFixed(1) : 0}%</small>
           </div>
@@ -114,7 +114,7 @@ export default function AtRiskStudentsWidget() {
             <i className="fas fa-exclamation-triangle"></i>
           </div>
           <div className="kpi-content">
-            <p className="kpi-label">MEDIUM Risk</p>
+            <p className="kpi-label">Risiko SEDANG</p>
             <h3 className="kpi-value">{summary?.medium_risk || 0}</h3>
             <small className="kpi-percent">{summary?.total_students > 0 ? ((summary.medium_risk / summary.total_students) * 100).toFixed(1) : 0}%</small>
           </div>
@@ -125,7 +125,7 @@ export default function AtRiskStudentsWidget() {
             <i className="fas fa-check-circle"></i>
           </div>
           <div className="kpi-content">
-            <p className="kpi-label">LOW Risk</p>
+            <p className="kpi-label">Risiko RENDAH</p>
             <h3 className="kpi-value">{summary?.low_risk || 0}</h3>
             <small className="kpi-percent">{summary?.total_students > 0 ? ((summary.low_risk / summary.total_students) * 100).toFixed(1) : 0}%</small>
           </div>
@@ -136,9 +136,9 @@ export default function AtRiskStudentsWidget() {
             <i className="fas fa-chart-line"></i>
           </div>
           <div className="kpi-content">
-            <p className="kpi-label">Average Score</p>
+            <p className="kpi-label">Skor Rata-rata</p>
             <h3 className="kpi-value">{(summary?.average_risk_score || 0).toFixed(1)}</h3>
-            <small className="kpi-percent">out of 100</small>
+            <small className="kpi-percent">dari 100</small>
           </div>
         </div>
       </div>
@@ -151,10 +151,10 @@ export default function AtRiskStudentsWidget() {
             onChange={(e) => setRiskFilter(e.target.value)}
             className="form-control"
           >
-            <option value="">All Risk Levels</option>
-            <option value="HIGH">HIGH Risk Only</option>
-            <option value="MEDIUM">MEDIUM Risk Only</option>
-            <option value="LOW">LOW Risk Only</option>
+            <option value="">Semua Tingkat Risiko</option>
+            <option value="HIGH">Hanya Risiko TINGGI</option>
+            <option value="MEDIUM">Hanya Risiko SEDANG</option>
+            <option value="LOW">Hanya Risiko RENDAH</option>
           </select>
         </div>
         <div className="control-group">
@@ -163,8 +163,8 @@ export default function AtRiskStudentsWidget() {
             onChange={(e) => setSortBy(e.target.value)}
             className="form-control"
           >
-            <option value="risk_score">Sort by Risk Score</option>
-            <option value="recent">Sort by Recent Assessment</option>
+            <option value="risk_score">Urutkan berdasarkan Skor Risiko</option>
+            <option value="recent">Urutkan berdasarkan Penilaian Terbaru</option>
           </select>
         </div>
       </div>
@@ -173,26 +173,26 @@ export default function AtRiskStudentsWidget() {
       {loading ? (
         <div className="loading-state">
           <div className="spinner-border"></div>
-          <p>Loading at-risk students...</p>
+          <p>Memuat siswa berisiko...</p>
         </div>
       ) : filteredRisks.length === 0 ? (
         <div className="empty-state">
           <i className="fas fa-inbox"></i>
-          <p>No students found</p>
-          <small>At-risk students will appear here</small>
+          <p>Tidak ada siswa yang ditemukan</p>
+          <small>Siswa berisiko akan muncul di sini</small>
         </div>
       ) : (
         <div className="table-responsive">
           <table className="risks-table">
             <thead>
               <tr>
-                <th>Student</th>
-                <th>Risk Level</th>
-                <th>Risk Score</th>
-                <th>Enrollment</th>
-                <th>Indicators</th>
-                <th>Last Assessed</th>
-                <th>Action</th>
+                <th>Siswa</th>
+                <th>Tingkat Risiko</th>
+                <th>Skor Risiko</th>
+                <th>Pendaftaran</th>
+                <th>Indikator</th>
+                <th>Dinilai Terakhir</th>
+                <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -245,7 +245,7 @@ export default function AtRiskStudentsWidget() {
                   </td>
                   <td>
                     <button className="btn btn-sm btn-outline-primary">
-                      <i className="fas fa-envelope"></i> Message
+                      <i className="fas fa-envelope"></i> Pesan
                     </button>
                   </td>
                 </tr>
@@ -258,7 +258,7 @@ export default function AtRiskStudentsWidget() {
       <div className="widget-footer">
         <small className="text-muted">
           <i className="fas fa-info-circle me-1"></i>
-          Last updated: {summary?.last_updated ? new Date(summary.last_updated).toLocaleString() : 'Never'}
+          Terakhir diperbarui: {summary?.last_updated ? new Date(summary.last_updated).toLocaleString() : 'Tidak pernah'}
         </small>
       </div>
     </div>

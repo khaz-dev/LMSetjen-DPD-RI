@@ -10,10 +10,10 @@ class AdminModelAdmin(admin.ModelAdmin):
     search_fields = ['user__email', 'full_name', 'department']
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['email', 'full_name', 'role', 'nip', 'golongan', 'is_active', 'date_joined']
-    list_filter = ['role', 'is_active', 'external_status', 'jenis_jabatan', 'date_joined']
+    list_display = ['email', 'full_name', 'is_admin', 'is_instructor', 'is_student', 'nip', 'is_active', 'date_joined']
+    list_filter = ['is_admin', 'is_instructor', 'is_student', 'is_active', 'external_status', 'jenis_jabatan', 'date_joined']
     search_fields = ['email', 'full_name', 'username', 'nip', 'external_id']
-    readonly_fields = ['external_id', 'external_created_at', 'external_updated_at', 'last_sync_date']
+    readonly_fields = ['external_id', 'external_created_at', 'external_updated_at', 'last_sync_date', 'roles', 'role', 'current_role']
 
 class OrganizationUnitAdmin(admin.ModelAdmin):
     list_display = ['name', 'external_id', 'created_at', 'updated_at']

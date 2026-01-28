@@ -8,10 +8,19 @@
     min-height: 100vh;
     background: transparent;
     padding: 3rem 0;
-    padding-top: 3rem !important;
+    padding-top: calc(70px + 3rem) !important;
     padding-bottom: 3rem !important;
     margin-top: 0 !important;
     margin-bottom: 8rem;
+}
+
+/* Override padding when pt-5 pb-5 classes are applied */
+.modern-student-course.pt-5 {
+    padding-top: 50px !important;
+}
+
+.modern-student-course.pb-5 {
+    padding-bottom: 50px !important;
 }
 
 .course-progress-card {
@@ -839,7 +848,7 @@
     box-shadow: 0 3px 10px rgba(33, 150, 243, 0.3);
 }
 
-.instructor-name {
+.instructor-reply-section .instructor-name {
     color: #1976d2;
     font-weight: 600;
     font-size: 1.5rem !important;

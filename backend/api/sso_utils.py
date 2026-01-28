@@ -1,10 +1,11 @@
 """
-SSO (Single Sign-On) Integration with Nusa DPD
-Handles JWT token verification and user authentication from external SSO provider
+SSO (Single Sign-On) Integration with Nusa DPD & Google OAuth
+Handles JWT token verification and user authentication from external SSO providers
 """
 
 import jwt
 import json
+import requests
 from datetime import datetime
 from functools import wraps
 from rest_framework import serializers
@@ -200,3 +201,198 @@ class SSOUserManager:
             counter += 1
         
         return username
+
+
+class GoogleOAuthVerifier:
+    """
+    Utility class for verifying Google OAuth tokens
+    Handles ID token verification and user data extraction
+    """
+    
+    GOOGLE_TOKEN_INFO_URL = "https://www.googleapis.com/oauth2/v3/tokeninfo"
+    GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
+    
+    @staticmethod
+    def verify_token(access_token):
+        """
+        Verify Google access token and get user info
+        
+        Args:
+            access_token (str): Google OAuth access token
+            
+        Returns:
+            dict: User information (sub, email, name, picture, etc.)
+            
+        Raises:
+            ValueError: If token is invalid or expired
+        """
+        try:
+            # Verify token and get user info
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(GoogleOAuthVerifier.GOOGLE_USERINFO_URL, headers=headers)
+            
+            if response.status_code != 200:
+                raise ValueError(f"Invalid Google token: {response.json().get('error', 'Unknown error')}")
+            
+            user_info = response.json()
+            return user_info
+            
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Google token verification failed: {str(e)}")
+    
+    @staticmethod
+    def verify_id_token(id_token, client_id):
+        """
+        Verify Google ID token (alternative method using ID token instead of access token)
+        
+        Args:
+            id_token (str): Google ID token
+            client_id (str): Your Google Client ID
+            
+        Returns:
+            dict: Decoded ID token payload
+            
+        Raises:
+            ValueError: If token is invalid
+        """
+        try:
+            # Verify ID token with Google
+            params = {
+                'id_token': id_token
+            }
+            response = requests.get(GoogleOAuthVerifier.GOOGLE_TOKEN_INFO_URL, params=params)
+            
+            if response.status_code != 200:
+                raise ValueError(f"Invalid ID token: {response.json().get('error_description', 'Unknown error')}")
+            
+            token_data = response.json()
+            
+            # Verify audience (client ID)
+            if token_data.get('aud') != client_id:
+                raise ValueError("Invalid client ID in token")
+            
+            return token_data
+            
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"ID token verification failed: {str(e)}")
+    
+    @staticmethod
+    def get_user_data_from_token(user_info):
+        """
+        Extract relevant user data from Google user info
+        
+        Args:
+            user_info (dict): User info from Google API
+            
+        Returns:
+            dict: Normalized user data
+        """
+        return {
+            'google_id': user_info.get('id'),  # Google user ID
+            'email': user_info.get('email', ''),
+            'name': user_info.get('name', ''),
+            'picture': user_info.get('picture', ''),
+            'verified_email': user_info.get('verified_email', False),
+        }
+
+
+class GoogleOAuthUserManager:
+    """
+    Manages user creation and updates from Google OAuth data
+    """
+    
+    @staticmethod
+    def get_or_create_user_from_google(google_data):
+        """
+        Get existing user or create new one from Google data
+        
+        Args:
+            google_data (dict): User data from Google OAuth
+            
+        Returns:
+            tuple: (user, created) where created is boolean
+        """
+        email = google_data.get('email')
+        google_id = google_data.get('google_id')
+        
+        if not email:
+            raise ValueError("Email is required from Google OAuth data")
+        
+        # Try to find existing user by email
+        try:
+            user = User.objects.get(email=email)
+            # Update user data if changed
+            GoogleOAuthUserManager.update_user_from_google(user, google_data)
+            return user, False
+        except User.DoesNotExist:
+            # Create new user from Google data
+            user = GoogleOAuthUserManager.create_user_from_google(google_data)
+            return user, True
+    
+    @staticmethod
+    def create_user_from_google(google_data):
+        """Create new user from Google OAuth data"""
+        email = google_data.get('email')
+        name = google_data.get('name', '')
+        google_id = google_data.get('google_id')
+        
+        if not name:
+            name = email.split('@')[0]
+        
+        # Generate unique username from email
+        username = GoogleOAuthUserManager.generate_unique_username(email)
+        
+        # Create user
+        user = User.objects.create(
+            username=username,
+            email=email,
+            full_name=name,
+            role='student',  # Default role for Google OAuth users
+            is_active=True,
+            external_status='ACTIVE'
+        )
+        
+        # Create user profile with Google ID
+        profile, _ = Profile.objects.get_or_create(user=user)
+        profile.full_name = name
+        profile.save()
+        
+        return user
+    
+    @staticmethod
+    def update_user_from_google(user, google_data):
+        """Update existing user with Google data"""
+        name = google_data.get('name')
+        picture = google_data.get('picture')
+        
+        # Update fields if they differ
+        if name and user.full_name != name:
+            user.full_name = name
+        
+        user.last_login = datetime.now()
+        user.save()
+        
+        # Update profile
+        try:
+            profile = user.profile
+            if picture:
+                profile.profile_pic = picture
+            profile.save()
+        except Profile.DoesNotExist:
+            profile = Profile.objects.create(user=user, profile_pic=picture)
+        
+        return user
+    
+    @staticmethod
+    def generate_unique_username(email):
+        """Generate unique username from email"""
+        base_username = email.split('@')[0].lower()
+        username = base_username
+        counter = 1
+        
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        return username
+

@@ -7,15 +7,17 @@
    ================================ */
 
 .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Protect header card gap from parent overrides */
 .modern-dashboard .row > .col-12 > .instructor-header-card,
 .modern-dashboard .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Main Page Layout */
@@ -23,9 +25,32 @@
     background: transparent;
     min-height: 100vh;
     padding: 3rem 0;
-    padding-top: 3rem !important;
+    padding-top: calc(70px + 3rem) !important;
     padding-bottom: 3rem !important;
     margin-bottom: 8rem;
+    overflow-x: hidden;
+    overflow-y: visible;
+    /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
+}
+
+/* CRITICAL: Force instructor-profile-page padding to be overridable by pt-5 and pb-5 classes */
+/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+/* ✨ PHASE 6.5: Move pt-5 overrides AFTER main class definition to ensure proper CSS cascade */
+.instructor-profile-page.pt-5 {
+    padding-top: 50px !important;
+}
+
+.instructor-profile-page.pb-5 {
+    padding-bottom: 3rem !important;
+}
+
+/* More specific override for modern-profile-page variant */
+.instructor-profile-page.modern-profile-page.pt-5 {
+    padding-top: 50px !important;
+}
+
+.instructor-profile-page.modern-profile-page.pb-5 {
+    padding-bottom: 3rem !important;
 }
 
 /* Ensure proper scroll context for sticky sidebar */
@@ -64,14 +89,46 @@
     flex-direction: column;
 }
 
+/* Protect Header on profile page from row CSS rules */
+.instructor-profile-page .row.instructor-header-row {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Ensure Header card maintains full width and removes right gap */
+.instructor-profile-page .row.instructor-header-row > .col-xl-12,
+.instructor-profile-page .row.instructor-header-row > .col-lg-12,
+.instructor-profile-page .row.instructor-header-row > .col-md-12,
+.instructor-profile-page .row.instructor-header-row > .col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* ✨ PHASE 4.21: Sidebar-content rows - Proper layout without conflicts */
+.instructor-profile-page .row.sidebar-content-row,
+.instructor-profile-page .row.sidebar-content-row-loading {
+    flex-wrap: nowrap;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
 .instructor-profile-page .row:has(.instructor-sidebar-column) > .col-lg-9 {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
@@ -87,8 +144,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
@@ -980,10 +1037,14 @@
   /* Content column - expands to fill remaining space */
   .instructor-profile-page .row > .col-md-8 {
     flex: 1 1 auto;
-    min-width: 0 !important;
+    min-width: 0;
     width: auto;
     max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  /* Ensure content doesn't wrap under sidebar */
+  .instructor-profile-page .row > .col-md-8 {
+    min-width: 400px;
   }
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {

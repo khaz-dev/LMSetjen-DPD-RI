@@ -105,9 +105,9 @@ const LecturesTab = ({
         const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0];
         const labelMap = {
             "mp4": "Video", "avi": "Video", "mov": "Video", "mkv": "Video", "webm": "Video", "ogg": "Video",
-            "pdf": "PDF", "doc": "Document", "docx": "Document", "txt": "Text",
-            "ppt": "Presentation", "pptx": "Presentation",
-            "jpg": "Image", "jpeg": "Image", "png": "Image", "gif": "Image", "bmp": "Image"
+            "pdf": "PDF", "doc": "Dokumen", "docx": "Dokumen", "txt": "Teks",
+            "ppt": "Presentasi", "pptx": "Presentasi",
+            "jpg": "Gambar", "jpeg": "Gambar", "png": "Gambar", "gif": "Gambar", "bmp": "Gambar"
         };
         
         return labelMap[extension] || "File";
@@ -115,7 +115,7 @@ const LecturesTab = ({
 
     const getFileTypeTitle = (fileUrl) => {
         const type = getFileTypeLabel(fileUrl);
-        return type === "Video" ? "Play video" : `Open ${type.toLowerCase()}`;
+        return type === "Video" ? "Putar video" : `Buka ${type.toLowerCase()}`;
     };
 
     // Helper function to get lesson progress status
@@ -278,8 +278,8 @@ const LecturesTab = ({
                         
                         Toast().fire({
                             icon: "info",
-                            title: "Resuming Video",
-                            text: `Continuing from where you left off at ${timeString}`,
+                            title: "Melanjutkan Video",
+                            text: `Melanjutkan dari tempat Anda meninggalkannya pada ${timeString}`,
                             timer: 3000,
                             toast: true,
                             position: "top-end"
@@ -354,8 +354,8 @@ const LecturesTab = ({
         if (isAlreadyCompleted && isAutoComplete) {
             Toast().fire({
                 icon: "info",
-                title: "Lesson Already Completed!",
-                text: "This lesson is already marked as completed.",
+                title: "Pelajaran Sudah Diselesaikan!",
+                text: "Pelajaran ini sudah ditandai sebagai selesai.",
                 timer: 2000
             });
             return;
@@ -451,8 +451,8 @@ const LecturesTab = ({
             if (isAlreadyCompleted && !isAutoComplete) {
                 Toast().fire({
                     icon: "info",
-                    title: "Lesson Unmarked!",
-                    text: "Lesson has been marked as incomplete. Video progress has been reset.",
+                    title: "Pelajaran Tidak Ditandai!",
+                    text: "Pelajaran telah ditandai sebagai belum selesai. Kemajuan video telah disetel ulang.",
                     timer: 2000
                 });
             } else if (!isAlreadyCompleted) {
@@ -460,15 +460,15 @@ const LecturesTab = ({
                 if (isAutoComplete) {
                     Toast().fire({
                         icon: "success",
-                        title: "🎉 Lesson Completed Automatically!",
-                        text: "Great job! The lesson has been marked as completed.",
+                        title: "🎉 Pelajaran Diselesaikan Secara Otomatis!",
+                        text: "Kerja bagus! Pelajaran telah ditandai sebagai selesai.",
                         timer: 4000,
                         showConfirmButton: false,
                     });
                 } else {
                     Toast().fire({
                         icon: "success",
-                        title: "Lesson Marked as Complete!",
+                        title: "Pelajaran Ditandai Selesai!",
                         timer: 2000
                     });
                 }
@@ -482,8 +482,8 @@ const LecturesTab = ({
             
             Toast().fire({
                 icon: "error",
-                title: "Failed to update completion status",
-                text: "Please try again in a moment.",
+                title: "Gagal memperbarui status penyelesaian",
+                text: "Silakan coba lagi dalam beberapa saat.",
                 timer: 3000
             });
         }
@@ -902,7 +902,7 @@ const LecturesTab = ({
     return (
         <div className="tab-pane fade show active" id="lectures" role="tabpanel">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h4 className="mb-0">Course Curriculum</h4>
+                <h4 className="mb-0">Kurikulum Kursus</h4>
                 {course?.curriculum?.length > 0 && (() => {
                     const totalLessons = course.curriculum.reduce((acc, c) => acc + (c.variant_items?.length || 0), 0);
                     const completedLessons = getCompletedLessonsCount() || 0;
@@ -913,7 +913,7 @@ const LecturesTab = ({
                             {/* Move stats above the bar */}
                             <div className="course-progress-stats">
                                 <span className="progress-text text-white">
-                                    {completedLessons}/{totalLessons} lessons
+                                    {completedLessons}/{totalLessons} pelajaran
                                 </span>
                                 <span className="progress-percentage text-white">
                                     {progressPercentage}%
@@ -939,7 +939,7 @@ const LecturesTab = ({
                                     <div>
                                         <h5 className="mb-1">{c.title}</h5>
                                         <small className="opacity-90">
-                                            {c.variant_items?.length || 0} Lesson{(c.variant_items?.length || 0) !== 1 ? "s" : ""}
+                                            {c.variant_items?.length || 0} Pelajaran{(c.variant_items?.length || 0) !== 1 ? "" : ""}
                                         </small>
                                     </div>
                                     <button
@@ -949,7 +949,7 @@ const LecturesTab = ({
                                         data-bs-target={`#collapse-${c.variant_id}`}
                                         aria-expanded="true"
                                         aria-controls={`collapse-${c.variant_id}`}
-                                        title="Toggle section"
+                                        title="Tombol bagian"
                                     >
                                         <i className="fas fa-chevron-down fa-lg"></i>
                                     </button>
@@ -1014,19 +1014,19 @@ const LecturesTab = ({
                                                             {progressStatus.status === "completed" && (
                                                                 <small className="lesson-status-badge completed">
                                                                     <i className="fas fa-check-circle me-1"></i>
-                                                                    Completed
+                                                                    Diselesaikan
                                                                 </small>
                                                             )}
                                                             {progressStatus.status === "in-progress" && (
                                                                 <small className="lesson-status-badge in-progress">
                                                                     <i className="fas fa-play-circle me-1"></i>
-                                                                    {progressStatus.percentage}% watched
+                                                                    {progressStatus.percentage}% ditonton
                                                                 </small>
                                                             )}
                                                             {isVideoLesson && progressStatus.status === "not-started" && (
                                                                 <small className="lesson-status-badge not-started">
                                                                     <i className="fas fa-play me-1"></i>
-                                                                    Ready to watch
+                                                                    Siap ditonton
                                                                 </small>
                                                             )}
                                                         </div>
@@ -1052,11 +1052,11 @@ const LecturesTab = ({
                                                                     <label 
                                                                         htmlFor={`lesson-${l.variant_item_id}`}
                                                                         className={`lesson-completion-label ${isUpdating ? "updating" : ""}`}
-                                                                        title={isUpdating ? "Updating..." : (isCompleted ? "Mark as incomplete" : "Mark as complete")}
+                                                                        title={isUpdating ? "Memperbarui..." : (isCompleted ? "Tandai sebagai belum selesai" : "Tandai sebagai selesai")}
                                                                     >
                                                                         {isUpdating ? (
                                                                             <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                                                                <span className="visually-hidden">Loading...</span>
+                                                                                <span className="visually-hidden">Memuat...</span>
                                                                             </div>
                                                                         ) : (
                                                                             <i className="fas fa-check"></i>
@@ -1078,8 +1078,8 @@ const LecturesTab = ({
             ) : (
                 <div className="empty-state">
                     <i className="fas fa-play-circle empty-icon"></i>
-                    <h5>No lectures available yet</h5>
-                    <p>Course content will be available soon</p>
+                    <h5>Belum ada pelajaran yang tersedia</h5>
+                    <p>Konten kursus akan segera tersedia</p>
                 </div>
             )}
 
@@ -1175,7 +1175,7 @@ const LecturesTab = ({
                                     }}
                                 >
                                     <i className="fas fa-chart-line"></i>
-                                    {Math.round(played * 100)}% watched
+                                    {Math.round(played * 100)}% ditonton
                                 </div>
                             )}                                    <ReactPlayer
                                         url={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
@@ -1276,7 +1276,7 @@ const LecturesTab = ({
                                                 }}
                                             >
                                                 <i className="fas fa-external-link-alt me-2"></i>
-                                                Open File
+                                                Buka File
                                             </a>
                                             <a
                                                 href={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
@@ -1284,7 +1284,7 @@ const LecturesTab = ({
                                                 className="btn btn-outline-light btn-lg"
                                             >
                                                 <i className="fas fa-download me-2"></i>
-                                                Download
+                                                Unduh
                                             </a>
                                         </div>
                                     </div>

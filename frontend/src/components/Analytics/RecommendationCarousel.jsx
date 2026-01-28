@@ -73,10 +73,10 @@ export default function RecommendationCarousel() {
         <div className="auth-prompt">
           <div className="auth-content">
             <i className="fas fa-graduation-cap"></i>
-            <h3>Personalized Learning Paths Await</h3>
-            <p>Sign in to get course recommendations tailored to your learning goals</p>
-            <a href="/sign-in" className="btn btn-primary">Sign In</a>
-            <a href="/sign-up" className="btn btn-outline">Create Account</a>
+            <h3>Jalur Pembelajaran Dipersonalisasi Menanti</h3>
+            <p>Masuk untuk mendapatkan rekomendasi kursus yang disesuaikan dengan tujuan pembelajaran Anda</p>
+            <a href="/sign-in" className="btn btn-primary">Masuk</a>
+            <a href="/sign-up" className="btn btn-outline">Buat Akun</a>
           </div>
         </div>
       </div>
@@ -109,9 +109,9 @@ export default function RecommendationCarousel() {
         <div>
           <h2>
             <i className="fas fa-star me-2"></i>
-            Recommended For You
+            Direkomendasikan untuk Anda
           </h2>
-          <p>Courses curated based on your learning profile and interests</p>
+          <p>Kursus yang dikurasi berdasarkan profil pembelajaran dan minat Anda</p>
         </div>
         <div className="carousel-nav">
           <button 
@@ -161,14 +161,14 @@ export default function RecommendationCarousel() {
                 {rec.enrolled && (
                   <div className="status-overlay enrolled">
                     <i className="fas fa-check-circle"></i>
-                    <p>Enrolled</p>
+                    <p>Terdaftar</p>
                   </div>
                 )}
               </div>
 
               <div className="card-content">
                 <h3 className="card-title">
-                  {rec.course_detail?.title || rec.course_name || 'Course'}
+                  {rec.course_detail?.title || rec.course_name || 'Kursus'}
                 </h3>
                 <p className="card-reason">
                   {getFullReasonLabel(rec.reason)}
@@ -181,7 +181,7 @@ export default function RecommendationCarousel() {
                       style={{ width: rec.score + '%' }}
                     ></div>
                   </div>
-                  <span className="score-text">{rec.score.toFixed(0)}% match</span>
+                  <span className="score-text">{rec.score.toFixed(0)}% cocok</span>
                 </div>
 
                 {rec.course_detail?.instructor_name && (
@@ -205,7 +205,7 @@ export default function RecommendationCarousel() {
                   disabled={rec.clicked}
                 >
                   <i className="fas fa-eye me-1"></i>
-                  {rec.clicked ? 'Viewed' : 'Learn More'}
+                  {rec.clicked ? 'Dilihat' : 'Pelajari Lebih Lanjut'}
                 </button>
                 <button 
                   className="btn btn-primary"
@@ -213,7 +213,7 @@ export default function RecommendationCarousel() {
                   disabled={rec.enrolled}
                 >
                   <i className="fas fa-plus me-1"></i>
-                  {rec.enrolled ? 'Enrolled' : 'Enroll Now'}
+                  {rec.enrolled ? 'Terdaftar' : 'Daftar Sekarang'}
                 </button>
               </div>
             </div>
@@ -248,22 +248,22 @@ function getReasonColor(reason) {
 
 function getReasonLabel(reason) {
   const labels = {
-    'similar_content': 'Similar',
+    'similar_content': 'Serupa',
     'trending': 'Trending',
-    'personalized': 'For You',
-    'popular': 'Popular',
-    'completed_prerequisite': 'Next Step'
+    'personalized': 'Untuk Anda',
+    'popular': 'Populer',
+    'completed_prerequisite': 'Langkah Berikutnya'
   };
   return labels[reason] || reason;
 }
 
 function getFullReasonLabel(reason) {
   const labels = {
-    'similar_content': 'Based on courses you\'ve taken',
-    'trending': 'Popular this week',
-    'personalized': 'Tailored to your interests',
-    'popular': 'Most enrolled by peers',
-    'completed_prerequisite': 'Available after prerequisites'
+    'similar_content': 'Berdasarkan kursus yang Anda ambil',
+    'trending': 'Populer minggu ini',
+    'personalized': 'Disesuaikan dengan minat Anda',
+    'popular': 'Paling banyak diambil oleh teman sejawat',
+    'completed_prerequisite': 'Tersedia setelah prasyarat'
   };
   return labels[reason] || reason;
 }

@@ -871,7 +871,7 @@ function CourseDetail() {
                             e.currentTarget.style.transform = "scale(1) translateY(0)";
                             e.currentTarget.style.boxShadow = "0 8px 25px rgba(102, 126, 234, 0.4)";
                         }}
-                        title={isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                        title={isInWishlist ? "Hapus dari Wishlist" : "Tambah ke Wishlist"}
                     >
                         {isLoadingWishlist ? (
                             <i className="fas fa-spinner fa-spin text-white" style={{ fontSize: "1.5rem" }}></i>

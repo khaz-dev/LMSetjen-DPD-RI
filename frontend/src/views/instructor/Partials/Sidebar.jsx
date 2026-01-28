@@ -8,19 +8,16 @@ import "./Sidebar.css";
 function Sidebar() {
     const location = useLocation();
     const [isCollapsed, setIsCollapsed] = useState(() => {
-        const saved = localStorage.getItem('instructorSidebarCollapsed');
-        return saved === 'true';
+        const saved = localStorage.getItem("instructorSidebarCollapsed");
+        return saved === "true";
     });
 
     const toggleSidebarCollapse = () => {
         const newState = !isCollapsed;
         setIsCollapsed(newState);
-        localStorage.setItem('instructorSidebarCollapsed', newState.toString());
-        // ✨ Delay event slightly to ensure sidebar class updates first (React async state)
-        // This is critical for smooth animations - the sidebar needs to change class BEFORE pages listen
-        setTimeout(() => {
-            triggerInstructorSidebarCollapseEvent();
-        }, 10);
+        localStorage.setItem("instructorSidebarCollapsed", newState.toString());
+        // ✨ Trigger event for all pages to adapt their layout
+        triggerInstructorSidebarCollapseEvent();
     };
     
     const isActive = (path) => location.pathname === path || location.pathname.startsWith(path);
@@ -41,12 +38,12 @@ function Sidebar() {
 
     return (
         <div className="col-lg-3 col-md-4 col-12 instructor-sidebar-column">
-            <nav className={`instructor-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+            <nav className={`instructor-sidebar ${isCollapsed ? "collapsed" : ""}`}>
                 {/* Mobile Header */}
                 <div className="d-md-none">
                     <div className="instructor-sidebar-header">
-                        <h6 className="mb-0 fw-bold">Instructor Panel</h6>
-                        <p className="mb-0 opacity-90 small">Manage your courses</p>
+                        <h6 className="mb-0 fw-bold">Panel Instruktur</h6>
+                        <p className="mb-0 opacity-90 small">Kelola kursus Anda</p>
                     </div>
                     <button
                         className="instructor-mobile-toggle w-100"
@@ -65,13 +62,13 @@ function Sidebar() {
                 {!isCollapsed && (
                     <div className="d-none d-md-flex instructor-sidebar-header">
                         <div style={{ flex: 1 }}>
-                            <h5 className="mb-1 fw-bold">Instructor Dashboard</h5>
-                            <p className="mb-0 opacity-90 small">Manage courses & students</p>
+                            <h5 className="mb-1 fw-bold">Dasbor Instruktur</h5>
+                            <p className="mb-0 opacity-90 small">Kelola kursus & siswa</p>
                         </div>
                         <button 
                             className="sidebar-toggle-btn d-flex"
                             onClick={toggleSidebarCollapse}
-                            title="Collapse sidebar"
+                            title="Tutup bilah sisi"
                         >
                             <i className="bi bi-chevron-left"></i>
                         </button>
@@ -84,7 +81,7 @@ function Sidebar() {
                         <button 
                             className="sidebar-expand-btn d-flex"
                             onClick={toggleSidebarCollapse}
-                            title="Expand sidebar"
+                            title="Perluas bilah sisi"
                         >
                             <i className="bi bi-chevron-right"></i>
                         </button>
@@ -94,124 +91,113 @@ function Sidebar() {
                 <div className="collapse navbar-collapse show" id="instructorSidenav">
                     <div className="sidebar-content">
                         {/* Main Navigation */}
-                        <div className="nav-section-title section-title">Course Management</div>
+                        <div className="nav-section-title section-title">Manajemen Kursus</div>
                         <div className="d-flex flex-column">
                             <Link 
-                                className={`instructor-nav-link ${isActive('/instructor/dashboard') ? 'active' : ''}`} 
+                                className={`instructor-nav-link ${isActive("/instructor/dashboard") ? "active" : ""}`} 
                                 to="/instructor/dashboard/"
-                                data-tooltip="Dashboard"
+                                data-tooltip="Dasbor"
                             >
                                 <div className="instructor-nav-icon nav-icon">
                                     <i className="bi bi-grid-fill"></i>
                                 </div>
-                                <span className="nav-text">Dashboard</span>
+                                <span className="nav-text">Dasbor</span>
                             </Link>
                             
                             <Link 
-                                className={`instructor-nav-link ${isActive('/instructor/courses') ? 'active' : ''}`} 
+                                className={`instructor-nav-link ${isActive("/instructor/courses") ? "active" : ""}`} 
                                 to="/instructor/courses/"
-                                data-tooltip="My Courses"
+                                data-tooltip="Kursus Saya"
                             >
                                 <div className="instructor-nav-icon nav-icon">
                                     <i className="fas fa-book-open"></i>
                                 </div>
-                                <span className="nav-text">My Courses</span>
+                                <span className="nav-text">Kursus Saya</span>
                             </Link>
                             
                             <Link 
-                                className={`instructor-nav-link ${isActive('/instructor/create-course') ? 'active' : ''}`} 
+                                className={`instructor-nav-link ${isActive("/instructor/create-course") ? "active" : ""}`} 
                                 to="/instructor/create-course/"
-                                data-tooltip="Create Course"
+                                data-tooltip="Buat Kursus"
                             >
                                 <div className="instructor-nav-icon nav-icon">
                                     <i className="fas fa-plus-circle"></i>
                                 </div>
-                                <span className="nav-text">Create Course</span>
+                                <span className="nav-text">Buat Kursus</span>
                             </Link>
                             
                             <Link 
-                                className={`instructor-nav-link ${isActive('/instructor/students') ? 'active' : ''}`} 
+                                className={`instructor-nav-link ${isActive("/instructor/students") ? "active" : ""}`} 
                                 to="/instructor/students/"
-                                data-tooltip="Students"
+                                data-tooltip="Siswa"
                             >
                                 <div className="instructor-nav-icon nav-icon">
                                     <i className="fas fa-user-graduate"></i>
                                 </div>
-                                <span className="nav-text">Students</span>
+                                <span className="nav-text">Siswa</span>
                             </Link>
                             
                             <Link 
-                                className={`instructor-nav-link ${isActive('/instructor/reviews') ? 'active' : ''}`} 
+                                className={`instructor-nav-link ${isActive("/instructor/reviews") ? "active" : ""}`} 
                                 to="/instructor/reviews/"
-                                data-tooltip="Reviews"
+                                data-tooltip="Ulasan"
                             >
                                 <div className="instructor-nav-icon nav-icon">
                                     <i className="fas fa-star"></i>
                                 </div>
-                                <span className="nav-text">Reviews</span>
+                                <span className="nav-text">Ulasan</span>
                             </Link>
                             
                             <Link 
-                                className={`instructor-nav-link ${isActive('/instructor/question-answer') ? 'active' : ''}`} 
+                                className={`instructor-nav-link ${isActive("/instructor/question-answer") ? "active" : ""}`} 
                                 to="/instructor/question-answer/"
-                                data-tooltip="Q&A Forum"
+                                data-tooltip="Forum T&J"
                             >
                                 <div className="instructor-nav-icon nav-icon">
                                     <i className="fas fa-comments"></i>
                                 </div>
-                                <span className="nav-text">Q&A Forum</span>
+                                <span className="nav-text">Forum T&J</span>
                             </Link>
                             
                             <Link 
-                                className={`instructor-nav-link ${isActive('/instructor/notifications') ? 'active' : ''}`} 
+                                className={`instructor-nav-link ${isActive("/instructor/notifications") ? "active" : ""}`} 
                                 to="/instructor/notifications/"
-                                data-tooltip="Notifications"
+                                data-tooltip="Notifikasi"
                             >
                                 <div className="instructor-nav-icon nav-icon">
                                     <i className="fas fa-bell"></i>
                                 </div>
-                                <span className="nav-text">Notifications</span>
+                                <span className="nav-text">Notifikasi</span>
                             </Link>
                         </div>
 
                         <div className="instructor-divider"></div>
 
                         {/* Account Settings */}
-                        <div className="nav-section-title section-title">Account Settings</div>
+                        <div className="nav-section-title section-title">Pengaturan Akun</div>
                         <div className="d-flex flex-column">
                             <Link 
-                                className={`instructor-nav-link ${isActive('/instructor/profile') ? 'active' : ''}`} 
+                                className={`instructor-nav-link ${isActive("/instructor/profile") ? "active" : ""}`} 
                                 to="/instructor/profile/"
-                                data-tooltip="Edit Profile"
+                                data-tooltip="Edit Profil"
                             >
                                 <div className="instructor-nav-icon nav-icon">
                                     <i className="fas fa-user-edit"></i>
                                 </div>
-                                <span className="nav-text">Edit Profile</span>
-                            </Link>
-                            
-                            <Link 
-                                className={`instructor-nav-link ${isActive('/instructor/change-password') ? 'active' : ''}`} 
-                                to="/instructor/change-password/"
-                                data-tooltip="Change Password"
-                            >
-                                <div className="instructor-nav-icon nav-icon">
-                                    <i className="fas fa-shield-alt"></i>
-                                </div>
-                                <span className="nav-text">Change Password</span>
+                                <span className="nav-text">Edit Profil</span>
                             </Link>
                         </div>
 
                         {/* Logout Button */}
                         <button 
                             onClick={handleLogout}
-                            className={`instructor-logout-btn ${isCollapsed ? 'collapsed' : ''}`}
-                            data-tooltip="Sign Out"
+                            className={`instructor-logout-btn ${isCollapsed ? "collapsed" : ""}`}
+                            data-tooltip="Keluar"
                         >
                             <div className="instructor-nav-icon nav-icon">
                                 <i className="fas fa-sign-out-alt"></i>
                             </div>
-                            <span className="nav-text">Sign Out</span>
+                            <span className="nav-text">Keluar</span>
                         </button>
                     </div>
                 </div>

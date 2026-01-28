@@ -48,16 +48,16 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                 setCertificate(response.data.certificate);
                 Toast().fire({
                     icon: 'success',
-                    title: 'Certificate Generated!',
-                    text: 'Your certificate has been successfully generated.'
+                    title: 'Sertifikat Berhasil Dibuat!',
+                    text: 'Sertifikat Anda telah berhasil dibuat.'
                 });
             }
         } catch (error) {
             console.error("Error generating certificate:", error);
             Toast().fire({
                 icon: 'error',
-                title: 'Generation Failed',
-                text: error.response?.data?.detail || 'Failed to generate certificate.'
+                title: 'Gagal Membuat Sertifikat',
+                text: error.response?.data?.detail || 'Gagal membuat sertifikat.'
             });
         } finally {
             setGenerating(false);
@@ -74,15 +74,15 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
             
             Toast().fire({
                 icon: 'info',
-                title: 'Print to PDF',
-                text: 'Use your browser\'s print dialog to save as PDF.'
+                title: 'Cetak ke PDF',
+                text: 'Gunakan dialog cetak browser Anda untuk menyimpan sebagai PDF.'
             });
         } catch (error) {
             console.error("Error downloading certificate:", error);
             Toast().fire({
                 icon: 'error',
-                title: 'Download Failed',
-                text: 'Failed to download certificate.'
+                title: 'Unduhan Gagal',
+                text: 'Gagal mengunduh sertifikat.'
             });
         }
     };
@@ -129,7 +129,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                 <div className="certificate-header">
                     <h4 className="mb-4">
                         <i className="fas fa-certificate me-3 text-warning"></i>
-                        Course Certificate
+                        Sertifikat Kursus
                     </h4>
                 </div>
 
@@ -142,10 +142,10 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                     <i className={`fas ${allLessonsCompleted ? 'fa-check-circle' : 'fa-clock'}`}></i>
                                 </div>
                                 <div className="status-content">
-                                    <h6>Lesson Completion</h6>
-                                    <p>{completionPercentage}% Complete</p>
+                                    <h6>Penyelesaian Pelajaran</h6>
+                                    <p>{completionPercentage}% Selesai</p>
                                     <small>
-                                        {allLessonsCompleted ? 'All lessons completed!' : `${100 - completionPercentage}% remaining`}
+                                        {allLessonsCompleted ? 'Semua pelajaran selesai!' : `${100 - completionPercentage}% tersisa`}
                                     </small>
                                 </div>
                             </div>
@@ -156,12 +156,12 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                     <i className={`fas ${allQuizzesPassed ? 'fa-check-circle' : 'fa-hourglass-half'}`}></i>
                                 </div>
                                 <div className="status-content">
-                                    <h6>Quiz Requirements</h6>
+                                    <h6>Persyaratan Kuis</h6>
                                     <p>
-                                        {quizResults.filter(q => q.passed).length} of {quizResults.length} Passed
+                                        {quizResults.filter(q => q.passed).length} dari {quizResults.length} Lulus
                                     </p>
                                     <small>
-                                        {allQuizzesPassed ? 'All quizzes passed!' : 'Complete remaining quizzes with 70% or higher'}
+                                        {allQuizzesPassed ? 'Semua kuis lulus!' : 'Selesaikan kuis yang tersisa dengan skor 70% atau lebih'}
                                     </small>
                                 </div>
                             </div>
@@ -177,8 +177,8 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                 <div className="congratulations-card">
                                     <div className="congratulations-content">
                                         <i className="fas fa-trophy congratulations-icon"></i>
-                                        <h5>Congratulations! 🎉</h5>
-                                        <p>You've successfully completed all requirements for this course. Generate your professional certificate now!</p>
+                                        <h5>Selamat! 🎉</h5>
+                                        <p>Anda telah berhasil menyelesaikan semua persyaratan kursus ini. Buatlah sertifikat profesional Anda sekarang!</p>
                                         <button 
                                             className="btn btn-primary btn-lg generate-btn"
                                             onClick={generateCertificate}
@@ -187,12 +187,12 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                             {generating ? (
                                                 <>
                                                     <div className="spinner-border spinner-border-sm me-2"></div>
-                                                    Generating...
+                                                    Membuat...
                                                 </>
                                             ) : (
                                                 <>
                                                     <i className="fas fa-award me-2"></i>
-                                                    Generate Certificate
+                                                    Buat Sertifikat
                                                 </>
                                             )}
                                         </button>
@@ -207,14 +207,14 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                         onClick={downloadCertificate}
                                     >
                                         <i className="fas fa-download me-2"></i>
-                                        Save as PDF
+                                        Simpan sebagai PDF
                                     </button>
                                     <button 
                                         className="btn btn-outline-primary btn-lg"
                                         onClick={printCertificate}
                                     >
                                         <i className="fas fa-print me-2"></i>
-                                        Print
+                                        Cetak
                                     </button>
                                 </div>
                             </div>
@@ -225,21 +225,21 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                         <div className="requirements-card">
                             <h6>
                                 <i className="fas fa-info-circle me-2 text-info"></i>
-                                Certificate Requirements
+                                Persyaratan Sertifikat
                             </h6>
                             <ul className="requirements-list">
                                 <li className={allLessonsCompleted ? 'completed' : ''}>
                                     <i className={`fas ${allLessonsCompleted ? 'fa-check' : 'fa-times'} me-2`}></i>
-                                    Complete all course lessons (100%)
+                                    Selesaikan semua pelajaran kursus (100%)
                                 </li>
                                 <li className={allQuizzesPassed ? 'completed' : ''}>
                                     <i className={`fas ${allQuizzesPassed ? 'fa-check' : 'fa-times'} me-2`}></i>
-                                    Pass all quizzes with 70% or higher score
+                                    Lulus semua kuis dengan skor 70% atau lebih
                                 </li>
                             </ul>
                             <p className="requirements-note">
                                 <i className="fas fa-lightbulb me-2 text-warning"></i>
-                                Once you meet all requirements, you can generate and download your professional certificate.
+                                Setelah Anda memenuhi semua persyaratan, Anda dapat membuat dan mengunduh sertifikat profesional Anda.
                             </p>
                         </div>
                     </div>
@@ -248,7 +248,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                 {/* Certificate Preview */}
                 {certificate && (
                     <div className="certificate-preview mt-0">
-                        <h5 className="mb-4">Certificate Preview</h5>
+                        <h5 className="mb-4">Pratinjau Sertifikat</h5>
                         <div 
                             className="certificate-document" 
                             ref={certificateRef}
@@ -270,19 +270,19 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                 <div className="certificate-id">
                                     <span>Certificate ID: {certificate.certificate_id}</span>
                                 </div>
-                                <h5 className="show-student">This is to certify that:</h5>
+                                <h5 className="show-student">Ini adalah untuk memastikan bahwa:</h5>
                                 <h2 className="student-name">{UserData()?.full_name}</h2>
                                 <div className="certificate-body">
-                                    <h6 className="show-course-title">has successfully completed the course</h6>
+                                    <h6 className="show-course-title">telah berhasil menyelesaikan kursus</h6>
                                     <h3 className="course-title">{course?.course?.title}</h3>
                                 </div>
                                 <div className="course-instructor">
-                                    <h6 className="show-instructor">with distinction, demonstrating proficiency in all</h6>
-                                    <h6 className="show-instructor">course materials and assessments by</h6>
+                                    <h6 className="show-instructor">dengan prestasi cemerlang, menunjukkan penguasaan dalam semua</h6>
+                                    <h6 className="show-instructor">materi kursus dan penilaian oleh</h6>
                                     <span>{course?.course?.teacher?.full_name}</span>
                                 </div>
                                 <div className="certificate-date">
-                                    <strong>Date of Completion:</strong>
+                                    <strong>Tanggal Penyelesaian:</strong>
                                     <span>{formatDate(certificate.date)}</span>
                                 </div>
                                 
@@ -296,7 +296,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                             includeMargin={false}
                                             renderAs="svg"
                                         />
-                                        <p className="qr-label">Scan to Verify</p>
+                                        <p className="qr-label">Pindai untuk Verifikasi</p>
                                     </div>
                                 )}
                             </div>
@@ -308,7 +308,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                 {/* Quiz Results Summary (if available) */}
                 {quizResults.length > 0 && (
                     <div className="quiz-results-summary mt-4">
-                        <h6>Quiz Performance Summary</h6>
+                        <h6>Ringkasan Kinerja Kuis</h6>
                         <div className="quiz-results-list">
                             {quizResults.map((quiz, index) => (
                                 <div key={index} className={`quiz-result-item ${quiz.passed ? 'passed' : 'failed'}`}>
@@ -320,7 +320,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                     </div>
                                     <div className="quiz-result-status">
                                         <i className={`fas ${quiz.passed ? 'fa-check-circle' : 'fa-times-circle'}`}></i>
-                                        <span>{quiz.passed ? 'Passed' : 'Failed'}</span>
+                                        <span>{quiz.passed ? 'Lulus' : 'Gagal'}</span>
                                     </div>
                                 </div>
                             ))}

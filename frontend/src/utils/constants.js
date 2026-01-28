@@ -1,17 +1,9 @@
 import UserData from "../views/plugin/UserData";
 
-// Use environment variable for API URL with smart fallback based on hostname
-// On production, VITE_API_BASE_URL will be '/api' (relative path)
-// On localhost development, it defaults to 'http://127.0.0.1:8000'
-// The relative path is safer as it uses the same origin (http/https, domain, port)
-const baseURL = import.meta.env.VITE_API_BASE_URL || (() => {
-  // In development, use localhost. In production, use relative path
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return 'http://127.0.0.1:8000';
-  }
-  // In production, use relative path (no hardcoded domain)
-  return '/api';
-})();
+// Use environment variable for API URL, fallback to relative path
+// In Docker: uses /api (nginx proxies to backend:8000 internally)
+// In development: use environment variable or relative path
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Build the full API base URL
 // If baseURL is already a full URL (http://...), use it as-is + /api/v1
@@ -25,7 +17,7 @@ export const DEFAULT_IMAGE_URL = "https://www.eclosio.ong/wp-content/uploads/201
 
 // Helper function to get full media URL
 // ✨ PHASE 4.30: Fixed to use correct backend origin for media files in development
-// In development: points to http://127.0.0.1:8000/media/ (Django backend)
+// In development: points to http://127.0.0.1:9000/media/ (Django backend)
 // In production: points to /media/ (nginx serves from same origin as frontend)
 export const getMediaUrl = (path) => {
     if (!path) return '';
@@ -41,7 +33,7 @@ export const getMediaUrl = (path) => {
     const getBackendMediaUrl = () => {
         // Extract backend origin from baseURL
         if (baseURL.startsWith('http')) {
-            // Development mode: baseURL is full URL like http://127.0.0.1:8000
+            // Development mode: baseURL is full URL like http://127.0.0.1:9000
             const baseOrigin = baseURL.split('/api')[0]; // Remove /api/v1/ part
             return `${baseOrigin}/media/`;
         }

@@ -11,40 +11,40 @@ const CourseFAQ = () => {
 
     const faqs = [
         {
-            question: "What are the prerequisites for this course?",
-            answer: "This course is designed for beginners and requires no prior programming experience. Basic computer literacy and familiarity with web browsers is helpful but not required. We'll guide you through everything step by step."
+            question: "Apa prasyarat untuk kursus ini?",
+            answer: "Kursus ini dirancang untuk pemula dan tidak memerlukan pengalaman pemrograman sebelumnya. Literasi komputer dasar dan keakraban dengan peramban web akan membantu tetapi tidak diperlukan. Kami akan memandu Anda melalui segalanya langkah demi langkah."
         },
         {
-            question: "How long do I have access to the course?",
-            answer: "You get lifetime access to this course! Once enrolled, you can access all course materials, including future updates, anytime and anywhere. There are no time restrictions or deadlines."
+            question: "Berapa lama saya memiliki akses ke kursus?",
+            answer: "Anda mendapatkan akses seumur hidup ke kursus ini! Setelah terdaftar, Anda dapat mengakses semua materi kursus, termasuk pembaruan di masa depan, kapan saja dan di mana saja. Tidak ada batasan waktu atau tenggat waktu."
         },
         {
-            question: "Can I download the course videos?",
-            answer: "Yes, all course videos are available for download so you can learn offline. You'll also get access to downloadable resources including source code, project files, and additional reading materials."
+            question: "Bisakah saya mengunduh video kursus?",
+            answer: "Ya, semua video kursus dapat diunduh sehingga Anda dapat belajar secara offline. Anda juga akan mendapatkan akses ke sumber daya yang dapat diunduh termasuk kode sumber, file proyek, dan materi bacaan tambahan."
         },
         {
-            question: "Is there a certificate of completion?",
-            answer: "Absolutely! Upon successful completion of the course, you'll receive a certificate of completion that you can add to your LinkedIn profile, resume, or portfolio to showcase your new skills."
+            question: "Apakah ada sertifikat penyelesaian?",
+            answer: "Tentu saja! Setelah berhasil menyelesaikan kursus, Anda akan menerima sertifikat penyelesaian yang dapat Anda tambahkan ke profil LinkedIn, resume, atau portofolio Anda untuk menampilkan keterampilan baru Anda."
         },
         {
-            question: "What if I'm not satisfied with the course?",
-            answer: "We offer a 30-day money-back guarantee. If you're not completely satisfied with the course within the first 30 days, you can request a full refund with no questions asked."
+            question: "Bagaimana jika saya tidak puas dengan kursusnya?",
+            answer: "Kami menawarkan jaminan uang kembali 30 hari. Jika Anda tidak sepenuhnya puas dengan kursus dalam 30 hari pertama, Anda dapat meminta pengembalian dana penuh tanpa pertanyaan."
         },
         {
-            question: "How much time should I dedicate to this course?",
-            answer: "The course is self-paced, but we recommend dedicating 3-5 hours per week. Most students complete the course within 4-6 weeks. You can learn faster or slower based on your schedule and learning pace."
+            question: "Berapa banyak waktu yang harus saya dedikasikan untuk kursus ini?",
+            answer: "Kursus dapat disesuaikan dengan kecepatan Anda sendiri, tetapi kami merekomendasikan untuk mendedikasikan 3-5 jam per minggu. Sebagian besar siswa menyelesaikan kursus dalam 4-6 minggu. Anda dapat belajar lebih cepat atau lebih lambat berdasarkan jadwal dan kecepatan belajar Anda."
         },
         {
-            question: "Do I need any special software or tools?",
-            answer: "All you need is a computer with an internet connection and a web browser. We'll guide you through installing any free tools and software during the course. No expensive software licenses required."
+            question: "Apakah saya memerlukan perangkat lunak atau alat khusus?",
+            answer: "Yang Anda butuhkan adalah komputer dengan koneksi internet dan peramban web. Kami akan memandu Anda melalui penginstalan alat dan perangkat lunak gratis apa pun selama kursus. Tidak ada lisensi perangkat lunak mahal yang diperlukan."
         },
         {
-            question: "Is there instructor support available?",
-            answer: "Yes! You'll have access to instructor support through the course discussion forum. We typically respond to questions within 24 hours. You'll also have access to a community of fellow students."
+            question: "Apakah dukungan instruktur tersedia?",
+            answer: "Ya! Anda akan memiliki akses ke dukungan instruktur melalui forum diskusi kursus. Kami biasanya merespons pertanyaan dalam waktu 24 jam. Anda juga akan memiliki akses ke komunitas sesama siswa."
         },
         {
-            question: "Can I access this course on mobile devices?",
-            answer: "Absolutely! The course is fully mobile-friendly. You can watch videos, read materials, and participate in discussions from your smartphone, tablet, or any device with internet access."
+            question: "Bisakah saya mengakses kursus ini di perangkat seluler?",
+            answer: "Tentu saja! Kursus ini sepenuhnya responsif untuk perangkat seluler. Anda dapat menonton video, membaca materi, dan berpartisipasi dalam diskusi dari smartphone, tablet, atau perangkat apa pun dengan akses internet."
         }
     ];
 
@@ -54,10 +54,10 @@ const CourseFAQ = () => {
                 <div className="text-center mb-5">
                     <h3 className="h4 fw-bold text-primary mb-3">
                         <i className="fas fa-question-circle me-3"></i>
-                        Frequently Asked Questions
+                        Pertanyaan yang Sering Diajukan
                     </h3>
                     <p className="text-muted">
-                        Get answers to the most common questions about this course
+                        Dapatkan jawaban atas pertanyaan paling umum tentang kursus ini
                     </p>
                 </div>
 

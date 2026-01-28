@@ -7,25 +7,48 @@
    ================================ */
 
 .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Protect header card gap from parent overrides */
 .modern-dashboard .row > .col-12 > .instructor-header-card,
 .modern-dashboard .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
+}
+
+/* CRITICAL: Force instructor-review-page padding to be overridable by pt-5 and pb-5 classes */
+/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+.instructor-review-page.pt-5 {
+    padding-top: 50px !important;
+}
+
+.instructor-review-page.pb-5 {
+    padding-bottom: 3rem !important;
 }
 
 /* Main Page Layout */
 .instructor-review-page {
-    background: transparent;
-    min-height: 100vh;
-    padding: 3rem 0;
-    padding-top: 3rem !important;
-    padding-bottom: 3rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
     margin-bottom: 8rem;
+    min-height: 100vh;
+    background: transparent;
+    padding: 3rem 0;
+    padding-top: calc(70px + 3rem) !important;
+    padding-bottom: 3rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: hidden;
+    overflow-y: visible;
+    /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
+}    /* ✨ PHASE 7.3: Add overflow-x: hidden to prevent horizontal scroll */
 }
 
 /* Ensure proper scroll context for sticky sidebar */
@@ -62,6 +85,38 @@
     padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
     display: flex;
     flex-direction: column;
+}
+
+/* Protect Header on review page from row CSS rules */
+.instructor-review-page .row.instructor-header-row {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Ensure Header card maintains full width and removes right gap */
+.instructor-review-page .row.instructor-header-row > .col-xl-12,
+.instructor-review-page .row.instructor-header-row > .col-lg-12,
+.instructor-review-page .row.instructor-header-row > .col-md-12,
+.instructor-review-page .row.instructor-header-row > .col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* ✨ PHASE 4.21: Sidebar-content rows - Proper layout without conflicts */
+.instructor-review-page .row.sidebar-content-row,
+.instructor-review-page .row.sidebar-content-row-loading {
+    flex-wrap: nowrap;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
@@ -588,6 +643,14 @@
     font-weight: 500;
     font-size: 0.8rem;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.instructor-review-page .cancel-icon {
+    margin-right: 0.3rem;
+    font-size: 0.75rem;
 }
 
 .instructor-review-page .submit-btn {
@@ -887,10 +950,8 @@
     max-width: 100%;
   }
 
-  /* Ensure content doesn't wrap under sidebar */
-  .instructor-review-page .row > .col-lg-9 {
-    min-width: 500px;
-  }
+  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
+  /* Removed min-width: 500px to prevent gap shift when sidebar-collapsed-adapted is applied */
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
     /* Fallback for browsers that don't support :has() */
@@ -920,10 +981,8 @@
     max-width: 100%;
   }
 
-  /* Ensure content doesn't wrap under sidebar */
-  .instructor-review-page .row > .col-md-8 {
-    min-width: 400px;
-  }
+  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
+  /* Removed min-width: 400px to prevent gap shift when sidebar-collapsed-adapted is applied */
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
     /* Fallback for browsers that don't support :has() */

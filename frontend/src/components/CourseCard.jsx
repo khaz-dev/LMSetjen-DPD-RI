@@ -32,7 +32,7 @@ const CourseCard = ({ course, index, onDelete }) => {
     const getNextStep = () => {
         if (!hasCurriculum) {
             return {
-                label: 'Add Curriculum',
+                label: 'Tambah Kurikulum',
                 icon: 'fa-list',
                 link: `/instructor/edit-course/${course.course_id}/curriculum/`,
                 color: '#4CAF50'
@@ -40,7 +40,7 @@ const CourseCard = ({ course, index, onDelete }) => {
         }
         if (!hasLessons) {
             return {
-                label: 'Add Lessons',
+                label: 'Tambah Pelajaran',
                 icon: 'fa-video',
                 link: `/instructor/edit-course/${course.course_id}/curriculum/`,
                 color: '#2196F3'
@@ -48,14 +48,14 @@ const CourseCard = ({ course, index, onDelete }) => {
         }
         if (!hasQuiz) {
             return {
-                label: 'Add Quiz',
+                label: 'Tambah Kuis',
                 icon: 'fa-question-circle',
                 link: `/instructor/edit-course/${course.course_id}/quiz/`,
                 color: '#FF9800'
             };
         }
         return {
-            label: 'Ready to Publish',
+            label: 'Siap Dipublikasikan',
             icon: 'fa-check-circle',
             link: `/instructor/edit-course/${course.course_id}/`,
             color: '#8BC34A'
@@ -88,7 +88,7 @@ const CourseCard = ({ course, index, onDelete }) => {
                         }}
                     >
                         <i className={`fas ${isDraft ? 'fa-clock' : 'fa-check-circle'}`}></i>
-                        {course.teacher_course_status || 'Published'}
+                        {course.teacher_course_status || 'Dipublikasikan'}
                     </span>
 
                     {/* Level Badge */}
@@ -104,11 +104,11 @@ const CourseCard = ({ course, index, onDelete }) => {
                     <div className="d-flex align-items-center gap-3 mb-3">
                         <div className="category-tag">
                             <i className="fas fa-tag me-1"></i>
-                            {course.category?.title || "General"}
+                            {course.category?.title || "Umum"}
                         </div>
                         <div className="students-count">
                             <i className="fas fa-users me-1"></i>
-                            {course.students?.length || 0} Students
+                            {course.students?.length || 0} Siswa
                         </div>
                         {/* Duration Display */}
                         {course.lectures && course.lectures.length > 0 && (
@@ -120,19 +120,19 @@ const CourseCard = ({ course, index, onDelete }) => {
                     </div>
 
                     <h4 className="course-title mb-2">
-                        {course.title || "Untitled Course"}
+                        {course.title || "Kursus Tanpa Judul"}
                     </h4>
 
                     <div className="course-date mb-3">
                         <i className="fas fa-calendar-alt me-2"></i>
-                        Created {course.date ? moment(course.date).format("DD MMM, YYYY") : "N/A"}
+                        Dibuat {course.date ? moment(course.date).format("DD MMM, YYYY") : "Tidak Tersedia"}
                     </div>
 
                     {/* Progress Indicator for Draft Courses */}
                     {isDraft && (
                         <div className="mb-3">
                             <div className="d-flex justify-content-between align-items-center mb-2">
-                                <small className="text-muted fw-bold">Course Progress</small>
+                                <small className="text-muted fw-bold">Kemajuan Kursus</small>
                                 <small className="fw-bold" style={{ color: nextStep.color }}>{progress}%</small>
                             </div>
                             <div className="progress" style={{ height: '8px', borderRadius: '10px' }}>
@@ -192,7 +192,7 @@ const CourseCard = ({ course, index, onDelete }) => {
                             onClick={() => window.location.href = `/course-detail/${course.slug}/`}
                         >
                             <i className="fas fa-eye me-1"></i>
-                            View
+                            Lihat
                         </button>
                         
                         <button 
@@ -200,7 +200,7 @@ const CourseCard = ({ course, index, onDelete }) => {
                             onClick={() => handleDeleteCourse(course.course_id, course.title, onDelete)}
                         >
                             <i className="fas fa-trash me-1"></i>
-                            Delete
+                            Hapus
                         </button>
                     </div>
                 </div>

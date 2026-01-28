@@ -340,14 +340,6 @@ function Index() {
 
                                 {/* CTA Buttons */}
                                 <div className="d-flex flex-wrap gap-3 mb-5">
-                                    <Link 
-                                        to="/register" 
-                                        className="btn btn-lg px-4 py-3 hero-btn-primary"
-                                    >
-                                        <i className="fas fa-user-plus me-2"></i>
-                                        Daftar Sekarang
-                                    </Link>
-                                    
                                     <button 
                                         className="btn btn-lg btn-outline-light px-4 py-3 hero-btn-secondary-outline"
                                         onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
@@ -1873,8 +1865,8 @@ function Index() {
                             </p>
                         </div>
                         <div className="col-lg-4 text-lg-end mt-4 mt-lg-0">
-                            <Link 
-                                to="/register"
+                            <button 
+                                onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
                                 className="btn btn-lg px-4 py-3 cta-register-btn"
                                 style={{
                                     background: "white",
@@ -1892,9 +1884,9 @@ function Index() {
                                     transition: "all 0.3s ease"
                                 }}
                             >
-                                <i className="fas fa-rocket me-2"></i>
-                                Daftar Gratis Sekarang
-                            </Link>
+                                <i className="fas fa-search me-2"></i>
+                                Jelajahi Kursus Kami
+                            </button>
                         </div>
                     </div>
                 </div>

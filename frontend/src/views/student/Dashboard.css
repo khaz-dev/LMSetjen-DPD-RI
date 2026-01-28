@@ -1,14 +1,65 @@
 /* Student Dashboard Component Styles */
 
+/* ================================
+   GAP BETWEEN HEADER AND DASHBOARD
+   ================================ */
+
+.student-header-card {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important; /* ✨ PHASE 8b: CRITICAL - Controls gap between header-card and content */
+    /* ✨ PHASE 40.2: Synchronized with Header.css (1.5rem) to match all other student pages */
+}
+
+/* Protect header card gap from parent overrides */
+.dashboard-page .row > .col-12 > .student-header-card,
+.dashboard-page .student-header-card {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important; /* ✨ PHASE 8b: CRITICAL - Controls gap between header-card and content */
+    /* ✨ PHASE 40.2: Synchronized with Header.css (1.5rem) to match all other student pages */
+}
+
 /* Page Background */
 .dashboard-page {
     min-height: 100vh;
     background: transparent;
     padding: 3rem 0;
-    padding-top: 3rem !important;
+    padding-top: calc(70px + 3rem) !important;
     padding-bottom: 3rem !important;
     margin-top: 0 !important;
     margin-bottom: 8rem;
+    overflow-x: hidden; /* ✨ PHASE 8b: Prevent horizontal scroll from row width calc */
+}
+
+/* ✨ PHASE 8b: Force padding-top to be overridable by pt-5 utility class */
+.dashboard-page.pt-5 {
+    padding-top: 50px !important;
+}
+
+.dashboard-page.pb-5 {
+    padding-bottom: 3rem !important;
+}
+
+/* ✨ PHASE 8b: Critical row styling - match instructor Dashboard pattern */
+.dashboard-page > .container > .row {
+    margin-bottom: 0; /* Remove gap below header-card */
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Neutralize column padding-left */
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Neutralize column padding-right */
+    display: flex; /* Enable flexbox layout for all rows */
+    flex-wrap: wrap; /* Allow wrapping if needed */
+    gap: 0; /* Remove Bootstrap gap */
+    width: calc(100% + var(--bs-gutter-x, 24px)); /* Extend to compensate for negative margins */
+    /* \u2728 PHASE 40.12: Made more specific to only target top-level rows in container, not nested rows */
+}
+
+/* ✨ PHASE 8b: Column styling - remove bottom margin and set proper padding */
+/* Only target direct children of top-level rows in container */
+.dashboard-page > .container > .row > [class*="col-"] {
+    margin-bottom: 0; /* Remove gap for columns */
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px)); /* Bootstrap default column padding */
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px)); /* Bootstrap default column padding */
+    display: flex;
+    flex-direction: column;
+    /* \u2728 PHASE 40.12: Made more specific to only target top-level columns in container, not nested columns */
 }
 
 /* Dashboard Cards */
@@ -807,15 +858,34 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: 100% !important;
+    /* ✨ PHASE 40.10: Added width 100% to ensure sidebar-collapsed-adapted fills parent width */
     flex: 1 1 auto !important;
     min-width: 0 !important;
 }
 
-/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+/* Inner rows inside col-lg-9: align with welcome-section (no negative margins needed) */
 .dashboard-page .row:has(.student-sidebar-column) > .col-lg-9 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
+}
+
+/* Ensure row.mb-2 inside col-lg-9 follows welcome-section width */
+.dashboard-page .row:has(.student-sidebar-column) > .col-lg-9 > .row.mb-2 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
+}
+
+/* Ensure row.mb-4 inside col-lg-9 follows welcome-section width */
+.dashboard-page .row:has(.student-sidebar-column) > .col-lg-9 > .row.mb-4 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
 }
 
 /* Tablet: col-md-8 content wrapper (inside sidebar row) */
@@ -824,20 +894,162 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: 100% !important;
+    /* ✨ PHASE 40.10: Added width 100% to ensure sidebar-collapsed-adapted fills parent width */
     flex: 1 1 auto !important;
     min-width: 0 !important;
 }
 
-/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+/* Inner rows inside col-md-8: align with welcome-section (no negative margins needed) */
 .dashboard-page .row:has(.student-sidebar-column) > .col-md-8 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
+}
+
+/* Ensure row.mb-2 inside col-md-8 follows welcome-section width */
+.dashboard-page .row:has(.student-sidebar-column) > .col-md-8 > .row.mb-2 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
+}
+
+/* Ensure row.mb-4 inside col-md-8 follows welcome-section width */
+.dashboard-page .row:has(.student-sidebar-column) > .col-md-8 > .row.mb-4 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
+}
+
+/* 💨 PHASE 40.17: Ensure columns inside rows fill left-start to right-end */
+.sidebar-collapsed-adapted .row.mb-2 > [class*="col-"] {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    /* 💨 PHASE 40.17: Column children have zero spacing */
+}
+
+.sidebar-collapsed-adapted .row > [class*="col-"] {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    /* 💨 PHASE 40.17: All column children have zero spacing */
 }
 
 /* Override for specific spacing needs */
 .dashboard-page .row.mb-3 {
     margin-bottom: 1rem !important;
+}
+
+/* 💨 PHASE 40.22: Master rule - row.mb-2 displays all 4 cards in 1 line with maximum gap spacing */
+.sidebar-collapsed-adapted .row.mb-2 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    position: relative !important;
+    gap: 2rem !important;
+    /* 💨 PHASE 40.22: Increased gap to 2rem for maximum generous spacing between cards */
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    /* 💨 PHASE 40.22: Explicit flex display prevents wrapping */
+}
+
+/* 💨 PHASE 40.22: Ensure columns don't grow beyond their width */
+.sidebar-collapsed-adapted .row.mb-2 > [class*="col-"] {
+    flex: 0 1 calc(25% - 1.5rem) !important;
+    /* 💨 PHASE 40.22: Updated flex-basis to account for 2rem gap distribution (6rem / 4) */
+    min-width: 0 !important;
+}
+
+/* 💨 PHASE 40.25: Nested row with g-3 (3 learning time stat cards) with 2rem gap spacing */
+.sidebar-collapsed-adapted .row.g-3 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    position: relative !important;
+    gap: 2rem !important;
+    /* 💨 PHASE 40.25: Increased gap from Bootstrap's g-3 (1rem) to 2rem for consistency */
+    display: flex !important;
+    flex-wrap: nowrap !important;
+}
+
+/* 💨 PHASE 40.25: Ensure g-3 child columns maintain proper sizing */
+.sidebar-collapsed-adapted .row.g-3 > [class*="col-"] {
+    flex: 0 1 calc(33.333% - 1.333rem) !important;
+    /* 💨 PHASE 40.25: 3 columns with 2rem gap (2rem / 3 ≈ 0.667rem per column, rounded to 1.333rem) */
+    min-width: 0 !important;
+}
+
+/* 💨 PHASE 40.24: Learning Progress row (mb-4) with 2rem gap spacing */
+.sidebar-collapsed-adapted .row.mb-4 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    position: relative !important;
+    gap: 2rem !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    /* 💨 PHASE 40.24: Learning Progress card displayed with maximum spacing */
+}
+
+/* 💨 PHASE 40.24: Ensure Learning Progress card children maintain proper sizing */
+.sidebar-collapsed-adapted .row.mb-4 > [class*="col-"] {
+    flex: 0 1 auto !important;
+    /* 💨 PHASE 40.24: Allow dashboard-card to maintain full width */
+    min-width: 0 !important;
+}
+
+/* 💨 PHASE 40.23: Recent Activity / My Courses row with 2rem gap spacing */
+.sidebar-collapsed-adapted > .row:not(.mb-2):not(.mb-4):has(.col-lg-4):has(.col-lg-8) {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    position: relative !important;
+    gap: 2rem !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    /* 💨 PHASE 40.23: Recent Activity/My Courses displayed in single line with maximum spacing */
+}
+
+/* 💨 PHASE 40.23: Adjust column widths for Recent Activity (col-lg-4) and My Courses (col-lg-8) */
+.sidebar-collapsed-adapted > .row:not(.mb-2):not(.mb-4):has(.col-lg-4):has(.col-lg-8) > [class*="col-"] {
+    flex: 0 1 auto !important;
+    /* 💨 PHASE 40.23: Allow col-lg-4 and col-lg-8 to maintain their natural width ratio */
+    min-width: 0 !important;
+}
+
+/* 💨 PHASE 40.17: Remove ALL left/right margins AND padding from ANY row inside sidebar-collapsed-adapted */
+.sidebar-collapsed-adapted .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    position: relative !important;
+    /* 💨 PHASE 40.17: Ensures all rows fill parent's full horizontal space */
 }
 
 /* ============================== */

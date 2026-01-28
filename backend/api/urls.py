@@ -15,7 +15,6 @@ urlpatterns = [
 
     path("user/token/", api_views.MyTokenObtainPairView.as_view()),
     path("user/token/refresh/", TokenRefreshView.as_view()),
-    path("user/register/", api_views.RegisterView.as_view()),
     path("user/password-reset/<email>/", api_views.PasswordResetEmailVerifyAPIView.as_view()),
     path("user/password-change/", api_views.PasswordChangeAPIView.as_view()),
     path("user/profile/<user_id>/", api_views.ProfileAPIView.as_view()),
@@ -24,6 +23,7 @@ urlpatterns = [
     # SSO (Single Sign-On) Endpoints
     path("sso/verify/", api_views.SSOTokenVerifyAPIView.as_view(), name="sso-verify"),
     path("sso/login/<str:sso_token>/", api_views.SSOLoginRedirectAPIView.as_view(), name="sso-login"),
+    path("auth/google/", api_views.GoogleOAuthAPIView.as_view(), name="google-oauth"),  # ✨ PHASE 4.16: Google OAuth
 
     # Core Endpoints
     path("course/category/", api_views.CategoryListAPIView.as_view()),
@@ -178,4 +178,7 @@ urlpatterns = [
     path("analytics/search-taxonomy/trending/", api_views.TrendingCategoriesView.as_view()),
     path("analytics/search-taxonomy/timeline/", api_views.QueryAnalysisByTimeView.as_view()),
 
+    # ✨ PHASE 3: MULTI-ROLE AUTHENTICATION ENDPOINTS
+    path("auth/available-roles/", api_views.AvailableRolesAPIView.as_view()),
+    path("auth/select-role/", api_views.SelectRoleAPIView.as_view()),
 ]

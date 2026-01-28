@@ -68,7 +68,7 @@ function Search() {
             setAllCourses([]);
             Toast().fire({
                 icon: "error",
-                title: "Failed to load courses",
+                title: "Gagal memuat kursus",
             });
         } finally {
             setIsLoading(false);
@@ -105,7 +105,7 @@ function Search() {
         if (!userId) {
             Toast().fire({
                 icon: "warning",
-                title: "Please login to add to wishlist",
+                title: "Silakan login untuk menambah ke daftar keinginan",
             });
             return;
         }
@@ -114,7 +114,7 @@ function Search() {
         if (isTeacher) {
             Toast().fire({
                 icon: "info",
-                title: "Instructors cannot add courses to wishlist",
+                title: "Instruktur tidak dapat menambahkan kursus ke daftar keinginan",
             });
             return;
         }
@@ -129,7 +129,7 @@ function Search() {
             // Success response
             Toast().fire({
                 icon: "success",
-                title: response.data.message || "Wishlist updated successfully",
+                title: response.data.message || "Daftar keinginan berhasil diperbarui",
             });
             
             // Refresh wishlist data
@@ -140,14 +140,14 @@ function Search() {
             console.error("[Wishlist Error]", error);
             
             // Handle different error scenarios
-            let errorMessage = "Error updating wishlist";
+            let errorMessage = "Kesalahan saat memperbarui daftar keinginan";
             
             if (error.response) {
                 // Server responded with error
                 if (error.response.status === 404) {
-                    errorMessage = "Course not found";
+                    errorMessage = "Kursus tidak ditemukan";
                 } else if (error.response.status === 401) {
-                    errorMessage = "Please login again";
+                    errorMessage = "Silakan login lagi";
                 } else if (error.response.data?.message) {
                     errorMessage = error.response.data.message;
                 } else if (error.response.data?.detail) {
@@ -155,7 +155,7 @@ function Search() {
                 }
             } else if (error.request) {
                 // Request made but no response
-                errorMessage = "Network error. Please check your connection";
+                errorMessage = "Kesalahan jaringan. Silakan periksa koneksi Anda";
             }
             
             Toast().fire({
@@ -217,48 +217,48 @@ function Search() {
     // Handle instructor application email
     const handleStartTeaching = () => {
         const email = "sdm@dpd.go.id";
-        const subject = "Application to Become an Instructor";
-        const emailBody = `Hello,
+        const subject = "Aplikasi untuk Menjadi Instruktur";
+        const emailBody = `Halo,
 
-I would like to apply to become an instructor on the LMS DPD RI platform.
+Saya ingin mengajukan aplikasi untuk menjadi instruktur di platform LMS DPD RI.
 
-Name: [Your Full Name]
-Email: [Your Email]
-Phone: [Your Phone Number]
-Expertise Area: [Your Expertise]
+Nama: [Nama Lengkap Anda]
+Email: [Email Anda]
+Nomor Telepon: [Nomor Telepon Anda]
+Area Keahlian: [Keahlian Anda]
 
-Thank you for considering my application.
+Terima kasih atas pertimbangan aplikasi saya.
 
-Best regards`;
+Salam hormat,`;
 
         Swal.fire({
-            title: '<strong>Become an Instructor</strong>',
+            title: '<strong>Jadilah Instruktur</strong>',
             html: `
                 <div style="text-align: left; padding: 20px;">
                     <p style="margin-bottom: 15px; color: #555;">
-                        To apply as an instructor, please send an email with the following details:
+                        Untuk mendaftar sebagai instruktur, silakan kirim email dengan detail berikut:
                     </p>
                     
                     <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #667eea;">
                         <div style="margin-bottom: 15px;">
                             <strong style="color: #667eea; display: block; margin-bottom: 5px;">
-                                📧 Email To:
+                                📧 Kirim Email Ke:
                             </strong>
                             <code style="background: white; padding: 8px 12px; border-radius: 6px; display: inline-block; font-size: 14px;">
                                 ${email}
                             </code>
                             <button onclick="navigator.clipboard.writeText('${email}'); 
-                                this.innerHTML='✓ Copied!'; 
+                                this.innerHTML='✓ Disalin!'; 
                                 this.style.background='#28a745';
-                                setTimeout(() => { this.innerHTML='Copy'; this.style.background='#667eea'; }, 2000);"
+                                setTimeout(() => { this.innerHTML='Salin'; this.style.background='#667eea'; }, 2000);"
                                 style="margin-left: 10px; padding: 5px 15px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                                Copy
+                                Salin
                             </button>
                         </div>
                         
                         <div style="margin-bottom: 15px;">
                             <strong style="color: #667eea; display: block; margin-bottom: 5px;">
-                                📋 Subject:
+                                📋 Subjek:
                             </strong>
                             <code style="background: white; padding: 8px 12px; border-radius: 6px; display: block; font-size: 14px;">
                                 ${subject}
@@ -267,33 +267,33 @@ Best regards`;
                         
                         <div>
                             <strong style="color: #667eea; display: block; margin-bottom: 5px;">
-                                ✉️ Email Template:
+                                ✉️ Template Email:
                             </strong>
                             <textarea readonly
                                 style="width: 100%; height: 200px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 13px; resize: vertical;"
                                 onclick="this.select();"
                             >${emailBody}</textarea>
                             <button onclick="navigator.clipboard.writeText(\`${emailBody.replace(/`/g, '\\`')}\`); 
-                                this.innerHTML='✓ Template Copied!'; 
+                                this.innerHTML='✓ Template Disalin!'; 
                                 this.style.background='#28a745';
-                                setTimeout(() => { this.innerHTML='Copy Template'; this.style.background='#667eea'; }, 2000);"
+                                setTimeout(() => { this.innerHTML='Salin Template'; this.style.background='#667eea'; }, 2000);"
                                 style="width: 100%; margin-top: 10px; padding: 10px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                                Copy Template
+                                Salin Template
                             </button>
                         </div>
                     </div>
                     
                     <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196f3;">
                         <strong style="color: #1976d2; display: block; margin-bottom: 5px;">
-                            💡 How to Apply:
+                            💡 Cara Mendaftar:
                         </strong>
                         <ol style="margin: 5px 0; padding-left: 20px; color: #555; font-size: 14px;">
-                            <li>Copy the email address and template above</li>
-                            <li>Open your email client (Gmail, Outlook, etc.)</li>
-                            <li>Paste the email address in the "To" field</li>
-                            <li>Paste the subject line</li>
-                            <li>Paste the template and fill in your details</li>
-                            <li>Click "Send Email" button below for quick access</li>
+                            <li>Salin alamat email dan template di atas</li>
+                            <li>Buka klien email Anda (Gmail, Outlook, dll)</li>
+                            <li>Tempel alamat email di bidang "Ke"</li>
+                            <li>Tempel baris subjek</li>
+                            <li>Tempel template dan isi detail Anda</li>
+                            <li>Klik tombol "Kirim Email" di bawah untuk akses cepat</li>
                         </ol>
                     </div>
                 </div>
@@ -301,8 +301,8 @@ Best regards`;
             icon: 'info',
             width: '700px',
             showCancelButton: true,
-            confirmButtonText: '<i class="fas fa-envelope"></i> Send Email',
-            cancelButtonText: 'Close',
+            confirmButtonText: '<i class="fas fa-envelope"></i> Kirim Email',
+            cancelButtonText: 'Tutup',
             confirmButtonColor: '#667eea',
             cancelButtonColor: '#6c757d',
             customClass: {
@@ -317,7 +317,7 @@ Best regards`;
                 
                 Toast().fire({
                     icon: "success",
-                    title: "Opening your email client...",
+                    title: "Membuka klien email Anda...",
                     timer: 3000
                 });
             }
@@ -390,10 +390,10 @@ Best regards`;
                             <div className="row justify-content-center">
                                 <div className="col-lg-8">
                                     <h1 className="display-4 fw-bold mb-4">
-                                        Discover Amazing Courses
+                                        Temukan Kursus Luar Biasa
                                     </h1>
                                     <p className="lead mb-4 opacity-90">
-                                        Find the perfect course to advance your skills and achieve your learning goals
+                                        Temukan kursus sempurna untuk meningkatkan keterampilan Anda dan mencapai tujuan pembelajaran
                                     </p>
                                     
                                     <div className="search-input-container">
@@ -401,7 +401,7 @@ Best regards`;
                                             ref={searchInputRef}
                                             type="text"
                                             className="form-control form-control-search"
-                                            placeholder="Search for courses, topics, or instructors..."
+                                            placeholder="Cari kursus, topik, atau instruktur..."
                                             value={searchQuery}
                                             onChange={handleSearch}
                                         />
@@ -410,8 +410,8 @@ Best regards`;
                                                 type="button"
                                                 className="clear-search-btn"
                                                 onClick={handleClearSearch}
-                                                title="Clear search"
-                                                aria-label="Clear search input"
+                                                title="Hapus pencarian"
+                                                aria-label="Hapus input pencarian"
                                             >
                                                 <i className="fas fa-times"></i>
                                             </button>
@@ -432,21 +432,21 @@ Best regards`;
                             <div className="row align-items-center mb-3">
                                 <div className="col-md-6">
                                     <h3 className="mb-0 fw-bold text-dark">
-                                        {searchQuery ? `Search Results` : `All Courses`}
+                                        {searchQuery ? `Hasil Pencarian` : `Semua Kursus`}
                                     </h3>
                                     <p className="text-muted mb-0">
-                                        {courses.length} course{courses.length !== 1 ? 's' : ''} available
-                                        {searchQuery && ` matching "${searchQuery}"`}
-                                        {selectedCategory !== "all" && ` in ${selectedCategory}`}
+                                        {courses.length} kursus{courses.length !== 1 ? 's' : ''} tersedia
+                                        {searchQuery && ` cocok dengan "${searchQuery}"`}
+                                        {selectedCategory !== "all" && ` di ${selectedCategory}`}
                                     </p>
                                 </div>
                                 <div className="col-md-6 text-md-end">
                                     <div className="d-flex align-items-center justify-content-md-end gap-3">
                                         <span className="text-muted">
-                                            Page {currentPage} of {totalPages || 1}
+                                            Halaman {currentPage} dari {totalPages || 1}
                                         </span>
                                         <span className="badge bg-primary">
-                                            {courses.length} Results
+                                            {courses.length} Hasil
                                         </span>
                                     </div>
                                 </div>
@@ -457,14 +457,14 @@ Best regards`;
                                 <div className="d-flex align-items-center gap-2 flex-wrap">
                                     <span className="filter-label">
                                         <i className="fas fa-filter me-2"></i>
-                                        Filter by Category:
+                                        Filter berdasarkan Kategori:
                                     </span>
                                     <button
                                         className={`category-filter-btn ${selectedCategory === "all" ? "active" : ""}`}
                                         onClick={() => handleCategoryChange("all")}
                                     >
                                         <i className="fas fa-th-large me-1"></i>
-                                        All Categories
+                                        Semua Kategori
                                     </button>
                                     {categories.map((category, index) => (
                                         <button
@@ -485,21 +485,16 @@ Best regards`;
                                 {[...Array(8)].map((_, index) => (
                                     <div key={index} className="col-lg-3 col-md-6">
                                         <div 
-                                            className="card border-0 h-100"
-                                            style={{
-                                                borderRadius: '16px',
-                                                background: '#f8f9fa',
-                                                overflow: 'hidden'
-                                            }}
+                                            className="card border-0 h-100 skeleton-card"
                                         >
-                                            <div className="placeholder" style={{ height: '200px', background: '#e9ecef' }}></div>
+                                            <div className="skeleton-placeholder skeleton-placeholder-image"></div>
                                             <div className="card-body p-3">
-                                                <div className="placeholder rounded mb-2" style={{ width: '70%', height: '20px' }}></div>
-                                                <div className="placeholder rounded mb-2" style={{ width: '100%', height: '16px' }}></div>
-                                                <div className="placeholder rounded mb-3" style={{ width: '90%', height: '16px' }}></div>
+                                                <div className="skeleton-placeholder skeleton-placeholder-title"></div>
+                                                <div className="skeleton-placeholder skeleton-placeholder-line"></div>
+                                                <div className="skeleton-placeholder skeleton-placeholder-line-last"></div>
                                                 <div className="d-flex justify-content-between">
-                                                    <div className="placeholder rounded" style={{ width: '45%', height: '14px' }}></div>
-                                                    <div className="placeholder rounded" style={{ width: '45%', height: '14px' }}></div>
+                                                    <div className="skeleton-placeholder skeleton-placeholder-meta"></div>
+                                                    <div className="skeleton-placeholder skeleton-placeholder-meta"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -512,11 +507,11 @@ Best regards`;
                                 <div className="empty-state-animation">
                                     <i className="fas fa-search empty-icon"></i>
                                 </div>
-                                <h4 className="mb-3 empty-state-title">No Courses Found</h4>
+                                <h4 className="mb-3 empty-state-title">Tidak Ada Kursus</h4>
                                 <p className="mb-4 empty-state-message">
                                     {searchQuery 
-                                        ? <>No courses match "<strong>{searchQuery}</strong>". Try adjusting your search terms.</>
-                                        : "No courses are available at the moment."
+                                        ? <>Tidak ada kursus yang cocok dengan "<strong>{searchQuery}</strong>". Coba sesuaikan istilah pencarian Anda.</>
+                                        : "Tidak ada kursus yang tersedia saat ini."
                                     }
                                 </p>
                                 {searchQuery && (
@@ -526,11 +521,11 @@ Best regards`;
                                             onClick={handleClearSearch}
                                         >
                                             <i className="fas fa-arrow-left me-2"></i>
-                                            Show All Courses
+                                            Tampilkan Semua Kursus
                                         </button>
                                         <p className="empty-state-hint mt-3">
                                             <i className="fas fa-lightbulb me-2"></i>
-                                            Try different keywords or check spelling
+                                            Coba kata kunci lain atau periksa ejaan
                                         </p>
                                     </div>
                                 )}
@@ -549,19 +544,6 @@ Best regards`;
                                                         alt={c.title}
                                                         className="course-image-modern"
                                                         loading="lazy"
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: 0,
-                                                            left: 0,
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            objectFit: 'cover',
-                                                            objectPosition: 'center',
-                                                            display: 'block'
-                                                        }}
-                                                        onError={(e) => {
-                                                            e.target.style.display = 'none';
-                                                        }}
                                                     />
                                                     {!c.image && (
                                                         <div className="course-image-placeholder">
@@ -574,7 +556,7 @@ Best regards`;
                                                         <button 
                                                             onClick={() => addToWishlist(c.id)} 
                                                             className="wishlist-btn"
-                                                            title={isCourseInWishlist(c.id) ? "Remove from wishlist" : "Add to wishlist"}
+                                                            title={isCourseInWishlist(c.id) ? "Hapus dari daftar keinginan" : "Tambah ke daftar keinginan"}
                                                             disabled={!userId}
                                                         >
                                                             <i className={`${isCourseInWishlist(c.id) ? 'fas' : 'far'} fa-heart text-danger`} />
@@ -592,17 +574,17 @@ Best regards`;
                                                     
                                                     <div className="course-meta-search">
                                                         <i className="fas fa-user me-1"></i>
-                                                        <span>{c.teacher?.full_name || 'Unknown Instructor'}</span>
+                                                        <span>{c.teacher?.full_name || 'Instruktur Tidak Diketahui'}</span>
                                                     </div>
                                                     
                                                     <div className="course-meta-search">
                                                         <i className="fas fa-users me-1"></i>
-                                                        <span>{c.students?.length || 0} Student{(c.students?.length || 0) !== 1 ? 's' : ''}</span>
+                                                        <span>{c.students?.length || 0} Siswa{(c.students?.length || 0) !== 1 ? 's' : ''}</span>
                                                     </div>
 
                                                     <div className="course-meta-search mb-2">
                                                         <span className="badge bg-info me-1">{c.level}</span>
-                                                        <span className="badge bg-success">{c.category?.title || 'General'}</span>
+                                                        <span className="badge bg-success">{c.category?.title || 'Umum'}</span>
                                                     </div>
 
                                                     {/* Rating */}
@@ -620,7 +602,7 @@ Best regards`;
 
                                                     {/* View Course Button */}
                                                     <Link to={`/course-detail/${c.slug}/`} className="btn-course-detail">
-                                                        <span>View Course</span>
+                                                        <span>Lihat Kursus</span>
                                                         <i className="fas fa-arrow-right"></i>
                                                     </Link>
                                                 </div>
@@ -661,30 +643,27 @@ Best regards`;
                                 )}
                             </>
                         )}
-                    </div>
-                </section>
 
-                {/* Call to Action Section */}
-                <section className="container" style={{ paddingTop: '6rem', paddingBottom: '4rem' }}>
-                    <div className="cta-section">
-                        <div className="cta-content">
-                            <div className="row align-items-center">
-                                <div className="col-lg-8">
-                                    <h2 className="h1 mb-3">Become an Instructor Today</h2>
-                                    <p className="lead mb-0 opacity-90">
-                                        Share your knowledge with millions of students worldwide. 
-                                        Join our community of expert instructors and start teaching what you love.
-                                    </p>
-                                </div>
-                                <div className="col-lg-4 text-lg-end mt-4 mt-lg-0">
-                                    <button 
-                                        onClick={handleStartTeaching}
-                                        className="btn-cta"
-                                        style={{ border: 'none', cursor: 'pointer' }}
-                                    >
-                                        <span>Start Teaching</span>
-                                        <i className="fas fa-arrow-right"></i>
-                                    </button>
+                        {/* Call to Action Section - Inside container at bottom */}
+                        <div className="cta-section">
+                            <div className="cta-content">
+                                <div className="row align-items-center">
+                                    <div className="col-lg-8">
+                                        <h2 className="h1 mb-3">Jadilah Instruktur Hari Ini</h2>
+                                        <p className="lead mb-0 opacity-90">
+                                            Bagikan pengetahuan Anda dengan jutaan siswa di seluruh dunia. 
+                                            Bergabunglah dengan komunitas instruktur ahli kami dan mulai mengajar apa yang Anda cintai.
+                                        </p>
+                                    </div>
+                                    <div className="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                                        <button 
+                                            onClick={handleStartTeaching}
+                                            className="btn-cta"
+                                        >
+                                            <span>Mulai Mengajar</span>
+                                            <i className="fas fa-arrow-right"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

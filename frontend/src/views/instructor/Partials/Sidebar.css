@@ -627,7 +627,15 @@
 
 /* Remove top gaps only on mobile - allow mt-md-4 to work on larger screens */
 @media (max-width: 767px) {
-    .row:has(.instructor-sidebar) {
+    .modern-dashboard .row:has(.instructor-sidebar),
+    .instructor-course-edit-curriculum-page .row:has(.instructor-sidebar),
+    .instructor-courses-page .row:has(.instructor-sidebar),
+    .instructor-review-page .row:has(.instructor-sidebar),
+    .instructor-students-page .row:has(.instructor-sidebar),
+    .instructor-profile-page .row:has(.instructor-sidebar),
+    .instructor-notification-page .row:has(.instructor-sidebar),
+    .instructor-qa-detail-page .row:has(.instructor-sidebar),
+    .instructor-password-page .row:has(.instructor-sidebar) {
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
@@ -642,13 +650,10 @@
     /* Direct sidebar width control */
     .col-lg-3.instructor-sidebar-column .instructor-sidebar {
         transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 305px !important;  /* ✨ CRITICAL: Width for expanded state */
-        min-width: 305px !important;
     }
     
     .col-lg-3.instructor-sidebar-column .instructor-sidebar.collapsed {
-        width: 85px !important;  /* ✨ CRITICAL: Width for collapsed state */
-        min-width: 85px !important;
+        width: 85px !important;
     }
     
 }
@@ -662,13 +667,10 @@
     /* Direct sidebar width control */
     .col-md-4.instructor-sidebar-column .instructor-sidebar {
         transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 305px !important;  /* ✨ CRITICAL: Width for expanded state */
-        min-width: 305px !important;
     }
     
     .col-md-4.instructor-sidebar-column .instructor-sidebar.collapsed {
-        width: 85px !important;  /* ✨ CRITICAL: Width for collapsed state */
-        min-width: 85px !important;
+        width: 85px !important;
     }
 }
 

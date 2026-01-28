@@ -45,6 +45,13 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
 FRONTEND_SITE_URL = env('FRONTEND_SITE_URL', default='https://lmsetjendpdri.duckdns.org')
 BACKEND_SITE_URL = env('BACKEND_SITE_URL', default='https://lmsetjendpdri.duckdns.org')
 
+# ===========================
+# Google OAuth Configuration (PHASE 4.16)
+# ===========================
+GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID', default='')
+GOOGLE_CLIENT_SECRET = env('GOOGLE_CLIENT_SECRET', default='')
+GOOGLE_OAUTH_REDIRECT_URI = env('GOOGLE_OAUTH_REDIRECT_URI', default='http://localhost:3000/login')
+
 
 # Application definition
 
@@ -73,6 +80,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Serve static files in production
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -325,6 +333,12 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
+CORS_EXPOSE_HEADERS = [
+    'content-type',
+    'x-csrftoken',
+    'authorization',
+]
+
 # Cache Configuration - Redis for production, local memory for development
 try:
     # Try to use Redis if available
@@ -545,3 +559,16 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Trust X-Forwarded-Host header from nginx
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
+
+# ============================================================================
+# AUTORELOADER CONFIGURATION FOR WINDOWS
+# ============================================================================
+# Fix for autoreloader not properly inheriting venv on Windows
+# When DEBUG=True, Django's autoreloader spawns a subprocess which was losing
+# the venv's sys.path and environment variables
+# See: https://docs.djangoproject.com/en/4.2/ref/django-admin/#django-admin-runserver
+import sys
+if DEBUG and sys.platform == 'win32':
+    # Use WatchmanReloaderClass or PollingReloader if autoreloader fails
+    # This ensures subprocess properly inherits sys.executable and venv
+    os.environ['RUN_MAIN'] = 'true'

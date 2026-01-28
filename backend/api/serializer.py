@@ -20,11 +20,34 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['full_name'] = user.full_name
         token['email'] = user.email
         token['username'] = user.username
-        token['role'] = user.role
+        # CRITICAL FIX: Use current_role (for multi-role) instead of deprecated role field
+        # user.role is always 'student' for multi-role users, so we must use current_role
+        token['role'] = user.current_role if hasattr(user, 'current_role') and user.current_role else user.role
+        token['current_role'] = user.current_role if hasattr(user, 'current_role') else user.role
         token['nip'] = user.nip  # Add NIP field for SSO identity
         
+        # ✨ PHASE 4.10: Add boolean role fields to JWT
+        # These new fields allow frontend to properly detect which roles user has
+        token['is_student'] = getattr(user, 'is_student', True)
+        token['is_instructor'] = getattr(user, 'is_instructor', False)
+        token['is_admin'] = getattr(user, 'is_admin', False)
+        
+        # Return available roles based on boolean fields
+        available_roles = []
+        if token['is_student']:
+            available_roles.append('student')
+        if token['is_instructor']:
+            available_roles.append('instructor')
+        if token['is_admin']:
+            available_roles.append('admin')
+        
+        token['available_roles'] = available_roles
+        token['has_multiple_roles'] = len(available_roles) > 1
+        token['roles'] = ','.join(available_roles) if available_roles else 'student'
+        
         # Auto-create Teacher object if user is instructor/teacher but doesn't have one yet
-        if user.role in ['instructor', 'teacher']:
+        # Updated to check boolean is_instructor field first
+        if getattr(user, 'is_instructor', False) or user.role in ['instructor', 'teacher']:
             try:
                 # Try to get existing teacher
                 teacher_id = user.teacher.id
@@ -115,6 +138,10 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     
 class UserSerializer(serializers.ModelSerializer):
+    """User serializer with Multi Role support - PHASE 4.10"""
+    enrollment_count = serializers.SerializerMethodField()
+    course_count = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         # Only return essential fields for admin list view - OPTIMIZED
@@ -124,10 +151,33 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'full_name',
             'role',
+            'is_student',
+            'is_instructor',
+            'is_admin',
             'is_active',
             'last_login',
-            'date_joined'
+            'date_joined',
+            'enrollment_count',
+            'course_count'
         ]
+    
+    def get_enrollment_count(self, obj):
+        """Count enrollments if user is student - supports Multi Role system"""
+        if obj.is_student or obj.role == 'student':
+            from . import models as api_models
+            return api_models.EnrolledCourse.objects.filter(user=obj).count()
+        return 0
+    
+    def get_course_count(self, obj):
+        """Count courses if user is instructor - supports Multi Role system"""
+        if obj.is_instructor or obj.role == 'teacher':
+            from . import models as api_models
+            try:
+                teacher = api_models.Teacher.objects.get(user=obj)
+                return api_models.Course.objects.filter(teacher=teacher).count()
+            except api_models.Teacher.DoesNotExist:
+                return 0
+        return 0
 
 class OrganizationUnitSerializer(serializers.ModelSerializer):
     class Meta:
@@ -230,7 +280,7 @@ class AdminSummarySerializer(serializers.Serializer):
 
 
 class AdminUserManagementSerializer(serializers.ModelSerializer):
-    """Enhanced User serializer for admin user management"""
+    """Enhanced User serializer for admin user management - PHASE 4.10: Updated for Multi Role support"""
     enrollment_count = serializers.SerializerMethodField()
     course_count = serializers.SerializerMethodField()
     last_login_display = serializers.SerializerMethodField()
@@ -241,16 +291,18 @@ class AdminUserManagementSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'email', 'full_name', 'role', 'is_active', 
             'date_joined', 'last_login', 'enrollment_count', 'course_count',
-            'last_login_display', 'status_display'
+            'last_login_display', 'status_display', 'is_student', 'is_instructor', 'is_admin'
         ]
     
     def get_enrollment_count(self, obj):
-        if obj.role == 'student':
+        # Support both legacy single-role and new multi-role system
+        if obj.is_student or obj.role == 'student':
             return api_models.EnrolledCourse.objects.filter(user=obj).count()
         return 0
     
     def get_course_count(self, obj):
-        if obj.role == 'teacher':
+        # Support both legacy single-role and new multi-role system
+        if obj.is_instructor or obj.role == 'teacher':
             try:
                 teacher = api_models.Teacher.objects.get(user=obj)
                 return api_models.Course.objects.filter(teacher=teacher).count()
@@ -486,10 +538,21 @@ class Question_Answer_MessageSerializer(serializers.ModelSerializer):
 class Question_AnswerSerializer(serializers.ModelSerializer):
     messages = Question_Answer_MessageSerializer(many=True)
     profile = ProfileSerializer(many=False)
+    course = serializers.SerializerMethodField()  # ✨ PHASE 4.16: Return full course object for QA
     
     class Meta:
         fields = '__all__'
         model = api_models.Question_Answer
+    
+    def get_course(self, obj):
+        """Return full course object instead of just ID for better frontend filtering"""
+        if obj.course:
+            return {
+                'id': obj.course.id,
+                'title': obj.course.title,
+                'course_id': obj.course.course_id,
+            }
+        return None
 
 
 
@@ -624,6 +687,7 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
     question_answer = Question_AnswerSerializer(many=True, read_only=True)
     review = ReviewSerializer(many=False, read_only=True)
     quiz_results = serializers.SerializerMethodField()
+    qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.18: Add QA count for student QA page
 
 
     class Meta:
@@ -633,6 +697,10 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
     def get_quiz_results(self, obj):
         """Return quiz results for this enrollment"""
         return obj.quiz_results()
+
+    def get_qa_count(self, obj):
+        """✨ PHASE 4.18: Count total questions for this course enrollment"""
+        return api_models.Question_Answer.objects.filter(course=obj.course).count()
 
     def __init__(self, *args, **kwargs):
         super(EnrolledCourseSerializer, self).__init__(*args, **kwargs)
@@ -711,10 +779,15 @@ class CourseSerializer(serializers.ModelSerializer):
     requirements = CourseRequirementSerializer(many=True, read_only=True, required=False)
     learning_outcomes = CourseLearningOutcomeSerializer(many=True, read_only=True, required=False)
     resources = CourseResourceSerializer(many=True, read_only=True, required=False)
+    qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.16: Add QA count for instructor QA page
     
     class Meta:
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources"]
+        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "qa_count"]
         model = api_models.Course
+    
+    def get_qa_count(self, obj):
+        """✨ PHASE 4.16: Count total questions for this course"""
+        return api_models.Question_Answer.objects.filter(course=obj).count()
 
     def __init__(self, *args, **kwargs):
         super(CourseSerializer, self).__init__(*args, **kwargs)

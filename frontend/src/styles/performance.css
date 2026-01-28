@@ -482,15 +482,9 @@
   margin-right: 1rem;
   padding-top: 0 !important;
   user-select: none;
-  /* ✨ CRITICAL: Width for expanded state - enables animation */
-  width: 305px !important;
-  min-width: 305px !important;
 }
 
 .instructor-sidebar.collapsed {
-  /* ✨ CRITICAL: Width for collapsed state - completes animation */
-  width: 85px !important;
-  min-width: 85px !important;
   box-shadow: 0 4px 12px rgba(52, 152, 219, 0.08);
 }
 
@@ -691,15 +685,11 @@
   .instructor-sidebar {
     position: static;
     max-height: none;
-    width: 305px !important;  /* ✨ CRITICAL: Expanded state width */
-    min-width: 305px !important;
   }
 
   .instructor-sidebar.collapsed {
     max-height: 50px;
     overflow: hidden;
-    width: 85px !important;  /* ✨ CRITICAL: Collapsed state width */
-    min-width: 85px !important;
   }
 
   .instructor-sidebar.collapsed .instructor-sidebar-body {
@@ -753,51 +743,11 @@
   background: rgba(52, 152, 219, 0.4);
 }
 
-/* ===================================================
-   CONTENT COLUMN SIDEBAR ADAPTATION
-   Handles smooth animation when sidebar collapses/expands
-   =================================================== */
-
-.sidebar-collapsed-adapted {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  width: auto !important;
-  max-width: 100% !important;
-}
-
-/* Desktop: lg breakpoint (≥992px) */
-@media (min-width: 992px) {
-  .sidebar-collapsed-adapted {
-    width: auto !important;
-    max-width: 100% !important;
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-  }
-}
-
-/* Tablet: md breakpoint (768px - 991px) */
-@media (min-width: 768px) and (max-width: 991px) {
-  .sidebar-collapsed-adapted {
-    width: auto !important;
-    max-width: 100% !important;
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-  }
-}
-
-/* Mobile: <768px */
-@media (max-width: 767px) {
-  .sidebar-collapsed-adapted {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
-
 /* ACCESSIBILITY */
 @media (prefers-reduced-motion: reduce) {
   .instructor-sidebar,
   .instructor-sidebar-link,
-  .instructor-sidebar-button,
-  .sidebar-collapsed-adapted {
+  .instructor-sidebar-button {
     transition: none;
   }
 

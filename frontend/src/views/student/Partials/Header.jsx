@@ -5,6 +5,7 @@ import { ProfileContext } from "../../plugin/Context";
 import UserData from "../../plugin/UserData";
 import useAxios from "../../../utils/useAxios";
 import { isValidImageUrl } from "../../../utils/imageUtils";
+import RoleIndicator from "../../../components/RoleIndicator";
 import "./Header.css";
 
 function Header() {
@@ -71,7 +72,7 @@ function Header() {
       if (userData) {
         const fallbackProfile = {
           full_name: userData.full_name || "",
-          about: "Welcome to your dashboard",
+          about: "Selamat datang di dasbor Anda",
           image: "",
           country: "",
         };
@@ -118,17 +119,17 @@ function Header() {
 
   // Calculate profile-related info
   const getMemberSince = () => {
-    return profile?.date ? moment(profile.date).format("MMMM YYYY") : userData?.date_joined ? moment(userData.date_joined).format("MMMM YYYY") : "Recently";
+    return profile?.date ? moment(profile.date).format("MMMM YYYY") : userData?.date_joined ? moment(userData.date_joined).format("MMMM YYYY") : "Baru-baru ini";
   };
 
   const getJoinedDaysAgo = () => {
     const joinDate = profile?.date || userData?.date_joined;
-    if (!joinDate) return "Recently joined";
+    if (!joinDate) return "Baru-baru ini bergabung";
     const days = moment().diff(moment(joinDate), "days");
-    if (days < 1) return "Joined today";
-    if (days < 30) return `${days} days ago`;
-    if (days < 365) return `${Math.floor(days/30)} months ago`;
-    return `${Math.floor(days/365)} years ago`;
+    if (days < 1) return "Bergabung hari ini";
+    if (days < 30) return `${days} hari yang lalu`;
+    if (days < 365) return `${Math.floor(days/30)} bulan yang lalu`;
+    return `${Math.floor(days/365)} tahun yang lalu`;
   };
 
   // Render profile avatar with proper error handling
@@ -137,15 +138,10 @@ function Header() {
       return (
         <div className="student-default-avatar loading-shimmer mx-auto">
           <div 
-            className="spinner-border text-white" 
-            role="status" 
-            style={{ 
-              width: "2.5rem", 
-              height: "2.5rem",
-              flexShrink: 0 
-            }}
+            className="spinner-border text-white spinner-loading-lg" 
+            role="status"
           >
-            <span className="visually-hidden">Loading...</span>
+            <span className="visually-hidden">Sedang memuat...</span>
           </div>
         </div>
       );
@@ -157,7 +153,7 @@ function Header() {
           key={profile.image}
           src={profile.image}
           className="profile-avatar"
-          alt={`${profile?.full_name || "User"} avatar`}
+          alt={`${profile?.full_name || "Pengguna"} avatar`}
           onError={() => {
             setImageError(true);
           }}
@@ -193,8 +189,8 @@ function Header() {
           <button
             className="student-header-toggle-btn"
             onClick={toggleCollapse}
-            title={isCollapsed ? "Expand Header" : "Collapse Header"}
-            aria-label={isCollapsed ? "Expand Header" : "Collapse Header"}
+            title={isCollapsed ? "Perluas Header" : "Ciutkan Header"}
+            aria-label={isCollapsed ? "Perluas Header" : "Ciutkan Header"}
           >
             <i className={`fas fa-chevron-${isCollapsed ? "down" : "up"}`}></i>
           </button>
@@ -204,57 +200,56 @@ function Header() {
             <div className="student-header-collapsed p-3">
               <div className="d-flex align-items-center justify-content-between">
                 <div className="student-avatar-wrapper d-flex align-items-center gap-2">
-                  <div style={{ width: "50px", height: "50px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="avatar-container-mini">
                     {loading ? (
                       <div className="student-default-avatar loading-shimmer">
-                        <div className="spinner-border text-white" role="status" style={{ width: "1.5rem", height: "1.5rem" }}>
-                          <span className="visually-hidden">Loading...</span>
+                        <div className="spinner-border text-white spinner-loading-sm" role="status">
+                          <span className="visually-hidden">Sedang memuat...</span>
                         </div>
                       </div>
                     ) : profile?.image && !imageError ? (
                       <img
                         src={profile.image}
                         className="profile-avatar-mini"
-                        alt={`${profile?.full_name || "User"} avatar`}
+                        alt={`${profile?.full_name || "Pengguna"} avatar`}
                         onError={() => setImageError(true)}
                       />
                     ) : (
                       <div className="student-default-avatar">
-                        <i className="fas fa-user" style={{ fontSize: "1.2rem", color: "white", opacity: 0.9 }}></i>
+                        <i className="fas fa-user icon-user-mini"></i>
                       </div>
                     )}
                   </div>
-                  <div>
+                  <div className="d-flex align-items-center justify-content-between w-100 gap-2">
                     <h5 className="mb-0 text-white">
-                      {profile?.full_name || userData?.full_name || "Student Dashboard"}
+                      {profile?.full_name || userData?.full_name || "Dasbor Siswa"}
                     </h5>
-                    <small className="text-white-50">
-                      <i className="fas fa-graduation-cap me-1"></i>
-                      Student
-                    </small>
+                    <div style={{marginTop: '-2px', flexShrink: 0}}>
+                      <RoleIndicator compact={true} />
+                    </div>
                   </div>
                 </div>
                 <div className="d-flex gap-2">
                   <Link
                     to="/student/courses/"
-                    className="btn btn-sm btn-light"
-                    title="My Courses"
+                    className={`btn-collapsed-header ${isActivePage("/student/courses/") ? "active" : ""}`}
+                    title="Kursus Saya"
                   >
                     <i className="fas fa-book-open me-1"></i>
-                    Courses
+                    Kursus
                   </Link>
                   <Link
                     to="/student/profile/"
-                    className="btn btn-sm btn-outline-light"
-                    title="Profile"
+                    className={`btn-collapsed-header ${isActivePage("/student/profile/") ? "active" : ""}`}
+                    title="Profil"
                   >
                     <i className="fas fa-user-edit"></i>
                   </Link>
                   <button 
                     className="student-header-toggle-btn-inline"
                     onClick={toggleCollapse}
-                    title="Expand Header"
-                    aria-label="Expand Header"
+                    title="Perluas Header"
+                    aria-label="Perluas Header"
                   >
                     <i className="fas fa-chevron-down"></i>
                   </button>
@@ -279,30 +274,31 @@ function Header() {
                 </div>
 
                 {/* Profile Information Section */}
-                <div className="col-lg-6 col-md-5 mb-4 mb-lg-0">
+                <div className="col-lg-6 col-md-5 mb-4 mb-lg-0 d-flex align-items-center">
                   <div>
                     <h1 className="profile-name">
-                      {profile?.full_name || userData?.full_name || "Welcome!"}
+                      {profile?.full_name || userData?.full_name || "Selamat Datang!"}
                     </h1>
                     <p className="profile-description">
-                      {profile?.about || "Welcome to your learning journey! Explore courses and expand your knowledge."}
+                      {profile?.about || "Selamat datang di perjalanan belajar Anda! Jelajahi kursus dan perluas pengetahuan Anda."}
                     </p>
                     
                     <div className="d-flex flex-wrap gap-3 mb-3">
                       <div className="badge-modern">
                         <i className="fas fa-calendar-alt"></i>
-                        Member since {getMemberSince()}
+                        Anggota sejak {getMemberSince()}
                       </div>
                       <div className="badge-modern">
                         <i className="fas fa-clock"></i>
                         {getJoinedDaysAgo()}
                       </div>
+                      <RoleIndicator compact={true} />
                     </div>
 
                     {profile?.country && (
                       <div className="profile-meta mb-3">
                         <i className="fas fa-map-marker-alt"></i>
-                        <span>Located in {profile.country}</span>
+                        <span>Berlokasi di {profile.country}</span>
                       </div>
                     )}
                   </div>
@@ -314,12 +310,11 @@ function Header() {
                     <div className="d-flex flex-column flex-md-row flex-lg-column gap-3 justify-content-center justify-content-lg-end">
                       <Link
                         to="/student/profile/"
-                        className={`btn-modern-white ${isActivePage("/student/profile/") ? "active" : ""}`}
-                        title="Edit your profile settings"
-                        style={{ position: "relative" }}
+                        className={`btn-modern-white btn-with-indicator ${isActivePage("/student/profile/") ? "active" : ""}`}
+                        title="Edit pengaturan profil Anda"
                       >
                         <i className="fas fa-user-edit"></i>
-                        Edit Profile
+                        Edit Profil
                         {isActivePage("/student/profile/") && (
                           <div className="active-indicator"></div>
                         )}
@@ -327,12 +322,11 @@ function Header() {
                       
                       <Link
                         to="/student/courses/"
-                        className={`btn-outline-white ${isActivePage("/student/courses/") ? "active" : ""}`}
-                        title="View your courses"
-                        style={{ position: "relative" }}
+                        className={`btn-outline-white btn-with-indicator ${isActivePage("/student/courses/") ? "active" : ""}`}
+                        title="Lihat kursus Anda"
                       >
                         <i className="fas fa-book-open"></i>
-                        My Courses
+                        Kursus Saya
                         {isActivePage("/student/courses/") && (
                           <div className="active-indicator"></div>
                         )}
@@ -343,35 +337,35 @@ function Header() {
               </div>
 
               {/* Additional Profile Details Row */}
-              <div className="row mt-3 pt-3" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.2)" }}>
+              <div className="row mt-3 pt-3 student-details-separator">
                 <div className="col-md-12">
                   <div className="row">
-                    {/* Profile Status */}
-                    <div className="col-md-4 mb-3">
+                    {/* Status Profil */}
+                    <div className="col-md-4">
                       <div className="profile-detail-item">
                         <div className="profile-meta">
                           <i className="fas fa-user-check"></i>
-                          <span>Account Status: Active</span>
+                          <span>Status Akun: Aktif</span>
                         </div>
                       </div>
                     </div>
                     
-                    {/* Last Login */}
-                    <div className="col-md-4 mb-3">
+                    {/* Login Terakhir */}
+                    <div className="col-md-4">
                       <div className="profile-detail-item">
                         <div className="profile-meta">
                           <i className="fas fa-sign-in-alt"></i>
-                          <span>Last active: Today</span>
+                          <span>Aktif terakhir: Hari ini</span>
                         </div>
                       </div>
                     </div>
                     
-                    {/* Profile Completion */}
-                    <div className="col-md-4 mb-3">
+                    {/* Kelengkapan Profil */}
+                    <div className="col-md-4">
                       <div className="profile-detail-item">
                         <div className="profile-meta">
                           <i className="fas fa-check-circle"></i>
-                          <span>Profile: {profile?.about && profile?.country ? "Complete" : "Incomplete"}</span>
+                          <span>Profil: {profile?.about && profile?.country ? "Lengkap" : "Belum Lengkap"}</span>
                         </div>
                       </div>
                     </div>

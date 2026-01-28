@@ -78,7 +78,7 @@ body {
   overflow-y: auto;
   height: auto;
   max-height: none;
-  scrollbar-gutter: stable; /* ✨ PHASE 4.16 FIX: Reserve scrollbar space to prevent layout shift */
+  /* Removed scrollbar-gutter: stable from body to prevent unwanted gap on pages where scrollbar is hidden */
 }
 
 /* Webkit browsers (Chrome, Edge, Safari) - Applied to html for maximum specificity */
@@ -223,6 +223,30 @@ body.student-theme {
   --theme-card-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
   --theme-text-on-primary: #ffffff;
   --theme-border-color: rgba(102, 126, 234, 0.2);
+}
+
+/* ✨ PHASE 4+ FIX: Make student-theme pages fill full screen width like landing-fixed-header */
+/* Ensure student theme sections stretch to full viewport width */
+body.student-theme section,
+body.student-theme main,
+body.student-theme .modern-course-page,
+body.student-theme .modern-students,
+body.student-theme .modern-dashboard,
+body.student-theme .courses-container,
+body.student-theme .instructor-profile-page,
+body.student-theme .instructor-review-page,
+body.student-theme .instructor-notification-page,
+body.student-theme .instructor-password-page,
+body.student-theme .instructor-course-create-page,
+body.student-theme .instructor-course-edit-page,
+body.student-theme .instructor-course-edit-curriculum-page,
+body.student-theme .qa-bg-section {
+  position: relative;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 /* Dark Theme (Student - Purple Dark Mode) */

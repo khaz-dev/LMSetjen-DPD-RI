@@ -35,10 +35,10 @@ export default function QueryTaxonomyWidget() {
         setReport(response.data);
       }
     } catch (error) {
-      console.error('Failed to fetch taxonomy report:', error);
+      console.error('Gagal mengambil laporan taksonomi:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Failed to fetch taxonomy report'
+        title: 'Gagal mengambil laporan taksonomi'
       });
     }
     setLoading(false);
@@ -55,10 +55,10 @@ export default function QueryTaxonomyWidget() {
         setTaxonomies(response.data.results);
       }
     } catch (error) {
-      console.error('Failed to fetch taxonomies:', error);
+      console.error('Gagal mengambil taksonomi:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Failed to fetch query taxonomies'
+        title: 'Gagal mengambil taksonomi kueri'
       });
     }
     setLoading(false);
@@ -75,10 +75,10 @@ export default function QueryTaxonomyWidget() {
         setAnalytics(response.data.results);
       }
     } catch (error) {
-      console.error('Failed to fetch analytics:', error);
+      console.error('Gagal mengambil analitik:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Failed to fetch category analytics'
+        title: 'Gagal mengambil analitik kategori'
       });
     }
     setLoading(false);
@@ -92,10 +92,10 @@ export default function QueryTaxonomyWidget() {
         setTimelineData(response.data);
       }
     } catch (error) {
-      console.error('Failed to fetch timeline:', error);
+      console.error('Gagal mengambil garis waktu:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Failed to fetch timeline data'
+        title: 'Gagal mengambil data garis waktu'
       });
     }
     setLoading(false);
@@ -116,7 +116,7 @@ export default function QueryTaxonomyWidget() {
   };
 
   if (loading && !report && activeTab === 'overview') {
-    return <div className="qtw-widget card"><div className="card-body text-center">Loading...</div></div>;
+    return <div className="qtw-widget card"><div className="card-body text-center">Memuat...</div></div>;
   }
 
   return (
@@ -124,27 +124,27 @@ export default function QueryTaxonomyWidget() {
       <div className="card-header bg-light border-bottom">
         <div className="d-flex justify-content-between align-items-center">
           <div>
-            <h5 className="mb-0">🏷️ Search Query Taxonomy</h5>
-            <small className="text-muted">Categorize and analyze search queries by intent</small>
+            <h5 className="mb-0">🏷️ Taksonomi Kueri Pencarian</h5>
+            <small className="text-muted">Kategorikan dan analisis kueri pencarian berdasarkan maksud</small>
           </div>
           <div className="btn-group btn-group-sm">
             <button
               className={`btn ${days === 7 ? 'btn-primary' : 'btn-outline-primary'}`}
               onClick={() => setDays(7)}
             >
-              7d
+              7 hari
             </button>
             <button
               className={`btn ${days === 30 ? 'btn-primary' : 'btn-outline-primary'}`}
               onClick={() => setDays(30)}
             >
-              30d
+              30 hari
             </button>
             <button
               className={`btn ${days === 90 ? 'btn-primary' : 'btn-outline-primary'}`}
               onClick={() => setDays(90)}
             >
-              90d
+              90 hari
             </button>
           </div>
         </div>
@@ -160,7 +160,7 @@ export default function QueryTaxonomyWidget() {
               setActiveTab('overview');
             }}
           >
-            Overview
+            Ringkasan
           </a>
         </li>
         <li className="nav-item">
@@ -172,7 +172,7 @@ export default function QueryTaxonomyWidget() {
               setActiveTab('queries');
             }}
           >
-            Queries
+            Kueri
           </a>
         </li>
         <li className="nav-item">
@@ -184,7 +184,7 @@ export default function QueryTaxonomyWidget() {
               setActiveTab('analytics');
             }}
           >
-            Categories
+            Kategori
           </a>
         </li>
         <li className="nav-item">
@@ -196,7 +196,7 @@ export default function QueryTaxonomyWidget() {
               setActiveTab('timeline');
             }}
           >
-            Timeline
+            Garis Waktu
           </a>
         </li>
       </ul>
@@ -208,31 +208,31 @@ export default function QueryTaxonomyWidget() {
             <div className="row mb-4">
               <div className="col-md-3 mb-3">
                 <div className="metric-card">
-                  <div className="metric-label">Total Searches</div>
+                  <div className="metric-label">Total Pencarian</div>
                   <div className="metric-value">{report.total_searches}</div>
                 </div>
               </div>
               <div className="col-md-3 mb-3">
                 <div className="metric-card">
-                  <div className="metric-label">Unique Queries</div>
+                  <div className="metric-label">Kueri Unik</div>
                   <div className="metric-value">{report.unique_queries}</div>
                 </div>
               </div>
               <div className="col-md-3 mb-3">
                 <div className="metric-card">
-                  <div className="metric-label">Unique Users</div>
+                  <div className="metric-label">Pengguna Unik</div>
                   <div className="metric-value">{report.unique_users}</div>
                 </div>
               </div>
               <div className="col-md-3 mb-3">
                 <div className="metric-card highlight">
-                  <div className="metric-label">Avg CTR</div>
+                  <div className="metric-label">CTR Rata-rata</div>
                   <div className="metric-value">{report.avg_ctr.toFixed(2)}%</div>
                 </div>
               </div>
             </div>
 
-            <h6 className="mb-3">Query Categories</h6>
+            <h6 className="mb-3">Kategori Kueri</h6>
             <div className="row">
               {report.categories && Object.entries(report.categories).slice(0, 6).map(([key, cat]) => (
                 <div key={key} className="col-md-6 mb-3">
@@ -247,17 +247,17 @@ export default function QueryTaxonomyWidget() {
                         <span className="value">{cat.search_volume}</span>
                       </div>
                       <div className="stat">
-                        <span className="label">Avg Results:</span>
+                        <span className="label">Hasil Rata-rata:</span>
                         <span className="value">{cat.avg_results}</span>
                       </div>
                       <div className="stat">
-                        <span className="label">Failed Rate:</span>
+                        <span className="label">Tingkat Gagal:</span>
                         <span className="value text-danger">{cat.failed_rate.toFixed(1)}%</span>
                       </div>
                     </div>
                     {cat.top_queries && cat.top_queries.length > 0 && (
                       <div className="top-queries">
-                        <small className="text-muted">Top Queries:</small>
+                        <small className="text-muted">Kueri Teratas:</small>
                         <ul>
                           {cat.top_queries.slice(0, 3).map((q, idx) => (
                             <li key={idx}>{q.search_query} ({q.count})</li>
@@ -276,13 +276,13 @@ export default function QueryTaxonomyWidget() {
         {activeTab === 'queries' && (
           <div className="qtw-queries">
             <div className="mb-3">
-              <label className="form-label">Filter by Category</label>
+              <label className="form-label">Filter berdasarkan Kategori</label>
               <select
                 className="form-select"
                 value={selectedCategory || ''}
                 onChange={(e) => setSelectedCategory(e.target.value || null)}
               >
-                <option value="">All Categories</option>
+                <option value="">Semua Kategori</option>
                 {report?.categories && Object.entries(report.categories).map(([key, cat]) => (
                   <option key={key} value={cat.category_type}>
                     {cat.category_name}
@@ -292,21 +292,21 @@ export default function QueryTaxonomyWidget() {
             </div>
 
             {loading ? (
-              <div className="text-center">Loading...</div>
+              <div className="text-center">Memuat...</div>
             ) : taxonomies.length === 0 ? (
-              <div className="alert alert-info">No queries found</div>
+              <div className="alert alert-info">Tidak ada kueri yang ditemukan</div>
             ) : (
               <div className="table-responsive">
                 <table className="table table-hover table-sm">
                   <thead className="table-light">
                     <tr>
-                      <th>Query</th>
-                      <th>Category</th>
-                      <th>Searches</th>
-                      <th>Clicks</th>
+                      <th>Kueri</th>
+                      <th>Kategori</th>
+                      <th>Pencarian</th>
+                      <th>Klik</th>
                       <th>CTR</th>
-                      <th>Failed</th>
-                      <th>Users</th>
+                      <th>Gagal</th>
+                      <th>Pengguna</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -339,9 +339,9 @@ export default function QueryTaxonomyWidget() {
         {activeTab === 'analytics' && (
           <div className="qtw-analytics">
             {loading ? (
-              <div className="text-center">Loading...</div>
+              <div className="text-center">Memuat...</div>
             ) : analytics.length === 0 ? (
-              <div className="alert alert-info">No category analytics available</div>
+              <div className="alert alert-info">Tidak ada analitik kategori yang tersedia</div>
             ) : (
               <div className="row">
                 {analytics.map((cat) => (
@@ -355,7 +355,7 @@ export default function QueryTaxonomyWidget() {
                       </div>
                       <div className="metrics">
                         <div className="metric-row">
-                          <span>Total Searches</span>
+                          <span>Total Pencarian</span>
                           <strong>{cat.total_searches}</strong>
                         </div>
                         <div className="metric-row">
@@ -365,11 +365,11 @@ export default function QueryTaxonomyWidget() {
                           </strong>
                         </div>
                         <div className="metric-row">
-                          <span>Failed Rate</span>
+                          <span>Tingkat Gagal</span>
                           <strong className="text-danger">{cat.failed_rate.toFixed(1)}%</strong>
                         </div>
                         <div className="metric-row">
-                          <span>Trending Score</span>
+                          <span>Skor Trending</span>
                           <div className="progress" style={{ height: '20px' }}>
                             <div
                               className="progress-bar"
@@ -394,17 +394,17 @@ export default function QueryTaxonomyWidget() {
         {/* Timeline Tab */}
         {activeTab === 'timeline' && timelineData && (
           <div className="qtw-timeline">
-            <h6 className="mb-3">Search Volume Over Time</h6>
+            <h6 className="mb-3">Volume Pencarian Seiring Waktu</h6>
             {timelineData.daily_stats && timelineData.daily_stats.length > 0 ? (
               <div className="table-responsive">
                 <table className="table table-sm table-hover">
                   <thead className="table-light">
                     <tr>
-                      <th>Date</th>
-                      <th>Searches</th>
-                      <th>Avg CTR</th>
-                      <th>Failures</th>
-                      <th>New Queries</th>
+                      <th>Tanggal</th>
+                      <th>Pencarian</th>
+                      <th>CTR Rata-rata</th>
+                      <th>Kegagalan</th>
+                      <th>Kueri Baru</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -425,12 +425,12 @@ export default function QueryTaxonomyWidget() {
                 </table>
               </div>
             ) : (
-              <div className="alert alert-info">No timeline data available</div>
+              <div className="alert alert-info">Tidak ada data garis waktu yang tersedia</div>
             )}
 
             {timelineData.trending_categories && timelineData.trending_categories.length > 0 && (
               <div className="mt-4">
-                <h6 className="mb-3">Trending Categories</h6>
+                <h6 className="mb-3">Kategori Trending</h6>
                 <div className="row">
                   {timelineData.trending_categories.map((cat) => (
                     <div key={cat.id} className="col-md-6 mb-3">
@@ -455,7 +455,7 @@ export default function QueryTaxonomyWidget() {
           onClick={fetchTaxonomyReport}
           disabled={loading}
         >
-          {loading ? 'Refreshing...' : 'Refresh'}
+          {loading ? 'Menyegarkan...' : 'Segarkan'}
         </button>
       </div>
     </div>

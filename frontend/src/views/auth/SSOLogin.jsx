@@ -6,7 +6,8 @@ import UserData from '../plugin/UserData';
 import apiInstance from '../../utils/axios';
 import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
-import { setAuthUser } from '../../utils/auth';
+import { setAuthUser, redirectUserByRole } from '../../utils/auth';
+import RoleSelectionModal from '../../components/RoleSelectionModal';
 import Cookie from 'js-cookie';
 import './SSOLogin.css';
 
@@ -31,6 +32,11 @@ function SSOLogin() {
   const { isLoggedIn } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Multi-role support
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     // If already logged in, redirect to dashboard
@@ -126,34 +132,57 @@ function SSOLogin() {
         ? "Welcome! Your account has been created via SSO."
         : "Welcome back! Logged in via SSO.";
 
-      Toast().fire({
-        icon: "success",
-        title: statusMessage,
-      });
+      // Check if user has multiple roles
+      if (user?.available_roles && user.available_roles.length > 1) {
+        console.log("👥 Multi-role user detected:", user.available_roles);
+        
+        // Store user data and roles for role selection modal
+        setCurrentUser({
+          full_name: user.full_name,
+          email: user.email,
+          nip: user.nip
+        });
+        setAvailableRoles(user.available_roles);
+        setShowRoleModal(true);
+        
+        Toast().fire({
+          icon: "info",
+          title: "Pilih Peran Anda",
+          text: "Anda memiliki akses dengan beberapa peran.",
+        });
+      } else {
+        // Single role user - redirect directly
+        console.log("👤 Single-role user:", user?.role);
+        
+        Toast().fire({
+          icon: "success",
+          title: statusMessage,
+        });
 
-      // Redirect based on user role
-      console.log("👤 User data:", user);
-      console.log("User role:", user?.role);
-      console.log("User NIP:", user?.nip);
+        // Redirect based on user role
+        console.log("👤 User data:", user);
+        console.log("User role:", user?.role);
+        console.log("User NIP:", user?.nip);
 
-      // Determine redirect path immediately
-      let redirectPath = '/student/dashboard/';
-      const userRole = user?.role;
-      
-      console.log("Final user role for redirect:", userRole);
-      
-      if (userRole === 'admin') {
-        redirectPath = '/admin/dashboard/';
-      } else if (userRole === 'teacher') {
-        redirectPath = '/instructor/dashboard/';
+        // Determine redirect path immediately
+        let redirectPath = '/student/dashboard/';
+        const userRole = user?.role;
+        
+        console.log("Final user role for redirect:", userRole);
+        
+        if (userRole === 'admin') {
+          redirectPath = '/admin/dashboard/';
+        } else if (userRole === 'teacher') {
+          redirectPath = '/instructor/dashboard/';
+        }
+
+        console.log("Redirecting to:", redirectPath);
+        
+        // Perform redirect with minimal delay
+        setTimeout(() => {
+          navigate(redirectPath);
+        }, 500);
       }
-
-      console.log("Redirecting to:", redirectPath);
-      
-      // Perform redirect with minimal delay
-      setTimeout(() => {
-        navigate(redirectPath);
-      }, 500);
 
     } catch (err) {
       console.error("❌ SSO login error:", err);
@@ -192,9 +221,53 @@ function SSOLogin() {
     }
   };
 
+  /**
+   * Handle role selection from modal
+   */
+  const handleRoleSelected = (selectedRole) => {
+    console.log("✅ Role selected:", selectedRole);
+    setShowRoleModal(false);
+    
+    // Redirect based on selected role
+    redirectUserByRole(selectedRole);
+  };
+
+  /**
+   * Handle role selection modal cancel
+   */
+  const handleRoleModalCancel = () => {
+    console.log("❌ Role selection cancelled");
+    setShowRoleModal(false);
+    
+    // Logout user since they cancelled role selection
+    Toast().fire({
+      icon: "warning",
+      title: "Login Dibatalkan",
+      text: "Anda perlu memilih peran untuk melanjutkan.",
+    });
+    
+    // Clear auth data
+    useAuthStore.getState().logout();
+    
+    // Redirect to login
+    setTimeout(() => {
+      navigate("/login/");
+    }, 1000);
+  };
+
   return (
     <>
       <BaseHeader />
+
+      {/* Role Selection Modal */}
+      <RoleSelectionModal
+        show={showRoleModal}
+        roles={availableRoles}
+        currentRole={currentUser ? availableRoles[0] : null}
+        user={currentUser}
+        onRoleSelected={handleRoleSelected}
+        onCancel={handleRoleModalCancel}
+      />
 
       <section className="sso-login-section">
         <div className="container">

@@ -76,6 +76,9 @@ function UsersAdmin() {
         full_name: "",
         email: "",
         role: "student",
+        is_student: false,
+        is_instructor: false,
+        is_admin: false,
         password: "",
         password2: ""
     });
@@ -135,7 +138,7 @@ function UsersAdmin() {
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to fetch users"
+                title: "Gagal mengambil data pengguna"
             });
             setLoading(false);
         }
@@ -205,18 +208,38 @@ function UsersAdmin() {
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
         
+        // Validate at least one role is selected
+        if (!formData.is_student && !formData.is_instructor && !formData.is_admin) {
+            Toast().fire({
+                icon: "warning",
+                title: "Silakan pilih setidaknya satu peran"
+            });
+            return;
+        }
+        
         try {
+            // Prepare submission data with boolean role fields
+            const submitData = {
+                full_name: formData.full_name,
+                email: formData.email,
+                is_student: formData.is_student,
+                is_instructor: formData.is_instructor,
+                is_admin: formData.is_admin,
+                ...(formData.password && { password: formData.password }),
+                ...(modalType === "create" && { role: formData.role })
+            };
+
             if (modalType === "create") {
-                await api.post("/admin/user-create/", formData);
+                await api.post("/admin/user-create/", submitData);
                 Toast().fire({
                     icon: "success",
-                    title: "User created successfully"
+                    title: "Pengguna berhasil dibuat"
                 });
             } else if (modalType === "edit") {
-                await api.put(`/admin/user-update/${selectedUser.id}/`, formData);
+                await api.put(`/admin/user-update/${selectedUser.id}/`, submitData);
                 Toast().fire({
                     icon: "success",
-                    title: "User updated successfully"
+                    title: "Pengguna berhasil diperbarui"
                 });
             }
             
@@ -227,7 +250,7 @@ function UsersAdmin() {
             console.error("Error saving user:", error);
             Toast().fire({
                 icon: "error",
-                title: error.response?.data?.message || "Failed to save user"
+                title: error.response?.data?.message || "Gagal menyimpan pengguna"
             });
         }
     }, [modalType, selectedUser, formData, api, fetchUsers]);
@@ -235,8 +258,8 @@ function UsersAdmin() {
     // Handle delete user
     const handleDeleteUser = useCallback(async (userId) => {
         const confirm = await DeleteConfirmation({
-            title: "Delete User",
-            text: "Are you sure you want to delete this user? This action cannot be undone."
+            title: "Hapus Pengguna",
+            text: "Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan."
         });
         if (!confirm.isConfirmed) return;
 
@@ -244,14 +267,14 @@ function UsersAdmin() {
             await api.delete(`/admin/user-delete/${userId}/`);
             Toast().fire({
                 icon: "success",
-                title: "User deleted successfully"
+                title: "Pengguna berhasil dihapus"
             });
             fetchUsers();
         } catch (error) {
             console.error("Error deleting user:", error);
             Toast().fire({
                 icon: "error",
-                title: error.response?.data?.message || "Failed to delete user"
+                title: error.response?.data?.message || "Gagal menghapus pengguna"
             });
         }
     }, [api, fetchUsers]);
@@ -261,14 +284,14 @@ function UsersAdmin() {
         if (selectedUsers.length === 0) {
             Toast().fire({
                 icon: "warning",
-                title: "Please select users first"
+                title: "Silakan pilih pengguna terlebih dahulu"
             });
             return;
         }
 
         const confirm = await DeleteConfirmation({
-            title: "Delete Users",
-            text: "Are you sure you want to delete these users? This action cannot be undone."
+            title: "Hapus Pengguna",
+            text: "Apakah Anda yakin ingin menghapus pengguna-pengguna ini? Tindakan ini tidak dapat dibatalkan."
         });
         if (!confirm.isConfirmed) return;
 
@@ -526,6 +549,9 @@ function UsersAdmin() {
             full_name: user.full_name,
             email: user.email,
             role: user.role,
+            is_student: user.is_student || false,
+            is_instructor: user.is_instructor || false,
+            is_admin: user.is_admin || false,
             password: "",
             password2: ""
         });
@@ -643,10 +669,10 @@ function UsersAdmin() {
                             <div className="header-text">
                                 <h1 className="dashboard-title">
                                     <MdPeople className="title-icon" />
-                                    User Management
+                                    Manajemen Pengguna
                                 </h1>
                                 <p className="dashboard-subtitle">
-                                    Comprehensive user control and monitoring dashboard
+                                    Dashboard kontrol dan pemantauan pengguna yang komprehensif
                                 </p>
                             </div>
                             <div className="dashboard-actions">
@@ -661,20 +687,20 @@ function UsersAdmin() {
                                         {syncing ? (
                                             <>
                                                 <FaSpinner className="spinner fa-spin" />
-                                                Syncing...
+                                                Sinkronisasi...
                                             </>
                                         ) : (
                                             <>
                                                 <MdSync />
-                                                Sync Data
+                                                Sinkronisasi Data
                                             </>
                                         )}
                                     </button>
                                     {lastSuccessfulSyncTime ? (
                                         <div className="last-sync-info">
-                                            <small className="last-sync-label">Last Sync:</small>
+                                            <small className="last-sync-label">Sinkronisasi Terakhir:</small>
                                             <div className="last-sync-time">
-                                                {new Date(lastSuccessfulSyncTime).toLocaleString("en-US", {
+                                                {new Date(lastSuccessfulSyncTime).toLocaleString("id-ID", {
                                                     month: "short",
                                                     day: "numeric",
                                                     year: "numeric",
@@ -686,16 +712,16 @@ function UsersAdmin() {
                                         </div>
                                     ) : (
                                         <div className="last-sync-info">
-                                            <small className="last-sync-label">Last Sync:</small>
+                                            <small className="last-sync-label">Sinkronisasi Terakhir:</small>
                                             <div className="last-sync-time">
-                                                Never
+                                                Belum Pernah
                                             </div>
                                         </div>
                                     )}
                                 </div>
                                 <button className="btn-modern-primary" onClick={openCreateModal}>
                                     <MdPersonAdd />
-                                    Add New User
+                                    Tambah Pengguna Baru
                                 </button>
                             </div>
                         </div>
@@ -708,7 +734,7 @@ function UsersAdmin() {
                                 <FaUsers className="stat-icon-enhanced" />
                                 <div className="stat-content">
                                     <div className="stat-number-enhanced">{stats.total_users}</div>
-                                    <div className="stat-label-enhanced">Total Users</div>
+                                    <div className="stat-label-enhanced">Total Pengguna</div>
                                     <div className="stat-change positive">
                                         <MdTrendingUp /> +12.5%
                                     </div>
@@ -720,7 +746,7 @@ function UsersAdmin() {
                                 <FaUserCheck className="stat-icon-enhanced" />
                                 <div className="stat-content">
                                     <div className="stat-number-enhanced">{stats.active_users}</div>
-                                    <div className="stat-label-enhanced">Active Users</div>
+                                    <div className="stat-label-enhanced">Pengguna Aktif</div>
                                     <div className="stat-change positive">
                                         <MdTrendingUp /> +8.2%
                                     </div>
@@ -732,7 +758,7 @@ function UsersAdmin() {
                                 <FaUserGraduate className="mini-stat-icon" />
                                 <div className="mini-stat-content">
                                     <div className="mini-stat-number">{stats.students}</div>
-                                    <div className="mini-stat-label">Students</div>
+                                    <div className="mini-stat-label">Siswa</div>
                                 </div>
                             </div>
                         </div>
@@ -741,7 +767,7 @@ function UsersAdmin() {
                                 <FaUserTie className="mini-stat-icon" />
                                 <div className="mini-stat-content">
                                     <div className="mini-stat-number">{stats.teachers}</div>
-                                    <div className="mini-stat-label">Teachers</div>
+                                    <div className="mini-stat-label">Instruktur</div>
                                 </div>
                             </div>
                         </div>
@@ -750,7 +776,7 @@ function UsersAdmin() {
                                 <FaUserCog className="mini-stat-icon" />
                                 <div className="mini-stat-content">
                                     <div className="mini-stat-number">{stats.admins}</div>
-                                    <div className="mini-stat-label">Admins</div>
+                                    <div className="mini-stat-label">Admin</div>
                                 </div>
                             </div>
                         </div>
@@ -761,7 +787,7 @@ function UsersAdmin() {
                         <div className="panel-header-modern">
                             <h3 className="panel-title-modern">
                                 <MdDashboard />
-                                User Management Controls
+                                Kontrol Manajemen Pengguna
                             </h3>
                         </div>
                         <div className="panel-content-modern">
@@ -771,7 +797,7 @@ function UsersAdmin() {
                                     <input
                                         type="text"
                                         className="search-input-modern"
-                                        placeholder="Search users by name, email, or username..."
+                                        placeholder="Cari pengguna berdasarkan nama, email, atau nama pengguna..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
@@ -783,10 +809,10 @@ function UsersAdmin() {
                                         value={roleFilter} 
                                         onChange={(e) => setRoleFilter(e.target.value)}
                                     >
-                                        <option value="all">All Roles</option>
-                                        <option value="student">Students Only</option>
-                                        <option value="teacher">Teachers Only</option>
-                                        <option value="admin">Admins Only</option>
+                                        <option value="all">Semua Peran</option>
+                                        <option value="student">Hanya Siswa</option>
+                                        <option value="teacher">Hanya Instruktur</option>
+                                        <option value="admin">Hanya Admin</option>
                                     </select>
                                 </div>
                                 
@@ -796,9 +822,9 @@ function UsersAdmin() {
                                         value={statusFilter} 
                                         onChange={(e) => setStatusFilter(e.target.value)}
                                     >
-                                        <option value="all">All Status</option>
-                                        <option value="active">Active Users</option>
-                                        <option value="inactive">Inactive Users</option>
+                                        <option value="all">Semua Status</option>
+                                        <option value="active">Pengguna Aktif</option>
+                                        <option value="inactive">Pengguna Tidak Aktif</option>
                                     </select>
                                 </div>
                             </div>
@@ -810,26 +836,26 @@ function UsersAdmin() {
                         <div className="bulk-actions-modern">
                             <div className="bulk-info-modern">
                                 <FaUsers className="bulk-icon" />
-                                <span className="bulk-text">{selectedUsers.length} users selected</span>
+                                <span className="bulk-text">{selectedUsers.length} pengguna dipilih</span>
                             </div>
                             <div className="bulk-actions-buttons">
                                 <button 
                                     className="bulk-btn"
                                     onClick={() => handleBulkAction("activate")}
                                 >
-                                    <FaUserCheck /> Activate
+                                    <FaUserCheck /> Aktifkan
                                 </button>
                                 <button 
                                     className="bulk-btn"
                                     onClick={() => handleBulkAction("deactivate")}
                                 >
-                                    <FaUserTimes /> Deactivate
+                                    <FaUserTimes /> Nonaktifkan
                                 </button>
                                 <button 
                                     className="bulk-btn"
                                     onClick={() => handleBulkAction("delete")}
                                 >
-                                    <FaTrash /> Delete
+                                    <FaTrash /> Hapus
                                 </button>
                             </div>
                         </div>
@@ -838,7 +864,7 @@ function UsersAdmin() {
                     {/* Modern Users Table */}
                     <div className="users-table-container table-responsive-wrapper">
                         <div className="table-scroll-indicator">
-                            <FaArrowRight /> Scroll for more
+                            <FaArrowRight /> Gulir untuk lebih banyak
                         </div>
                         <table className="users-table-modern" role="table" aria-label="Users management table">
                             <thead>
@@ -849,27 +875,27 @@ function UsersAdmin() {
                                                 <MdCheckBox 
                                                     className="checkbox-icon selected" 
                                                     onClick={handleSelectAll}
-                                                    title="Deselect all users"
+                                                    title="Batalkan pilihan semua pengguna"
                                                     role="checkbox"
                                                     aria-checked="true"
                                                 /> : 
                                                 <MdCheckBoxOutlineBlank 
                                                     className="checkbox-icon" 
                                                     onClick={handleSelectAll}
-                                                    title="Select all users"
+                                                    title="Pilih semua pengguna"
                                                     role="checkbox"
                                                     aria-checked="false"
                                                 />
                                             }
                                         </div>
                                     </th>
-                                    <th className="user-column" scope="col">User Information</th>
-                                    <th className="role-column" scope="col">Role & Permissions</th>
-                                    <th className="status-column" scope="col">Account Status</th>
-                                    <th className="login-column" scope="col">Last Activity</th>
-                                    <th className="date-column" scope="col">Registration</th>
-                                    <th className="activity-column" scope="col">System Activity</th>
-                                    <th className="actions-column" scope="col">Management</th>
+                                    <th className="user-column" scope="col">Informasi Pengguna</th>
+                                    <th className="role-column" scope="col">Peran</th>
+                                    <th className="status-column" scope="col">Status</th>
+                                    <th className="login-column" scope="col">Aktivitas Terakhir</th>
+                                    <th className="date-column" scope="col">Pendaftaran</th>
+                                    <th className="activity-column" scope="col">Aktivitas Sistem</th>
+                                    <th className="actions-column" scope="col">Manajemen</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -912,32 +938,52 @@ function UsersAdmin() {
                                             </div>
                                         </td>
                                         <td className="role-cell">
-                                            <div className={`role-badge-modern ${user.role}`}>
-                                                <div className="role-icon">
-                                                    {user.role === "student" && <FaUserGraduate />}
-                                                    {user.role === "teacher" && <FaUserTie />}
-                                                    {user.role === "admin" && <FaUserCog />}
-                                                </div>
-                                                <div className="role-text">
-                                                    <span className="role-name">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
-                                                    <span className="role-desc">
-                                                        {user.role === "student" && "Learning Access"}
-                                                        {user.role === "teacher" && "Content Creator"}
-                                                        {user.role === "admin" && "Full Control"}
-                                                    </span>
-                                                </div>
+                                            <div className="multi-role-container">
+                                                {user.is_student && (
+                                                    <div className="role-badge-modern student">
+                                                        <div className="role-icon">
+                                                            <FaUserGraduate />
+                                                        </div>
+                                                        <div className="role-text">
+                                                            <span className="role-name">Siswa</span>
+                                                            <span className="role-desc">Pembelajaran</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {user.is_instructor && (
+                                                    <div className="role-badge-modern teacher">
+                                                        <div className="role-icon">
+                                                            <FaUserTie />
+                                                        </div>
+                                                        <div className="role-text">
+                                                            <span className="role-name">Instruktur</span>
+                                                            <span className="role-desc">Konten</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {user.is_admin && (
+                                                    <div className="role-badge-modern admin">
+                                                        <div className="role-icon">
+                                                            <FaUserCog />
+                                                        </div>
+                                                        <div className="role-text">
+                                                            <span className="role-name">Admin</span>
+                                                            <span className="role-desc">Kontrol</span>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="status-cell">
                                             <div className={`status-badge-modern ${user.is_active ? "active" : "inactive"}`}>
                                                 <div className="status-indicator"></div>
-                                                <span className="status-text">{user.is_active ? "Active" : "Inactive"}</span>
+                                                <span className="status-text">{user.is_active ? "Aktif" : "Tidak Aktif"}</span>
                                             </div>
                                         </td>
                                         <td className="login-cell">
                                             <div className="login-info-modern">
                                                 <FaBell className="date-cell" />
-                                                <span className="date-info-modern">{user.last_login ? dayjs(user.last_login).format("DD MMM, YYYY") : "No Data"}</span>
+                                                <span className="date-info-modern">{user.last_login ? dayjs(user.last_login).format("DD MMM, YYYY") : "Tidak Ada Data"}</span>
                                             </div>
                                         </td>
                                         <td className="date-cell">
@@ -951,23 +997,23 @@ function UsersAdmin() {
                                         </td>
                                         <td className="activity-cell">
                                             <div className="activity-metrics-modern">
-                                                {user.role === "student" && (
+                                                {user.is_student && (
                                                     <>
                                                         <div className="metric-item">
                                                             <FaChartLine className="metric-icon" />
-                                                            <span>{user.enrollment_count} Enrollments</span>
+                                                            <span>{user.enrollment_count || 0} Pendaftaran</span>
                                                         </div>
                                                     </>
                                                 )}
-                                                {user.role === "teacher" && (
+                                                {user.is_instructor && (
                                                     <>
                                                         <div className="metric-item">
                                                             <FaChartLine className="metric-icon" />
-                                                            <span>{user.course_count} Courses</span>
+                                                            <span>{user.course_count || 0} Kursus</span>
                                                         </div>
                                                     </>
                                                 )}
-                                                {user.role === "admin" && (
+                                                {user.is_admin && (
                                                     <div className="metric-item admin">
                                                         <FaCog className="metric-icon" />
                                                         <span>Administrator</span>
@@ -980,21 +1026,21 @@ function UsersAdmin() {
                                                 <button 
                                                     className="action-btn-modern view-btn"
                                                     onClick={() => openViewModal(user)}
-                                                    title="View Full Profile"
+                                                    title="Lihat Profil Lengkap"
                                                 >
                                                     <FaEye />
                                                 </button>
                                                 <button 
                                                     className="action-btn-modern edit-btn"
                                                     onClick={() => openEditModal(user)}
-                                                    title="Edit User Settings"
+                                                    title="Edit Pengaturan Pengguna"
                                                 >
                                                     <FaEdit />
                                                 </button>
                                                 <button 
                                                     className="action-btn-modern delete-btn"
                                                     onClick={() => handleDeleteUser(user.id)}
-                                                    title="Remove User"
+                                                    title="Hapus Pengguna"
                                                 >
                                                     <FaTrash />
                                                 </button>
@@ -1007,10 +1053,10 @@ function UsersAdmin() {
                                     <td colSpan="8" className="empty-state-cell">
                                         <div className="empty-state-modern">
                                             <FaUsers className="empty-icon" />
-                                            <h5>No Users Found</h5>
-                                            <p>No users match your current search and filter criteria. Try adjusting your filters or search terms.</p>
+                                            <h5>Tidak Ada Pengguna Ditemukan</h5>
+                                            <p>Tidak ada pengguna yang cocok dengan kriteria pencarian dan filter Anda saat ini. Coba sesuaikan filter atau istilah pencarian Anda.</p>
                                             <button className="btn-modern-primary" onClick={openCreateModal}>
-                                                <MdPersonAdd /> Add First User
+                                                <MdPersonAdd /> Tambah Pengguna Pertama
                                             </button>
                                         </div>
                                     </td>
@@ -1027,7 +1073,7 @@ function UsersAdmin() {
                                 className="pagination-btn-compact"
                                 onClick={() => setCurrentPage(1)}
                                 disabled={currentPage === 1}
-                                title="First page"
+                                title="Halaman pertama"
                             >
                                 ⟨⟨
                             </button>
@@ -1035,7 +1081,7 @@ function UsersAdmin() {
                                 className="pagination-btn-compact"
                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                 disabled={currentPage === 1}
-                                title="Previous page"
+                                title="Halaman sebelumnya"
                             >
                                 ⟨
                             </button>
@@ -1076,7 +1122,7 @@ function UsersAdmin() {
                                 className="pagination-btn-compact"
                                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                 disabled={currentPage === totalPages}
-                                title="Next page"
+                                title="Halaman berikutnya"
                             >
                                 ⟩
                             </button>
@@ -1084,7 +1130,7 @@ function UsersAdmin() {
                                 className="pagination-btn-compact"
                                 onClick={() => setCurrentPage(totalPages)}
                                 disabled={currentPage === totalPages}
-                                title="Last page"
+                                title="Halaman terakhir"
                             >
                                 ⟩⟩
                             </button>
@@ -1104,14 +1150,14 @@ function UsersAdmin() {
                                         </div>
                                         <div className="modal-title-text">
                                             <h2>
-                                                {modalType === "create" && "Create New User Account"}
-                                                {modalType === "edit" && "Edit User Information"}
-                                                {modalType === "view" && "User Profile Details"}
+                                                {modalType === "create" && "Buat Akun Pengguna Baru"}
+                                                {modalType === "edit" && "Edit Pengguna"}
+                                                {modalType === "view" && "Detail Profil Pengguna"}
                                             </h2>
                                             <p>
-                                                {modalType === "create" && "Add a new user to the learning management system"}
-                                                {modalType === "edit" && "Update user information and permissions"}
-                                                {modalType === "view" && "Comprehensive user profile and activity overview"}
+                                                {modalType === "create" && "Tambah pengguna baru ke sistem manajemen pembelajaran"}
+                                                {modalType === "edit" && "Perbarui informasi dan izin pengguna"}
+                                                {modalType === "view" && "Gambaran lengkap profil dan aktivitas pengguna"}
                                             </p>
                                         </div>
                                     </div>
@@ -1128,36 +1174,42 @@ function UsersAdmin() {
                                         <div className="user-details-view">
                                             {/* Basic Information Section */}
                                             <div className="detail-section">
-                                                <h3>👤 Basic Information</h3>
+                                                <h3>👤 Informasi Dasar</h3>
                                                 <div className="detail-grid">
                                                     <div className="detail-item">
-                                                        <label>Full Name</label>
+                                                        <label>Nama Lengkap</label>
                                                         <span>{selectedUser?.user_info?.full_name}</span>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>Email Address</label>
+                                                        <label>Alamat Email</label>
                                                         <span>{selectedUser?.user_info?.email}</span>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>Username</label>
+                                                        <label>Nama Pengguna</label>
                                                         <span>{selectedUser?.user_info?.username}</span>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>User Role</label>
-                                                        <span className={`role-badge ${selectedUser?.user_info?.role}`}>
-                                                            {selectedUser?.user_info?.role === "student" && "🎓 Student"}
-                                                            {selectedUser?.user_info?.role === "teacher" && "👨‍🏫 Teacher"}
-                                                            {selectedUser?.user_info?.role === "admin" && "⚙️ Administrator"}
-                                                        </span>
+                                                        <label>Peran Pengguna</label>
+                                                        <div className="modal-role-container">
+                                                            {selectedUser?.user_info?.is_student && (
+                                                                <span className="role-badge student">🎓 Siswa</span>
+                                                            )}
+                                                            {selectedUser?.user_info?.is_instructor && (
+                                                                <span className="role-badge teacher">👨‍🏫 Instruktur</span>
+                                                            )}
+                                                            {selectedUser?.user_info?.is_admin && (
+                                                                <span className="role-badge admin">⚙️ Administrator</span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>Account Status</label>
+                                                        <label>Status Akun</label>
                                                         <span className={`status-badge ${selectedUser?.user_info?.is_active ? "active" : "inactive"}`}>
-                                                            {selectedUser?.user_info?.is_active ? "✓ Active" : "✕ Inactive"}
+                                                            {selectedUser?.user_info?.is_active ? "✓ Aktif" : "✕ Tidak Aktif"}
                                                         </span>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>Member Since</label>
+                                                        <label>Anggota Sejak</label>
                                                         <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleDateString("en-US", {year: "numeric", month: "short", day: "numeric"}) : "N/A"}</span>
                                                     </div>
                                                 </div>
@@ -1165,63 +1217,63 @@ function UsersAdmin() {
 
                                             {/* Activity Information Section */}
                                             <div className="detail-section">
-                                                <h3>📊 Account Activity</h3>
+                                                <h3>📊 Aktivitas Akun</h3>
                                                 <div className="detail-grid">
                                                     <div className="detail-item">
-                                                        <label>Last Login</label>
-                                                        <span>{selectedUser?.user_info?.last_login ? new Date(selectedUser.user_info.last_login).toLocaleString("en-US", {year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"}) : "Never logged in"}</span>
+                                                        <label>Login Terakhir</label>
+                                                        <span>{selectedUser?.user_info?.last_login ? new Date(selectedUser.user_info.last_login).toLocaleString("id-ID", {year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"}) : "Belum Pernah Login"}</span>
                                                     </div>
                                                     <div className="detail-item">
-                                                        <label>Account Created</label>
+                                                        <label>Akun Dibuat</label>
                                                         <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleString("en-US", {year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"}) : "N/A"}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Statistics Section - For Students */}
-                                            {selectedUser?.user_info?.role === "student" && selectedUser?.enrollment_stats && (
+                                            {selectedUser?.user_info?.is_student && selectedUser?.enrollment_stats && (
                                                 <div className="detail-section">
-                                                    <h3>📚 Learning Statistics</h3>
+                                                    <h3>📚 Statistik Pembelajaran</h3>
                                                     <div className="stats-grid-modal">
                                                         <div className="stat-item">
-                                                            <label>Total Enrollments</label>
+                                                            <label>Total Pendaftaran</label>
                                                             <span>{selectedUser?.enrollment_stats?.total_enrollments || 0}</span>
                                                         </div>
                                                         <div className="stat-item">
-                                                            <label>Completed Courses</label>
+                                                            <label>Kursus Selesai</label>
                                                             <span>{selectedUser?.enrollment_stats?.completed_courses || 0}</span>
                                                         </div>
                                                         <div className="stat-item">
-                                                            <label>In Progress Courses</label>
+                                                            <label>Kursus Sedang Berlangsung</label>
                                                             <span>{selectedUser?.enrollment_stats?.in_progress_courses || 0}</span>
                                                         </div>
                                                         <div className="stat-item">
-                                                            <label>Certificates Earned</label>
+                                                            <label>Sertifikat Diterima</label>
                                                             <span>{selectedUser?.enrollment_stats?.certificates_earned || 0}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                             )}
 
-                                            {/* Statistics Section - For Teachers */}
-                                            {selectedUser?.user_info?.role === "teacher" && selectedUser?.teaching_stats && (
+                                            {/* Statistics Section - For Instructors */}
+                                            {selectedUser?.user_info?.is_instructor && selectedUser?.teaching_stats && (
                                                 <div className="detail-section">
-                                                    <h3>🎓 Teaching Statistics</h3>
+                                                    <h3>🎓 Statistik Pengajaran</h3>
                                                     <div className="stats-grid-modal">
                                                         <div className="stat-item">
-                                                            <label>Total Courses Created</label>
+                                                            <label>Total Kursus Dibuat</label>
                                                             <span>{selectedUser?.teaching_stats?.total_courses || 0}</span>
                                                         </div>
                                                         <div className="stat-item">
-                                                            <label>Published Courses</label>
+                                                            <label>Kursus Dipublikasikan</label>
                                                             <span>{selectedUser?.teaching_stats?.published_courses || 0}</span>
                                                         </div>
                                                         <div className="stat-item">
-                                                            <label>Total Students</label>
+                                                            <label>Total Siswa</label>
                                                             <span>{selectedUser?.teaching_stats?.total_students || 0}</span>
                                                         </div>
                                                         <div className="stat-item">
-                                                            <label>Course Reviews</label>
+                                                            <label>Ulasan Kursus</label>
                                                             <span>{selectedUser?.teaching_stats?.total_reviews || 0}</span>
                                                         </div>
                                                     </div>
@@ -1234,13 +1286,13 @@ function UsersAdmin() {
                                                 <div className="form-group-modern">
                                                     <label htmlFor="full_name" className="form-label-modern">
                                                         <FaUsers className="label-icon" />
-                                                        Full Name *
+                                                        Nama Lengkap *
                                                     </label>
                                                     <input
                                                         type="text"
                                                         id="full_name"
                                                         className="form-input-modern"
-                                                        placeholder="Enter user's full name"
+                                                        placeholder="Masukkan nama lengkap pengguna"
                                                         value={formData.full_name}
                                                         onChange={(e) => setFormData({...formData, full_name: e.target.value})}
                                                         required
@@ -1252,13 +1304,13 @@ function UsersAdmin() {
                                                 <div className="form-group-modern">
                                                     <label htmlFor="email" className="form-label-modern">
                                                         <FaBell className="label-icon" />
-                                                        Email Address *
+                                                        Alamat Email *
                                                     </label>
                                                     <input
                                                         type="email"
                                                         id="email"
                                                         className="form-input-modern"
-                                                        placeholder="Enter email address"
+                                                        placeholder="Masukkan alamat email"
                                                         value={formData.email}
                                                         onChange={(e) => setFormData({...formData, email: e.target.value})}
                                                         required
@@ -1268,21 +1320,54 @@ function UsersAdmin() {
                                             
                                             <div className="form-row">
                                                 <div className="form-group-modern">
-                                                    <label htmlFor="role" className="form-label-modern">
+                                                    <label className="form-label-modern">
                                                         <FaCog className="label-icon" />
-                                                        User Role *
+                                                        Peran Pengguna (Pilih Semua yang Berlaku) *
                                                     </label>
-                                                    <select
-                                                        id="role"
-                                                        className="form-select-modern"
-                                                        value={formData.role}
-                                                        onChange={(e) => setFormData({...formData, role: e.target.value})}
-                                                        required
-                                                    >
-                                                        <option value="student">Student - Learning Access</option>
-                                                        <option value="teacher">Teacher - Content Creator</option>
-                                                        <option value="admin">Administrator - Full Control</option>
-                                                    </select>
+                                                    <div className="form-checkbox-group">
+                                                        <div className="form-checkbox-item">
+                                                            <input
+                                                                type="checkbox"
+                                                                id="is_student"
+                                                                className="form-checkbox-input"
+                                                                checked={formData.is_student}
+                                                                onChange={(e) => setFormData({...formData, is_student: e.target.checked})}
+                                                            />
+                                                            <label htmlFor="is_student" className="form-checkbox-label">
+                                                                <FaUserGraduate className="checkbox-icon" />
+                                                                Siswa - Akses Pembelajaran
+                                                            </label>
+                                                        </div>
+                                                        <div className="form-checkbox-item">
+                                                            <input
+                                                                type="checkbox"
+                                                                id="is_instructor"
+                                                                className="form-checkbox-input"
+                                                                checked={formData.is_instructor}
+                                                                onChange={(e) => setFormData({...formData, is_instructor: e.target.checked})}
+                                                            />
+                                                            <label htmlFor="is_instructor" className="form-checkbox-label">
+                                                                <FaUserTie className="checkbox-icon" />
+                                                                Instruktur - Pembuat Konten
+                                                            </label>
+                                                        </div>
+                                                        <div className="form-checkbox-item">
+                                                            <input
+                                                                type="checkbox"
+                                                                id="is_admin"
+                                                                className="form-checkbox-input"
+                                                                checked={formData.is_admin}
+                                                                onChange={(e) => setFormData({...formData, is_admin: e.target.checked})}
+                                                            />
+                                                            <label htmlFor="is_admin" className="form-checkbox-label">
+                                                                <FaUserCog className="checkbox-icon" />
+                                                                Administrator - Kontrol Penuh
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    {!(formData.is_student || formData.is_instructor || formData.is_admin) && (
+                                                        <p className="form-helper-text error">⚠️ Pengguna harus memiliki setidaknya satu peran</p>
+                                                    )}
                                                 </div>
                                             </div>
                                             
@@ -1292,14 +1377,14 @@ function UsersAdmin() {
                                                         <div className="form-group-modern">
                                                             <label htmlFor="password" className="form-label-modern">
                                                                 <FaCog className="label-icon" />
-                                                                Password *
+                                                                Kata Sandi *
                                                             </label>
                                                             <div className="password-input-wrapper">
                                                                 <input
                                                                     type={showPasswords.password ? "text" : "password"}
                                                                     id="password"
                                                                     className="form-control password-input"
-                                                                    placeholder="Enter secure password"
+                                                                    placeholder="Masukkan kata sandi yang aman"
                                                                     value={formData.password}
                                                                     onChange={(e) => {
                                                                         setFormData({...formData, password: e.target.value});
@@ -1317,31 +1402,31 @@ function UsersAdmin() {
                                                                 </button>
                                                             </div>
                                                             <div className="password-requirements">
-                                                                <p className="requirements-title">Password must contain:</p>
+                                                                <p className="requirements-title">Kata sandi harus berisi:</p>
                                                                 <div className="requirement-list">
                                                                     <div className={`requirement-item ${passwordValidation.length ? "valid" : ""}`}>
                                                                         {passwordValidation.length ? <FaCheck /> : <FaTimes />}
-                                                                        <span>At least 8 characters</span>
+                                                                        <span>Setidaknya 8 karakter</span>
                                                                     </div>
                                                                     <div className={`requirement-item ${passwordValidation.uppercase ? "valid" : ""}`}>
                                                                         {passwordValidation.uppercase ? <FaCheck /> : <FaTimes />}
-                                                                        <span>One uppercase letter (A-Z)</span>
+                                                                        <span>Satu huruf besar (A-Z)</span>
                                                                     </div>
                                                                     <div className={`requirement-item ${passwordValidation.lowercase ? "valid" : ""}`}>
                                                                         {passwordValidation.lowercase ? <FaCheck /> : <FaTimes />}
-                                                                        <span>One lowercase letter (a-z)</span>
+                                                                        <span>Satu huruf kecil (a-z)</span>
                                                                     </div>
                                                                     <div className={`requirement-item ${passwordValidation.number ? "valid" : ""}`}>
                                                                         {passwordValidation.number ? <FaCheck /> : <FaTimes />}
-                                                                        <span>One number (0-9)</span>
+                                                                        <span>Satu angka (0-9)</span>
                                                                     </div>
                                                                     <div className={`requirement-item ${passwordValidation.special ? "valid" : ""}`}>
                                                                         {passwordValidation.special ? <FaCheck /> : <FaTimes />}
-                                                                        <span>One special character (!@#$%...)</span>
+                                                                        <span>Satu karakter khusus (!@#$%...)</span>
                                                                     </div>
                                                                     <div className={`requirement-item ${passwordValidation.notCommon ? "valid" : ""}`}>
                                                                         {passwordValidation.notCommon ? <FaCheck /> : <FaTimes />}
-                                                                        <span>Not a common password</span>
+                                                                        <span>Bukan kata sandi umum</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -1352,14 +1437,14 @@ function UsersAdmin() {
                                                         <div className="form-group-modern">
                                                             <label htmlFor="password2" className="form-label-modern">
                                                                 <FaCog className="label-icon" />
-                                                                Confirm Password *
+                                                                Konfirmasi Kata Sandi *
                                                             </label>
                                                             <div className="password-input-wrapper">
                                                                 <input
                                                                     type={showPasswords.password2 ? "text" : "password"}
                                                                     id="password2"
                                                                     className="form-control password-input"
-                                                                    placeholder="Confirm password"
+                                                                    placeholder="Konfirmasi kata sandi"
                                                                     value={formData.password2}
                                                                     onChange={(e) => setFormData({...formData, password2: e.target.value})}
                                                                     required
@@ -1375,12 +1460,12 @@ function UsersAdmin() {
                                                             </div>
                                                             {formData.password2 && formData.password !== formData.password2 && (
                                                                 <div className="password-match-error">
-                                                                    <FaTimes /> Passwords do not match
+                                                                    <FaTimes /> Kata sandi tidak cocok
                                                                 </div>
                                                             )}
                                                             {formData.password2 && formData.password === formData.password2 && (
                                                                 <div className="password-match-success">
-                                                                    <FaCheck /> Passwords match
+                                                                    <FaCheck /> Kata sandi cocok
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1390,12 +1475,12 @@ function UsersAdmin() {
                                             
                                             <div className="form-actions-modern">
                                                 <button type="button" className="btn-cancel-modern" onClick={() => setShowModal(false)}>
-                                                    Cancel
+                                                    Batal
                                                 </button>
                                                 <button type="submit" className="btn-submit-modern">
                                                     <div className="btn-content">
                                                         {modalType === "create" ? <MdPersonAdd /> : <FaEdit />}
-                                                        <span>{modalType === "create" ? "Create User Account" : "Update User Information"}</span>
+                                                        <span>{modalType === "create" ? "Buat Akun Pengguna" : "Perbarui"}</span>
                                                     </div>
                                                 </button>
                                             </div>
@@ -1425,11 +1510,11 @@ function UsersAdmin() {
                             </div>
                             <div className="sync-header-text">
                                 <h3>
-                                    {syncProgress.status === "initializing" && "Initializing Sync..."}
-                                    {syncProgress.status === "syncing" && "Syncing Data..."}
-                                    {syncProgress.status === "completed" && "Sync Completed!"}
-                                    {syncProgress.status === "error" && "Sync Failed"}
-                                    {syncProgress.status === "cancelled" && "Sync Cancelled"}
+                                    {syncProgress.status === "initializing" && "Menginisialisasi Sinkronisasi..."}
+                                    {syncProgress.status === "syncing" && "Sinkronisasi Data..."}
+                                    {syncProgress.status === "completed" && "Sinkronisasi Selesai!"}
+                                    {syncProgress.status === "error" && "Sinkronisasi Gagal"}
+                                    {syncProgress.status === "cancelled" && "Sinkronisasi Dibatalkan"}
                                 </h3>
                                 <p>{syncProgress.message}</p>
                             </div>
@@ -1571,7 +1656,7 @@ function UsersAdmin() {
                                                         {error.email && (
                                                             <>Email: {error.email} | </>
                                                         )}
-                                                        {error.error ? error.error : (error.errors ? JSON.stringify(error.errors) : "Unknown error")}
+                                                        {error.error ? error.error : (error.errors ? JSON.stringify(error.errors) : "Kesalahan tidak diketahui")}
                                                     </>
                                                 )}
                                             </span>

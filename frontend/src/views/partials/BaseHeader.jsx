@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect, memo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { WishlistContext } from '../plugin/Context';
+import { WishlistContext, RolesContext } from '../plugin/Context';
 import { useAuthStore } from "../../store/auth";
 import UserData from "../plugin/UserData";
 import apiInstance from "../../utils/axios";
@@ -12,6 +12,8 @@ import './BaseHeader.css';
 
 function BaseHeader() {
     const [wishlistCount, setWishlistCount] = useContext(WishlistContext);
+    // ✨ PHASE 4.20: Import RolesContext to track role changes for menu updates
+    const { currentRole } = useContext(RolesContext) || {};
     const [searchQuery, setSearchQuery] = useState("");
     const [typingComplete, setTypingComplete] = useState(false);
     const [animationSkipped, setAnimationSkipped] = useState(false);
@@ -32,14 +34,42 @@ function BaseHeader() {
     const isSearchPage = location.pathname.includes('/search');
     const [isLoggedIn, user, allUserData] = useAuthStore((state) => [state.isLoggedIn, state.user, state.allUserData]);
     const userData = UserData();
+    // ✨ PHASE 4.20: Re-compute menu role checks based on currentRole dependency to update menu on role change
     const hasTeacherId = !!(userData?.teacher_id && userData?.teacher_id !== null && userData?.teacher_id !== undefined && userData?.teacher_id !== 0);
     const isAdmin = userData?.role === 'admin';
+    
+    // ✨ PHASE 4.21: Determine menu to show based on currentRole, not hasTeacherId
+    // hasTeacherId is a permanent user attribute that doesn't change with role switches
+    // currentRole reflects the actual current role the user is in
+    const determineMenuType = () => {
+        const normalizedRole = currentRole?.toLowerCase?.().trim();
+        
+        switch (normalizedRole) {
+            case 'admin':
+                return 'admin';
+            case 'teacher':
+            case 'instructor':
+                return 'instructor';
+            case 'student':
+            default:
+                return 'student';
+        }
+    };
+    
+    const currentMenuType = determineMenuType();
     
     // Animation effect
     useEffect(() => {
         const timer = setTimeout(() => setTypingComplete(true), 4000);
         return () => clearTimeout(timer);
     }, []);
+
+    // ✨ PHASE 4.20: Track role changes to update menu items in real-time
+    useEffect(() => {
+        console.log('PHASE 4.20: Role changed in BaseHeader, triggering menu update', currentRole);
+        // This effect just acts as a trigger for component re-render
+        // The menu items will be re-computed automatically due to userData and isAdmin dependencies
+    }, [currentRole]);
 
     // ✨ PHASE 3: Load search history from localStorage on component mount
     useEffect(() => {
@@ -639,7 +669,7 @@ function BaseHeader() {
                         {/* User menu */}
                         {isLoggedIn() ? (
                             <div className="user-menu">
-                                {isAdmin ? (
+                                {currentMenuType === 'admin' ? (
                                     <div 
                                         className="nav-item dropdown"
                                         onMouseEnter={handleMouseEnter}
@@ -653,7 +683,7 @@ function BaseHeader() {
                                             {renderDropdownItems(adminMenuItems)}
                                         </ul>
                                     </div>
-                                ) : hasTeacherId ? (
+                                ) : currentMenuType === 'instructor' ? (
                                     <div 
                                         className="nav-item dropdown"
                                         onMouseEnter={handleMouseEnter}
@@ -687,9 +717,6 @@ function BaseHeader() {
                             <div className="auth-buttons">
                                 <Link to="/login/" className="btn-login">
                                     <i className="fas fa-sign-in-alt me-2"></i>Masuk
-                                </Link>
-                                <Link to="/register/" className="btn-register">
-                                    <i className="fas fa-user-plus me-2"></i>Daftar
                                 </Link>
                             </div>
                         )}

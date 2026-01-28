@@ -54,10 +54,20 @@
     min-height: 100vh;
     background: transparent;
     padding: 3rem 0;
-    padding-top: 3rem !important;
+    padding-top: calc(70px + 3rem) !important;
     padding-bottom: 3rem !important;
     margin-top: 0 !important;
     margin-bottom: 8rem;
+    overflow-x: hidden; /* ✨ PHASE 8b: Prevent horizontal scroll from row width calc */
+}
+
+/* ✨ PHASE 8b: Force padding-top to be overridable by pt-5 utility class */
+.modern-qa-page.pt-5 {
+    padding-top: 50px !important;
+}
+
+.modern-qa-page.pb-5 {
+    padding-bottom: 3rem !important;
 }
 
 .qa-header-card {
@@ -697,17 +707,28 @@
 
 .modal-header-content {
     display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
     position: relative;
     z-index: 1;
+    flex: 1;
+    min-width: 0;
 }
 
 .modal-header-info {
     display: flex;
     align-items: center;
     gap: 1rem;
+    width: 100%;
+}
+
+.modal-title-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 0.5rem;
 }
 
 .modal-icon-wrapper {
@@ -721,6 +742,7 @@
     font-size: 1.2rem;
     backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
 }
 
 .modal-title-section h4 {
@@ -728,13 +750,24 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: white;
+    flex: 0 1 auto;
+}
+
+.modal-title-section .d-flex {
+    align-items: center;
+    gap: 0.75rem !important;
+    margin-bottom: 0.5rem;
 }
 
 .modal-subtitle {
-    margin: 0.5rem 0 0 0;
+    margin: 0;
+    padding: 0;
     font-size: 0.95rem;
     color: rgba(255, 255, 255, 0.9);
     font-weight: 400;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    width: 100%;
 }
 
 .btn-close-modern {

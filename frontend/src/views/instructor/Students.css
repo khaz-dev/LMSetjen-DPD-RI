@@ -5,15 +5,36 @@
    ================================ */
 
 .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Protect header card gap from parent overrides */
 .modern-dashboard .row > .col-12 > .instructor-header-card,
 .modern-dashboard .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
+}
+
+/* Ensure header card maintains consistent width on students page */
+.modern-students .instructor-header-card {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* CRITICAL: Force modern-students padding to be overridable by pt-5 and pb-5 classes */
+/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+.modern-students.pt-5 {
+    padding-top: 50px !important;
+}
+
+.modern-students.pb-5 {
+    padding-bottom: 3rem !important;
 }
 
 /* ========================================
@@ -34,6 +55,27 @@
     flex-wrap: wrap;
     gap: 0;
     width: calc(100% + var(--bs-gutter-x, 24px));
+}
+
+/* Protect Header on students page from row CSS rules */
+.modern-students .row.instructor-header-row {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Ensure Header card maintains full width and removes right gap */
+.modern-students .row.instructor-header-row > .col-xl-12,
+.modern-students .row.instructor-header-row > .col-lg-12,
+.modern-students .row.instructor-header-row > .col-md-12,
+.modern-students .row.instructor-header-row > .col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
 /* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
@@ -58,8 +100,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
@@ -75,8 +117,8 @@
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
@@ -107,12 +149,21 @@
 /* NO override or conflicting properties here */
 
 .modern-students {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    margin-bottom: 8rem;
     min-height: 100vh;
     background: transparent;
     padding: 3rem 0;
-    padding-top: 3rem !important;
+    padding-top: calc(70px + 3rem) !important;
     padding-bottom: 3rem !important;
-    margin-bottom: 8rem;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: hidden;
+    /* ✨ PHASE 7.3: Add overflow-x: hidden to prevent horizontal scroll */
 }
 
 .students-header {
@@ -380,20 +431,19 @@
   /* Content column - expands to fill remaining space */
   .modern-students .row > .col-lg-9 {
     flex: 1 1 auto;
-    min-width: 0 !important;
+    min-width: 0;
     width: auto;
     max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
+
+  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
+  /* Removed min-width: 500px to prevent gap shift when sidebar-collapsed-adapted is applied */
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
   .modern-students .row > .col-md-8 {
     flex: 1 1 auto;
-    min-width: 0 !important;
-    width: auto;
-    max-width: 100%;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    min-width: 0;
   }
 }
 

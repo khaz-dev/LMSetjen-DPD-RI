@@ -34,10 +34,10 @@ function Wishlist() {
             setWishlist(wishlistArray);
         } catch (err) {
             console.error("Error fetching wishlist:", err);
-            setError("Failed to load wishlist");
+            setError("Gagal memuat wishlist");
             Toast().fire({
                 icon: "error",
-                title: "Failed to load wishlist"
+                title: "Gagal memuat wishlist"
             });
         } finally {
             setLoading(false);
@@ -57,7 +57,7 @@ function Wishlist() {
         if (!courseId) {
             Toast().fire({
                 icon: "error",
-                title: "Invalid course"
+                title: "Kursus tidak valid"
             });
             return;
         }
@@ -90,17 +90,17 @@ function Wishlist() {
         return (
             <>
                 <BaseHeader />
-                <section className="modern-wishlist-page" style={{ minHeight: 'calc(100vh - 120px)' }}>
+                <section className="pt-5 pb-5 modern-wishlist-page" style={{ minHeight: 'calc(100vh - 120px)' }}>
                     <div className="container">
                         <Header />
-                        <div className="row mt-0 mt-md-4">
+                        <div className="row mt-0 md-4">
                             <Sidebar />
                             <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">Sedang memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Wishlist...</p>
+                                    <p className="mt-3 text-muted">Memuat Wishlist...</p>
                                 </div>
                             </div>
                         </div>
@@ -115,10 +115,10 @@ function Wishlist() {
         <>
             <BaseHeader />
 
-            <section className="modern-wishlist-page">
+            <section className="pt-5 pb-5 modern-wishlist-page">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row mt-0 md-4">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Page Header */}
@@ -128,10 +128,10 @@ function Wishlist() {
                                         <div className="col-lg-8">
                                             <h1 className="mb-3 fw-bold d-flex align-items-center">
                                                 <i className="fas fa-heart me-3" style={{ fontSize: '2.5rem' }}></i>
-                                                My Wishlist
+                                                Daftar Keinginan Saya
                                             </h1>
                                             <p className="mb-0 opacity-90 lead">
-                                                Your saved courses collection. Keep track of courses you want to take later.
+                                                Koleksi kursus tersimpan Anda. Lacak kursus yang ingin Anda ambil nanti.
                                             </p>
                                         </div>
                                         <div className="col-lg-4">
@@ -140,7 +140,7 @@ function Wishlist() {
                                                     <div className="wishlist-stat-number justify-content-end">
                                                         {wishlist?.length || 0}
                                                     </div>
-                                                    <div className="wishlist-stat-label">Active Courses</div>
+                                                    <div className="wishlist-stat-label">Kursus Tersimpan</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -152,14 +152,14 @@ function Wishlist() {
                             {error && (
                                 <div className="empty-state">
                                     <i className="fas fa-exclamation-triangle empty-icon text-warning"></i>
-                                    <h4 className="text-muted mb-3">Oops! Something went wrong</h4>
+                                    <h4 className="text-muted mb-3">Oops! Terjadi kesalahan</h4>
                                     <p className="text-muted mb-4">{error}</p>
                                     <button 
                                         onClick={fetchWishlist} 
                                         className="btn btn-modern"
                                     >
                                         <i className="fas fa-refresh me-2"></i>
-                                        Try Again
+                                        Coba Lagi
                                     </button>
                                 </div>
                             )}
@@ -186,7 +186,7 @@ function Wishlist() {
                                                                 onClick={() => addToWishlist(w.course?.id)} 
                                                                 className="wishlist-btn position-absolute"
                                                                 type="button"
-                                                                title={isCourseInWishlist(w.course?.id) ? "Remove from wishlist" : "Add to wishlist"}
+                                                                title={isCourseInWishlist(w.course?.id) ? "Hapus dari daftar keinginan" : "Tambah ke daftar keinginan"}
                                                                 style={{
                                                                     top: '15px',
                                                                     right: '15px'
@@ -202,7 +202,7 @@ function Wishlist() {
                                                             <div className="d-flex flex-wrap gap-2 mb-2" style={{ maxWidth: '100%' }}>
                                                                 <span className="badge badge-modern">
                                                                     <i className="fas fa-folder-open"></i>
-                                                                    <span className="badge-text">{w.course?.category?.title || 'General'}</span>
+                                                                    <span className="badge-text">{w.course?.category?.title || 'Umum'}</span>
                                                                 </span>
                                                                 <span className="badge badge-level">
                                                                     <i className="fas fa-signal"></i>
@@ -223,7 +223,7 @@ function Wishlist() {
                                                                         overflow: 'hidden'
                                                                     }}
                                                                 >
-                                                                    {w.course?.title || 'Course Title Not Available'}
+                                                                    {w.course?.title || 'Judul Kursus Tidak Tersedia'}
                                                                 </Link>
                                                             </h5>
 
@@ -231,11 +231,11 @@ function Wishlist() {
                                                             <div className="mb-3">
                                                                 <small className="text-muted d-block mb-1">
                                                                     <i className="fas fa-user me-1" style={{ color: '#667eea' }}></i>
-                                                                    By: {w.course?.teacher?.full_name || 'Unknown Teacher'}
+                                                                    Oleh: {w.course?.teacher?.full_name || 'Instruktur Tidak Diketahui'}
                                                                 </small>
                                                                 <small className="text-muted d-block">
                                                                     <i className="fas fa-users me-1" style={{ color: '#667eea' }}></i>
-                                                                    {w.course?.students?.length || 0} Student{(w.course?.students?.length || 0) !== 1 && "s"}
+                                                                    {w.course?.students?.length || 0} Siswa{(w.course?.students?.length || 0) !== 1 && "s"}
                                                                 </small>
                                                             </div>
 
@@ -251,7 +251,7 @@ function Wishlist() {
                                                                     />
                                                                 </div>
                                                                 <span className="text-warning fw-medium me-1">{w.course?.average_rating || 0}</span>
-                                                                <small className="text-muted">({w.course?.reviews?.length || 0} reviews)</small>
+                                                                <small className="text-muted">({w.course?.reviews?.length || 0} ulasan)</small>
                                                             </div>
                                                         </div>
 
@@ -262,7 +262,7 @@ function Wishlist() {
                                                                 className="btn btn-modern"
                                                             >
                                                                 <i className="fas fa-eye me-2"></i>
-                                                                View Details
+                                                                Lihat Detail
                                                             </Link>
                                                         </div>
                                                     </div>
@@ -272,13 +272,13 @@ function Wishlist() {
                                     ) : (
                                         <div className="empty-state">
                                             <i className="fas fa-heart empty-icon"></i>
-                                            <h4 className="text-muted mb-3">Your Wishlist is Empty</h4>
+                                            <h4 className="text-muted mb-3">Daftar Keinginan Anda Kosong</h4>
                                             <p className="text-muted mb-4">
-                                                You haven't saved any courses yet. Browse our course catalog and save courses you're interested in!
+                                                Anda belum menyimpan kursus apapun. Jelajahi katalog kursus kami dan simpan kursus yang Anda minati!
                                             </p>
                                             <Link to="/search" className="btn btn-modern">
                                                 <i className="fas fa-search me-2"></i>
-                                                Browse Courses
+                                                Jelajahi Kursus
                                             </Link>
                                         </div>
                                     )}

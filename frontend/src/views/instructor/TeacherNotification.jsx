@@ -53,7 +53,7 @@ function TeacherNotification() {
             fetchNoti();
             Toast().fire({
                 icon: "success",
-                title: "Notication Seen",
+                title: "Notifikasi Dibaca",
             });
         });
     };
@@ -63,7 +63,7 @@ function TeacherNotification() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-notification-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <section className="instructor-notification-page pt-5 pb-5" style={{ display: 'flex', alignItems: 'center' }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -71,9 +71,9 @@ function TeacherNotification() {
                             <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Loading Notifications...</p>
+                                    <p className="mt-3 text-muted">Memuat Notifikasi...</p>
                                 </div>
                             </div>
                         </div>
@@ -88,7 +88,7 @@ function TeacherNotification() {
         <>
             <BaseHeader />
 
-            <section className="instructor-notification-page" style={{ minHeight: '100vh', paddingTop: '3rem', paddingBottom: '3rem' }}>
+            <section className="instructor-notification-page pt-5 pb-5" style={{ minHeight: '100vh' }}>
                 <div className="container">
                     {/* Header Here */}
                     <Header />
@@ -126,10 +126,10 @@ function TeacherNotification() {
                                             fontSize: '2.5rem',
                                             fontWeight: 'bold'
                                         }}>
-                                            <i className="fas fa-bell me-3"></i>Notifications
+                                            <i className="fas fa-bell me-3"></i>Notifikasi
                                         </h1>
                                         <p className="mb-0 text-muted" style={{ fontSize: '1.1rem' }}>
-                                            Stay updated with all your important alerts
+                                            Tetap perbarui dengan semua pemberitahuan penting Anda
                                         </p>
                                     </div>
                                     <div className="text-end">
@@ -143,7 +143,7 @@ function TeacherNotification() {
                                                 fontWeight: '600'
                                             }}>
                                                 <i className="fas fa-exclamation-circle me-2"></i>
-                                                {(Array.isArray(noti) ? noti : [])?.filter(n => !n.seen)?.length || 0} Unread
+                                                {(Array.isArray(noti) ? noti : [])?.filter(n => !n.seen)?.length || 0} Belum Dibaca
                                             </div>
                                         </div>
                                     </div>
@@ -212,7 +212,7 @@ function TeacherNotification() {
                                                                             fontSize: '0.7rem',
                                                                             fontWeight: '600'
                                                                         }}>
-                                                                            NEW
+                                                                            BARU
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -258,7 +258,7 @@ function TeacherNotification() {
                                                                     }}
                                                                 >
                                                                     <i className="fas fa-check me-2"></i>
-                                                                    Mark as Read
+                                                                    Tandai sebagai Dibaca
                                                                 </button>
                                                             )}
                                                             {n.seen && (
@@ -270,7 +270,7 @@ function TeacherNotification() {
                                                                     alignItems: 'center'
                                                                 }}>
                                                                     <i className="fas fa-check-double me-2"></i>
-                                                                    Read
+                                                                    Dibaca
                                                                 </div>
                                                             )}
                                                         </div>
@@ -304,9 +304,9 @@ function TeacherNotification() {
                                                 color: '#3498db' 
                                             }}></i>
                                         </div>
-                                        <h4 className="mb-3" style={{ color: '#2c3e50' }}>No Notifications</h4>
+                                        <h4 className="mb-3" style={{ color: '#2c3e50' }}>Tidak Ada Notifikasi</h4>
                                         <p className="text-muted mb-0" style={{ fontSize: '1.1rem' }}>
-                                            You're all caught up! New notifications will appear here when they arrive.
+                                            Anda sudah mengikuti semuanya! Notifikasi baru akan muncul di sini saat tiba.
                                         </p>
                                     </div>
                                 )}

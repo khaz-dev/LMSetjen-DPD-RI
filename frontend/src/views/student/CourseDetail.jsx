@@ -164,7 +164,7 @@ function CourseDetail() {
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to load quiz details"
+                title: "Gagal memuat detail kuis"
             });
         }
     };
@@ -188,7 +188,7 @@ function CourseDetail() {
         if (!quiz?.can_attempt) {
             Toast().fire({
                 icon: "error",
-                title: "Daily attempt limit reached (3/3). Please try again tomorrow."
+                title: "Batas percobaan harian tercapai (3/3). Silakan coba lagi besok."
             });
             return;
         }
@@ -237,8 +237,8 @@ function CourseDetail() {
                             // Show time's up notification
                             Toast().fire({
                                 icon: "warning",
-                                title: "Time's Up!",
-                                text: "Quiz time has expired. Submitting your answers automatically.",
+                                title: "Waktu Habis!",
+                                text: "Waktu kuis telah habis. Jawaban Anda akan dikirim secara otomatis.",
                                 timer: 3000
                             });
                             
@@ -256,7 +256,7 @@ function CourseDetail() {
         } else {
             Toast().fire({
                 icon: "error",
-                title: "Quiz questions are not available. Please try again."
+                title: "Pertanyaan kuis tidak tersedia. Silakan coba lagi."
             });
         }
     };
@@ -310,8 +310,8 @@ function CourseDetail() {
                             // Show time's up notification
                             Toast().fire({
                                 icon: "warning",
-                                title: "Time's Up!",
-                                text: "Quiz time has expired. Submitting your answers automatically.",
+                                title: "Waktu Habis!",
+                                text: "Waktu kuis telah habis. Jawaban Anda akan dikirim secara otomatis.",
                                 timer: 3000
                             });
                             
@@ -329,14 +329,14 @@ function CourseDetail() {
             
             Toast().fire({
                 icon: "success",
-                title: "Quiz Resumed Successfully! 🎯",
-                text: "Continuing from where you left off. Good luck!"
+                title: "Kuis Dilanjutkan dengan Berhasil! 🎯",
+                text: "Melanjutkan dari tempat Anda berhenti. Semoga beruntung!"
             });
         } else {
             Toast().fire({
                 icon: "error",
-                title: "Resume Failed",
-                text: "Unable to resume quiz. Please try starting a new quiz."
+                title: "Lanjutkan Gagal",
+                text: "Tidak dapat melanjutkan kuis. Silakan coba mulai kuis baru."
             });
         }
     };
@@ -393,7 +393,7 @@ function CourseDetail() {
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to submit quiz. Please try again."
+                title: "Gagal mengirim kuis. Silakan coba lagi."
             });
             setIsQuizActive(false);
         }
@@ -453,19 +453,19 @@ function CourseDetail() {
                 // Refresh course data which will recalculate completion percentage including quizzes
                 await fetchCourseDetail(true); // true = prevent loading state
                 
-                // Show success message for auto-submit
+                // Tampilkan pesan sukses untuk pengiriman otomatis
                 Toast().fire({
                     icon: "info",
-                    title: "Quiz Auto-Submitted Successfully!",
-                    text: "Your answers have been submitted due to time expiry.",
+                    title: "Kuis Dikirim Secara Otomatis dengan Berhasil!",
+                    text: "Jawaban Anda telah dikirim karena waktu telah habis.",
                     timer: 4000
                 });
             }
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Auto-submit failed",
-                text: "Failed to submit quiz automatically. Please try again manually."
+                title: "Pengiriman otomatis gagal",
+                text: "Gagal mengirim kuis secara otomatis. Silakan coba lagi secara manual."
             });
             setIsQuizActive(false);
         }
@@ -538,8 +538,8 @@ function CourseDetail() {
             console.error("Error fetching course detail:", error);
             Toast().fire({
                 icon: "error",
-                title: "Failed to load course details",
-                text: "Please refresh the page to try again.",
+                title: "Gagal memuat detail kursus",
+                text: "Silakan segarkan halaman untuk mencoba lagi.",
                 timer: 4000
             });
         }).finally(() => {
@@ -751,22 +751,22 @@ function CourseDetail() {
 
     const showResumeDialog = (quiz, resumeData) => {
         Swal.fire({
-            title: "Resume Quiz?",
+            title: "Lanjutkan Kuis?",
             html: `
                 <div style="text-align: left; margin: 20px 0;">
-                    <p style="margin-bottom: 15px;"><strong>You have an incomplete quiz attempt:</strong></p>
+                    <p style="margin-bottom: 15px;"><strong>Anda memiliki percobaan kuis yang belum selesai:</strong></p>
                     <div style="padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #007bff;">
-                        <p style="margin: 5px 0;"><strong>📝 Quiz:</strong> ${quiz.title}</p>
-                        <p style="margin: 5px 0;"><strong>⏰ Time Remaining:</strong> ${Math.floor(resumeData.timeRemaining / 60)}:${(resumeData.timeRemaining % 60).toString().padStart(2, "0")}</p>
-                        <p style="margin: 5px 0;"><strong>📊 Progress:</strong> Question ${resumeData.currentQuestionIndex + 1} of ${quiz.questions.length}</p>
-                        <p style="margin: 5px 0;"><strong>📅 Started:</strong> ${new Date(resumeData.startTime).toLocaleString()}</p>
-                        <p style="margin: 5px 0; color: #6c757d; font-size: 0.9em;">💡 Your progress has been automatically saved</p>
+                        <p style="margin: 5px 0;"><strong>📝 Kuis:</strong> ${quiz.title}</p>
+                        <p style="margin: 5px 0;"><strong>⏰ Waktu Tersisa:</strong> ${Math.floor(resumeData.timeRemaining / 60)}:${(resumeData.timeRemaining % 60).toString().padStart(2, "0")}</p>
+                        <p style="margin: 5px 0;"><strong>📊 Kemajuan:</strong> Pertanyaan ${resumeData.currentQuestionIndex + 1} dari ${quiz.questions.length}</p>
+                        <p style="margin: 5px 0;"><strong>📅 Dimulai:</strong> ${new Date(resumeData.startTime).toLocaleString()}</p>
+                        <p style="margin: 5px 0; color: #6c757d; font-size: 0.9em;">💡 Kemajuan Anda telah disimpan secara otomatis</p>
                     </div>
                 </div>
             `,
             showCancelButton: true,
-            confirmButtonText: "🔄 Resume Quiz",
-            cancelButtonText: "🆕 Start New Quiz",
+            confirmButtonText: "🔄 Lanjutkan Kuis",
+            cancelButtonText: "🆕 Mulai Kuis Baru",
             confirmButtonColor: "#28a745",
             cancelButtonColor: "#dc3545",
             width: "500px",
@@ -786,8 +786,8 @@ function CourseDetail() {
                 setSelectedQuiz(quiz);
                 Toast().fire({
                     icon: "info",
-                    title: "Previous progress cleared",
-                    text: "You can now start a fresh quiz attempt."
+                    title: "Kemajuan sebelumnya dihapus",
+                    text: "Anda sekarang dapat memulai percobaan kuis yang baru."
                 });
             }
         });
@@ -924,7 +924,7 @@ function CourseDetail() {
         if (!createNote.title?.trim()) {
             Toast().fire({
                 icon: "error",
-                title: "Please enter a note title",
+                title: "Silakan masukkan judul catatan",
             });
             return;
         }
@@ -932,7 +932,7 @@ function CourseDetail() {
         if (!createNote.note?.trim()) {
             Toast().fire({
                 icon: "error",
-                title: "Please enter note content",
+                title: "Silakan masukkan konten catatan",
             });
             return;
         }
@@ -952,13 +952,13 @@ function CourseDetail() {
                 handleNoteClose(); // Close modal after successful creation
                 Toast().fire({
                     icon: "success",
-                    title: "Note created successfully",
+                    title: "Catatan berhasil dibuat",
                 });
             });
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to create note. Please try again.",
+                title: "Gagal membuat catatan. Silakan coba lagi.",
             });
         }
     };
@@ -970,7 +970,7 @@ function CourseDetail() {
         if (!createNote.title?.trim()) {
             Toast().fire({
                 icon: "error",
-                title: "Please enter a note title",
+                title: "Silakan masukkan judul catatan",
             });
             return;
         }
@@ -978,7 +978,7 @@ function CourseDetail() {
         if (!createNote.note?.trim()) {
             Toast().fire({
                 icon: "error",
-                title: "Please enter note content",
+                title: "Silakan masukkan konten catatan",
             });
             return;
         }
@@ -995,12 +995,12 @@ function CourseDetail() {
             handleNoteClose();
             Toast().fire({
                 icon: "success",
-                title: "Note updated successfully",
+                title: "Catatan berhasil diperbarui",
             });
         }).catch((error) => {
             Toast().fire({
                 icon: "error",
-                title: "Failed to update note. Please try again.",
+                title: "Gagal memperbarui catatan. Silakan coba lagi.",
             });
         });
     };
@@ -1010,7 +1010,7 @@ function CourseDetail() {
             fetchCourseDetail();
             Toast().fire({
                 icon: "success",
-                title: "Note deleted",
+                title: "Catatan berhasil dihapus",
             });
         });
     };
@@ -1040,7 +1040,7 @@ function CourseDetail() {
             handleQuestionClose();
             Toast().fire({
                 icon: "success",
-                title: "Question created successfully",
+                title: "Pertanyaan berhasil dibuat",
             });
         });
     };
@@ -1051,7 +1051,7 @@ function CourseDetail() {
         if (!selectedConversation) {
             Toast().fire({
                 icon: "error",
-                title: "Please select a conversation first",
+                title: "Silakan pilih percakapan terlebih dahulu",
             });
             return;
         }
@@ -1059,7 +1059,7 @@ function CourseDetail() {
         if (!createMessage.message.trim()) {
             Toast().fire({
                 icon: "error",
-                title: "Please enter a message"
+                title: "Silakan masukkan pesan"
             });
             return;
         }
@@ -1095,7 +1095,7 @@ function CourseDetail() {
         } catch (error) {
             Toast().fire({
                 icon: "error",
-                title: "Failed to send message"
+                title: "Gagal mengirim pesan"
             });
         }
     };
@@ -1139,7 +1139,7 @@ function CourseDetail() {
         if (!createReview.review.trim()) {
             Toast().fire({
                 icon: "error",
-                title: "Please write a review",
+                title: "Silakan tulis ulasan",
             });
             return;
         }
@@ -1147,7 +1147,7 @@ function CourseDetail() {
         if (!createReview.rating || createReview.rating < 1 || createReview.rating > 5) {
             Toast().fire({
                 icon: "error",
-                title: "Please select a rating",
+                title: "Silakan pilih rating",
             });
             return;
         }
@@ -1165,19 +1165,19 @@ function CourseDetail() {
             setIsEditingReview(false);
             Toast().fire({
                 icon: "success",
-                title: "Review created successfully",
+                title: "Ulasan berhasil dibuat",
             });
         }).catch((error) => {
             // Check if it's a duplicate review error
             if (error.response?.data?.error?.includes("already reviewed")) {
                 Toast().fire({
                     icon: "warning",
-                    title: "You have already reviewed this course",
+                    title: "Anda telah meninjau kursus ini",
                 });
             } else {
                 Toast().fire({
                     icon: "error",
-                    title: "Failed to submit review. Please try again.",
+                    title: "Gagal mengirim ulasan. Silakan coba lagi.",
                 });
             }
         });
@@ -1190,7 +1190,7 @@ function CourseDetail() {
         if (!createReview.review.trim()) {
             Toast().fire({
                 icon: "error",
-                title: "Please write a review",
+                title: "Silakan tulis ulasan",
             });
             return;
         }
@@ -1198,7 +1198,7 @@ function CourseDetail() {
         if (!createReview.rating || createReview.rating < 1 || createReview.rating > 5) {
             Toast().fire({
                 icon: "error",
-                title: "Please select a rating",
+                title: "Silakan pilih rating",
             });
             return;
         }
@@ -1216,12 +1216,12 @@ function CourseDetail() {
             setIsEditingReview(false);
             Toast().fire({
                 icon: "success",
-                title: "Review updated successfully",
+                title: "Ulasan berhasil diperbarui",
             });
         }).catch((error) => {
             Toast().fire({
                 icon: "error",
-                title: "Failed to update review. Please try again.",
+                title: "Gagal memperbarui ulasan. Silakan coba lagi.",
             });
         });
     };
@@ -1267,17 +1267,17 @@ function CourseDetail() {
                     }}
                 >
                     <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
+                        <span className="visually-hidden">Memuat...</span>
                     </div>
                 </div>
             )}
 
-            <section className="modern-student-course">
+            <section className="pt-5 pb-5 modern-student-course">
                 <div className="container">
                     {/* Header Here */}
                     <Header />
                         
-                        <div className="row mt-0 mt-md-4">
+                        <div className="row mt-0 md-4">
                             {/* Sidebar Here */}
                             <Sidebar />
                             
@@ -1311,17 +1311,17 @@ function CourseDetail() {
                                                 <div className="col-md-9 pe-2">
                                                     <h2 className="fw-bold mb-3 course-title-animated">{course?.course?.title}</h2>
                                                     <p className="opacity-90 mb-3 course-subtitle-animated">
-                                                        Continue your learning journey and track your progress
+                                                        Lanjutkan perjalanan pembelajaran Anda dan lacak kemajuan Anda
                                                     </p>
                                                     <div className="d-flex align-items-center gap-3 flex-wrap">
                                                         <span className="badge bg-white text-primary px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: "0.1s" }}>
                                                             <i className="fas fa-book me-1"></i>
-                                                            {completionStats.completedLessons}/{completionStats.totalLessons} Lessons
+                                                            {completionStats.completedLessons}/{completionStats.totalLessons} Pelajaran
                                                         </span>
                                                         {completionStats.totalQuizzes > 0 && (
                                                             <span className="badge bg-white text-success px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: "0.2s" }}>
                                                                 <i className="fas fa-brain me-1"></i>
-                                                                {completionStats.passedQuizzes}/{completionStats.totalQuizzes} Quizzes
+                                                                {completionStats.passedQuizzes}/{completionStats.totalQuizzes} Kuis
                                                             </span>
                                                         )}
                                                         <span className="badge bg-white text-primary px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: "0.3s" }}>
@@ -1338,7 +1338,7 @@ function CourseDetail() {
                                                         <div className="progress-inner">
                                                             <div className="text-center">
                                                                 <div className="h3 fw-bold mb-0">{completionPercentage || 0}%</div>
-                                                                <small>Complete</small>
+                                                                <small>Selesai</small>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1353,32 +1353,32 @@ function CourseDetail() {
                                     <ul className="nav nav-tabs nav-tabs-modern" id="courseTab" role="tablist">
                                         <li className="nav-item" role="presentation">
                                             <button className="nav-link active" id="lectures-tab" data-bs-toggle="tab" data-bs-target="#lectures" type="button" role="tab">
-                                                <i className="fas fa-play-circle me-2"></i>Lectures
+                                                <i className="fas fa-play-circle me-2"></i>Pelajaran
                                             </button>
                                         </li>
                                         <li className="nav-item" role="presentation">
                                             <button className="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">
-                                                <i className="fas fa-sticky-note me-2"></i>Notes
+                                                <i className="fas fa-sticky-note me-2"></i>Catatan
                                             </button>
                                         </li>
                                         <li className="nav-item" role="presentation">
                                             <button className="nav-link" id="discussions-tab" data-bs-toggle="tab" data-bs-target="#discussions" type="button" role="tab">
-                                                <i className="fas fa-comments me-2"></i>Discussions
+                                                <i className="fas fa-comments me-2"></i>Diskusi
                                             </button>
                                         </li>
                                         <li className="nav-item" role="presentation">
                                             <button className="nav-link" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz" type="button" role="tab">
-                                                <i className="fas fa-brain me-2"></i>Quizzes
+                                                <i className="fas fa-brain me-2"></i>Kuis
                                             </button>
                                         </li>
                                         <li className="nav-item" role="presentation">
                                             <button className="nav-link" id="certificate-tab" data-bs-toggle="tab" data-bs-target="#certificate" type="button" role="tab">
-                                                <i className="fas fa-certificate me-2"></i>Certificate
+                                                <i className="fas fa-certificate me-2"></i>Sertifikat
                                             </button>
                                         </li>
                                         <li className="nav-item" role="presentation">
                                             <button className="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab">
-                                                <i className="fas fa-star me-2"></i>Review
+                                                <i className="fas fa-star me-2"></i>Ulasan
                                             </button>
                                         </li>
                                     </ul>
@@ -1400,13 +1400,13 @@ function CourseDetail() {
                                         {/* Notes Tab */}
                                         <div className="tab-pane fade" id="notes" role="tabpanel">
                                             <div className="d-flex justify-content-between align-items-center mb-4">
-                                                <h4 className="mb-0">My Notes</h4>
+                                                <h4 className="mb-0">Catatan Saya</h4>
                                                 <button 
                                                     className="add-btn-modern" 
                                                     onClick={() => handleNoteShow(null)}
                                                 >
                                                     <i className="fas fa-plus"></i>
-                                                    Add Note
+                                                    Tambah Catatan
                                                 </button>
                                             </div>
                                             
@@ -1452,14 +1452,14 @@ function CourseDetail() {
                                                                     <button 
                                                                         className="btn-note-action edit" 
                                                                         onClick={() => handleNoteShow(n)}
-                                                                        title="Edit note"
+                                                                        title="Edit catatan"
                                                                     >
                                                                         <i className="fas fa-edit"></i>
                                                                     </button>
                                                                     <button 
                                                                         className="btn-note-action delete" 
                                                                         onClick={() => handleDeleteNote(n.id)}
-                                                                        title="Delete note"
+                                                                        title="Hapus catatan"
                                                                     >
                                                                         <i className="fas fa-trash"></i>
                                                                     </button>
@@ -1480,8 +1480,8 @@ function CourseDetail() {
                                             ) : (
                                                 <div className="empty-state">
                                                     <i className="fas fa-sticky-note empty-icon"></i>
-                                                    <h5>No notes yet</h5>
-                                                    <p>Start taking notes to remember important points</p>
+                                                    <h5>Belum ada catatan</h5>
+                                                    <p>Mulai membuat catatan untuk mengingat poin penting</p>
                                                 </div>
                                             )}
                                         </div>
@@ -1489,13 +1489,13 @@ function CourseDetail() {
                                         {/* Discussions Tab */}
                                         <div className="tab-pane fade" id="discussions" role="tabpanel">
                                             <div className="d-flex justify-content-between align-items-center mb-4">
-                                                <h4 className="mb-0">Course Discussions</h4>
+                                                <h4 className="mb-0">Diskusi Kursus</h4>
                                                 <button 
                                                     className="add-btn-modern" 
                                                     onClick={handleQuestionShow}
                                                 >
                                                     <i className="fas fa-plus"></i>
-                                                    Ask Question
+                                                    Ajukan Pertanyaan
                                                 </button>
                                             </div>
                                             
@@ -1532,13 +1532,13 @@ function CourseDetail() {
                                                             
                                                             <div className="question-content">
                                                                 <h5 className="question-title">
-                                                                    {q.title || "No Title"}
+                                                                    {q.title || "Tidak Ada Judul"}
                                                                 </h5>
                                                                 
                                                                 <div className="question-meta">
                                                                     <div className="question-meta-item">
                                                                         <i className="fas fa-user question-meta-icon"></i>
-                                                                        <span>{q.profile?.full_name || "Anonymous User"}</span>
+                                                                        <span>{q.profile?.full_name || "Pengguna Anonim"}</span>
                                                                     </div>
                                                                     <div className="question-meta-item">
                                                                         <i className="fas fa-calendar-alt question-meta-icon"></i>
@@ -1558,7 +1558,7 @@ function CourseDetail() {
                                                             <div className="question-stats">
                                                                 <span className="replies-badge">
                                                                     <i className="fas fa-comments"></i>
-                                                                    {q.messages?.length || 0} Replies
+                                                                    {q.messages?.length || 0} Balasan
                                                                 </span>
                                                             </div>
                                                             
@@ -1570,7 +1570,7 @@ function CourseDetail() {
                                                                 }}
                                                             >
                                                                 <i className="fas fa-comment-dots"></i>
-                                                                Join Conversation
+                                                                Bergabung dengan Percakapan
                                                                 <i className="fas fa-arrow-right discussion-arrow"></i>
                                                             </button>
                                                         </div>
@@ -1579,8 +1579,8 @@ function CourseDetail() {
                                             ) : (
                                                 <div className="empty-state">
                                                     <i className="fas fa-comments empty-icon"></i>
-                                                    <h5>No discussions yet</h5>
-                                                    <p>Be the first to ask a question or start a discussion</p>
+                                                    <h5>Belum ada diskusi</h5>
+                                                    <p>Jadilah yang pertama mengajukan pertanyaan atau memulai diskusi</p>
                                                 </div>
                                             )}
                                         </div>
@@ -1588,12 +1588,12 @@ function CourseDetail() {
                                         {/* Quiz Tab */}
                                         <div className="tab-pane fade" id="quiz" role="tabpanel">
                                             <div className="d-flex justify-content-between align-items-center mb-4">
-                                                <h4 className="mb-0">Course Quizzes</h4>
+                                                <h4 className="mb-0">Kuis Kursus</h4>
                                                 {quizzes.length > 0 && (
                                                     <div className="quiz-summary">
                                                         <span className="badge bg-primary px-3 py-2 rounded-pill">
                                                             <i className="fas fa-brain me-1"></i>
-                                                            {quizzes.length} Quiz{quizzes.length > 1 ? "zes" : ""} Available
+                                                            {quizzes.length} Kuis Tersedia
                                                         </span>
                                                     </div>
                                                 )}
@@ -1630,7 +1630,7 @@ function CourseDetail() {
                                                                     </div>
                                                                     <div className="quiz-header-content">
                                                                         <h1 className="student-quiz-title">{quiz.title}</h1>
-                                                                        <p className="student-quiz-description">{quiz.description || "Test your understanding of this course material"}</p>
+                                                                        <p className="student-quiz-description">{quiz.description || "Uji pemahaman Anda tentang materi kursus ini"}</p>
                                                                     </div>
                                                                 </div>
                                                                 
@@ -1640,21 +1640,21 @@ function CourseDetail() {
                                                                             <div className="student-stat-item">
                                                                                 <i className="fas fa-question-circle text-primary"></i>
                                                                                 <span className="student-stat-number">{quiz.total_questions}</span>
-                                                                                <span className="student-stat-label">Questions</span>
+                                                                                <span className="student-stat-label">Pertanyaan</span>
                                                                             </div>
                                                                         </div>
                                                                         <div className="col-4">
                                                                             <div className="student-stat-item">
                                                                                 <i className="fas fa-clock text-warning"></i>
                                                                                 <span className="student-stat-number">{quiz.total_questions}</span>
-                                                                                <span className="student-stat-label">Minutes</span>
+                                                                                <span className="student-stat-label">Menit</span>
                                                                             </div>
                                                                         </div>
                                                                         <div className="col-4">
                                                                             <div className="student-stat-item">
                                                                                 <i className="fas fa-trophy text-success"></i>
                                                                                 <span className="student-stat-number">{Math.round(quiz.best_score || 0)}%</span>
-                                                                                <span className="student-stat-label">Best</span>
+                                                                                <span className="student-stat-label">Terbaik</span>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -1666,28 +1666,28 @@ function CourseDetail() {
                                                                             {hasQuizProgress(quiz) ? (
                                                                                 <span className="text-info">
                                                                                     <i className="fas fa-play-circle me-1"></i>
-                                                                                    Resume Available
+                                                                                    Siap Dilanjutkan
                                                                                 </span>
                                                                             ) : quiz.is_passed ? (
                                                                                 <span className="text-success">
                                                                                     <i className="fas fa-check-circle me-1"></i>
-                                                                                    Passed
+                                                                                    Lulus
                                                                                 </span>
                                                                             ) : quiz.best_score > 0 ? (
                                                                                 <span className="text-warning">
                                                                                     <i className="fas fa-exclamation-triangle me-1"></i>
-                                                                                    Need Improvement
+                                                                                    Perlu Ditingkatkan
                                                                                 </span>
                                                                             ) : (
                                                                                 <span className="text-muted">
                                                                                     <i className="fas fa-clock me-1"></i>
-                                                                                    Not Attempted
+                                                                                    Belum Dicoba
                                                                                 </span>
                                                                             )}
                                                                         </span>
                                                                         <span className="attempts-counter">
                                                                             <i className="fas fa-redo me-1"></i>
-                                                                            {quiz.today_attempts}/3 attempts today
+                                                                            {quiz.today_attempts}/3 percobaan hari ini
                                                                         </span>
                                                                     </div>
                                                                     <div className="progress quiz-progress-bar">
@@ -1696,7 +1696,7 @@ function CourseDetail() {
                                                                             style={{width: `${quiz.best_score || 0}%`}}
                                                                         ></div>
                                                                     </div>
-                                                                    <small className="text-muted">Minimum passing score: 80%</small>
+                                                                    <small className="text-muted">Skor minimum untuk lulus: 80%</small>
                                                                 </div>
 
                                                                 <div className="student-quiz-actions">
@@ -1710,21 +1710,21 @@ function CourseDetail() {
                                                                                     return (
                                                                                         <>
                                                                                             <i className="fas fa-play-circle me-2"></i>
-                                                                                            Resume Quiz
+                                                                                            Lanjutkan Kuis
                                                                                         </>
                                                                                     );
                                                                                 } else if (quiz.best_score > 0) {
                                                                                     return (
                                                                                         <>
                                                                                             <i className="fas fa-redo me-2"></i>
-                                                                                            Retake Quiz
+                                                                                            Coba Lagi
                                                                                         </>
                                                                                     );
                                                                                 } else {
                                                                                     return (
                                                                                         <>
                                                                                             <i className="fas fa-play me-2"></i>
-                                                                                            Start Quiz
+                                                                                            Mulai Kuis
                                                                                         </>
                                                                                     );
                                                                                 }
@@ -1733,7 +1733,7 @@ function CourseDetail() {
                                                                     ) : (
                                                                         <button className="btn btn-secondary w-100" disabled>
                                                                             <i className="fas fa-ban me-2"></i>
-                                                                            Daily Limit Reached (3/3)
+                                                                            Batas Harian Tercapai (3/3)
                                                                         </button>
                                                                     )}
                                                                 </div>
@@ -1744,8 +1744,8 @@ function CourseDetail() {
                                             ) : (
                                                 <div className="empty-state">
                                                     <i className="fas fa-brain empty-icon"></i>
-                                                    <h5>No quizzes available</h5>
-                                                    <p>Quizzes will appear here once they are added to the course</p>
+                                                    <h5>Tidak ada kuis yang tersedia</h5>
+                                                    <p>Kuis akan muncul di sini setelah ditambahkan ke kursus</p>
                                                 </div>
                                             )}
                                         </div>
@@ -1760,18 +1760,18 @@ function CourseDetail() {
 
                                         {/* Review Tab */}
                                         <div className="tab-pane fade" id="review" role="tabpanel">
-                                            <h4 className="mb-4">Course Review</h4>
+                                            <h4 className="mb-4">Ulasan Kursus</h4>
                                             
                                             {studentReview ? (
                                                 !isEditingReview ? (
                                                     <div className="review-card-modern" style={{ position: "relative" }}>
                                                         <div className="d-flex justify-content-between align-items-start mb-3">
-                                                            <h5 className="mb-0">Your Review</h5>
+                                                            <h5 className="mb-0">Ulasan Anda</h5>
                                                             <div className="d-flex gap-2">
                                                                 <button 
                                                                     className="btn btn-outline-primary btn-sm"
                                                                     onClick={handleEditReview}
-                                                                    title="Edit your review"
+                                                                    title="Edit ulasan Anda"
                                                                 >
                                                                     <i className="fas fa-edit me-1"></i>
                                                                     Edit
@@ -1786,7 +1786,7 @@ function CourseDetail() {
                                                                 <span className="ms-2">({studentReview.rating}/5)</span>
                                                             </div>
                                                             <small className="text-muted">
-                                                                Reviewed on {moment(studentReview.date).format("MMM DD, YYYY")}
+                                                                Diulas pada {moment(studentReview.date).format("DD MMM YYYY")}
                                                             </small>
                                                         </div>
                                                         <p className="mb-3">{studentReview.review}</p>
@@ -1801,13 +1801,13 @@ function CourseDetail() {
                                                                         </div>
                                                                         <div className="flex-grow-1">
                                                                             <h4 className="mb-0 instructor-name text-primary">
-                                                                                {course.course?.teacher?.full_name || "Course Instructor"}
+                                                                                {course.course?.teacher?.full_name || "Instruktur Kursus"}
                                                                             </h4>
-                                                                            <small className="text-muted">Instructor Response</small>
+                                                                            <small className="text-muted">Balasan dari Instruktur</small>
                                                                         </div>
                                                                         <div className="reply-badge">
                                                                             <i className="fas fa-reply me-1"></i>
-                                                                            <small>Reply</small>
+                                                                            <small>Balasan</small>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -1819,14 +1819,14 @@ function CourseDetail() {
                                                             <div className="no-reply-section mt-4">
                                                                 <div className="d-flex align-items-center justify-content-center text-muted">
                                                                     <i className="fas fa-hourglass-half me-2"></i>
-                                                                    <small>Waiting for instructor response...</small>
+                                                                    <small>Menunggu balasan dari instruktur...</small>
                                                                 </div>
                                                             </div>
                                                         )}
                                                     </div>
                                                 ) : (
                                                     <div className="review-card-modern">
-                                                        <h5 className="mb-3">Edit Your Review</h5>
+                                                        <h5 className="mb-3">Edit Ulasan Anda</h5>
                                                         <form onSubmit={handleUpdateReviewSubmit}>
                                                             <div className="mb-3">
                                                                 <label className="form-label">Rating</label>
@@ -1841,14 +1841,14 @@ function CourseDetail() {
                                                                 </div>
                                                             </div>
                                                             <div className="mb-3">
-                                                                <label className="form-label">Your Review</label>
+                                                                <label className="form-label">Ulasan Anda</label>
                                                                 <textarea
                                                                     name="review"
                                                                     value={createReview.review}
                                                                     onChange={handleReviewChange}
                                                                     className="form-control form-control-modern"
                                                                     rows="4"
-                                                                    placeholder="Share your thoughts about this course..."
+                                                                    placeholder="Bagikan pemikiran Anda tentang kursus ini..."
                                                                 ></textarea>
                                                             </div>
                                                             <div className="review-edit-actions d-flex gap-2">
@@ -1858,7 +1858,7 @@ function CourseDetail() {
                                                                     disabled={!createReview.review.trim() || !createReview.rating}
                                                                 >
                                                                     <i className="fas fa-save me-2"></i>
-                                                                    Update Review
+                                                                    Perbarui Ulasan
                                                                 </button>
                                                                 <button 
                                                                     type="button" 
@@ -1866,7 +1866,7 @@ function CourseDetail() {
                                                                     onClick={handleCancelEditReview}
                                                                 >
                                                                     <i className="fas fa-times me-2"></i>
-                                                                    Cancel
+                                                                    Batal
                                                                 </button>
                                                             </div>
                                                         </form>
@@ -1874,7 +1874,7 @@ function CourseDetail() {
                                                 )
                                             ) : (
                                                 <div className="review-card-modern">
-                                                    <h5 className="mb-3">Rate This Course</h5>
+                                                    <h5 className="mb-3">Beri Rating Kursus Ini</h5>
                                                     <form onSubmit={handleCreateReviewSubmit}>
                                                         <div className="mb-3">
                                                             <label className="form-label">Rating</label>
@@ -1889,14 +1889,14 @@ function CourseDetail() {
                                                             </div>
                                                         </div>
                                                         <div className="mb-3">
-                                                            <label className="form-label">Your Review</label>
+                                                            <label className="form-label">Ulasan Anda</label>
                                                             <textarea
                                                                 name="review"
                                                                 value={createReview.review}
                                                                 onChange={handleReviewChange}
                                                                 className="form-control form-control-modern"
                                                                 rows="4"
-                                                                placeholder="Share your thoughts about this course..."
+                                                                placeholder="Bagikan pemikiran Anda tentang kursus ini..."
                                                             ></textarea>
                                                         </div>
                                                         <button 
@@ -1905,7 +1905,7 @@ function CourseDetail() {
                                                             disabled={!createReview.review.trim() || !createReview.rating}
                                                         >
                                                             <i className="fas fa-star me-2"></i>
-                                                            Submit Review
+                                                            Kirim Ulasan
                                                         </button>
                                                     </form>
                                                 </div>
@@ -1947,10 +1947,10 @@ function CourseDetail() {
                             </div>
                             <div className="modal-title-section">
                                 <h4 className="modal-title-modern">
-                                    {selectedNote ? "Edit Course Note" : "Add Course Note"}
+                                    {selectedNote ? "Edit Catatan Kursus" : "Tambah Catatan Kursus"}
                                 </h4>
                                 <p className="modal-subtitle">
-                                    {selectedNote ? "Update your note with new insights" : "Capture important insights and key takeaways from this course"}
+                                    {selectedNote ? "Perbarui catatan Anda dengan wawasan baru" : "Tangkap wawasan penting dan poin utama dari kursus ini"}
                                 </p>
                             </div>
                         </div>
@@ -1975,7 +1975,7 @@ function CourseDetail() {
                         <div className="form-group-modern">
                             <label className="form-label-modern">
                                 <i className="fas fa-heading form-label-icon-note"></i>
-                                Note Title
+                                Judul Catatan
                                 <span className="required-indicator">*</span>
                             </label>
                             <div className="input-wrapper-modern">
@@ -1983,7 +1983,7 @@ function CourseDetail() {
                                     type="text"
                                     name="title"
                                     className="form-input-modern form-input-note"
-                                    placeholder="Give your note a descriptive title..."
+                                    placeholder="Berikan judul yang deskriptif untuk catatan Anda..."
                                     value={createNote.title}
                                     onChange={handleNoteChange}
                                     required
@@ -1995,7 +1995,7 @@ function CourseDetail() {
                         <div className="form-group-modern">
                             <label className="form-label-modern">
                                 <i className="fas fa-edit form-label-icon-note"></i>
-                                Note Content
+                                Konten Catatan
                                 <span className="required-indicator">*</span>
                             </label>
                             <div className="textarea-wrapper-modern">
@@ -2003,13 +2003,13 @@ function CourseDetail() {
                                     name="note"
                                     className="form-textarea-modern form-textarea-note"
                                     rows="5"
-                                    placeholder="Write your note content here. Include key concepts, insights, or important points from the course..."
+                                    placeholder="Tulis isi catatan Anda di sini. Sertakan konsep kunci, wawasan, atau poin penting dari kursus..."
                                     value={createNote.note}
                                     onChange={handleNoteChange}
                                     required
                                 />
                                 <div className="character-counter">
-                                    {(createNote.note || "").length}/2000 characters
+                                    {(createNote.note || "").length}/2000 karakter
                                 </div>
                             </div>
                         </div>
@@ -2018,13 +2018,13 @@ function CourseDetail() {
                         <div className="form-group-modern">
                             <label className="color-picker-label">
                                 <i className="fas fa-palette form-label-icon-note"></i>
-                                Choose Note Color
+                                Pilih Warna Catatan
                             </label>
                             
                             {/* Color Preview */}
                             <div className="color-preview-section" style={{ marginBottom: "1rem" }}>
                                 <div className="color-preview-label" style={{ fontSize: "0.9rem", color: "#6c757d", marginBottom: "0.5rem" }}>
-                                    Selected Color Preview:
+                                    Pratinjau Warna Terpilih:
                                 </div>
                                 <div 
                                     className="color-preview-demo"
@@ -2039,7 +2039,7 @@ function CourseDetail() {
                                     }}
                                 >
                                     <i className="fas fa-sticky-note me-2"></i>
-                                    This is how your note will look
+                                    Inilah cara catatan Anda akan terlihat
                                 </div>
                             </div>
                             
@@ -2082,13 +2082,13 @@ function CourseDetail() {
                         <div className="tips-section">
                             <div className="tips-header">
                                 <i className="fas fa-lightbulb tips-icon"></i>
-                                <span>Tips for effective note-taking</span>
+                                <span>Tips untuk pembuatan catatan yang efektif</span>
                             </div>
                             <ul className="tips-list">
-                                <li><i className="fas fa-check"></i>Include specific timestamps for video references</li>
-                                <li><i className="fas fa-check"></i>Summarize key concepts in your own words</li>
-                                <li><i className="fas fa-check"></i>Note practical applications and examples</li>
-                                <li><i className="fas fa-check"></i>Add personal insights and reflections</li>
+                                <li><i className="fas fa-check"></i>Sertakan cap waktu spesifik untuk referensi video</li>
+                                <li><i className="fas fa-check"></i>Ringkas konsep kunci dengan kata-kata Anda sendiri</li>
+                                <li><i className="fas fa-check"></i>Catat aplikasi praktis dan contoh</li>
+                                <li><i className="fas fa-check"></i>Tambahkan wawasan pribadi dan refleksi</li>
                             </ul>
                         </div>
                     </div>
@@ -2103,7 +2103,7 @@ function CourseDetail() {
                             onClick={handleNoteClose}
                         >
                             <i className="fas fa-times"></i>
-                            Cancel
+                            <span>Cancel</span>
                         </button>
                         <button 
                             type="submit"
@@ -2151,8 +2151,8 @@ function CourseDetail() {
                                 <i className="fas fa-question-circle"></i>
                             </div>
                             <div className="modal-title-section">
-                                <h4 className="modal-title-modern">Ask a Question</h4>
-                                <p className="modal-subtitle">Share your question with the course community and get expert answers</p>
+                                <h4 className="modal-title-modern">Ajukan Pertanyaan</h4>
+                                <p className="modal-subtitle">Bagikan pertanyaan Anda dengan komunitas kursus dan dapatkan jawaban ahli</p>
                             </div>
                         </div>
                     </div>
@@ -2176,7 +2176,7 @@ function CourseDetail() {
                         <div className="form-group-modern">
                             <label className="form-label-modern">
                                 <i className="fas fa-heading form-label-icon"></i>
-                                Question Title
+                                Judul Pertanyaan
                                 <span className="required-indicator">*</span>
                             </label>
                             <div className="input-wrapper-modern">
@@ -2184,7 +2184,7 @@ function CourseDetail() {
                                     type="text"
                                     name="title"
                                     className="form-input-modern"
-                                    placeholder="Write a clear, descriptive title for your question..."
+                                    placeholder="Tulis judul yang jelas dan deskriptif untuk pertanyaan Anda..."
                                     value={createMessage.title}
                                     onChange={handleMessageChange}
                                     required
@@ -2196,7 +2196,7 @@ function CourseDetail() {
                         <div className="form-group-modern">
                             <label className="form-label-modern">
                                 <i className="fas fa-edit form-label-icon"></i>
-                                Question Details
+                                Detail Pertanyaan
                                 <span className="required-indicator">*</span>
                             </label>
                             <div className="textarea-wrapper-modern">
@@ -2204,13 +2204,13 @@ function CourseDetail() {
                                     name="message"
                                     className="form-textarea-modern"
                                     rows="4"
-                                    placeholder="Provide detailed information about your question. The more context you give, the better answers you'll receive..."
+                                    placeholder="Berikan informasi detail tentang pertanyaan Anda. Semakin banyak konteks yang Anda berikan, semakin baik jawaban yang akan Anda terima..."
                                     value={createMessage.message}
                                     onChange={handleMessageChange}
                                     required
                                 />
                                 <div className="character-counter">
-                                    {createMessage.message?.length || 0}/2000 characters
+                                    {createMessage.message?.length || 0}/2000 karakter
                                 </div>
                             </div>
                         </div>
@@ -2219,13 +2219,13 @@ function CourseDetail() {
                         <div className="tips-section">
                             <div className="tips-header">
                                 <i className="fas fa-lightbulb tips-icon"></i>
-                                <span>Tips for getting better answers</span>
+                                <span>Tips untuk mendapatkan jawaban yang lebih baik</span>
                             </div>
                             <ul className="tips-list">
-                                <li><i className="fas fa-check"></i>Be specific and clear in your question</li>
-                                <li><i className="fas fa-check"></i>Include relevant context and examples</li>
-                                <li><i className="fas fa-check"></i>Reference specific course content or timestamps</li>
-                                <li><i className="fas fa-check"></i>Search existing questions before posting</li>
+                                <li><i className="fas fa-check"></i>Jadilah spesifik dan jelas dalam pertanyaan Anda</li>
+                                <li><i className="fas fa-check"></i>Sertakan konteks dan contoh yang relevan</li>
+                                <li><i className="fas fa-check"></i>Rujuk konten kursus spesifik atau cap waktu</li>
+                                <li><i className="fas fa-check"></i>Cari pertanyaan yang ada sebelum memposting</li>
                             </ul>
                         </div>
                     </div>
@@ -2240,7 +2240,7 @@ function CourseDetail() {
                             onClick={handleQuestionClose}
                         >
                             <i className="fas fa-times"></i>
-                            Cancel
+                            <span>Batal</span>
                         </button>
                         <button 
                             type="submit"
@@ -2248,7 +2248,7 @@ function CourseDetail() {
                             disabled={!createMessage.title?.trim() || !createMessage.message?.trim()}
                         >
                             <i className="fas fa-paper-plane"></i>
-                            Ask Question
+                            Ajukan Pertanyaan
                         </button>
                     </div>
                 </div>
@@ -2265,8 +2265,8 @@ function CourseDetail() {
                                 <i className="fas fa-comments"></i>
                             </div>
                             <div className="modal-title-section">
-                                <h4 className="modal-title-modern">{selectedConversation?.title || "Discussion"}</h4>
-                                <p className="modal-subtitle">Join the conversation and share your thoughts</p>
+                                <h4 className="modal-title-modern">{selectedConversation?.title || "Diskusi"}</h4>
+                                <p className="modal-subtitle">Bergabunglah dalam percakapan dan bagikan pemikiran Anda</p>
                             </div>
                         </div>
                     </div>
@@ -2329,7 +2329,7 @@ function CourseDetail() {
                                                         <i className="fas fa-clock me-1"></i>
                                                         {moment(msg.date).format("DD MMM, YYYY - HH:mm")}
                                                     </div>
-                                                    <span>{msg.profile?.full_name || "Anonymous User"}</span>
+                                                    <span>{msg.profile?.full_name || "Pengguna Anonim"}</span>
                                                 </div>
                                                 <div className="message-text-qa">{msg.message}</div>
                                             </div>
@@ -2342,8 +2342,8 @@ function CourseDetail() {
                         {selectedConversation && (!selectedConversation.messages || selectedConversation.messages.length === 0) && (
                             <div className="empty-conversation-qa">
                                 <i className="fas fa-comment"></i>
-                                <h5>No replies yet</h5>
-                                <p>Be the first to reply to this question!</p>
+                                <h5>Belum ada balasan</h5>
+                                <p>Jadilah yang pertama membalas pertanyaan ini!</p>
                             </div>
                         )}
 
@@ -2365,7 +2365,7 @@ function CourseDetail() {
                             type="submit"
                         >
                             <i className="fas fa-paper-plane"></i>
-                            Send Reply
+                            Kirim Balasan
                         </button>
                     </form>
                 </div>
@@ -2415,31 +2415,31 @@ function CourseDetail() {
                             </div>
                             <h4>{selectedQuiz.title}</h4>
                             <p className="quiz-intro-description">
-                                {selectedQuiz.description || "Test your understanding of the course material"}
+                                {selectedQuiz.description || "Uji pemahaman Anda tentang materi kursus"}
                             </p>
                             
                             <div className="quiz-info-cards">
                                 <div className="quiz-info-card">
                                     <i className="fas fa-question-circle"></i>
                                     <span className="info-number">{selectedQuiz.total_questions}</span>
-                                    <span className="info-label">Questions</span>
+                                    <span className="info-label">Pertanyaan</span>
                                 </div>
                                 <div className="quiz-info-card">
                                     <i className="fas fa-clock"></i>
                                     <span className="info-number">{selectedQuiz.total_questions}</span>
-                                    <span className="info-label">Minutes</span>
+                                    <span className="info-label">Menit</span>
                                 </div>
                                 <div className="quiz-info-card">
                                     <i className="fas fa-trophy"></i>
                                     <span className="info-number">80%</span>
-                                    <span className="info-label">Pass Score</span>
+                                    <span className="info-label">Skor Lulus</span>
                                 </div>
                                 <div className="quiz-info-card">
                                     <i className="fas fa-redo"></i>
                                     <span className={`info-number ${selectedQuiz.today_attempts >= 3 ? "text-danger" : "text-warning"}`}>
                                         {selectedQuiz.today_attempts || 0}/3
                                     </span>
-                                    <span className="info-label">Today's Attempts</span>
+                                    <span className="info-label">Percobaan Hari Ini</span>
                                 </div>
                             </div>
 
@@ -2448,36 +2448,36 @@ function CourseDetail() {
                                 <div className={`quiz-attempt-warning ${selectedQuiz.can_attempt ? "warning" : "danger"}`}>
                                     <i className={`fas ${selectedQuiz.can_attempt ? "fa-exclamation-triangle" : "fa-ban"} me-2`}></i>
                                     {selectedQuiz.can_attempt 
-                                        ? `You have used ${selectedQuiz.today_attempts} of 3 daily attempts. ${3 - selectedQuiz.today_attempts} attempt${3 - selectedQuiz.today_attempts !== 1 ? "s" : ""} remaining.`
-                                        : "You have reached the daily limit of 3 attempts. Please try again tomorrow."
+                                        ? `Anda telah menggunakan ${selectedQuiz.today_attempts} dari 3 percobaan harian. ${3 - selectedQuiz.today_attempts} percobaan${3 - selectedQuiz.today_attempts !== 1 ? "" : ""} tersisa.`
+                                        : "Anda telah mencapai batas harian 3 percobaan. Silakan coba lagi besok."
                                     }
                                 </div>
                             )}
 
                             <div className="quiz-rules">
-                                <h6>Quiz Rules:</h6>
+                                <h6>Aturan Kuis:</h6>
                                 <ul>
-                                    <li>You have 1 minute per question</li>
-                                    <li>You need 80% to pass this quiz</li>
-                                    <li>You can attempt this quiz maximum 3 times per day</li>
-                                    <li>Once started, you cannot pause the quiz</li>
+                                    <li>Anda memiliki 1 menit per pertanyaan</li>
+                                    <li>Anda perlu 80% untuk lulus kuis ini</li>
+                                    <li>Anda dapat mencoba kuis ini maksimal 3 kali per hari</li>
+                                    <li>Setelah dimulai, Anda tidak dapat menjeda kuis</li>
                                 </ul>
                             </div>
 
                             <div className="quiz-start-actions">
                                 <button className="btn btn-secondary" onClick={handleQuizClose}>
                                     <i className="fas fa-arrow-left me-2"></i>
-                                    Back to Course
+                                    Kembali ke Kursus
                                 </button>
                                 {selectedQuiz.can_attempt ? (
                                     <button className="btn btn-primary" onClick={startQuiz}>
                                         <i className="fas fa-play me-2"></i>
-                                        Start Quiz
+                                        Mulai Kuis
                                     </button>
                                 ) : (
                                     <button className="btn btn-secondary" disabled>
                                         <i className="fas fa-ban me-2"></i>
-                                        Daily Limit Reached
+                                        Batas Harian Tercapai
                                     </button>
                                 )}
                             </div>
@@ -2497,7 +2497,7 @@ function CourseDetail() {
                             
                             <div className="quiz-progress-info">
                                 <div className="question-counter">
-                                    Question {currentQuestionIndex + 1} of {selectedQuiz.questions?.length || 0}
+                                    Pertanyaan {currentQuestionIndex + 1} dari {selectedQuiz.questions?.length || 0}
                                 </div>
                                 <div className="quiz-timer">
                                     <i className="fas fa-clock me-2"></i>
@@ -2563,7 +2563,7 @@ function CourseDetail() {
                                         disabled={currentQuestionIndex === 0}
                                     >
                                         <i className="fas fa-arrow-left me-2"></i>
-                                        Previous
+                                        Sebelumnya
                                     </button>
                                     
                                     {currentQuestionIndex < (selectedQuiz.questions?.length || 0) - 1 ? (
@@ -2582,7 +2582,7 @@ function CourseDetail() {
                                                 }
                                             }}
                                         >
-                                            Next
+                                            Berikutnya
                                             <i className="fas fa-arrow-right ms-2"></i>
                                         </button>
                                     ) : (
@@ -2591,7 +2591,7 @@ function CourseDetail() {
                                             onClick={submitQuiz}
                                         >
                                             <i className="fas fa-check me-2"></i>
-                                            Submit Quiz
+                                            Kirim Kuis
                                         </button>
                                     )}
                                 </div>
@@ -2607,30 +2607,30 @@ function CourseDetail() {
                                 <i className={`fas ${quizResult.passed ? "fa-trophy" : "fa-times-circle"}`}></i>
                             </div>
                             <h4 className={`quiz-result-title ${quizResult.passed ? "text-success" : "text-danger"}`}>
-                                {quizResult.passed ? "Congratulations!" : "Quiz Failed"}
+                                {quizResult.passed ? "Selamat!" : "Kuis Gagal"}
                             </h4>
                             <p className="quiz-result-message">
                                 {quizResult.passed 
-                                    ? "You have successfully passed the quiz!" 
-                                    : "You need 80% or higher to pass. Try again!"}
+                                    ? "Anda telah berhasil lulus kuis!" 
+                                    : "Anda membutuhkan 80% atau lebih untuk lulus. Coba lagi!"}
                             </p>
                         </div>
 
                         <div className="quiz-result-stats">
                             <div className="result-stat">
-                                <span className="student-stat-label">Your Score</span>
+                                <span className="student-stat-label">Skor Anda</span>
                                 <span className={`stat-value ${quizResult.passed ? "text-success" : "text-danger"}`}>
                                     {Math.round(quizResult.score)}%
                                 </span>
                             </div>
                             <div className="result-stat">
-                                <span className="student-stat-label">Correct Answers</span>
+                                <span className="student-stat-label">Jawaban Benar</span>
                                 <span className="stat-value">
                                     {quizResult.correct_answers}/{quizResult.total_questions}
                                 </span>
                             </div>
                             <div className="result-stat">
-                                <span className="student-stat-label">Time Taken</span>
+                                <span className="student-stat-label">Waktu yang Digunakan</span>
                                 <span className="stat-value">
                                     {(() => {
                                         const timeTaken = quizResult.time_taken || 0;
@@ -2641,14 +2641,14 @@ function CourseDetail() {
                                 </span>
                             </div>
                             <div className="result-stat">
-                                <span className="student-stat-label">Today's Attempts</span>
+                                <span className="student-stat-label">Percobaan Hari Ini</span>
                                 <span className={`stat-value ${quizResult.attempts_left === 0 ? "text-danger" : "text-warning"}`}>
                                     {quizResult.today_attempts || 0}/{quizResult.max_daily_attempts || 3}
                                 </span>
                             </div>
                             {(quizResult.attempts_left !== undefined && quizResult.attempts_left > 0) && (
                                 <div className="result-stat">
-                                    <span className="student-stat-label">Attempts Left</span>
+                                    <span className="student-stat-label">Percobaan Tersisa</span>
                                     <span className="stat-value text-info">
                                         {quizResult.attempts_left}
                                     </span>
@@ -2661,8 +2661,8 @@ function CourseDetail() {
                             <div className={`attempt-status-alert ${quizResult.can_attempt ? "alert-warning" : "alert-danger"}`}>
                                 <i className={`fas ${quizResult.can_attempt ? "fa-exclamation-triangle" : "fa-ban"} me-2`}></i>
                                 {quizResult.can_attempt 
-                                    ? `You have ${quizResult.attempts_left} attempt${quizResult.attempts_left !== 1 ? "s" : ""} left today. You need 80% to pass.`
-                                    : "Daily limit reached! You can try again tomorrow. (3 attempts per day)"
+                                    ? `Anda memiliki ${quizResult.attempts_left} percobaan${quizResult.attempts_left !== 1 ? "" : ""} tersisa hari ini. Anda perlu 80% untuk lulus.`
+                                    : "Batas harian tercapai! Anda dapat mencoba lagi besok. (3 percobaan per hari)"
                                 }
                             </div>
                         )}
@@ -2670,24 +2670,24 @@ function CourseDetail() {
                         <div className="quiz-result-actions">
                             <button className="btn btn-secondary" onClick={handleQuizClose}>
                                 <i className="fas fa-arrow-left me-2"></i>
-                                Back to Course
+                                Kembali ke Kursus
                             </button>
                             {!quizResult.passed && quizResult.can_attempt && (
                                 <button className="btn btn-primary" onClick={startQuiz}>
                                     <i className="fas fa-redo me-2"></i>
-                                    Try Again ({quizResult.attempts_left} left)
+                                    Coba Lagi ({quizResult.attempts_left} tersisa)
                                 </button>
                             )}
                             {!quizResult.passed && !quizResult.can_attempt && (
                                 <button className="btn btn-secondary" disabled>
                                     <i className="fas fa-ban me-2"></i>
-                                    Daily Limit Reached
+                                    Batas Harian Tercapai
                                 </button>
                             )}
                             {quizResult.passed && (
                                 <button className="btn btn-success" onClick={handleQuizClose}>
                                     <i className="fas fa-check me-2"></i>
-                                    Quiz Passed!
+                                    Kuis Lulus!
                                 </button>
                             )}
                         </div>

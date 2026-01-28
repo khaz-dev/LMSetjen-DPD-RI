@@ -73,7 +73,7 @@ function DashboardAdmin() {
             console.error("Error fetching dashboard data:", error);
             Toast().fire({
                 icon: "error",
-                title: "Failed to load dashboard data"
+                title: "Gagal memuat data dashboard"
             });
         }
     };
@@ -98,6 +98,40 @@ function DashboardAdmin() {
         }
     };
 
+    // Translation mapping for system health field names
+    const fieldTranslations = {
+        // Database statistics
+        database_size: "Ukuran Database",
+        total_tables: "Total Tabel",
+        active_connections: "Koneksi Aktif",
+        cache_hit_ratio: "Rasio Cache Hit",
+        query_count: "Jumlah Query",
+        last_backup: "Backup Terakhir",
+        table_count: "Jumlah Tabel",
+        record_count: "Jumlah Record",
+        storage_used: "Penyimpanan Digunakan",
+        storage_available: "Penyimpanan Tersedia",
+        
+        // Server information
+        server_name: "Nama Server",
+        operating_system: "Sistem Operasi",
+        python_version: "Versi Python",
+        django_version: "Versi Django",
+        database_engine: "Engine Database",
+        server_uptime: "Waktu Aktif Server",
+        cpu_usage: "Penggunaan CPU",
+        memory_usage: "Penggunaan Memori",
+        disk_usage: "Penggunaan Disk",
+        ssl_enabled: "SSL Diaktifkan",
+        debug_mode: "Mode Debug",
+        allowed_hosts: "Host yang Diizinkan"
+    };
+
+    // Function to translate field names
+    const translateFieldName = (fieldName) => {
+        return fieldTranslations[fieldName] || fieldName.replace(/_/g, " ");
+    };
+
     // Chart configurations
     const getEnrollmentChartData = () => {
         if (!enrollmentAnalytics?.monthly_enrollments) return null;
@@ -107,7 +141,7 @@ function DashboardAdmin() {
                 `${item.month.substring(0, 3)} ${item.year}`
             ),
             datasets: [{
-                label: "Monthly Enrollments",
+                label: "Pendaftaran Bulanan",
                 data: enrollmentAnalytics.monthly_enrollments.map(item => item.enrollments),
                 borderColor: "rgb(75, 192, 192)",
                 backgroundColor: "rgba(75, 192, 192, 0.2)",
@@ -163,8 +197,8 @@ function DashboardAdmin() {
                     <div className="row justify-content-center">
                         <div className="col-md-6 text-center">
                             <i className="fas fa-shield-alt fa-5x text-danger mb-4"></i>
-                            <h2>Access Denied</h2>
-                            <p className="lead">You don't have permission to access the admin panel.</p>
+                            <h2>Akses Ditolak</h2>
+                            <p className="lead">Anda tidak memiliki izin untuk mengakses panel admin.</p>
                         </div>
                     </div>
                 </div>
@@ -181,9 +215,9 @@ function DashboardAdmin() {
                     <div className="row justify-content-center">
                         <div className="col-md-6 text-center">
                             <div className="spinner-border text-primary" style={{width: "3rem", height: "3rem"}}>
-                                <span className="visually-hidden">Loading...</span>
+                                <span className="visually-hidden">Memuat...</span>
                             </div>
-                            <p className="mt-3">Loading admin dashboard...</p>
+                            <p className="mt-3">Memuat dashboard admin...</p>
                         </div>
                     </div>
                 </div>
@@ -204,20 +238,20 @@ function DashboardAdmin() {
                             <div className="header-text">
                                 <h1 className="dashboard-title">
                                     <i className="fas fa-tachometer-alt me-3"></i>
-                                    Admin Dashboard
+                                    Dashboard Admin
                                 </h1>
                                 <p className="dashboard-subtitle">
-                                    Welcome back, {userData?.full_name}! Here's what's happening with your LMS system.
+                                    Selamat datang kembali, {userData?.full_name}! Berikut yang terjadi dengan sistem LMS Anda.
                                 </p>
                             </div>
                             <div className="dashboard-actions">
                                 <button className="btn btn-primary me-2">
                                     <i className="fas fa-download me-2"></i>
-                                    Export Report
+                                    Unduh Laporan
                                 </button>
                                 <button className="btn btn-outline-secondary">
                                     <i className="fas fa-sync-alt me-2"></i>
-                                    Refresh
+                                    Segarkan
                                 </button>
                             </div>
                         </div>
@@ -230,7 +264,7 @@ function DashboardAdmin() {
                                 className={`nav-link ${activeTab === "overview" ? "active" : ""}`}
                                 onClick={() => setActiveTab("overview")}
                             >
-                                <i className="fas fa-chart-line me-2"></i>Overview
+                                <i className="fas fa-chart-line me-2"></i>Gambaran Umum
                             </button>
                         </li>
                         <li className="nav-item">
@@ -238,7 +272,7 @@ function DashboardAdmin() {
                                 className={`nav-link ${activeTab === "analytics" ? "active" : ""}`}
                                 onClick={() => setActiveTab("analytics")}
                             >
-                                <i className="fas fa-chart-bar me-2"></i>Analytics
+                                <i className="fas fa-chart-bar me-2"></i>Analitik
                             </button>
                         </li>
                         <li className="nav-item">
@@ -246,7 +280,7 @@ function DashboardAdmin() {
                                 className={`nav-link ${activeTab === "system" ? "active" : ""}`}
                                 onClick={() => setActiveTab("system")}
                             >
-                                <i className="fas fa-server me-2"></i>System Health
+                                <i className="fas fa-server me-2"></i>Kesehatan Sistem
                             </button>
                         </li>
                         <li className="nav-item">
@@ -254,7 +288,7 @@ function DashboardAdmin() {
                                 className={`nav-link ${activeTab === "activity" ? "active" : ""}`}
                                 onClick={() => setActiveTab("activity")}
                             >
-                                <i className="fas fa-activity me-2"></i>Recent Activity
+                                <i className="fas fa-activity me-2"></i>Aktivitas Terbaru
                             </button>
                         </li>
                         <li className="nav-item">
@@ -262,7 +296,7 @@ function DashboardAdmin() {
                                 className={`nav-link ${activeTab === "content-gaps" ? "active" : ""}`}
                                 onClick={() => setActiveTab("content-gaps")}
                             >
-                                <i className="fas fa-search-minus me-2"></i>Content Gaps
+                                <i className="fas fa-search-minus me-2"></i>Celah Konten
                             </button>
                         </li>
                         <li className="nav-item">
@@ -270,7 +304,7 @@ function DashboardAdmin() {
                                 className={`nav-link ${activeTab === "at-risk" ? "active" : ""}`}
                                 onClick={() => setActiveTab("at-risk")}
                             >
-                                <i className="fas fa-user-shield me-2"></i>At-Risk Students
+                                <i className="fas fa-user-shield me-2"></i>Siswa Berisiko
                             </button>
                         </li>
                         <li className="nav-item">
@@ -278,7 +312,7 @@ function DashboardAdmin() {
                                 className={`nav-link ${activeTab === "recommendations" ? "active" : ""}`}
                                 onClick={() => setActiveTab("recommendations")}
                             >
-                                <i className="fas fa-star me-2"></i>Recommendations
+                                <i className="fas fa-star me-2"></i>Rekomendasi
                             </button>
                         </li>
                         <li className="nav-item">
@@ -286,7 +320,7 @@ function DashboardAdmin() {
                                 className={`nav-link ${activeTab === "search-quality" ? "active" : ""}`}
                                 onClick={() => setActiveTab("search-quality")}
                             >
-                                <i className="fas fa-chart-line me-2"></i>Search Quality
+                                <i className="fas fa-chart-line me-2"></i>Kualitas Pencarian
                             </button>
                         </li>
                         <li className="nav-item">
@@ -294,7 +328,7 @@ function DashboardAdmin() {
                                 className={`nav-link ${activeTab === "query-taxonomy" ? "active" : ""}`}
                                 onClick={() => setActiveTab("query-taxonomy")}
                             >
-                                <i className="fas fa-tags me-2"></i>Query Taxonomy
+                                <i className="fas fa-tags me-2"></i>Taksonomi Kueri
                             </button>
                         </li>
                     </ul>
@@ -314,9 +348,9 @@ function DashboardAdmin() {
                                                 </div>
                                                 <div className="stat-info">
                                                     <h4 className="stat-number">{dashboardData?.total_students || 0}</h4>
-                                                    <p className="stat-label">Total Students</p>
+                                                    <p className="stat-label">Total Siswa</p>
                                                     <span className="stat-change positive">
-                                                        +{dashboardData?.recent_registrations || 0} this month
+                                                        +{dashboardData?.recent_registrations || 0} bulan ini
                                                     </span>
                                                 </div>
                                             </div>
@@ -331,9 +365,9 @@ function DashboardAdmin() {
                                                 </div>
                                                 <div className="stat-info">
                                                     <h4 className="stat-number">{dashboardData?.total_teachers || 0}</h4>
-                                                    <p className="stat-label">Total Teachers</p>
+                                                    <p className="stat-label">Total Instruktur</p>
                                                     <span className="stat-change neutral">
-                                                        {dashboardData?.active_teachers?.length || 0} active
+                                                        {dashboardData?.active_teachers?.length || 0} aktif
                                                     </span>
                                                 </div>
                                             </div>
@@ -348,9 +382,9 @@ function DashboardAdmin() {
                                                 </div>
                                                 <div className="stat-info">
                                                     <h4 className="stat-number">{dashboardData?.total_courses || 0}</h4>
-                                                    <p className="stat-label">Total Courses</p>
+                                                    <p className="stat-label">Total Kursus</p>
                                                     <span className="stat-change positive">
-                                                        {dashboardData?.active_courses || 0} published
+                                                        {dashboardData?.active_courses || 0} dipublikasikan
                                                     </span>
                                                 </div>
                                             </div>
@@ -365,9 +399,9 @@ function DashboardAdmin() {
                                                 </div>
                                                 <div className="stat-info">
                                                     <h4 className="stat-number">{dashboardData?.total_enrollments || 0}</h4>
-                                                    <p className="stat-label">Total Enrollments</p>
+                                                    <p className="stat-label">Total Pendaftaran</p>
                                                     <span className="stat-change positive">
-                                                        +{dashboardData?.recent_enrollments || 0} this month
+                                                        +{dashboardData?.recent_enrollments || 0} bulan ini
                                                     </span>
                                                 </div>
                                             </div>
@@ -384,7 +418,7 @@ function DashboardAdmin() {
                                             </div>
                                             <div className="mini-stat-content">
                                                 <h5>{dashboardData?.total_certificates || 0}</h5>
-                                                <p>Certificates Issued</p>
+                                                <p>Sertifikat Diterbitkan</p>
                                             </div>
                                         </div>
                                     </div>
@@ -396,7 +430,7 @@ function DashboardAdmin() {
                                             </div>
                                             <div className="mini-stat-content">
                                                 <h5>{dashboardData?.total_reviews || 0}</h5>
-                                                <p>Total Reviews</p>
+                                                <p>Total Ulasan</p>
                                             </div>
                                         </div>
                                     </div>
@@ -408,7 +442,7 @@ function DashboardAdmin() {
                                             </div>
                                             <div className="mini-stat-content">
                                                 <h5>{dashboardData?.total_quizzes || 0}</h5>
-                                                <p>Total Quizzes</p>
+                                                <p>Total Kuis</p>
                                             </div>
                                         </div>
                                     </div>
@@ -420,7 +454,7 @@ function DashboardAdmin() {
                                             </div>
                                             <div className="mini-stat-content">
                                                 <h5>{dashboardData?.completion_rate || 0}%</h5>
-                                                <p>Completion Rate</p>
+                                                <p>Tingkat Penyelesaian</p>
                                             </div>
                                         </div>
                                     </div>
@@ -433,7 +467,7 @@ function DashboardAdmin() {
                                             <div className="panel-header">
                                                 <h5 className="panel-title">
                                                     <i className="fas fa-trophy me-2"></i>
-                                                    Top Performing Courses
+                                                    Kursus Terbaik
                                                 </h5>
                                             </div>
                                             <div className="activity-list">
@@ -454,7 +488,7 @@ function DashboardAdmin() {
                                                 ) : (
                                                     <div className="empty-state">
                                                         <i className="fas fa-book-open"></i>
-                                                        <p>No course data available</p>
+                                                        <p>Data kursus tidak tersedia</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -466,7 +500,7 @@ function DashboardAdmin() {
                                             <div className="panel-header">
                                                 <h5 className="panel-title">
                                                     <i className="fas fa-users me-2"></i>
-                                                    Most Active Teachers
+                                                    Instruktur Paling Aktif
                                                 </h5>
                                             </div>
                                             <div className="activity-list">
@@ -487,7 +521,7 @@ function DashboardAdmin() {
                                                 ) : (
                                                     <div className="empty-state">
                                                         <i className="fas fa-chalkboard-teacher"></i>
-                                                        <p>No teacher data available</p>
+                                                        <p>Data instruktur tidak tersedia</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -503,9 +537,9 @@ function DashboardAdmin() {
                                 <Suspense fallback={
                                     <div className="text-center py-5">
                                         <div className="spinner-border text-primary" role="status">
-                                            <span className="visually-hidden">Loading charts...</span>
+                                            <span className="visually-hidden">Memuat grafik...</span>
                                         </div>
-                                        <p className="mt-3 text-muted">Loading analytics...</p>
+                                        <p className="mt-3 text-muted">Memuat analitik...</p>
                                     </div>
                                 }>
                                 <div className="row">
@@ -513,7 +547,7 @@ function DashboardAdmin() {
                                     <div className="col-lg-8 mb-4">
                                         <div className="chart-panel">
                                             <div className="panel-header">
-                                                <h5 className="panel-title">Enrollment Trends (Last 12 Months)</h5>
+                                                <h5 className="panel-title">Tren Pendaftaran (12 Bulan Terakhir)</h5>
                                             </div>
                                             <div className="chart-container">
                                                 {getEnrollmentChartData() && (
@@ -527,7 +561,7 @@ function DashboardAdmin() {
                                                                 },
                                                                 title: {
                                                                     display: true,
-                                                                    text: "Monthly Enrollment Statistics"
+                                                                    text: "Statistik Pendaftaran Bulanan"
                                                                 }
                                                             }
                                                         }}
@@ -541,7 +575,7 @@ function DashboardAdmin() {
                                     <div className="col-lg-4 mb-4">
                                         <div className="chart-panel">
                                             <div className="panel-header">
-                                                <h5 className="panel-title">Category Distribution</h5>
+                                                <h5 className="panel-title">Distribusi Kategori</h5>
                                             </div>
                                             <div className="chart-container">
                                                 {getCategoryChartData() && (
@@ -565,7 +599,7 @@ function DashboardAdmin() {
                                     <div className="col-12 mb-4">
                                         <div className="chart-panel">
                                             <div className="panel-header">
-                                                <h5 className="panel-title">Top Performing Courses</h5>
+                                                <h5 className="panel-title">Kursus Terbaik</h5>
                                             </div>
                                             <div className="chart-container">
                                                 {getTopCoursesChartData() && (
@@ -579,7 +613,7 @@ function DashboardAdmin() {
                                                                 },
                                                                 title: {
                                                                     display: true,
-                                                                    text: "Course Enrollment Numbers"
+                                                                    text: "Jumlah Pendaftaran Kursus"
                                                                 }
                                                             }
                                                         }}
@@ -602,11 +636,11 @@ function DashboardAdmin() {
                                             <div className="panel-header">
                                                 <h5 className="panel-title">
                                                     <i className="fas fa-heartbeat me-2"></i>
-                                                    System Health Status
+                                                    Status Kesehatan Sistem
                                                 </h5>
                                                 <span className="health-status online">
                                                     <i className="fas fa-check-circle"></i>
-                                                    All Systems Operational
+                                                    Semua Sistem Berfungsi
                                                 </span>
                                             </div>
                                             <div className="system-metrics">
@@ -615,7 +649,7 @@ function DashboardAdmin() {
                                                         <div key={key} className="col-md-4 mb-3">
                                                             <div className="metric-card">
                                                                 <h4>{value}</h4>
-                                                                <p>{key.replace(/_/g, " ").toUpperCase()}</p>
+                                                                <p>{translateFieldName(key).toUpperCase()}</p>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -627,14 +661,14 @@ function DashboardAdmin() {
                                     <div className="col-lg-4 mb-4">
                                         <div className="server-info-panel">
                                             <div className="panel-header">
-                                                <h5 className="panel-title">Server Information</h5>
+                                                <h5 className="panel-title">Informasi Server</h5>
                                             </div>
                                             <div className="server-info-list">
                                                 {Object.entries(systemHealth.server_information).map(([key, value]) => (
                                                     <div key={key} className="info-item">
-                                                        <span className="info-label">{key.replace(/_/g, " ")}</span>
+                                                        <span className="info-label">{translateFieldName(key)}</span>
                                                         <span className="info-value">
-                                                            {typeof value === "boolean" ? (value ? "Yes" : "No") : value.toString()}
+                                                            {typeof value === "boolean" ? (value ? "Ya" : "Tidak") : value.toString()}
                                                         </span>
                                                     </div>
                                                 ))}
@@ -654,7 +688,7 @@ function DashboardAdmin() {
                                             <div className="panel-header">
                                                 <h5 className="panel-title">
                                                     <i className="fas fa-user-plus me-2"></i>
-                                                    Recent Enrollments
+                                                    Pendaftaran Terbaru
                                                 </h5>
                                             </div>
                                             <div className="activity-list">
@@ -664,10 +698,10 @@ function DashboardAdmin() {
                                                             <div className="activity-icon bg-info">
                                                                 <i className="fas fa-user-plus text-white"></i>
                                                             </div>
-                                                            <div className="activity-content">
+                                                                            <div className="activity-content">
                                                                 <h6 className="activity-title">{enrollment.student}</h6>
                                                                 <p className="activity-description">
-                                                                    enrolled in "{enrollment.course}"
+                                                                    mendaftar di "{enrollment.course}"
                                                                 </p>
                                                                 <small className="activity-time">
                                                                     {new Date(enrollment.date).toLocaleDateString()}
@@ -678,7 +712,7 @@ function DashboardAdmin() {
                                                 ) : (
                                                     <div className="empty-state">
                                                         <i className="fas fa-user-plus"></i>
-                                                        <p>No recent enrollments</p>
+                                                        <p>Tidak ada pendaftaran terbaru</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -690,7 +724,7 @@ function DashboardAdmin() {
                                             <div className="panel-header">
                                                 <h5 className="panel-title">
                                                     <i className="fas fa-star me-2"></i>
-                                                    Recent Reviews
+                                                    Ulasan Terbaru
                                                 </h5>
                                             </div>
                                             <div className="activity-list">
@@ -700,10 +734,10 @@ function DashboardAdmin() {
                                                             <div className="activity-icon bg-warning text-white">
                                                                 <i className="fas fa-star"></i>
                                                             </div>
-                                                            <div className="activity-content">
+                                                                            <div className="activity-content">
                                                                 <h6 className="activity-title">{review.student}</h6>
                                                                 <p className="activity-description">
-                                                                    rated "{review.course}" - {review.rating}/5 stars
+                                                                    memberi nilai "{review.course}" - {review.rating}/5 bintang
                                                                 </p>
                                                                 <small className="activity-time">
                                                                     {new Date(review.date).toLocaleDateString()}
@@ -714,7 +748,7 @@ function DashboardAdmin() {
                                                 ) : (
                                                     <div className="empty-state">
                                                         <i className="fas fa-star"></i>
-                                                        <p>No recent reviews</p>
+                                                        <p>Tidak ada ulasan terbaru</p>
                                                     </div>
                                                 )}
                                             </div>

@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -39,6 +40,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # Root redirect to API documentation
+    path('', RedirectView.as_view(url='api/v1/', permanent=False)),
+    
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
@@ -66,12 +70,9 @@ urlpatterns += [
             EnhancedMediaView.as_view(), name='enhanced-media'),
 ]
 
-# Static files serving
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
-else:
-    # In production, static files are served by nginx or whitenoise
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+# Static files serving - Always use STATIC_ROOT for both dev and production
+# STATIC_ROOT contains collected static files from collectstatic command
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # Add debug toolbar URLs in development
 if settings.DEBUG:

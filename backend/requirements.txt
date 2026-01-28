@@ -17,6 +17,7 @@ djangorestframework-simplejwt==5.2.2
 drf-yasg==1.21.7
 environs==10.0.0
 gunicorn==21.2.0
+whitenoise==6.6.0
 idna==3.6
 inflection==0.5.1
 jmespath==0.10.0
@@ -43,3 +44,5 @@ uritemplate==4.1.1
 urllib3==1.26.18
 moviepy==1.0.3
 qrcode[pil]==7.4.2
+django-debug-toolbar==4.1.0
+django-extensions==3.2.3

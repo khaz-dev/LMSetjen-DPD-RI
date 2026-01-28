@@ -2,42 +2,234 @@
    Course Quiz Management - Modern Instructor Design Theme
    ======================================================================== */
 
-/* Import instructor design system */
-@import url('./CourseEdit.css');
+/* ================================
+   DESIGN SYSTEM VARIABLES
+   ================================ */
+:root {
+    /* Instructor Color Palette - Matching Header Theme */
+    --instructor-primary: #3498db;
+    --instructor-primary-dark: #2980b9;
+    --instructor-primary-light: #34495e;
+    --instructor-gradient: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
+    --instructor-gradient-hover: linear-gradient(135deg, #2980b9 0%, #1e3c72 100%);
+    
+    /* Semantic Colors */
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --info-color: #3b82f6;
+    
+    /* Neutral Colors */
+    --neutral-50: #f9fafb;
+    --neutral-100: #f3f4f6;
+    --neutral-200: #e5e7eb;
+    --neutral-300: #d1d5db;
+    --neutral-400: #9ca3af;
+    --neutral-500: #6b7280;
+    --neutral-600: #4b5563;
+    --neutral-700: #374151;
+    --neutral-800: #1f2937;
+    --neutral-900: #111827;
+    
+    /* Spacing System */
+    --space-xs: 0.5rem;
+    --space-sm: 0.75rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    --space-3xl: 4rem;
+    
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 15px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-instructor: 0 10px 30px rgba(52, 152, 219, 0.15);
+    
+    /* Transitions */
+    --transition-fast: 0.15s ease-out;
+    --transition-normal: 0.3s ease-out;
+    --transition-slow: 0.5s ease-out;
+}
 
 /* ================================
    GAP BETWEEN HEADER AND DASHBOARD
    ================================ */
 
-.instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+.course-quiz-header-card {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* Protect header card gap from parent overrides */
-.modern-dashboard .row > .col-12 > .instructor-header-card,
-.modern-dashboard .instructor-header-card {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
+.modern-dashboard .row > .col-12 > .course-quiz-header-card,
+.modern-dashboard .course-quiz-header-card {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
-/* Main Dashboard Background */
-.modern-dashboard {
-  min-height: 100vh;
-  background: transparent;
-  padding: 3rem 0;
-  padding-top: 3rem !important;
-  padding-bottom: 3rem !important;
-  margin-bottom: 8rem;
+/* Ensure header card maintains consistent width on quiz page */
+.course-quiz-page .course-quiz-header-card {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* CRITICAL: Force course-quiz-page padding to be overridable by pt-5 and pb-5 classes */
+/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+.course-quiz-page.pt-5 {
+    padding-top: 50px !important;
+}
+
+.course-quiz-page.pb-5 {
+    padding-bottom: 3rem !important;
+}
+
+/* ========================================
+   CRITICAL LAYOUT FIX - Row & Column Structure
+   ======================================== */
+
+/* Main section container - ensure proper display and spacing */
+.course-quiz-page {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    min-height: 100vh;
+    background: transparent;
+    padding: 3rem 0 3rem 0;
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+    margin-bottom: 8rem;
+    overflow-x: hidden;
+    overflow-y: visible;
+    /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
+}
+
+.course-quiz-page.pt-5 {
+    padding-top: 50px !important;
+}
+
+.course-quiz-page.pb-5 {
+    padding-bottom: 3rem !important;
+}
+
+/* ================================
+   PAGE CONTAINER STYLES
+   ================================ */
+
+.course-quiz-container {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    min-height: 100vh;
+    background: transparent;
+    padding: 3rem 0 3rem 0;
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+    margin-bottom: 8rem;
+}
+
+.course-quiz-container.pt-5 {
+    padding-top: 50px !important;
+}
+
+.course-quiz-container.pb-5 {
+    padding-bottom: 3rem !important;
 }
 
 /* Ensure proper scroll context for sticky sidebar */
-.modern-dashboard .container {
-  position: relative;
+.course-quiz-container .container {
+    position: relative;
 }
 
-/* Consistent vertical spacing for dashboard sections */
-.modern-dashboard .row {
+/* ================================
+   CURSOR STYLING - Interactive Elements
+   ================================ */
+
+/* Ensure all interactive elements and their children have proper cursor pointer */
+button,
+.btn,
+.btn-update-course,
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-warning,
+.btn-success,
+.btn-info,
+[role="button"],
+.file-upload-area,
+.drag-drop-area,
+.form-control:not([readonly]),
+.form-select,
+.form-check-input,
+.form-check-label,
+a[href]:not(.disabled),
+.nav-link,
+.dropdown-toggle {
+    cursor: pointer !important;
+}
+
+/* Ensure all text elements inside clickable elements inherit pointer cursor */
+button *,
+.btn *,
+.btn-update-course *,
+[role="button"] *,
+.file-upload-area *,
+.drag-drop-area *,
+.form-check-label *,
+a[href]:not(.disabled) *,
+.nav-link *,
+.dropdown-toggle * {
+    cursor: inherit !important;
+}
+
+/* Override text cursor on clickable text elements */
+button span,
+button i,
+button div,
+.btn span,
+.btn i,
+.btn div,
+.btn-update-course span,
+.btn-update-course i,
+.file-upload-area p,
+.file-upload-area span,
+.file-upload-area i,
+.drag-drop-area p,
+.drag-drop-area span,
+.drag-drop-area i,
+.form-check-label span,
+.nav-link span,
+.nav-link i {
+    cursor: pointer !important;
+}
+
+/* ================================
+   ROW STYLING - Match Dashboard Pattern
+   ================================ */
+
+/* Consistent vertical spacing for quiz page sections */
+.course-quiz-container .row {
   margin-bottom: 0; /* Remove gap below instructor-header-card */
   margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Neutralize column padding-left */
   margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Neutralize column padding-right */
@@ -48,14 +240,14 @@
 }
 
 /* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
-.modern-dashboard .row:has(.instructor-sidebar-column) {
+.course-quiz-container .row:has(.instructor-sidebar-column) {
   flex-wrap: nowrap;
   width: 100%; /* Keep outer row normal width */
   margin-left: 0 !important; /* No negative margin for outer row */
   margin-right: 0 !important; /* No negative margin for outer row */
 }
 
-.modern-dashboard .row > [class*="col-"] {
+.course-quiz-container .row > [class*="col-"] {
   margin-bottom: 0; /* Remove gap for columns */
   padding-left: calc(0.5 * var(--bs-gutter-x, 24px)); /* Bootstrap default column padding */
   padding-right: calc(0.5 * var(--bs-gutter-x, 24px)); /* Bootstrap default column padding */
@@ -70,50 +262,50 @@
 /* ============================== */
 
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
-.modern-dashboard .row:has(.instructor-sidebar-column) > .col-lg-9 {
+.course-quiz-container .row:has(.instructor-sidebar-column) > .col-lg-9 {
   margin-left: 0 !important; /* NO negative margin - prevents left overlap with sidebar */
   margin-right: 0 !important; /* NO negative margin - prevents right overflow */
   padding-left: 0 !important; /* Remove Bootstrap column padding */
   padding-right: 0 !important; /* Remove Bootstrap column padding */
+  width: calc(100% - var(--bs-gutter-x, 24px)) !important; /* Account for outer row's negative margins */
   flex: 1 1 auto !important; /* Use flexbox to fill available space properly */
-  min-width: 0 !important; /* Allow flex shrinking below content width */
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
-.modern-dashboard .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
+.course-quiz-container .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
   margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull left by col padding to reach col-12 edge */
   margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull right by col padding to reach col-12 edge */
   width: calc(100% + var(--bs-gutter-x, 24px)) !important; /* Extend width to compensate for negative margins */
 }
 
 /* Tablet: col-md-8 content wrapper (inside sidebar row) */
-.modern-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 {
+.course-quiz-container .row:has(.instructor-sidebar-column) > .col-md-8 {
   margin-left: 0 !important; /* NO negative margin - prevents left overlap with sidebar */
   margin-right: 0 !important; /* NO negative margin - prevents right overflow */
   padding-left: 0 !important; /* Remove Bootstrap column padding */
   padding-right: 0 !important; /* Remove Bootstrap column padding */
+  width: calc(100% - var(--bs-gutter-x, 24px)) !important; /* Account for outer row's negative margins */
   flex: 1 1 auto !important; /* Use flexbox to fill available space properly */
-  min-width: 0 !important; /* Allow flex shrinking below content width */
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
-.modern-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
+.course-quiz-container .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
   margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull left by col padding to reach col-12 edge */
   margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull right by col padding to reach col-12 edge */
   width: calc(100% + var(--bs-gutter-x, 24px)) !important; /* Extend width to compensate for negative margins */
 }
 
 /* Override for specific spacing needs */
-.modern-dashboard .row.mb-3 {
+.course-quiz-container .row.mb-3 {
   margin-bottom: 1rem !important;
 }
 
 /* ============================== */
 /* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
-/* Ensure sticky positioning works on Dashboard */
+/* Ensure sticky positioning works on CourseQuiz page */
 /* ============================== */
 /* Sidebar column: flex container that holds sticky sidebar */
-.modern-dashboard .row > .instructor-sidebar-column {
+.course-quiz-container .row > .instructor-sidebar-column {
   display: flex;
   flex-direction: column;
   overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
@@ -124,93 +316,21 @@
 /* Position: sticky is already set in Sidebar.css & performance.css */
 /* NO override or conflicting properties here */
 
-/* Reduced padding for card bodies */
-.modern-dashboard .card-body {
-  padding: 1rem !important; /* Reduced from p-4 (1.5rem) to 1rem */
-}
-
-.modern-dashboard .card-body.p-3 {
-  padding: 1rem !important; /* Override p-3 to consistent 1rem */
-}
-
 /* ================================
-   CURSOR POINTER FIX
+   GAP BETWEEN HEADER AND CONTAINER
    ================================ */
 
-/* Ensure all interactive elements and their children have proper cursor pointer */
-button, 
-.btn, 
-[role="button"],
-.quiz-card,
-.question-card,
-.nav-tabs .nav-link,
-.btn-icon,
-.btn-close,
-.modal-header .btn-close,
-a[href]:not(.disabled) {
-    cursor: pointer !important;
-}
-
-/* Ensure all text elements inside clickable elements inherit pointer cursor */
-button *,
-.btn *,
-[role="button"] *,
-.quiz-card *:not(input):not(textarea):not(select),
-.question-card .question-header *,
-.nav-tabs .nav-link *,
-.btn-icon *,
-.btn-close *,
-a[href]:not(.disabled) * {
-    cursor: inherit !important;
-}
-
-/* Override text cursor on clickable elements */
-button span,
-button i,
-button div,
-.btn span,
-.btn i,
-.btn div,
-.quiz-card h3,
-.quiz-card p,
-.quiz-card .quiz-title,
-.quiz-card .quiz-description,
-.question-card .question-text,
-.nav-tabs .nav-link span,
-.nav-tabs .nav-link i {
-    cursor: pointer !important;
-}
-
-/* Specific fixes for form elements inside clickable containers */
-.choice-item {
-    cursor: pointer !important;
-}
-
-.choice-item * {
-    cursor: pointer !important;
-}
-
-.choice-item input[type="radio"],
-.choice-item input[type="checkbox"] {
-    cursor: pointer !important;
+.course-quiz-container .instructor-header-card {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
 
 /* ================================
    QUIZ MANAGEMENT LAYOUT
    ================================ */
 
-.course-quiz-container {
-    min-height: 100vh;
-    padding: 3rem 2rem;
-    padding-top: 3rem !important;
-    padding-bottom: 3rem !important;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-}
-
-/* Ensure modern-dashboard has proper footer spacing */
-.modern-dashboard {
-    padding-bottom: 3rem !important;
-}
+/* Note: All container styling moved to main definition above */
 
 .quiz-loading {
     display: flex;
@@ -285,6 +405,8 @@ button div,
     color: var(--neutral-800);
     line-height: 1;
     text-align: right;  /* Align number to the right */
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .stat-content {
@@ -292,6 +414,8 @@ button div,
     flex-direction: column;
     flex: 1;  /* Allow stat-content to grow and fill available space */
     min-width: 0;  /* Allow flex to properly distribute space */
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .stat-content .stat-label {
@@ -302,6 +426,10 @@ button div,
     letter-spacing: 0.05em;
     margin-top: 0.25rem;
     text-align: right;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.2;
 }
 
 /* ================================
@@ -913,14 +1041,20 @@ button div,
 }
 
 .btn-outline-primary {
-    background: transparent;
-    color: var(--instructor-primary);
     border: 2px solid var(--instructor-primary);
+    color: var(--instructor-primary);
+    background: transparent;
+    padding: var(--space-md) var(--space-xl);
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    transition: all var(--transition-normal);
 }
 
 .btn-outline-primary:hover {
     background: var(--instructor-primary);
     color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .btn-header-secondary {
@@ -1096,151 +1230,424 @@ button div,
 }
 
 /* ================================
-   SIDEBAR LAYOUT FIX - CourseQuiz Page
-   Ensures sidebar columns resize properly when sidebar collapses/expands
-   Unified with responsive design for all breakpoints
+   INLINE STYLE CONVERSIONS
    ================================ */
 
-/* Base: Desktop Large (lg breakpoint and up) */
-@media (min-width: 992px) {
-    .modern-dashboard .row > .instructor-sidebar-column {
-        flex-basis: auto;
-        flex-grow: 0;
-        flex-shrink: 0;
-        width: auto;
-    }
+/* Loading section container - from inline style */
+.course-quiz-loading-section {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+}
 
-    /* ================================
-       Expanded state: Sidebar NOT collapsed
-       col-lg-3 = 25% | col-lg-9 = 75%
-       ================================ */
-    .modern-dashboard .row > .col-lg-9 {
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
-        width: auto !important;
-        max-width: 100% !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
+/* Content column with flex layout */
+.course-quiz-content-column {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+}
 
-    /* ================================
-       Collapsed state: Sidebar IS collapsed
-       col-lg-3 = 100px | col-lg-9 = calc(100% - 100px)
-       ================================ */
-    .modern-dashboard .row > .col-lg-9:has(~ .col-lg-3 .instructor-sidebar.collapsed),
-    .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-lg-9 {
-        flex: 1 1 auto !important;
-        width: auto !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
+/* Loading spinner container */
+.course-quiz-loading-container {
+    flex: 1;
+}
 
-    /* ================================
-       Expanded state: Sidebar col-lg-3
-       ================================ */
-    .modern-dashboard .row > .col-lg-3 {
-        flex: 0 0 auto !important;
-        width: 25% !important;
-        max-width: 25% !important;
-    }
+/* Loading text styling */
+.course-quiz-loading-text {
+    margin-top: 1rem;
+    color: #6c757d;
+}
 
-    /* ================================
-       Collapsed state: Sidebar col-lg-3
-       ================================ */
-    .modern-dashboard .row > .col-lg-3:has(.instructor-sidebar.collapsed) {
-        flex: 0 0 auto !important;
-        width: auto !important;
-        max-width: 100px !important;
-        min-width: 100px !important;
+/* ================================
+   UNIQUE QUIZ-SCOPED CLASSES
+   (Prevent naming conflicts with other pages)
+   ================================ */
+
+/* Quiz Header - Modern Design (Unique to Quiz Page) */
+.quiz-header-modern {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 15px;
+    z-index: 10;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(52, 152, 219, 0.3);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.quiz-header-modern:hover {
+    box-shadow: 0 15px 40px rgba(52, 152, 219, 0.4);
+    transform: translateY(-2px);
+}
+
+.quiz-header-modern > * {
+    position: relative;
+    z-index: 1;
+}
+
+.quiz-header-modern h3 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: white;
+}
+
+.quiz-header-modern p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+}
+
+/* Quiz Stats Overview - Responsive Grid (Unique to Quiz Page) */
+.quiz-stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@supports not (display: grid) {
+    .quiz-stats-overview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .quiz-stats-overview [class*="col-"] {
+        flex: 1 1 calc(25% - 1rem);
     }
 }
 
-/* Tablet (md breakpoint: 768px - 991px) */
+/* Quiz Navigation Card - Unique Styling (Unique to Quiz Page) */
+.quiz-nav-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.quiz-nav-card .quiz-nav-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-bottom: 2px solid #f0f0f0;
+    padding: 0;
+    margin: 0;
+}
+
+.quiz-nav-card .tab-btn {
+    flex: 1;
+    min-width: 150px;
+    padding: 1rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.quiz-nav-card .tab-btn:hover:not(:disabled) {
+    color: #3498db;
+    background-color: #f8f9fa;
+}
+
+.quiz-nav-card .tab-btn.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+    background-color: transparent;
+}
+
+.quiz-nav-card .tab-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Quiz Overview Wrapper (Unique to Quiz Page) */
+.quiz-overview-wrapper {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1) translateY(-3px); }
+    50% { transform: scale(1.05) translateY(-3px); }
+    100% { transform: scale(1) translateY(-3px); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes shimmer {
+    0%, 100% { background-position: 200% 0; }
+    50% { background-position: -200% 0; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* Quiz Empty Card - For Empty States (Unique to Quiz Page) */
+.quiz-empty-card {
+    background: white;
+    border-radius: 12px;
+    border: 2px dashed #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    padding: 3rem 2rem;
+}
+
+.quiz-empty-card:hover {
+    border-color: #3498db;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+}
+
+.quiz-empty-card .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.quiz-empty-card .empty-icon {
+    font-size: 3.5rem;
+    color: #bdbdbd;
+    margin-bottom: 0.5rem;
+}
+
+.quiz-empty-card h4 {
+    color: #424242;
+    font-weight: 600;
+    margin: 0;
+}
+
+.quiz-empty-card p {
+    color: #9e9e9e;
+    margin: 0;
+}
+
+/* Quiz Questions Header (Unique to Quiz Page) */
+.quiz-questions-header {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.quiz-questions-header .quiz-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.quiz-questions-header .quiz-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212121;
+}
+
+.quiz-questions-header .quiz-description {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #666;
+}
+
+/* Quiz Questions Section Wrapper (Unique to Quiz Page) */
+.quiz-questions-section {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ================================
+   ACCESSIBILITY
+   ================================ */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus indicators */
+.form-control:focus,
+.form-select:focus,
+.btn:focus {
+    outline: 2px solid var(--instructor-primary);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .quiz-nav-card,
+    .quiz-empty-card,
+    .quiz-questions-header {
+        border: 2px solid var(--neutral-800);
+    }
+    
+    .form-control,
+    .form-select {
+        border-width: 3px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================== */
+/* Responsive Content Column */
+/* Quiz page content column should fill available space when sidebar is */
+/* expanded or collapsed, providing smooth transitions */
+/* ============================== */
+
+/* Base: Desktop Large (lg breakpoint and up) */
+/* col-lg-3 sidebar + col-lg-9 content = 12 columns */
+@media (min-width: 992px) {
+  .course-quiz-container .row > .instructor-sidebar-column {
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    /* Sidebar now spans full column width without Bootstrap padding */
+    width: auto;
+  }
+
+  /* Content column - expands to fill remaining space */
+  .course-quiz-container .row > .col-lg-9 {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+  }
+
+  /* Ensure content doesn't wrap under sidebar */
+  .course-quiz-container .row > .col-lg-9 {
+    min-width: 500px;
+  }
+
+  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
+    /* Fallback for browsers that don't support :has() */
+    .course-quiz-container .row > .col-lg-9 {
+      flex: 1;
+      width: auto;
+      max-width: 100%;
+    }
+  }
+}
+
+/* Tablet (md breakpoint) */
+/* col-md-4 sidebar + col-md-8 content = 12 columns */
 @media (min-width: 768px) and (max-width: 991px) {
-    .modern-dashboard .row > .instructor-sidebar-column {
-        flex-basis: auto;
-        flex-grow: 0;
-        flex-shrink: 0;
-        width: auto;
-    }
+  .course-quiz-container .row > .instructor-sidebar-column {
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    /* Sidebar now spans full column width without Bootstrap padding */
+    width: auto;
+  }
 
-    /* ================================
-       Expanded state: Sidebar NOT collapsed
-       col-md-4 = 33% | col-md-8 = 66%
-       ================================ */
-    .modern-dashboard .row > .col-md-8 {
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
-        width: auto !important;
-        max-width: 100% !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
+  /* Content column - expands to fill remaining space */
+  .course-quiz-container .row > .col-md-8 {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+  }
 
-    /* ================================
-       Collapsed state: Sidebar IS collapsed
-       col-md-4 = 100px | col-md-8 = calc(100% - 100px)
-       ================================ */
-    .modern-dashboard .row > .col-md-8:has(~ .col-md-4 .instructor-sidebar.collapsed),
-    .modern-dashboard .row:has(.instructor-sidebar.collapsed) > .col-md-8 {
-        flex: 1 1 auto !important;
-        width: auto !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
+  /* Ensure content doesn't wrap under sidebar */
+  .course-quiz-container .row > .col-md-8 {
+    min-width: 400px;
+  }
 
-    /* ================================
-       Expanded state: Sidebar col-md-4
-       ================================ */
-    .modern-dashboard .row > .col-md-4 {
-        flex: 0 0 auto !important;
-        width: 33.333333% !important;
-        max-width: 33.333333% !important;
+  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
+    /* Fallback for browsers that don't support :has() */
+    .course-quiz-container .row > .col-md-8 {
+      flex: 1;
+      width: auto;
+      max-width: 100%;
     }
-
-    /* ================================
-       Collapsed state: Sidebar col-md-4
-       ================================ */
-    .modern-dashboard .row > .col-md-4:has(.instructor-sidebar.collapsed) {
-        flex: 0 0 auto !important;
-        width: auto !important;
-        max-width: 100px !important;
-        min-width: 100px !important;
-    }
+  }
 }
 
 /* Mobile: Full width stacked */
 @media (max-width: 767px) {
-    .modern-dashboard .row {
-        flex-wrap: wrap;
-    }
-
-    .modern-dashboard .row:has(.instructor-sidebar-column) {
-        flex-wrap: wrap;
-    }
-
-    .create-header-modern {
-        padding: 1rem;
-    }
-
-    .form-body-modern {
-        padding: 0;
-    }
-
-    .form-section {
-        padding: 1rem;
-    }
-}
-
-@media (max-width: 767px) {
-  .modern-dashboard .row {
+  .course-quiz-container .row {
     flex-direction: column;
   }
 
-  .modern-dashboard .row > [class*="col-"],
-  .modern-dashboard .row > .instructor-sidebar-column {
+  .course-quiz-container .row > [class*="col-"],
+  .course-quiz-container .row > .instructor-sidebar-column {
     flex: 0 0 100%;
     width: 100%;
     max-width: 100%;
   }
 }
+
+

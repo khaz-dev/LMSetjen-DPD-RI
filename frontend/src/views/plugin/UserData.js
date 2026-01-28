@@ -46,6 +46,8 @@ function UserData() {
   console.log("📦 Zustand allUserData exists:", !!allUserData);
   if (allUserData) {
     console.log("✅ UserData: Using Zustand store, role =", allUserData.role);
+    console.log("   current_role =", allUserData.current_role);
+    console.log("   available_roles =", allUserData.available_roles);
     return allUserData;
   }
   
