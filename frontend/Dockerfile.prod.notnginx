@@ -1,0 +1,99 @@
+# ============================================
+# Production Dockerfile for React Frontend
+# Without Nginx - Direct HTTP Server
+# LMSetjen DPD RI - Learning Management System
+# ============================================
+
+# Stage 1: Build Stage
+FROM node:18-alpine as builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (including devDependencies needed for build)
+RUN npm ci && \
+    npm cache clean --force
+
+# Copy application source
+COPY ./frontend . 
+
+# Build argument for API URL
+ARG VITE_API_BASE_URL=/api
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
+# Debug: Show environment variable
+RUN echo "========================================" && \
+    echo "Building with VITE_API_BASE_URL: $VITE_API_BASE_URL" && \
+    echo "========================================"
+
+# Build application
+RUN npm run build
+
+# ============================================
+# Stage 2: Production Stage - Simple HTTP Server
+# Using a lightweight Node.js server instead of Nginx
+# This is because production server uses Apache, not Nginx
+# ============================================
+FROM node:18-alpine as production
+
+# Install a simple HTTP server
+RUN npm install -g serve
+
+# Set working directory
+WORKDIR /app
+
+# Copy built assets from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Expose port 80 (will be mapped to 3000 in docker-compose)
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost/health || exit 1
+
+# Start the HTTP server
+# serve serves the dist folder and proxies /api requests to backend
+CMD ["serve", "-s", "dist", "-l", "80", "--single"]
+
+# ============================================
+# Alternative: Using minimal Python HTTP server
+# Uncomment below and comment out "serve" commands if you prefer Python
+# ============================================
+# FROM python:3.11-slim as production
+# 
+# WORKDIR /app
+# 
+# COPY --from=builder /app/dist ./dist
+# 
+# EXPOSE 80
+# 
+# COPY <<EOF server.py
+# import http.server
+# import socketserver
+# import os
+# from pathlib import Path
+#
+# class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+#     def end_headers(self):
+#         self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+#         super().end_headers()
+#
+#     def translate_path(self, path):
+#         path = super().translate_path(path)
+#         if os.path.isfile(path):
+#             return path
+#         return os.path.join(os.path.dirname(path), 'index.html')
+#
+# PORT = 80
+# Handler = MyHTTPRequestHandler
+# os.chdir('dist')
+# with socketserver.TCPServer(("", PORT), Handler) as httpd:
+#     print(f"Server running on port {PORT}")
+#     httpd.serve_forever()
+# EOF
+#
+# CMD ["python", "server.py"]
