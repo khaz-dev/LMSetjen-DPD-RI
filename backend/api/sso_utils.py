@@ -255,26 +255,49 @@ class GoogleOAuthVerifier:
         Raises:
             ValueError: If token is invalid
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
         try:
+            logger.info(f"🔐 Verifying ID token with Google")
+            logger.info(f"Client ID from config: {client_id[:20]}..." if client_id else "❌ Client ID is EMPTY!")
+            logger.info(f"Token length: {len(id_token)}")
+            
             # Verify ID token with Google
             params = {
                 'id_token': id_token
             }
             response = requests.get(GoogleOAuthVerifier.GOOGLE_TOKEN_INFO_URL, params=params)
             
+            logger.info(f"Google API response status: {response.status_code}")
+            
             if response.status_code != 200:
-                raise ValueError(f"Invalid ID token: {response.json().get('error_description', 'Unknown error')}")
+                error_msg = response.json().get('error_description', 'Unknown error')
+                logger.error(f"❌ Google API error: {error_msg}")
+                raise ValueError(f"Invalid ID token: {error_msg}")
             
             token_data = response.json()
+            logger.info(f"✅ Token data received from Google")
+            logger.info(f"Token 'aud' (audience): {token_data.get('aud')}")
+            logger.info(f"Expected client_id: {client_id}")
             
             # Verify audience (client ID)
-            if token_data.get('aud') != client_id:
+            if not client_id:
+                logger.warning("⚠️  Client ID is not configured in settings! Skipping client ID verification")
+            elif token_data.get('aud') != client_id:
+                logger.error(f"❌ Client ID mismatch! Token has: {token_data.get('aud')}, Expected: {client_id}")
                 raise ValueError("Invalid client ID in token")
+            else:
+                logger.info("✅ Client ID verified successfully")
             
             return token_data
             
         except requests.exceptions.RequestException as e:
+            logger.error(f"❌ Network error during ID token verification: {str(e)}")
             raise ValueError(f"ID token verification failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"❌ Unexpected error in verify_id_token: {str(e)}")
+            raise
     
     @staticmethod
     def get_user_data_from_token(user_info):

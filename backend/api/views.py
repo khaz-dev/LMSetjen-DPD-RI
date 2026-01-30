@@ -5775,9 +5775,9 @@ class ReactSPACatchAllView(APIView):
                 host = request.get_host()
                 path = request.path
                 
-                # If localhost or 127.0.0.1, redirect to local React dev server (Vite runs on 5173)
+                # If localhost or 127.0.0.1, redirect to local React dev server (Vite runs on 5174)
                 if 'localhost' in host or '127.0.0.1' in host:
-                    frontend_url = 'http://localhost:5173'
+                    frontend_url = 'http://localhost:5174'
                 else:
                     # For other hosts (remote development), use FRONTEND_SITE_URL
                     frontend_url = settings.FRONTEND_SITE_URL

@@ -123,7 +123,7 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
                     iconColor: '#28a745',
                     confirmButtonText: 'OK',
                     confirmButtonColor: '#28a745',
-                    timer: 3000,
+                    timer: 5174,
                     timerProgressBar: true,
                     customClass: {
                         popup: 'modern-toast'

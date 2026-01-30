@@ -295,7 +295,7 @@ function CourseEdit() {
                     setTimeout(() => {
                         setSubmitStatus("idle");
                         setSubmitMessage("");
-                    }, 3000);
+                    }, 5174);
                 },
                 (error) => {
                     // Enhanced error callback

@@ -59,7 +59,7 @@ LMSetjen DPD RI adalah platform Learning Management System (LMS) yang dirancang 
 
 ```
 
-### Tujuan**URL:** http://localhost:8000
+### Tujuan**URL:** http://localhost:8001
 
 - 🎯 Menyediakan platform pembelajaran online yang modern dan user-friendly
 
@@ -75,7 +75,7 @@ npm install
 
 ```
 
-## ✨ Fitur Utama**URL:** http://localhost:5173
+## ✨ Fitur Utama**URL:** http://localhost:5174
 
 
 
@@ -287,7 +287,7 @@ python manage.py runserver### Frontend
 
 - Vite
 
-Backend akan berjalan di: **http://localhost:8000**- React Router
+Backend akan berjalan di: **http://localhost:8001**- React Router
 
 - Zustand (State Management)
 
@@ -327,7 +327,7 @@ npm run dev
 yarn dev
 ```
 
-Frontend akan berjalan di: **http://localhost:5173**
+Frontend akan berjalan di: **http://localhost:5174**
 
 ---
 
@@ -335,9 +335,9 @@ Frontend akan berjalan di: **http://localhost:5173**
 
 ### Akses Aplikasi
 
-1. **Landing Page**: http://localhost:5173
-2. **Admin Panel**: http://localhost:8000/admin
-3. **API Documentation**: http://localhost:8000/api/
+1. **Landing Page**: http://localhost:5174
+2. **Admin Panel**: http://localhost:8001/admin
+3. **API Documentation**: http://localhost:8001/api/
 
 ### Default Credentials
 
@@ -458,7 +458,7 @@ File: `backend/lms_api/settings.py`
 ```python
 # Sesuaikan sesuai kebutuhan:
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-CORS_ALLOWED_ORIGINS = ['http://localhost:5173']
+CORS_ALLOWED_ORIGINS = ['http://localhost:5174']
 ```
 
 ### Frontend Configuration
@@ -467,7 +467,7 @@ File: `frontend/src/utils/axios.js`
 
 ```javascript
 // Update base URL sesuai backend
-const baseURL = 'http://localhost:8000/api/v1/';
+const baseURL = 'http://localhost:8001/api/v1/';
 ```
 
 ---

@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookie from "js-cookie";
 
 // Get API URL from environment variable, fallback to relative path
-// In Docker: uses /api (nginx proxies to backend:8000 internally)
+// In Docker: uses /api (nginx proxies to backend:8001 internally)
 // In development: use environment variable or relative path
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -16,7 +16,7 @@ const API_BASE_URL = baseURL.startsWith('http')
 // Create an Axios instance with default settings
 const apiInstance = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 30000,  // Increased from 10s to 30s to handle slower connections and large responses
+    timeout: 51740,  // Increased from 10s to 30s to handle slower connections and large responses
     headers: {
         "Content-Type": "application/json",
     },

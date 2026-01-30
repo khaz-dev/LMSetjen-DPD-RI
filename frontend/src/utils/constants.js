@@ -1,7 +1,7 @@
 import UserData from "../views/plugin/UserData";
 
 // Use environment variable for API URL, fallback to relative path
-// In Docker: uses /api (nginx proxies to backend:8000 internally)
+// In Docker: uses /api (nginx proxies to backend:8001 internally)
 // In development: use environment variable or relative path
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -17,7 +17,7 @@ export const DEFAULT_IMAGE_URL = "https://www.eclosio.ong/wp-content/uploads/201
 
 // Helper function to get full media URL
 // ✨ PHASE 4.30: Fixed to use correct backend origin for media files in development
-// In development: points to http://127.0.0.1:9000/media/ (Django backend)
+// In development: points to http://127.0.0.1:8001/media/ (Django backend)
 // In production: points to /media/ (nginx serves from same origin as frontend)
 export const getMediaUrl = (path) => {
     if (!path) return '';
@@ -28,12 +28,12 @@ export const getMediaUrl = (path) => {
     }
     
     // Get the backend base URL for media files
-    // In development: use http://127.0.0.1:8000 (or whatever backend is configured)
+    // In development: use http://127.0.0.1:8001 (or whatever backend is configured)
     // In production: use relative /media/ (same origin as frontend via nginx)
     const getBackendMediaUrl = () => {
         // Extract backend origin from baseURL
         if (baseURL.startsWith('http')) {
-            // Development mode: baseURL is full URL like http://127.0.0.1:9000
+            // Development mode: baseURL is full URL like http://127.0.0.1:8001
             const baseOrigin = baseURL.split('/api')[0]; // Remove /api/v1/ part
             return `${baseOrigin}/media/`;
         }

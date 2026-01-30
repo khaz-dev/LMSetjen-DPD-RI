@@ -63,6 +63,15 @@ function spaFallbackPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    // Explicitly define environment variables for client-side access
+    'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(
+      process.env.VITE_GOOGLE_CLIENT_ID || '634643429020-bnjp2eo6bct4v5cn6f8hr918km8v2ajr.apps.googleusercontent.com'
+    ),
+    'import.meta.env.VITE_API_BASE_URL': JSON.stringify(
+      process.env.VITE_API_BASE_URL || 'http://localhost:8001'
+    ),
+  },
   plugins: [
     spaFallbackPlugin(),
     react({
@@ -87,7 +96,8 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 5173,
+    host: '0.0.0.0',  // Listen on all interfaces (IPv4 + IPv6)
+    port: process.env.VITE_PORT || 5174,  // Use VITE_PORT env var if set, default to 5174 for local dev
     hmr: {
       // HMR settings
       protocol: 'ws',

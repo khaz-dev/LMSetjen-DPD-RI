@@ -318,7 +318,7 @@ Salam hormat,`;
                 Toast().fire({
                     icon: "success",
                     title: "Membuka klien email Anda...",
-                    timer: 3000
+                    timer: 5174
                 });
             }
         });

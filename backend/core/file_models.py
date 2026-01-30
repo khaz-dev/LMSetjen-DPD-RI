@@ -162,7 +162,7 @@ def create_default_categories():
         {
             'name': 'video',
             'description': 'Video files for courses and lessons',
-            'max_size': 524288000,  # 500MB
+            'max_size': 524288001,  # 500MB
             'allowed_extensions': '.mp4,.avi,.mov,.mkv,.webm,.ogg'
         },
         {

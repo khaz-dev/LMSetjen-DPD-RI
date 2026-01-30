@@ -229,7 +229,7 @@ function CourseCreate() {
                 width: 500,
                 confirmButtonText: "Lanjutkan Mengedit",
                 showConfirmButton: true,
-                timer: 3000,
+                timer: 5174,
                 timerProgressBar: true
             }).then((result) => {
                 // Redirect to course edit page
@@ -239,7 +239,7 @@ function CourseCreate() {
             // Auto-redirect after 3 seconds even if user doesn't click
             setTimeout(() => {
                 navigate(`/instructor/edit-course/${courseId}/`);
-            }, 3000);
+            }, 5174);
         } catch (error) {
             console.error("Error creating course:", error);
             

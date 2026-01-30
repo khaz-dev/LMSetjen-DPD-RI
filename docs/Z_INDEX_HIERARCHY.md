@@ -87,9 +87,9 @@ z-index: 1050-1099
 - `.modal` - z-index: 1055 (Bootstrap)
 - `.modal-backdrop` - z-index: 1050 (Bootstrap)
 
-### Level 9000-9999: Notifications Layer
+### Level 8001-9999: Notifications Layer
 ```css
-z-index: 9000-9999
+z-index: 8001-9999
 ```
 **Usage:** Toast notifications, alerts that should appear above all other content
 - `z-index: 9999` - Toast notifications, system alerts

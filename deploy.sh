@@ -1,159 +1,218 @@
 #!/bin/bash
 
-# 🚀 Automated Production Deployment Script
-# LMSetjen DPD RI - Learning Management System
-# This script automates the entire deployment process
+################################################################################
+#                                                                              #
+#  LMSetjen DPD RI - Bash Deployment Script for Ubuntu Server                #
+#  Equivalent to deploy.ps1 for PowerShell/Windows                           #
+#                                                                              #
+#  Usage: ./deploy.sh [command]                                              #
+#                                                                              #
+#  This script provides simple one-command deployment for Linux/Ubuntu       #
+#  servers using Docker Compose.                                             #
+#                                                                              #
+################################################################################
 
-set -e
-
-echo "╔════════════════════════════════════════════════════════════╗"
-echo "║  🚀 LMS Production Deployment Script                       ║"
-echo "║  Target: lmsetjendpdri.duckdns.org                        ║"
-echo "╚════════════════════════════════════════════════════════════╝"
-echo ""
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR"
+ENV_FILE="$PROJECT_ROOT/.env"
 
 # Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
+Green='\033[0;32m'
+Red='\033[0;31m'
+Yellow='\033[1;33m'
+Cyan='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Function to print colored messages
-print_step() {
-    echo -e "${BLUE}→${NC} $1"
+# ════════════════════════════════════════════════════════════════════════════
+# Functions
+# ════════════════════════════════════════════════════════════════════════════
+
+write_header() {
+    echo ""
+    echo -e "${Cyan}[DEPLOYMENT]${NC}"
+    echo -e "${Cyan}$1${NC}"
+    echo ""
 }
 
-print_success() {
-    echo -e "${GREEN}✓${NC} $1"
+write_success() {
+    echo -e "${Green}✅ $1${NC}"
 }
 
-print_error() {
-    echo -e "${RED}✗${NC} $1"
+write_error() {
+    echo -e "${Red}❌ $1${NC}"
 }
 
-print_warning() {
-    echo -e "${YELLOW}⚠${NC} $1"
+write_warning() {
+    echo -e "${Yellow}⚠️  $1${NC}"
 }
 
-# Check if we're in the right directory
-if [ ! -f "docker-compose.yml" ]; then
-    print_error "docker-compose.yml not found!"
-    print_step "Please run this script from the project root directory"
+show_help() {
+    write_header "LMSetjen DPD RI - Deployment Commands"
+    cat << 'EOF'
+Usage: ./deploy.sh [command]
+
+Commands:
+  up              Start all containers (default)
+  down            Stop all containers
+  status          Show container status
+  logs            Show recent logs
+  restart         Restart all containers
+  clean           Clean rebuild (removes containers & volumes)
+  help            Show this help message
+
+Examples:
+  ./deploy.sh              # Start all services
+  ./deploy.sh status       # Check container status
+  ./deploy.sh restart      # Restart services
+  ./deploy.sh down         # Stop all services
+  ./deploy.sh logs         # View logs with live follow
+  ./deploy.sh clean        # Full rebuild (WARNING: removes data)
+  ./deploy.sh help         # Show this help
+
+Service URLs:
+  Frontend: http://localhost:5174
+  Backend:  http://localhost:8001/api/v1/
+  Health:   http://localhost:8001/api/v1/health/
+
+Default Database Credentials:
+  Host:     localhost
+  Port:     5432
+  User:     postgres
+  Password: Okkdpdri2026
+  Database: lmsdb
+
+For more information:
+  - Check .env file for configuration
+  - View logs: docker-compose logs -f [backend|frontend|redis]
+  - Check container status: ./deploy.sh status
+EOF
+}
+
+# ════════════════════════════════════════════════════════════════════════════
+# Main Script
+# ════════════════════════════════════════════════════════════════════════════
+
+# Check Docker installation
+if ! command -v docker &> /dev/null; then
+    write_error "Docker not found. Please install Docker first."
     exit 1
 fi
 
-# Step 1: Pull latest code
-print_step "Pulling latest code from GitHub..."
-git pull origin main
-print_success "Code updated"
+write_success "Docker: $(docker --version)"
 
-# Step 2: Check for .env file
-print_step "Checking environment file..."
-if [ ! -f ".env" ]; then
-    print_warning ".env file not found. Creating with defaults..."
-    cat > .env << 'EOF'
-# Database
-DB_NAME=django_lms_db
-DB_USER=lms_user
-DB_PASSWORD=secure_password
-
-# Redis
-REDIS_PASSWORD=redis_password
-
-# Django
-SECRET_KEY=change-me-to-secret-key-in-production
-DEBUG=False
-ALLOWED_HOSTS=lmsetjendpdri.duckdns.org,16.79.83.21
-
-# Email (SendGrid)
-SENDGRID_API_KEY=
-
-# Frontend
-FRONTEND_SITE_URL=https://lmsetjendpdri.duckdns.org
-
-# SSL
-USE_SSL=True
-
-# API
-API_BASE_URL=https://lmsetjendpdri.duckdns.org/api
-EOF
-    print_warning "Created .env file - PLEASE UPDATE WITH YOUR ACTUAL CREDENTIALS"
-else
-    print_success ".env file found"
+# Check Docker Compose installation
+if ! command -v docker-compose &> /dev/null; then
+    write_error "Docker Compose not found. Please install Docker Compose first."
+    exit 1
 fi
 
-# Step 3: Stop current containers
-print_step "Stopping current containers..."
-docker compose down 2>/dev/null || true
-print_success "Containers stopped"
+write_success "Docker Compose: $(docker-compose --version)"
 
-# Step 4: Rebuild and start containers
-print_step "Rebuilding and starting Docker containers..."
-print_warning "This may take 2-5 minutes..."
-docker compose up -d --build
-
-# Step 5: Wait for services
-print_step "Waiting for services to start (30 seconds)..."
-sleep 30
-
-# Step 6: Check container status
-print_step "Checking container status..."
-echo ""
-docker compose ps
-echo ""
-
-# Step 7: Check logs for errors
-print_step "Checking for startup errors..."
-ERRORS=$(docker compose logs 2>&1 | grep -i "error\|exception\|failed" | grep -v "DEBUG\|verbose" || true)
-
-if [ -n "$ERRORS" ]; then
-    print_warning "Potential issues found:"
-    echo "$ERRORS"
-else
-    print_success "No critical errors detected"
+# Check .env file
+if [ ! -f "$ENV_FILE" ]; then
+    write_error ".env not found at $ENV_FILE"
+    exit 1
 fi
 
-# Step 8: Apply migrations (if needed)
-print_step "Applying database migrations..."
-docker compose exec -T backend python manage.py migrate --noinput
-print_success "Migrations completed"
+write_success ".env found"
 
-# Step 9: Collect static files
-print_step "Collecting static files..."
-docker compose exec -T backend python manage.py collectstatic --noinput
-print_success "Static files collected"
+# Change to project root directory
+cd "$PROJECT_ROOT" || exit 1
 
-# Step 10: Run certificate fix script
-print_step "Running certificate validation token script..."
-if [ -f "run_certificate_fix.sh" ]; then
-    bash run_certificate_fix.sh
-    print_success "Certificate script completed"
-else
-    print_warning "Certificate fix script not found, skipping..."
-fi
+# Get command (default to 'up')
+COMMAND="${1:-up}"
 
-echo ""
-echo "╔════════════════════════════════════════════════════════════╗"
-echo "║  ✨ Deployment Completed Successfully!                     ║"
-echo "╚════════════════════════════════════════════════════════════╝"
-echo ""
-echo -e "${GREEN}✓ All containers are running${NC}"
-echo -e "${GREEN}✓ Database migrations applied${NC}"
-echo -e "${GREEN}✓ Static files collected${NC}"
-echo -e "${GREEN}✓ Certificate tokens processed${NC}"
-echo ""
-echo "📍 Website: https://lmsetjendpdri.duckdns.org"
-echo "📊 Admin: https://lmsetjendpdri.duckdns.org/admin"
-echo "📚 API: https://lmsetjendpdri.duckdns.org/api"
-echo ""
-echo "📋 Next Steps:"
-echo "  1. Open your browser and navigate to the website"
-echo "  2. Log in with your credentials"
-echo "  3. Navigate to a course and check the certificate tab"
-echo "  4. Verify that QR codes are now visible"
-echo ""
-echo "🔍 For detailed logs, run:"
-echo "   docker compose logs -f"
-echo ""
-print_success "Deployment ready!"
+# Execute command
+case "$COMMAND" in
+    up)
+        write_header "Starting Services"
+        docker-compose up -d
+        if [ $? -eq 0 ]; then
+            write_success "Services started"
+            echo ""
+            echo "URLs:"
+            echo "  Frontend: http://localhost:5174"
+            echo "  Backend:  http://localhost:8001"
+            echo "  Health:   http://localhost:8001/api/v1/health/"
+            echo ""
+        else
+            write_error "Failed to start services"
+            exit 1
+        fi
+        ;;
+    
+    down)
+        write_header "Stopping Services"
+        docker-compose down
+        if [ $? -eq 0 ]; then
+            write_success "Services stopped"
+        else
+            write_error "Failed to stop services"
+            exit 1
+        fi
+        ;;
+    
+    status)
+        write_header "Container Status"
+        docker-compose ps
+        ;;
+    
+    logs)
+        write_header "Recent Logs (Press Ctrl+C to exit)"
+        docker-compose logs --tail=50 -f
+        ;;
+    
+    restart)
+        write_header "Restarting Services"
+        docker-compose restart
+        if [ $? -eq 0 ]; then
+            write_success "Services restarted"
+        else
+            write_error "Failed to restart services"
+            exit 1
+        fi
+        ;;
+    
+    clean)
+        write_header "Clean Rebuild"
+        write_warning "This will remove all containers and volumes"
+        read -p "Continue? (y/N) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            docker-compose down -v --remove-orphans
+            write_success "Old containers and volumes removed"
+            echo ""
+            write_header "Building and Starting Services"
+            docker-compose up -d --build
+            if [ $? -eq 0 ]; then
+                write_success "Rebuild complete"
+                echo ""
+                echo "URLs:"
+                echo "  Frontend: http://localhost:5174"
+                echo "  Backend:  http://localhost:8001"
+                echo ""
+            else
+                write_error "Failed to rebuild services"
+                exit 1
+            fi
+        else
+            write_warning "Clean rebuild cancelled"
+        fi
+        ;;
+    
+    help|--help|-h)
+        show_help
+        ;;
+    
+    *)
+        write_error "Unknown command: $COMMAND"
+        echo ""
+        echo "Use './deploy.sh help' to see available commands"
+        exit 1
+        ;;
+esac
+
+# ════════════════════════════════════════════════════════════════════════════
+# End of Script
+# ════════════════════════════════════════════════════════════════════════════

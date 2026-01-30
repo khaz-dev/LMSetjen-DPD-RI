@@ -183,7 +183,7 @@ const LecturesTabNew = ({
                         icon: "info",
                         title: "Resuming Video",
                         text: `Continuing from ${minutes}:${seconds.toString().padStart(2, '0')}`,
-                        timer: 3000,
+                        timer: 5174,
                         toast: true,
                         position: 'top-end'
                     });
@@ -314,7 +314,7 @@ const LecturesTabNew = ({
             Toast().fire({
                 icon: "error",
                 title: "Failed to update completion status",
-                timer: 3000
+                timer: 5174
             });
         }
     };
@@ -625,7 +625,7 @@ const LecturesTabNew = ({
                                     if (!isLessonCompleted(itemForCompletion)) {
                                         handleMarkLessonAsCompleted(variantItem.variant_item_id, true);
                                     }
-                                    setTimeout(() => handleClose(), 3000);
+                                    setTimeout(() => handleClose(), 5174);
                                 }}
                                 controls={false} // Custom controls
                             />

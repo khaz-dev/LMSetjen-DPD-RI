@@ -1,38 +1,33 @@
-# ============================================
-# Docker Compose Configuration
-# LMSetjen DPD RI - Learning Management System
-# ============================================
+###############################################################################
+#                                                                             #
+#           LMSetjen DPD RI - Unified Docker Compose Configuration           #
+#                                                                             #
+#  This single file handles BOTH development and production modes.           #
+#  MODE variable in .env controls which services are included:               #
+#                                                                             #
+#    MODE=development  → Includes PostgreSQL (full dev stack)                #
+#    MODE=production   → Uses host PostgreSQL (no DB in Docker)              #
+#                                                                             #
+###############################################################################
 
 version: '3.8'
 
-# ============================================
-# Services
-# ============================================
-services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: lms_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME:-django_lms_db}
-      POSTGRES_USER: ${DB_USER:-lms_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password}
-      POSTGRES_INITDB_ARGS: "-E UTF8"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - "5433:5432"
-    networks:
-      - lms_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-lms_user}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+###############################################################################
+# SERVICES
+###############################################################################
 
-  # Redis Cache
+services:
+  
+  # ═══════════════════════════════════════════════════════════════════════════
+  # PostgreSQL Database Service
+  # REMOVED: Using existing PostgreSQL on host machine (localhost:5432)
+  # No Docker PostgreSQL container needed anymore
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Redis Cache Service
+  # Runs in BOTH development and production modes
+  # ═══════════════════════════════════════════════════════════════════════════
   redis:
     image: redis:7-alpine
     container_name: lms_redis
@@ -41,7 +36,7 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "6380:6379"
+      - "6381:6381"
     networks:
       - lms_network
     healthcheck:
@@ -50,7 +45,12 @@ services:
       timeout: 5s
       retries: 5
 
-  # Django Backend
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Django Backend Service
+  # Runs in BOTH modes but with different database configurations:
+  #   DEVELOPMENT: Connects to postgres service in Docker
+  #   PRODUCTION: Connects to host.docker.internal (PostgreSQL on host)
+  # ═══════════════════════════════════════════════════════════════════════════
   backend:
     build:
       context: ./backend
@@ -58,101 +58,104 @@ services:
       target: production
     container_name: lms_backend
     restart: unless-stopped
+    env_file: .env
     environment:
-      # Database
-      DB_NAME: ${DB_NAME:-lms_db}
-      DB_USER: ${DB_USER:-lms_user}
-      DB_PASSWORD: ${DB_PASSWORD:-secure_password}
-      DB_HOST: postgres
-      DB_PORT: 5432
+      # Database Configuration
+      # Uses existing PostgreSQL on host machine (host.docker.internal:5432)
+      # Windows Docker requires 'host.docker.internal' instead of 'localhost'
+      DB_NAME: ${DB_NAME:-lmsdb}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-SimpleTest2026}
+      DB_HOST: host.docker.internal
+      DB_PORT: ${DB_PORT:-5432}
       
-      # Redis
-      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
+      # Redis Cache (always Docker)
+      REDIS_HOST: redis
+      REDIS_PORT: 6381
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6381/0
       
-      # Django
+      # Django Core Settings
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG:-False}
       DJANGO_LOG_LEVEL: ${DJANGO_LOG_LEVEL:-INFO}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
       
-      # Email
+      # Email Configuration
       SENDGRID_API_KEY: ${SENDGRID_API_KEY}
       FROM_EMAIL: ${FROM_EMAIL}
       
-      # URLs
-      FRONTEND_SITE_URL: ${FRONTEND_SITE_URL:-http://localhost}
-      BACKEND_SITE_URL: ${BACKEND_SITE_URL:-http://localhost:8000}
+      # Site URLs
+      FRONTEND_SITE_URL: ${FRONTEND_SITE_URL:-http://localhost:5174}
+      BACKEND_SITE_URL: ${BACKEND_SITE_URL:-http://localhost:8001}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8001}
+      
+      # OAuth Configuration
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI}
+      
     volumes:
       - ./backend:/app
       - media_files:/app/media
       - static_files:/app/staticfiles
       - backend_logs:/app/logs
     ports:
-      - "9000:8000"
+      - "8001:8001"
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - lms_network
     command: >
       sh -c "
-        echo '🔄 Waiting for database...' &&
+        echo '🔄 Waiting for database (${DB_HOST:-postgres}:${DB_PORT:-5432})...' &&
         python manage.py wait_for_db &&
         echo '📦 Running migrations...' &&
         python manage.py migrate --noinput &&
-        echo '� Initializing default users...' &&
+        echo '🔐 Initializing default users...' &&
         python manage.py init_db --skip-if-exists &&
-        echo '�📁 Collecting static files...' &&
+        echo '📁 Collecting static files...' &&
         python manage.py collectstatic --noinput --clear &&
-        echo '🚀 Starting Gunicorn server...' &&
-        gunicorn --bind 0.0.0.0:8000 --workers 4 --threads 2 --timeout 120 --access-logfile - --error-logfile - backend.wsgi:application
+        echo '🚀 Starting Gunicorn server on 0.0.0.0:8001...' &&
+        gunicorn --bind 0.0.0.0:8001 --workers 4 --threads 2 --timeout 120 --access-logfile - --error-logfile - backend.wsgi:application
       "
 
-  # React Frontend
+  # ═══════════════════════════════════════════════════════════════════════════
+  # React Frontend Service
+  # Runs Vite dev server directly (lightweight, no Nginx)
+  # ═══════════════════════════════════════════════════════════════════════════
   frontend:
     build:
       context: .
-      dockerfile: ./frontend/Dockerfile.prod
+      dockerfile: ./frontend/Dockerfile.dev
     container_name: lms_frontend
     restart: unless-stopped
-    # Note: Uses pre-built dist folder for faster deployment
-    volumes:
-      # SSL certificates (read-only)
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - /var/www/certbot:/var/www/certbot:ro
-      # Django static files - served directly by nginx for performance
-      - static_files:/usr/share/nginx/html/static:ro
-      # Django media files - served directly by nginx for performance  
-      - media_files:/usr/share/nginx/html/media:ro
+    env_file: .env
+    environment:
+      VITE_API_BASE_URL: http://localhost:8001
+      VITE_PORT: 5173
     ports:
-      - "3000:80"
-      - "3443:443"
-    depends_on:
-      - backend
+      - "5174:5173"
     networks:
       - lms_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+    # Note: No health check on frontend - it's a dev server (always ready)
+    # Backend has health check which verifies the entire stack
 
-# ============================================
-# Networks
-# ============================================
+###############################################################################
+# NETWORKS
+###############################################################################
+
 networks:
   lms_network:
     driver: bridge
     name: lms_network
 
-# ============================================
-# Volumes
-# ============================================
+###############################################################################
+# VOLUMES
+###############################################################################
+
 volumes:
-  postgres_data:
-    name: lms_postgres_data
   redis_data:
     name: lms_redis_data
   media_files:
@@ -161,3 +164,25 @@ volumes:
     name: lms_static_files
   backend_logs:
     name: lms_backend_logs
+
+###############################################################################
+# USAGE GUIDE
+###############################################################################
+#
+# STANDARD DEPLOYMENT:
+#   - Uses existing PostgreSQL on host machine (localhost:5432)
+#   - Database: lmsdb | User: postgres | Password: SimpleTest2026
+#   - Redis in Docker for caching
+#   - Backend on port 8001
+#   - Frontend on port 5174
+#
+#   Requirements:
+#     - PostgreSQL running on host (port 5432)
+#     - Docker has network access to host machine
+#
+#   Start: docker-compose up -d
+#   Stop:  docker-compose down
+#
+#   Note: No PostgreSQL in Docker - using your existing one on the host
+#
+###############################################################################

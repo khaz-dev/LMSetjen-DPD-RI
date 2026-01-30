@@ -50,7 +50,7 @@ BACKEND_SITE_URL = env('BACKEND_SITE_URL', default='https://lmsetjendpdri.duckdn
 # ===========================
 GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID', default='')
 GOOGLE_CLIENT_SECRET = env('GOOGLE_CLIENT_SECRET', default='')
-GOOGLE_OAUTH_REDIRECT_URI = env('GOOGLE_OAUTH_REDIRECT_URI', default='http://localhost:3000/login')
+GOOGLE_OAUTH_REDIRECT_URI = env('GOOGLE_OAUTH_REDIRECT_URI', default='http://localhost:5174/login')
 
 
 # Application definition
@@ -115,20 +115,44 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database Configuration
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME', default='lms_db'),
-        'USER': env('DB_USER', default='lms_user'),
-        'PASSWORD': env('DB_PASSWORD', default='secure_password'),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default='5432'),
-        'CONN_MAX_AGE': 600,  # 10 minutes connection persistence
-        'OPTIONS': {
-            'connect_timeout': 10,
-        },
+import urllib.parse
+
+# Support for DATABASE_URL environment variable (prioritized over individual settings)
+_database_url = env('DATABASE_URL', default=None)
+
+print(f"DEBUG: DATABASE_URL value: {_database_url}")
+
+if _database_url:
+    print("DEBUG: Using DATABASE_URL configuration")
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=_database_url,
+            conn_max_age=600,
+        )
     }
-}
+    print(f"DEBUG: DATABASES config: {DATABASES}")
+else:
+    print("DEBUG: Using individual DB configuration")
+    # Fall back to individual configuration with URL-encoded password
+    _DB_NAME = env('DB_NAME', default='secure_password')
+    # URL-encode the password to handle special characters
+    _DB_NAME_encoded = urllib.parse.quote(_DB_NAME, safe='')
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': env('DB_NAME', default='lms_db'),
+            'USER': env('DB_USER', default='lms_user'),
+            'PASSWORD': env('DB_PASSWORD', default='secure_password'),
+            'HOST': env('DB_HOST', default='localhost'),
+            'PORT': env('DB_PORT', default='5432'),
+            'CONN_MAX_AGE': 600,  # 10 minutes connection persistence
+            'OPTIONS': {
+                'connect_timeout': 10,
+            },
+        }
+    }
 
 
 # Password validation
@@ -299,10 +323,10 @@ SIMPLE_JWT = {
 # CORS Configuration for Frontend Integration
 CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
     "http://16.79.83.21",  # EC2 server IP (HTTP)
     "https://16.79.83.21",  # EC2 server IP (HTTPS)
     "https://lmsetjendpdri.duckdns.org",  # Production domain (HTTPS)
@@ -343,14 +367,14 @@ CORS_EXPOSE_HEADERS = [
 try:
     # Try to use Redis if available
     import redis
-    redis_client = redis.Redis.from_url(env('REDIS_URL', default='redis://localhost:6379/1'))
+    redis_client = redis.Redis.from_url(env('REDIS_URL', default='redis://localhost:6381/1'))
     redis_client.ping()
     
     # Redis is available, use Redis caching
     CACHES = {
         'default': {
             'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': env('REDIS_URL', default='redis://localhost:6379/1'),
+            'LOCATION': env('REDIS_URL', default='redis://localhost:6381/1'),
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
                 'CONNECTION_POOL_KWARGS': {
@@ -366,7 +390,7 @@ try:
         # Separate cache for sessions
         'sessions': {
             'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': env('REDIS_URL', default='redis://localhost:6379/2'),
+            'LOCATION': env('REDIS_URL', default='redis://localhost:6381/2'),
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             },
@@ -376,7 +400,7 @@ try:
         # Cache for course data and heavy queries
         'course_cache': {
             'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': env('REDIS_URL', default='redis://localhost:6379/3'),
+            'LOCATION': env('REDIS_URL', default='redis://localhost:6381/3'),
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             },
@@ -494,8 +518,8 @@ if DEBUG:
 
 # Enhanced Local File Storage Configuration
 # Increased to 500MB to support large video uploads (matches MAX_VIDEO_FILE_SIZE)
-FILE_UPLOAD_MAX_MEMORY_SIZE = env.int('FILE_UPLOAD_MAX_MEMORY_SIZE', default=524288000)  # 500MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = env.int('DATA_UPLOAD_MAX_MEMORY_SIZE', default=524288000)  # 500MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = env.int('FILE_UPLOAD_MAX_MEMORY_SIZE', default=524288001)  # 500MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = env.int('DATA_UPLOAD_MAX_MEMORY_SIZE', default=524288001)  # 500MB
 FILE_UPLOAD_TEMP_DIR = os.path.join(BASE_DIR, 'temp_uploads')
 os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
 
@@ -521,7 +545,7 @@ for dir_path in MEDIA_SUBDIRS.values():
 
 # File Size Limits by Type
 MAX_FILE_SIZES = {
-    'video': env.int('MAX_VIDEO_FILE_SIZE', default=524288000),    # 500MB
+    'video': env.int('MAX_VIDEO_FILE_SIZE', default=524288001),    # 500MB
     'image': env.int('MAX_IMAGE_FILE_SIZE', default=52428800),     # 50MB
     'document': env.int('MAX_DOCUMENT_FILE_SIZE', default=104857600), # 100MB
     'audio': env.int('MAX_AUDIO_FILE_SIZE', default=104857600),    # 100MB

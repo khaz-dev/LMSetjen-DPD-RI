@@ -215,7 +215,7 @@ function SSOLogin() {
       // Redirect to login after showing error
       setTimeout(() => {
         navigate("/login/");
-      }, 3000);
+      }, 5174);
     } finally {
       setLoading(false);
     }

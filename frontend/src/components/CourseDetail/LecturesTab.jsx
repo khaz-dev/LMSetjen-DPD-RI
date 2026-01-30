@@ -280,7 +280,7 @@ const LecturesTab = ({
                             icon: "info",
                             title: "Melanjutkan Video",
                             text: `Melanjutkan dari tempat Anda meninggalkannya pada ${timeString}`,
-                            timer: 3000,
+                            timer: 5174,
                             toast: true,
                             position: "top-end"
                         });
@@ -484,7 +484,7 @@ const LecturesTab = ({
                 icon: "error",
                 title: "Gagal memperbarui status penyelesaian",
                 text: "Silakan coba lagi dalam beberapa saat.",
-                timer: 3000
+                timer: 5174
             });
         }
     };

@@ -51,7 +51,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
         icon: "warning",
         title: "File Besar Terdeteksi",
         text: `Ukuran video: ${fileSizeMB.toFixed(1)}MB. Konfirmasi kompresi diperlukan.`,
-        timer: 3000,
+        timer: 5174,
         showConfirmButton: false
       });
     } else {
@@ -387,7 +387,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
           icon: "info",
           title: "Mengompresi Video",
           text: `Ukuran file ${fileSizeMB.toFixed(1)}MB. Kompresi diperlukan dan mungkin memakan waktu beberapa menit...`,
-          timer: 3000,
+          timer: 5174,
           showConfirmButton: false
         });
 

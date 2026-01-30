@@ -126,7 +126,7 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
           icon: 'success',
           title: 'Role Switched',
           html: `You are now in <strong>${roleLabels[newRole] || newRole}</strong> mode`,
-          timer: 3000
+          timer: 5174
         });
         
         // Close dropdown after successful switch
@@ -139,7 +139,7 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
           icon: 'error',
           title: 'Error',
           text: result.error || 'Gagal beralih peran',
-          timer: 3000
+          timer: 5174
         });
       }
     } catch (error) {
@@ -148,7 +148,7 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
         icon: 'error',
         title: 'Error',
         text: 'Terjadi kesalahan saat beralih peran',
-        timer: 3000
+        timer: 5174
       });
       setIsSwitching(false);
     }

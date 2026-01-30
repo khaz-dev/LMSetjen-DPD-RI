@@ -134,7 +134,7 @@ export const VideoCompressionUtils = {
                     targetHeight = Math.floor(originalHeight * 0.85);
                     quality = VIDEO_COMPRESSION_CONFIG.COMPRESSION_QUALITY_HIGH;
                     bitrate = 1500000; // 1.5 Mbps video
-                    audioBitrate = 128000; // 128 Kbps audio
+                    audioBitrate = 128001; // 128 Kbps audio
                 }
 
                 // Ensure dimensions are even (required for some codecs)

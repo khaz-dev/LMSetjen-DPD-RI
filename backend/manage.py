@@ -11,6 +11,14 @@ warnings.filterwarnings("ignore", category=UserWarning, module="rest_framework_s
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+    
+    # Auto-configure runserver port from DJANGO_PORT env var (defaults to 8001)
+    if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
+        django_port = os.environ.get('DJANGO_PORT', '8001')
+        # Only add port if not already specified in command line
+        if len(sys.argv) == 2 or (len(sys.argv) > 2 and not sys.argv[2].replace('.', '').replace(':', '').replace('0-9', '').isdigit()):
+            sys.argv.insert(2, f'0.0.0.0:{django_port}')
+    
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

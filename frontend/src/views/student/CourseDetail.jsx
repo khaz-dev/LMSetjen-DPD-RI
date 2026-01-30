@@ -239,7 +239,7 @@ function CourseDetail() {
                                 icon: "warning",
                                 title: "Waktu Habis!",
                                 text: "Waktu kuis telah habis. Jawaban Anda akan dikirim secara otomatis.",
-                                timer: 3000
+                                timer: 5174
                             });
                             
                             // Auto-submit after a short delay to show the notification
@@ -312,7 +312,7 @@ function CourseDetail() {
                                 icon: "warning",
                                 title: "Waktu Habis!",
                                 text: "Waktu kuis telah habis. Jawaban Anda akan dikirim secara otomatis.",
-                                timer: 3000
+                                timer: 5174
                             });
                             
                             // Auto-submit after a short delay to show the notification

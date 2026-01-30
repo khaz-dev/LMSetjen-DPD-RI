@@ -142,12 +142,12 @@ cd backend
 python -m venv venv
 venv\Scripts\activate  # Windows
 pip install -r requirements.txt
-python manage.py runserver  # http://localhost:8000
+python manage.py runserver  # http://localhost:8001
 
 # Frontend
 cd frontend
 npm install
-npm run dev  # http://localhost:5173
+npm run dev  # http://localhost:5174
 ```
 
 ### Database

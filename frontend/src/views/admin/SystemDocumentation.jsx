@@ -268,9 +268,9 @@ function SystemDocumentation() {
                 components: "System Components",
                 componentsList: [
                     "Frontend Container (Node + Nginx) - Serves React SPA on ports 80/443",
-                    "Backend Container (Python + Django) - API server on port 8000",
+                    "Backend Container (Python + Django) - API server on port 8001",
                     "PostgreSQL Container - Database on port 5432",
-                    "Redis Container - Caching on port 6379",
+                    "Redis Container - Caching on port 6381",
                     "Main Nginx (Host) - SSL termination and reverse proxy"
                 ],
                 network: "Network Configuration",
@@ -684,9 +684,9 @@ function SystemDocumentation() {
                 components: "Komponen Sistem",
                 componentsList: [
                     "Container Frontend (Node + Nginx) - Melayani React SPA pada port 80/443",
-                    "Container Backend (Python + Django) - Server API pada port 8000",
+                    "Container Backend (Python + Django) - Server API pada port 8001",
                     "Container PostgreSQL - Database pada port 5432",
-                    "Container Redis - Caching pada port 6379",
+                    "Container Redis - Caching pada port 6381",
                     "Nginx Utama (Host) - SSL termination dan reverse proxy"
                 ],
                 network: "Konfigurasi Jaringan",

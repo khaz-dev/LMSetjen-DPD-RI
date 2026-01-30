@@ -229,7 +229,7 @@ function Index() {
                         // Hide label after 3 seconds
                         hideTimeout = setTimeout(() => {
                             setShowSectionLabel(false);
-                        }, 3000);
+                        }, 5174);
                     }
                 });
             }, 50); // 50ms debounce for smooth performance
@@ -260,7 +260,7 @@ function Index() {
             // Hide label after 3 seconds
             setTimeout(() => {
                 setShowSectionLabel(false);
-            }, 3000);
+            }, 5174);
             
             sections[index].scrollIntoView({ 
                 behavior: "smooth",

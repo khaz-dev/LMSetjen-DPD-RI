@@ -11,7 +11,7 @@ function BaseFooter() {
     Toast().fire({
       title: "Akan segera datang",
       icon: "info",
-      timer: 3000
+      timer: 5174
     });
   };
 
