@@ -171,16 +171,16 @@ class APIRootView(APIView):
                 "redoc": request.build_absolute_uri('/redoc/'),
             },
             "endpoints": {
-                "health": request.build_absolute_uri('/v1/health/'),
+                "health": request.build_absolute_uri('/api/v1/health/'),
                 "authentication": {
-                    "login": request.build_absolute_uri('/v1/user/token/'),
-                    "refresh": request.build_absolute_uri('/v1/user/token/refresh/'),
-                    "register": request.build_absolute_uri('/v1/user/register/'),
+                    "login": request.build_absolute_uri('/api/v1/user/token/'),
+                    "refresh": request.build_absolute_uri('/api/v1/user/token/refresh/'),
+                    "register": request.build_absolute_uri('/api/v1/user/register/'),
                 },
                 "courses": {
-                    "list": request.build_absolute_uri('/v1/course/course-list/'),
-                    "categories": request.build_absolute_uri('/v1/course/category/'),
-                    "search": request.build_absolute_uri('/v1/course/search/'),
+                    "list": request.build_absolute_uri('/api/v1/course/course-list/'),
+                    "categories": request.build_absolute_uri('/api/v1/course/category/'),
+                    "search": request.build_absolute_uri('/api/v1/course/search/'),
                 },
             },
             "support": {
@@ -225,7 +225,7 @@ class SSOTokenVerifyAPIView(APIView):
     """
     Verify SSO token and exchange for LMS JWT tokens
     
-    Endpoint: /v1/sso/verify/
+    Endpoint: /api/v1/sso/verify/
     Method: POST
     
     Request:
@@ -369,7 +369,7 @@ class SSOLoginRedirectAPIView(APIView):
     """
     SSO Login Redirect Handler
     
-    Endpoint: /v1/sso/login/{sso_token}/
+    Endpoint: /api/v1/sso/login/{sso_token}/
     Method: GET
     
     Redirects to /sso/{sso_token}/ on frontend for handling
@@ -398,7 +398,7 @@ class SSOLoginRedirectAPIView(APIView):
                 "message": "SSO token received. Redirecting to frontend...",
                 "frontend_url": frontend_url,
                 "sso_token": sso_token,
-                "verify_endpoint": request.build_absolute_uri('/v1/sso/verify/')
+                "verify_endpoint": request.build_absolute_uri('/api/v1/sso/verify/')
             },
             status=status.HTTP_200_OK
         )
@@ -409,7 +409,7 @@ class GoogleOAuthAPIView(APIView):
     """
     Google OAuth Login Handler
     
-    Endpoint: /v1/auth/google/
+    Endpoint: /api/v1/auth/google/
     Method: POST
     
     Request:
@@ -550,7 +550,7 @@ class PasswordResetEmailVerifyAPIView(generics.RetrieveAPIView):
     serializer_class = api_serializer.UserSerializer
 
     def get_object(self):
-        email = self.kwargs['email'] # v1/password-email-verify/desphixs@gmail.com/
+        email = self.kwargs['email'] # api/v1/password-email-verify/desphixs@gmail.com/
 
         user = User.objects.filter(email=email).first()
 
@@ -1058,7 +1058,7 @@ class FullTextSearchAPIView(generics.ListAPIView):
 # ✨ PHASE 4.3: Analytics API Views
 class TrendingSearchesAnalyticsAPIView(generics.ListAPIView):
     """
-    GET /v1/analytics/trending-searches/?days=7&limit=10
+    GET /api/v1/analytics/trending-searches/?days=7&limit=10
     Returns trending searches from the last N days
     """
     permission_classes = [AllowAny]
@@ -1081,7 +1081,7 @@ class TrendingSearchesAnalyticsAPIView(generics.ListAPIView):
 
 class FailedSearchesAnalyticsAPIView(generics.ListAPIView):
     """
-    GET /v1/analytics/failed-searches/?days=7&limit=10
+    GET /api/v1/analytics/failed-searches/?days=7&limit=10
     Returns searches that returned zero results
     """
     permission_classes = [AllowAny]
@@ -1104,7 +1104,7 @@ class FailedSearchesAnalyticsAPIView(generics.ListAPIView):
 
 class SearchVolumeAnalyticsAPIView(generics.ListAPIView):
     """
-    GET /v1/analytics/search-volume/?start_date=2025-01-01&end_date=2025-12-31
+    GET /api/v1/analytics/search-volume/?start_date=2025-01-01&end_date=2025-12-31
     Returns daily search volume for the date range
     """
     permission_classes = [AllowAny]
@@ -1143,7 +1143,7 @@ class SearchVolumeAnalyticsAPIView(generics.ListAPIView):
 
 class SearchStatsAPIView(generics.ListAPIView):
     """
-    GET /v1/analytics/search-stats/?start_date=2025-01-01&end_date=2025-12-31
+    GET /api/v1/analytics/search-stats/?start_date=2025-01-01&end_date=2025-12-31
     Returns aggregate search statistics for the date range
     """
     permission_classes = [AllowAny]
@@ -1181,7 +1181,7 @@ class SearchStatsAPIView(generics.ListAPIView):
 
 class CourseSearchMetricsAPIView(generics.ListAPIView):
     """
-    GET /v1/analytics/course-search-metrics/?sort=impressions
+    GET /api/v1/analytics/course-search-metrics/?sort=impressions
     Returns per-course search metrics. Sort by: impressions, clicks, ctr
     """
     serializer_class = api_serializer.CourseSearchMetricsSerializer
@@ -1216,7 +1216,7 @@ class CourseSearchMetricsAPIView(generics.ListAPIView):
 # ✨ PHASE 4.4: Dashboard API Views
 class SearchAnalyticsDashboardAPIView(generics.GenericAPIView):
     """
-    GET /v1/analytics/dashboard/?period=daily&days=7
+    GET /api/v1/analytics/dashboard/?period=daily&days=7
     Comprehensive dashboard combining all search analytics
     """
     permission_classes = [AllowAny]
@@ -1298,7 +1298,7 @@ class SearchAnalyticsDashboardAPIView(generics.GenericAPIView):
 
 class SearchAnalyticsSummaryAPIView(generics.GenericAPIView):
     """
-    GET /v1/analytics/summary/?days=7
+    GET /api/v1/analytics/summary/?days=7
     Quick summary of search analytics (lightweight)
     """
     permission_classes = [AllowAny]
@@ -1333,7 +1333,7 @@ class SearchAnalyticsSummaryAPIView(generics.GenericAPIView):
 
 class SearchAnalyticsTrendAPIView(generics.GenericAPIView):
     """
-    GET /v1/analytics/trend/?start_date=2025-01-01&end_date=2025-12-31
+    GET /api/v1/analytics/trend/?start_date=2025-01-01&end_date=2025-12-31
     Detailed trend analysis with daily/weekly aggregation
     """
     permission_classes = [AllowAny]
@@ -1392,7 +1392,7 @@ class SearchAnalyticsTrendAPIView(generics.GenericAPIView):
 
 class FilterOptionsAPIView(generics.GenericAPIView):
     """
-    GET /v1/filters/options/
+    GET /api/v1/filters/options/
     Returns all available filter options for advanced search
     """
     permission_classes = [AllowAny]
@@ -1456,7 +1456,7 @@ class FilterOptionsAPIView(generics.GenericAPIView):
 
 class CategoryFilterAPIView(generics.GenericAPIView):
     """
-    GET /v1/filters/categories/
+    GET /api/v1/filters/categories/
     Get all course categories with course count
     """
     permission_classes = [AllowAny]
@@ -1477,7 +1477,7 @@ class CategoryFilterAPIView(generics.GenericAPIView):
 
 class LevelFilterAPIView(generics.GenericAPIView):
     """
-    GET /v1/filters/levels/
+    GET /api/v1/filters/levels/
     Get course level distribution with counts
     """
     permission_classes = [AllowAny]
@@ -1513,7 +1513,7 @@ class LevelFilterAPIView(generics.GenericAPIView):
 
 class RatingFilterAPIView(generics.GenericAPIView):
     """
-    GET /v1/filters/ratings/
+    GET /api/v1/filters/ratings/
     Get rating range distribution
     """
     permission_classes = [AllowAny]
@@ -1597,7 +1597,7 @@ class RatingFilterAPIView(generics.GenericAPIView):
 
 class TeacherFilterAPIView(generics.GenericAPIView):
     """
-    GET /v1/filters/teachers/
+    GET /api/v1/filters/teachers/
     Get available teachers with course counts
     """
     permission_classes = [AllowAny]
@@ -1625,7 +1625,7 @@ class TeacherFilterAPIView(generics.GenericAPIView):
 
 class AdvancedSearchAPIView(generics.GenericAPIView):
     """
-    POST /v1/search/advanced/
+    POST /api/v1/search/advanced/
     Unified endpoint combining FTS search with advanced filters
     
     Request:
@@ -1747,7 +1747,7 @@ class AdvancedSearchAPIView(generics.GenericAPIView):
 
 class AdvancedSearchSuggestionsAPIView(generics.GenericAPIView):
     """
-    GET /v1/search/suggestions/?q=python
+    GET /api/v1/search/suggestions/?q=python
     Get autocomplete suggestions based on search history and courses
     ✨ PHASE 4.9: Added caching for suggestions (600s TTL)
     """
@@ -6452,7 +6452,7 @@ class AvailableRolesAPIView(APIView):
     """
     Get list of available roles for the authenticated user
     
-    Endpoint: /v1/auth/available-roles/
+    Endpoint: /api/v1/auth/available-roles/
     Method: GET
     Authentication: Required (JWT Token)
     Permission: IsAuthenticated
@@ -6510,7 +6510,7 @@ class SelectRoleAPIView(APIView):
     """
     Switch/select user's current active role
     
-    Endpoint: /v1/auth/select-role/
+    Endpoint: /api/v1/auth/select-role/
     Method: POST
     Authentication: Required (JWT Token)
     Permission: IsAuthenticated

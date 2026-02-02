@@ -6,10 +6,10 @@ import UserData from "../views/plugin/UserData";
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Build the full API base URL
-// If baseURL is already a full URL (http://...), use it as-is + /v1
+// If baseURL is already a full URL (http://...), use it as-is + /api/v1
 // If baseURL is relative (/api), use it as-is + /v1 (baseURL already has /api)
 export const API_BASE_URL = baseURL.startsWith('http')
-  ? `${baseURL}/v1/`   // Full URL: append /v1/
+  ? `${baseURL}/api/v1/`   // Full URL: append /api/v1/
   : `${baseURL}/v1/`;       // Relative: append /v1/ (baseURL already has /api)
 
 // Default image URL for fallback cases
@@ -34,7 +34,7 @@ export const getMediaUrl = (path) => {
         // Extract backend origin from baseURL
         if (baseURL.startsWith('http')) {
             // Development mode: baseURL is full URL like http://127.0.0.1:8001
-            const baseOrigin = baseURL.split('/api')[0]; // Remove /v1/ part
+            const baseOrigin = baseURL.split('/api')[0]; // Remove /api/v1/ part
             return `${baseOrigin}/media/`;
         }
         // Production mode: relative path works (nginx serves both frontend and media)

@@ -258,7 +258,7 @@ class MultiRoleLoginTests(APITestCase):
     
     def test_login_returns_available_roles(self):
         """Test that login response includes available roles"""
-        response = self.client.post('/v1/token/', {
+        response = self.client.post('/api/v1/token/', {
             'email': 'khairil@example.com',
             'password': 'testpass123'
         }, format='json')

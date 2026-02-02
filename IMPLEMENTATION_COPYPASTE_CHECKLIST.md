@@ -647,7 +647,7 @@ print(connection.get_autocommit())  # Should print: False
 
 ### 3. Check Pagination
 ```bash
-curl "https://lms.dpd.go.id/api/v1/course/course-list/" | grep -o '"pagination"'
+curl "https://lms.dpd.go.id/api/api/v1/course/course-list/" | grep -o '"pagination"'
 # Should show pagination in response
 ```
 
@@ -680,7 +680,7 @@ from django.db import connection, reset_queries
 
 def test_cache_improvement():
     """Test cache vs no cache performance"""
-    endpoint = 'https://lms.dpd.go.id/api/v1/course/search/?query=python'
+    endpoint = 'https://lms.dpd.go.id/api/api/v1/course/search/?query=python'
     
     # Test 1: No cache
     cache.clear()

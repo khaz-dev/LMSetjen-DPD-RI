@@ -394,7 +394,7 @@ psql -U postgres lms_db < ~/lms_db_backup_20260130.sql
 
 ```bash
 # Check backend health
-curl https://lms.dpd.go.id/v1/health/
+curl https://lms.dpd.go.id/api/v1/health/
 
 # Check frontend
 curl https://lms.dpd.go.id

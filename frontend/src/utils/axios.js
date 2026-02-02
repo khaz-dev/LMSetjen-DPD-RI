@@ -10,7 +10,7 @@ const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 // If baseURL is already a full URL (http://...), use it as-is + /v1
 // If baseURL is relative (/api), use it as-is + /v1
 const API_BASE_URL = baseURL.startsWith('http') 
-  ? `${baseURL}/v1/`  // Full URL: append /v1/
+  ? `${baseURL}/api/v1/`  // Full URL: append /api/v1/
   : `${baseURL}/v1/`;      // Relative: append /v1/ (baseURL already has /api)
 
 // Create an Axios instance with default settings

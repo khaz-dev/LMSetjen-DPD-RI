@@ -209,11 +209,11 @@ function SystemDocumentation() {
                 baseUrl: "Base URL",
                 endpoints: "Main Endpoint Groups",
                 endpointsList: [
-                    "/v1/user/ - User authentication and profile management",
-                    "/v1/course/ - Course CRUD operations and browsing",
-                    "/v1/student/ - Student-specific operations (enrollment, progress, wishlist)",
-                    "/v1/teacher/ - Teacher operations (course management, analytics)",
-                    "/v1/admin/ - Admin operations (user management, system config)"
+                    "/api/v1/user/ - User authentication and profile management",
+                    "/api/v1/course/ - Course CRUD operations and browsing",
+                    "/api/v1/student/ - Student-specific operations (enrollment, progress, wishlist)",
+                    "/api/v1/teacher/ - Teacher operations (course management, analytics)",
+                    "/api/v1/admin/ - Admin operations (user management, system config)"
                 ],
                 docs: "Interactive Documentation",
                 swaggerUrl: "Swagger UI",
@@ -390,7 +390,7 @@ function SystemDocumentation() {
                 monitoring: "System Monitoring",
                 monitoringDesc: "The system includes built-in health checks and monitoring:",
                 monitoringList: [
-                    "Health endpoint: /v1/health/ - Returns system status",
+                    "Health endpoint: /api/v1/health/ - Returns system status",
                     "Database connection monitoring",
                     "Redis cache availability check",
                     "Docker container health checks",
@@ -625,11 +625,11 @@ function SystemDocumentation() {
                 baseUrl: "Base URL",
                 endpoints: "Grup Endpoint Utama",
                 endpointsList: [
-                    "/v1/user/ - Autentikasi pengguna dan manajemen profil",
-                    "/v1/course/ - Operasi CRUD kursus dan browsing",
-                    "/v1/student/ - Operasi spesifik student (enrollment, progress, wishlist)",
-                    "/v1/teacher/ - Operasi teacher (manajemen kursus, analitik)",
-                    "/v1/admin/ - Operasi admin (manajemen pengguna, konfigurasi sistem)"
+                    "/api/v1/user/ - Autentikasi pengguna dan manajemen profil",
+                    "/api/v1/course/ - Operasi CRUD kursus dan browsing",
+                    "/api/v1/student/ - Operasi spesifik student (enrollment, progress, wishlist)",
+                    "/api/v1/teacher/ - Operasi teacher (manajemen kursus, analitik)",
+                    "/api/v1/admin/ - Operasi admin (manajemen pengguna, konfigurasi sistem)"
                 ],
                 docs: "Dokumentasi Interaktif",
                 swaggerUrl: "Swagger UI",
@@ -806,7 +806,7 @@ function SystemDocumentation() {
                 monitoring: "Monitoring Sistem",
                 monitoringDesc: "Sistem mencakup health checks dan monitoring built-in:",
                 monitoringList: [
-                    "Health endpoint: /v1/health/ - Mengembalikan status sistem",
+                    "Health endpoint: /api/v1/health/ - Mengembalikan status sistem",
                     "Monitoring koneksi database",
                     "Pengecekan ketersediaan Redis cache",
                     "Health checks container Docker",
@@ -1129,7 +1129,7 @@ function SystemDocumentation() {
                         
                         <h3 className="subsection-title">{t.api.baseUrl}</h3>
                         <div className="code-block">
-                            https://lmsetjendpdri.duckdns.org/v1/
+                            https://lmsetjendpdri.duckdns.org/api/v1/
                         </div>
 
                         <h3 className="subsection-title">{t.api.endpoints}</h3>

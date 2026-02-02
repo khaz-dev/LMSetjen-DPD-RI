@@ -21,7 +21,7 @@ import './SSOLogin.css';
  * Flow:
  * 1. User is redirected from nusadpd.duckdns.org with JWT token
  * 2. Component receives token from URL parameter
- * 3. Sends token to backend /v1/sso/verify/ endpoint
+ * 3. Sends token to backend /api/v1/sso/verify/ endpoint
  * 4. Backend verifies token and returns LMS JWT tokens
  * 5. Frontend stores tokens in cookies and redirects user
  */

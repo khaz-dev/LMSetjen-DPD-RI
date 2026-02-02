@@ -92,11 +92,11 @@
 ```
 
 **Endpoints**:
-- Health: `GET /v1/health/`
-- Courses: `GET /v1/course/course-list/`
-- Search: `GET /v1/course/search/`
-- Advanced Search: `POST /v1/search/advanced/`
-- Analytics: `GET /v1/analytics/dashboard/`
+- Health: `GET /api/v1/health/`
+- Courses: `GET /api/v1/course/course-list/`
+- Search: `GET /api/v1/course/search/`
+- Advanced Search: `POST /api/v1/search/advanced/`
+- Analytics: `GET /api/v1/analytics/dashboard/`
 
 ### Frontend Status
 ```
@@ -268,7 +268,7 @@ Branches:          main (production-ready)
 ### Access Services
 - Frontend: http://localhost:3001
 - Backend API: http://localhost:8000
-- API Health: http://localhost:8000/v1/health/
+- API Health: http://localhost:8000/api/v1/health/
 
 ### Available Commands
 ```
