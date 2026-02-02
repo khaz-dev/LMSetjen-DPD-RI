@@ -81,7 +81,7 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG:-False}
       DJANGO_LOG_LEVEL: ${DJANGO_LOG_LEVEL:-INFO}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
       
       # Email Configuration
       SENDGRID_API_KEY: ${SENDGRID_API_KEY}

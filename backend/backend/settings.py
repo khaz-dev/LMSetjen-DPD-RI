@@ -30,17 +30,31 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-+c@7t#q96f*r#f-@ss1$2r5a
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
-    'localhost',
-    '127.0.0.1',
-    'testserver',  # For running tests
-    '16.79.83.21',  # EC2 server IP
-    'lmsetjendpdri.duckdns.org',  # Production domain
-    'lms.dpd.go.id',  # Production domain
-    '.onrender.com',
-    '.railway.app',
-    '.vercel.app'
-])
+# Get ALLOWED_HOSTS from environment
+# In production, this MUST be set via .env or docker-compose
+# Development defaults only apply if not explicitly set
+if DEBUG:
+    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
+        'localhost',
+        '127.0.0.1',
+        'testserver',  # For running tests
+        'backend',
+    ])
+else:
+    # Production: MUST be explicitly provided via environment variable
+    allowed_hosts_env = env('ALLOWED_HOSTS', default='')
+    if not allowed_hosts_env:
+        raise ValueError(
+            'ALLOWED_HOSTS environment variable is required in production.\n'
+            'Set ALLOWED_HOSTS=lms.dpd.go.id,www.lms.dpd.go.id in your .env file'
+        )
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
+
+# Always include localhost for internal requests
+if 'localhost' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('localhost')
+if '127.0.0.1' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('127.0.0.1')
 
 # Frontend and Backend URLs (for emails, redirects, etc.)
 FRONTEND_SITE_URL = env('FRONTEND_SITE_URL', default='https://lmsetjendpdri.duckdns.org')
