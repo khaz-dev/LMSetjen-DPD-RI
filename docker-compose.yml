@@ -90,7 +90,7 @@ services:
       # Site URLs
       FRONTEND_SITE_URL: ${FRONTEND_SITE_URL:-http://localhost:5174}
       BACKEND_SITE_URL: ${BACKEND_SITE_URL:-http://localhost:8001}
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8001}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://lms.dpd.go.id/api}
       
       # OAuth Configuration
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
