@@ -142,8 +142,8 @@ ALLOWED_HOSTS=lms.dpd.go.id,www.lms.dpd.go.id
 DJANGO_LOG_LEVEL=INFO
 
 # URLs
-FRONTEND_SITE_URL=https://lms.dpd.go.id
-BACKEND_SITE_URL=https://lms.dpd.go.id
+FRONTEND_SITE_URL=http://localhost:5174
+BACKEND_SITE_URL=http://localhost:8001
 VITE_API_BASE_URL=http://localhost:8001
 
 # Redis (Docker internal)

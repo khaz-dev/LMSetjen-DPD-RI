@@ -1,33 +1,4 @@
-###############################################################################
-#                                                                             #
-#           LMSetjen DPD RI - Unified Docker Compose Configuration           #
-#                                                                             #
-#  This single file handles BOTH development and production modes.           #
-#  MODE variable in .env controls which services are included:               #
-#                                                                             #
-#    MODE=development  → Includes PostgreSQL (full dev stack)                #
-#    MODE=production   → Uses host PostgreSQL (no DB in Docker)              #
-#                                                                             #
-###############################################################################
-
-version: '3.8'
-
-###############################################################################
-# SERVICES
-###############################################################################
-
 services:
-  
-  # ═══════════════════════════════════════════════════════════════════════════
-  # PostgreSQL Database Service
-  # REMOVED: Using existing PostgreSQL on host machine (localhost:5432)
-  # No Docker PostgreSQL container needed anymore
-  # ═══════════════════════════════════════════════════════════════════════════
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Redis Cache Service
-  # Runs in BOTH development and production modes
-  # ═══════════════════════════════════════════════════════════════════════════
   redis:
     image: redis:7-alpine
     container_name: lms_redis
@@ -44,13 +15,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Django Backend Service
-  # Runs in BOTH modes but with different database configurations:
-  #   DEVELOPMENT: Connects to postgres service in Docker
-  #   PRODUCTION: Connects to host.docker.internal (PostgreSQL on host)
-  # ═══════════════════════════════════════════════════════════════════════════
   backend:
     build:
       context: ./backend
@@ -90,7 +54,7 @@ services:
       # Site URLs
       FRONTEND_SITE_URL: ${FRONTEND_SITE_URL:-http://localhost:5174}
       BACKEND_SITE_URL: ${BACKEND_SITE_URL:-http://localhost:8001}
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://lms.dpd.go.id/api}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8001}
       
       # OAuth Configuration
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
@@ -122,11 +86,6 @@ services:
         echo '🚀 Starting Gunicorn server on 0.0.0.0:8001...' &&
         gunicorn --bind 0.0.0.0:8001 --workers 4 --threads 2 --timeout 120 --access-logfile - --error-logfile - backend.wsgi:application
       "
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # React Frontend Service
-  # Runs Vite dev server directly (lightweight, no Nginx)
-  # ═══════════════════════════════════════════════════════════════════════════
   frontend:
     build:
       context: .
@@ -135,27 +94,17 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      VITE_API_BASE_URL: http://localhost:8001
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8001}
       VITE_PORT: 5173
     ports:
       - "5174:5173"
     networks:
       - lms_network
-    # Note: No health check on frontend - it's a dev server (always ready)
-    # Backend has health check which verifies the entire stack
-
-###############################################################################
-# NETWORKS
-###############################################################################
 
 networks:
   lms_network:
     driver: bridge
     name: lms_network
-
-###############################################################################
-# VOLUMES
-###############################################################################
 
 volumes:
   redis_data:
@@ -166,25 +115,3 @@ volumes:
     name: lms_static_files
   backend_logs:
     name: lms_backend_logs
-
-###############################################################################
-# USAGE GUIDE
-###############################################################################
-#
-# STANDARD DEPLOYMENT:
-#   - Uses existing PostgreSQL on host machine (localhost:5432)
-#   - Database: lmsdb | User: postgres | Password: SimpleTest2026
-#   - Redis in Docker for caching
-#   - Backend on port 8001
-#   - Frontend on port 5174
-#
-#   Requirements:
-#     - PostgreSQL running on host (port 5432)
-#     - Docker has network access to host machine
-#
-#   Start: docker-compose up -d
-#   Stop:  docker-compose down
-#
-#   Note: No PostgreSQL in Docker - using your existing one on the host
-#
-###############################################################################
