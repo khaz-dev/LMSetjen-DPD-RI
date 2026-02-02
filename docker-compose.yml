@@ -57,6 +57,8 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: lms_backend
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     restart: unless-stopped
     env_file: .env
     environment:
