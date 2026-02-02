@@ -237,7 +237,7 @@ print("✅ Cache working!")
 
 **Step 4: Measure (5 min)**
 ```bash
-curl https://lms.dpd.go.id/api/api/v1/course/course-list/
+curl http://localhost:8001/api/v1/course/course-list/
 # Note response time → should be 70% faster
 ```
 

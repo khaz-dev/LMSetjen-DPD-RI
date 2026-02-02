@@ -96,7 +96,7 @@ function Login() {
       }
 
       console.log("🔄 Sending credential to backend...");
-      console.log("Backend URL:", import.meta.env.VITE_API_URL || "https://lms.dpd.go.id/api");
+      console.log("Backend URL:", import.meta.env.VITE_API_URL || "http://localhost:8001");
 
       // Send to backend for verification
       const response_data = await apiInstance.post("/auth/google/", {

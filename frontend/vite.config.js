@@ -69,7 +69,7 @@ export default defineConfig({
       process.env.VITE_GOOGLE_CLIENT_ID || '634643429020-bnjp2eo6bct4v5cn6f8hr918km8v2ajr.apps.googleusercontent.com'
     ),
     'import.meta.env.VITE_API_BASE_URL': JSON.stringify(
-      process.env.VITE_API_BASE_URL || 'https://lms.dpd.go.id/api'
+      process.env.VITE_API_BASE_URL || 'http://localhost:8001'
     ),
   },
   plugins: [

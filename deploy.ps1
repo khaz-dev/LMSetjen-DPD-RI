@@ -82,7 +82,7 @@ switch ($Command) {
             Write-Success "Services started"
             Write-Host "`nURLs:"
             Write-Host "  Frontend: http://localhost:5174"
-            Write-Host "  Backend:  https://lms.dpd.go.id/api`n"
+            Write-Host "  Backend:  http://localhost:8001`n"
         }
     }
     "down" {
