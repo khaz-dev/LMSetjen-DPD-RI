@@ -72,8 +72,8 @@ Examples:
 
 Service URLs:
   Frontend: http://localhost:5174
-  Backend:  https://lms.dpd.go.id/api/api/v1/
-  Health:   https://lms.dpd.go.id/api/api/v1/health/
+  Backend:  https://lms.dpd.go.id/api/v1/
+  Health:   https://lms.dpd.go.id/api/v1/health/
 
 Default Database Credentials:
   Host:     localhost
@@ -134,7 +134,7 @@ case "$COMMAND" in
             echo "URLs:"
             echo "  Frontend: http://localhost:5174"
             echo "  Backend:  https://lms.dpd.go.id/api"
-            echo "  Health:   https://lms.dpd.go.id/api/api/v1/health/"
+            echo "  Health:   https://lms.dpd.go.id/api/v1/health/"
             echo ""
         else
             write_error "Failed to start services"

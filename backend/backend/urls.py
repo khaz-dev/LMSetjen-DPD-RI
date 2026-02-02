@@ -41,7 +41,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     # Root redirect to API documentation
-    path('', RedirectView.as_view(url='api/v1/', permanent=False)),
+    path('', RedirectView.as_view(url='v1/', permanent=False)),
     
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
@@ -55,7 +55,7 @@ urlpatterns = [
     # In development without Docker, this allows React Router to handle the route
     path('certificate/validate/<str:validation_token>/', api_views.ReactSPACatchAllView.as_view(), name='certificate-validate-spa'),
 
-    path("api/v1/", include("api.urls"))
+    path("v1/", include("api.urls"))
 ]
 
 # Enhanced media serving with video streaming support

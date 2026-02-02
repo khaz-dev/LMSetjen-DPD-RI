@@ -40,7 +40,7 @@ const AdvancedSearchForm = ({
         if (value.length >= 2) {
             try {
                 const response = await fetch(
-                    `/api/v1/search/suggestions/?q=${encodeURIComponent(value)}`
+                    `/v1/search/suggestions/?q=${encodeURIComponent(value)}`
                 );
                 const data = await response.json();
                 setSuggestions(data.suggestions || []);

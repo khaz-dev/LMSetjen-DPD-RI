@@ -48,15 +48,15 @@ permission_classes = [IsStudentUser]  # Require student
 
 ### Search Implementation (PHASE 4+)
 1. **Full-Text Search**: `FullTextSearchAPIView` uses PostgreSQL `SearchVector` with rank weighting
-   - Endpoint: `GET /api/v1/course/full-text-search/`
+   - Endpoint: `GET /v1/course/full-text-search/`
    - Supports websearch syntax (quotes, boolean operators)
    - Cache layer: `SearchCacheManager` (backend/api/cache_utils.py)
 
 2. **Basic Search**: `SearchCourseAPIView` - simpler, ranked by title/description relevance
-   - Endpoint: `GET /api/v1/course/search/?search=query`
+   - Endpoint: `GET /v1/course/search/?search=query`
 
 3. **Advanced Search**: `AdvancedSearchAPIView` - FTS + filter support
-   - Endpoint: `POST /api/v1/search/advanced/`
+   - Endpoint: `POST /v1/search/advanced/`
    - Filters: category_id, level, min_rating, teacher_id
    - See `api/serializer.py` AdvancedSearchRequestSerializer for schema
 
@@ -65,17 +65,17 @@ permission_classes = [IsStudentUser]  # Require student
    - Methods: `.trending_searches()`, `.failed_searches()`
 
 ### Analytics Endpoints
-- `GET /api/v1/analytics/trending-searches/` - Popular search terms
-- `GET /api/v1/analytics/failed-searches/` - Zero-result queries
-- `GET /api/v1/analytics/dashboard/` - Comprehensive dashboard data
-- `GET /api/v1/filters/options/` - Available filter options
+- `GET /v1/analytics/trending-searches/` - Popular search terms
+- `GET /v1/analytics/failed-searches/` - Zero-result queries
+- `GET /v1/analytics/dashboard/` - Comprehensive dashboard data
+- `GET /v1/filters/options/` - Available filter options
 
 ## Frontend Component Patterns
 
 ### Custom Hooks
 ```javascript
 // useAxios - authenticated API calls with error handling
-const response = useAxios().get('/api/v1/course/course-list/')
+const response = useAxios().get('/v1/course/course-list/')
 
 // UserData - current user info, includes role/permissions
 const userData = UserData();
@@ -215,7 +215,7 @@ npm run dev  # http://localhost:5174
 
 ## SSO & External Integration
 
-- SSO endpoint: `POST /api/v1/sso/verify/` - validates external SSO tokens
+- SSO endpoint: `POST /v1/sso/verify/` - validates external SSO tokens
 - Token format includes `nip` field for government employee ID
 - Fallback: JWT refresh tokens for session persistence
 - SSO utils in `backend/api/sso_utils.py`

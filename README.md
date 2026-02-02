@@ -467,7 +467,7 @@ File: `frontend/src/utils/axios.js`
 
 ```javascript
 // Update base URL sesuai backend
-const baseURL = 'https://lms.dpd.go.id/api/api/v1/';
+const baseURL = 'https://lms.dpd.go.id/api/v1/';
 ```
 
 ---
