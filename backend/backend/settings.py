@@ -39,6 +39,7 @@ if DEBUG:
         '127.0.0.1',
         'testserver',  # For running tests
         'backend',
+        'lms.dpd.go.id',
     ])
 else:
     # Production: MUST be explicitly provided via environment variable
