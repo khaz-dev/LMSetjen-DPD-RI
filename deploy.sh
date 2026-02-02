@@ -79,7 +79,7 @@ Default Database Credentials:
   Host:     localhost
   Port:     5432
   User:     postgres
-  Password: Okkdpdri2026
+  Password: Okkdpdri@2026
   Database: lmsdb
 
 For more information:

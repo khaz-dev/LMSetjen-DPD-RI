@@ -75,10 +75,8 @@ export default defineConfig({
   plugins: [
     spaFallbackPlugin(),
     react({
-      // Add fast refresh options
-      fastRefresh: true,
-      // Exclude problematic files from HMR
-      include: "**/*.{jsx,tsx}",
+      // Fast refresh disabled in production
+      fastRefresh: process.env.NODE_ENV !== 'production',
     }),
     // Gzip compression
     viteCompression({
@@ -97,28 +95,12 @@ export default defineConfig({
   ],
   server: {
     host: '0.0.0.0',  // Listen on all interfaces (IPv4 + IPv6)
-    port: process.env.VITE_PORT || 5174,  // Use VITE_PORT env var if set, default to 5174 for local dev
-    hmr: {
-      // HMR settings
-      protocol: process.env.VITE_HMR_PROTOCOL || 'ws',
-      host: process.env.VITE_HMR_HOST || 'localhost',
-      port: process.env.VITE_HMR_PORT ? parseInt(process.env.VITE_HMR_PORT) : 5174,
-      overlay: true,
-    },
+    port: process.env.VITE_PORT || 5174,
+    hmr: false,  // Disable HMR entirely - use npm run build for production
     watch: {
       usePolling: true,
     },
   },
-  
-  // allowedHosts configuration for Vite dev server
-  // Allows specific hosts to access the dev server (prevents "Blocked request" errors)
-  allowedHosts: [
-    'localhost',
-    '127.0.0.1',
-    'lms.dpd.go.id',
-    'lmsetjendpdri.duckdns.org',
-    process.env.VITE_ALLOWED_HOSTS || 'localhost',
-  ].filter(Boolean),
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
   },
