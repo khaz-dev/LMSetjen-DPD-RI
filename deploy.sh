@@ -72,8 +72,8 @@ Examples:
 
 Service URLs:
   Frontend: http://localhost:5174
-  Backend:  http://localhost:8001/api/v1/
-  Health:   http://localhost:8001/api/v1/health/
+  Backend:  https://lms.dpd.go.id/api/api/v1/
+  Health:   https://lms.dpd.go.id/api/api/v1/health/
 
 Default Database Credentials:
   Host:     localhost
@@ -133,8 +133,8 @@ case "$COMMAND" in
             echo ""
             echo "URLs:"
             echo "  Frontend: http://localhost:5174"
-            echo "  Backend:  http://localhost:8001"
-            echo "  Health:   http://localhost:8001/api/v1/health/"
+            echo "  Backend:  https://lms.dpd.go.id/api"
+            echo "  Health:   https://lms.dpd.go.id/api/api/v1/health/"
             echo ""
         else
             write_error "Failed to start services"
@@ -190,7 +190,7 @@ case "$COMMAND" in
                 echo ""
                 echo "URLs:"
                 echo "  Frontend: http://localhost:5174"
-                echo "  Backend:  http://localhost:8001"
+                echo "  Backend:  https://lms.dpd.go.id/api"
                 echo ""
             else
                 write_error "Failed to rebuild services"

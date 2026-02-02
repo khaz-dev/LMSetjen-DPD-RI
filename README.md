@@ -59,7 +59,7 @@ LMSetjen DPD RI adalah platform Learning Management System (LMS) yang dirancang 
 
 ```
 
-### Tujuan**URL:** http://localhost:8001
+### Tujuan**URL:** https://lms.dpd.go.id/api
 
 - 🎯 Menyediakan platform pembelajaran online yang modern dan user-friendly
 
@@ -287,7 +287,7 @@ python manage.py runserver### Frontend
 
 - Vite
 
-Backend akan berjalan di: **http://localhost:8001**- React Router
+Backend akan berjalan di: **https://lms.dpd.go.id/api**- React Router
 
 - Zustand (State Management)
 
@@ -336,8 +336,8 @@ Frontend akan berjalan di: **http://localhost:5174**
 ### Akses Aplikasi
 
 1. **Landing Page**: http://localhost:5174
-2. **Admin Panel**: http://localhost:8001/admin
-3. **API Documentation**: http://localhost:8001/api/
+2. **Admin Panel**: https://lms.dpd.go.id/api/admin
+3. **API Documentation**: https://lms.dpd.go.id/api/api/
 
 ### Default Credentials
 
@@ -467,7 +467,7 @@ File: `frontend/src/utils/axios.js`
 
 ```javascript
 // Update base URL sesuai backend
-const baseURL = 'http://localhost:8001/api/v1/';
+const baseURL = 'https://lms.dpd.go.id/api/api/v1/';
 ```
 
 ---

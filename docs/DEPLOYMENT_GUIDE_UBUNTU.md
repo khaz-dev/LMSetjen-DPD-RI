@@ -144,7 +144,7 @@ DJANGO_LOG_LEVEL=INFO
 # URLs
 FRONTEND_SITE_URL=https://lms.dpd.go.id
 BACKEND_SITE_URL=https://lms.dpd.go.id
-VITE_API_BASE_URL=http://localhost:8001
+VITE_API_BASE_URL=https://lms.dpd.go.id/api
 
 # Redis (Docker internal)
 REDIS_URL=redis://:redis_password@redis:6381/0
@@ -237,8 +237,8 @@ Create `/etc/apache2/sites-available/lms.dpd.go.id.conf`:
     ProxyPassReverse / http://localhost:5174/
     
     # Backend API (Django on port 8001)
-    ProxyPass /api http://localhost:8001/api
-    ProxyPassReverse /api http://localhost:8001/api
+    ProxyPass /api https://lms.dpd.go.id/api/api
+    ProxyPassReverse /api https://lms.dpd.go.id/api/api
     
     # WebSocket support
     RewriteEngine On

@@ -67,7 +67,7 @@ EXPOSE 8001
 
 # Health check - follow redirects and check for 200 status
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request; req = urllib.request.Request('http://localhost:8001/api/v1/health/', headers={'Host': 'localhost'}); response = urllib.request.urlopen(req, timeout=5); exit(0 if response.status in [200, 301] else 1)" || exit 1
+    CMD python -c "import urllib.request; req = urllib.request.Request('https://lms.dpd.go.id/api/api/v1/health/', headers={'Host': 'localhost'}); response = urllib.request.urlopen(req, timeout=5); exit(0 if response.status in [200, 301] else 1)" || exit 1
 
 # Default command - migrations and collectstatic are handled in docker-compose
 CMD ["gunicorn", "--bind", "0.0.0.0:8001", "--workers", "2", "--threads", "2", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info", "backend.wsgi:application"]

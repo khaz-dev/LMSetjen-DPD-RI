@@ -89,7 +89,7 @@ services:
       
       # Site URLs
       FRONTEND_SITE_URL: ${FRONTEND_SITE_URL:-http://localhost:5174}
-      BACKEND_SITE_URL: ${BACKEND_SITE_URL:-http://localhost:8001}
+      BACKEND_SITE_URL: ${BACKEND_SITE_URL:-https://lms.dpd.go.id/api}
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://lms.dpd.go.id/api}
       
       # OAuth Configuration
@@ -135,7 +135,7 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      VITE_API_BASE_URL: http://localhost:8001
+      VITE_API_BASE_URL: https://lms.dpd.go.id/api
       VITE_PORT: 5173
     ports:
       - "5174:5173"

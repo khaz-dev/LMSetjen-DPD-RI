@@ -216,7 +216,7 @@ print("✅ Cache working")
 
 ### Test DB Pooling
 ```bash
-curl http://localhost:8001/api/v1/course/course-list/
+curl https://lms.dpd.go.id/api/api/v1/course/course-list/
 # Should respond in <100ms with caching
 ```
 
@@ -328,7 +328,7 @@ print(cache.get('test'))  # Should print: hello
 ### Step 4: Measure Baseline (10 minutes)
 ```bash
 # Measure before optimization
-curl http://localhost:8001/api/v1/course/course-list/
+curl https://lms.dpd.go.id/api/api/v1/course/course-list/
 # Note the response time
 ```
 
@@ -341,7 +341,7 @@ curl http://localhost:8001/api/v1/course/course-list/
 ### Step 6: Measure Again (5 minutes)
 ```bash
 # Measure after optimization
-curl http://localhost:8001/api/v1/course/course-list/
+curl https://lms.dpd.go.id/api/api/v1/course/course-list/
 # Should be 70% faster!
 ```
 

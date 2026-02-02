@@ -142,7 +142,7 @@ cd backend
 python -m venv venv
 venv\Scripts\activate  # Windows
 pip install -r requirements.txt
-python manage.py runserver  # http://localhost:8001
+python manage.py runserver  # https://lms.dpd.go.id/api
 
 # Frontend
 cd frontend
