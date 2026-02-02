@@ -50,9 +50,14 @@ COPY --from=dependencies /usr/local/bin /usr/local/bin
 # Copy application code
 COPY --chown=appuser:appuser . .
 
-# Create necessary directories
+# Create necessary directories with proper permissions
 RUN mkdir -p /app/media /app/static /app/staticfiles /app/logs /app/temp_uploads && \
-    chown -R appuser:appuser /app/media /app/static /app/staticfiles /app/logs /app/temp_uploads
+    chown -R appuser:appuser /app/media /app/static /app/staticfiles /app/logs /app/temp_uploads && \
+    chmod -R 755 /app/media /app/static /app/staticfiles /app/logs /app/temp_uploads && \
+    chmod -R g+w /app/media /app/static /app/staticfiles /app/logs /app/temp_uploads
+
+# Ensure /app directory itself is writable by appuser
+RUN chmod -R 755 /app && chmod g+w /app
 
 # Switch to non-root user
 USER appuser

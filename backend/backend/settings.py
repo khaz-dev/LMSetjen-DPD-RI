@@ -36,6 +36,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
     'testserver',  # For running tests
     '16.79.83.21',  # EC2 server IP
     'lmsetjendpdri.duckdns.org',  # Production domain
+    'lms.dpd.go.id',  # Production domain
     '.onrender.com',
     '.railway.app',
     '.vercel.app'
@@ -330,9 +331,7 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "http://16.79.83.21",  # EC2 server IP (HTTP)
     "https://16.79.83.21",  # EC2 server IP (HTTPS)
     "https://lmsetjendpdri.duckdns.org",  # Production domain (HTTPS)
-    "https://frontend-mtmk2t9bk-khazs-projects.vercel.app",  # Old production frontend
-    "https://frontend-srfucwb9o-khazs-projects.vercel.app",  # New production frontend
-    "https://frontend-p26ir11fd-khazs-projects.vercel.app",  # Alternative production frontend
+    "https://lms.dpd.go.id",  # Server 
 ])
 
 CORS_ALLOW_CREDENTIALS = True
@@ -499,7 +498,15 @@ LOGGING = {
 
 # Create logs directory if it doesn't exist
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')
-os.makedirs(LOGS_DIR, exist_ok=True)
+try:
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    os.chmod(LOGS_DIR, 0o755)
+except (PermissionError, OSError) as e:
+    if os.path.exists(LOGS_DIR) and os.access(LOGS_DIR, os.W_OK):
+        pass
+    else:
+        import sys
+        print(f"Warning: Could not create logs directory: {e}", file=sys.stderr)
 
 # Django Extensions for better development and monitoring
 if DEBUG:
@@ -521,7 +528,15 @@ if DEBUG:
 FILE_UPLOAD_MAX_MEMORY_SIZE = env.int('FILE_UPLOAD_MAX_MEMORY_SIZE', default=524288001)  # 500MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = env.int('DATA_UPLOAD_MAX_MEMORY_SIZE', default=524288001)  # 500MB
 FILE_UPLOAD_TEMP_DIR = os.path.join(BASE_DIR, 'temp_uploads')
-os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
+try:
+    os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
+    os.chmod(FILE_UPLOAD_TEMP_DIR, 0o755)
+except (PermissionError, OSError) as e:
+    if os.path.exists(FILE_UPLOAD_TEMP_DIR) and os.access(FILE_UPLOAD_TEMP_DIR, os.W_OK):
+        pass
+    else:
+        import sys
+        print(f"Warning: Could not create temp_uploads directory: {e}", file=sys.stderr)
 
 # Organized Media Storage Structure
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -541,7 +556,15 @@ MEDIA_SUBDIRS = {
 
 # Create directories if they don't exist
 for dir_path in MEDIA_SUBDIRS.values():
-    os.makedirs(dir_path, exist_ok=True)
+    try:
+        os.makedirs(dir_path, exist_ok=True)
+        os.chmod(dir_path, 0o755)
+    except (PermissionError, OSError) as e:
+        if os.path.exists(dir_path) and os.access(dir_path, os.W_OK):
+            pass
+        else:
+            import sys
+            print(f"Warning: Could not create directory {dir_path}: {e}", file=sys.stderr)
 
 # File Size Limits by Type
 MAX_FILE_SIZES = {
