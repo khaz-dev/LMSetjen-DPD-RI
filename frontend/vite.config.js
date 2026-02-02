@@ -100,6 +100,9 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
+    allowedHosts: [
+      'lms.dpd.go.id',
+    ]
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
