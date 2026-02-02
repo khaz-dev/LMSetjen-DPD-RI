@@ -101,7 +101,7 @@ export default defineConfig({
       usePolling: true,
     },
     allowedHosts: [
-      'lms.dpd.go.id',
+      'lms.dpd.go.id'
     ]
   },
   optimizeDeps: {
