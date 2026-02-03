@@ -519,7 +519,6 @@ function Login() {
 
                   <div className="sso-login-container">
                     <h5 className="text-center mb-4 sso-login-title" style={{fontSize: "0.95rem", fontWeight: "600", color: "#495057"}}>
-                      <i className="fas fa-user-circle me-2"></i>
                       Pilih Metode Login Anda
                     </h5>
 
@@ -575,10 +574,10 @@ function Login() {
                       </p>
                       <div className="d-grid">
                         <a 
-                          href="https://nusadpd.duckdns.org/sso/" 
+                          href="https://nusa.dpd.go.id?app=LMS" 
                           className="btn btn-lg sso-nusa-btn"
                           target="_self"
-                          title="Login menggunakan akun Nusa DPD"
+                          title="Login menggunakan akun SSO"
                           style={{
                             backgroundColor: "#0066CC",
                             color: "#FFFFFF",
@@ -586,7 +585,7 @@ function Login() {
                           }}
                         >
                           <i className="fas fa-building me-2"></i>
-                          Login dengan Nusa DPD
+                          Login dengan SSO
                         </a>
                       </div>
                     </div>
@@ -595,7 +594,7 @@ function Login() {
                     <div className="alert alert-info mt-4" role="alert">
                       <i className="fas fa-info-circle me-2"></i>
                       <small>
-                        Gunakan akun Google atau Nusa DPD Anda untuk login ke sistem pembelajaran ini.
+                        Gunakan akun Google atau SSO untuk login ke sistem pembelajaran ini.
                       </small>
                     </div>
 
