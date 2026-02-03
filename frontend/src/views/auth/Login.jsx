@@ -643,7 +643,7 @@ function Login() {
                       </p>
                       <div className="d-grid">
                         <a
-                          href="https://nusadpd.duckdns.org?app=LMS"
+                          href="https://nusa.dpd.go.id?app=LMS"
                           className="btn btn-lg sso-nusa-btn"
                           target="_self"
                           title="Login menggunakan akun SSO"
