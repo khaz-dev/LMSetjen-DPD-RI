@@ -507,6 +507,29 @@
 .sso-google-btn,
 .sso-nusa-btn {
     font-size: 0.9rem !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Google Button Hover */
+.sso-google-btn:hover {
+    background-color: #F8F9FA !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* NUSA SSO Button Hover - Reverse style to filled */
+.sso-nusa-btn:hover {
+    background-color: #0066CC !important;
+    color: #FFFFFF !important;
+    border-color: #0066CC !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.25) !important;
+}
+
+/* Active/pressed state */
+.sso-google-btn:active,
+.sso-nusa-btn:active {
+    transform: translateY(0) !important;
 }
 
 /* Responsive SSO button */

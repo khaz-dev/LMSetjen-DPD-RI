@@ -634,3 +634,7 @@ if DEBUG and sys.platform == 'win32':
     # Use WatchmanReloaderClass or PollingReloader if autoreloader fails
     # This ensures subprocess properly inherits sys.executable and venv
     os.environ['RUN_MAIN'] = 'true'
+
+# External API Configuration
+EXTERNAL_API_BASE_URL = env('EXTERNAL_API_BASE_URL', default='https://cmb.tail91813a.ts.net')
+EXTERNAL_API_TOKEN = env('EXTERNAL_API_TOKEN', default='hY89aCK6tgMmGQNootpLYsw9otfwmNAv24cZ3QIljC8aI8DQ4RbxQlHPn0cVBbgdtwuJpWbxfbu4qGCwTycKtAiIDwX8ePEcWRtBhu2LfKmsY87eGuCDXBv8pAvbLtEH')
