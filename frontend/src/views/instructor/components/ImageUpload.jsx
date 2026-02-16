@@ -18,6 +18,44 @@ const ImageUpload = ({
   const [imageUrl, setImageUrl] = useState("");
   const [validationError, setValidationError] = useState("");
 
+  // ✨ PHASE 4.26: Extract file ID from various Google Drive URL formats
+  const extractGoogleDriveFileId = (url) => {
+    try {
+      // Format 1: https://drive.google.com/file/d/FILE_ID/view...
+      const match1 = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (match1 && match1[1]) return match1[1];
+      
+      // Format 2: https://drive.google.com/uc?id=FILE_ID...
+      const match2 = url.match(/[?&]id=([a-zA-Z0-9-_]+)/);
+      if (match2 && match2[1]) return match2[1];
+      
+      // Format 3: https://drive.usercontent.google.com/download?id=FILE_ID...
+      const match3 = url.match(/[?&]id=([a-zA-Z0-9-_]+)/);
+      if (match3 && match3[1]) return match3[1];
+      
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  // ✨ PHASE 4.26: Convert Google Drive URL to direct image URL
+  const convertGoogleDriveUrl = (url) => {
+    const isGoogleDrive = url.includes('drive.google.com') || url.includes('drive.usercontent.google.com');
+    
+    if (!isGoogleDrive) {
+      return url; // Return as-is if not Google Drive
+    }
+    
+    const fileId = extractGoogleDriveFileId(url);
+    if (fileId) {
+      // Use the direct export format that works with img tags
+      return `https://drive.google.com/uc?id=${fileId}`;
+    }
+    
+    return url; // Return original if can't extract file ID
+  };
+
   // Validate image URL
   const isValidImageUrl = (url) => {
     try {
@@ -30,7 +68,7 @@ const ImageUpload = ({
       const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
       const path = urlObj.pathname.toLowerCase();
       const isValidExt = validExtensions.some(ext => path.includes(ext));
-      const isGoogleDrive = urlObj.hostname.includes('drive.google.com') || urlObj.hostname.includes('lh');
+      const isGoogleDrive = urlObj.hostname.includes('drive.google.com') || urlObj.hostname.includes('lh') || urlObj.hostname.includes('drive.usercontent.google.com');
       return isValidExt || isGoogleDrive;
     } catch {
       return false;
@@ -57,13 +95,17 @@ const ImageUpload = ({
     setLoading(true);
     
     try {
+      // ✨ PHASE 4.26: Convert Google Drive URLs to loadable format
+      const urlToLoad = convertGoogleDriveUrl(imageUrl);
+      
       // Verify image can be loaded by creating an Image object
       const img = new Image();
       img.onload = () => {
+        // Store the original URL, not the converted one
         setImagePreview(imageUrl);
         setCourseData(prevData => ({
           ...prevData,
-          image: imageUrl,
+          image: imageUrl, // Store original URL
         }));
         validateField('image', imageUrl);
         
@@ -85,7 +127,8 @@ const ImageUpload = ({
         setLoading(false);
       };
       
-      img.src = imageUrl;
+      // Load using the converted URL (for testing), but preview the original URL
+      img.src = urlToLoad;
     } catch (error) {
       console.error("Error validating image URL:", error);
       setValidationError("Terjadi kesalahan saat validasi URL gambar");
@@ -152,7 +195,7 @@ const ImageUpload = ({
                     <div className="image-preview-container" style={{ height: '400px' }}>
                       <img
                         className="image-preview"
-                        src={courseData.image}
+                        src={convertGoogleDriveUrl(courseData.image)}
                         alt="Current Course Thumbnail"
                         onError={(e) => {
                           e.target.src = PLACEHOLDER_SVG;
@@ -178,7 +221,7 @@ const ImageUpload = ({
                     <div className="image-preview-container" style={{ height: '400px' }}>
                       <img
                         className={getImagePreviewClass()}
-                        src={imagePreview}
+                        src={convertGoogleDriveUrl(imagePreview)}
                         alt="New Course Thumbnail Preview"
                         onError={(e) => {
                           e.target.src = PLACEHOLDER_SVG;
@@ -200,7 +243,7 @@ const ImageUpload = ({
               <div className="image-preview-container" style={{ height: '400px' }}>
                 <img
                   className={getImagePreviewClass()}
-                  src={imagePreview || courseData?.image || PLACEHOLDER_SVG}
+                  src={convertGoogleDriveUrl(imagePreview || courseData?.image || PLACEHOLDER_SVG)}
                   alt="Course Thumbnail Preview"
                   onError={(e) => {
                     e.target.src = PLACEHOLDER_SVG;
