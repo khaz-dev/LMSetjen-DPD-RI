@@ -41,6 +41,7 @@ const ImageUpload = ({
 
   // ✨ PHASE 4.26: Convert Google Drive URL to direct image URL
   // ✨ PHASE 4.29: Fixed - Add &export=download so Google Drive serves the actual image
+  // ✨ PHASE 4.30: CRITICAL FIX - Use Google's lh.googleusercontent.com media server (better CORS support)
   const convertGoogleDriveUrl = (url) => {
     const isGoogleDrive = url.includes('drive.google.com') || url.includes('drive.usercontent.google.com');
     
@@ -50,9 +51,10 @@ const ImageUpload = ({
     
     const fileId = extractGoogleDriveFileId(url);
     if (fileId) {
-      // Use the direct export format with &export=download parameter
-      // This tells Google Drive to return the actual image file, not an HTML page
-      return `https://drive.google.com/uc?id=${fileId}&export=download`;
+      // PHASE 4.30: Use Google's lh.googleusercontent.com media server instead
+      // This is Google's official image hosting domain with better CORS support
+      // Much more reliable for img tag loading than drive.google.com/uc endpoints
+      return `https://lh.googleusercontent.com/d/${fileId}`;
     }
     
     return url; // Return original if can't extract file ID
@@ -223,6 +225,7 @@ const ImageUpload = ({
                         className="image-preview"
                         src={convertGoogleDriveUrl(courseData.image)}
                         alt="Current Course Thumbnail"
+                        referrerPolicy="no-referrer"
                         onError={(e) => {
                           e.target.src = PLACEHOLDER_SVG;
                           e.target.style.backgroundColor = '#f0f0f0';
@@ -249,6 +252,7 @@ const ImageUpload = ({
                         className={getImagePreviewClass()}
                         src={convertGoogleDriveUrl(imagePreview)}
                         alt="New Course Thumbnail Preview"
+                        referrerPolicy="no-referrer"
                         onError={(e) => {
                           e.target.src = PLACEHOLDER_SVG;
                           e.target.style.backgroundColor = '#f0f0f0';
@@ -271,6 +275,7 @@ const ImageUpload = ({
                   className={getImagePreviewClass()}
                   src={convertGoogleDriveUrl(imagePreview || courseData?.image || PLACEHOLDER_SVG)}
                   alt="Course Thumbnail Preview"
+                  referrerPolicy="no-referrer"
                   onError={(e) => {
                     e.target.src = PLACEHOLDER_SVG;
                     e.target.style.backgroundColor = '#f0f0f0';
