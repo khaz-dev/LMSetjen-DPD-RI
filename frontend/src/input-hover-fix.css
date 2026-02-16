@@ -227,6 +227,38 @@ textarea:focus,
     z-index: 2 !important;
 }
 
+/* ✨ PHASE 4.25: Global form-select option styling for consistency */
+select option,
+.form-select option {
+    background: white !important;
+    color: #495057 !important;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+select option:checked,
+.form-select option:checked {
+    background: linear-gradient(rgba(52, 152, 219, 0.15), rgba(52, 152, 219, 0.15)), white !important;
+    background-color: #e7f5ff !important;
+    color: #094af3 !important;
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.3);
+}
+
+select option:hover,
+.form-select option:hover {
+    background: #f0f7ff !important;
+    color: #495057 !important;
+}
+
+select option:disabled,
+.form-select option:disabled {
+    background: #f8f9fa !important;
+    color: #6c757d !important;
+    opacity: 0.5;
+}
+
 /* ============================================
    CHECKBOX & RADIO HOVER STYLES
    ============================================ */
