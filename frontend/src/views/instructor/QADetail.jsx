@@ -152,7 +152,7 @@ function QADetail() {
 
                                     <form class="w-100 row">
                                         <div className="col-lg-10">
-                                            <textarea class="one form-control pe-4 bg-light w-100" id="autoheighttextarea" rows="2" placeholder="Write a message..."></textarea>
+                                            <textarea class="one form-control pe-4 bg-light w-100" id="autoheighttextarea" rows="2" placeholder="Tulis pesan..."></textarea>
                                         </div>
                                         <div className="col-lg-2">
                                             <button class="btn btn-primary ms-2 mb-0 w-100" type="button">

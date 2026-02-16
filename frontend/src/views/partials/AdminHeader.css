@@ -41,7 +41,7 @@
     }
 }
 
-.navbar-toggler-icon {
+.admin-header .navbar-toggler-icon {
     width: 28px;
     height: 28px;
     display: inline-block;
@@ -49,9 +49,9 @@
     position: relative;
 }
 
-.navbar-toggler-icon::before,
-.navbar-toggler-icon::after,
-.navbar-toggler-icon span {
+.admin-header .navbar-toggler-icon::before,
+.admin-header .navbar-toggler-icon::after,
+.admin-header .navbar-toggler-icon span {
     content: '';
     display: block;
     height: 4px;
@@ -62,20 +62,20 @@
     transition: all 0.3s;
 }
 
-.navbar-toggler-icon span {
+.admin-header .navbar-toggler-icon span {
     margin: 0;
 }
 
-.navbar-toggler-icon::before {
+.admin-header .navbar-toggler-icon::before {
     margin-top: 4px;
 }
 
-.navbar-toggler-icon::after {
+.admin-header .navbar-toggler-icon::after {
     margin-bottom: 4px;
 }
 
 /* Horizontal navigation for desktop */
-.navbar-nav {
+.admin-header .navbar-nav {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -84,7 +84,7 @@
 }
 
 /* Each nav-item inline */
-.nav-item {
+.admin-header .nav-item {
     display: flex;
     align-items: center;
     margin: 0 0.25rem;
@@ -193,10 +193,6 @@
     background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     backdrop-filter: blur(10px);
-}
-
-.stat-label {
-    font-weight: 500;
 }
 
 /* CRITICAL: Admin Header Stat Label - Scoped to navbar context */
@@ -914,7 +910,11 @@
         min-height: 60px;
     }
     
-    body {
+    /* CRITICAL FIX: Scope body padding to admin context only */
+    /* Apply padding-top to section elements instead of body to limit scope */
+    /* This prevents student/instructor dashboard pages from being affected */
+    .admin-header + section,
+    .admin-header +div {
         padding-top: 70px !important;
     }
     

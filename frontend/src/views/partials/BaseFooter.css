@@ -22,7 +22,6 @@
   border-top: 1px solid var(--footer-border);
   box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
   padding-top: 2rem;
-  padding-bottom: 1rem;
   width: 100%;
 }
 
@@ -231,6 +230,7 @@
   border-top: 2px solid var(--footer-border);
   padding-top: 0.5rem;
   margin-top: 0.5rem;
+  padding-bottom: 1rem;
 }
 
 .footer-copyright {

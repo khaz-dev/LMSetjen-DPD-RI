@@ -197,6 +197,7 @@ function CourseCreate() {
             level: courseData.level,
             image: courseData.image, // URL from file-upload API
             file: courseData.file,   // URL from file-upload API
+            intro_video_source: courseData.intro_video_source || "upload", // ✨ PHASE 4.18: Include video source type
         };
 
         try {

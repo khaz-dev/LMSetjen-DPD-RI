@@ -96,9 +96,17 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',  // Listen on all interfaces (IPv4 + IPv6)
     port: process.env.VITE_PORT || 5174,
-    hmr: false,  // Disable HMR entirely - use npm run build for production
+    // ✨ PHASE 4.10: Enable HMR for hot module replacement (auto-reload on file changes)
+    // Configure HMR to work with development server
+    hmr: {
+      protocol: 'ws',  // Use WebSocket protocol for HMR
+      host: 'localhost',  // Connect back to localhost for file changes
+      port: process.env.VITE_PORT || 5174,
+    },
+    // Use native file system watching instead of polling
+    // Much faster and more efficient than polling
     watch: {
-      usePolling: true,
+      usePolling: false,  // Disable polling - use native file system events
     },
     allowedHosts: [
       'lms.dpd.go.id'

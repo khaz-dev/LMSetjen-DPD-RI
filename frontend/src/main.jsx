@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import './index.css'
 import './input-hover-fix.css'
 import './accessibility-fixes.css'
+import './views/admin/TestimonialsAdmin.css'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(

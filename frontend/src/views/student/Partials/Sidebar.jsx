@@ -158,6 +158,16 @@ function Sidebar() {
                                 <span className="nav-text">Edit Profil</span>
                             </Link>
                             
+                            <Link 
+                                className={`modern-nav-link ${isActive("/student/testimonials") ? "active" : ""}`} 
+                                to="/student/testimonials/"
+                                data-tooltip="Testimoni"
+                            >
+                                <div className="nav-icon">
+                                    <i className="fas fa-quote-left"></i>
+                                </div>
+                                <span className="nav-text">Testimoni</span>
+                            </Link>
                         </div>
 
                         {/* Logout Button */}

@@ -149,7 +149,7 @@ if _database_url:
     }
     print(f"DEBUG: DATABASES config: {DATABASES}")
 else:
-    print("DEBUG: Using individual DB configuration")
+    print("DEBUG: Using individual DB configuration (PostgreSQL)")
     # Fall back to individual configuration with URL-encoded password
     _DB_NAME = env('DB_NAME', default='secure_password')
     # URL-encode the password to handle special characters
@@ -161,7 +161,7 @@ else:
             'NAME': env('DB_NAME', default='lms_db'),
             'USER': env('DB_USER', default='lms_user'),
             'PASSWORD': env('DB_PASSWORD', default='secure_password'),
-            'HOST': env('DB_HOST', default='localhost'),
+            'HOST': env('DB_HOST', default='host.docker.internal'),  # Use Docker host for Windows
             'PORT': env('DB_PORT', default='5432'),
             'CONN_MAX_AGE': 600,  # 10 minutes connection persistence
             'OPTIONS': {
@@ -538,22 +538,17 @@ if DEBUG:
     
     INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
-# Enhanced Local File Storage Configuration
-# Increased to 500MB to support large video uploads (matches MAX_VIDEO_FILE_SIZE)
-FILE_UPLOAD_MAX_MEMORY_SIZE = env.int('FILE_UPLOAD_MAX_MEMORY_SIZE', default=524288001)  # 500MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = env.int('DATA_UPLOAD_MAX_MEMORY_SIZE', default=524288001)  # 500MB
-FILE_UPLOAD_TEMP_DIR = os.path.join(BASE_DIR, 'temp_uploads')
-try:
-    os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
-    os.chmod(FILE_UPLOAD_TEMP_DIR, 0o755)
-except (PermissionError, OSError) as e:
-    if os.path.exists(FILE_UPLOAD_TEMP_DIR) and os.access(FILE_UPLOAD_TEMP_DIR, os.W_OK):
-        pass
-    else:
-        import sys
-        print(f"Warning: Could not create temp_uploads directory: {e}", file=sys.stderr)
+# \u2728 PHASE 3: FILE UPLOAD CONFIGURATION - DEPRECATED
+# File uploads to server are no longer used. All images/videos now use external URLs
+# (Google Drive, YouTube, CDNs). Keeping MEDIA_ROOT/MEDIA_URL for backward compatibility.
+# Note: temp_uploads directory creation disabled (no longer needed)
 
-# Organized Media Storage Structure
+# Legacy - No longer needed for new content, kept for backward compatibility
+# FILE_UPLOAD_MAX_MEMORY_SIZE = env.int('FILE_UPLOAD_MAX_MEMORY_SIZE', default=524288001)
+# DATA_UPLOAD_MAX_MEMORY_SIZE = env.int('DATA_UPLOAD_MAX_MEMORY_SIZE', default=524288001)
+# FILE_UPLOAD_TEMP_DIR = os.path.join(BASE_DIR, 'temp_uploads')  # DEPRECATED - not used
+
+# Keep MEDIA settings for serving legacy content only
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
@@ -636,5 +631,5 @@ if DEBUG and sys.platform == 'win32':
     os.environ['RUN_MAIN'] = 'true'
 
 # External API Configuration
-EXTERNAL_API_BASE_URL = env('EXTERNAL_API_BASE_URL', default='https://cmb.tail91813a.ts.net')
+EXTERNAL_API_BASE_URL = env('EXTERNAL_API_BASE_URL', default='https://Cmb2.duckdns.org')
 EXTERNAL_API_TOKEN = env('EXTERNAL_API_TOKEN', default='hY89aCK6tgMmGQNootpLYsw9otfwmNAv24cZ3QIljC8aI8DQ4RbxQlHPn0cVBbgdtwuJpWbxfbu4qGCwTycKtAiIDwX8ePEcWRtBhu2LfKmsY87eGuCDXBv8pAvbLtEH')

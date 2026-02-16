@@ -197,11 +197,11 @@ function SSOLogin() {
       } else if (err.response?.data?.details) {
         errorMessage = Object.values(err.response.data.details).join(', ');
       } else if (err.response?.status === 401) {
-        errorMessage = "Invalid or expired SSO token. Please log in again.";
+        errorMessage = "Token SSO tidak valid atau sudah kadaluarsa. Silakan masuk lagi.";
       } else if (err.response?.status === 400) {
-        errorMessage = "Invalid SSO data. Please contact support.";
+        errorMessage = "Data SSO tidak valid. Silakan hubungi dukungan.";
       } else if (err.message === 'Network Error') {
-        errorMessage = "Network error. Please check your connection.";
+        errorMessage = "Kesalahan jaringan. Silakan periksa koneksi Anda.";
       }
 
       setError(errorMessage);

@@ -194,8 +194,8 @@ export const useCurriculumSubmit = () => {
             
             Toast().fire({
                 icon: "success",
-                title: "Course Updated Successfully",
-                text: "Your course has been updated successfully!",
+                title: "Kursus Berhasil Diperbarui",
+                text: "Kursus Anda telah berhasil diperbarui!",
             });
             
             if (onSuccess) {

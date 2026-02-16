@@ -104,6 +104,11 @@ class SSOUserManager:
         """
         Get existing user or create new one from SSO data
         
+        ✨ PHASE 5: Unified authentication lookup
+        - Primary: Look up by EMAIL (unique, matches Google OAuth approach)
+        - Fallback: Look up by NIP if email not provided
+        - Merge: If same person logs in via Google + SSO, treats as same account
+        
         Args:
             sso_data (dict): User data from SSO token containing nip, name, email, etc.
             
@@ -120,16 +125,48 @@ class SSOUserManager:
         if not nip:
             raise ValueError("NIP (employee ID) is required from SSO data")
         
-        # Try to find existing user by NIP
+        user = None
+        created = False
+        
+        # PRIMARY LOOKUP: Try to find existing user by EMAIL first (unique field)
+        # This ensures users logging in via Google + SSO are treated as the same account
+        if email:
+            try:
+                user = User.objects.get(email=email)
+                # Update user data from SSO
+                user = SSOUserManager.update_user_from_sso(user, sso_data)
+                return user, False
+            except User.DoesNotExist:
+                pass  # User doesn't exist by email, continue
+        
+        # FALLBACK: Try to find by NIP
+        # ⚠️ Note: NIP is not unique, so this may return multiple users
+        # Handle MultipleObjectsReturned gracefully by taking the first/primary one
         try:
-            user = User.objects.get(nip=nip)
-            # Update user data if changed
-            user = SSOUserManager.update_user_from_sso(user, sso_data)
-            return user, False
-        except User.DoesNotExist:
-            # Create new user from SSO data
-            user = SSOUserManager.create_user_from_sso(sso_data)
-            return user, True
+            users = User.objects.filter(nip=nip)
+            
+            if users.exists():
+                # If multiple users with same NIP, use the oldest (first created)
+                # This handles duplicate NIP edge case
+                user = users.order_by('date_joined').first()
+                
+                # Update NIP-based user with email if provided
+                if email and user.email != email:
+                    # Only update email if it's not already taken by another user
+                    if not User.objects.filter(email=email).exclude(id=user.id).exists():
+                        user.email = email
+                        user.save()
+                
+                # Update other user data from SSO
+                user = SSOUserManager.update_user_from_sso(user, sso_data)
+                return user, False
+        except Exception as e:
+            # Continue to create new user if lookup fails
+            pass
+        
+        # CREATE NEW USER: If not found by email or NIP, create new user
+        user = SSOUserManager.create_user_from_sso(sso_data)
+        return user, True
     
     @staticmethod
     def create_user_from_sso(sso_data):
@@ -166,16 +203,30 @@ class SSOUserManager:
     
     @staticmethod
     def update_user_from_sso(user, sso_data):
-        """Update existing user with SSO data"""
+        """
+        Update existing user with SSO data
+        
+        ✨ PHASE 5: Synchronize user data from SSO
+        - Merge Gmail accounts with SSO accounts
+        - Keep all existing role permissions
+        - Preserve name from sync (Sinkronisasi Data Pegawai) process
+        """
         name = sso_data.get('name')
         email = sso_data.get('email')
+        nip = sso_data.get('nip')
         
-        # Update fields if they differ
-        if name and user.full_name != name:
+        # ✨ PHASE 5: Only update full_name if currently blank
+        # Preserve name set during sync, don't override on SSO login
+        if name and not user.full_name:
             user.full_name = name
         
         if email and user.email != email:
             user.email = email
+        
+        # CRITICAL: Sync NIP from SSO if not already set
+        # This merges users who first signed up via Google
+        if nip and not user.nip:
+            user.nip = nip
         
         # Update external fields
         if 'iat' in sso_data:
@@ -388,8 +439,10 @@ class GoogleOAuthUserManager:
         name = google_data.get('name')
         picture = google_data.get('picture')
         
-        # Update fields if they differ
-        if name and user.full_name != name:
+        # ✨ PHASE 5: Only update full_name if currently blank
+        # Preserve name set during sync (Sinkronisasi Data Pegawai)
+        # Only use Google name if user has no name yet (new user)
+        if name and not user.full_name:
             user.full_name = name
         
         user.last_login = datetime.now()

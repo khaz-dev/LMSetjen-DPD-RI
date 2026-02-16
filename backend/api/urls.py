@@ -33,6 +33,10 @@ urlpatterns = [
     path("course/trending-searches/", api_views.TrendingSearchesAPIView.as_view()),
     path("course/course-detail/<slug>/", api_views.CourseDetailAPIView.as_view()),
     path("statistics/public-stats/", api_views.PublicStatsAPIView.as_view()),
+    path("statistics/testimonials/", api_views.TestimonialListAPIView.as_view()),  # ✨ PHASE 4: Testimonials endpoint
+    path("student/submit-testimonial/", api_views.TestimonialCreateAPIView.as_view()),  # ✨ PHASE 4.10: Testimonial submission endpoint
+    path("student/testimonial/", api_views.TestimonialDetailAPIView.as_view()),  # ✨ PHASE 4.10: Testimonial detail (get/delete)
+    path("student/testimonials/list/", api_views.UserTestimonialsListAPIView.as_view()),  # ✨ PHASE 4.13: User testimonials list with status
     
     # ✨ PHASE 4.3: Analytics Endpoints
     path("analytics/trending-searches/", api_views.TrendingSearchesAnalyticsAPIView.as_view()),
@@ -121,13 +125,16 @@ urlpatterns = [
     path("quiz/choice/list-create/", api_views.QuizChoiceListCreateAPIView.as_view()),
     path("quiz/choice/detail/<choice_id>/", api_views.QuizChoiceDetailAPIView.as_view()),
 
-    # File Upload APIs - Original and Enhanced
-    path("file-upload/", api_views.FileUploadAPIView.as_view()),  # Keep original for compatibility
+    # \u26a0\ufe0f DEPRECATED (Phase 3): File Upload APIs - Server-side file storage no longer used
+    # Kept for backward compatibility only. Will be removed in a future version.
+    # Images and videos now handled via external URLs (Google Drive, YouTube, CDNs)
+    path("file-upload/", api_views.FileUploadAPIView.as_view()),  # DEPRECATED - Use external URLs instead
     
-    # Enhanced Local Storage APIs
-    path("upload/enhanced/", enhanced_upload_views.EnhancedFileUploadAPIView.as_view()),
-    path("upload/bulk/", enhanced_upload_views.BulkFileUploadAPIView.as_view()),
-    path("storage/info/", enhanced_upload_views.FileInfoAPIView.as_view()),
+    # \u26a0\ufe0f DEPRECATED (Phase 3): Enhanced Local Storage APIs - No longer needed
+    # Will be removed when all clients migrate to external URL-based approach
+    path("upload/enhanced/", enhanced_upload_views.EnhancedFileUploadAPIView.as_view()),  # DEPRECATED
+    path("upload/bulk/", enhanced_upload_views.BulkFileUploadAPIView.as_view()),  # DEPRECATED
+    path("storage/info/", enhanced_upload_views.FileInfoAPIView.as_view()),  # DEPRECATED
     
     # Admin API URLs
     path("admin/dashboard-summary/", api_views.AdminSummaryAPIView.as_view()),
@@ -147,6 +154,11 @@ urlpatterns = [
     # ✨ PHASE 4.11: Admin Category Management URLs
     path("admin/category/", api_views.AdminCategoryListCreateAPIView.as_view()),
     path("admin/category/<int:id>/", api_views.AdminCategoryDetailAPIView.as_view()),
+
+    # ✨ PHASE 4.12: Admin Testimonial Management URLs (Curation)
+    path("admin/testimonials/pending/", api_views.AdminPendingTestimonialsListAPIView.as_view()),
+    path("admin/testimonials/approved/", api_views.AdminApprovedTestimonialsListAPIView.as_view()),
+    path("admin/testimonials/<int:testimonial_id>/approve-reject/", api_views.AdminApproveRejectTestimonialAPIView.as_view()),
 
     # ✨ TIER 1: Content Gap Analysis
     path("analytics/content-gaps/", api_views.ContentGapAnalysisView.as_view()),

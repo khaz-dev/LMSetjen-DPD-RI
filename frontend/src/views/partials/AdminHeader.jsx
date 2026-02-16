@@ -50,11 +50,23 @@ function AdminHeader() {
     };
 
     // Utility functions
+    const getFirstTwoWords = (fullName) => {
+        if (!fullName || typeof fullName !== 'string') return '';
+        const words = fullName.trim().split(/\s+/);
+        
+        if (words.length === 0) return '';
+        if (words.length === 1) return words[0];
+        return `${words[0]} ${words[1]}`;
+    };
+
     const getDisplayName = () => {
         if (userData?.full_name) {
-            return userData.full_name.length > 20 
-                ? userData.full_name.substring(0, 20) + "..."
-                : userData.full_name;
+            const cleanedFullName = userData.full_name
+                .replace(/,+/g, '') // Remove all commas
+                .replace(/[^\w\s]/g, '') // Remove special characters except spaces and word characters
+                .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
+                .trim();
+            return getFirstTwoWords(cleanedFullName) || 'Admin';
         }
         return "Admin";
     };
@@ -67,6 +79,7 @@ function AdminHeader() {
     const adminMenuItems = [
         { to: "/admin/dashboard/", icon: "bi bi-grid-fill", text: "Dashboard", requiresSuperAdmin: false },
         { to: "/admin/users/", icon: "fas fa-users", text: "Kelola Pengguna", requiresSuperAdmin: false },
+        { to: "/admin/testimonials/", icon: "fas fa-comments", text: "Kurasi Testimoni", requiresSuperAdmin: false },
         { to: "/admin/documentation/", icon: "fas fa-book", text: "Dokumentasi Sistem", requiresSuperAdmin: false },
         { to: "/admin/kelola-materi/", icon: "fas fa-book-atlas", text: "Kelola Materi", requiresSuperAdmin: false },
         { to: "/admin/analytics/", icon: "fas fa-chart-line", text: "Analitik", requiresSuperAdmin: false },

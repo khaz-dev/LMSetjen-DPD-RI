@@ -676,7 +676,7 @@ function SortableSection({
                             )}`}
                             value={variant?.title || ""}
                             onChange={(e) => handleSectionChange(variantIndex, "title", e.target.value)}
-                            placeholder="e.g., Introduction to Programming"
+                            placeholder="Misalnya, Pengenalan Pemrograman"
                         />
                         {validationState.errors[`variant_${variantIndex}_title`] && (
                             <div className="curriculum-invalid-feedback">
@@ -2297,13 +2297,13 @@ function CourseEditCurriculum() {
     const removeCurriculumSection = async (index, variantId) => {
         // Confirm deletion
         const result = await Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to recover this section!",
+            title: 'Apakah Anda yakin?',
+            text: "Anda tidak akan dapat memulihkan bagian ini!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!'
+            confirmButtonText: 'Ya, hapus!'
         });
 
         if (!result.isConfirmed) return;
@@ -2382,7 +2382,7 @@ function CourseEditCurriculum() {
 
         Toast().fire({
             icon: "success",
-            title: "New lesson added successfully!",
+            title: "Pelajaran baru berhasil ditambahkan!",
         });
     };
 
@@ -2395,13 +2395,13 @@ function CourseEditCurriculum() {
     const removeLesson = async (variantIndex, itemIndex, variantId, itemId) => {
         // Confirm deletion
         const result = await Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to recover this lesson!",
+            title: 'Apakah Anda yakin?',
+            text: "Anda tidak akan dapat memulihkan pelajaran ini!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!'
+            confirmButtonText: 'Ya, hapus!'
         });
 
         if (!result.isConfirmed) return;

@@ -1098,12 +1098,12 @@ function StudentCourseLectureDetail() {
                                                                 {/* Card header */}
                                                                 <div className="card-header border-bottom p-0 pb-3">
                                                                     {/* Title */}
-                                                                    <h4 className="mb-3 p-3">Discussion</h4>
+                                                                    <h4 className="mb-3 p-3">Diskusi</h4>
                                                                     <form className="row g-4 p-3">
-                                                                        {/* Search */}
+                                                                        {/* Cari */}
                                                                         <div className="col-sm-6 col-lg-9">
                                                                             <div className="position-relative">
-                                                                                <input className="form-control pe-5 bg-transparent" type="search" placeholder="Search" aria-label="Search" />
+                                                                                <input className="form-control pe-5 bg-transparent" type="search" placeholder="Cari" aria-label="Cari" />
                                                                                 <button className="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0 text-primary-hover text-reset" type="submit">
                                                                                     <i className="fas fa-search fs-6 " />
                                                                                 </button>
@@ -1295,7 +1295,7 @@ function StudentCourseLectureDetail() {
                                                                             </ul>
 
                                                                             <form class="w-100 d-flex">
-                                                                                <textarea class="one form-control pe-4 bg-light w-75" id="autoheighttextarea" rows="1" placeholder="Write a message..."></textarea>
+                                                                                <textarea class="one form-control pe-4 bg-light w-75" id="autoheighttextarea" rows="1" placeholder="Tulis pesan..."></textarea>
                                                                                 <button class="btn btn-primary ms-2 mb-0 w-25" type="button">Post <i className='fas fa-paper-plane'></i></button>
                                                                             </form>
                                                                         </div>
@@ -1335,7 +1335,7 @@ function StudentCourseLectureDetail() {
                                                                                 <textarea
                                                                                     className="form-control"
                                                                                     id="exampleFormControlTextarea1"
-                                                                                    placeholder="Your review"
+                                                                                    placeholder="Ulasan Anda"
                                                                                     rows={3}
                                                                                     defaultValue={""}
                                                                                 />

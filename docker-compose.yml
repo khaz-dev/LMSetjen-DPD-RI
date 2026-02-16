@@ -67,6 +67,8 @@ services:
       
     volumes:
       - ./backend:/app
+      # ⚠️ PHASE 3: media_files volume kept for backward compatibility only
+      # NO LONGER USED for new content (using external URLs instead)
       - media_files:/app/media
       - static_files:/app/staticfiles
       - backend_logs:/app/logs
@@ -113,6 +115,8 @@ networks:
 volumes:
   redis_data:
     name: lms_redis_data
+  # ⚠️ PHASE 3: media_files volume DEPRECATED - no longer used for new content
+  # Kept only for backward compatibility with existing media files
   media_files:
     name: lms_media_files
   static_files:

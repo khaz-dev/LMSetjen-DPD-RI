@@ -1,0 +1,804 @@
+/* Testimonials Admin Page Styles */
+
+/* 🔍 CSS LOAD VERIFICATION: This file is loaded and active */
+.testimonials-admin-page {
+    min-height: 100vh;
+    background: transparent;
+    --btn-success-color: white !important;
+    --btn-danger-color: white !important;
+    --btn-success-bg: #28a745 !important;
+    --btn-danger-bg: #dc3545 !important;
+}
+
+.testimonials-admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* Page Header */
+.testimonials-admin-header {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.header-content h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #343a40;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.header-content h1 i {
+    color: #667eea;
+    font-size: 2.5rem;
+}
+
+.header-subtitle {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.95rem;
+}
+
+.header-stats {
+    display: flex;
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+}
+
+/* ✨ FIX 4.16: Add page-scoped CSS to prevent Dashboard.css override */
+.testimonials-admin-page .stat-label {
+    color: #6c757d !important;
+    font-size: 0.85rem !important;
+    margin-left: 0 !important;
+    text-align: center !important;
+    text-shadow: none !important;
+    letter-spacing: normal !important;
+}
+
+.testimonials-admin-page .header-stats .stat-item .stat-label {
+    color: #6c757d !important;
+    font-size: 0.85rem !important;
+}
+
+/* Ensure stat-label specific styling in admin context */
+.testimonials-admin-container .stat-label {
+    color: #6c757d !important;
+    font-size: 0.85rem !important;
+}
+
+/* Tabs */
+.testimonials-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+}
+
+.tab-button {
+    flex: 1;
+    padding: 1rem;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    cursor: pointer;
+    border-radius: 10px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.tab-button.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+}
+
+.tab-button i {
+    font-size: 1.2rem;
+}
+
+/* Content Area */
+.testimonials-content {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: rgba(102, 126, 234, 0.3);
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    color: #343a40;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #6c757d;
+}
+
+/* Testimonials Grid */
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Testimonial Card */
+.testimonial-card {
+    background: #f8f9fa !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 12px !important;
+    padding: 1.5rem !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.testimonial-card:hover {
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15) !important;
+    transform: translateY(-2px) !important;
+    border-color: #667eea !important;
+}
+
+/* Testimonial Header */
+.testimonial-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: flex-start;
+}
+
+.testimonial-avatar {
+    flex-shrink: 0;
+}
+
+.testimonial-avatar img,
+.avatar-initial {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.testimonial-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.testimonial-info h5 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    color: #343a40;
+    word-break: break-word;
+}
+
+.testimonial-info small {
+    display: block;
+    font-size: 0.8rem;
+}
+
+.email-text {
+    margin: 0.25rem 0 0 0;
+    color: #0048b4;
+    word-break: break-all;
+}
+
+.role-badge {
+    flex-shrink: 0;
+}
+
+.role-badge .badge {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-primary {
+    background-color: #667eea;
+}
+
+.badge-info {
+    background-color: #17a2b8;
+}
+
+/* Testimonial Body */
+.testimonial-body {
+    flex: 1;
+    margin-bottom: 1rem;
+}
+
+.rating-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.rating-display i {
+    font-size: 0.9rem;
+    color: #e0e0e0;
+    transition: all 0.2s;
+}
+
+.rating-display i.filled {
+    color: #f39c12;
+    transform: scale(1.1);
+}
+
+.rating-value {
+    font-size: 0.9rem;
+    color: #f39c12;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.testimonial-text {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    font-style: italic;
+}
+
+.date-text {
+    display: block;
+    font-size: 0.8rem;
+}
+
+/* Testimonial Actions */
+.testimonial-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.testimonial-actions .btn {
+    flex: 1;
+    padding: 0.5rem !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.testimonial-actions .btn:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+/* ULTRA-SPECIFIC: Button color rules with highest specificity */
+.testimonial-actions .btn-success,
+.testimonial-actions button.btn-success,
+.testimonial-actions button.btn.btn-sm.btn-success,
+.testimonials-admin-page .testimonial-actions button.btn-success {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: white !important;
+}
+
+.testimonial-actions .btn-success:hover:not(:disabled),
+.testimonial-actions button.btn-success:hover:not(:disabled),
+.testimonial-actions button.btn.btn-sm.btn-success:hover:not(:disabled),
+.testimonials-admin-page .testimonial-actions button.btn-success:hover:not(:disabled) {
+    background-color: #218838 !important;
+    border-color: #1e7e34 !important;
+    color: white !important;
+}
+
+.testimonial-actions .btn-danger,
+.testimonial-actions button.btn-danger,
+.testimonial-actions button.btn.btn-sm.btn-danger,
+.testimonials-admin-page .testimonial-actions button.btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+}
+
+.testimonial-actions .btn-danger:hover:not(:disabled),
+.testimonial-actions button.btn-danger:hover:not(:disabled),
+.testimonial-actions button.btn.btn-sm.btn-danger:hover:not(:disabled),
+.testimonials-admin-page .testimonial-actions button.btn-danger:hover:not(:disabled) {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+    color: white !important;
+}
+
+/* Ensure button children inherit white color */
+.testimonial-actions .btn-success > *,
+.testimonial-actions button.btn-success > *,
+.testimonial-actions button.btn.btn-sm.btn-success > * {
+    color: white !important;
+}
+
+.testimonial-actions .btn-danger > *,
+.testimonial-actions button.btn-danger > *,
+.testimonial-actions button.btn.btn-sm.btn-danger > * {
+    color: white !important;
+}
+
+.testimonial-actions .btn i {
+    margin-right: 0.3rem;
+    color: white !important;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+/* Rejection Modal */
+.rejection-modal {
+    background: white;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h5 {
+    margin: 0;
+    color: #343a40;
+    font-size: 1.25rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: 0;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    color: #343a40;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-body .form-control {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+    font-family: inherit;
+}
+
+.modal-body .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.modal-footer .btn {
+    padding: 0.5rem 1.5rem !important;
+    border-radius: 8px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    font-weight: 500 !important;
+    outline: none !important;
+}
+
+.modal-footer .btn-secondary,
+.modal-footer button.btn-secondary,
+.modal-footer button.btn.btn-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+    border-color: #6c757d !important;
+}
+
+.modal-footer .btn-secondary:hover:not(:disabled),
+.modal-footer button.btn-secondary:hover:not(:disabled),
+.modal-footer button.btn.btn-secondary:hover:not(:disabled) {
+    background-color: #5a6268 !important;
+    border-color: #5a6268 !important;
+    color: white !important;
+}
+
+.modal-footer .btn-danger,
+.modal-footer button.btn-danger,
+.modal-footer button.btn.btn-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+}
+
+.modal-footer .btn-danger:hover:not(:disabled),
+.modal-footer button.btn-danger:hover:not(:disabled),
+.modal-footer button.btn.btn-danger:hover:not(:disabled) {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+    color: white !important;
+}
+
+/* Ensure button children in modal inherit colors */
+.modal-footer .btn > *,
+.modal-footer button.btn-secondary > *,
+.modal-footer button.btn-danger > * {
+    color: white !important;
+}
+
+.modal-footer .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ============================================================================ */
+/* ULTIMATE OVERRIDES: Ensure Bootstrap button defaults are overridden */
+/* ============================================================================ */
+
+/* Override Bootstrap default button colors everywhere on this page */
+.testimonials-admin-page .btn-success,
+.testimonials-admin-page button.btn-success,
+.testimonials-admin-page .btn-success:focus,
+.testimonials-admin-page .btn-success:active {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: white !important;
+    box-shadow: none !important;
+}
+
+.testimonials-admin-page .btn-danger,
+.testimonials-admin-page button.btn-danger,
+.testimonials-admin-page .btn-danger:focus,
+.testimonials-admin-page .btn-danger:active {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+    box-shadow: none !important;
+}
+
+/* Force any potential text or icon color inheritance to be white */
+.testimonials-admin-page [class*="btn-success"],
+.testimonials-admin-page [class*="btn-danger"] {
+    color: white !important;
+}
+
+.testimonials-admin-page [class*="btn-success"] > *,
+.testimonials-admin-page [class*="btn-danger"] > * {
+    color: white !important;
+}
+
+/* Ensure icons inherit the button color */
+.testimonials-admin-page button i,
+.testimonials-admin-page .btn i,
+.testimonials-admin-page .btn-success i,
+.testimonials-admin-page .btn-danger i {
+    color: white !important;
+}
+
+/* AGGRESSIVE: Override all button text content */
+.btn-success,
+button.btn-success {
+    color: white !important;
+}
+
+.btn-success > span,
+button.btn-success > span {
+    color: white !important;
+}
+
+.btn-success i,
+button.btn-success i {
+    color: white !important;
+}
+
+.btn-danger,
+button.btn-danger {
+    color: white !important;
+}
+
+.btn-danger > span,
+button.btn-danger > span {
+    color: white !important;
+}
+
+.btn-danger i,
+button.btn-danger i {
+    color: white !important;
+}
+
+/* Bootstrap button element text content override */
+.btn-sm {
+    color: white !important;
+}
+
+.btn-sm.btn-success,
+.btn-sm.btn-danger {
+    color: white !important;
+}
+
+.testimonial-actions .btn-success,
+.testimonial-actions .btn-danger {
+    color: white !important;
+}
+
+.testimonial-actions button {
+    color: white !important;
+}
+
+/* SUPER AGGRESSIVE: Override button text and icon colors */
+.btn-success,
+.btn-success span,
+.btn-success i,
+button.btn-success,
+button.btn-success span,
+button.btn-success i,
+.btn-danger,
+.btn-danger span,
+.btn-danger i,
+button.btn-danger,
+button.btn-danger span,
+button.btn-danger i {
+    color: white !important;
+}
+
+/* Ensure all button children are white */
+.btn-success *,
+.btn-danger * {
+    color: white !important;
+}
+
+/* Testimonial action buttons - maximum specificity */
+.testimonial-actions .btn-success,
+.testimonial-actions .btn-success span,
+.testimonial-actions .btn-success i,
+.testimonial-actions .btn-sm.btn-success,
+.testimonial-actions .btn-sm.btn-success span,
+.testimonial-actions .btn-sm.btn-success i,
+.testimonial-actions .btn-danger,
+.testimonial-actions .btn-danger span,
+.testimonial-actions .btn-danger i,
+.testimonial-actions .btn-sm.btn-danger,
+.testimonial-actions .btn-sm.btn-danger span,
+.testimonial-actions .btn-sm.btn-danger i {
+    color: white !important;
+}
+
+/* ABSOLUTE FINAL OVERRIDE: All buttons with success or danger class must have white text */
+button[class*="success"] {
+    color: white !important;
+}
+
+button[class*="success"] * {
+    color: white !important;
+}
+
+button[class*="danger"] {
+    color: white !important;
+}
+
+button[class*="danger"] * {
+    color: white !important;
+}
+
+/* @media query workaround: Ensure colors persist across load states */
+@supports (display: flex) {
+    .btn-success,
+    .btn-success *,
+    button.btn-success,
+    button.btn-success * {
+        color: white !important;
+    }
+    
+    .btn-danger,
+    .btn-danger *,
+    button.btn-danger,
+    button.btn-danger * {
+        color: white !important;
+    }
+}
+
+/* CRITICAL: Lock down .btn-sm styling ONLY for buttons on this page */
+/* Override accessibility-fixes.css and AnalyticsWidgets.css .btn-sm rules */
+.testimonials-admin-page .btn-sm,
+.testimonials-admin-page button.btn-sm,
+.testimonials-admin-page .testimonial-actions .btn-sm,
+.testimonials-admin-page .testimonial-actions button.btn-sm {
+    padding: 0.375rem 0.75rem !important;
+    min-width: auto !important;
+    min-height: auto !important;
+    height: auto !important;
+    font-size: 0.875rem !important;
+}
+
+/* Specifically for testimonial action buttons - override ALL global btn-sm rules */
+.testimonial-actions .btn-sm {
+    padding: 0.375rem 0.75rem !important;
+    min-width: auto !important;
+    min-height: auto !important;
+    height: auto !important;
+    font-size: 0.875rem !important;
+    width: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.testimonial-actions button.btn-sm {
+    padding: 0.375rem 0.75rem !important;
+    min-width: auto !important;
+    min-height: auto !important;
+    font-size: 0.875rem !important;
+}
+
+.testimonial-actions .btn-sm.btn-success,
+.testimonial-actions button.btn-sm.btn-success {
+    padding: 0.375rem 0.75rem !important;
+    min-width: auto !important;
+    min-height: auto !important;
+}
+
+.testimonial-actions .btn-sm.btn-danger,
+.testimonial-actions button.btn-sm.btn-danger {
+    padding: 0.375rem 0.75rem !important;
+    min-width: auto !important;
+    min-height: auto !important;
+}
+
+/* CRITICAL: Lock down modal footer button styling */
+.testimonials-admin-page .modal-footer .btn,
+.testimonials-admin-page .modal-footer button {
+    padding: 0.5rem 1.5rem !important;
+    min-width: auto !important;
+    min-height: auto !important;
+    height: auto !important;
+    font-size: 1rem !important;
+}
+
+.modal-footer .btn-secondary,
+.modal-footer button.btn-secondary {
+    padding: 0.5rem 1.5rem !important;
+    min-width: auto !important;
+    min-height: auto !important;
+}
+
+.modal-footer .btn-danger,
+.modal-footer button.btn-danger {
+    padding: 0.5rem 1.5rem !important;
+    min-width: auto !important;
+    min-height: auto !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .testimonials-admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-stats {
+        width: 100%;
+        justify-content: space-around;
+    }
+
+    .header-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .testimonials-tabs {
+        flex-direction: column;
+    }
+
+    .tab-button {
+        justify-content: flex-start;
+        padding: 0.75rem 1rem;
+    }
+
+    .testimonials-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .testimonials-admin-container {
+        padding: 1rem 0.5rem;
+    }
+
+    .testimonials-content {
+        padding: 1rem;
+    }
+}
+
+/* Loading State */
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.loading {
+    animation: pulse 2s infinite;
+}

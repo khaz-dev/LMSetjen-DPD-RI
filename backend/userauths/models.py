@@ -12,7 +12,7 @@ USER_ROLE_CHOICES = (
 
 class OrganizationUnit(models.Model):
     """Organization unit from external system"""
-    external_id = models.IntegerField(unique=True, help_text="External system unit ID")
+    external_id = models.CharField(max_length=50, unique=True, help_text="External system unit ID")
     name = models.CharField(max_length=200, help_text="Organization unit name")
     description = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -28,7 +28,7 @@ class OrganizationUnit(models.Model):
 
 class Position(models.Model):
     """Position/job from external system"""
-    external_id = models.IntegerField(unique=True, help_text="External system position ID")
+    external_id = models.CharField(max_length=50, unique=True, help_text="External system position ID")
     name = models.CharField(max_length=200, help_text="Position name")
     description = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -241,7 +241,7 @@ class User(AbstractUser):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.FileField(upload_to="user_folder", null=True, blank=True)  # Removed invalid default
+    image = models.URLField(max_length=500, null=True, blank=True)  # ✨ PHASE 3: Changed from FileField to URLField for external URLs
     full_name = models.CharField(max_length=100)
     country = models.CharField(max_length=100, null=True, blank=True)
     about = models.TextField(null=True, blank=True)
@@ -295,7 +295,7 @@ class Profile(models.Model):
 
 class Admin(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.FileField(upload_to="admin_folder", null=True, blank=True)  # Removed invalid default
+    image = models.URLField(max_length=500, null=True, blank=True)  # ✨ PHASE 3: Changed from FileField to URLField for external URLs
     full_name = models.CharField(max_length=100)
     department = models.CharField(max_length=100, null=True, blank=True)
     permissions = models.TextField(null=True, blank=True, help_text="JSON field for admin permissions")

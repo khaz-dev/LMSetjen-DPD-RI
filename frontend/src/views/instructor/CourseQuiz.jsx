@@ -134,13 +134,13 @@ function CourseQuiz() {
                 await apiInstance.put(`quiz/detail/${editingQuiz.quiz_id}/`, quizData);
                 Toast().fire({
                     icon: "success",
-                    title: "Quiz updated successfully"
+                    title: "Kuis berhasil diperbarui"
                 });
             } else {
                 await apiInstance.post("quiz/list-create/", quizData);
                 Toast().fire({
                     icon: "success",
-                    title: "Quiz created successfully"
+                    title: "Kuis berhasil dibuat"
                 });
             }
 

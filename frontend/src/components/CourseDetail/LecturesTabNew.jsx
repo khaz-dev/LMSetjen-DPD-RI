@@ -313,7 +313,7 @@ const LecturesTabNew = ({
             
             Toast().fire({
                 icon: "error",
-                title: "Failed to update completion status",
+                title: "Gagal memperbarui status penyelesaian",
                 timer: 5174
             });
         }

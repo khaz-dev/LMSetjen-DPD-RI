@@ -725,7 +725,9 @@
     .modern-qa-detail-page .col-lg-9,
     .student-profile-page .col-lg-9,
     .modern-profile-page .col-lg-9,
-    .modern-wishlist-page .col-lg-9 {
+    .modern-wishlist-page .col-lg-9,
+    .student-testimonials-page .col-lg-9,
+    .instructor-testimonials-page .col-lg-9 {
         flex: 1 1 auto !important; /* Flex-grow fills available space */
         max-width: 100% !important; /* Remove Bootstrap's max-width constraint */
         transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -744,7 +746,9 @@
     .modern-qa-detail-page .col-md-8,
     .student-profile-page .col-md-8,
     .modern-profile-page .col-md-8,
-    .modern-wishlist-page .col-md-8 {
+    .modern-wishlist-page .col-md-8,
+    .student-testimonials-page .col-md-8,
+    .instructor-testimonials-page .col-md-8 {
         flex: 1 1 auto !important; /* Flex-grow fills available space */
         max-width: 100% !important; /* Remove Bootstrap's max-width constraint */
         transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1), 

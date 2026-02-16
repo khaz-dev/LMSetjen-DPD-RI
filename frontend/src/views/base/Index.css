@@ -139,45 +139,26 @@ body:has(.landing-page-container) {
     z-index: 3 !important;
 }
 
-/* Last section (Testimonials) - Enable proper snapping with footer, no bottom gap */
-.landing-page-container .snap-section:last-child {
-    min-height: 100vh !important; /* Ensure full viewport height for snapping */
+/* Last section (Testimonials) - Footer now INSIDE for smooth scrolling without snap-back */
+.landing-page-container .snap-section:last-of-type {
+    min-height: auto !important; /* Allow flexible height - footer is inside */
     max-height: none !important;
     scroll-snap-align: start !important; /* Enable snapping to last section */
-    scroll-snap-stop: always !important; /* Ensure it doesn't get skipped */
+    scroll-snap-stop: auto !important; /* Allow user to scroll smoothly */
     justify-content: flex-start !important;
     padding-top: 5rem !important;
-    padding-bottom: 0 !important; /* No bottom padding to eliminate gap */
+    padding-bottom: 0 !important; /* ✨ PHASE 4.9: Footer inside, no bottom padding */
     margin-bottom: 0 !important;
     overflow: visible !important;
     display: flex !important;
     flex-direction: column !important;
 }
 
-/* Ensure BaseFooter inside wrapper has no bottom gaps */
-.landing-page-container .footer-wrapper footer {
-    margin-top: 10rem;
+/* ✨ PHASE 4.9: Footer styling when inside snap-section */
+.landing-page-container .snap-section:last-of-type footer {
+    margin-top: auto !important; /* Push footer to bottom */
     margin-bottom: 0rem !important;
-    padding-bottom: 1rem !important;
-}
-
-/* Remove any container padding/margin inside footer at the bottom */
-.landing-page-container .footer-wrapper footer > .container {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-/* Remove any row/col padding at the very bottom */
-.landing-page-container .footer-wrapper footer .row:last-child {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-/* Legacy selector - kept for backwards compatibility */
-.landing-page-container .snap-section:last-child > div:last-child {
-    margin-top: auto !important; /* Push footer to bottom if needed */
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
+    padding-bottom: 0rem !important;
 }
 
 /* Fix for any absolutely positioned elements that may overflow */

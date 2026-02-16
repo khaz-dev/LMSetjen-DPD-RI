@@ -176,12 +176,12 @@
     box-shadow: 0 10px 20px rgba(6, 182, 212, 0.3);
 }
 
-.stat-info {
+.kelola-material-page-wrapper .stat-info {
     text-align: left;
     flex: 1;
 }
 
-.stat-number {
+.kelola-material-page-wrapper .stat-number {
     font-size: 2.2rem;
     font-weight: 800;
     margin: 0;
@@ -192,7 +192,9 @@
     line-height: 1.2;
 }
 
-.stat-label {
+/* CRITICAL FIX: Scope .stat-label to KelolaMaterialAdmin context only */
+/* Student dashboard also uses .stat-label class, must not affect it */
+.kelola-material-page-wrapper .stat-label {
     color: #64748b;
     font-size: 0.95rem;
     font-weight: 600;
@@ -201,7 +203,7 @@
     letter-spacing: 0.5px;
 }
 
-.stat-change {
+.kelola-material-page-wrapper .stat-change {
     display: inline-block;
     padding: 5px 12px;
     border-radius: 20px;
@@ -210,12 +212,12 @@
     margin-top: 6px;
 }
 
-.stat-change.positive {
+.kelola-material-page-wrapper .stat-change.positive {
     background: rgba(16, 185, 129, 0.1);
     color: #059669;
 }
 
-.stat-change.neutral {
+.kelola-material-page-wrapper .stat-change.neutral {
     background: rgba(107, 114, 128, 0.1);
     color: #6b7280;
 }
@@ -679,11 +681,11 @@
         font-size: 24px;
     }
 
-    .stat-info {
+    .kelola-material-page-wrapper .stat-info {
         text-align: center;
     }
 
-    .stat-number {
+    .kelola-material-page-wrapper .stat-number {
         font-size: 1.8rem;
     }
 

@@ -144,13 +144,23 @@
     background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
 }
 
-.stat-icon {
-  font-size: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* ✨ PHASE 4.10: Remove left/right gaps on first and last stat cards */
+.row.mb-2 > [class*="col-"]:first-child {
+    padding-left: 0 !important;
 }
 
+.row.mb-2 > [class*="col-"]:last-child {
+    padding-right: 0 !important;
+}
+
+    /* ✨ PHASE 4.10: Remove left/right gaps on Activity & Course Overview row */
+    .row.dashboard-activity-row > [class*="col-"]:first-child {
+        padding-left: 0 !important;
+    }
+
+    .row.dashboard-activity-row > [class*="col-"]:last-child {
+        padding-right: 0 !important;
+    }
 .stat-info {
   min-width: 0;
 }
@@ -684,7 +694,7 @@
     border-radius: 20px;
     color: white;
     padding: 2rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     position: relative;
     overflow: hidden;
     user-select: none; /* Prevent text selection */
@@ -706,6 +716,16 @@
 .welcome-section h5 {
     user-select: none; /* Prevent text selection */
     cursor: default; /* Default cursor */
+}
+
+/* ✨ PHASE 4.32: Fix h5 text readability in welcome-section */
+/* Override white text color for better contrast on gradient background */
+.welcome-section h5 {
+    color: rgba(255, 255, 255, 1) !important; /* Pure white instead of inherited weak color */
+    font-weight: 600 !important; /* Make text bolder for better visibility */
+    font-size: 0.95rem !important; /* Slightly larger than default h5 */
+    opacity: 1 !important; /* Override opacity-90 class for full visibility */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Add shadow for depth and contrast */
 }
 
 /* Modern Buttons */
@@ -925,7 +945,7 @@
 }
 
 /* 💨 PHASE 40.17: Ensure columns inside rows fill left-start to right-end */
-.sidebar-collapsed-adapted .row.mb-2 > [class*="col-"] {
+.dashboard-page .sidebar-collapsed-adapted .row.mb-2 > [class*="col-"] {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -933,7 +953,7 @@
     /* 💨 PHASE 40.17: Column children have zero spacing */
 }
 
-.sidebar-collapsed-adapted .row > [class*="col-"] {
+.dashboard-page .sidebar-collapsed-adapted .row > [class*="col-"] {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -947,7 +967,7 @@
 }
 
 /* 💨 PHASE 40.22: Master rule - row.mb-2 displays all 4 cards in 1 line with maximum gap spacing */
-.sidebar-collapsed-adapted .row.mb-2 {
+.dashboard-page .sidebar-collapsed-adapted .row.mb-2 {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -964,14 +984,14 @@
 }
 
 /* 💨 PHASE 40.22: Ensure columns don't grow beyond their width */
-.sidebar-collapsed-adapted .row.mb-2 > [class*="col-"] {
+.dashboard-page .sidebar-collapsed-adapted .row.mb-2 > [class*="col-"] {
     flex: 0 1 calc(25% - 1.5rem) !important;
     /* 💨 PHASE 40.22: Updated flex-basis to account for 2rem gap distribution (6rem / 4) */
     min-width: 0 !important;
 }
 
 /* 💨 PHASE 40.25: Nested row with g-3 (3 learning time stat cards) with 2rem gap spacing */
-.sidebar-collapsed-adapted .row.g-3 {
+.dashboard-page .sidebar-collapsed-adapted .row.g-3 {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -987,14 +1007,14 @@
 }
 
 /* 💨 PHASE 40.25: Ensure g-3 child columns maintain proper sizing */
-.sidebar-collapsed-adapted .row.g-3 > [class*="col-"] {
+.dashboard-page .sidebar-collapsed-adapted .row.g-3 > [class*="col-"] {
     flex: 0 1 calc(33.333% - 1.333rem) !important;
     /* 💨 PHASE 40.25: 3 columns with 2rem gap (2rem / 3 ≈ 0.667rem per column, rounded to 1.333rem) */
     min-width: 0 !important;
 }
 
 /* 💨 PHASE 40.24: Learning Progress row (mb-4) with 2rem gap spacing */
-.sidebar-collapsed-adapted .row.mb-4 {
+.dashboard-page .sidebar-collapsed-adapted .row.mb-4 {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -1010,14 +1030,14 @@
 }
 
 /* 💨 PHASE 40.24: Ensure Learning Progress card children maintain proper sizing */
-.sidebar-collapsed-adapted .row.mb-4 > [class*="col-"] {
+.dashboard-page .sidebar-collapsed-adapted .row.mb-4 > [class*="col-"] {
     flex: 0 1 auto !important;
     /* 💨 PHASE 40.24: Allow dashboard-card to maintain full width */
     min-width: 0 !important;
 }
 
 /* 💨 PHASE 40.23: Recent Activity / My Courses row with 2rem gap spacing */
-.sidebar-collapsed-adapted > .row:not(.mb-2):not(.mb-4):has(.col-lg-4):has(.col-lg-8) {
+.dashboard-page .sidebar-collapsed-adapted > .row:not(.mb-2):not(.mb-4):has(.col-lg-4):has(.col-lg-8) {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -1033,14 +1053,14 @@
 }
 
 /* 💨 PHASE 40.23: Adjust column widths for Recent Activity (col-lg-4) and My Courses (col-lg-8) */
-.sidebar-collapsed-adapted > .row:not(.mb-2):not(.mb-4):has(.col-lg-4):has(.col-lg-8) > [class*="col-"] {
+.dashboard-page .sidebar-collapsed-adapted > .row:not(.mb-2):not(.mb-4):has(.col-lg-4):has(.col-lg-8) > [class*="col-"] {
     flex: 0 1 auto !important;
     /* 💨 PHASE 40.23: Allow col-lg-4 and col-lg-8 to maintain their natural width ratio */
     min-width: 0 !important;
 }
 
 /* 💨 PHASE 40.17: Remove ALL left/right margins AND padding from ANY row inside sidebar-collapsed-adapted */
-.sidebar-collapsed-adapted .row {
+.dashboard-page .sidebar-collapsed-adapted .row {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;

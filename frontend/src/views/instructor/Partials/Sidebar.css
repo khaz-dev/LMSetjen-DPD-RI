@@ -85,6 +85,10 @@
     display: flex;
     flex-direction: column;
     overflow: visible !important; /* ✅ Ensure sticky works - no scroll context on column */
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
 }
 
 /* ============================== */
@@ -709,6 +713,47 @@
 /* ============================== */
 /* Page Content Adaptation */
 /* ============================== */
+
+/* Desktop: col-lg-9 adapts when sidebar collapses */
+@media (min-width: 992px) {
+    /* Target content columns in all instructor pages with CHILD COMBINATOR for higher specificity */
+    .instructor-dashboard-page > .container > .row > .col-lg-9,
+    .instructor-courses-page > .container > .row > .col-lg-9,
+    .instructor-profile-page > .container > .row > .col-lg-9,
+    .instructor-password-page > .container > .row > .col-lg-9,
+    .instructor-testimonials-page > .container > .row > .col-lg-9 {
+        flex: 1 1 auto !important; /* Flex-grow fills available space */
+        max-width: 100% !important; /* Remove Bootstrap's max-width constraint */
+        transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                    max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+/* Tablet: col-md-8 adapts when sidebar collapses */
+@media (min-width: 768px) and (max-width: 991px) {
+    /* Target content columns in all instructor pages with CHILD COMBINATOR for higher specificity */
+    .instructor-dashboard-page > .container > .row > .col-md-8,
+    .instructor-courses-page > .container > .row > .col-md-8,
+    .instructor-profile-page > .container > .row > .col-md-8,
+    .instructor-password-page > .container > .row > .col-md-8,
+    .instructor-testimonials-page > .container > .row > .col-md-8 {
+        flex: 1 1 auto !important; /* Flex-grow fills available space */
+        max-width: 100% !important; /* Remove Bootstrap's max-width constraint */
+        transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                    max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+/* Mobile: col-12 stays 100% width */
+@media (max-width: 767px) {
+    .col-12 {
+        flex: 0 0 100% !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
 
 /* Keep the utility class for backward compatibility and smooth transitions */
 .sidebar-collapsed-adapted {

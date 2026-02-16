@@ -124,8 +124,8 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
         const newRole = result.current_role;
         Toast().fire({
           icon: 'success',
-          title: 'Role Switched',
-          html: `You are now in <strong>${roleLabels[newRole] || newRole}</strong> mode`,
+          title: 'Peran Berhasil Beralih',
+          html: `Anda sekarang dalam mode <strong>${roleLabels[newRole] || newRole}</strong>`,
           timer: 5174
         });
         
@@ -137,7 +137,7 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
         setIsSwitching(false);
         Toast().fire({
           icon: 'error',
-          title: 'Error',
+          title: 'Kesalahan',
           text: result.error || 'Gagal beralih peran',
           timer: 5174
         });
@@ -146,7 +146,7 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
       console.error('Error switching role:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Error',
+        title: 'Kesalahan',
         text: 'Terjadi kesalahan saat beralih peran',
         timer: 5174
       });

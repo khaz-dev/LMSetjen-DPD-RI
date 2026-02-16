@@ -16,17 +16,17 @@ import "../../styles/PasswordInput.css";
 // Constants
 const PASSWORD_MIN_LENGTH = 6;
 const VALIDATION_MESSAGES = {
-    OLD_PASSWORD_REQUIRED: "Old password is required",
-    NEW_PASSWORD_REQUIRED: "New password is required",
-    CONFIRM_PASSWORD_REQUIRED: "Please confirm your new password",
-    PASSWORD_TOO_SHORT: `New password must be at least ${PASSWORD_MIN_LENGTH} characters long`,
-    PASSWORDS_DONT_MATCH: "Passwords do not match",
-    SAME_PASSWORD: "New password must be different from old password",
-    FORM_VALIDATION_ERROR: "Please fix the errors in the form",
-    INCORRECT_OLD_PASSWORD: "Incorrect old password",
-    NETWORK_ERROR: "Network error. Please check your connection",
-    PASSWORD_CHANGE_SUCCESS: "Password changed successfully!",
-    PASSWORD_CHANGE_ERROR: "Failed to change password. Please try again.",
+    OLD_PASSWORD_REQUIRED: "Kata sandi lama diperlukan",
+    NEW_PASSWORD_REQUIRED: "Kata sandi baru diperlukan",
+    CONFIRM_PASSWORD_REQUIRED: "Silakan konfirmasi kata sandi baru Anda",
+    PASSWORD_TOO_SHORT: `Kata sandi baru harus setidaknya ${PASSWORD_MIN_LENGTH} karakter`,
+    PASSWORDS_DONT_MATCH: "Kata sandi tidak cocok",
+    SAME_PASSWORD: "Kata sandi baru harus berbeda dari kata sandi lama",
+    FORM_VALIDATION_ERROR: "Silakan perbaiki kesalahan dalam formulir",
+    INCORRECT_OLD_PASSWORD: "Kata sandi lama salah",
+    NETWORK_ERROR: "Kesalahan jaringan. Silakan periksa koneksi Anda",
+    PASSWORD_CHANGE_SUCCESS: "Kata sandi berhasil diubah!",
+    PASSWORD_CHANGE_ERROR: "Gagal mengubah kata sandi. Silakan coba lagi.",
     UNABLE_TO_VERIFY: "Tidak dapat memverifikasi kata sandi. Silakan masuk kembali."
 };
 

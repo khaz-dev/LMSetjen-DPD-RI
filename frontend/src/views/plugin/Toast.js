@@ -77,18 +77,18 @@ function LogoutConfirmation() {
 }
 
    // Place this near the top of your file, after imports
-function DeleteConfirmation({ title = "Delete Confirmation", text = "Are you sure you want to delete this item? This action cannot be undone." }) {
+function DeleteConfirmation({ title = "Konfirmasi Penghapusan", text = "Apakah Anda yakin ingin menghapus item ini? Tindakan ini tidak dapat dibatalkan." }) {
     return Swal.fire({
         title: title,
         html: `<div style="color: #4a5568; font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">
                 ${text}
-                <br><small style="color: #718096;">This action is permanent.</small>
+                <br><small style="color: #718096;">Tindakan ini bersifat permanen.</small>
             </div>`,
         icon: 'warning',
         iconColor: '#e53e3e',
         showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-trash me-2"></i>Yes, Delete',
-        cancelButtonText: '<i class="fas fa-times me-2"></i>Cancel',
+        confirmButtonText: '<i class="fas fa-trash me-2"></i>Ya, Hapus',
+        cancelButtonText: '<i class="fas fa-times me-2"></i>Batal',
         reverseButtons: true,
         focusCancel: true,
         confirmButtonColor: '#e53e3e',

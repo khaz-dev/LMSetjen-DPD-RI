@@ -31,19 +31,21 @@ staticfiles/
 static_root/
 
 # ===================================
-# MEDIA & UPLOADS
+# MEDIA & UPLOADS - DEPRECATED (Phase 3)
 # ===================================
-# User uploaded files (keep structure)
+# ⚠️ PHASE 3: File uploads to server no longer used
+# Using external URLs (Google Drive, YouTube, CDNs) instead
+# Keeping these rules only for legacy media files
 media/
 !media/.gitkeep
 
-# Specific uploads
-media/course-file/
-media/user_folder/
-media/*.mp4
-media/*.pdf
-media/*.png
-media/*.jpg
+# Specific uploads (legacy - no longer created)
+# media/course-file/
+# media/user_folder/
+# media/*.mp4
+# media/*.pdf
+# media/*.png
+# media/*.jpg
 
 # ===================================
 # VIRTUAL ENVIRONMENT

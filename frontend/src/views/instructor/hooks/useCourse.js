@@ -200,8 +200,8 @@ export const useCourseSubmit = () => {
             if (response?.data) {
                 Toast().fire({
                     icon: "success",
-                    title: "Success",
-                    text: "Course updated successfully!",
+                    title: "Berhasil",
+                    text: "Kursus berhasil diperbarui!",
                 });
                 
                 if (onSuccess) {
@@ -212,7 +212,7 @@ export const useCourseSubmit = () => {
             }
         } catch (error) {
             console.error("Error updating course:", error);
-            const errorMessage = error.response?.data?.detail || "Failed to update course. Please try again.";
+            const errorMessage = error.response?.data?.detail || "Gagal memperbarui kursus. Silakan coba lagi.";
             
             Toast().fire({
                 icon: "error",

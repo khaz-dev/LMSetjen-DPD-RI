@@ -69,18 +69,18 @@ export const ERROR_MESSAGES = {
         descriptionTooLong: "Description is very long. Consider making it more concise"
     },
     file: {
-        invalidType: "Invalid file type. Please upload a valid file.",
-        tooLarge: "File is too large. Please upload a smaller file.",
-        uploadFailed: "Failed to upload file. Please try again."
+        invalidType: "Jenis file tidak valid. Silakan unggah file yang valid.",
+        tooLarge: "File terlalu besar. Silakan unggah file yang lebih kecil.",
+        uploadFailed: "Gagal mengunggah file. Silakan coba lagi."
     }
 };
 
 // Success Messages
 export const SUCCESS_MESSAGES = {
-    courseUpdated: "Course updated successfully!",
-    imageUploaded: "Course thumbnail updated successfully!",
-    videoUploaded: "Course video uploaded successfully!",
-    fileSaved: "File saved successfully!"
+    courseUpdated: "Kursus berhasil diperbarui!",
+    imageUploaded: "Thumbnail kursus berhasil diperbarui!",
+    videoUploaded: "Video kursus berhasil diunggah!",
+    fileSaved: "File berhasil disimpan!"
 };
 
 // CKEditor Configuration

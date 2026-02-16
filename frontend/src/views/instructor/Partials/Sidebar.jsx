@@ -186,6 +186,17 @@ function Sidebar() {
                                 </div>
                                 <span className="nav-text">Edit Profil</span>
                             </Link>
+                            
+                            <Link 
+                                className={`instructor-nav-link ${isActive("/instructor/testimonials") ? "active" : ""}`} 
+                                to="/instructor/testimonials/"
+                                data-tooltip="Testimoni"
+                            >
+                                <div className="instructor-nav-icon nav-icon">
+                                    <i className="fas fa-quote-left"></i>
+                                </div>
+                                <span className="nav-text">Testimoni</span>
+                            </Link>
                         </div>
 
                         {/* Logout Button */}

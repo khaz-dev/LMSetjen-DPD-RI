@@ -17,6 +17,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @staticmethod
     def _add_user_fields(token, user):
         """Add custom user fields to JWT token - used by both normal login and SSO"""
+        token['user_id'] = user.id  # ✨ PHASE 4.10: Add user ID for frontend operations
+        token['id'] = user.id  # Also add as 'id' for compatibility
         token['full_name'] = user.full_name
         token['email'] = user.email
         token['username'] = user.username
@@ -648,19 +650,38 @@ class NoteSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer(many=False)
+    # Include user data with profile information
+    user = serializers.SerializerMethodField()
 
     class Meta:
-        fields = '__all__'
+        fields = ['id', 'user', 'course', 'role', 'review', 'rating', 'reply', 'active', 'date']
         model = api_models.Review
 
-    def __init__(self, *args, **kwargs):
-        super(ReviewSerializer, self).__init__(*args, **kwargs)
-        request = self.context.get("request")
-        if request and request.method == "POST":
-            self.Meta.depth = 0
-        else:
-            self.Meta.depth = 3
+    def get_user(self, obj):
+        """Get user with profile information"""
+        if obj.user:
+            user_data = {
+                'id': obj.user.id,
+                'full_name': obj.user.full_name,
+                'email': obj.user.email,
+                'golongan': obj.user.golongan,
+                'jenis_jabatan': obj.user.jenis_jabatan,
+            }
+            
+            # Try to get image from related Profile
+            try:
+                profile = Profile.objects.get(user=obj.user)
+                if profile.image:
+                    user_data['image'] = profile.image.url if hasattr(profile.image, 'url') else str(profile.image)
+                else:
+                    user_data['image'] = None
+            except Profile.DoesNotExist:
+                user_data['image'] = None
+            except Exception as e:
+                user_data['image'] = None
+            
+            return user_data
+        return None
 
 class NotificationSerializer(serializers.ModelSerializer):
 
@@ -782,7 +803,7 @@ class CourseSerializer(serializers.ModelSerializer):
     qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.16: Add QA count for instructor QA page
     
     class Meta:
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "qa_count"]
+        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "qa_count", "intro_video_source"]
         model = api_models.Course
     
     def get_qa_count(self, obj):
@@ -850,7 +871,7 @@ class CourseEditSerializer(serializers.ModelSerializer):
     quizzes = serializers.SerializerMethodField()
     
     class Meta:
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count"]
+        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count", "intro_video_source"]
         model = api_models.Course
     
     def get_quizzes(self, obj):
@@ -1013,7 +1034,7 @@ class ExternalUserDataSerializer(serializers.Serializer):
     """Serializer for external API user data"""
     id = serializers.CharField()
     name = serializers.CharField()
-    email = serializers.EmailField()
+    email = serializers.CharField(allow_null=True, required=False, allow_blank=True)
     created_at = serializers.CharField(allow_null=True, required=False)
     updated_at = serializers.CharField(allow_null=True, required=False)
     status = serializers.CharField(allow_null=True, required=False)

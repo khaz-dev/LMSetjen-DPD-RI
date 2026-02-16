@@ -63,8 +63,8 @@ const CurriculumImageUpload = ({
                 
                 Toast().fire({
                     icon: "success",
-                    title: "Image Uploaded",
-                    text: "Course thumbnail updated successfully!",
+                    title: "Gambar Diunggah",
+                    text: "Thumbnail kursus berhasil diperbarui!",
                     timer: 2000,
                     showConfirmButton: false
                 });

@@ -11,7 +11,7 @@
 }
 
 /* Protect header card gap from parent overrides */
-.modern-dashboard .row > .col-12 > .instructor-header-card,
+.instructor-dashboard .row > .col-12 > .instructor-header-card,
 .modern-dashboard .instructor-header-card {
     margin-top: 0 !important;
     margin-bottom: 1.5rem !important;
@@ -56,7 +56,8 @@
 }
 
 /* Consistent vertical spacing for dashboard sections */
-.modern-dashboard .row {
+/* CRITICAL FIX: Scope to .instructor-dashboard to prevent cascade to admin dashboard */
+.instructor-dashboard .row {
   margin-bottom: 0; /* Remove gap below instructor-header-card */
   margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Neutralize column padding-left */
   margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Neutralize column padding-right */
@@ -67,14 +68,14 @@
 }
 
 /* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
-.modern-dashboard .row:has(.instructor-sidebar-column) {
+.instructor-dashboard .row:has(.instructor-sidebar-column) {
   flex-wrap: nowrap;
   width: 100%; /* Keep outer row normal width */
   margin-left: 0 !important; /* No negative margin for outer row */
   margin-right: 0 !important; /* No negative margin for outer row */
 }
 
-.modern-dashboard .row > [class*="col-"] {
+.instructor-dashboard .row > [class*="col-"] {
   margin-bottom: 0; /* Remove gap for columns */
   padding-left: calc(0.5 * var(--bs-gutter-x, 24px)); /* Bootstrap default column padding */
   padding-right: calc(0.5 * var(--bs-gutter-x, 24px)); /* Bootstrap default column padding */
@@ -89,7 +90,7 @@
 /* ============================== */
 
 /* Desktop: col-lg-9 content wrapper (inside sidebar row) */
-.modern-dashboard .row:has(.instructor-sidebar-column) > .col-lg-9 {
+.instructor-dashboard .row:has(.instructor-sidebar-column) > .col-lg-9 {
   margin-left: 0 !important; /* NO negative margin - prevents left overlap with sidebar */
   margin-right: 0 !important; /* NO negative margin - prevents right overflow */
   padding-left: 0 !important; /* Remove Bootstrap column padding */
@@ -99,14 +100,14 @@
 }
 
 /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
-.modern-dashboard .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
+.instructor-dashboard .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
   margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull left by col padding to reach col-12 edge */
   margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull right by col padding to reach col-12 edge */
   width: calc(100% + var(--bs-gutter-x, 24px)) !important; /* Extend width to compensate for negative margins */
 }
 
 /* Tablet: col-md-8 content wrapper (inside sidebar row) */
-.modern-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 {
+.instructor-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 {
   margin-left: 0 !important; /* NO negative margin - prevents left overlap with sidebar */
   margin-right: 0 !important; /* NO negative margin - prevents right overflow */
   padding-left: 0 !important; /* Remove Bootstrap column padding */
@@ -116,14 +117,14 @@
 }
 
 /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
-.modern-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
+.instructor-dashboard .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
   margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull left by col padding to reach col-12 edge */
   margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Pull right by col padding to reach col-12 edge */
   width: calc(100% + var(--bs-gutter-x, 24px)) !important; /* Extend width to compensate for negative margins */
 }
 
 /* Override for specific spacing needs */
-.modern-dashboard .row.mb-3 {
+.instructor-dashboard .row.mb-3 {
   margin-bottom: 1rem !important;
 }
 
@@ -132,7 +133,7 @@
 /* Ensure sticky positioning works on Dashboard */
 /* ============================== */
 /* Sidebar column: flex container that holds sticky sidebar */
-.modern-dashboard .row > .instructor-sidebar-column {
+.instructor-dashboard .row > .instructor-sidebar-column {
   display: flex;
   flex-direction: column;
   overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
@@ -1125,7 +1126,7 @@
 
 /* Base: Desktop Large (lg breakpoint and up) */
 /* col-lg-3 sidebar + col-lg-9 content = 12 columns */
-  .modern-dashboard .row > .instructor-sidebar-column {
+  .instructor-dashboard .row > .instructor-sidebar-column {
     flex-basis: auto;
     flex-grow: 0;
     flex-shrink: 0;
@@ -1134,7 +1135,7 @@
   }
 
   /* Content column - expands to fill remaining space */
-  .modern-dashboard .row > .col-lg-9 {
+  .instructor-dashboard .row > .col-lg-9 {
     flex: 1 1 auto;
     min-width: 0;
     width: auto;
@@ -1146,7 +1147,7 @@
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
     /* Fallback for browsers that don't support :has() */
-    .modern-dashboard .row > .col-lg-9 {
+    .instructor-dashboard .row > .col-lg-9 {
       flex: 1;
       width: auto;
       max-width: 100%;
@@ -1156,7 +1157,7 @@
 
 /* Tablet (md breakpoint) */
 /* col-md-4 sidebar + col-md-8 content = 12 columns */
-  .modern-dashboard .row > .instructor-sidebar-column {
+  .instructor-dashboard .row > .instructor-sidebar-column {
     flex-basis: auto;
     flex-grow: 0;
     flex-shrink: 0;
@@ -1166,7 +1167,7 @@
   }
 
   /* Content column - expands to fill remaining space */
-  .modern-dashboard .row > .col-md-8 {
+  .instructor-dashboard .row > .col-md-8 {
     flex: 1 1 auto;
     min-width: 0;
     width: auto;
@@ -1178,7 +1179,7 @@
 
   @supports not (selector(:has(.instructor-sidebar.collapsed))) {
     /* Fallback for browsers that don't support :has() */
-    .modern-dashboard .row > .col-md-8 {
+    .instructor-dashboard .row > .col-md-8 {
       flex: 1;
       width: auto;
       max-width: 100%;
@@ -1188,12 +1189,12 @@
 
 /* Mobile: Full width stacked */
 @media (max-width: 767px) {
-  .modern-dashboard .row {
+  .instructor-dashboard .row {
     flex-direction: column;
   }
 
-  .modern-dashboard .row > [class*="col-"],
-  .modern-dashboard .row > .instructor-sidebar-column {
+  .instructor-dashboard .row > [class*="col-"],
+  .instructor-dashboard .row > .instructor-sidebar-column {
     flex: 0 0 100%;
     width: 100%;
     max-width: 100%;

@@ -73,10 +73,10 @@ export const CURRICULUM_ERROR_MESSAGES = {
 
 // Success Messages for Curriculum
 export const CURRICULUM_SUCCESS_MESSAGES = {
-    courseUpdated: "Course updated successfully!",
-    imageUploaded: "Course thumbnail updated successfully!",
-    videoUploaded: "Course intro video uploaded successfully!",
-    dataLoaded: "Course data loaded successfully!"
+    courseUpdated: "Kursus berhasil diperbarui!",
+    imageUploaded: "Thumbnail kursus berhasil diperbarui!",
+    videoUploaded: "Video pengantar kursus berhasil diunggah!",
+    dataLoaded: "Data kursus berhasil dimuat!"
 };
 
 // CKEditor Configuration for Curriculum

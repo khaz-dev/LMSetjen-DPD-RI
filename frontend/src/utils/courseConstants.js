@@ -44,41 +44,41 @@ export const CKEDITOR_CONFIG = {
 export const TOAST_MESSAGES = {
   IMAGE_UPLOAD_SUCCESS: {
     icon: "success",
-    title: "Image Uploaded",
-    text: "Course thumbnail uploaded successfully!",
+    title: "Gambar Berhasil Diunggah",
+    text: "Thumbnail kursus berhasil diunggah!",
     timer: 2000,
     showConfirmButton: false
   },
   VIDEO_UPLOAD_SUCCESS: {
     icon: "success",
-    title: "Video Uploaded",
-    text: "Intro video uploaded successfully!",
+    title: "Video Berhasil Diunggah",
+    text: "Video pengantar berhasil diunggah!",
     timer: 2000,
     showConfirmButton: false
   },
   COURSE_CREATE_SUCCESS: {
     icon: "success",
-    title: "Course Created Successfully",
-    text: "Your course has been created and you can now add lessons!",
-    confirmButtonText: "Continue to Edit Course"
+    title: "Kursus Berhasil Dibuat",
+    text: "Kursus Anda telah dibuat dan Anda sekarang dapat menambahkan pelajaran!",
+    confirmButtonText: "Lanjutkan ke Edit Kursus"
   },
   VALIDATION_ERROR: {
     icon: "error",
-    title: "Please Fix the Following Issues",
-    confirmButtonText: "Fix Issues"
+    title: "Silakan Perbaiki Masalah Berikut",
+    confirmButtonText: "Perbaiki"
   },
   UPLOAD_ERROR: {
     icon: "error",
-    title: "Upload Failed",
+    title: "Unggahan Gagal",
   },
   CATEGORIES_LOAD_ERROR: {
     icon: "error",
-    title: "Loading Error",
-    text: "Failed to load course categories. Please refresh the page.",
+    title: "Kesalahan Memuat",
+    text: "Gagal memuat kategori kursus. Silakan segarkan halaman.",
   },
   CREATION_ERROR: {
     icon: "error",
-    title: "Creation Failed",
+    title: "Pembuatan Gagal",
   }
 };
 

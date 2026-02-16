@@ -119,7 +119,7 @@ function KelolaMaterialAdmin() {
             fetchCategories();
         } catch (error) {
             console.error("Error saving category:", error);
-            const errorMsg = error.response?.data?.title?.[0] || error.response?.data?.error || "Failed to save category";
+            const errorMsg = error.response?.data?.title?.[0] || error.response?.data?.error || "Gagal menyimpan kategori";
             setFormErrors({ submit: errorMsg });
             Toast().fire({
                 icon: "error",

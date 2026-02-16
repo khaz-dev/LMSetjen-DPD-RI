@@ -81,13 +81,13 @@ export const switchRole = async (role, options = {}) => {
     if (error.response?.status === 400) {
       return {
         success: false,
-        error: error.response.data.error || 'Invalid role selection'
+        error: error.response.data.error || 'Pilihan peran tidak valid'
       };
     }
     
     return {
       success: false,
-      error: 'Network error. Please check your connection.'
+      error: 'Kesalahan jaringan. Silakan periksa koneksi Anda.'
     };
   }
 };
@@ -130,7 +130,7 @@ export const getAvailableRoles = async () => {
     return {
       success: false,
       available_roles: [],
-      error: 'Network error'
+      error: 'Kesalahan jaringan'
     };
   }
 };

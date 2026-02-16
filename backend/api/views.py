@@ -802,6 +802,396 @@ class PublicStatsAPIView(generics.GenericAPIView):
             }, status=status.HTTP_200_OK)
 
 
+class TestimonialListAPIView(generics.GenericAPIView):
+    """
+    Testimonials List API - Returns top testimonials sorted by user's golongan (Government Rank)
+    Used for homepage testimonials section
+    
+    Returns top 3 reviews sorted by golongan from highest (IV/e) to lowest (II/a)
+    
+    Filters testimonials by the role the user testified as, not by the user's current role flags.
+    This allows multi-role users to have separate testimonials for each role.
+    
+    ✨ PHASE 4.11: Updated to support multi-role testimonials using role field
+    
+    Returns:
+    - List of reviews with user profile information and golongan
+    """
+    permission_classes = [AllowAny]
+    
+    def golongan_sort_key(self, golongan_str):
+        """
+        Convert golongan string to sortable tuple
+        Format: "IV/e", "III/a", "II/c", etc.
+        Returns: (roman_value, letter_value) for sorting
+        
+        Roman numerals: IV=4, III=3, II=2, I=1
+        Letters: a=1, b=2, c=3, d=4, e=5, f=6
+        """
+        if not golongan_str:
+            return (0, 0)
+        
+        try:
+            parts = golongan_str.strip().split('/')
+            if len(parts) != 2:
+                return (0, 0)
+            
+            roman_part = parts[0].strip().upper()
+            letter_part = parts[1].strip().lower()
+            
+            # Convert Roman numeral to integer
+            roman_values = {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5}
+            roman_value = roman_values.get(roman_part, 0)
+            
+            # Convert letter to integer (a=1, b=2, etc.)
+            letter_value = ord(letter_part) - ord('a') + 1 if letter_part else 0
+            
+            return (roman_value, -letter_value)  # Negative letter for descending order
+        except:
+            return (0, 0)
+    
+    def get(self, request):
+        try:
+            # ✨ PHASE 4.11: Accept role parameter to filter testimonials by the role they testified as
+            role = request.query_params.get('role', None)
+            
+            # Fetch all active reviews with related user and profile data
+            reviews_query = api_models.Review.objects.filter(
+                active=True
+            ).select_related('user', 'user__profile').order_by('-date')
+            
+            # ✨ PHASE 4.11: Filter by review role, NOT user role flags
+            # This allows multi-role users to testify separately as student and instructor
+            if role == 'student':
+                reviews_query = reviews_query.filter(role='student')
+            elif role == 'instructor':
+                reviews_query = reviews_query.filter(role='instructor')
+            # If no role specified or invalid role, return all reviews
+            
+            # Convert to list and sort by golongan (highest to lowest)
+            reviews_list = list(reviews_query)
+            reviews_list.sort(
+                key=lambda r: self.golongan_sort_key(r.user.golongan if r.user else ''),
+                reverse=True
+            )
+            
+            # Get top 3
+            top_reviews = reviews_list[:3]
+            
+            # Serialize the data
+            testimonials_data = []
+            for review in top_reviews:
+                user = review.user
+                profile = user.profile if user else None
+                
+                testimonials_data.append({
+                    'id': review.id,
+                    'full_name': user.full_name if user else 'Anonymous',
+                    'golongan': user.golongan if user else '',
+                    'position': user.kelas_jabatan if user else '',
+                    'organization': user.unit_organisasi.name if hasattr(user, 'unit_organisasi') else 'Setjen DPD RI',
+                    'review': review.review,
+                    'rating': review.rating,
+                    'role': review.role,  # ✨ PHASE 4.11: Include role in response
+                    'image': profile.image.url if profile and profile.image else None,
+                    'date': review.date.isoformat()
+                })
+            
+            return Response({
+                'count': len(testimonials_data),
+                'results': testimonials_data,
+                'timestamp': timezone.now().isoformat()
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"Error in TestimonialListAPIView: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response({
+                'error': str(e),
+                'results': []
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TestimonialCreateAPIView(generics.CreateAPIView):
+    """
+    Testimonial Submission API - Students/Instructors can submit general testimonials
+    For the homepage testimonials section (not tied to specific courses)
+    
+    POST /api/v1/student/submit-testimonial/
+    
+    Request body:
+    {
+        "rating": 1-5,
+        "review": "testimonial text...",
+        "role": "student" or "instructor" (optional, defaults to current role)
+    }
+    
+    Returns:
+    - 201: Testimonial created successfully
+    - 200: Testimonial updated successfully
+    - 400: Missing fields or validation error
+    - 401: Unauthorized (authentication required)
+    - 500: Server error
+    
+    ✨ PHASE 4.11: Updated to support multi-role testimonials
+    """
+    serializer_class = api_serializer.ReviewSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def create(self, request, *args, **kwargs):
+        try:
+            user = request.user
+            rating = request.data.get('rating')
+            review_text = request.data.get('review')
+            role = request.data.get('role', 'student')  # ✨ PHASE 4.11: Accept role parameter
+
+            # Validation
+            if not review_text or not review_text.strip():
+                return Response(
+                    {"error": "Testimoni harus diisi"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if not rating or rating < 1 or rating > 5:
+                return Response(
+                    {"error": "Rating harus antara 1 dan 5"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # ✨ PHASE 4.11: Validate role parameter
+            valid_roles = ['student', 'instructor']
+            if role not in valid_roles:
+                return Response(
+                    {"error": f"Role harus salah satu dari: {', '.join(valid_roles)}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # ✨ PHASE 4.11: Check user has the specified role
+            if role == 'student' and not user.is_student:
+                return Response(
+                    {"error": "Anda tidak memiliki role sebagai student"}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            elif role == 'instructor' and not user.is_instructor:
+                return Response(
+                    {"error": "Anda tidak memiliki role sebagai instructor"}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # ✨ PHASE 4.11: Check if user already has a testimonial for this specific role
+            existing_testimonial = api_models.Review.objects.filter(
+                user=user, 
+                course__isnull=True,  # General testimonial (no course)
+                role=role  # Specific role
+            ).first()
+            
+            if existing_testimonial:
+                # UPDATE existing testimonial
+                existing_testimonial.review = review_text.strip()
+                existing_testimonial.rating = int(rating)
+                existing_testimonial.active = False  # ✨ PHASE 4.12: Require admin approval after update
+                existing_testimonial.reply = None  # ✨ FIX 4.15: Clear rejection reason on resubmission
+                existing_testimonial.save()
+
+                return Response({
+                    "message": f"Testimoni Anda sebagai {role} berhasil diperbarui! Testimoni akan ditampilkan setelah disetujui admin.",
+                    "testimonial_id": existing_testimonial.id,
+                    "status": "updated",
+                    "role": role,
+                    "requires_approval": True
+                }, status=status.HTTP_200_OK)
+            else:
+                # CREATE new testimonial
+                testimonial = api_models.Review.objects.create(
+                    user=user,
+                    course=None,  # General testimonial, not tied to specific course
+                    role=role,  # ✨ PHASE 4.11: Store the role
+                    review=review_text.strip(),
+                    rating=int(rating),
+                    active=False,  # ✨ PHASE 4.12: Require admin approval before showing on homepage
+                )
+
+                return Response({
+                    "message": f"Testimoni Anda sebagai {role} berhasil dikirim! Testimoni akan ditampilkan setelah disetujui admin.",
+                    "testimonial_id": testimonial.id,
+                    "status": "pending_review",
+                    "role": role,
+                    "requires_approval": True
+                }, status=status.HTTP_201_CREATED)
+            
+        except ValueError as e:
+            return Response(
+                {"error": f"Format data tidak valid: {str(e)}"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except KeyError as e:
+            return Response(
+                {"error": f"Field yang diperlukan tidak ditemukan: {str(e)}"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Gagal menyimpan testimoni: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class TestimonialDetailAPIView(generics.GenericAPIView):
+    """
+    User's Testimonial Detail API - Get, Update, or Delete user's testimonial
+    
+    GET /api/v1/student/testimonial/?role=student   - Get user's student testimonial
+    GET /api/v1/student/testimonial/?role=instructor - Get user's instructor testimonial
+    DELETE /api/v1/student/testimonial/?role=student - Delete user's student testimonial
+    
+    Returns:
+    - 200: Success (GET)
+    - 204: Success (DELETE)
+    - 404: Testimonial not found
+    - 401: Unauthorized
+    - 500: Server error
+    
+    ✨ PHASE 4.11: Updated to support multi-role testimonials
+    """
+    serializer_class = api_serializer.ReviewSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get_user_testimonial(self, role='student'):
+        """Get the authenticated user's testimonial for a specific role"""
+        try:
+            return api_models.Review.objects.get(
+                user=self.request.user,
+                course__isnull=True,  # General testimonial only
+                role=role  # ✨ PHASE 4.11: Filter by role
+            )
+        except api_models.Review.DoesNotExist:
+            return None
+
+    def get(self, request, *args, **kwargs):
+        """Get user's testimonial for a specific role"""
+        # ✨ PHASE 4.11: Accept role from query params
+        role = request.query_params.get('role', 'student')
+        
+        if role not in ['student', 'instructor']:
+            return Response(
+                {"error": "Invalid role parameter"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        testimonial = self.get_user_testimonial(role=role)
+        
+        if not testimonial:
+            # Return 200 OK with null data instead of 404
+            # "No testimonial yet" is not an error, it's a normal empty state
+            return Response(
+                None,  # Return null instead of error message
+                status=status.HTTP_200_OK
+            )
+        
+        serializer = self.get_serializer(testimonial)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+        """Delete user's testimonial for a specific role"""
+        # ✨ PHASE 4.11: Accept role from query params
+        role = request.query_params.get('role', 'student')
+        
+        if role not in ['student', 'instructor']:
+            return Response(
+                {"error": "Invalid role parameter"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        testimonial = self.get_user_testimonial(role=role)
+        
+        if not testimonial:
+            return Response(
+                {"error": "Testimoni tidak ditemukan"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        testimonial.delete()
+        return Response({
+            "message": "Testimoni Anda berhasil dihapus",
+            "status": "deleted"
+        }, status=status.HTTP_204_NO_CONTENT)
+
+
+# ✨ PHASE 4.13: User Testimonials List - Users can see all their submitted testimonials with status
+class UserTestimonialsListAPIView(generics.ListAPIView):
+    """
+    User Testimonials List API - Get all user's submitted testimonials with status
+    
+    GET /api/v1/student/testimonials/list/?role=student
+    
+    Returns all user's testimonials (pending, approved, rejected) with rejection reasons if applicable
+    
+    Responses:
+    - 200: List of user's testimonials
+    - 401: Unauthorized
+    """
+    serializer_class = api_serializer.ReviewSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    
+    def get_queryset(self):
+        """Get all testimonials for the authenticated user for their specified role"""
+        user = self.request.user
+        role = self.request.query_params.get('role', 'student')
+        
+        if role not in ['student', 'instructor']:
+            role = 'student'
+        
+        # Get all testimonials (approved, pending, rejected) for this user and role
+        return api_models.Review.objects.filter(
+            user=user,
+            role=role
+        ).order_by('-date')
+    
+    def list(self, request, *args, **kwargs):
+        """List user's testimonials with status information"""
+        from django.db.models import Q
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        
+        # Enhance response with status information
+        testimonials_data = []
+        for review, data in zip(queryset, serializer.data):
+            # ✨ FIX 4.15: Differentiate pending vs rejected:
+            # - Pending: active=False AND reply is empty/null (fresh submission awaiting admin review)
+            # - Rejected: active=False AND reply has content (admin rejected with reason)
+            # - Approved: active=True
+            if review.active:
+                status_val = 'approved'
+                rejection_reason = None
+                is_rejected = False
+            elif review.reply and review.reply.strip():  # Has rejection reason
+                status_val = 'rejected'
+                rejection_reason = review.reply
+                is_rejected = True
+            else:  # active=False but reply is empty
+                status_val = 'pending'
+                rejection_reason = None
+                is_rejected = False
+            
+            testimonial_info = {
+                **data,
+                'status': status_val,
+                'rejection_reason': rejection_reason,
+                'is_rejected': is_rejected,
+                'can_resubmit': is_rejected  # Allow resubmission only if actually rejected
+            }
+            testimonials_data.append(testimonial_info)
+        
+        return Response({
+            'count': len(testimonials_data),
+            'results': testimonials_data
+        }, status=status.HTTP_200_OK)
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
     """
@@ -5417,7 +5807,15 @@ class SyncExternalUsersAPIView(APIView):
             
             for user_data in users_to_process:
                 try:
-                    # Validate external user data
+                    # ✨ PHASE 5: CRITICAL FIX - Clean email BEFORE validation
+                    # External API may send empty email ("" or null)
+                    # Generate default if missing BEFORE passing to serializer
+                    if not user_data.get('email') or user_data.get('email') == '':
+                        nip = user_data.get('nip', user_data.get('id', ''))
+                        user_data['email'] = f"{nip}@external-system.local"
+                        print(f"Email missing for user {user_data.get('id')}, generated: {user_data['email']}")
+                    
+                    # NOW validate external user data (with cleaned email)
                     serializer = api_serializer.ExternalUserDataSerializer(data=user_data)
                     if not serializer.is_valid():
                         sync_results['errors'].append({
@@ -6591,7 +6989,7 @@ class SelectRoleAPIView(APIView):
             
             return Response({
                 'success': True,
-                'message': f'Successfully switched to {requested_role} role',
+                'message': f'Berhasil beralih ke peran {requested_role}',
                 'current_role': user.current_role,
                 'available_roles': user.get_available_boolean_roles(),
                 'user_id': user.id,
@@ -6614,4 +7012,205 @@ class SelectRoleAPIView(APIView):
                 'success': False,
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ✨ PHASE 4.12: Admin Testimonial Management Views
+class AdminPendingTestimonialsListAPIView(generics.ListAPIView):
+    """
+    Admin - List all pending (unapproved) testimonials for review
+    
+    GET /api/v1/admin/testimonials/pending/
+    
+    Returns:
+    - 200: List of pending testimonials
+    - 401: Unauthorized
+    - 403: Not admin
+    """
+    serializer_class = api_serializer.ReviewSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [JWTAuthentication]
+    
+    def get_queryset(self):
+        """Get all pending testimonials ordered by date (newest first)"""
+        from django.db.models import Q
+        # Pending = active=False AND no rejection reason (reply is empty)
+        # This excludes already-rejected testimonials
+        return api_models.Review.objects.filter(
+            Q(active=False) & (Q(reply__isnull=True) | Q(reply='')),  # Pending approval (not yet reviewed)
+            course__isnull=True  # General testimonials only
+        ).select_related('user', 'user__profile').order_by('-date')
+    
+    def list(self, request, *args, **kwargs):
+        """Override to add custom response format"""
+        queryset = self.get_queryset()
+        
+        # Build response data with user info
+        testimonials_data = []
+        for review in queryset:
+            user = review.user
+            profile = user.profile if user else None
+            
+            testimonials_data.append({
+                'id': review.id,
+                'user_id': user.id if user else None,
+                'full_name': user.full_name if user else 'Anonymous',
+                'email': user.email if user else '',
+                'golongan': user.golongan if user else '',
+                'position': user.kelas_jabatan if user else '',
+                'organization': user.unit_organisasi.name if hasattr(user, 'unit_organisasi') else 'Setjen DPD RI',
+                'review': review.review,
+                'rating': review.rating,
+                'role': review.role,
+                'active': review.active,
+                'image': profile.image.url if profile and profile.image else None,
+                'date': review.date.isoformat()
+            })
+        
+        return Response({
+            'count': len(testimonials_data),
+            'results': testimonials_data,
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_200_OK)
+
+
+class AdminApproveRejectTestimonialAPIView(generics.GenericAPIView):
+    """
+    Admin - Approve or reject a testimonial
+    
+    PATCH /api/v1/admin/testimonials/<testimonial_id>/approve-reject/
+    
+    Request body:
+    {
+        "action": "approve" or "reject",
+        "reason": "optional reason for rejection"
+    }
+    
+    Returns:
+    - 200: Testimonial approved/rejected successfully
+    - 400: Invalid action
+    - 404: Testimonial not found
+    - 401: Unauthorized
+    - 403: Not admin
+    """
+    serializer_class = api_serializer.ReviewSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [JWTAuthentication]
+    
+    def get_object(self, testimonial_id):
+        """Get testimonial by ID"""
+        try:
+            return api_models.Review.objects.get(id=testimonial_id)
+        except api_models.Review.DoesNotExist:
+            return None
+    
+    def patch(self, request, testimonial_id):
+        """Approve or reject a testimonial"""
+        try:
+            action = request.data.get('action', '').lower()
+            reason = request.data.get('reason', '')
+            
+            # Validate action
+            if action not in ['approve', 'reject']:
+                return Response(
+                    {"error": "Action harus 'approve' atau 'reject'"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get testimonial
+            testimonial = self.get_object(testimonial_id)
+            if not testimonial:
+                return Response(
+                    {"error": "Testimoni tidak ditemukan"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            if action == 'approve':
+                testimonial.active = True
+                testimonial.save()
+                
+                return Response({
+                    "message": f"Testimoni berhasil disetujui dan akan ditampilkan di halaman utama.",
+                    "testimonial_id": testimonial.id,
+                    "status": "approved",
+                    "action": "approve"
+                }, status=status.HTTP_200_OK)
+            
+            else:  # reject
+                # Instead of deleting, we keep it for record-keeping but mark as inactive permanently
+                testimonial.active = False
+                testimonial.reply = f"Ditolak oleh admin. Alasan: {reason}" if reason else "Ditolak oleh admin."
+                testimonial.save()
+                
+                # Notify user about rejection (optional)
+                # You could send email notification here
+                
+                return Response({
+                    "message": f"Testimoni berhasil ditolak.",
+                    "testimonial_id": testimonial.id,
+                    "status": "rejected",
+                    "action": "reject"
+                }, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {"error": f"Error: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class AdminApprovedTestimonialsListAPIView(generics.ListAPIView):
+    """
+    Admin - List all approved testimonials
+    
+    GET /api/v1/admin/testimonials/approved/
+    
+    Returns:
+    - 200: List of approved testimonials
+    - 401: Unauthorized
+    - 403: Not admin
+    """
+    serializer_class = api_serializer.ReviewSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [JWTAuthentication]
+    
+    def get_queryset(self):
+        """Get all approved testimonials ordered by date (newest first)"""
+        return api_models.Review.objects.filter(
+            active=True,
+            course__isnull=True  # General testimonials only
+        ).select_related('user', 'user__profile').order_by('-date')
+    
+    def list(self, request, *args, **kwargs):
+        """Override to add custom response format"""
+        queryset = self.get_queryset()
+        
+        # Build response data with user info
+        testimonials_data = []
+        for review in queryset:
+            user = review.user
+            profile = user.profile if user else None
+            
+            testimonials_data.append({
+                'id': review.id,
+                'user_id': user.id if user else None,
+                'full_name': user.full_name if user else 'Anonymous',
+                'email': user.email if user else '',
+                'golongan': user.golongan if user else '',
+                'position': user.kelas_jabatan if user else '',
+                'organization': user.unit_organisasi.name if hasattr(user, 'unit_organisasi') else 'Setjen DPD RI',
+                'review': review.review,
+                'rating': review.rating,
+                'role': review.role,
+                'active': review.active,
+                'image': profile.image.url if profile and profile.image else None,
+                'date': review.date.isoformat()
+            })
+        
+        return Response({
+            'count': len(testimonials_data),
+            'results': testimonials_data,
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_200_OK)
 

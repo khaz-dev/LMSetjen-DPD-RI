@@ -291,7 +291,7 @@
     letter-spacing: 0.5px;
 }
 
-.stat-change {
+.admin-page-wrapper .stat-change {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -301,17 +301,17 @@
     font-weight: 600;
 }
 
-.stat-change.positive {
+.admin-page-wrapper .stat-change.positive {
     background: rgba(16, 185, 129, 0.1);
     color: #059669;
 }
 
-.stat-change.negative {
+.admin-page-wrapper .stat-change.negative {
     background: rgba(239, 68, 68, 0.1);
     color: #dc2626;
 }
 
-.stat-change.neutral {
+.admin-page-wrapper .stat-change.neutral {
     background: rgba(107, 114, 128, 0.1);
     color: #6b7280;
 }

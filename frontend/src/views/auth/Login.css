@@ -381,11 +381,11 @@
 }
 
 /* Additional text selection prevention */
-.text-center {
+.login-section .text-center {
     user-select: none; /* Prevent text selection on centered text */
 }
 
-.text-muted {
+.login-section .text-muted {
     user-select: none; /* Prevent text selection on muted text */
     cursor: default; /* Default cursor */
 }

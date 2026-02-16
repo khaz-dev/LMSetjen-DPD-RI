@@ -536,7 +536,7 @@
   align-items: center;
 }
 
-.stat-label {
+.analytics-widgets .stat-label {
   font-size: 12px;
   color: #888;
   font-weight: 600;

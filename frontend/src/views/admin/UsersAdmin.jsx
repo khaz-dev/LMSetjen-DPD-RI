@@ -312,7 +312,7 @@ function UsersAdmin() {
             console.error("Error performing bulk action:", error);
             Toast().fire({
                 icon: "error",
-                title: error.response?.data?.message || "Failed to perform bulk action"
+                title: error.response?.data?.message || "Gagal melakukan tindakan massal"
             });
         }
     }, [selectedUsers, api, fetchUsers]);
@@ -496,13 +496,13 @@ function UsersAdmin() {
                 setSyncProgress(prev => ({
                     ...prev,
                     status: "error",
-                    message: error.response?.data?.error || "Failed to sync external users data",
+                    message: error.response?.data?.error || "Gagal menyinkronkan data pengguna eksternal",
                     errors: [error.response?.data?.error || error.message]
                 }));
                 
                 Toast().fire({
                     icon: "error",
-                    title: error.response?.data?.error || "Failed to sync external users data"
+                    title: error.response?.data?.error || "Gagal menyinkronkan data pengguna eksternal"
                 });
             }
         } finally {
@@ -567,7 +567,7 @@ function UsersAdmin() {
             console.error("Error fetching user details:", error);
             Toast().fire({
                 icon: "error",
-                title: "Failed to load user details"
+                title: "Gagal memuat detail pengguna"
             });
         }
     }, [api]);

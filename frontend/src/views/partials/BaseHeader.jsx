@@ -325,14 +325,13 @@ function BaseHeader() {
     };
 
     // Utility functions
-    const getFirstThreeWords = (fullName) => {
+    const getFirstTwoWords = (fullName) => {
         if (!fullName || typeof fullName !== 'string') return '';
         const words = fullName.trim().split(/\s+/);
         
         if (words.length === 0) return '';
         if (words.length === 1) return words[0];
-        if (words.length === 2) return `${words[0]} ${words[1]}`;
-        return `${words[0]} ${words[1]} ${words[2]}`;
+        return `${words[0]} ${words[1]}`;
     };
 
     const getDisplayName = () => {
@@ -348,7 +347,7 @@ function BaseHeader() {
             .replace(/[^\w\s]/g, '') // Remove special characters except spaces and word characters
             .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
             .trim();
-        const displayName = getFirstThreeWords(cleanedFullName);
+        const displayName = getFirstTwoWords(cleanedFullName);
         
         if (isAdmin) return displayName || 'Admin';
         return displayName || (hasTeacherId ? 'Pemateri' : 'Peserta');
@@ -492,7 +491,7 @@ function BaseHeader() {
                                     <button 
                                         onClick={handleSearchSubmit} 
                                         className="search-button"
-                                        aria-label="Search"
+                                        aria-label="Cari"
                                     >
                                         <i className="fas fa-search me-1"></i>Cari
                                     </button>

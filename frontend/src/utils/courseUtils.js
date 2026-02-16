@@ -74,23 +74,23 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
     try {
         // Show enhanced delete confirmation dialog
         const result = await DeleteConfirmation({
-            title: 'Delete Course?',
-            text: `You are about to permanently delete "${courseName}". This will remove all associated content including curriculum, lessons, quizzes, and student enrollments. This action cannot be undone.`
+            title: 'Hapus Kursus?',
+            text: `Anda akan menghapus secara permanen "${courseName}". Ini akan menghapus semua konten terkait termasuk kurikulum, pelajaran, kuis, dan pendaftaran siswa. Tindakan ini tidak dapat dibatalkan.`
         });
         
         if (result.isConfirmed) {
             // Show loading indicator
             Swal.fire({
-                title: 'Deleting Course...',
+                title: 'Menghapus Kursus...',
                 html: `
                     <div style="text-align: center;">
                         <div class="spinner-border text-danger mb-3" role="status" style="width: 3rem; height: 3rem;">
-                            <span class="visually-hidden">Loading...</span>
+                            <span class="visually-hidden">Memproses...</span>
                         </div>
                         <p style="color: #4a5568; font-size: 1rem;">
-                            Removing "${courseName}" and all related data...
+                            Menghapus "${courseName}" dan semua data terkait...
                         </p>
-                        <small style="color: #718096;">Please wait, this may take a moment.</small>
+                        <small style="color: #718096;">Harap tunggu, ini mungkin membutuhkan waktu beberapa saat.</small>
                     </div>
                 `,
                 allowOutsideClick: false,
@@ -107,15 +107,15 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
                 
                 // Success notification
                 await Swal.fire({
-                    title: 'Course Deleted!',
+                    title: 'Kursus Berhasil Dihapus!',
                     html: `
                         <div style="text-align: center;">
                             <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem;"></i>
                             <p style="color: #4a5568; font-size: 1rem; margin-bottom: 0.5rem;">
-                                <strong>"${courseName}"</strong> has been successfully deleted.
+                                <strong>"${courseName}"</strong> telah berhasil dihapus.
                             </p>
                             <small style="color: #718096;">
-                                All associated content has been removed from the system.
+                                Semua konten terkait telah dihapus dari sistem.
                             </small>
                         </div>
                     `,
@@ -142,17 +142,17 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
                 console.error('Error deleting course:', error);
                 
                 // Determine error message
-                let errorMessage = 'Failed to delete the course. Please try again.';
+                let errorMessage = 'Gagal menghapus kursus. Silakan coba lagi.';
                 let errorDetails = '';
                 
                 if (error.response) {
                     // Server responded with error
                     if (error.response.status === 404) {
-                        errorMessage = 'Course not found. It may have already been deleted.';
+                        errorMessage = 'Kursus tidak ditemukan. Mungkin sudah dihapus sebelumnya.';
                     } else if (error.response.status === 403) {
-                        errorMessage = 'You do not have permission to delete this course.';
+                        errorMessage = 'Anda tidak memiliki izin untuk menghapus kursus ini.';
                     } else if (error.response.status === 400) {
-                        errorMessage = 'Cannot delete course. Please check if there are any dependencies.';
+                        errorMessage = 'Tidak dapat menghapus kursus. Silakan periksa apakah ada ketergantungan.';
                     }
                     
                     if (error.response.data?.error) {
@@ -162,14 +162,14 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
                     }
                 } else if (error.request) {
                     // Network error
-                    errorMessage = 'Network error. Please check your internet connection.';
+                    errorMessage = 'Kesalahan jaringan. Silakan periksa koneksi internet Anda.';
                 } else {
-                    errorMessage = error.message || 'An unexpected error occurred.';
+                    errorMessage = error.message || 'Terjadi kesalahan yang tidak terduga.';
                 }
                 
                 // Show error dialog
                 await Swal.fire({
-                    title: 'Deletion Failed',
+                    title: 'Penghapusan Gagal',
                     html: `
                         <div style="text-align: center;">
                             <i class="fas fa-exclamation-triangle text-danger mb-3" style="font-size: 3rem;"></i>
@@ -184,7 +184,7 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
                                 </div>
                             ` : ''}
                             <small style="color: #718096; display: block; margin-top: 12px;">
-                                If this problem persists, please contact support.
+                                Jika masalah ini terus berlanjut, silakan hubungi dukungan.
                             </small>
                         </div>
                     `,

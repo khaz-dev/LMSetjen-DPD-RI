@@ -249,6 +249,32 @@ body.student-theme .qa-bg-section {
   margin-right: 0 !important;
 }
 
+/* ✨ PHASE 4.33: FIX instructor-theme page styling override
+   CRITICAL: Match student-theme rules for instructor pages to prevent style cascade
+   When navigating from student dashboard to instructor dashboard,
+   instructor pages need their own positioning rules */
+body.instructor-theme section,
+body.instructor-theme main,
+body.instructor-theme .modern-course-page,
+body.instructor-theme .modern-students,
+body.instructor-theme .modern-dashboard,
+body.instructor-theme .courses-container,
+body.instructor-theme .instructor-profile-page,
+body.instructor-theme .instructor-review-page,
+body.instructor-theme .instructor-notification-page,
+body.instructor-theme .instructor-password-page,
+body.instructor-theme .instructor-course-create-page,
+body.instructor-theme .instructor-course-edit-page,
+body.instructor-theme .instructor-course-edit-curriculum-page,
+body.instructor-theme .qa-bg-section {
+  position: relative;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
 /* Dark Theme (Student - Purple Dark Mode) */
 body.student-theme.dark-theme,
 body.dark-theme {
@@ -366,7 +392,9 @@ body.dark-theme .dropdown-item:active {
 }
 
 /* Prevent text selection on all elements by default */
-body, div, span, h1, h2, h3, h4, h5, h6, p, a, img, strong, em, small,
+/* CRITICAL FIX: Scope this rule to prevent affecting student/teacher pages globally */
+/* Only apply to interactive UI elements with SPECIFIC CLASSES, NOT to generic div/span */
+/* Removed: body, div, span, h1, h2, h3, h4, h6 - these are too broad and break data tables */
 .card, .card-body, .card-title, .card-text,
 .badge, .btn-text, .nav-link,
 .modal-title, .modal-body, .modal-header,
@@ -380,10 +408,41 @@ body, div, span, h1, h2, h3, h4, h5, h6, p, a, img, strong, em, small,
   caret-color: transparent !important;
 }
 
-/* Allow text selection only for input elements */
+/* CRITICAL: Allow h5 and p elements to have normal text behavior in content areas */
+/* These should NOT have user-select: none by default as they may contain selectable content */
+h5, p {
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+  -moz-user-select: auto !important;
+  -ms-user-select: auto !important;
+  cursor: auto !important;
+  caret-color: auto !important;
+}
+
+/* Prevent selection on navigation and link text ONLY when they're actual UI controls */
+nav a, nav span, .navbar-brand, .breadcrumb, header a {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* ✨ PHASE 5: CRITICAL FIX - Allow text selection for ALL data content */
+/* All content inside tables, paragraphs, and divs should be selectable */
+body, div, span, h1, h2, h3, h4, h6, strong, em, small {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: inherit !important;
+  caret-color: auto !important;
+}
+
+/* Allow text selection for input elements and table content */
 input, textarea, .form-control, .form-select, 
 [contenteditable="true"], [contenteditable=""], 
-.editable-text {
+.editable-text,
+table, thead, tbody, tr, td, th {
   user-select: text !important;
   -webkit-user-select: text !important;
   -moz-user-select: text !important;
@@ -395,13 +454,16 @@ input, textarea, .form-control, .form-select,
 /* Global Cursor Management - Fix cursor pointer inheritance issues */
 button, 
 .btn, 
-a[href], 
+a[href]:not(.content-link), 
 .clickable, 
 [role="button"], 
 [onclick], 
 .dropdown-toggle {
   cursor: pointer !important;
   user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
 }
 
 /* Critical Fix: Ensure all children of clickable elements inherit pointer cursor */
@@ -443,6 +505,17 @@ label {
 .code-block, 
 pre, 
 code {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+}
+
+/* ✨ PHASE 5 FIX: Allow text selection in tables and their content */
+/* Tables should be selectable for copying data, even if inside restricted containers */
+table, 
+table * {
   user-select: text !important;
   -webkit-user-select: text !important;
   -moz-user-select: text !important;

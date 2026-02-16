@@ -46,6 +46,7 @@ const NotFound = lazy(() => import("./views/base/NotFound"));
 const StudentDashboard = lazy(() => import("./views/student/Dashboard"));
 const StudentCourses = lazy(() => import("./views/student/Courses"));
 const StudentCourseDetail = lazy(() => import("./views/student/CourseDetail"));
+const StudentTestimonials = lazy(() => import("./views/student/Testimonials"));
 const Wishlist = lazy(() => import("./views/student/Wishlist"));
 const StudentQA = lazy(() => import("./views/student/QA"));
 const StudentProfile = lazy(() => import("./views/student/Profile"));
@@ -53,6 +54,7 @@ const StudentProfile = lazy(() => import("./views/student/Profile"));
 // Instructor Routes
 const Dashboard = lazy(() => import("./views/instructor/Dashboard"));
 const Courses = lazy(() => import("./views/instructor/Courses"));
+const InstructorTestimonials = lazy(() => import("./views/instructor/Testimonials"));
 const Review = lazy(() => import("./views/instructor/Review"));
 const Students = lazy(() => import("./views/instructor/Students"));
 const TeacherNotification = lazy(() => import("./views/instructor/TeacherNotification"));
@@ -68,6 +70,7 @@ const DashboardAdmin = lazy(() => import("./views/admin/DashboardAdmin"));
 const UsersAdmin = lazy(() => import("./views/admin/UsersAdmin"));
 const SystemDocumentation = lazy(() => import("./views/admin/SystemDocumentation"));
 const KelolaMaterialAdmin = lazy(() => import("./views/admin/KelolaMaterialAdmin"));
+const TestimonialsAdmin = lazy(() => import("./views/admin/TestimonialsAdmin"));
 
 // Loading component for Suspense fallback - Centered spinner
 const LoadingFallback = () => (
@@ -286,6 +289,16 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
+                            <Route
+                                path="/student/testimonials/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["student"]}>
+                                            <StudentTestimonials />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
                             
                             {/* Instructor Routes */}
 
@@ -356,6 +369,16 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <Profile />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/instructor/testimonials/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                            <InstructorTestimonials />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }
@@ -438,6 +461,16 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["admin"]}>
                                             <KelolaMaterialAdmin />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/admin/testimonials/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["admin"]}>
+                                            <TestimonialsAdmin />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }

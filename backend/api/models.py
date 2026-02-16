@@ -49,6 +49,12 @@ RATING = (
     (5, "5 Star"),
 )
 
+# ✨ PHASE 4.11: Testimonial role choices for multi-role users
+TESTIMONIAL_ROLES = (
+    ("student", "Student"),
+    ("instructor", "Instructor"),
+)
+
 NOTI_TYPE = (
     ("New Order", "New Order"),
     ("New Review", "New Review"),
@@ -56,6 +62,12 @@ NOTI_TYPE = (
     ("Draft", "Draft"),
     ("Course Published", "Course Published"),
     ("Course Enrollment Completed", "Course Enrollment Completed"),
+)
+
+# ✨ PHASE 4.18: Video source types for course intro videos
+INTRO_VIDEO_SOURCE = (
+    ("upload", "Upload File"),
+    ("youtube", "YouTube Link"),
 )
 
 class Teacher(models.Model):
@@ -139,6 +151,9 @@ class Course(models.Model):
     course_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
     date = models.DateTimeField(default=timezone.now)
+    
+    # ✨ PHASE 4.18: Intro video source type (upload or YouTube)
+    intro_video_source = models.CharField(choices=INTRO_VIDEO_SOURCE, default="upload", max_length=20, blank=True, null=True)
     
     # ✨ PHASE 4: PostgreSQL Full-Text Search field
     search_vector = SearchVectorField(null=True, blank=True)
@@ -507,7 +522,14 @@ class Note(models.Model):
     
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)  # ✨ PHASE 4.10: Allow general testimonials without course
+    # ✨ PHASE 4.11: Role field for multi-role testimonials (student/instructor)
+    role = models.CharField(
+        max_length=20,
+        choices=TESTIMONIAL_ROLES,
+        default="student",
+        help_text="Role the user is testifying as (student or instructor)"
+    )
     review = models.TextField(blank=True, null=True)
     rating = models.IntegerField(choices=RATING, default=1)
     reply = models.CharField(null=True, blank=True, max_length=1000)
@@ -515,7 +537,7 @@ class Review(models.Model):
     date = models.DateTimeField(default=timezone.now)   
 
     def __str__(self):
-        return self.course.title
+        return self.course.title if self.course else f"General Testimonial ({self.role})"
     
     def profile(self):
         return Profile.objects.get(user=self.user)

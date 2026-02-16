@@ -1,57 +1,34 @@
-// Utility functions for handling file URLs from the file-upload API
-import { getMediaUrl, DEFAULT_IMAGE_URL } from './constants';
+// ✨ PHASE 2: Simplified utility functions for external URL handling
+// Removed: Legacy file-upload API URL construction (no longer uploading files)
+// Updated: Now handles only direct external URLs (Google Drive, YouTube, image CDNs, etc.)
+
+import { DEFAULT_IMAGE_URL } from './constants';
 
 /**
- * Helper function to get proper image URL
- * Handles both new file-upload API URLs and legacy relative URLs
+ * Helper function to handle image URLs
+ * Now expects complete external URLs (HTTP/HTTPS)
+ * Example: https://drive.google.com/uc?id=... or https://picsum.photos/...
  */
 export const getImageUrl = (imageUrl) => {
     if (!imageUrl) {
         return DEFAULT_IMAGE_URL;
     }
     
-    // If it's already a complete URL from file-upload API, return as is
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        return imageUrl;
-    }
-    
-    // Use getMediaUrl from constants.js for proper URL construction
-    return getMediaUrl(imageUrl);
+    // Return URL as-is (user provides complete external URL)
+    return imageUrl;
 };
 
 /**
- * Helper function to get proper video URL
- * Handles both new file-upload API URLs and legacy relative URLs
+ * Helper function to handle YouTube URLs
+ * Example: https://www.youtube.com/embed/dQw4w9WgXcQ
  */
 export const getVideoUrl = (videoUrl) => {
     if (!videoUrl) {
         return "";
     }
     
-    // If it's already a complete URL from file-upload API, return as is
-    if (videoUrl.startsWith('http://') || videoUrl.startsWith('https://')) {
-        return videoUrl;
-    }
-    
-    // Use getMediaUrl from constants.js for proper URL construction
-    return getMediaUrl(videoUrl);
-};
-
-/**
- * Helper function to get proper file URL for any file type
- */
-export const getFileUrl = (fileUrl) => {
-    if (!fileUrl) {
-        return "";
-    }
-    
-    // If it's already a complete URL from file-upload API, return as is
-    if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
-        return fileUrl;
-    }
-    
-    // Use getMediaUrl from constants.js for proper URL construction
-    return getMediaUrl(fileUrl);
+    // Return URL as-is (already validated and extracted by VideoUpload component)
+    return videoUrl;
 };
 
 /**

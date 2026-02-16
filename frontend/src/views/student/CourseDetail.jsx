@@ -2354,7 +2354,7 @@ function CourseDetail() {
                         <textarea 
                             name="message" 
                             className="message-textarea-qa" 
-                            placeholder="Share your thoughts or reply..." 
+                            placeholder="Bagikan pemikiran atau balas..." 
                             rows="3"
                             onChange={handleMessageChange}
                             value={createMessage.message}

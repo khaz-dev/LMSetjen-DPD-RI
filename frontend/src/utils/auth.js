@@ -39,16 +39,16 @@ export const login = async (email, password) => {
                     rawData: data
                 };
             } else if (status === 403) {
-                errorMessage = "Account access denied. Please contact support.";
+                errorMessage = "Akses akun ditolak. Silakan hubungi dukungan.";
             } else if (status >= 500) {
-                errorMessage = "Server error. Please try again later.";
+                errorMessage = "Kesalahan server. Silakan coba lagi nanti.";
             } else {
                 errorMessage = data?.detail || data?.message || errorMessage;
             }
         } else if (error.request) {
-            errorMessage = "Network error. Please check your connection and try again.";
+            errorMessage = "Kesalahan jaringan. Silakan periksa koneksi Anda dan coba lagi.";
         } else {
-            errorMessage = "An unexpected error occurred. Please try again.";
+            errorMessage = "Terjadi kesalahan yang tidak terduga. Silakan coba lagi.";
         }
         
         return { data: null, error: errorMessage, errorDetails };

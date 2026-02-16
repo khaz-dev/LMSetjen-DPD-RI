@@ -127,17 +127,17 @@ function UserGuide() {
                     },
                     
                     interaction: {
-                        title: "Interacting with Content",
+                        title: "Berinteraksi dengan Konten",
                         features: [
-                            "Ask questions in the Q&A section",
-                            "Participate in discussions with other students",
-                            "Leave reviews and ratings after completing courses",
-                            "Add courses to your wishlist for later"
+                            "Ajukan pertanyaan di bagian T&J",
+                            "Berpartisipasi dalam diskusi dengan siswa lain",
+                            "Tinggalkan ulasan dan rating setelah menyelesaikan kursus",
+                            "Tambahkan kursus ke daftar keinginan Anda untuk nanti"
                         ]
                     },
                     
                     certificates: {
-                        title: "Earning Certificates",
+                        title: "Meraih Sertifikat",
                         requirements: [
                             "Complete all lessons in the course (100% completion)",
                             "Pass all quizzes with required scores",
