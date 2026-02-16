@@ -40,6 +40,7 @@ const ImageUpload = ({
   };
 
   // ✨ PHASE 4.26: Convert Google Drive URL to direct image URL
+  // ✨ PHASE 4.29: Fixed - Add &export=download so Google Drive serves the actual image
   const convertGoogleDriveUrl = (url) => {
     const isGoogleDrive = url.includes('drive.google.com') || url.includes('drive.usercontent.google.com');
     
@@ -49,8 +50,9 @@ const ImageUpload = ({
     
     const fileId = extractGoogleDriveFileId(url);
     if (fileId) {
-      // Use the direct export format that works with img tags
-      return `https://drive.google.com/uc?id=${fileId}`;
+      // Use the direct export format with &export=download parameter
+      // This tells Google Drive to return the actual image file, not an HTML page
+      return `https://drive.google.com/uc?id=${fileId}&export=download`;
     }
     
     return url; // Return original if can't extract file ID
