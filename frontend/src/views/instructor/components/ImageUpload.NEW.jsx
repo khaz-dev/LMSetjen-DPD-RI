@@ -41,7 +41,8 @@ const ImageUpload = ({
 
   // ✨ PHASE 4.26: Convert Google Drive URL to direct image URL
   // ✨ PHASE 4.29: Fixed - Add &export=download so Google Drive serves the actual image
-  // ✨ PHASE 4.30: CRITICAL FIX - Use Google's lh.googleusercontent.com media server (better CORS support)
+  // ✨ PHASE 4.30: CRITICAL FIX - Attempted lh.googleusercontent.com (FAILED - 404)
+  // ✨ PHASE 4.31: REAL FIX - Use Google Drive's official thumbnail endpoint
   const convertGoogleDriveUrl = (url) => {
     const isGoogleDrive = url.includes('drive.google.com') || url.includes('drive.usercontent.google.com');
     
@@ -51,10 +52,11 @@ const ImageUpload = ({
     
     const fileId = extractGoogleDriveFileId(url);
     if (fileId) {
-      // PHASE 4.30: Use Google's lh.googleusercontent.com media server instead
-      // This is Google's official image hosting domain with better CORS support
-      // Much more reliable for img tag loading than drive.google.com/uc endpoints
-      return `https://lh.googleusercontent.com/d/${fileId}`;
+      // PHASE 4.31: Use Google Drive's thumbnail endpoint
+      // This is Google's official endpoint for retrieving file previews/thumbnails
+      // Works for images, documents, and other file types
+      // sz=w1200 sets width to 1200px (high quality for course thumbnails)
+      return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`;
     }
     
     return url; // Return original if can't extract file ID
