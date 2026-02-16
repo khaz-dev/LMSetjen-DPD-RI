@@ -138,7 +138,7 @@ const ImageUpload = ({
               </div>
             </div>
           </div>
-        ) : (
+        ) : (imagePreview || courseData?.image) ? (
           <>
             {/* Show comparison when both old and new images exist */}
             {courseData?.image && imagePreview && courseData.image !== imagePreview ? (
@@ -219,7 +219,7 @@ const ImageUpload = ({
               </div>
             )}
           </>
-        )}
+        ) : null}
       </div>
 
       {/* URL Input Section */}
