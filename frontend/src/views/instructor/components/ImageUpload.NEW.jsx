@@ -95,17 +95,41 @@ const ImageUpload = ({
     setLoading(true);
     
     try {
-      // ✨ PHASE 4.26: Convert Google Drive URLs to loadable format
-      const urlToLoad = convertGoogleDriveUrl(imageUrl);
+      // ✨ PHASE 4.27: For Google Drive URLs, skip Image() validation due to CORS restrictions
+      // Google Drive blocks Image() object requests even for valid public images
+      const isGoogleDrive = imageUrl.includes('drive.google.com') || imageUrl.includes('drive.usercontent.google.com');
       
-      // Verify image can be loaded by creating an Image object
-      const img = new Image();
-      img.onload = () => {
-        // Store the original URL, not the converted one
+      if (isGoogleDrive) {
+        // Directly accept Google Drive URLs after format validation
         setImagePreview(imageUrl);
         setCourseData(prevData => ({
           ...prevData,
-          image: imageUrl, // Store original URL
+          image: imageUrl,
+        }));
+        validateField('image', imageUrl);
+        
+        Toast().fire({
+          icon: "success",
+          title: "Gambar Ditambahkan",
+          text: "Google Drive gambar berhasil ditambahkan! Link akan ditampilkan saat melihat kursus.",
+          timer: 2000,
+          showConfirmButton: false
+        });
+        
+        setImageUrl("");
+        setValidationError("");
+        setLoading(false);
+        return;
+      }
+      
+      // For non-Google Drive URLs, verify image can be loaded by creating an Image object
+      const img = new Image();
+      img.onload = () => {
+        // Store the original URL
+        setImagePreview(imageUrl);
+        setCourseData(prevData => ({
+          ...prevData,
+          image: imageUrl,
         }));
         validateField('image', imageUrl);
         
@@ -127,8 +151,8 @@ const ImageUpload = ({
         setLoading(false);
       };
       
-      // Load using the converted URL (for testing), but preview the original URL
-      img.src = urlToLoad;
+      // Load the image to verify it's valid (skip for Google Drive)
+      img.src = imageUrl;
     } catch (error) {
       console.error("Error validating image URL:", error);
       setValidationError("Terjadi kesalahan saat validasi URL gambar");
