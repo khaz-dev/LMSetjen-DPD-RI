@@ -1,6 +1,9 @@
 import { useState, useRef } from "react";
 import Toast from "../../plugin/Toast";
 
+// Placeholder SVG (no external dependencies)
+const PLACEHOLDER_SVG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"%3E%3Crect width="400" height="300" fill="%23f0f0f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="%23999" transform="translate(0 20)"%3EGambar Tidak Tersedia%3C/text%3E%3C/svg%3E';
+
 const ImageUpload = ({ 
   imagePreview, 
   setImagePreview, 
@@ -152,7 +155,8 @@ const ImageUpload = ({
                         src={courseData.image}
                         alt="Current Course Thumbnail"
                         onError={(e) => {
-                          e.target.src = "https://via.placeholder.com/400x300?text=Gambar+Tidak+Tersedia";
+                          e.target.src = PLACEHOLDER_SVG;
+                          e.target.style.backgroundColor = '#f0f0f0';
                         }}
                         style={{ opacity: 0.7, objectFit: 'contain', height: '100%' }}
                       />
@@ -177,7 +181,8 @@ const ImageUpload = ({
                         src={imagePreview}
                         alt="New Course Thumbnail Preview"
                         onError={(e) => {
-                          e.target.src = "https://via.placeholder.com/400x300?text=Gambar+Tidak+Tersedia";
+                          e.target.src = PLACEHOLDER_SVG;
+                          e.target.style.backgroundColor = '#f0f0f0';
                         }}
                         style={{ objectFit: 'contain', height: '100%' }}
                       />
@@ -195,10 +200,11 @@ const ImageUpload = ({
               <div className="image-preview-container" style={{ height: '400px' }}>
                 <img
                   className={getImagePreviewClass()}
-                  src={imagePreview || courseData?.image || "https://via.placeholder.com/400x300?text=Pilih+Gambar"}
+                  src={imagePreview || courseData?.image || PLACEHOLDER_SVG}
                   alt="Course Thumbnail Preview"
                   onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/400x300?text=Gambar+Tidak+Tersedia";
+                    e.target.src = PLACEHOLDER_SVG;
+                    e.target.style.backgroundColor = '#f0f0f0';
                   }}
                   style={{ objectFit: 'contain', height: '100%' }}
                 />
