@@ -156,7 +156,6 @@ const VideoUpload = ({ courseData, setCourseData }) => {
                 allowFullScreen
                 loading="lazy"
                 decoding="async"
-                sandbox="allow-scripts allow-same-origin allow-forms"
               ></iframe>
             </div>
           </div>
