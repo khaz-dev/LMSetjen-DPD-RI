@@ -44,31 +44,28 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       return;
     }
 
-    // Store the full YouTube embed URL
-    const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    // ✨ PHASE 4.28: Use youtube-nocookie.com to reduce tracking and CORS errors
+    // youtube-nocookie.com doesn't load tracking/ads, reducing console violations
+    const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
     
-    setVideoLoading(true);
-    
-    // Simulate loading to give user feedback
-    setTimeout(() => {
-      setCourseData(prevData => ({
-        ...prevData,
-        file: embedUrl,
-        intro_video_source: "youtube"
-      }));
+    // ✨ PHASE 4.28: Update state immediately instead of unnecessary setTimeout
+    // Previous 500ms delay caused performance violations with no UX benefit
+    setCourseData(prevData => ({
+      ...prevData,
+      file: embedUrl,
+      intro_video_source: "youtube"
+    }));
 
-      Toast().fire({
-        icon: "success",
-        title: "Video YouTube Ditambahkan",
-        text: "Video pengantar YouTube berhasil ditambahkan!",
-        timer: 2000,
-        showConfirmButton: false
-      });
+    Toast().fire({
+      icon: "success",
+      title: "Video YouTube Ditambahkan",
+      text: "Video pengantar YouTube berhasil ditambahkan!",
+      timer: 2000,
+      showConfirmButton: false
+    });
 
-      setYoutubeUrl("");
-      setYoutubeValidationError("");
-      setVideoLoading(false);
-    }, 500);
+    setYoutubeUrl("");
+    setYoutubeValidationError("");
   };
 
   return (
@@ -153,10 +150,13 @@ const VideoUpload = ({ courseData, setCourseData }) => {
             <div className="ratio ratio-16x9" style={{ borderRadius: "12px", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
               <iframe
                 src={courseData.file}
-                title="YouTube video player"
+                title="YouTube video player - Course Introduction"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
+                loading="lazy"
+                decoding="async"
+                sandbox="allow-accelerometer allow-autoplay allow-clipboard-write allow-encrypted-media allow-gyroscope allow-picture-in-picture allow-same-origin"
               ></iframe>
             </div>
           </div>
@@ -182,7 +182,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
           {/* Remove Button */}
           <div className="d-flex gap-2">
             <button 
-              className="btn btn-outline-danger btn-sm"
+              className="btn btn-danger btn-sm"
               onClick={() => {
                 setCourseData(prev => ({ ...prev, file: null, intro_video_source: "youtube" }));
                 setYoutubeUrl("");

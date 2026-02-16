@@ -809,7 +809,7 @@ function SortableLessonItem({
                     {variant.items.length > 1 && (
                         <button
                             type="button"
-                            className="btn btn-outline-danger btn-sm"
+                            className="btn btn-danger btn-sm"
                             onClick={() => removeLesson(variantIndex, itemIndex, variant?.variant_id, item?.variant_item_id)}
                             disabled={uiState.isSubmitting}
                         >
