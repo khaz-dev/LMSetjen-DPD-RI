@@ -140,7 +140,7 @@ const VideoUpload = ({ courseData, setCourseData }) => {
       </div>
 
       {/* YouTube Preview */}
-      {courseData.file && courseData.file.includes("youtube.com/embed") && (
+      {courseData.file && (courseData.file.includes("youtube.com/embed") || courseData.file.includes("youtube-nocookie.com/embed")) && (
         <>
           <div className="mb-3">
             <label className="form-label">
