@@ -470,7 +470,7 @@ export default VideoUpload;
           <i className="fas fa-info-circle me-2"></i>
           <strong>Tidak ada video yang dipilih</strong>
           <br />
-          <small>Masukkan URL YouTube di atas untuk menambahkan video pengantar kursus Anda</small>
+          <small>Masukkan URL YouTube atau Google Drive di atas untuk menambahkan video pengantar kursus Anda</small>
         </div>
       )}
     </div>
