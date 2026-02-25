@@ -15,13 +15,69 @@ import CourseDetailLoading from "./components/CourseDetailLoading";
 
 // Import hooks and utilities
 import { useCourse } from "./hooks/useCourse";
-import { calculateTotalDuration } from "../../utils/durationUtils";
+import { calculateTotalDuration, formatDuration, parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Duration formatting
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import Swal from "sweetalert2";
 
 import "./CourseDetail.css";
+
+// ✨ PHASE 4.75: Utility function to convert media URLs to preview/embed format
+// Handles Google Drive URLs and YouTube URLs for iframe embedding
+const convertGoogleDriveUrlToPreview = (url) => {
+    if (!url || typeof url !== 'string') return url;
+    
+    // Check if it's a Google Drive URL
+    if (url.includes('drive.google.com')) {
+        // Extract file ID from various Google Drive URL formats
+        let fileId = null;
+        
+        // Format: https://drive.google.com/file/d/{FILE_ID}/view
+        // or: https://drive.google.com/file/d/{FILE_ID}/view?usp=sharing
+        const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+        if (match) {
+            fileId = match[1];
+        }
+        
+        // If file ID found, convert to preview format
+        if (fileId) {
+            return `https://drive.google.com/file/d/${fileId}/preview`;
+        }
+    }
+    
+    // ✨ PHASE 4.75 FIX: Handle YouTube URLs
+    // Convert youtube.com/watch?v=ID and youtu.be/ID to embed format
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        let videoId = null;
+        
+        // Format: https://www.youtube.com/watch?v={VIDEO_ID}
+        if (url.includes('youtube.com/watch')) {
+            const match = url.match(/v=([a-zA-Z0-9_-]{11})/);
+            if (match) {
+                videoId = match[1];
+            }
+        }
+        
+        // Format: https://youtu.be/{VIDEO_ID}
+        if (url.includes('youtu.be/')) {
+            const match = url.match(/youtu.be\/([a-zA-Z0-9_-]{11})/);
+            if (match) {
+                videoId = match[1];
+            }
+        }
+        
+        // If video ID found, convert to embed format with disabled features
+        if (videoId) {
+            // ✨ PHASE 4.76: Disable share, info, and related videos in YouTube player
+            // rel=0: disables related videos suggestions
+            // modestbranding=1: hides YouTube logo
+            return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
+        }
+    }
+    
+    return url;
+};
 
 function CourseDetail() {
     const { slug } = useParams();
@@ -131,6 +187,31 @@ function CourseDetail() {
         }, 50);
     };
 
+    // ✨ PHASE 4.43.3: Handle modal close to pause all videos/iframes
+    useEffect(() => {
+        const modalElement = document.getElementById("lessonPreviewModal");
+        if (!modalElement) return;
+
+        const handleModalHidden = () => {
+            // Stop all videos
+            const videos = modalElement.querySelectorAll("video");
+            videos.forEach(video => {
+                video.pause();
+                video.currentTime = 0;
+            });
+            
+            // Reset preview state
+            setPreviewVideo(null);
+        };
+
+        // Listen for Bootstrap modal hidden event
+        modalElement.addEventListener("hidden.bs.modal", handleModalHidden);
+
+        return () => {
+            modalElement.removeEventListener("hidden.bs.modal", handleModalHidden);
+        };
+    }, []);
+
     // Ensure page always loads from top as a fresh instance
     useEffect(() => {
         // Scroll to top immediately
@@ -182,25 +263,72 @@ function CourseDetail() {
             const coursePreviewModalElement = document.getElementById("coursePreviewModal");
             const lessonPreviewModalElement = document.getElementById("lessonPreviewModal");
             
+            // ✨ PHASE 4.43.9: Handlers for Course Preview Modal
             const handleCourseModalHidden = () => {
+                // Pause all videos in the modal using direct DOM query
+                const videos = document.querySelectorAll("#coursePreviewModal video");
+                videos.forEach(video => {
+                    video.pause();
+                    video.currentTime = 0;
+                    video.blur();
+                });
+                
+                // Stop iframes (Google Drive videos)
+                const iframes = document.querySelectorAll("#coursePreviewModal iframe");
+                iframes.forEach(iframe => {
+                    iframe.src = "about:blank";
+                });
+                
+                // Also pause video via ref as backup
                 const videoElement = videoRef.current;
                 if (videoElement) {
                     videoElement.pause();
-                    videoElement.currentTime = 0; // Reset to start
-                    videoElement.blur(); // Remove focus to prevent aria-hidden warning
+                    videoElement.currentTime = 0;
+                    videoElement.blur();
+                }
+            };
+            
+            // ✨ PHASE 4.43.9: Reset iframe src when course preview modal is shown again
+            const handleCourseModalShown = () => {
+                // Reset iframe src to actual video URL when modal is shown
+                const iframes = document.querySelectorAll("#coursePreviewModal iframe");
+                if (iframes.length > 0 && course?.file) {
+                    const videoUrl = convertGoogleDriveUrlToPreview(course.file);
+                    iframes.forEach(iframe => {
+                        iframe.src = videoUrl;
+                    });
                 }
             };
             
             const handleLessonModalHidden = () => {
-                // Find lesson video element and pause it
-                const lessonVideo = document.querySelector("#lessonPreviewModal video");
-                if (lessonVideo) {
-                    lessonVideo.pause();
-                    lessonVideo.currentTime = 0; // Reset to start
-                    lessonVideo.blur(); // Remove focus to prevent aria-hidden warning
-                }
+                // Pause all video elements
+                const videos = document.querySelectorAll("#lessonPreviewModal video");
+                videos.forEach(video => {
+                    video.pause();
+                    video.currentTime = 0;
+                    video.blur();
+                });
+                
+                // Stop iframes (Google Drive videos)
+                const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
+                iframes.forEach(iframe => {
+                    iframe.src = "about:blank";
+                });
+                
                 // Reset preview video state
                 setPreviewVideo(null);
+            };
+            
+            // ✨ PHASE 4.43.9: Reset iframe src when lesson preview modal is shown again
+            const handleLessonModalShown = () => {
+                // Reset iframe src to actual video URL when modal is shown
+                const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
+                if (iframes.length > 0 && previewVideo) {
+                    const videoUrl = convertGoogleDriveUrlToPreview(previewVideo.file || previewVideo.video_url);
+                    iframes.forEach(iframe => {
+                        iframe.src = videoUrl;
+                    });
+                }
             };
             
             // Handle backdrop clicks (clicking outside modal)
@@ -232,14 +360,19 @@ function CourseDetail() {
                 }
             };
             
-            // Add Bootstrap modal hidden event listeners (this fires on ALL close methods)
+            // Add Bootstrap modal event listeners
+            // Use 'hide.bs.modal' to pause video BEFORE the modal is hidden
+            // Use 'show.bs.modal' to reset iframe src when modal is opened
+            // This prevents aria-hidden warnings and ensures video stops immediately
             if (coursePreviewModalElement) {
-                coursePreviewModalElement.addEventListener("hidden.bs.modal", handleCourseModalHidden);
+                coursePreviewModalElement.addEventListener("hide.bs.modal", handleCourseModalHidden);
+                coursePreviewModalElement.addEventListener("show.bs.modal", handleCourseModalShown);
                 coursePreviewModalElement.addEventListener("click", handleBackdropClick);
             }
             
             if (lessonPreviewModalElement) {
-                lessonPreviewModalElement.addEventListener("hidden.bs.modal", handleLessonModalHidden);
+                lessonPreviewModalElement.addEventListener("hide.bs.modal", handleLessonModalHidden);
+                lessonPreviewModalElement.addEventListener("show.bs.modal", handleLessonModalShown);
                 lessonPreviewModalElement.addEventListener("click", handleBackdropClick);
             }
             
@@ -249,11 +382,13 @@ function CourseDetail() {
             // Return cleanup function
             return () => {
                 if (coursePreviewModalElement) {
-                    coursePreviewModalElement.removeEventListener("hidden.bs.modal", handleCourseModalHidden);
+                    coursePreviewModalElement.removeEventListener("hide.bs.modal", handleCourseModalHidden);
+                    coursePreviewModalElement.removeEventListener("show.bs.modal", handleCourseModalShown);
                     coursePreviewModalElement.removeEventListener("click", handleBackdropClick);
                 }
                 if (lessonPreviewModalElement) {
-                    lessonPreviewModalElement.removeEventListener("hidden.bs.modal", handleLessonModalHidden);
+                    lessonPreviewModalElement.removeEventListener("hide.bs.modal", handleLessonModalHidden);
+                    lessonPreviewModalElement.removeEventListener("show.bs.modal", handleLessonModalShown);
                     lessonPreviewModalElement.removeEventListener("click", handleBackdropClick);
                 }
                 document.removeEventListener("keydown", handleEscKey);
@@ -352,9 +487,6 @@ function CourseDetail() {
                             </div>
                         </div>
                     </div>
-                    
-                    {/* Course Analytics & Statistics - Separate Card Below Description */}
-                    <CourseStatistics course={course} />
                     </>
 
                 );
@@ -423,7 +555,7 @@ function CourseDetail() {
                                         }}
                                     >
                                         <h6 className="fw-bold mb-1" style={{ color: "#ffc107", fontSize: "0.95rem" }}>
-                                            {calculateTotalDuration(course?.lectures || [])}
+                                            {calculateTotalDuration(course?.lectures || []).withJP}
                                         </h6>
                                         <small className="text-muted" style={{ fontSize: "0.8rem" }}>Total durasi</small>
                                     </div>
@@ -484,7 +616,7 @@ function CourseDetail() {
                                                             {item.content_duration && (
                                                                 <small className="badge bg-light text-muted">
                                                                     <i className="fas fa-clock me-1"></i>
-                                                                    {item.content_duration}
+                                                                    {formatDuration(parseDurationToSeconds(item.content_duration))}
                                                                 </small>
                                                             )}
                                                             {item.preview && (
@@ -516,7 +648,12 @@ function CourseDetail() {
                     </div>
                 );
             case "instructor":
-                return <CourseInstructor teacher={course?.teacher} />;
+                return (
+                    <>
+                        <CourseInstructor teacher={course?.teacher} />
+                        <CourseStatistics course={course} />
+                    </>
+                );
             case "reviews":
                 return (
                     <CourseReviews 
@@ -586,16 +723,21 @@ function CourseDetail() {
             {/* Course Preview Modal - Compact Design */}
             {course?.file && (
                 <div className="modal fade" id="coursePreviewModal" tabIndex={-1} aria-labelledby="coursePreviewModalLabel" aria-hidden="true">
-                    <div className="modal-dialog modal-xl">
+                    <div className="modal-dialog modal-xl modal-dialog-centered">
                         <div className="modal-content border-0" style={{ borderRadius: "20px", overflow: "hidden" }}>
                             <div 
                                 className="modal-header border-0 text-white position-relative"
                                 style={{
                                     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                    padding: "0.75rem 1.25rem"
+                                    padding: "0.75rem 1.25rem",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: "1rem",
+                                    flexWrap: "nowrap"
                                 }}
                             >
-                                <div className="d-flex align-items-center" style={{ zIndex: 2, position: "relative" }}>
+                                <div className="d-flex align-items-center flex-grow-1" style={{ zIndex: 2, position: "relative" }}>
                                     <div 
                                         className="me-2"
                                         style={{
@@ -610,7 +752,7 @@ function CourseDetail() {
                                     >
                                         <i className="fas fa-play text-white" style={{ fontSize: "0.9rem" }}></i>
                                     </div>
-                                    <div>
+                                    <div className="flex-grow-1">
                                         <h6 className="mb-0 fw-bold" style={{ fontSize: "0.95rem" }}>
                                             Preview Kursus
                                         </h6>
@@ -630,6 +772,8 @@ function CourseDetail() {
                                         position: "relative",
                                         width: "32px",
                                         height: "32px",
+                                        minWidth: "32px",
+                                        minHeight: "32px",
                                         borderRadius: "50%",
                                         background: "rgba(255, 255, 255, 0.2)",
                                         border: "2px solid rgba(255, 255, 255, 0.3)",
@@ -637,15 +781,41 @@ function CourseDetail() {
                                         alignItems: "center",
                                         justifyContent: "center",
                                         padding: 0,
-                                        transition: "all 0.3s ease"
+                                        transition: "all 0.3s ease",
+                                        flexShrink: 0
                                     }}
-                                    onClick={() => {
-                                        // Immediately pause and reset the video
+                                    onClick={(e) => {
+                                        // ✨ PHASE 4.43.8: Stop both video and iframe content before closing
+                                        // Step 1: Remove focus from button FIRST to prevent aria-hidden warning
+                                        e.currentTarget.blur();
+                                        
+                                        // Step 2: Pause all video elements immediately
+                                        const videos = document.querySelectorAll("#coursePreviewModal video");
+                                        videos.forEach(video => {
+                                            video.pause();
+                                            video.currentTime = 0;
+                                        });
+                                        
+                                        // Step 3: Stop iframes (Google Drive videos) by setting src to blank
+                                        const iframes = document.querySelectorAll("#coursePreviewModal iframe");
+                                        iframes.forEach(iframe => {
+                                            iframe.src = "about:blank";
+                                        });
+                                        
+                                        // Step 4: Also pause video via ref as backup
                                         const videoElement = videoRef.current;
                                         if (videoElement) {
                                             videoElement.pause();
                                             videoElement.currentTime = 0;
-                                            videoElement.blur(); // Remove focus to prevent aria-hidden warning
+                                        }
+                                        
+                                        // Step 5: Now close the modal
+                                        const modalElement = document.getElementById("coursePreviewModal");
+                                        if (modalElement) {
+                                            const modal = window.bootstrap.Modal.getInstance(modalElement);
+                                            if (modal) {
+                                                modal.hide();
+                                            }
                                         }
                                     }}
                                     onMouseEnter={(e) => {
@@ -660,22 +830,52 @@ function CourseDetail() {
                                     <i className="fas fa-times text-white" style={{ fontSize: "1rem" }}></i>
                                 </button>
                             </div>
-                            <div className="modal-body p-0 bg-dark d-flex align-items-center justify-content-center" style={{ minHeight: "400px", maxHeight: "calc(100vh - 100px)" }}>
-                                {/* Video with natural aspect ratio */}
-                                <video 
-                                    ref={videoRef}
-                                    src={course.file} 
-                                    style={{ 
-                                        width: "100%",
-                                        height: "auto",
-                                        maxHeight: "calc(100vh - 100px)",
-                                        objectFit: "contain"
-                                    }}
-                                    controls 
-                                    onError={(e) => {
-                                        console.error("Video failed to load:", course.file);
-                                    }}
-                                />
+                            <div className="modal-body p-0 bg-dark" style={{ minHeight: "400px", maxHeight: "calc(100vh - 100px)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                                {/* ✨ PHASE 4.74: Fixed video container with proper YouTube detection */}
+                                <div style={{ width: "100%", maxWidth: "100%", position: "relative" }}>
+                                    {(() => {
+                                        const videoUrl = convertGoogleDriveUrlToPreview(course.file);
+                                        const isGoogleDrive = videoUrl && videoUrl.includes('drive.google.com/file') && videoUrl.includes('/preview');
+                                        const isYouTubeEmbed = videoUrl && (videoUrl.includes('youtube.com/embed') || videoUrl.includes('youtube-nocookie.com/embed') || videoUrl.includes('youtu.be'));
+                                        
+                                        return isGoogleDrive || isYouTubeEmbed ? (
+                                            // ✨ PHASE 4.74: Both Google Drive and YouTube require iframe
+                                            <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden" }}>
+                                                <iframe
+                                                    key={videoUrl}
+                                                    src={videoUrl}
+                                                    style={{
+                                                        border: "none",
+                                                        borderRadius: "8px"
+                                                    }}
+                                                    sandbox="allow-same-origin allow-scripts allow-presentation"
+                                                    allowFullScreen
+                                                    title="Course Preview"
+                                                    onError={(e) => {
+                                                        console.error("Course preview iframe failed to load:", videoUrl, e);
+                                                    }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            // Regular video tag for direct video file URLs
+                                            <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden", backgroundColor: "#000" }}>
+                                                <video 
+                                                    key={videoUrl}
+                                                    ref={videoRef}
+                                                    src={videoUrl} 
+                                                    style={{ 
+                                                        objectFit: "contain",
+                                                        backgroundColor: "#000"
+                                                    }}
+                                                    controls 
+                                                    onError={(e) => {
+                                                        console.error("Video failed to load:", videoUrl);
+                                                    }}
+                                                />
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -685,13 +885,18 @@ function CourseDetail() {
             {/* Lesson Preview Modal - Compact Design */}
             {previewVideo && (
                 <div className="modal fade" id="lessonPreviewModal" tabIndex={-1} aria-labelledby="lessonPreviewModalLabel" aria-hidden="true">
-                    <div className="modal-dialog modal-xl">
+                    <div className="modal-dialog modal-xl modal-dialog-centered">
                         <div className="modal-content border-0" style={{ borderRadius: "20px", overflow: "hidden" }}>
                             <div 
                                 className="modal-header border-0 text-white position-relative"
                                 style={{
                                     background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
-                                    padding: "0.75rem 1.25rem"
+                                    padding: "0.75rem 1.25rem",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: "1rem",
+                                    flexWrap: "nowrap"
                                 }}
                             >
                                 <div className="d-flex align-items-center flex-grow-1" style={{ zIndex: 2, position: "relative" }}>
@@ -720,13 +925,13 @@ function CourseDetail() {
                                     </div>
                                     <span className="badge bg-light text-success ms-2" style={{ fontSize: "0.7rem" }}>
                                         <i className="fas fa-eye me-1"></i>
-                                        Gratis Preview
+                                        Preview
                                     </span>
                                 </div>
                                 
                                 <button 
                                     type="button" 
-                                    className="btn btn-sm ms-2"
+                                    className="btn btn-sm"
                                     data-bs-dismiss="modal" 
                                     aria-label="Close"
                                     style={{ 
@@ -734,6 +939,8 @@ function CourseDetail() {
                                         position: "relative",
                                         width: "32px",
                                         height: "32px",
+                                        minWidth: "32px",
+                                        minHeight: "32px",
                                         borderRadius: "50%",
                                         background: "rgba(255, 255, 255, 0.2)",
                                         border: "2px solid rgba(255, 255, 255, 0.3)",
@@ -741,18 +948,38 @@ function CourseDetail() {
                                         alignItems: "center",
                                         justifyContent: "center",
                                         padding: 0,
-                                        transition: "all 0.3s ease"
+                                        transition: "all 0.3s ease",
+                                        flexShrink: 0
                                     }}
-                                    onClick={() => {
-                                        // Immediately pause and reset the lesson video
-                                        const lessonVideo = document.querySelector("#lessonPreviewModal video");
-                                        if (lessonVideo) {
-                                            lessonVideo.pause();
-                                            lessonVideo.currentTime = 0;
-                                            lessonVideo.blur(); // Remove focus to prevent aria-hidden warning
-                                        }
-                                        // Reset preview state
+                                    onClick={(e) => {
+                                        // ✨ PHASE 4.43.8: Stop both video and iframe content before closing
+                                        // Step 1: Remove focus from button FIRST to prevent aria-hidden warning
+                                        e.currentTarget.blur();
+                                        
+                                        // Step 2: Pause all video elements immediately
+                                        const videos = document.querySelectorAll("#lessonPreviewModal video");
+                                        videos.forEach(video => {
+                                            video.pause();
+                                            video.currentTime = 0;
+                                        });
+                                        
+                                        // Step 3: Stop iframes (Google Drive videos) by setting src to blank
+                                        const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
+                                        iframes.forEach(iframe => {
+                                            iframe.src = "about:blank";
+                                        });
+                                        
+                                        // Step 4: Reset preview state
                                         setPreviewVideo(null);
+                                        
+                                        // Step 5: Now close the modal
+                                        const modalElement = document.getElementById("lessonPreviewModal");
+                                        if (modalElement) {
+                                            const modal = window.bootstrap.Modal.getInstance(modalElement);
+                                            if (modal) {
+                                                modal.hide();
+                                            }
+                                        }
                                     }}
                                     onMouseEnter={(e) => {
                                         e.target.style.background = "rgba(255, 255, 255, 0.3)";
@@ -766,32 +993,58 @@ function CourseDetail() {
                                     <i className="fas fa-times text-white" style={{ fontSize: "1rem" }}></i>
                                 </button>
                             </div>
-                            <div className="modal-body p-0 bg-dark d-flex align-items-center justify-content-center" style={{ minHeight: "400px", maxHeight: "calc(100vh - 150px)" }}>
-                                {/* Video with natural aspect ratio */}
-                                <video 
-                                    key={previewVideo.file || previewVideo.video_url}
-                                    src={previewVideo.file || previewVideo.video_url} 
-                                    style={{ 
-                                        width: "100%",
-                                        height: "auto",
-                                        maxHeight: "calc(100vh - 150px)",
-                                        objectFit: "contain"
-                                    }}
-                                    controls 
-                                    autoPlay
-                                    onError={(e) => {
-                                        console.error("Video failed to load:", previewVideo.file || previewVideo.video_url);
-                                    }}
-                                    onLoadedData={(e) => {
-                                        e.target.play().catch(err => console.error("Auto-play blocked:", err));
-                                    }}
-                                />
+                            <div className="modal-body p-0 bg-dark" style={{ minHeight: "400px", maxHeight: "calc(100vh - 150px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                {/* ✨ PHASE 4.43.3: Wrap video in aspect ratio container for proper proportional display */}
+                                <div style={{ width: "100%", maxWidth: "100%", position: "relative" }}>
+                                    {/* ✨ PHASE 4.74: Fixed YouTube embed handling - render as iframe not video tag */}
+                                    {(() => {
+                                        const videoUrl = convertGoogleDriveUrlToPreview(previewVideo.file || previewVideo.video_url);
+                                        const isGoogleDrive = videoUrl && videoUrl.includes('drive.google.com/file') && videoUrl.includes('/preview');
+                                        const isYouTubeEmbed = videoUrl && (videoUrl.includes('youtube.com/embed') || videoUrl.includes('youtube-nocookie.com/embed') || videoUrl.includes('youtu.be'));
+                                        
+                                        return isGoogleDrive || isYouTubeEmbed ? (
+                                            // ✨ PHASE 4.74: Both Google Drive and YouTube require iframe
+                                            <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden" }}>
+                                                <iframe
+                                                    key={videoUrl}
+                                                    src={videoUrl}
+                                                    style={{
+                                                        border: "none",
+                                                        borderRadius: "8px"
+                                                    }}
+                                                    sandbox="allow-same-origin allow-scripts allow-presentation"
+                                                    allowFullScreen
+                                                    title="Lesson Preview"
+                                                    onError={(e) => {
+                                                        console.error("Iframe failed to load:", videoUrl, e);
+                                                    }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            // Regular video tag for direct video file URLs
+                                            <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden", backgroundColor: "#000" }}>
+                                                <video 
+                                                    key={videoUrl}
+                                                    src={videoUrl} 
+                                                    style={{ 
+                                                        objectFit: "contain",
+                                                        backgroundColor: "#000"
+                                                    }}
+                                                    controls 
+                                                    onError={(e) => {
+                                                        console.error("Video failed to load:", videoUrl);
+                                                    }}
+                                                />
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
                             </div>
                             <div className="modal-footer border-0 bg-light py-2">
                                 <div className="w-100 text-center">
                                     <small className="text-muted">
                                         <i className="fas fa-info-circle me-1"></i>
-                                        Ini adalah preview gratis. Daftar sekarang untuk mengakses seluruh kursus!
+                                        Ini adalah preview. Daftar sekarang untuk mengakses seluruh kursus!
                                     </small>
                                 </div>
                             </div>

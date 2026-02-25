@@ -14,6 +14,7 @@ import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCol
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
+import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Calculate JP
 
 function Dashboard() {
     const isCollapsed = useInstructorSidebarCollapse();
@@ -43,6 +44,19 @@ function Dashboard() {
             cleanUrl = decodeURIComponent(cleanUrl);
         }
         
+        // ✨ PHASE 4.X: Handle Google Drive URLs specially - convert to thumbnail format
+        if (cleanUrl.includes("drive.google.com")) {
+            // Extract file ID from Google Drive URL
+            const fileIdMatch1 = cleanUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            const fileIdMatch2 = cleanUrl.match(/[?&]id=([a-zA-Z0-9-_]+)/);
+            const fileId = (fileIdMatch1 && fileIdMatch1[1]) || (fileIdMatch2 && fileIdMatch2[1]);
+            
+            if (fileId) {
+                // Use Google Drive's thumbnail endpoint for reliable image loading
+                return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`;
+            }
+        }
+        
         // If it's already a complete URL, return as is
         // Must check BEFORE trying to extract media path, since full URLs contain /media/
         if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
@@ -60,6 +74,21 @@ function Dashboard() {
         
         // Use the centralized helper
         return getMediaUrl(cleanUrl);
+    };
+
+    // ✨ PHASE 4.77+: Calculate total JP (Jam Pelajaran) from course lectures
+    // 1 JP = 45 minutes = 2700 seconds
+    const calculateTotalJP = (lectures) => {
+        if (!lectures || !Array.isArray(lectures)) return 0;
+        
+        let totalSeconds = 0;
+        lectures.forEach(lecture => {
+            if (lecture.content_duration) {
+                totalSeconds += parseDurationToSeconds(lecture.content_duration);
+            }
+        });
+        
+        return Math.ceil(totalSeconds / 2700);
     };
 
     const fetchCourseData = async () => {
@@ -131,11 +160,12 @@ function Dashboard() {
         
         // Add recent student enrollments
         students.slice(0, 3).forEach(student => {
-            if (student?.full_name) {
+            if (student?.full_name && student?.date) {
                 activities.push({
                     type: "enrollment",
                     title: `${student.full_name} terdaftar dalam kursus`,
                     time: moment(student.date).fromNow(),
+                    timestamp: moment(student.date).unix(),
                     icon: "fas fa-user-plus",
                     color: "#10b981"
                 });
@@ -144,11 +174,12 @@ function Dashboard() {
         
         // Add recent reviews
         reviews.slice(0, 3).forEach(review => {
-            if (review?.rating) {
+            if (review?.rating && review?.date) {
                 activities.push({
                     type: "review",
                     title: `Ulasan baru ${review.rating}★ diterima`,
                     time: moment(review.date).fromNow(),
+                    timestamp: moment(review.date).unix(),
                     icon: "fas fa-star",
                     color: "#f59e0b"
                 });
@@ -157,19 +188,20 @@ function Dashboard() {
         
         // Add recent questions
         questions.slice(0, 3).forEach(question => {
-            if (question?.title) {
+            if (question?.title && question?.date) {
                 activities.push({
                     type: "question",
                     title: `Pertanyaan baru: ${question.title}`,
                     time: moment(question.date).fromNow(),
+                    timestamp: moment(question.date).unix(),
                     icon: "fas fa-question-circle",
                     color: "#3b82f6"
                 });
             }
         });
         
-        // Sort by most recent and take top 6
-        activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+        // Sort by timestamp (most recent first) and take top 6
+        activities.sort((a, b) => b.timestamp - a.timestamp);
         setRecentActivity(activities.slice(0, 6));
     };
 
@@ -201,7 +233,7 @@ function Dashboard() {
 
     // Memoize total content duration calculation
     const totalContentDuration = useMemo(() => {
-        if (courses.length === 0) return "0m";
+        if (courses.length === 0) return { formatted: "0m", withJP: "0m (0JP)" };
         const allLectures = courses.flatMap(course => course.lectures || []);
         return calculateTotalDuration(allLectures);
     }, [courses]);
@@ -377,7 +409,7 @@ function Dashboard() {
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-hourglass-half text-primary mb-2" style={{fontSize: "2rem"}}></i>
-                                                        <div className="h5 fw-bold mb-0">{totalContentDuration}</div>
+                                                        <div className="h5 fw-bold mb-0">{totalContentDuration.withJP || "0m 0s (0JP)"}</div>
                                                         <small className="text-muted">Total Konten Dibuat</small>
                                                     </div>
                                                 </div>
@@ -385,21 +417,21 @@ function Dashboard() {
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-film text-info mb-2" style={{fontSize: "2rem"}}></i>
                                                         <div className="h5 fw-bold mb-0">{courseDurationStats.count || 0}</div>
-                                                        <small className="text-muted">Total Kuliah</small>
+                                                        <small className="text-muted">Total Materi</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-chart-line text-success mb-2" style={{fontSize: "2rem"}}></i>
-                                                        <div className="h5 fw-bold mb-0">{courseDurationStats.average || "0m"}</div>
-                                                        <small className="text-muted">Durasi Rata-rata Kuliah</small>
+                                                        <div className="h5 fw-bold mb-0">{courseDurationStats.averageWithJP || "0m 0s (0JP)"}</div>
+                                                        <small className="text-muted">Durasi Rata-rata Materi</small>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3">
                                                     <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
                                                         <i className="fas fa-fire text-danger mb-2" style={{fontSize: "2rem"}}></i>
-                                                        <div className="h5 fw-bold mb-0">{courseDurationStats.max || "0m"}</div>
-                                                        <small className="text-muted">Kuliah Terlama</small>
+                                                        <div className="h5 fw-bold mb-0">{courseDurationStats.maxWithJP || "0m 0s (0JP)"}</div>
+                                                        <small className="text-muted">Materi Terlama</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -437,6 +469,7 @@ function Dashboard() {
                                                 <div className="empty-activity">
                                                     <i className="fas fa-history"></i>
                                                     <p>Tidak ada aktivitas terbaru</p>
+                                                    <small className="text-muted">Aktivitas akan tampil ketika siswa mendaftar, memberikan ulasan, atau mengajukan pertanyaan</small>
                                                 </div>
                                             )}
                                         </div>
@@ -531,9 +564,9 @@ function Dashboard() {
                                                                         e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
                                                                     }}
                                                                 />
-                                                                <div className="performance-course-info">
-                                                                    <h6 className="course-title-small">{course.title}</h6>
-                                                                    <div className="course-metrics">
+                                                                <div className="performance-course-info" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '80px' }}>
+                                                                    <h6 className="course-title-small" style={{ marginBottom: 0 }}>{course.title}</h6>
+                                                                    <div className="course-metrics" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
                                                                         <div className="metric">
                                                                             <i className="fas fa-users"></i>
                                                                             <span>{course.students?.length || 0} siswa</span>
@@ -541,6 +574,11 @@ function Dashboard() {
                                                                         <div className="metric">
                                                                             <i className="fas fa-star"></i>
                                                                             <span>{course.average_rating || 0}★</span>
+                                                                        </div>
+                                                                        {/* ✨ PHASE 4.77+: Show total JP */}
+                                                                        <div className="metric">
+                                                                            <i className="fas fa-clock"></i>
+                                                                            <span>{calculateTotalJP(course.lectures)} JP</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>

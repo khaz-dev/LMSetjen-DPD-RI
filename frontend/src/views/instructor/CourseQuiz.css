@@ -598,10 +598,18 @@ button div,
     color: var(--instructor-primary);
 }
 
-.btn-icon.btn-danger:hover {
+/* ✅ FIX: Make danger button visible with red background and white icon */
+.btn-icon.btn-danger {
+    background: var(--error-color);
+    color: white;
     border-color: var(--error-color);
-    color: var(--error-color);
-    background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-icon.btn-danger:hover {
+    border-color: #dc2626;
+    color: white;
+    background: #dc2626;
+    transform: scale(1.1);
 }
 
 .quiz-card-body {
@@ -643,6 +651,9 @@ button div,
     padding: var(--space-lg);
     border-top: 1px solid var(--neutral-200);
     background: var(--neutral-50);
+    /* ✅ FIX: Right-align the button in footer */
+    display: flex;
+    justify-content: flex-end;
 }
 
 /* ================================
@@ -1022,11 +1033,12 @@ button div,
     cursor: not-allowed;
 }
 
-/* Make the Add Question icon smaller */
+/* ✅ FIX: Make the plus icon white and visible on blue background */
 .btn-update-course .fa-plus {
-    font-size: 1.5rem; /* Try 0.9rem or 0.8rem for even smaller */
+    font-size: 1.5rem;
     vertical-align: middle;
     margin: 0;
+    color: white; /* Explicitly set to white for visibility */
 }
 
 .btn-secondary {

@@ -88,11 +88,14 @@ export const formatDuration = (totalSeconds, options = {}) => {
  * Calculate total duration from an array of items with duration strings
  * @param {Array} items - Array of objects with content_duration or duration property
  * @param {string} durationKey - Property name containing duration (default: 'content_duration')
- * @returns {string} Formatted total duration
+ * @returns {object} Object with formatted duration and JP variant
  */
 export const calculateTotalDuration = (items, durationKey = 'content_duration') => {
     if (!items || !Array.isArray(items) || items.length === 0) {
-        return "0m 0s";
+        return {
+            formatted: "0m 0s",
+            withJP: "0m 0s (0JP)"
+        };
     }
     
     const totalSeconds = items.reduce((total, item) => {
@@ -102,7 +105,10 @@ export const calculateTotalDuration = (items, durationKey = 'content_duration') 
         return total + parseDurationToSeconds(durationString);
     }, 0);
     
-    return formatDuration(totalSeconds);
+    return {
+        formatted: formatDuration(totalSeconds),
+        withJP: formatDurationWithJP(totalSeconds)
+    };
 };
 
 /**
@@ -174,18 +180,47 @@ export const exceedsThreshold = (durationString, thresholdSeconds) => {
 };
 
 /**
+ * Convert seconds to JP (Jam Pelajaran) where 1 JP = 45 minutes = 2700 seconds
+ * @param {number} totalSeconds - Total seconds
+ * @returns {number} Number of JP (rounded up)
+ */
+export const secondsToJP = (totalSeconds) => {
+    if (!totalSeconds || totalSeconds <= 0) {
+        return 0;
+    }
+    const JP_VALUE = 2700; // 45 minutes in seconds
+    return Math.ceil(totalSeconds / JP_VALUE);
+};
+
+/**
+ * Format duration with JP (Jam Pelajaran) notation
+ * Format: "0m 0s (0JP)" where 1JP = 45 minutes
+ * @param {number} totalSeconds - Total seconds
+ * @returns {string} Formatted duration with JP
+ */
+export const formatDurationWithJP = (totalSeconds) => {
+    const duration = formatDuration(totalSeconds);
+    const jp = secondsToJP(totalSeconds);
+    return `${duration} (${jp}JP)`;
+};
+
+/**
  * Get duration statistics from an array of items
  * @param {Array} items - Array of objects with duration
  * @param {string} durationKey - Property name containing duration
- * @returns {object} Statistics object with total, average, min, max
+ * @returns {object} Statistics object with total, average, min, max and JP variants
  */
 export const getDurationStats = (items, durationKey = 'content_duration') => {
     if (!items || !Array.isArray(items) || items.length === 0) {
         return {
             total: "0m 0s",
+            totalWithJP: "0m 0s (0JP)",
             average: "0m 0s",
+            averageWithJP: "0m 0s (0JP)",
             min: "0m 0s",
+            minWithJP: "0m 0s (0JP)",
             max: "0m 0s",
+            maxWithJP: "0m 0s (0JP)",
             count: 0
         };
     }
@@ -197,9 +232,13 @@ export const getDurationStats = (items, durationKey = 'content_duration') => {
     if (durations.length === 0) {
         return {
             total: "0m 0s",
+            totalWithJP: "0m 0s (0JP)",
             average: "0m 0s",
+            averageWithJP: "0m 0s (0JP)",
             min: "0m 0s",
+            minWithJP: "0m 0s (0JP)",
             max: "0m 0s",
+            maxWithJP: "0m 0s (0JP)",
             count: 0
         };
     }
@@ -211,9 +250,13 @@ export const getDurationStats = (items, durationKey = 'content_duration') => {
     
     return {
         total: formatDuration(totalSeconds),
+        totalWithJP: formatDurationWithJP(totalSeconds),
         average: formatDuration(averageSeconds),
+        averageWithJP: formatDurationWithJP(averageSeconds),
         min: formatDuration(minSeconds),
+        minWithJP: formatDurationWithJP(minSeconds),
         max: formatDuration(maxSeconds),
+        maxWithJP: formatDurationWithJP(maxSeconds),
         count: durations.length,
         totalSeconds,
         averageSeconds,
@@ -229,5 +272,7 @@ export default {
     formatDurationStyle,
     compareDurations,
     exceedsThreshold,
+    secondsToJP,
+    formatDurationWithJP,
     getDurationStats
 };

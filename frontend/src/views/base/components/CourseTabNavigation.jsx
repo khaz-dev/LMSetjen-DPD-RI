@@ -29,18 +29,13 @@ const CourseTabNavigation = ({ activeTab, setActiveTab }) => {
     return (
         <div className={`course-tab-navigation ${isScrolled ? 'scrolled' : ''}`}>
             <nav>
-                <div className="nav nav-pills nav-justified" role="tablist">{COURSE_TABS.map((tab) => (
+                <div className="nav nav-pills" role="tablist">{COURSE_TABS.map((tab) => (
                         <button
                             key={tab.key}
                             className={`nav-link fw-semibold px-2 px-md-3 ${activeTab === tab.key ? 'active' : ''}`}
                             onClick={() => handleTabClick(tab.key)}
                             type="button"
                             role="tab"
-                            style={{ 
-                                borderRadius: '12px',
-                                padding: '0.75rem 1rem',
-                                fontSize: '0.95rem'
-                            }}
                         >
                             <i className={`${tab.icon} me-2`}></i>
                             <span className="d-none d-md-inline">{tab.label}</span>

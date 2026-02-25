@@ -1,5 +1,6 @@
 import React from "react";
 import { useComingSoon } from "../../../components/ComingSoonModal";
+import { formatDuration, parseDurationToSeconds } from "../../../utils/durationUtils"; // ✨ PHASE 4.77+: Format durations
 
 const CurriculumTab = ({ curriculum }) => {
     const handleComingSoon = useComingSoon('Course lessons');
@@ -51,7 +52,7 @@ const CurriculumTab = ({ curriculum }) => {
                                                     {lesson.title}
                                                 </span>
                                             </div>
-                                            <p className="mb-0">{lesson.content_duration || "N/A"}</p>
+                                            <p className="mb-0">{lesson.content_duration ? formatDuration(parseDurationToSeconds(lesson.content_duration)) : "N/A"}</p>
                                         </div>
                                         {lessonIndex < section.variant_items.length - 1 && <hr />}
                                     </React.Fragment>

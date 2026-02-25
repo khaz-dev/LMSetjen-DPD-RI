@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useAxios } from './useAxios';
+import useAxios from './useAxios';
 
 /**
  * useDashboardAnalytics Hook
@@ -7,7 +7,6 @@ import { useAxios } from './useAxios';
  * Handles: overview metrics, trending searches, quality scores, course performance
  */
 export const useDashboardAnalytics = () => {
-  const api = useAxios();
 
   // State management
   const [overview, setOverview] = useState({
@@ -63,7 +62,7 @@ export const useDashboardAnalytics = () => {
         }
 
         // Fetch main dashboard data
-        const dashboardResponse = await api.get('/analytics/dashboard/', {
+        const dashboardResponse = await useAxios.get('/analytics/dashboard/', {
           params: {
             period: period,
             days: queryDays
@@ -88,7 +87,7 @@ export const useDashboardAnalytics = () => {
         setLoading(false);
       }
     },
-    [api]
+    []
   );
 
   /**
@@ -97,7 +96,7 @@ export const useDashboardAnalytics = () => {
   const fetchSummary = useCallback(
     async (days = 7) => {
       try {
-        const response = await api.get('/analytics/summary/', {
+        const response = await useAxios.get('/analytics/summary/', {
           params: { days }
         });
         return response.data;
@@ -106,16 +105,12 @@ export const useDashboardAnalytics = () => {
         throw err;
       }
     },
-    [api]
+    []
   );
-
-  /**
-   * Fetch trend data for date range
-   */
   const fetchTrendData = useCallback(
     async (startDate, endDate) => {
       try {
-        const response = await api.get('/analytics/trend/', {
+        const response = await useAxios.get('/analytics/trend/', {
           params: {
             start_date: startDate,
             end_date: endDate
@@ -127,7 +122,7 @@ export const useDashboardAnalytics = () => {
         throw err;
       }
     },
-    [api]
+    []
   );
 
   /**
@@ -136,7 +131,7 @@ export const useDashboardAnalytics = () => {
   const fetchTrendingSearches = useCallback(
     async (days = 7, limit = 10) => {
       try {
-        const response = await api.get('/analytics/trending-searches/', {
+        const response = await useAxios.get('/analytics/trending-searches/', {
           params: { days, limit }
         });
         return response.data?.trending || [];
@@ -145,7 +140,7 @@ export const useDashboardAnalytics = () => {
         throw err;
       }
     },
-    [api]
+    []
   );
 
   /**

@@ -16,13 +16,16 @@ const LecturesTabNew = ({
     show,
     setShow,
     variantItem,
-    setVariantItem
+    setVariantItem,
+    onProgressUpdate  // ✨ PHASE 4.131: Callback to notify parent when lesson progress updates
 }) => {
     // Video player ref and states
     const playerRef = useRef(null);
     const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const isClickingLessonRef = useRef(false);  // ✨ PHASE 4.111: Use ref to prevent concurrent clicks without causing re-renders
+    const [isClickingLessonUI, setIsClickingLessonUI] = useState(false);  // ✨ PHASE 4.111: State for visual feedback
     
     // Simplified video states - managed by VideoProgressManager
     const [playing, setPlaying] = useState(false);
@@ -105,23 +108,51 @@ const LecturesTabNew = ({
         return videoExtensions.some(ext => filename.toLowerCase().includes(ext.toLowerCase()));
     };
 
+    // ✨ PHASE 4.111: Failsafe to reset click lock if modal doesn't open
+    useEffect(() => {
+        if (isClickingLessonUI && !show) {
+            // If we're in "clicking" state but modal isn't open, wait a bit longer
+            const failsafeTimer = setTimeout(() => {
+                if (isClickingLessonUI && !show) {
+                    isClickingLessonRef.current = false;
+                    setIsClickingLessonUI(false);
+                }
+            }, 2000);  // 2 second failsafe timeout
+            
+            return () => clearTimeout(failsafeTimer);
+        }
+    }, [isClickingLessonUI, show]);
+
     // Get lesson progress status using VideoProgressManager
+    // ✨ PHASE 4.103: FIX - Check backend completion status FIRST before video progress
     const getLessonProgressStatus = (variantItem) => {
         if (!variantItem || !course?.course?.id) return { status: 'not-started', percentage: 0 };
         
+        // CRITICAL FIX: Check if lesson is marked as completed in the backend FIRST
+        // This ensures the UI reflects the actual completion status after video ends
+        if (isLessonCompleted(variantItem)) {
+            return { status: 'completed', percentage: 100 };
+        }
+        
+        // If not marked complete, check video progress data for in-progress status
         const itemId = variantItem.variant_item_id || variantItem.id;
         const progressKey = `${course.course.id}_${itemId}`;
         const progress = progressData[progressKey];
         
         if (!progress) return { status: 'not-started', percentage: 0 };
         
-        if (progress.isCompleted) {
-            return { status: 'completed', percentage: 100 };
-        } else if (progress.isInProgress) {
-            return { status: 'in-progress', percentage: Math.round(progress.percentage) };
-        } else {
-            return { status: 'not-started', percentage: 0 };
+        // ✨ PHASE 4.114: Show progress if there's any percentage watched (not just in-progress)
+        const percentage = Math.round(progress.percentage || 0);
+        
+        // If there's any progress (even if not marked isInProgress), show it
+        if (percentage > 0 && percentage < 100) {
+            return { status: 'in-progress', percentage };
+        } else if (percentage >= 100) {
+            // If 100% watched but not yet marked as completed
+            return { status: 'in-progress', percentage: 100 };
         }
+        
+        return { status: 'not-started', percentage: 0 };
     };
 
     // Count completed lessons
@@ -143,9 +174,19 @@ const LecturesTabNew = ({
         setDuration(0);
         setShow(false);
         setVariantItem(null);
+        isClickingLessonRef.current = false;  // ✨ PHASE 4.111: Reset click flag when modal closes
+        setIsClickingLessonUI(false);  // Reset UI state
     };
 
     const handleShow = (variant_item) => {
+        // ✨ PHASE 4.111: Prevent rapid repeated clicks using ref + state
+        if (isClickingLessonRef.current) {
+            return;
+        }
+        
+        isClickingLessonRef.current = true;
+        setIsClickingLessonUI(true);  // Update UI to show busy state
+        
         setVariantItem(variant_item);
         setShow(true);
         setIsLoading(true);
@@ -153,6 +194,12 @@ const LecturesTabNew = ({
         
         // Load progress for this lesson
         loadLessonProgress(variant_item);
+        
+        // Reset click flag after brief delay to prevent accidental double-clicks
+        setTimeout(() => {
+            isClickingLessonRef.current = false;
+            setIsClickingLessonUI(false);  // Update UI to show ready state
+        }, 200);
     };
 
     // Load progress for a single lesson using VideoProgressManager
@@ -191,7 +238,6 @@ const LecturesTabNew = ({
             }
             
         } catch (error) {
-            console.error('[LecturesTab] Failed to load progress:', error);
         }
     };
 
@@ -215,6 +261,8 @@ const LecturesTabNew = ({
             
             if (videoLessonIds.length === 0) return;
             
+            // ✨ PHASE 4.114: Debug progress loading
+            
             // Batch load progress
             const progressResults = await VideoProgressManager.loadProgressBatch(
                 course.course.id, 
@@ -225,16 +273,18 @@ const LecturesTabNew = ({
             const newProgressData = {};
             Object.entries(progressResults).forEach(([itemId, progress]) => {
                 newProgressData[`${course.course.id}_${itemId}`] = progress;
+                if (progress.percentage > 0) {
+                }
             });
             
             setProgressData(prev => ({ ...prev, ...newProgressData }));
             
         } catch (error) {
-            console.error('[LecturesTab] Failed to load all progress:', error);
         }
     };
 
     // Save current video progress
+    // ✨ PHASE 4.114: Periodic progress saving with debug logging
     const saveCurrentProgress = async () => {
         if (!variantItem || !duration || duration === 0) return;
         
@@ -264,8 +314,8 @@ const LecturesTabNew = ({
                 }
             }));
             
+            
         } catch (error) {
-            console.error('[LecturesTab] Failed to save progress:', error);
         }
     };
 
@@ -308,7 +358,6 @@ const LecturesTabNew = ({
             });
             
         } catch (error) {
-            console.error("Error updating lesson completion:", error);
             setMarkAsCompletedStatus(prev => ({ ...prev, [key]: "Error" }));
             
             Toast().fire({
@@ -405,12 +454,42 @@ const LecturesTabNew = ({
         }
     }, [course]);
 
+    // ✨ PHASE 4.131: Register progress update callback to parent (CourseDetail)
+    // This updates the lesson badge in real-time when video progress changes
+    useEffect(() => {
+        if (onProgressUpdate && course?.course?.id) {
+            // Create callback function that updates progressData when progress changes
+            const updateProgressCallback = (variantItemId, progressInfo) => {
+                
+                setProgressData(prev => ({
+                    ...prev,
+                    [`${course.course.id}_${variantItemId}`]: progressInfo
+                }));
+            };
+            
+            // Register the callback with parent
+            onProgressUpdate(updateProgressCallback);
+            
+        }
+    }, [onProgressUpdate, course?.course?.id]);
+
     // Auto-play video when modal opens
     useEffect(() => {
         if (show && variantItem && isVideoFile(variantItem.file)) {
             setPlaying(true);
         }
     }, [show, variantItem]);
+
+    // ✨ PHASE 4.114: Periodically save video progress every 5 seconds while playing
+    useEffect(() => {
+        if (!show || !playing || !variantItem || !duration) return;
+
+        const progressInterval = setInterval(() => {
+            saveCurrentProgress();
+        }, 5000);  // Save every 5 seconds
+
+        return () => clearInterval(progressInterval);
+    }, [show, playing, variantItem, duration, played]);
 
     return (
         <div className="tab-pane fade show active" id="lectures" role="tabpanel">
@@ -482,9 +561,25 @@ const LecturesTabNew = ({
                                                     <div className="d-flex align-items-center justify-content-between">
                                                         <div className="d-flex align-items-center gap-3 flex-grow-1">
                                                             <button 
-                                                                onClick={() => handleShow(l)} 
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    handleShow(l);
+                                                                }}
+                                                                onKeyPress={(e) => {
+                                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                                        e.preventDefault();
+                                                                        handleShow(l);
+                                                                    }
+                                                                }}
                                                                 className={`lesson-play-btn ${progressStatus.status}`}
                                                                 title={getFileTypeLabel(l.file)}
+                                                                disabled={isClickingLessonUI}
+                                                                style={{
+                                                                    cursor: isClickingLessonUI ? 'not-allowed' : 'pointer',
+                                                                    opacity: isClickingLessonUI ? 0.6 : 1,
+                                                                    transition: 'opacity 0.2s ease'
+                                                                }}
                                                             >
                                                                 {progressStatus.status === 'completed' ? (
                                                                     <i className="fas fa-check"></i>
@@ -515,13 +610,27 @@ const LecturesTabNew = ({
                                                                     {progressStatus.status === 'completed' && (
                                                                         <small className="lesson-status-badge completed">
                                                                             <i className="fas fa-check-circle me-1"></i>
-                                                                            Completed
+                                                                            Selesai
                                                                         </small>
                                                                     )}
                                                                     {progressStatus.status === 'in-progress' && (
                                                                         <small className="lesson-status-badge in-progress">
                                                                             <i className="fas fa-play-circle me-1"></i>
-                                                                            {progressStatus.percentage}% watched
+                                                                            {progressStatus.percentage}% ditonton
+                                                                        </small>
+                                                                    )}
+                                                                    {/* ✨ PHASE 4.114: Show progress for not-started if there's any watched percentage */}
+                                                                    {progressStatus.status === 'not-started' && progressStatus.percentage > 0 && (
+                                                                        <small className="lesson-status-badge not-started">
+                                                                            <i className="fas fa-film me-1"></i>
+                                                                            {progressStatus.percentage}% ditonton
+                                                                        </small>
+                                                                    )}
+                                                                    {/* Show 'Siap ditonton' only if there's no progress at all */}
+                                                                    {progressStatus.status === 'not-started' && progressStatus.percentage === 0 && (
+                                                                        <small className="lesson-status-badge not-started">
+                                                                            <i className="fas fa-play me-1"></i>
+                                                                            Siap ditonton
                                                                         </small>
                                                                     )}
                                                                 </div>
@@ -616,7 +725,6 @@ const LecturesTabNew = ({
                                 onError={(error) => {
                                     setError('Failed to load video');
                                     setIsLoading(false);
-                                    console.error('[Video] Error:', error);
                                 }}
                                 onEnded={() => {
                                     setPlaying(false);

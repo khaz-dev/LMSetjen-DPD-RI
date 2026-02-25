@@ -1,0 +1,167 @@
+/* ✨ PHASE 4.143: Lesson Completion Question Editor Styling */
+
+.lesson-completion-question-editor {
+    border-top: 2px solid #e9ecef;
+}
+
+.lesson-completion-question-editor .btn-group .btn {
+    border-radius: 0.4rem;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+    transition: all 0.2s ease;
+}
+
+.lesson-completion-question-editor .btn-group .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.question-editor-form {
+    animation: slideDown 0.3s ease-out;
+    border-radius: 0.5rem;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.question-editor-form label {
+    color: #212529;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.choice-item {
+    border-left: 3px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.choice-item:hover {
+    border-left-color: #0d6efd;
+    background-color: #f8f9fa !important;
+}
+
+.choice-item.correct {
+    border-left-color: #28a745;
+    background-color: #f0f8f4 !important;
+}
+
+.choices-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.choices-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.choices-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.choices-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.choices-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.question-summary {
+    border-radius: 0.5rem;
+    animation: fadeIn 0.3s ease-in;
+    background: linear-gradient(135deg, #f0f8f4 0%, #e8f5f0 100%);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.question-summary p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #212529;
+    word-break: break-word;
+}
+
+.question-summary .badge {
+    font-size: 0.80rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .lesson-completion-question-editor .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .lesson-completion-question-editor .btn-group .btn {
+        width: 100%;
+    }
+
+    .question-editor-form {
+        padding: 1rem !important;
+    }
+
+    .choice-item {
+        flex-direction: column;
+    }
+
+    .choice-item textarea {
+        width: 100%;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .question-editor-form {
+        background-color: #2d2d2d !important;
+        color: #e0e0e0;
+    }
+
+    .choice-item {
+        background-color: #3a3a3a !important;
+        border-left-color: #555;
+    }
+
+    .choice-item:hover {
+        background-color: #4a4a4a !important;
+    }
+
+    .question-summary {
+        background: linear-gradient(135deg, #2a4a3f 0%, #235845 100%) !important;
+        color: #e0e0e0;
+    }
+
+    .form-control,
+    .form-check-input {
+        background-color: #3a3a3a;
+        border-color: #555;
+        color: #e0e0e0;
+    }
+
+    .form-control:disabled {
+        opacity: 0.6;
+    }
+}

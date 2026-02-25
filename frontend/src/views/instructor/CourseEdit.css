@@ -359,7 +359,8 @@ button div,
 /* ================================
    FORM SECTIONS & LAYOUT
    ================================ */
-.card-body {
+/* SCOPED: Only apply to course edit form, not global card-body */
+.instructor-course-edit-page .card-body {
     padding: var(--space-2xl) !important;
 }
 
@@ -1044,6 +1045,18 @@ button div,
 }
 
 .status-badge.disabled {
+    color: #991b1b;
+    background-color: #fee2e2;
+    border: 1px solid #ef4444;
+}
+
+.status-badge.review {
+    color: #b45309;
+    background-color: #fef3c7;
+    border: 1px solid #f59e0b;
+}
+
+.status-badge.rejected {
     color: #991b1b;
     background-color: #fee2e2;
     border: 1px solid #ef4444;
@@ -1928,4 +1941,120 @@ button div,
     width: 100%;
     max-width: 100%;
   }
+}
+
+/* ✨ PHASE 4.61: Modern Form Check Styling for Proper Checkbox Alignment */
+.modern-form-check {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px !important;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%) !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(102, 126, 234, 0.2) !important;
+  transition: all 0.3s ease !important;
+  margin: 0 !important;
+  /* Reset Bootstrap defaults */
+  flex-wrap: nowrap !important;
+  position: relative !important;
+}
+
+.modern-form-check:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%) !important;
+  border-color: rgba(102, 126, 234, 0.4) !important;
+}
+
+/* Ensure input comes first in flex layout */
+.modern-form-check .form-check-input {
+  order: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  border: 2px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
+  /* Reset Bootstrap */
+  position: relative !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.modern-form-check .form-check-input::before {
+  content: none !important;
+}
+
+.modern-form-check .form-check-input::after {
+  content: none !important;
+}
+
+.modern-form-check .form-check-input:not(:checked) {
+  background-color: white !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) inset !important;
+}
+
+.modern-form-check .form-check-input:checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+}
+
+.modern-form-check .form-check-input:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+}
+
+/* Ensure label comes second in flex layout */
+.modern-form-check .form-check-label {
+  order: 1 !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  color: #1e293b !important;
+  font-weight: 500 !important;
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  user-select: none !important;
+  /* Reset Bootstrap */
+  position: static !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Additional high-specificity rules to override Bootstrap */
+.col-12 .modern-form-check {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.col-12 .modern-form-check .form-check-input {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.col-12 .modern-form-check .form-check-label {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Target nested within row structure */
+.row .col-12 .modern-form-check {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+/* Ensure form-check class doesn't interfere with flex layout */
+div.form-check.modern-form-check {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px !important;
+  flex-wrap: nowrap !important;
 }

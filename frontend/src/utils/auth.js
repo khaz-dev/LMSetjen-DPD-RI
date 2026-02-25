@@ -16,7 +16,6 @@ export const login = async (email, password) => {
 
         return { data, error: null, errorDetails: null };
     } catch (error) {
-        console.error("Login error:", error);
         let errorMessage = "Login failed. Please try again.";
         let errorDetails = {};
         
@@ -63,16 +62,13 @@ export const redirectUserByRole = (userData) => {
         if (typeof userData === 'string') {
             // userData is a string role like 'instructor' or 'teacher'
             role = userData.toLowerCase().trim();
-            console.log('PHASE 4.15: Redirect by role string:', role);
         } else if (userData && userData.role) {
             // userData is a user object with role property
             role = userData.role.toLowerCase().trim();
-            console.log('PHASE 4.15: Redirect by user object role:', role);
         }
         
         if (!role) {
             // Default redirect for users without role
-            console.log('PHASE 4.15: No role found, redirecting to student dashboard');
             window.location.href = '/student/dashboard/';
             return;
         }
@@ -80,23 +76,19 @@ export const redirectUserByRole = (userData) => {
         // Switch based on role (support both 'teacher' and 'instructor')
         switch (role) {
             case 'admin':
-                console.log('PHASE 4.15: Redirecting admin to /admin/dashboard/');
                 window.location.href = '/admin/dashboard/';
                 break;
             case 'teacher':
             case 'instructor':
-                console.log('PHASE 4.15: Redirecting instructor/teacher to /instructor/dashboard/');
                 window.location.href = '/instructor/dashboard/';
                 break;
             case 'student':
             default:
-                console.log('PHASE 4.15: Redirecting student to /student/dashboard/');
                 window.location.href = '/student/dashboard/';
                 break;
         }
     } catch (error) {
         // Fallback redirect
-        console.error('PHASE 4.15: Error in redirectUserByRole:', error);
         window.location.href = '/student/dashboard/';
     }
 };
@@ -113,12 +105,10 @@ export const register = async (full_name, email, password, password2) => {
         await login(email, password);
         return { data, error: null };
     } catch (error) {
-        console.error("Registration error in auth.js:", error);
         let errorMessage = "Registration failed. Please try again.";
         
         if (error.response?.data) {
             const errorData = error.response.data;
-            console.error("Backend error data:", errorData);
             
             // Handle field-specific errors
             if (errorData.full_name) {
@@ -245,13 +235,11 @@ export const logout = () => {
         });
         
     } catch (error) {
-        console.error("Logout error:", error);
         // Emergency fallback - just redirect immediately
         try {
             sessionStorage.clear();
             window.location.href = '/';
         } catch (fallbackError) {
-            console.error("Emergency logout fallback failed:", fallbackError);
         }
     }
 };
@@ -337,12 +325,10 @@ export const setAuthUser = (access_token, refresh_token) => {
             expires: isLocalhost ? 7 : 7,  // 7 days for refresh token
         });
 
-        console.log("🔐 Auth tokens set with options:", cookieOptions);
 
         try {
             const decodedToken = jwt_decode(access_token);
             if (decodedToken) {
-                console.log("👤 Setting auth user from decoded token:", decodedToken);
                 
                 // Merge with existing data rather than replace
                 // This preserves full_name, role, nip from SSO responses
@@ -356,11 +342,9 @@ export const setAuthUser = (access_token, refresh_token) => {
                     user_id: decodedToken.user_id || currentUser?.user_id
                 };
                 
-                console.log("📦 Merged user data:", mergedUser);
                 useAuthStore.getState().setUser(mergedUser);
             }
         } catch (error) {
-            console.error("Token decode error:", error);
             // Only logout if we're not already logging out
             if (sessionStorage.getItem('logging_out') !== 'true') {
                 logout();

@@ -8,6 +8,7 @@ import logoWebP from "../../assets/logo/logo-192.webp";
 import logoPNG from "../../assets/logo/logo-192.png";
 import { logout } from "../../utils/auth";
 import Toast, { LogoutConfirmation } from "../plugin/Toast";
+import { getImageUrl } from "../../utils/courseUtils";  // ✨ PHASE 4.77: Image URL utility
 import './BaseHeader.css';
 
 function BaseHeader() {
@@ -58,28 +59,41 @@ function BaseHeader() {
     
     const currentMenuType = determineMenuType();
     
+    // ✨ PHASE 4.177: Fetch guards to prevent duplicate API calls
+    const hasFetchedTrendingRef = React.useRef(false);
+    
     // Animation effect
     useEffect(() => {
         const timer = setTimeout(() => setTypingComplete(true), 4000);
         return () => clearTimeout(timer);
     }, []);
 
-    // ✨ PHASE 4.20: Track role changes to update menu items in real-time
+    // ✨ PHASE 3: Load search history from localStorage and fetch trending searches on component mount
     useEffect(() => {
-        console.log('PHASE 4.20: Role changed in BaseHeader, triggering menu update', currentRole);
-        // This effect just acts as a trigger for component re-render
-        // The menu items will be re-computed automatically due to userData and isAdmin dependencies
-    }, [currentRole]);
-
-    // ✨ PHASE 3: Load search history from localStorage on component mount
-    useEffect(() => {
+        // Load search history
         const savedHistory = localStorage.getItem('searchHistory');
         if (savedHistory) {
             try {
                 setSearchHistory(JSON.parse(savedHistory));
             } catch (e) {
-                console.warn('Failed to parse search history:', e);
                 setSearchHistory([]);
+            }
+        }
+        
+        // ✨ PHASE 3: Fetch trending searches on component mount
+        // ✨ PHASE 4.177: Add fetch guard + data check to prevent duplicate calls in React Strict Mode
+        if (!trendingSearches || trendingSearches.length === 0) {
+            if (!hasFetchedTrendingRef.current) {
+                hasFetchedTrendingRef.current = true;
+                const fetchTrendingSearches = async () => {
+                    try {
+                        const response = await apiInstance.get('course/trending-searches/');
+                        setTrendingSearches(response.data?.trending || []);
+                    } catch (error) {
+                        setTrendingSearches([]);
+                    }
+                };
+                fetchTrendingSearches();
             }
         }
         
@@ -89,21 +103,7 @@ function BaseHeader() {
         if (queryParam && isSearchPage) {
             setSearchQuery(queryParam);
         }
-    }, [location]);
-
-    // ✨ PHASE 3: Fetch trending searches on component mount
-    useEffect(() => {
-        const fetchTrendingSearches = async () => {
-            try {
-                const response = await apiInstance.get('course/trending-searches/');
-                setTrendingSearches(response.data?.trending || []);
-            } catch (error) {
-                console.error('Failed to fetch trending searches:', error);
-                setTrendingSearches([]);
-            }
-        };
-        fetchTrendingSearches();
-    }, []);
+    }, [isSearchPage, location, trendingSearches]);
 
     // ✨ PHASE 3: Save search to history when navigating to search results
     const addToSearchHistory = (query) => {
@@ -151,7 +151,6 @@ function BaseHeader() {
                 setShowSearchModal(true);  // Show modal regardless of result count
                 setShowSearchHistory(false);  // Hide history when we have results
             } catch (error) {
-                console.error("Search error:", error);
                 setSearchResults([]);
                 // ✨ FIX: Show modal on error too so user knows search was attempted
                 setShowSearchModal(true);
@@ -527,7 +526,7 @@ function BaseHeader() {
                                                         >
                                                             <div className="search-item-image">
                                                                 {course.image ? (
-                                                                    <img src={course.image} alt={course.title} />
+                                                                    <img src={getImageUrl(course.image)} alt={course.title} />
                                                                 ) : (
                                                                     <div className="search-item-image-placeholder">
                                                                         <i className="fas fa-book"></i>

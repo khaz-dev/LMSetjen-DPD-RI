@@ -8,7 +8,6 @@ import { useState, useCallback, useEffect } from 'react';
 import useAxios from './useAxios';
 
 const useAdvancedSearch = () => {
-    const api = useAxios();
     
     // State management
     const [results, setResults] = useState([]);
@@ -33,7 +32,7 @@ const useAdvancedSearch = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await api.get('category-filter/');
+                const response = await useAxios.get('category-filter/');
                 setCategories(response.data.categories || []);
             } catch (err) {
                 console.error('Error fetching categories:', err);
@@ -41,13 +40,13 @@ const useAdvancedSearch = () => {
         };
 
         fetchCategories();
-    }, [api]);
+    }, []);
 
     // Fetch teachers
     useEffect(() => {
         const fetchTeachers = async () => {
             try {
-                const response = await api.get('teacher-filter/');
+                const response = await useAxios.get('teacher-filter/');
                 setTeachers(response.data.teachers || []);
             } catch (err) {
                 console.error('Error fetching teachers:', err);
@@ -55,12 +54,12 @@ const useAdvancedSearch = () => {
         };
 
         fetchTeachers();
-    }, [api]);
+    }, []);
 
     // Perform advanced search
     const performSearch = useCallback(async (searchData) => {
         if (!searchData.query || searchData.query.trim() === '') {
-            setError('Please enter a search query');
+            setError('Silakan masukkan kueri pencarian');
             setResults([]);
             return;
         }
@@ -69,7 +68,7 @@ const useAdvancedSearch = () => {
         setError(null);
 
         try {
-            const response = await api.post('search/advanced/', {
+            const response = await useAxios.post('search/advanced/', {
                 query: searchData.query,
                 filters: searchData.filters || {},
                 page: searchData.page || 1,
@@ -111,7 +110,7 @@ const useAdvancedSearch = () => {
         } finally {
             setLoading(false);
         }
-    }, [api]);
+    }, []);
 
     // Change page
     const changePage = useCallback(async (newPage, currentSearchData) => {
@@ -148,13 +147,13 @@ const useAdvancedSearch = () => {
         }
 
         try {
-            const response = await api.get(`search/suggestions/?q=${encodeURIComponent(query)}`);
+            const response = await useAxios.get(`search/suggestions/?q=${encodeURIComponent(query)}`);
             return response.data.suggestions || [];
         } catch (err) {
             console.error('Error fetching suggestions:', err);
             return [];
         }
-    }, [api]);
+    }, []);
 
     return {
         // State

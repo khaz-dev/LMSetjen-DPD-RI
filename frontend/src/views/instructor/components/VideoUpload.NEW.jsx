@@ -294,9 +294,15 @@ const VideoUpload = ({ courseData, setCourseData }) => {
               <iframe
                 src={courseData.file}
                 title="Video player - Course Introduction"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
+                frameBorder={0}
+                // ✨ PHASE 4.34: Optimized sandbox for security without breaking functionality
+                sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-presentation"
+                // Minimal allow permissions needed for embedding
+                // ✨ PHASE 4.42: FIXED - Changed referrerPolicy from "no-referrer" to "origin"
+                // Google Drive requires referrer header for video playback
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; xr-spatial-tracking"
+                allowFullScreen={true}
+                referrerPolicy="origin"
                 loading="lazy"
                 decoding="async"
               ></iframe>

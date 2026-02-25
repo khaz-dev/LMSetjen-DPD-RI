@@ -12,6 +12,7 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
+import { getImageUrl } from "../../utils/courseUtils";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import "./QA.css";
 
@@ -496,10 +497,7 @@ function QA() {
                                                             <div className="course-image-container">
                                                                 {enrollment.course?.image ? (
                                                                     <img 
-                                                                        src={enrollment.course.image.startsWith("http") 
-                                                                            ? enrollment.course.image 
-                                                                            : "getMediaUrl(enrollment.course.image)"
-                                                                        } 
+                                                                        src={getImageUrl(enrollment.course.image)}
                                                                         alt={enrollment.course?.title || "Course"}
                                                                         className="course-image"
                                                                         onError={(e) => {

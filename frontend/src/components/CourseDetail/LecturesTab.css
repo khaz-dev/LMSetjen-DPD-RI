@@ -15,8 +15,39 @@
     margin: 0rem; 
 }
 
-.course-progress-stats {
-    white-space: nowrap;
+/* ✨ PHASE 4.11+: Ensure consistent white text styling in progress container */
+/* ✨ PHASE 4.84: Add maximum specificity to override Dashboard/Courses/CourseDetail CSS conflicts */
+.curriculum-progress-container .progress-text,
+.curriculum-progress-container .progress-text.text-white,
+.viewer-modal-modern + .modal .curriculum-progress-container .progress-text,
+div.curriculum-progress-container .progress-text {
+    color: white !important;
+    font-size: 0.85rem !important;  /* Override Dashboard's 1.25rem */
+    font-weight: 500 !important;
+}
+
+.curriculum-progress-container .progress-percentage,
+.curriculum-progress-container .progress-percentage.text-white,
+.viewer-modal-modern + .modal .curriculum-progress-container .progress-percentage,
+div.curriculum-progress-container .progress-percentage {
+    padding: 0 !important;           /* ✨ PHASE 4.85: Reset Dashboard's 0.3rem 0.6rem padding */
+    margin: 0 !important;            /* Reset margins */
+    border-radius: 0 !important;     /* Reset Dashboard's 12px border-radius */
+    box-shadow: none !important;     /* Remove Dashboard's shadow effect (creates border-like appearance) */
+    border: none !important;         /* Ensure no borders */
+    color: white !important;
+    font-size: 0.85rem !important;   /* Ensure matching size with progress-text */
+    font-weight: 600 !important;
+    background: transparent !important;  /* Remove Background gradient from Dashboard */
+    display: inline !important;
+    text-decoration: none !important;
+}
+
+/* Force parent container and all children to white */
+.curriculum-progress-container,
+.curriculum-progress-container .course-progress-stats,
+.curriculum-progress-container .course-progress-stats * {
+    color: white !important;
 }
 
 .course-progress-bar {
@@ -101,6 +132,25 @@
 .lesson-item.completed {
     background: rgba(102, 126, 234, 0.1);
     border-color: rgba(102, 126, 234, 0.3);
+}
+
+/* ✨ PHASE 4.107: Active lesson indicator - shows which lesson is currently playing */
+.lesson-item.active {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.15) 100%);
+    border-color: #667eea;
+    border-width: 2px;
+    box-shadow: 0 0 12px rgba(102, 126, 234, 0.4), inset 0 0 8px rgba(102, 126, 234, 0.1);
+}
+
+.lesson-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 0 8px rgba(102, 126, 234, 0.8);
 }
 
 .lesson-progress-indicator {
@@ -431,7 +481,7 @@
 .video-container {
     position: relative;
     background: #000;
-    min-height: 60vh;
+    height: auto;  /* ✨ PHASE 4.86: Changed from min-height: 60vh to auto to match video content */
 }
 
 /* Video Progress Badge */
@@ -439,26 +489,70 @@
     position: absolute;
     top: 1rem;
     left: 1rem;
-    padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: 8px;
+    padding: 10px 16px;
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 12px;
     backdrop-filter: blur(5px);
     z-index: 20;
     width: fit-content;
-    max-width: 200px;
+    max-width: 280px;
     color: white;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+/* ✨ PHASE 4.88: Google Drive Video Player Restrictions */
+/* Hide fullscreen button and disable interactive controls */
+.video-player-inline iframe {
+    /* Prevent direct interaction with fullscreen controls */
+    pointer-events: auto;
+}
+
+/* Disable fullscreen button using CSS */
+.video-player-inline iframe::before,
+.video-player-inline iframe[src*="drive.google.com"] {
+    /* Google Drive player controls override - using sandbox restrictions */
+}
+
+/* Block fullscreen from Google Drive embedded player */
+@supports (selector(::-webkit-scrollbar)) {
+    .video-player-inline iframe[src*="drive.google.com"] {
+        /* WebKit browser fullscreen button hiding */
+        filter: none;
+    }
 }
 
 /* Video Container Responsive Design */
 @media (max-width: 768px) {
     .video-container {
-        min-height: 40vh;
+        height: auto;
+    }
+    
+    .video-progress-badge {
+        padding: 8px 12px !important;
+        font-size: 0.85rem !important;
+        min-height: 28px !important;
     }
 }
 
 @media (max-width: 576px) {
     .video-container {
-        min-height: 30vh;
+        height: auto;
+    }
+    
+    .video-progress-badge {
+        padding: 6px 10px !important;
+        font-size: 0.8rem !important;
+        min-height: 24px !important;
+        right: 12px !important;
+        bottom: 12px !important;
     }
 }
 
@@ -555,17 +649,6 @@ kbd {
     overflow: hidden;
 }
 
-.lesson-play-btn.in-progress::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    animation: shimmer 2s infinite;
-}
-
 .lesson-play-btn.not-started {
     background: #F3F4F6;
     color: #6B7280;
@@ -596,7 +679,4 @@ kbd {
 }
 
 /* Animation Keyframes */
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
+/* Shimmer animation removed - no more repeated shining */

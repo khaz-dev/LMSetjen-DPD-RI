@@ -47,27 +47,27 @@ export const DEFAULT_CURRICULUM_DATA = {
 // Error Messages for Curriculum
 export const CURRICULUM_ERROR_MESSAGES = {
     required: {
-        title: "Course title is required",
-        description: "Course description is required",
-        category: "Please select a course category"
+        title: "Judul kursus diperlukan",
+        description: "Deskripsi kursus diperlukan",
+        category: "Silakan pilih kategori kursus"
     },
     invalid: {
-        title: "Title contains invalid characters",
-        fileType: "Invalid file type. Please upload a valid file.",
-        fileSize: "File is too large. Please upload a smaller file."
+        title: "Judul berisi karakter yang tidak valid",
+        fileType: "Jenis file tidak valid. Silakan unggah file yang valid.",
+        fileSize: "File terlalu besar. Silakan unggah file yang lebih kecil."
     },
     length: {
-        titleTooShort: "Title should be more descriptive (at least 10 characters)",
-        titleTooLong: "Title is too long. Keep it under 60 characters for better display",
-        descriptionTooShort: "Description is too short. Add more details about your course",
-        descriptionTooLong: "Description is quite long. Consider making it more concise"
+        titleTooShort: "Judul harus lebih deskriptif (minimal 10 karakter)",
+        titleTooLong: "Judul terlalu panjang. Pertahankan di bawah 60 karakter untuk tampilan yang lebih baik",
+        descriptionTooShort: "Deskripsi terlalu pendek. Tambahkan lebih banyak detail tentang kursus Anda",
+        descriptionTooLong: "Deskripsi cukup panjang. Pertimbangkan untuk membuatnya lebih ringkas"
     },
     upload: {
-        failed: "Failed to upload file. Please try again.",
-        invalidImage: "Please upload a valid image file (JPEG, PNG, GIF, or WebP)",
-        invalidVideo: "Please upload a valid video file (MP4, AVI, MOV, or WMV)",
-        imageTooLarge: "Please upload an image smaller than 5MB",
-        videoTooLarge: "Please upload a video smaller than 100MB"
+        failed: "Gagal mengunggah file. Silakan coba lagi.",
+        invalidImage: "Silakan unggah file gambar yang valid (JPEG, PNG, GIF, atau WebP)",
+        invalidVideo: "Silakan unggah file video yang valid (MP4, AVI, MOV, atau WMV)",
+        imageTooLarge: "Silakan unggah gambar dengan ukuran lebih kecil dari 5MB",
+        videoTooLarge: "Silakan unggah video dengan ukuran lebih kecil dari 100MB"
     }
 };
 

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import dayjs, { moment } from "../../../utils/dayjs";
 import { ProfileContext } from "../../plugin/Context";
@@ -16,6 +16,8 @@ function Header() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastFetchTime, setLastFetchTime] = useState(null);
+  // ✨ PHASE 4.177: Fetch guard to prevent duplicate profile/teacher/stats API calls
+  const hasFetchedRef = useRef(false);
   const [imageError, setImageError] = useState(false); // ✨ PHASE 4.21: Image error state for graceful fallback
   const [isCollapsed, setIsCollapsed] = useState(() => {
     // Initialize from localStorage - SEPARATE key for header
@@ -129,13 +131,21 @@ function Header() {
 
   // ✨ PHASE 4.21: useEffect Hook 1 - Fetch profile on mount
   // Only depends on userData and initial profile fetch
+  // ✨ PHASE 4.177: Added fetch guard + data check to prevent duplicate calls in React Strict Mode
   useEffect(() => {
+    // Skip if profile data is already loaded
+    if (profile?.full_name || profile?.id) return;
+    
+    // Guard against multiple fetches in React Strict Mode
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    
     if (userData?.user_id && !profile) {
       fetchProfile();
     } else if (!userData?.user_id) {
       setError("Pengguna tidak terautentikasi");
     }
-  }, [userData?.user_id]);
+  }, [userData?.user_id, profile?.full_name]);
 
   // ✨ PHASE 4.21: useEffect Hook 2 - Cache expiry check on profile page + reset image error on navigation
   // Separates route-based cache management from mount logic
@@ -223,7 +233,7 @@ function Header() {
     // Shows when image has error or no image URL available
     return (
       <div className="instructor-default-avatar mx-auto">
-        <svg width="120" height="120" viewBox="0 0 200 200" style={{ flex: "0 0 auto" }}>
+        <svg width="160" height="160" viewBox="0 0 200 200" style={{ flex: "0 0 auto" }}>
           <defs>
             <linearGradient id="instructorBg">
               <stop offset="0%" style={{stopColor:"#3498db"}}/>

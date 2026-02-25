@@ -53,7 +53,7 @@ const CurriculumBasicInfo = forwardRef(({
             {/* Course Title */}
             <div className="mb-3">
                 <label htmlFor="courseTitle" className="form-label">
-                    Title
+                    Judul Kursus
                     <span className="text-danger">*</span>
                     {warnings?.title?.length > 0 && <span className="text-warning">*</span>}
                 </label>
@@ -68,7 +68,7 @@ const CurriculumBasicInfo = forwardRef(({
                     onChange={handleInputChange} 
                 />
                 <small className="text-muted">
-                    Write a compelling course title (60 characters recommended)
+                    Tulis judul kursus yang menarik (60 karakter direkomendasikan)
                     {courseData?.title && (
                         <span className="float-end">
                             {courseData.title.length}/60
@@ -96,7 +96,7 @@ const CurriculumBasicInfo = forwardRef(({
             {/* Course Category */}
             <div className="mb-3">
                 <label className="form-label">
-                    Course Category
+                    Kategori Kursus
                     <span className="text-danger">*</span>
                 </label>
                 <select 
@@ -106,7 +106,7 @@ const CurriculumBasicInfo = forwardRef(({
                     value={courseData?.category?.id || courseData?.category || ''} 
                     onChange={handleInputChange}
                 >
-                    <option value="">Select a category</option>
+                    <option value="">Pilih kategori</option>
                     {categories?.map((c, index) => (
                         <option key={c.id || index} value={c.id}>
                             {c.title}
@@ -114,7 +114,7 @@ const CurriculumBasicInfo = forwardRef(({
                     ))}
                 </select>
                 <small className="text-muted">
-                    Help people find your courses by choosing categories that represent your course.
+                    Bantu orang menemukan kursus Anda dengan memilih kategori yang mewakili kursus Anda.
                 </small>
                 
                 {/* Error Messages */}
@@ -137,7 +137,7 @@ const CurriculumBasicInfo = forwardRef(({
             {/* Course Level */}
             <div className="mb-3">
                 <label className="form-label">
-                    Level
+                    Tingkat Kesulitan
                     {warnings?.level?.length > 0 && <span className="text-warning">*</span>}
                 </label>
                 <select 
@@ -147,13 +147,13 @@ const CurriculumBasicInfo = forwardRef(({
                     value={courseData?.level || ''} 
                     name="level"
                 >
-                    <option value="">Select level</option>
-                    <option value="Beginner">Beginner</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Advanced">Advanced</option>
+                    <option value="">Pilih tingkat</option>
+                    <option value="Beginner">Pemula</option>
+                    <option value="Intermediate">Menengah</option>
+                    <option value="Advanced">Lanjutan</option>
                 </select>
                 <small className="text-muted">
-                    Choose the appropriate difficulty level for your course.
+                    Pilih tingkat kesulitan yang sesuai untuk kursus Anda.
                 </small>
                 
                 {/* Warning Messages */}
@@ -168,7 +168,7 @@ const CurriculumBasicInfo = forwardRef(({
             {/* Course Description */}
             <div className="mb-3">
                 <label className="form-label">
-                    Course Description
+                    Deskripsi Kursus
                     <span className="text-danger">*</span>
                     {warnings?.description?.length > 0 && <span className="text-warning">*</span>}
                 </label>
@@ -177,9 +177,9 @@ const CurriculumBasicInfo = forwardRef(({
                     <Suspense fallback={
                         <div className="text-center py-4">
                             <div className="spinner-border text-primary spinner-border-sm" role="status">
-                                <span className="visually-hidden">Loading...</span>
+                                <span className="visually-hidden">Memuat...</span>
                             </div>
-                            <span className="ms-2 text-muted">Loading content editor...</span>
+                            <span className="ms-2 text-muted">Memuat editor konten...</span>
                         </div>
                     }>
                         <CKEditor
@@ -198,7 +198,7 @@ const CurriculumBasicInfo = forwardRef(({
                                     "|",
                                     "undo", "redo"
                                 ],
-                                placeholder: "Write a brief summary of your course..."
+                                placeholder: "Tulis ringkasan singkat tentang kursus Anda..."
                             }}
                         />
                     </Suspense>
@@ -206,9 +206,9 @@ const CurriculumBasicInfo = forwardRef(({
                 
                 {/* Character count */}
                 <div className="d-flex justify-content-between align-items-center mt-1">
-                    <small className="text-muted">A brief summary of your course content and learning objectives.</small>
+                    <small className="text-muted">Ringkasan singkat tentang konten kursus dan tujuan pembelajaran Anda.</small>
                     <small className="text-muted">
-                        {getCharacterCount(courseData?.description)} characters
+                        {getCharacterCount(courseData?.description)} karakter
                     </small>
                 </div>
                 

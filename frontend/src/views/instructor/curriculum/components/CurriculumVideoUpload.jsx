@@ -21,8 +21,8 @@ const CurriculumVideoUpload = ({
         if (!validTypes.includes(file.type)) {
             Toast().fire({
                 icon: "error",
-                title: "Invalid File Type",
-                text: "Please upload a valid video file (MP4, AVI, MOV, or WMV)",
+                title: "Jenis File Tidak Valid",
+                text: "Silakan unggah file video yang valid (MP4, AVI, MOV, atau WMV)",
             });
             event.target.value = '';
             return;
@@ -31,8 +31,8 @@ const CurriculumVideoUpload = ({
         if (file.size > 100 * 1024 * 1024) { // 100MB
             Toast().fire({
                 icon: "error",
-                title: "File Too Large",
-                text: "Please upload a video smaller than 100MB",
+                title: "File Terlalu Besar",
+                text: "Silakan unggah video dengan ukuran lebih kecil dari 100MB",
             });
             event.target.value = '';
             return;
@@ -59,8 +59,8 @@ const CurriculumVideoUpload = ({
                 
                 Toast().fire({
                     icon: "success",
-                    title: "Video Uploaded",
-                    text: "Course intro video uploaded successfully!",
+                    title: "Video Diunggah",
+                    text: "Video pengantar kursus berhasil diunggah!",
                     timer: 2000,
                     showConfirmButton: false
                 });
@@ -69,8 +69,8 @@ const CurriculumVideoUpload = ({
             console.error("Error uploading video:", error);
             Toast().fire({
                 icon: "error",
-                title: "Upload Failed",
-                text: error.response?.data?.message || "Failed to upload video. Please try again.",
+                title: "Unggahan Gagal",
+                text: error.response?.data?.message || "Gagal mengunggah video. Silakan coba lagi.",
             });
         } finally {
             setFileLoading(false);

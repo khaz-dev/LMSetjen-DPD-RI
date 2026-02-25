@@ -10,6 +10,60 @@
     will-change: transform, opacity !important;
     transform: translateZ(0) !important;
     backface-visibility: hidden !important;
+    position: relative !important;
+    padding-right: 48px !important;
+}
+
+/* ✨ PHASE 4.82: Modal dialog variant of modern-toast with proper centering */
+.modern-toast-dialog {
+    padding-right: 0 !important;  /* Remove padding-right used for toast close buttons */
+    text-align: center !important;
+}
+
+.modern-toast-dialog .swal2-icon {
+    margin: 0 auto 1rem auto !important;  /* Center the icon */
+}
+
+.modern-swal-title {
+    text-align: center !important;
+    margin: 0 auto !important;
+}
+
+.modern-swal-html {
+    text-align: center !important;
+}
+
+/* ✨ PHASE 4.58: Toast Close Button Styling */
+.toast-close-btn {
+    position: absolute !important;
+    right: 8px !important;
+    top: 8px !important;
+    background: transparent !important;
+    border: none !important;
+    color: #718096 !important;
+    font-size: 20px !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    border-radius: 6px !important;
+    opacity: 0.8 !important;
+    font-weight: bold !important;
+    outline: none !important;
+}
+
+.toast-close-btn:hover {
+    opacity: 1 !important;
+    color: #2d3748 !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.toast-close-btn:active {
+    transform: scale(0.95) !important;
 }
 
 .modern-progress-bar {

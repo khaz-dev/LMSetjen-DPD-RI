@@ -11,11 +11,15 @@ import Footer from "../partials/Footer";
 // Custom hooks
 import { useCourseData, useCourseForm, useCourseSubmit, useCategories } from "./hooks/useCourse";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
+import { useDebouncedCallback } from "../../utils/useOptimization";  // ✨ PHASE 4.168: Auto-save utility
 
 // Components
 import ImageUpload from "./components/ImageUpload";
 import VideoUpload from "./components/VideoUpload";
 import FormField from "./components/FormField";
+import CourseFeaturesForm from "./components/CourseFeaturesForm";
+import CourseRequirementsForm from "./components/CourseRequirementsForm";
+import CourseLearningOutcomesForm from "./components/CourseLearningOutcomesForm";
 
 // Lazy load CKEditor component (1.24 MB)
 const RichTextEditor = lazy(() => import("./components/RichTextEditor"));
@@ -31,6 +35,7 @@ import {
     validateLevel, 
     validateAllFields 
 } from "../../utils/courseEditValidation";
+import { getStatusText } from "../../utils/courseUtils";
 import { 
     COURSE_LEVELS, 
     COURSE_STATUS_OPTIONS,
@@ -54,13 +59,16 @@ function CourseEdit() {
     const [isPublishing, setIsPublishing] = useState(false);
     const [canPublish, setCanPublish] = useState(false);
     const [initialCourseData, setInitialCourseData] = useState(null); // Track initial data
+    const [hasRelatedChanges, setHasRelatedChanges] = useState(false); // Track if features/requirements/outcomes were updated
+    const [autoSaveStatus, setAutoSaveStatus] = useState("idle"); // ✨ PHASE 4.168: idle, saving, saved, error
+    const [lastAutoSaveTime, setLastAutoSaveTime] = useState(null); // ✨ PHASE 4.168: Track last auto-save time
     
     const navigate = useNavigate();
     const param = useParams();
     const isCollapsed = useInstructorSidebarCollapse();
 
     // Custom hooks
-    const { courseData, setCourseData, updateCourseData, loading } = useCourseData(param?.course_id);
+    const { courseData, setCourseData, updateCourseData, fetchCourseData, loading, error } = useCourseData(param?.course_id);
     const { categories } = useCategories();
     const { 
         errors, 
@@ -133,14 +141,19 @@ function CourseEdit() {
                           Array.isArray(courseData.quizzes) && 
                           courseData.quizzes.length > 0;
         
-        // Course must have curriculum, lessons, AND quizzes to publish
-        const meetsPublishRequirements = hasCurriculum && hasLessons && hasQuizzes;
+        // ✨ PHASE 4.70: Check that instructor WANTS to publish the course
+        // If they select "Draft" or "Disabled", button should be disabled
+        const wantsToPublish = courseData?.teacher_course_status === "Published";
+        
+        // Course must have curriculum, lessons, quizzes, AND instructor must want to publish
+        const meetsPublishRequirements = hasCurriculum && hasLessons && hasQuizzes && wantsToPublish;
         
         setCanPublish(meetsPublishRequirements);
     }, [courseData]);
 
-    // Track form changes for dirty state - only if actual data changed
-    const trackFormChanges = useCallback(() => {
+    // ✨ PHASE 4.51: Track form changes for dirty state using useEffect instead of setTimeout
+    // This fixes the stale closure bug where courseData wasn't updated in time
+    useEffect(() => {
         if (!initialCourseData) {
             return;
         }
@@ -148,10 +161,61 @@ function CourseEdit() {
         // Compare current data with initial data to detect real changes
         const hasRealChanges = JSON.stringify(courseData) !== JSON.stringify(initialCourseData);
         
-        if (hasRealChanges !== isDirty) {
-            setIsDirty(hasRealChanges);
+        setIsDirty(hasRealChanges);
+    }, [courseData, initialCourseData]);
+
+    // ✨ PHASE 4.168: Debounced auto-save function
+    // Automatically saves course changes without user interaction
+    const debouncedAutoSave = useDebouncedCallback(async () => {
+        // Skip auto-save if:
+        // - No changes (isDirty is false)
+        // - Already submitting
+        // - Course data is not loaded
+        // - Still loading course data
+        if (!isDirty || submitStatus === "submitting" || !courseData?.id || !initialCourseData) {
+            return;
         }
-    }, [courseData, initialCourseData, isDirty]);
+
+        try {
+            console.log('[CourseEdit.debouncedAutoSave] Auto-saving course...');
+            setAutoSaveStatus("saving");
+            
+            // Use existing submit logic but silently
+            await submitCourse(
+                courseData, 
+                param?.course_id,
+                (data) => {
+                    // Success
+                    console.log('[CourseEdit.debouncedAutoSave] ✅ Auto-save successful');
+                    setCourseData(data);
+                    setInitialCourseData(JSON.parse(JSON.stringify(data)));
+                    setIsDirty(false);
+                    setAutoSaveStatus("saved");
+                    setLastAutoSaveTime(new Date());
+                    
+                    // Show saved indicator briefly, then clear
+                    setTimeout(() => {
+                        setAutoSaveStatus("idle");
+                    }, 2000);
+                }
+            );
+        } catch (error) {
+            console.error('[CourseEdit.debouncedAutoSave] ❌ Error:', error);
+            setAutoSaveStatus("error");
+            
+            // Retry after 5 seconds on error
+            setTimeout(() => {
+                setAutoSaveStatus("idle");
+            }, 5000);
+        }
+    }, 2000, [isDirty, submitStatus, courseData, initialCourseData, submitCourse, param?.course_id, setCourseData]);
+
+    // ✨ PHASE 4.168: Trigger auto-save when isDirty becomes true
+    useEffect(() => {
+        if (isDirty && autoSaveStatus !== "saving") {
+            debouncedAutoSave();
+        }
+    }, [isDirty, autoSaveStatus, debouncedAutoSave]);
 
     // Validation wrapper to use the imported validation functions
     const handleFieldValidation = (fieldName, value) => {
@@ -186,14 +250,14 @@ function CourseEdit() {
         validateFormField(fieldName, actualValue, validationFunction);
     };
 
-    // Enhanced form input changes with dirty tracking
+    // Enhanced form input changes with dirty tracking (now automatic via useEffect)
     const handleCourseInputChange = (event) => {
         const { name, value } = event.target;
         updateCourseData({ [name]: value });
         handleFieldValidation(name, value);
         
-        // Defer dirty check to next tick so state updates first
-        setTimeout(() => trackFormChanges(), 0);
+        // ✨ PHASE 4.51: Dirty tracking now happens automatically in useEffect above
+        // This fixes stale closure issues from setTimeout
         
         // Reset submit status when user makes changes after an error
         if (submitStatus === "error") {
@@ -202,13 +266,12 @@ function CourseEdit() {
         }
     };
 
-    // Enhanced description change handling
+    // Enhanced description change handling (dirty tracking now automatic via useEffect)
     const handleDescriptionChange = (content) => {
         updateCourseData({ description: content });
         handleFieldValidation("description", content);
         
-        // Defer dirty check to next tick so state updates first
-        setTimeout(() => trackFormChanges(), 0);
+        // ✨ PHASE 4.51: Dirty tracking now happens automatically in useEffect
         
         if (submitStatus === "error") {
             setSubmitStatus("idle");
@@ -219,6 +282,12 @@ function CourseEdit() {
     // Enhanced form submission with comprehensive error handling
     const handleCourseSubmit = async (event) => {
         event.preventDefault();
+        
+        // 🎯 PHASE 4.57: Debug log - Check current state when form is submitted
+        console.log('[CourseEdit.handleCourseSubmit] Form submitted');
+        console.log('[CourseEdit.handleCourseSubmit] Current isDirty state:', isDirty);
+        console.log('[CourseEdit.handleCourseSubmit] Current hasRelatedChanges state:', hasRelatedChanges);
+        console.log('[CourseEdit.handleCourseSubmit] Current courseData:', courseData);
         
         // Set submitting state immediately
         setSubmitStatus("submitting");
@@ -270,26 +339,53 @@ function CourseEdit() {
             // Update submit message for actual submission
             setSubmitMessage("Menyimpan pembaruan kursus Anda...");
 
+            console.log('[CourseEdit] Submitting course with hasRelatedChanges:', hasRelatedChanges);
             await submitCourse(
                 courseData, 
                 param?.course_id,
                 (data) => {
                     // Enhanced success callback
+                    console.log('[CourseEdit] Success callback - resetting hasRelatedChanges');
                     setSubmitStatus("success");
                     setSubmitMessage("Kursus berhasil diperbarui!");
                     setIsDirty(false);
+                    setHasRelatedChanges(false); // ✨ PHASE 4.56: Reset flag after successful submission
+                    
+                    // ✨ CRITICAL FIX: Immediately update courseData with response from backend
+                    // This ensures the UI instantly reflects status changes (Review, Published, Rejected, etc.)
+                    // Previously, the UI would show stale status until async fetchCourseData() completed
+                    setCourseData(data);
                     
                     // Update initial data to current data after successful save
-                    setInitialCourseData(JSON.parse(JSON.stringify(courseData)));
+                    setInitialCourseData(JSON.parse(JSON.stringify(data)));
                     
-                    Toast().fire({
-                        icon: "success",
-                        title: "Kursus Diperbarui!",
-                        text: "Kursus Anda telah berhasil diperbarui dan disimpan.",
-                        timer: 4000,
-                        timerProgressBar: true,
-                        showConfirmButton: false
-                    });
+                    // ✨ PHASE 4.43.11: Handle status change when published course is updated
+                    const statusChanged = data?.platform_status === "Review" && courseData?.platform_status === "Published";
+                    
+                    if (statusChanged) {
+                        // Course was published and has been reset to Review for re-approval
+                        Toast().fire({
+                            icon: "info",
+                            title: "Status Diubah ke Menunggu Review",
+                            text: "Kursus Anda yang telah dipublikasikan telah kembali ke status 'Menunggu Review dari Admin' karena ada perubahan. Admin akan meninjau kembali sebelum kursus tersedia untuk siswa.",
+                            timer: 5000,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        });
+                        
+                        // Optionally refresh to ensure consistency with any other updates
+                        // But the UI will immediately update from setCourseData(data) above
+                    } else {
+                        // Regular update success
+                        Toast().fire({
+                            icon: "success",
+                            title: "Kursus Diperbarui!",
+                            text: "Kursus Anda telah berhasil diperbarui dan disimpan.",
+                            timer: 4000,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        });
+                    }
 
                     // Reset to idle after showing success
                     setTimeout(() => {
@@ -324,7 +420,8 @@ function CourseEdit() {
                         showConfirmButton: true,
                         confirmButtonText: "Coba Lagi"
                     });
-                }
+                },
+                hasRelatedChanges  // ✨ PHASE 4.56: Pass flag indicating features/requirements/outcomes were updated
             );
         } catch (error) {
             console.error("Submission error:", error);
@@ -342,7 +439,46 @@ function CourseEdit() {
             });
         }
     };
-    
+
+    // ✨ PHASE 4.167: Auto-save course after video deletion or other immediate updates
+    // Saves without full validation to persist state changes
+    // ✨ PHASE 4.176: Wrap autoSaveCourse in useCallback to prevent unnecessary re-renders of child components
+    const autoSaveCourse = useCallback(async () => {
+        try {
+            console.log('[CourseEdit] Auto-saving course after video deletion...');
+            setSubmitMessage("Menyimpan pembaruan kursus...");
+            
+            await submitCourse(
+                courseData, 
+                param?.course_id,
+                (data) => {
+                    console.log('[CourseEdit] Auto-save successful');
+                    setCourseData(data);
+                    setInitialCourseData(JSON.parse(JSON.stringify(data)));
+                    setIsDirty(false);
+                    
+                    Toast().fire({
+                        icon: "success",
+                        title: "Kursus Disimpan",
+                        text: "Perubahan telah disimpan otomatis",
+                        timer: 1500,
+                        showConfirmButton: false,
+                        position: "bottom-end"
+                    });
+                }
+            );
+        } catch (error) {
+            console.error('[CourseEdit] Error in auto-save:', error);
+            Toast().fire({
+                icon: "warning",
+                title: "Gagal Menyimpan Otomatis",
+                text: "Silakan klik 'Simpan' untuk menyimpan secara manual",
+                timer: 2000,
+                position: "bottom-end"
+            });
+        }
+    }, [courseData, param?.course_id, submitCourse]);
+
     // Handle course publishing with comprehensive validation
     const handlePublishCourse = async () => {
         // Pre-publish validation
@@ -386,32 +522,55 @@ function CourseEdit() {
             return;
         }
         
+        // ✨ PHASE 4.36: Updated workflow - submit for publication approval
+        // ✨ PHASE 4.71: Enhanced for republication of published courses
+        const isRepublication = courseData?.platform_status === "Published";
         const result = await Swal.fire({
-            title: "Terbitkan Kursus?",
+            title: isRepublication ? "Ajukan Perubahan Kursus untuk Publikasi?" : "Ajukan Kursus untuk Publikasi?",
             html: `
                 <div class="text-start">
-                    <p class="mb-3">Apakah Anda siap untuk menerbitkan <strong>"${courseData?.title}"</strong>?</p>
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <strong>Kursus Anda mencakup:</strong>
-                        <ul class="mt-2 mb-0">
-                            <li><i class="fas fa-check text-success me-1"></i> ${curriculumCount} bagian kurikulum${curriculumCount !== 1 ? "" : ""}</li>
-                            <li><i class="fas fa-check text-success me-1"></i> ${lecturesCount} pelajaran${lecturesCount !== 1 ? "" : ""}</li>
-                            <li><i class="fas fa-check text-success me-1"></i> ${quizzesCount} kuis${quizzesCount !== 1 ? "" : ""}</li>
-                        </ul>
+                    ${isRepublication ? `
+                        <p class="mb-3">Apakah Anda siap untuk mengajukan perubahan pada <strong>"${courseData?.title}"</strong> untuk persetujuan publikasi dari admin?</p>
+                        <div class="alert alert-success">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Informasi Update Publikasi:</strong>
+                            <ul class="mt-2 mb-0 small">
+                                <li><i class="fas fa-cloud-upload-alt me-1"></i> Perubahan Anda akan diajukan untuk persetujuan admin</li>
+                                <li><i class="fas fa-sync me-1"></i> Admin akan meninjau perubahan dan konten terbaru</li>
+                                <li><i class="fas fa-check-circle me-1"></i> Jika disetujui, perubahan akan langsung berlaku untuk siswa</li>
+                                <li><i class="fas fa-history me-1"></i> Kursus tetap dapat diakses siswa selama proses review</li>
+                            </ul>
+                        </div>
+                    ` : `
+                        <p class="mb-3">Apakah Anda siap untuk mengajukan <strong>"${courseData?.title}"</strong> untuk persetujuan publikasi dari admin?</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Alur Persetujuan Publikasi:</strong>
+                            <ul class="mt-2 mb-0 small">
+                                <li><i class="fas fa-paper-plane me-1"></i> Kursus Anda akan diajukan untuk persetujuan publikasi</li>
+                                <li><i class="fas fa-clock me-1"></i> Admin akan meninjau konten dan kualitas kursus Anda</li>
+                                <li><i class="fas fa-check-circle me-1"></i> Jika disetujui, kursus akan dipublikasikan dan tersedia untuk siswa</li>
+                                <li><i class="fas fa-times-circle me-1"></i> Jika ditolak, Anda akan menerima alasan penolakan untuk diperbaiki</li>
+                            </ul>
+                        </div>
+                    `}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Catatan:</strong>
+                        <p class="mb-0 mt-1 small">Pastikan kursus Anda sudah lengkap dengan kurikulum, pelajaran, dan kuis berkualitas untuk meningkatkan peluang persetujuan publikasi.</p>
                     </div>
-                    <p class="text-muted mb-0"><small>Setelah diterbitkan, siswa akan dapat mendaftar di kursus Anda.</small></p>
                 </div>
             `,
             icon: "question",
             showCancelButton: true,
-            confirmButtonColor: "#4CAF50",
+            confirmButtonColor: "#2196F3",
             cancelButtonColor: "#6c757d",
-            confirmButtonText: "Ya, Terbitkan Kursus",
+            confirmButtonText: isRepublication ? "Ya, Ajukan Perubahan untuk Publikasi" : "Ya, Ajukan Publikasi Kursus",
             cancelButtonText: "Belum",
             width: 600
         });
         
+        // ✨ PHASE 4.36: Submit for review workflow
         if (result.isConfirmed) {
             setIsPublishing(true);
             try {
@@ -422,56 +581,77 @@ function CourseEdit() {
                     setCourseData({
                         ...courseData,
                         teacher_course_status: "Published",
-                        platform_status: "Published"
+                        platform_status: "Review"
                     });
                     
                     await Swal.fire({
-                        title: "Kursus Diterbitkan!",
+                        title: isRepublication ? "Perubahan Kursus Diajukan!" : "Kursus Diajukan untuk Publikasi!",
                         html: `
                             <div class="text-start">
-                                <p class="mb-3"><strong>"${courseData?.title}"</strong> sekarang aktif!</p>
-                                <div class="alert alert-success">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    <strong>Kursus Anda siap:</strong>
-                                    <ul class="mt-2 mb-0">
-                                        <li>${response.data.course.curriculum_sections} bagian kurikulum</li>
-                                        <li>${response.data.course.lessons} pelajaran</li>
-                                        <li>Diterbitkan dan tersedia untuk siswa</li>
-                                    </ul>
-                                </div>
-                                ${response.data.warnings && response.data.warnings.length > 0 ? `
-                                    <div class="alert alert-warning mt-2">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        <strong>Saran:</strong>
-                                        <ul class="mt-2 mb-0">
-                                            ${response.data.warnings.map(w => `<li>${w}</li>`).join("")}
+                                ${isRepublication ? `
+                                    <p class="mb-3">Perubahan <strong>"${courseData?.title}"</strong> telah berhasil diajukan untuk persetujuan admin.</p>
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <strong>Status Update:</strong>
+                                        <ul class="mt-2 mb-0 small">
+                                            <li>✓ Perubahan Anda sedang ditinjau oleh admin</li>
+                                            <li>✓ Kursus tetap dapat diakses siswa selama proses review</li>
+                                            <li>⏳ Menunggu persetujuan publikasi dari admin</li>
                                         </ul>
                                     </div>
-                                ` : ""}
+                                    <div class="alert alert-info mt-2">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Apa yang terjadi selanjutnya?</strong>
+                                        <ol class="mt-2 mb-0 small" style="padding-left: 1.5rem;">
+                                            <li>Admin akan meninjau perubahan konten kursus Anda</li>
+                                            <li>Anda akan menerima notifikasi tentang persetujuan atau permintaan revisi</li>
+                                            <li>Jika disetujui, perubahan akan langsung diterapkan untuk semua siswa</li>
+                                            <li>Jika perlu perbaikan, kami akan memberikan feedback spesifik</li>
+                                        </ol>
+                                    </div>
+                                ` : `
+                                    <p class="mb-3"><strong>"${courseData?.title}"</strong> telah berhasil diajukan untuk persetujuan publikasi.</p>
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-paper-plane me-2"></i>
+                                        <strong>Status Terbaru:</strong>
+                                        <ul class="mt-2 mb-0 small">
+                                            <li>✓ ${response.data.course.curriculum_sections} bagian kurikulum</li>
+                                            <li>✓ ${response.data.course.lessons} pelajaran</li>
+                                            <li>⏳ Menunggu persetujuan publikasi dari admin</li>
+                                        </ul>
+                                    </div>
+                                    <div class="alert alert-info mt-2">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Apa yang terjadi selanjutnya?</strong>
+                                        <ol class="mt-2 mb-0 small" style="padding-left: 1.5rem;">
+                                            <li>Admin akan meninjau konten dan kualitas kursus Anda</li>
+                                            <li>Anda akan menerima notifikasi saat keputusan dibuat</li>
+                                            <li>Jika disetujui, kursus akan langsung dipublikasikan dan tersedia untuk siswa</li>
+                                            <li>Jika perlu perbaikan, kami akan memberikan feedback spesifik</li>
+                                        </ol>
+                                    </div>
+                                `}
                             </div>
                         `,
                         icon: "success",
-                        showCancelButton: true,
-                        confirmButtonText: "Lihat Kursus",
-                        cancelButtonText: "Tetap di Sini",
-                        confirmButtonColor: "#4CAF50"
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = `/course-detail/${courseData?.slug}/`;
-                        }
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#2196F3"
                     });
+                    
+                    // Refresh course data to show new status
+                    fetchCourseData();
                 } else {
-                    throw new Error(response.data.message || "Gagal menerbitkan kursus");
+                    throw new Error(response.data.message || "Gagal mengajukan kursus untuk review");
                 }
             } catch (error) {
-                console.error("Error publishing course:", error);
+                console.error("Error submitting course for review:", error);
                 const errorData = error.response?.data;
                 
                 await Swal.fire({
-                    title: "Tidak Dapat Menerbitkan Kursus",
+                    title: "Tidak Dapat Mengajukan Kursus untuk Review",
                     html: `
                         <div class="text-start">
-                            <p class="mb-3">${errorData?.message || "Gagal menerbitkan kursus"}</p>
+                            <p class="mb-3">${errorData?.message || "Gagal mengajukan kursus untuk review"}</p>
                             ${errorData?.errors && errorData.errors.length > 0 ? `
                                 <div class="alert alert-danger">
                                     <i class="fas fa-exclamation-circle me-2"></i>
@@ -484,7 +664,7 @@ function CourseEdit() {
                             ${errorData?.warnings && errorData.warnings.length > 0 ? `
                                 <div class="alert alert-warning mt-2">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
-                                    <strong>Saran:</strong>
+                                    <strong>Rekomendasi:</strong>
                                     <ul class="mt-2 mb-0">
                                         ${errorData.warnings.map(w => `<li>${w}</li>`).join("")}
                                     </ul>
@@ -500,6 +680,155 @@ function CourseEdit() {
             }
         }
     };
+
+    // ✨ PHASE 4.74: Handle course restore to published state
+    const handleRestoreCourse = async () => {
+        if (!courseData?.id) {
+            Toast().fire({
+                icon: "error",
+                title: "Error",
+                text: "Course ID not found",
+                timer: 2000
+            });
+            return;
+        }
+
+        // Confirm restore action
+        const result = await Swal.fire({
+            title: "Kembalikan Kursus ke Versi Terpublikasi?",
+            html: `
+                <div class="text-start">
+                    <p class="mb-3">Apakah Anda yakin ingin mengembalikan <strong>"${courseData?.title}"</strong> ke versi yang dipublikasikan terakhir?</p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Peringatan:</strong>
+                        <p class="mb-0 mt-2 small">
+                            Semua perubahan yang Anda buat sejak kursus dipublikasikan akan dihapus dan tidak dapat dipulihkan.
+                            Ini termasuk:
+                        </p>
+                        <ul class="mt-2 mb-0 small">
+                            <li>Perubahan kurikulum dan pelajaran</li>
+                            <li>Perubahan kuis dan pertanyaan</li>
+                            <li>Perubahan metadata kursus (judul, deskripsi, dll)</li>
+                        </ul>
+                    </div>
+                    <div class="alert alert-info mt-2">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Tindakan ini tidak dapat dibatalkan!</strong>
+                    </div>
+                </div>
+            `,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Ya, Kembalikan",
+            cancelButtonText: "Batal"
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        setIsPublishing(true);
+        try {
+            const response = await useAxios.post(`teacher/course-restore/${param?.course_id}/`);
+            
+            if (response.data.success) {
+                // Update local course data with restored content
+                setCourseData({
+                    ...courseData,
+                    ...response.data.course,
+                    platform_status: response.data.course.platform_status || "Published"
+                });
+
+                await Swal.fire({
+                    title: "Kursus Berhasil Dikembalikan!",
+                    html: `
+                        <div class="text-start">
+                            <p class="mb-3"><strong>"${response.data.course.title}"</strong> telah berhasil dikembalikan ke versi yang dipublikasikan.</p>
+                            <div class="alert alert-success">
+                                <i class="fas fa-undo me-2"></i>
+                                <strong>Konten yang Dikembalikan:</strong>
+                                <ul class="mt-2 mb-0 small">
+                                    <li>✓ ${response.data.course.curriculum_count} bagian kurikulum</li>
+                                    <li>✓ ${response.data.course.lessons_count} pelajaran</li>
+                                    <li>✓ ${response.data.course.quizzes_count} kuis</li>
+                                    <li>✓ Metadata kursus</li>
+                                </ul>
+                            </div>
+                            <p class="text-muted small mb-0 mt-3">
+                                Kursus Anda kembali ke status <strong>Published</strong> dan siap diakses siswa.
+                            </p>
+                        </div>
+                    `,
+                    icon: "success",
+                    confirmButtonText: "OK",
+                    confirmButtonColor: "#2196F3"
+                });
+
+                // Refresh course data
+                fetchCourseData();
+            } else {
+                throw new Error(response.data.message || "Gagal mengembalikan kursus");
+            }
+        } catch (error) {
+            console.error("Error restoring course:", error);
+            
+            await Swal.fire({
+                title: "Gagal Mengembalikan Kursus",
+                html: `
+                    <div class="text-start">
+                        <p class="mb-0">${error.response?.data?.message || error.message || "Gagal mengembalikan kursus"}</p>
+                    </div>
+                `,
+                icon: "error",
+                confirmButtonText: "OK"
+            });
+        } finally {
+            setIsPublishing(false);
+        }
+    };
+
+    // ✨ PHASE 4.76: Handle published course error - redirect to courses list
+    useEffect(() => {
+        if (error && error.type === "published_course") {
+            console.log("[CourseEdit] Published course error detected, showing redirect modal");
+            
+            Swal.fire({
+                title: "Kursus Sudah Dipublikasikan",
+                html: `
+                    <div class="text-start">
+                        <p class="mb-3">Kursus ini telah dipublikasikan dan tidak dapat diedit secara langsung.</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Alasan:</strong>
+                            <p class="mb-0 mt-2">Untuk melindungi kursus yang telah dipublikasikan, Anda perlu membuat versi draft terlebih dahulu. Versi draft memungkinkan Anda mengedit kursus tanpa mempengaruhi versi yang dipublikasikan.</p>
+                        </div>
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Cara Mengedit Kursus Dipublikasikan:</strong>
+                            <ol class="mt-2 mb-0 ps-3">
+                                <li>Klik tombol <strong>"Edit Versi Terbaru"</strong> di halaman daftar kursus Anda</li>
+                                <li>Sistem akan membuat versi draft baru untuk Anda</li>
+                                <li>Edit kursus draft tanpa khawatir mempengaruhi versi yang dipublikasikan</li>
+                                <li>Setelah selesai, ajukan untuk persetujuan publikasi ulang</li>
+                            </ol>
+                        </div>
+                    </div>
+                `,
+                icon: "warning",
+                confirmButtonText: "Kembali ke Daftar Kursus",
+                confirmButtonColor: "#3085d6",
+                width: 600,
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then(() => {
+                // Redirect to courses list where they can see the "Edit Versi Terbaru" button
+                navigate("/instructor/courses/");
+            });
+        }
+    }, [error, navigate]);
 
     // Show full-page loading spinner on initial load
     if (loading) {
@@ -517,6 +846,32 @@ function CourseEdit() {
                                         <span className="visually-hidden">Memuat...</span>
                                     </div>
                                     <p className="mt-3 text-muted">Memuat Kursus...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <Footer />
+            </>
+        );
+    }
+
+    // ✨ PHASE 4.76: Don't render form if there's a published course error (redirect is happening)
+    if (error && error.type === "published_course") {
+        return (
+            <>
+                <BaseHeader />
+                <section className="instructor-course-edit-page pt-5 pb-5" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
+                    <div className="container" style={{ flex: 1 }}>
+                        <Header />
+                        <div className="row">
+                            <Sidebar />
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+                                <div className="text-center">
+                                    <div className="spinner-border text-warning" role="status" style={{ width: "3rem", height: "3rem" }}>
+                                        <span className="visually-hidden">Mengalihkan...</span>
+                                    </div>
+                                    <p className="mt-3 text-muted">Mengalihkan Anda ke daftar kursus...</p>
                                 </div>
                             </div>
                         </div>
@@ -591,14 +946,23 @@ function CourseEdit() {
                                             warnings={warnings}
                                             validateField={handleFieldValidation}
                                             imageRef={imageRef}
+                                            onImageChange={() => {
+                                                // ✨ PHASE 4.49: Mark form as dirty when image changes
+                                                setIsDirty(true);
+                                            }}
                                         />
 
                                         <VideoUpload
                                             courseData={courseData}
                                             setCourseData={setCourseData}
-                                            errors={errors}
-                                            warnings={warnings}
-                                            validateField={handleFieldValidation}
+                                            onVideoChange={() => {
+                                                // ✨ PHASE 4.49: Mark form as dirty when video changes
+                                                setIsDirty(true);
+                                            }}
+                                            onVideoDelete={() => {
+                                                // ✨ PHASE 4.167: Auto-save course after video deletion
+                                                autoSaveCourse();
+                                            }}
                                         />
                                     </div>
                                     {/* Basic Information Section */}
@@ -671,25 +1035,30 @@ function CourseEdit() {
                                         <div className="row">
                                             <div className="col-md-6">
                                                 <FormField
-                                                    label="Status Kursus"
+                                                    label="Status Kursus yang Diinginkan"
                                                     name="teacher_course_status"
                                                     type="select"
                                                     value={courseData?.teacher_course_status || "Draft"}
                                                     onChange={handleCourseInputChange}
                                                     options={COURSE_STATUS_OPTIONS}
-                                                    helpText="Kontrol visibilitas kursus"
+                                                    helpText="Akan diterapkan setelah admin menyetujui kursus Anda"
                                                 />
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="mb-3" style={{ marginTop: "32px" }}>
-                                                    <label className="form-label">Status Saat Ini</label>
+                                                    <label className="form-label">Status Persetujuan Saat Ini</label>
                                                     <div className="d-flex align-items-center">
-                                                        <span className={`status-badge ${courseData?.teacher_course_status?.toLowerCase() || "draft"}`}>
+                                                        <span className={`status-badge ${(courseData?.platform_status || "Draft").toLowerCase()}`}>
                                                             <i className={`fas ${
-                                                                courseData?.teacher_course_status === "Published" ? "fa-check-circle" :
-                                                                courseData?.teacher_course_status === "Disabled" ? "fa-times-circle" : "fa-clock"
+                                                                courseData?.platform_status === "Published" ? "fa-check-circle" :
+                                                                courseData?.platform_status === "Review" ? "fa-hourglass-half" :
+                                                                courseData?.platform_status === "Rejected" ? "fa-times-circle" :
+                                                                courseData?.platform_status === "Disabled" ? "fa-times-circle" : "fa-clock"
                                                             } me-1`}></i>
-                                                            {courseData?.teacher_course_status || "Draft"}
+                                                            {courseData?.platform_status === "Review" ? "Menunggu Persetujuan Admin" :
+                                                             courseData?.platform_status === "Rejected" ? "Ditolak" :
+                                                             courseData?.platform_status === "Published" ? "Disetujui" :
+                                                             courseData?.platform_status === "Disabled" ? "Dinonaktifkan" : "Draf"}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -723,27 +1092,47 @@ function CourseEdit() {
                                                 helpText="Berikan ringkasan komprehensif tentang konten kursus Anda dan hasil pembelajaran"
                                             />
                                         </Suspense>
-                                        
-                                        {/* Manage Curriculum Button */}
-                                        <div className="d-flex justify-content-left mt-4 gap-3">
-                                            <Link 
-                                                to={`/instructor/edit-course/${param?.course_id}/curriculum/`} 
-                                                className="btn btn-update-course"
-                                            
-                                            >
-                                                <i className="fas fa-list me-2"></i>
-                                                Kelola Kurikulum
-                                            </Link>
-                                            <Link 
-                                                to={`/instructor/edit-course/${param?.course_id}/quiz/`} 
-                                                className="btn btn-update-course"
-                                                style={{ background: "linear-gradient(135deg, #e67e22 0%, #d35400 100%)" }}
-                                            >
-                                                <i className="fas fa-question-circle me-2"></i>
-                                                Kelola Kuis
-                                            </Link>
-                                        </div>
                                     </div>
+
+                                    {/* ✨ PHASE 4.45: Course Features, Requirements, and Learning Outcomes */}
+                                    {/* ✨ PHASE 4.47: Enable Perbarui Kursus button when nested forms update */}
+                                    <CourseFeaturesForm 
+                                        courseId={param?.course_id}
+                                        onFeaturesUpdate={() => {
+                                            // ✨ PHASE 4.48: Mark form as dirty to enable "Perbarui Kursus" button
+                                            // Features are saved via API immediately, but we need to mark course as modified
+                                            // When user clicks "Perbarui Kursus", the course will be validated and updated
+                                            // This ensures the save button is visible when features are added/edited/deleted
+                                            setIsDirty(true);
+                                            // ✨ PHASE 4.56: Mark that related models were updated for status reset detection
+                                            console.log('[CourseEdit] Feature updated - setting hasRelatedChanges to true');
+                                            setHasRelatedChanges(true);
+                                        }}
+                                    />
+
+                                    <CourseRequirementsForm 
+                                        courseId={param?.course_id}
+                                        onRequirementsUpdate={() => {
+                                            // ✨ PHASE 4.48: Mark form as dirty to enable "Perbarui Kursus" button
+                                            // Requirements are saved via API immediately, but we need to mark course as modified
+                                            setIsDirty(true);
+                                            // ✨ PHASE 4.56: Mark that related models were updated for status reset detection
+                                            console.log('[CourseEdit] Requirement updated - setting hasRelatedChanges to true');
+                                            setHasRelatedChanges(true);
+                                        }}
+                                    />
+
+                                    <CourseLearningOutcomesForm 
+                                        courseId={param?.course_id}
+                                        onOutcomesUpdate={() => {
+                                            // ✨ PHASE 4.48: Mark form as dirty to enable "Perbarui Kursus" button
+                                            // Learning outcomes are saved via API immediately, but we need to mark course as modified
+                                            setIsDirty(true);
+                                            // ✨ PHASE 4.56: Mark that related models were updated for status reset detection
+                                            console.log('[CourseEdit] Learning outcome updated - setting hasRelatedChanges to true');
+                                            setHasRelatedChanges(true);
+                                        }}
+                                    />
 
                             {/* Enhanced Action Buttons Section */}
                             <div className="form-section">
@@ -827,72 +1216,203 @@ function CourseEdit() {
 
                                 {/* Enhanced Action Buttons */}
                                 <div className="action-buttons d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
-                                    <div className="form-status-info">
-                                        {isDirty && submitStatus !== "submitting" && (
-                                            <div className="text-warning small">
-                                                <i className="fas fa-circle me-1"></i>
-                                                Anda memiliki perubahan yang belum disimpan
-                                            </div>
+                                    {/* ✨ PHASE 4.169: Preview Buttons Section (Left) */}
+                                    <div className="preview-buttons d-flex flex-wrap gap-2 align-items-center">
+                                        {/* Preview Published Version Button */}
+                                        {courseData?.platform_status === "Published" && (
+                                            <Link 
+                                                to={`/course-detail/${courseData?.slug}/`}
+                                                target="_blank"
+                                                className="btn btn-outline-success"
+                                                disabled={submitStatus === "submitting" || autoSaveStatus === "saving"}
+                                                title="Lihat versi kursus yang telah dipublikasikan"
+                                            >
+                                                <i className="fas fa-eye me-2"></i>
+                                                Pratinjau Publis
+                                            </Link>
                                         )}
-                                        {!isDirty && submitStatus === "idle" && (
-                                            <div className="text-muted small">
-                                                <i className="fas fa-save me-1"></i>
-                                                Semua perubahan tersimpan
-                                            </div>
-                                        )}
-                                    </div>
-                                    
-                                    <div className="button-group d-flex flex-wrap gap-2 justify-content-end">
-                                        {/* Preview Button */}
+                                        
+                                        {/* Preview Draft Version Button */}
                                         <Link 
-                                            to={`/course-detail/${courseData?.slug}/`}
+                                            to={`/course-detail/${courseData?.slug}/?draft=true`}
                                             target="_blank"
                                             className="btn btn-outline-primary"
-                                            disabled={submitStatus === "submitting"}
+                                            disabled={submitStatus === "submitting" || autoSaveStatus === "saving"}
+                                            title="Lihat versi draft kursus"
                                         >
                                             <i className="fas fa-eye me-2"></i>
-                                            Pratinjau Kursus
+                                            Pratinjau Draf
                                         </Link>
-                                        
-                                        {/* Enhanced Update Course Button */}
-                                        <button 
-                                            className={`btn btn-update-course ${submitStatus}`}
-                                            type="submit"
-                                            disabled={
-                                                isSubmitting || 
-                                                submitStatus === "submitting" || 
-                                                validationSummary.errors.length > 0
-                                            }
-                                        >
-                                            <div className="button-content d-flex align-items-center justify-content-center">
-                                                {submitStatus === "submitting" ? (
-                                                    <>
-                                                        <div className="spinner-border spinner-border-sm me-2"></div>
-                                                        <span className="button-text">
-                                                            {submitMessage.includes("Validating") ? "Memvalidasi..." : 
-                                                             submitMessage.includes("Saving") ? "Menyimpan..." : "Memperbarui..."}
+                                    </div>
+
+                                    {/* ✨ PHASE 4.169: Status Info and Management Buttons (Right) */}
+                                    <div className="form-status-and-actions d-flex flex-column flex-sm-row align-items-center gap-3">
+                                        <div className="form-status-info">
+                                            {/* ✨ PHASE 4.168: Auto-save status indicator */}
+                                            {autoSaveStatus === "saving" && (
+                                                <div className="text-info small">
+                                                    <div className="spinner-border spinner-border-sm me-1" style={{ width: '14px', height: '14px', display: 'inline-block' }}></div>
+                                                    Menyimpan perubahan otomatis...
+                                                </div>
+                                            )}
+                                            {autoSaveStatus === "saved" && (
+                                                <div className="text-success small">
+                                                    <i className="fas fa-check-circle me-1"></i>
+                                                    Perubahan tersimpan otomatis
+                                                    {lastAutoSaveTime && (
+                                                        <span className="ms-1 text-muted">
+                                                            pada {lastAutoSaveTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                                         </span>
-                                                    </>
-                                                ) : submitStatus === "success" ? (
-                                                    <>
-                                                        <i className="fas fa-check me-2"></i>
-                                                        <span className="button-text">Berhasil Diperbarui!</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <i className="fas fa-save me-2"></i>
-                                                        <span className="button-text">Perbarui Kursus</span>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {autoSaveStatus === "error" && (
+                                                <div className="text-danger small">
+                                                    <i className="fas fa-exclamation-circle me-1"></i>
+                                                    Gagal menyimpan otomatis, akan dicoba lagi...
+                                                </div>
+                                            )}
+                                            {autoSaveStatus === "idle" && !isDirty && (
+                                                <div className="text-muted small">
+                                                    <i className="fas fa-save me-1"></i>
+                                                    Semua perubahan tersimpan
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* ✨ PHASE 4.169: Management buttons */}
+                                        <div className="management-buttons d-flex flex-wrap gap-2">
+                                            <Link 
+                                                to={`/instructor/edit-course/${param?.course_id}/curriculum/`} 
+                                                className="btn btn-update-course"
+                                                style={{ background: "linear-gradient(135deg, #3498db 0%, #2980b9 100%)" }}
+                                            >
+                                                <i className="fas fa-list me-2"></i>
+                                                Kelola Kurikulum
+                                            </Link>
+                                            <Link 
+                                                to={`/instructor/edit-course/${param?.course_id}/quiz/`} 
+                                                className="btn btn-update-course"
+                                                style={{ background: "linear-gradient(135deg, #e67e22 0%, #d35400 100%)" }}
+                                            >
+                                                <i className="fas fa-question-circle me-2"></i>
+                                                Kelola Kuis
+                                            </Link>
+                                        </div>
                                     </div>
                                 </div>
                                 
-                                {/* Publish Course Button - Separate row, aligned to the right */}
-                                {courseData?.teacher_course_status === "Draft" && (
-                                    <div className="d-flex justify-content-end mt-3">
-                                        <div className="position-relative">
+                                {/* ✨ PHASE 4.36: Status display and submit for review button */}
+                                
+                                {/* Show rejection reason if course was rejected */}
+                                {courseData?.platform_status === "Rejected" && courseData?.rejection_reason && (
+                                    <div className="alert alert-danger mt-3" style={{ marginBottom: "0" }}>
+                                        <div className="d-flex align-items-start">
+                                            <i className="fas fa-times-circle text-danger me-3 mt-1 fs-5"></i>
+                                            <div className="flex-grow-1">
+                                                <h6 className="alert-heading mb-2 fw-bold">
+                                                    <i className="fas fa-exclamation-circle me-2"></i>
+                                                    Kursus Ditolak - Silakan Perbaiki
+                                                </h6>
+                                                <p className="mb-0">
+                                                    <strong>Alasan dari Admin:</strong>
+                                                </p>
+                                                <p className="mb-0 ps-3 border-left mt-2" style={{ borderLeft: "3px solid #dc3545", paddingLeft: "15px" }}>
+                                                    {courseData.rejection_reason}
+                                                </p>
+                                                <p className="text-muted small mt-2 mb-0">
+                                                    Silakan perbaiki masalah yang disebutkan di atas dan ajukan kembali untuk review.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Show pending review status */}
+                                {courseData?.platform_status === "Review" && (
+                                    <div className="alert alert-info mt-3" style={{ marginBottom: "0" }}>
+                                        <div className="d-flex align-items-center">
+                                            <i className="fas fa-hourglass-half text-info me-3"></i>
+                                            <div className="flex-grow-1">
+                                                <h6 className="alert-heading mb-1 fw-bold">Menunggu Persetujuan Admin</h6>
+                                                <small className="text-muted">Kursus Anda sedang dalam proses review. Anda akan menerima notifikasi saat admin selesai meninjau.</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Show published status */}
+                                {courseData?.platform_status === "Published" && (
+                                    <div className="alert alert-success mt-3" style={{ marginBottom: "0" }}>
+                                        <div className="d-flex align-items-center">
+                                            <i className="fas fa-check-circle text-success me-3"></i>
+                                            <div className="flex-grow-1">
+                                                <h6 className="alert-heading mb-1 fw-bold">✓ Kursus Dipublikasikan</h6>
+                                                <small className="text-muted">Kursus Anda telah disetujui dan sekarang tersedia untuk siswa di platform.</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ✨ PHASE 4.71 UPDATED: Buttons aligned horizontally for published courses */}
+                                {courseData?.platform_status === "Published" ? (
+                                    // Show both buttons in a horizontal line for published courses
+                                    <div className="d-flex justify-content-center gap-3 mt-3 w-100 flex-wrap">
+                                        {/* Restore Button */}
+                                        <div className="position-relative d-flex flex-column align-items-center">
+                                            <button 
+                                                type="button"
+                                                className="btn btn-warning"
+                                                onClick={handleRestoreCourse}
+                                                disabled={submitStatus === "submitting"}
+                                                style={{
+                                                    background: "linear-gradient(135deg, #f39c12 0%, #e67e22 100%)",
+                                                    color: "white",
+                                                    border: "none",
+                                                    padding: "12px 30px",
+                                                    borderRadius: "8px",
+                                                    fontWeight: "600",
+                                                    fontSize: "1rem",
+                                                    boxShadow: "0 4px 15px rgba(243, 156, 18, 0.3)",
+                                                    transition: "all 0.3s ease",
+                                                    cursor: submitStatus === "submitting" ? "not-allowed" : "pointer",
+                                                    opacity: submitStatus === "submitting" ? 0.6 : 1,
+                                                    whiteSpace: "nowrap"
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    if (submitStatus !== "submitting") {
+                                                        e.currentTarget.style.transform = "translateY(-2px)";
+                                                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(243, 156, 18, 0.4)";
+                                                    }
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.currentTarget.style.transform = "translateY(0)";
+                                                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(243, 156, 18, 0.3)";
+                                                }}
+                                                title="Kembalikan kursus ke versi yang terakhir dipublikasikan"
+                                            >
+                                                {submitStatus === "submitting" ? (
+                                                    <>
+                                                        <div className="spinner-border spinner-border-sm me-2"></div>
+                                                        <span>Mengembalikan...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-undo me-2"></i>
+                                                        <span>Restore Kursus</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                            {isDirty && (
+                                                <small className="text-muted d-block mt-2" style={{ fontSize: "0.75rem" }}>
+                                                    <i className="fas fa-info-circle me-1"></i>
+                                                    Anda memiliki perubahan yang belum disimpan
+                                                </small>
+                                            )}
+                                        </div>
+
+                                        {/* Submit/Republication Button */}
+                                        <div className="position-relative d-flex flex-column align-items-center">
                                             <button 
                                                 type="button"
                                                 className="btn btn-publish-course"
@@ -900,7 +1420,7 @@ function CourseEdit() {
                                                 disabled={isPublishing || submitStatus === "submitting" || !canPublish}
                                                 style={{
                                                     background: canPublish 
-                                                        ? "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)" 
+                                                        ? "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)" 
                                                         : "linear-gradient(135deg, #9e9e9e 0%, #757575 100%)",
                                                     color: "white",
                                                     border: "none",
@@ -909,7 +1429,76 @@ function CourseEdit() {
                                                     fontWeight: "600",
                                                     fontSize: "1rem",
                                                     boxShadow: canPublish 
-                                                        ? "0 4px 15px rgba(76, 175, 80, 0.3)" 
+                                                        ? "0 4px 15px rgba(33, 150, 243, 0.3)" 
+                                                        : "0 2px 8px rgba(0, 0, 0, 0.1)",
+                                                    transition: "all 0.3s ease",
+                                                    cursor: canPublish ? "pointer" : "not-allowed",
+                                                    opacity: canPublish ? 1 : 0.6,
+                                                    whiteSpace: "nowrap"
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    if (canPublish && !isPublishing && submitStatus !== "submitting") {
+                                                        e.currentTarget.style.transform = "translateY(-2px)";
+                                                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(33, 150, 243, 0.4)";
+                                                    }
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    if (canPublish) {
+                                                        e.currentTarget.style.transform = "translateY(0)";
+                                                        e.currentTarget.style.boxShadow = "0 4px 15px rgba(33, 150, 243, 0.3)";
+                                                    }
+                                                }}
+                                                title={!canPublish ? (
+                                                    courseData?.teacher_course_status !== "Published" 
+                                                        ? "Pilih 'Dipublikasikan' sebagai status yang diinginkan untuk mengajukan publikasi" 
+                                                        : "Tambahkan kurikulum, pelajaran, dan kuis sebelum mengajukan"
+                                                ) : "Ajukan kursus Anda untuk persetujuan publikasi"}
+                                            >
+                                                {isPublishing ? (
+                                                    <>
+                                                        <div className="spinner-border spinner-border-sm me-2"></div>
+                                                        <span>Mengajukan...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className={`fas ${canPublish ? "fa-paper-plane" : "fa-lock"} me-2`}></i>
+                                                        <span>
+                                                            {courseData?.platform_status === "Rejected" ? "Ajukan Ulang Publikasi Kursus" : courseData?.platform_status === "Published" ? "Ajukan Review Publikasi" : "Ajukan Publikasi Kursus"}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </button>
+                                            {!canPublish && (
+                                                <small className="text-muted d-block mt-2" style={{ fontSize: "0.85rem", maxWidth: "400px", color: "#ff9800", fontWeight: "500" }}>
+                                                    <i className="fas fa-exclamation-triangle me-1"></i>
+                                                    {courseData?.teacher_course_status !== "Published" 
+                                                        ? "Pilih 'Dipublikasikan' pada dropdown 'Status Kursus yang Diinginkan' di atas untuk melanjutkan"
+                                                        : "Tambahkan kurikulum, pelajaran & kuis terlebih dahulu"}
+                                                </small>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (courseData?.platform_status === "Draft" || courseData?.platform_status === "Rejected" || courseData?.platform_status === "Review") && (
+                                    // Show only submit button for non-published courses
+                                    <div className="d-flex justify-content-center mt-3 w-100">
+                                        <div className="position-relative d-flex flex-column align-items-center">
+                                            <button 
+                                                type="button"
+                                                className="btn btn-publish-course"
+                                                onClick={handlePublishCourse}
+                                                disabled={isPublishing || submitStatus === "submitting" || !canPublish}
+                                                style={{
+                                                    background: canPublish 
+                                                        ? "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)" 
+                                                        : "linear-gradient(135deg, #9e9e9e 0%, #757575 100%)",
+                                                    color: "white",
+                                                    border: "none",
+                                                    padding: "12px 30px",
+                                                    borderRadius: "8px",
+                                                    fontWeight: "600",
+                                                    fontSize: "1rem",
+                                                    boxShadow: canPublish 
+                                                        ? "0 4px 15px rgba(33, 150, 243, 0.3)" 
                                                         : "0 2px 8px rgba(0, 0, 0, 0.1)",
                                                     transition: "all 0.3s ease",
                                                     cursor: canPublish ? "pointer" : "not-allowed",
@@ -918,36 +1507,92 @@ function CourseEdit() {
                                                 onMouseOver={(e) => {
                                                     if (canPublish && !isPublishing && submitStatus !== "submitting") {
                                                         e.currentTarget.style.transform = "translateY(-2px)";
-                                                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(76, 175, 80, 0.4)";
+                                                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(33, 150, 243, 0.4)";
                                                     }
                                                 }}
                                                 onMouseOut={(e) => {
                                                     if (canPublish) {
                                                         e.currentTarget.style.transform = "translateY(0)";
-                                                        e.currentTarget.style.boxShadow = "0 4px 15px rgba(76, 175, 80, 0.3)";
+                                                        e.currentTarget.style.boxShadow = "0 4px 15px rgba(33, 150, 243, 0.3)";
                                                     }
                                                 }}
-                                                title={!canPublish ? "Tambahkan kurikulum, pelajaran, dan kuis sebelum menerbitkan" : "Terbitkan kursus Anda"}
+                                                title={!canPublish ? (
+                                                    courseData?.teacher_course_status !== "Published" 
+                                                        ? "Pilih 'Dipublikasikan' sebagai status yang diinginkan untuk mengajukan publikasi" 
+                                                        : "Tambahkan kurikulum, pelajaran, dan kuis sebelum mengajukan"
+                                                ) : "Ajukan kursus Anda untuk persetujuan publikasi"}
                                             >
                                                 {isPublishing ? (
                                                     <>
                                                         <div className="spinner-border spinner-border-sm me-2"></div>
-                                                        <span>Menerbitkan...</span>
+                                                        <span>Mengajukan...</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <i className={`fas ${canPublish ? "fa-rocket" : "fa-lock"} me-2`}></i>
-                                                        <span>Terbitkan Kursus</span>
+                                                        <i className={`fas ${canPublish ? "fa-paper-plane" : "fa-lock"} me-2`}></i>
+                                                        <span>
+                                                            {courseData?.platform_status === "Rejected" ? "Ajukan Ulang Publikasi Kursus" : "Ajukan Publikasi Kursus"}
+                                                        </span>
                                                     </>
                                                 )}
                                             </button>
                                             {!canPublish && (
-                                                <small className="text-muted d-block mt-1 text-end" style={{ fontSize: "0.75rem" }}>
-                                                    <i className="fas fa-info-circle me-1"></i>
-                                                    Tambahkan kurikulum, pelajaran & kuis terlebih dahulu
+                                                <small className="text-muted d-block mt-2" style={{ fontSize: "0.85rem", maxWidth: "400px", color: "#ff9800", fontWeight: "500" }}>
+                                                    <i className="fas fa-exclamation-triangle me-1"></i>
+                                                    {courseData?.teacher_course_status !== "Published" 
+                                                        ? "Pilih 'Dipublikasikan' pada dropdown 'Status Kursus yang Diinginkan' di atas untuk melanjutkan"
+                                                        : "Tambahkan kurikulum, pelajaran & kuis terlebih dahulu"}
                                                 </small>
                                             )}
                                         </div>
+                                    </div>
+                                )}
+                                
+                                {/* ✨ PHASE 4.74: Restore Button for Published Courses */}
+                                {courseData?.platform_status === "Published" && courseData?.published_copies && (
+                                    <div className="d-flex justify-content-center mt-3 w-100">
+                                        <button 
+                                            type="button"
+                                            className="btn"
+                                            onClick={handleRestoreCourse}
+                                            disabled={isPublishing}
+                                            style={{
+                                                background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
+                                                color: "white",
+                                                border: "none",
+                                                padding: "12px 25px",
+                                                borderRadius: "8px",
+                                                fontWeight: "600",
+                                                fontSize: "0.95rem",
+                                                boxShadow: "0 4px 15px rgba(255, 152, 0, 0.3)",
+                                                transition: "all 0.3s ease",
+                                                cursor: isPublishing ? "not-allowed" : "pointer",
+                                                opacity: isPublishing ? 0.7 : 1
+                                            }}
+                                            onMouseOver={(e) => {
+                                                if (!isPublishing) {
+                                                    e.currentTarget.style.transform = "translateY(-2px)";
+                                                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(255, 152, 0, 0.4)";
+                                                }
+                                            }}
+                                            onMouseOut={(e) => {
+                                                e.currentTarget.style.transform = "translateY(0)";
+                                                e.currentTarget.style.boxShadow = "0 4px 15px rgba(255, 152, 0, 0.3)";
+                                            }}
+                                            title="Kembalikan kursus ke versi yang dipublikasikan (undo changes)"
+                                        >
+                                            {isPublishing ? (
+                                                <>
+                                                    <div className="spinner-border spinner-border-sm me-2"></div>
+                                                    <span>Memulihkan...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-undo me-2"></i>
+                                                    <span>Restore Kursus</span>
+                                                </>
+                                            )}
+                                        </button>
                                     </div>
                                 )}
                                 

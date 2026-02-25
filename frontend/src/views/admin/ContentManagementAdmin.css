@@ -1,0 +1,1179 @@
+/**
+ * Content Management Admin - Unified Styles
+ * ✨ PHASE 4: Merged component for managing courses, testimonials, and categories
+ * Consolidates styles from CourseReviewAdmin, TestimonialsAdmin, and KelolaMaterialAdmin
+ */
+
+/* ========================================
+   Admin Dashboard Background Fix
+   ======================================== */
+
+/* Override global admin-dashboard gradient with transparent background */
+.admin-dashboard {
+    background: transparent !important;
+    min-height: 100vh;
+}
+
+/* ========================================
+   Root & Container Styles
+   ======================================== */
+
+.content-management-container {
+    width: 100%;
+}
+
+.cm-page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 40px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+}
+
+.cm-page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.cm-page-title i {
+    font-size: 2.25rem;
+}
+
+.cm-page-subtitle {
+    font-size: 1rem;
+    opacity: 0.95;
+    margin: 8px 0 0 0;
+    font-weight: 500;
+}
+
+/* ========================================
+   Tabs Container & Navigation
+   ======================================== */
+
+.cm-tabs-container {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.cm-tabs-header {
+    display: flex;
+    gap: 0;
+    padding: 0;
+    border-bottom: 2px solid #f0f0f0;
+    background: #fafafa;
+}
+
+.cm-tab-button {
+    flex: 1;
+    padding: 20px 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    position: relative;
+}
+
+.cm-tab-button:hover {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.cm-tab-button.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.cm-tab-icon {
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cm-tab-label {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+/* ========================================
+   Tab Description & Content
+   ======================================== */
+
+.cm-tab-description {
+    padding: 20px 40px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.cm-description-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #667eea;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.cm-tabs-content {
+    padding: 40px;
+}
+
+.cm-tab-pane {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.cm-tab-pane.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   Tab Header Styles (Inside Tabs)
+   ======================================== */
+
+.cm-tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.cm-tab-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cm-tab-header h3 i {
+    color: #667eea;
+}
+
+.cm-tab-header p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.cm-tab-stats {
+    display: flex;
+    gap: 15px;
+}
+
+.cm-stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 20px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+}
+
+.cm-stat-number {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #667eea;
+    display: block;
+}
+
+.cm-stat-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========================================
+   Course Review Tab Styles
+   ======================================== */
+
+.cm-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.cm-card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.course-review-card {
+    height: 100%;
+}
+
+.cm-card-header {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.cm-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.cm-card:hover .cm-card-image {
+    transform: scale(1.05);
+}
+
+.cm-status-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    color: #fff;
+}
+
+.cm-status-badge.pending {
+    background: rgba(255, 193, 7, 0.9);
+}
+
+.cm-status-badge.approved {
+    background: rgba(76, 175, 80, 0.9);
+}
+
+.cm-status-badge.rejected {
+    background: rgba(244, 67, 54, 0.9);
+}
+
+.cm-card-body {
+    padding: 20px;
+}
+
+.cm-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.4;
+    margin-bottom: 15px;
+}
+
+.cm-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.cm-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+}
+
+.cm-card-description {
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.cm-card-stats {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.cm-stat-number {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.cm-card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.cm-card-actions .btn {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border: none;
+    color: white !important;
+}
+
+/* Define consistent colors for all action buttons */
+.cm-card-actions .btn-info {
+    background: #2196F3 !important;
+    color: white !important;
+}
+
+.cm-card-actions .btn-info:hover {
+    background: #0b7dda !important;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    color: white !important;
+}
+
+.cm-card-actions .btn-success {
+    background: #4CAF50 !important;
+    color: white !important;
+}
+
+.cm-card-actions .btn-success:hover {
+    background: #45a049 !important;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    color: white !important;
+}
+
+.cm-card-actions .btn-danger {
+    background: #f44336 !important;
+    color: white !important;
+}
+
+.cm-card-actions .btn-danger:hover {
+    background: #da190b !important;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+    color: white !important;
+}
+
+/* Ensure text and icons are always white */
+.cm-card-actions .btn-info,
+.cm-card-actions .btn-success,
+.cm-card-actions .btn-danger {
+    color: white !important;
+}
+
+.cm-card-actions .btn-info *,
+.cm-card-actions .btn-success *,
+.cm-card-actions .btn-danger * {
+    color: white !important;
+}
+
+/* ========================================
+   Testimonial Tab Styles
+   ======================================== */
+
+.cm-subtabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.cm-subtab-button {
+    padding: 10px 20px;
+    background: #f0f0f0;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #666;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.cm-subtab-button:hover {
+    background: #e8e8e8;
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.cm-subtab-button.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.cm-subtab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+.cm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.cm-testimonial-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.cm-testimonial-card:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px);
+}
+
+.cm-testimonial-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.cm-testimonial-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    flex-shrink: 0;
+}
+
+.cm-testimonial-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cm-avatar-initial {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.cm-testimonial-info {
+    flex: 1;
+}
+
+.cm-testimonial-info h5 {
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.cm-testimonial-info small {
+    display: block;
+    color: #999;
+    font-size: 0.8rem;
+}
+
+.cm-email-text {
+    font-size: 0.8rem !important;
+    color: #666 !important;
+    margin-top: 4px !important;
+}
+
+.cm-role-badge {
+    flex-shrink: 0;
+}
+
+.cm-role-badge .badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+}
+
+.cm-testimonial-body {
+    margin-bottom: 15px;
+}
+
+.cm-rating-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.cm-rating-display i {
+    color: #f0ad4e;
+    font-size: 0.9rem;
+}
+
+.cm-rating-display i:not(.filled) {
+    color: #ddd;
+}
+
+.cm-rating-value {
+    font-weight: 600;
+    color: #667eea;
+    font-size: 0.9rem;
+}
+
+.cm-testimonial-text {
+    color: #555;
+    font-style: italic;
+    line-height: 1.6;
+    margin: 10px 0;
+    font-size: 0.95rem;
+}
+
+.cm-date-text {
+    font-size: 0.8rem !important;
+    color: #999 !important;
+}
+
+.cm-testimonial-actions {
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 15px;
+}
+
+.cm-testimonial-actions .btn {
+    flex: 1;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    color: white !important;
+}
+
+.cm-testimonial-actions .btn-success {
+    background: #4CAF50 !important;
+    color: white !important;
+}
+
+.cm-testimonial-actions .btn-success:hover {
+    background: #45a049 !important;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    color: white !important;
+}
+
+.cm-testimonial-actions .btn-danger {
+    background: #f44336 !important;
+    color: white !important;
+}
+
+.cm-testimonial-actions .btn-danger:hover {
+    background: #da190b !important;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+    color: white !important;
+}
+
+.cm-testimonial-actions .btn-success *,
+.cm-testimonial-actions .btn-danger * {
+    color: white !important;
+}
+
+/* ========================================
+   Materials Tab Styles
+   ======================================== */
+
+.cm-stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    border: none;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    height: 100%;
+}
+
+.cm-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.cm-stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.stat-primary::before {
+    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.stat-success::before {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.stat-warning::before {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.stat-info::before {
+    background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.cm-stat-card-body {
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+}
+
+.cm-stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-primary .cm-stat-icon {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.stat-success .cm-stat-icon {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.stat-warning .cm-stat-icon {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.stat-info .cm-stat-icon {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.cm-stat-info {
+    text-align: left;
+    flex: 1;
+}
+
+.cm-stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.cm-stat-label {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.cm-search-input {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.cm-search-input .form-control {
+    border-radius: 0 8px 8px 0;
+}
+
+.cm-search-input .input-group-text {
+    border-radius: 8px 0 0 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.cm-categories-table-responsive {
+    overflow-x: auto;
+}
+
+.cm-categories-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cm-categories-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.cm-categories-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.cm-categories-table td {
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.cm-categories-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.cm-category-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cm-category-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.cm-action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.cm-action-buttons .btn {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    color: white !important;
+}
+
+.cm-action-buttons .btn-primary {
+    background: #667eea !important;
+    color: white !important;
+}
+
+.cm-action-buttons .btn-primary:hover {
+    background: #5568d3 !important;
+    color: white !important;
+}
+
+.cm-action-buttons .btn-success {
+    background: #4CAF50 !important;
+    color: white !important;
+}
+
+.cm-action-buttons .btn-success:hover {
+    background: #45a049 !important;
+    color: white !important;
+}
+
+.cm-action-buttons .btn-danger {
+    background: #f44336 !important;
+    color: white !important;
+}
+
+.cm-action-buttons .btn-danger:hover {
+    background: #da190b !important;
+    color: white !important;
+}
+
+.cm-action-buttons .btn-secondary {
+    background: #6c757d !important;
+    color: white !important;
+}
+
+.cm-action-buttons .btn-secondary:hover {
+    background: #5a6268 !important;
+    color: white !important;
+}
+
+.cm-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.cm-empty-state-icon {
+    font-size: 4rem;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.cm-empty-state h4 {
+    color: #1a1a1a;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.cm-empty-state p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* ========================================
+   Modal Styles
+   ======================================== */
+
+.cm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.cm-modal {
+    background: white;
+    border-radius: 12px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+.cm-modal-lg {
+    max-width: 600px;
+    width: 90%;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.cm-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 25px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f8f9fa;
+}
+
+.cm-modal-header h5 {
+    margin: 0;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.cm-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.cm-modal-close:hover {
+    color: #f44336;
+}
+
+.cm-modal-body {
+    padding: 25px;
+}
+
+.cm-modal-footer {
+    padding: 15px 25px;
+    border-top: 1px solid #e0e0e0;
+    background: #f8f9fa;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 1024px) {
+    .cm-page-header {
+        padding: 30px 25px;
+    }
+
+    .cm-page-title {
+        font-size: 1.75rem;
+    }
+
+    .cm-tabs-header {
+        flex-wrap: wrap;
+    }
+
+    .cm-tab-button {
+        flex: 1 1 calc(33.333% - 6px);
+    }
+
+    .cm-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .cm-page-header {
+        padding: 25px 20px;
+    }
+
+    .cm-page-title {
+        font-size: 1.5rem;
+    }
+
+    .cm-page-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .cm-tab-button {
+        flex: 1 1 100%;
+        justify-content: flex-start;
+    }
+
+    .cm-tab-label {
+        display: none;
+    }
+
+    .cm-tabs-content {
+        padding: 20px;
+    }
+
+    .cm-tab-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cm-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cm-card-header {
+        height: 150px;
+    }
+
+    .cm-stat-card-body {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .cm-categories-table {
+        font-size: 0.85rem;
+    }
+
+    .cm-categories-table th,
+    .cm-categories-table td {
+        padding: 10px;
+    }
+
+    .cm-action-buttons .btn {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+
+    .cm-modal {
+        width: 95%;
+        border-radius: 12px;
+    }
+
+    .cm-modal-body {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cm-page-title {
+        font-size: 1.25rem;
+    }
+
+    .cm-page-title i {
+        font-size: 1.75rem;
+    }
+
+    .cm-tab-button {
+        padding: 15px 12px;
+        font-size: 0.85rem;
+    }
+
+    .cm-card-title {
+        font-size: 1.1rem;
+    }
+
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .stat-card-primary,
+    .stat-card-success,
+    .stat-card-warning,
+    .stat-card-info {
+        margin-bottom: 10px;
+    }
+
+    .cm-modal-overlay {
+        padding: 20px;
+    }
+
+    .cm-modal {
+        width: 100%;
+        max-height: 90vh;
+    }
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+.cm-tab-content {
+    display: block;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(3, 169, 244, 0.1) 100%);
+    border: 1px solid #90caf9;
+    color: #0277bd;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+/* Spinner */
+.spinner-border {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-width: 0.25rem;
+}
+
+/* Badge utilities */
+.badge {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.badge.bg-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.badge.bg-success {
+    background-color: #10b981 !important;
+}
+
+.badge.bg-danger {
+    background-color: #f44336 !important;
+}
+
+.badge.bg-warning {
+    background-color: #f59e0b !important;
+}
+
+/* ========================================
+   Form Check Styling (Checkbox Alignment)
+   ======================================== */
+
+/* Modern form-check styling for proper checkbox alignment */
+.modern-form-check {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    border-radius: 12px;
+    border: 1.5px solid rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.modern-form-check:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+/* Override Bootstrap's default form-check-input styling */
+.modern-form-check .form-check-input {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    border: 2px solid #cbd5e1;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.modern-form-check .form-check-input:not(:checked) {
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) inset;
+}
+
+.modern-form-check .form-check-input:checked {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.modern-form-check .form-check-input:checked::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+}
+
+.modern-form-check .form-check-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.modern-form-check .form-check-label {
+    cursor: pointer;
+    margin: 0;
+    color: #1e293b;
+    font-weight: 500;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    user-select: none;
+}
+
+.modern-form-check .form-check-label i {
+    color: #667eea;
+    margin-right: 8px;
+}

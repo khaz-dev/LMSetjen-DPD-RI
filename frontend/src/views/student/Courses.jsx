@@ -10,6 +10,8 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { SkeletonPage } from "../../components/skeletons";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
+import { getImageUrl, getLevelText } from "../../utils/courseUtils";
+import { calculateTotalDuration, parseDurationToSeconds } from "../../utils/durationUtils";
 import "./Courses.css";
 
 function Courses() {
@@ -69,6 +71,20 @@ function Courses() {
         }
         
         return progressPercentage;
+    };
+
+    // ✨ PHASE 4.77+: Calculate total JP (Jam Pelajaran) from course lectures
+    const calculateTotalJP = (lectures) => {
+        if (!lectures || !Array.isArray(lectures)) return 0;
+        
+        let totalSeconds = 0;
+        lectures.forEach(lecture => {
+            if (lecture.content_duration) {
+                totalSeconds += parseDurationToSeconds(lecture.content_duration);
+            }
+        });
+        
+        return Math.ceil(totalSeconds / 2700); // 1 JP = 45 minutes = 2700 seconds
     };
 
     if (fetching) {
@@ -172,12 +188,15 @@ function Courses() {
                                                         {c?.course?.image ? (
                                                             <>
                                                                 <img
-                                                                    src={c.course.image}
+                                                                    src={getImageUrl(c.course.image)}
                                                                     alt="course"
                                                                     className="course-image w-100"
                                                                     onError={(e) => {
                                                                         e.target.style.display = "none";
-                                                                        e.target.nextSibling.nextSibling.style.display = "flex";
+                                                                        const placeholder = e.target.parentElement?.querySelector(".course-placeholder");
+                                                                        if (placeholder) {
+                                                                            placeholder.style.display = "flex";
+                                                                        }
                                                                     }}
                                                                 />
                                                                 <div className="course-image-overlay">
@@ -222,8 +241,7 @@ function Courses() {
                                                                     {c.course.category?.title || "Umum"}
                                                                 </span>
                                                                 <span className="badge badge-level">
-                                                                    <i className="fas fa-signal"></i>
-                                                                    {c.course.level}
+                                                                    {getLevelText(c.course.level)}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -266,11 +284,11 @@ function Courses() {
                                                         Terdaftar: {moment(c.date).format("D MMM, YYYY")}
                                                     </span>
                                                     <span>
-                                                        <i className="fas fa-play-circle me-1 text-success"></i>
-                                                        {(c.lectures?.length || 0) + (c.quiz_results?.length || 0)} Total Item
+                                                        <i className="fas fa-clock me-1 text-info"></i>
+                                                        {calculateTotalDuration(c.lectures || []).formatted} ({calculateTotalJP(c.lectures || [])} JP)
                                                     </span>
                                                     <span>
-                                                        <i className="fas fa-check-circle me-1 text-info"></i>
+                                                        <i className="fas fa-check-circle me-1 text-success"></i>
                                                         {(c.completed_lesson?.length || 0) + (c.quiz_results?.filter(q => q.passed)?.length || 0)} Selesai
                                                     </span>
                                                 </div>

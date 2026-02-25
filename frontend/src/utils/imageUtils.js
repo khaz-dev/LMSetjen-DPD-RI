@@ -35,6 +35,7 @@ export const isValidImageUrl = (url) => {
     /^https?:\/\/.+/i,           // Full HTTP/HTTPS URLs
     /^\/media\/.+/i,             // Django media URLs
     /^\/static\/.+/i,            // Django static URLs
+    /^\/images\/.+/i,            // ✨ PHASE 4.42: Public images path (e.g., /images/placeholders/)
     /^data:image\/.+/i,          // Base64 data URLs
   ];
 

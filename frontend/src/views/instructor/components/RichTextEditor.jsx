@@ -77,9 +77,9 @@ const RichTextEditor = forwardRef(({
     }));
 
     const getEditorClass = () => {
-        if (errors.length > 0) return "border border-danger rounded";
-        if (warnings.length > 0) return "border border-warning rounded";
-        if (value) return "border border-success rounded";
+        if (errors && errors.length > 0) return "border border-danger rounded";
+        if (warnings && warnings.length > 0) return "border border-warning rounded";
+        if (value && typeof value === 'string' && value.trim()) return "border border-success rounded";
         return "";
     };
 
@@ -158,12 +158,6 @@ const RichTextEditor = forwardRef(({
                     data={typeof initialValueRef.current === 'string' ? initialValueRef.current : ''}
                     onChange={handleEditorChange}
                     onReady={handleEditorReady}
-                    onBlur={(event, editor) => {
-                        // Optional: You can add blur handling here
-                    }}
-                    onFocus={(event, editor) => {
-                        // Optional: You can add focus handling here
-                    }}
                     config={{
                         toolbar: [
                             "heading",
@@ -172,13 +166,12 @@ const RichTextEditor = forwardRef(({
                             "|",
                             "bulletedList", "numberedList",
                             "|",
-                            "outdent", "indent",
-                            "|",
                             "undo", "redo",
                             "|",
-                            "link", "blockQuote"
+                            "link"
                         ],
-                        placeholder: placeholder,
+                        // ✨ PHASE 4.70: Ensure placeholder is always a valid string
+                        placeholder: (typeof placeholder === 'string' ? placeholder : "").trim() || "Masukkan konten...",
                         // Additional config for better performance
                         autosave: {
                             save(editor) {

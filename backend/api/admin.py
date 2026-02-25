@@ -3,9 +3,115 @@ from api import models
 
 admin.site.register(models.Teacher)
 admin.site.register(models.Category)
-admin.site.register(models.Course)
-admin.site.register(models.Variant)
-admin.site.register(models.VariantItem)
+
+# ✨ PHASE 4.76: Custom Course Admin to distinguish draft vs published versions
+class CourseAdmin(admin.ModelAdmin):
+    """Admin interface for Course model with versioning support"""
+    list_display = (
+        'title_with_status',  # Custom method to show title + status
+        'get_course_type',    # Shows "PUBLISHED" or "DRAFT"
+        'teacher',
+        'platform_status',
+        'get_parent_course',  # Shows if this is a revision of another course
+        'is_published_version',
+        'date'
+    )
+    list_filter = ('is_published_version', 'platform_status', 'teacher', 'category', 'date')
+    search_fields = ('title', 'teacher__user__first_name', 'course_id')
+    readonly_fields = ('course_id', 'slug', 'search_vector', 'is_published_version', 'parent_course', 'published_snapshot')
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('title', 'description', 'course_id', 'slug', 'teacher', 'category', 'level')
+        }),
+        ('Media', {
+            'fields': ('image', 'file', 'intro_video_source')
+        }),
+        ('✨ Versioning & Status', {
+            'fields': ('is_published_version', 'parent_course', 'platform_status', 'teacher_course_status'),
+            'description': 'is_published_version=True: This is the published copy (student-facing). parent_course=not empty: This is a draft revision of a published course.'
+        }),
+        ('Approval & Publishing', {
+            'fields': ('approval_date', 'approved_by', 'review_submitted_date', 'rejection_reason', 'published_snapshot'),
+            'classes': ('collapse',)
+        }),
+        ('Meta', {
+            'fields': ('featured', 'date', 'search_vector'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    ordering = ('-date',)
+    
+    def title_with_status(self, obj):
+        """Display title with inline status indicator"""
+        if obj.is_published_version:
+            return f"{obj.title} [PUBLISHED ✓]"
+        elif obj.parent_course:
+            return f"{obj.title} [DRAFT - Editing Published ✎]"
+        else:
+            return f"{obj.title} [DRAFT]"
+    title_with_status.short_description = "Course Title"
+    
+    def get_course_type(self, obj):
+        """Show whether this is PUBLISHED or DRAFT"""
+        if obj.is_published_version:
+            return "✓ PUBLISHED"
+        elif obj.parent_course:
+            return "✎ DRAFT (Editing)"
+        else:
+            return "📝 DRAFT"
+    get_course_type.short_description = "Type"
+    
+    def get_parent_course(self, obj):
+        """Show parent course if this is a revision"""
+        if obj.parent_course:
+            return f"{obj.parent_course.title} (ID: {obj.parent_course.id})"
+        return "—"
+    get_parent_course.short_description = "Parent Course (Revision of)"
+
+admin.site.register(models.Course, CourseAdmin)
+# ==================== CURRICULUM MANAGEMENT ====================
+class VariantAdmin(admin.ModelAdmin):
+    """Admin interface for Bagian (Sections/Variants)"""
+    list_display = ('title', 'course', 'order', 'date')
+    search_fields = ('title', 'course__title')
+    list_filter = ('course', 'date')
+    ordering = ('-date',)
+
+class VariantItemAdmin(admin.ModelAdmin):
+    """Admin interface for Pelajaran (Lessons/Variant Items)"""
+    list_display = ('title', 'variant', 'media_source', 'duration', 'preview', 'order', 'date')  # ✨ PHASE 4.187: Show media_source in list
+    search_fields = ('title', 'variant__title', 'variant__course__title')
+    list_filter = ('variant__course', 'preview', 'date')
+    ordering = ('-date',)
+    
+    fieldsets = (
+        ('Informasi Pelajaran', {
+            'fields': ('variant', 'title', 'description', 'preview', 'order'),
+        }),
+        ('File Media', {
+            'fields': ('file', 'media_source'),  # ✨ PHASE 4.187: Add media_source field to track which source was used
+            'description': '✨ Masukkan URL file (video, PDF, atau dokumen lainnya). Durasi akan otomatis dihitung ketika file diunggah. Media Source menunjukkan sumber media yang digunakan (YouTube, Google Drive, atau Upload).',
+        }),
+        ('Durasi Video', {
+            'fields': ('duration',),
+            'description': '⏱️ Durasi otomatis dikosongkan ketika field File dikosongkan. Jangan isi field ini secara manual - biarkan sistem otomatis menghitung durasi saat file diunggah.',
+        }),
+        ('Metadata', {
+            'fields': ('variant_item_id', 'date'),
+            'classes': ('collapse',),
+        }),
+    )
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Make ID and date read-only"""
+        if obj:  # Editing existing object
+            return self.readonly_fields + ('variant_item_id', 'date')
+        return self.readonly_fields
+
+admin.site.register(models.Variant, VariantAdmin)
+admin.site.register(models.VariantItem, VariantItemAdmin)
 admin.site.register(models.Question_Answer)
 admin.site.register(models.Question_Answer_Message)
 admin.site.register(models.Certificate)
@@ -49,3 +155,7 @@ admin.site.register(models.ChurnPrediction)
 # ✨ TIER 3: Optimizations (Intent Classification, Quiz Calibration)
 admin.site.register(models.SearchIntent)
 admin.site.register(models.QuizMetrics)
+
+# ✨ PHASE 4.143: Lesson Completion Question System
+admin.site.register(models.LessonCompletionQuestion)
+admin.site.register(models.LessonCompletionQuestionChoice)

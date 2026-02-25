@@ -823,6 +823,27 @@ body:has(.landing-page-container) {
 }
 
 /* ==========================================
+   KURSUS POPULER SECTION - CARD STYLING FIX
+   PHASE 4.45: Ensure consistent .card-body.p-3 styling
+   Protects against global CSS overrides from other components
+   ========================================== */
+.landing-page-container .card-body.p-3 {
+    padding: 0.75rem !important;
+    display: block !important;
+    align-items: inherit !important;
+    justify-content: inherit !important;
+    flex-direction: inherit !important;
+}
+
+/* Explicitly reset course card body styling */
+.landing-page-container .course-card .card-body.p-3 {
+    padding: 0.75rem !important;
+    display: block !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* ==========================================
    END OF INDEX PAGE SCOPED STYLES
    All styles are now isolated to .landing-page-container
    This prevents conflicts with other pages

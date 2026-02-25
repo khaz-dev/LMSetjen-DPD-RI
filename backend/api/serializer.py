@@ -213,18 +213,15 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = "__all__"
     
     def to_representation(self, instance):
-        """Override to return full URL for image in GET requests"""
+        """✨ PHASE 4.42: Override to return image URL with default fallback if missing"""
         representation = super().to_representation(instance)
         
-        # Return full URL for image if it exists
-        if instance.image and hasattr(instance.image, 'url'):
-            request = self.context.get('request')
-            if request:
-                representation['image'] = request.build_absolute_uri(instance.image.url)
-            else:
-                representation['image'] = instance.image.url
+        # Return image URL directly - since image is a URLField, not FileField
+        if instance.image and str(instance.image).strip():
+            representation['image'] = str(instance.image)
         else:
-            representation['image'] = None
+            # Return default profile image if no image is set
+            representation['image'] = "/images/placeholders/default-instructor.svg"
             
         return representation
     
@@ -367,8 +364,15 @@ class CategoryManagementSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'slug', 'course_count']
     
     def get_course_count(self, obj):
-        """Get count of courses in this category"""
-        return api_models.Course.objects.filter(category=obj).count()
+        """Get count of published courses in this category
+        ✨ PHASE 4+: Only count published courses for public consistency
+        [*] PHASE 4.77 FIX: Filter by is_published_version=True to avoid double counting
+        In dual-copy versioning: draft has is_published_version=False, published copy has is_published_version=True"""
+        return api_models.Course.objects.filter(
+            category=obj,
+            platform_status="Published",
+            is_published_version=True  # [*] PHASE 4.77: Count only published copies, not drafts
+        ).count()
     
     def validate_title(self, value):
         """Ensure category title is not empty and unique"""
@@ -418,13 +422,12 @@ class TeacherSerializer(serializers.ModelSerializer):
         model = api_models.Teacher
     
     def get_image(self, obj):
-        """Return full URL for image or None if not available"""
-        if obj.image and hasattr(obj.image, 'url'):
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.image.url)
-            return obj.image.url
-        return None
+        """✨ PHASE 4.42: Return image URL directly from URLField, with default fallback if missing"""
+        # Since image is a URLField (not FileField), return string directly
+        if obj.image and str(obj.image).strip():
+            return str(obj.image)
+        # Return default profile image if no image is set
+        return "/images/placeholders/default-instructor.svg"
     
     def get_average_rating(self, obj):
         """Calculate average rating across all teacher's courses"""
@@ -449,19 +452,31 @@ class TeacherSerializer(serializers.ModelSerializer):
 class BasicTeacherSerializer(serializers.ModelSerializer):
     """Simplified Teacher serializer for basic operations without related fields"""
     image = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()  # ✨ PHASE 4.39: Ensure full_name returns teacher name or user full_name fallback
 
     class Meta:
-        fields = ["id", "user", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "about", "country"]
+        fields = ["id", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "about", "country"]
         model = api_models.Teacher
     
     def get_image(self, obj):
-        """Return full URL for image or None if not available"""
-        if obj.image and hasattr(obj.image, 'url'):
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.image.url)
-            return obj.image.url
-        return None
+        """✨ PHASE 4.42: Return image URL directly from URLField, with default fallback if missing"""
+        # Since image is a URLField (not FileField), return string directly
+        if obj.image and str(obj.image).strip():
+            return str(obj.image)
+        # Return default profile image if no image is set
+        return "/images/placeholders/default-instructor.svg"
+    
+    def get_full_name(self, obj):
+        """
+        ✨ PHASE 4.39: Always return user's full_name as source of truth
+        User.full_name is the authoritative source for instructor names
+        """
+        if obj.user and obj.user.full_name:
+            return obj.user.full_name  # Always prefer user.full_name (source of truth)
+        # Fallback to teacher's full_name if user's is empty
+        if obj.full_name and obj.full_name.strip():
+            return obj.full_name
+        return "Instruktur"
 
 
 
@@ -470,12 +485,14 @@ class VariantItemSerializer(serializers.ModelSerializer):
     content_duration = serializers.ReadOnlyField()  # Include the property method
     file_type = serializers.ReadOnlyField()         # Include file type property
     file_icon = serializers.ReadOnlyField()         # Include file icon property
+    duration_seconds = serializers.SerializerMethodField()  # ✨ PHASE 4.43.9: Extract duration in seconds for frontend
+    completion_question = serializers.SerializerMethodField()  # ✨ PHASE 4.143: Include lesson completion question
     
     class Meta:
         fields = '__all__'
         model = api_models.VariantItem
 
-    
+
     def __init__(self, *args, **kwargs):
         super(VariantItemSerializer, self).__init__(*args, **kwargs)
         request = self.context.get("request")
@@ -484,30 +501,17 @@ class VariantItemSerializer(serializers.ModelSerializer):
         else:
             self.Meta.depth = 1  # Reduced from 3 to 1
     
-    def to_representation(self, instance):
-        """Override to return full URL for file field"""
-        representation = super().to_representation(instance)
-        request = self.context.get('request')
-        
-        # Handle file field - convert relative paths to full URLs
-        if instance.file:
-            file_url = str(instance.file)
-            # If it's already a full URL, return as-is
-            if file_url.startswith('http://') or file_url.startswith('https://'):
-                representation['file'] = file_url
-            # Otherwise, construct full URL with /media/ prefix
-            elif request:
-                if not file_url.startswith('/'):
-                    file_url = f"/media/{file_url}"
-                representation['file'] = request.build_absolute_uri(file_url)
-            else:
-                # Fallback if no request context
-                if not file_url.startswith('/'):
-                    representation['file'] = f"/media/{file_url}"
-                else:
-                    representation['file'] = file_url
-        
-        return representation
+    def get_duration_seconds(self, obj):
+        """✨ PHASE 4.43.9: Extract duration in seconds from DurationField for frontend"""
+        if obj.duration:
+            return int(obj.duration.total_seconds())
+        return None
+    
+    def get_completion_question(self, obj):
+        """✨ PHASE 4.143: Return completion question if it exists for this variant item"""
+        if hasattr(obj, 'completion_question') and obj.completion_question:
+            return LessonCompletionQuestionSerializer(obj.completion_question).data
+        return None
 
 
 class VariantSerializer(serializers.ModelSerializer):
@@ -764,8 +768,11 @@ class CourseResourceSerializer(serializers.ModelSerializer):
 # ==================== END NEW SERIALIZERS ====================
 
 class SearchCourseSerializer(serializers.ModelSerializer):
-    """✨ PHASE 2: Lightweight serializer for search results - only essential fields (~500B per course vs 5KB)"""
-    category_name = serializers.CharField(source='category.title', read_only=True)
+    """✨ PHASE 2: Lightweight serializer for search results - only essential fields (~500B per course vs 5KB)
+    ✨ PHASE 4.77+: Fixed category field to return object with title property (was returning only string)
+    """
+    category = serializers.SerializerMethodField()  # ✨ PHASE 4.77: Return category as object
+    category_name = serializers.CharField(source='category.title', read_only=True)  # Keep for backwards compatibility
     teacher_name = serializers.CharField(source='teacher.user.full_name', read_only=True)
     students_count = serializers.SerializerMethodField()
     rating = serializers.SerializerMethodField()
@@ -774,8 +781,21 @@ class SearchCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.Course
         # Only return fields needed for search modal - 70% smaller response
-        fields = ['id', 'title', 'slug', 'image', 'level', 'category_name', 'teacher_name', 
+        fields = ['id', 'title', 'slug', 'image', 'level', 'category', 'category_name', 'teacher_name', 
                   'students_count', 'rating', 'number_of_rating', 'featured']
+    
+    def get_category(self, obj):
+        """✨ PHASE 4.77: Return category as object with title property
+        Frontend expects: course.category?.title
+        This returns: { "title": "Category Name", "id": 123 }
+        """
+        if obj.category:
+            return {
+                'id': obj.category.id,
+                'title': obj.category.title,
+                'slug': obj.category.slug
+            }
+        return None
     
     def get_students_count(self, obj):
         """Count enrolled students efficiently"""
@@ -800,15 +820,30 @@ class CourseSerializer(serializers.ModelSerializer):
     requirements = CourseRequirementSerializer(many=True, read_only=True, required=False)
     learning_outcomes = CourseLearningOutcomeSerializer(many=True, read_only=True, required=False)
     resources = CourseResourceSerializer(many=True, read_only=True, required=False)
+    # ✨ PHASE 4.71: Fix quizzes field to return array instead of count
+    # Frontend checks: Array.isArray(courseData.quizzes) && courseData.quizzes.length > 0
+    # So we must return the actual Quiz objects, not just a count
+    quizzes = serializers.SerializerMethodField()  # ✨ PHASE 4.71: Return actual quiz objects for canPublish logic
+    teacher = BasicTeacherSerializer(read_only=True)  # ✨ PHASE 4.39: Explicit teacher serialization with full details
     qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.16: Add QA count for instructor QA page
     
     class Meta:
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "qa_count", "intro_video_source"]
+        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "qa_count", "quizzes", "intro_video_source", "rejection_reason", "review_submitted_date"]
         model = api_models.Course
     
     def get_qa_count(self, obj):
         """✨ PHASE 4.16: Count total questions for this course"""
         return api_models.Question_Answer.objects.filter(course=obj).count()
+    
+    def get_quizzes(self, obj):
+        """✨ PHASE 4.71: Return array of quiz objects, not count
+        Frontend checks: Array.isArray(courseData.quizzes) && courseData.quizzes.length > 0
+        This was returning only count (number), which failed the Array.isArray() check.
+        Now returns full Quiz objects as array so canPublish logic works correctly.
+        """
+        from . import serializer as ser  # Lazy import to avoid circular reference
+        quizzes = obj.quizzes.all()
+        return ser.QuizSerializer(quizzes, many=True).data if quizzes.exists() else []
 
     def __init__(self, *args, **kwargs):
         super(CourseSerializer, self).__init__(*args, **kwargs)
@@ -826,8 +861,12 @@ class CourseSerializer(serializers.ModelSerializer):
         # Handle image field - convert relative paths to full URLs
         if instance.image:
             image_url = str(instance.image)
+            # If it's a Google Drive link, convert it to direct access format
+            if 'drive.google.com' in image_url:
+                from .url_utils import convert_google_drive_url_to_direct_image
+                representation['image'] = convert_google_drive_url_to_direct_image(image_url)
             # If it's already a full URL, return as-is
-            if image_url.startswith('http://') or image_url.startswith('https://'):
+            elif image_url.startswith('http://') or image_url.startswith('https://'):
                 representation['image'] = image_url
             # Otherwise, construct full URL with /media/ prefix
             elif request:
@@ -863,20 +902,86 @@ class CourseEditSerializer(serializers.ModelSerializer):
     """
     Simplified course serializer for editing operations to avoid circular references
     and improve performance
+    
+    ✨ PHASE 4.75: Publish versioning fix
+    - Now includes published_version data so frontend can show "what's published to students"
+    - When course.platform_status="Review", published_version contains the current published curriculum
+    - This prevents draft changes from appearing as published before admin approval
+    
+    ✨ PHASE 4.85: Added missing course metadata
+    - Added features, requirements, and learning_outcomes for admin review page
+    - These were missing from serializer causing blank sections in admin UI
     """
     category = CategorySerializer(read_only=True)
     teacher = BasicTeacherSerializer(read_only=True)
     curriculum = VariantSerializer(many=True, required=False, read_only=True)
     lectures = VariantItemSerializer(many=True, required=False, read_only=True)
     quizzes = serializers.SerializerMethodField()
+    # ✨ PHASE 4.85: Added missing course metadata fields
+    features = CourseFeatureSerializer(many=True, read_only=True, required=False)
+    requirements = CourseRequirementSerializer(many=True, read_only=True, required=False)
+    learning_outcomes = CourseLearningOutcomeSerializer(many=True, read_only=True, required=False)
+    approved_by_name = serializers.CharField(source='approved_by.get_full_name', read_only=True, allow_null=True)
+    published_version = serializers.SerializerMethodField()  # ✨ PHASE 4.75: Include published version data
     
     class Meta:
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count", "intro_video_source"]
+        # ✨ PHASE 4.85: Added "features", "requirements", "learning_outcomes"
+        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count", "intro_video_source", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version"]
         model = api_models.Course
     
     def get_quizzes(self, obj):
-        """Return lightweight quiz data for workflow stepper"""
-        return obj.quizzes.values('quiz_id', 'title', 'is_active')
+        """✨ PHASE 4.38: Return full quiz data with questions and choices for admin review"""
+        from . import serializer as ser  # Import to avoid circular reference
+        quizzes = obj.quizzes.all()
+        return ser.QuizSerializer(quizzes, many=True, read_only=True).data
+    
+    def get_published_version(self, obj):
+        """
+        ✨ PHASE 4.75: Return the published version of this course if it exists
+        
+        This is used by the frontend to show:
+        1. For draft in Review status: what's CURRENTLY published to students
+        2. For normal viewing: null (no published version)
+        3. For admins reviewing: the current live version to compare with draft
+        
+        Returns: Full serialized published course data or None
+        """
+        # Check if this is a draft course with published copies
+        if not obj.is_published_version:
+            published_copies = obj.published_copies.filter(is_published_version=True).first()
+            if published_copies:
+                # Return full published version data including curriculum
+                from . import serializer as ser
+                from api.models import VariantItem
+                
+                # Get lectures using the model method
+                published_lectures = VariantItem.objects.filter(variant__course=published_copies)
+                
+                return {
+                    'id': published_copies.id,
+                    'course_id': published_copies.course_id,
+                    'title': published_copies.title,
+                    'description': published_copies.description,
+                    'file': published_copies.file,
+                    'image': published_copies.image,
+                    'platform_status': published_copies.platform_status,
+                    'teacher_course_status': published_copies.teacher_course_status,
+                    'intro_video_source': published_copies.intro_video_source,
+                    'level': published_copies.level,
+                    'curriculum': ser.VariantSerializer(
+                        published_copies.curriculum.all(), 
+                        many=True, 
+                        read_only=True
+                    ).data,
+                    'lectures': ser.VariantItemSerializer(
+                        published_lectures,
+                        many=True,
+                        read_only=True
+                    ).data,
+                    # Include quiz count so frontend knows it exists
+                    'quizzes_count': published_copies.quizzes.count()
+                }
+        return None
     
     def to_representation(self, instance):
         """Override to return full URL for image and file fields"""
@@ -1590,6 +1695,141 @@ class SearchTaxonomyAnalyticsSerializer(serializers.ModelSerializer):
             return 'POOR'
 
 
+# ✨ PHASE 4.78: Instructor Request Serializers
+class InstructorRequestCreateSerializer(serializers.ModelSerializer):
+    """
+    ✨ PHASE 4.78: Serializer for creating instructor requests
+    Student submits request with expertise areas, bio, and experience level
+    Also returns rejection info if request was rejected
+    """
+    reviewed_by_name = serializers.CharField(
+        source='reviewed_by.full_name', 
+        read_only=True, 
+        allow_null=True
+    )
+    
+    class Meta:
+        model = api_models.InstructorRequest
+        fields = ['id', 'expertise_areas', 'bio', 'experience_level', 'request_date', 'status', 'rejection_reason', 'reviewed_date', 'reviewed_by_name']
+        read_only_fields = ['id', 'request_date', 'status', 'rejection_reason', 'reviewed_date', 'reviewed_by_name']
+    
+    def create(self, validated_data):
+        """Create new instructor request for current user or update rejected one
+        
+        ✨ PHASE 4.79: Handles both new submissions and reapplications
+        - New submission: Creates new PENDING request
+        - Reapplication: Updates existing REJECTED request back to PENDING
+        """
+        user = self.context['request'].user
+        
+        # Check if user can request
+        can_request, reason = api_models.InstructorRequest.can_user_request(user)
+        if not can_request:
+            raise serializers.ValidationError(reason)
+        
+        # Get or create request (returns existing REJECTED or new instance)
+        request_obj, created = api_models.InstructorRequest.get_or_create_for_user(user)
+        
+        # Update fields
+        request_obj.expertise_areas = validated_data.get('expertise_areas', request_obj.expertise_areas)
+        request_obj.bio = validated_data.get('bio', request_obj.bio)
+        request_obj.experience_level = validated_data.get('experience_level', request_obj.experience_level)
+        
+        # If this is a reapplication (was rejected), reset to PENDING
+        if request_obj.status == 'REJECTED':
+            request_obj.status = 'PENDING'
+            request_obj.rejection_reason = None  # Clear rejection reason
+            request_obj.reviewed_by = None
+            request_obj.reviewed_date = None
+        
+        # Set user if new
+        if created:
+            request_obj.user = user
+        
+        # Save and return
+        request_obj.save()
+        return request_obj
+
+
+class InstructorRequestDetailSerializer(serializers.ModelSerializer):
+    """
+    ✨ PHASE 4.78: Detailed serializer for instructor requests
+    Used for student to view their request status and admin to review
+    """
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_image = serializers.CharField(source='user.profile.image', read_only=True, allow_null=True)
+    reviewed_by_name = serializers.CharField(
+        source='reviewed_by.full_name', 
+        read_only=True, 
+        allow_null=True
+    )
+    
+    class Meta:
+        model = api_models.InstructorRequest
+        fields = [
+            'id',
+            'user_id', 'user_name', 'user_email', 'user_image',
+            'expertise_areas', 'bio', 'experience_level',
+            'request_date', 'status', 'rejection_reason',
+            'reviewed_by_name', 'reviewed_date'
+        ]
+        read_only_fields = [
+            'id', 'user_id', 'user_name', 'user_email', 'user_image',
+            'request_date', 'status', 'rejection_reason',
+            'reviewed_by_name', 'reviewed_date'
+        ]
+
+
+class AdminInstructorRequestListSerializer(serializers.ModelSerializer):
+    """
+    ✨ PHASE 4.78: Admin serializer for listing pending requests
+    Includes all details needed for admin review
+    """
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_image = serializers.CharField(source='user.profile.image', read_only=True, allow_null=True)
+    user_nip = serializers.CharField(source='user.nip', read_only=True, allow_null=True)
+    reviewed_by_name = serializers.CharField(source='reviewed_by.full_name', read_only=True, allow_null=True)
+    
+    class Meta:
+        model = api_models.InstructorRequest
+        fields = [
+            'id',
+            'user_id', 'user_name', 'user_email', 'user_image', 'user_nip',
+            'expertise_areas', 'bio', 'experience_level',
+            'request_date', 'status', 'rejection_reason',
+            'reviewed_by', 'reviewed_by_name', 'reviewed_date'
+        ]
+        read_only_fields = [
+            'id', 'user_id', 'user_name', 'user_email', 'user_image', 'user_nip',
+            'request_date', 'reviewed_date'
+        ]
+
+
+class AdminInstructorRequestActionSerializer(serializers.Serializer):
+    """
+    ✨ PHASE 4.78: Serializer for admin approve/reject actions
+    """
+    action = serializers.ChoiceField(choices=['approve', 'reject'])
+    rejection_reason = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=500,
+        help_text="Required if action='reject'"
+    )
+    
+    def validate(self, data):
+        """Validate that rejection_reason is provided for reject action"""
+        if data['action'] == 'reject' and not data.get('rejection_reason', '').strip():
+            raise serializers.ValidationError({
+                'rejection_reason': 'Alasan penolakan diperlukan saat menolak permintaan'
+            })
+        return data
+
+
 class QueryTaxonomyReportSerializer(serializers.Serializer):
     """Serialize comprehensive query taxonomy report"""
     total_searches = serializers.IntegerField()
@@ -1598,4 +1838,84 @@ class QueryTaxonomyReportSerializer(serializers.Serializer):
     avg_ctr = serializers.FloatField()
     avg_failed_rate = serializers.FloatField()
     categories = SearchTaxonomyAnalyticsSerializer(many=True, read_only=True)
+
+
+# ✨ PHASE 4.143: Lesson Completion Question Serializers
+
+class LessonCompletionQuestionChoiceSerializer(serializers.ModelSerializer):
+    """Serializer for completion question choices (multiple choice/multi-select)"""
+    
+    class Meta:
+        model = api_models.LessonCompletionQuestionChoice
+        fields = ['choice_id', 'choice_text', 'is_correct', 'order']
+        read_only_fields = ['choice_id']
+
+
+class LessonCompletionQuestionSerializer(serializers.ModelSerializer):
+    """Serializer for lesson completion questions with nested choices"""
+    choices = LessonCompletionQuestionChoiceSerializer(many=True, read_only=True)
+    variant_item_title = serializers.CharField(source='variant_item.title', read_only=True)
+    question_type_display = serializers.CharField(source='get_question_type_display', read_only=True)
+    
+    class Meta:
+        model = api_models.LessonCompletionQuestion
+        fields = [
+            'question_id', 'question_text', 'question_type', 'question_type_display',
+            'correct_answer_text', 'case_sensitive', 'choices', 'variant_item_title',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['question_id', 'created_at', 'updated_at']
+
+
+class LessonCompletionQuestionCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for creating/updating completion questions with choices data"""
+    choices = LessonCompletionQuestionChoiceSerializer(many=True, required=False)
+    
+    class Meta:
+        model = api_models.LessonCompletionQuestion
+        fields = [
+            'question_text', 'question_type', 'correct_answer_text', 'case_sensitive', 'choices'
+        ]
+    
+    def create(self, validated_data):
+        """Create question and associated choices"""
+        choices_data = validated_data.pop('choices', [])
+        question = api_models.LessonCompletionQuestion.objects.create(**validated_data)
+        
+        # Create choices if provided and question type is multiple choice/multi-select
+        if question.question_type in ['multiple_choice', 'multi_select'] and choices_data:
+            for choice_data in choices_data:
+                api_models.LessonCompletionQuestionChoice.objects.create(
+                    question=question,
+                    **choice_data
+                )
+        
+        return question
+    
+    def update(self, instance, validated_data):
+        """Update question and choices"""
+        choices_data = validated_data.pop('choices', None)
+        
+        # Update question fields
+        instance.question_text = validated_data.get('question_text', instance.question_text)
+        instance.question_type = validated_data.get('question_type', instance.question_type)
+        instance.correct_answer_text = validated_data.get('correct_answer_text', instance.correct_answer_text)
+        instance.case_sensitive = validated_data.get('case_sensitive', instance.case_sensitive)
+        instance.save()
+        
+        # Update choices if provided
+        if choices_data is not None:
+            # Delete old choices
+            instance.choices.all().delete()
+            
+            # Create new choices
+            if instance.question_type in ['multiple_choice', 'multi_select']:
+                for choice_data in choices_data:
+                    api_models.LessonCompletionQuestionChoice.objects.create(
+                        question=instance,
+                        **choice_data
+                    )
+        
+        return instance
+
 

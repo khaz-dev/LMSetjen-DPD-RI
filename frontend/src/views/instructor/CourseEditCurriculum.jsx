@@ -34,12 +34,14 @@ import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import WorkflowStepper from "../../components/WorkflowStepper";
+import LessonCompletionQuestionEditor from "../../components/CourseEdit/LessonCompletionQuestionEditor"; // ✨ PHASE 4.143
 
 // Utility imports
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
+import { useDebouncedCallback } from "../../utils/useOptimization";  // ✨ PHASE 4.170: Auto-save utility
 
 // Styles
 import "./CourseEditCurriculum.css";
@@ -640,7 +642,7 @@ function SortableSection({
                     </div>
                     <div className="d-flex align-items-center gap-2">
                         <span className="badge bg-light text-dark">
-                            {variant?.items?.length || 0} Pelajaran{(variant?.items?.length || 0) !== 1 ? 's' : ''}
+                            {variant?.items?.length || 0} Pelajaran
                         </span>
                         {variants.length > 1 && (
                             <button
@@ -653,7 +655,7 @@ function SortableSection({
                                 disabled={uiState.isSubmitting}
                             >
                                 <i className="fas fa-trash me-1"></i>
-                                Delete
+                                Hapus
                             </button>
                         )}
                     </div>
@@ -666,7 +668,7 @@ function SortableSection({
                     <div className="mb-4">
                         <label className="form-label fw-bold">
                             <i className="fas fa-heading me-2 text-primary"></i>
-                            Section Title
+                            Judul Bagian
                         </label>
                         <input
                             type="text"
@@ -696,7 +698,7 @@ function SortableSection({
                             disabled={uiState.isSubmitting}
                         >
                             <i className="fas fa-plus me-2"></i>
-                            Add New Lesson
+                            Tambah Pelajaran Baru
                         </button>
                     </div>
                 </div>
@@ -726,7 +728,30 @@ function SortableLessonItem({
     getFileTypeLabel,
     getFileCategory,
     getFileName,
-    uiState 
+    uiState,
+    durationEditingMode,
+    toggleDurationEditMode,
+    handleDurationInput,
+    lessonMediaSource,
+    getSelectedMediaSource,
+    getMediaSourceForPreview,  // ✨ PHASE 4.192: Get actual saved media for preview only
+    switchLessonMediaSource,
+    extractYoutubeIdLesson,  // ✨ PHASE 4.173: Extract YouTube ID for preview
+    extractGoogleDriveFileIdLesson,  // ✨ PHASE 4.173: Extract Google Drive ID for preview
+    validateYoutubeLessonUrl,  // ✨ PHASE 4.190: Validate YouTube URLs
+    validateGoogleDriveLessonUrl,  // ✨ PHASE 4.190: Validate Google Drive URLs
+    previewVisibility,  // ✨ PHASE 4.191: Preview visibility toggle state
+    togglePreviewVisibility,  // ✨ PHASE 4.191: Toggle preview visibility
+    course,
+    curriculumUploadProgress,
+    setCurriculumUploadProgress,
+    autoSaveCurriculum,
+    handleDeleteLessonFile, // ✨ PHASE 4.146: Pass delete handler to component
+    lessonLinkInputs, // ✨ PHASE 4.175: Temporary link inputs state
+    setLessonLinkInputs, // ✨ PHASE 4.175: Setter for temporary link inputs
+    formatSecondsToHMS, // ✨ PHASE 4.198: Format seconds to hh:mm:ss
+    extractedDuration, // ✨ PHASE 4.204: Extracted duration state for display
+    setExtractedDuration // ✨ PHASE 4.204: Setter for extracted duration state
 }) {
     const {
         attributes,
@@ -847,7 +872,7 @@ function SortableLessonItem({
                 {/* Two Column Layout: Description/Preview on Left, File Upload on Right */}
                 <div className="row">
                     {/* Left Column: Description and Preview Checkbox */}
-                    <div className="col-md-6 mb-3">
+                    <div className="col-md-6">
                         <div className="mb-3">
                             <label className="form-label fw-bold">
                                 <i className="fas fa-align-left me-2 text-primary"></i>
@@ -860,7 +885,7 @@ function SortableLessonItem({
                                 )}`}
                                 value={item?.description || ""}
                                 onChange={(e) => handleLessonChange(variantIndex, itemIndex, "description", e.target.value)}
-                                rows="8"
+                                rows="5"
                                 placeholder="Jelaskan apa yang akan dipelajari siswa dalam pelajaran ini..."
                             />
                             {validationState.errors[`item_${variantIndex}_${itemIndex}_description`] && (
@@ -869,6 +894,153 @@ function SortableLessonItem({
                                 </div>
                             )}
                         </div>
+
+                        {/* ✨ PHASE 4.44: Duration Display and Edit Section - Above form-check */}
+                        {/* ✨ PHASE 4.62: Support both Google Drive and YouTube links for duration display */}
+                        {/* ✨ PHASE 4.110.1: Also show duration section for uploaded files */}
+                        {(item?.gdriveLink || item?.youtubeLink || item?.uploadedFile) && (
+                            <div className="mb-3 mt-3">
+                                <div className="duration-display-section p-3 bg-light border rounded" style={{borderLeft: '4px solid #0d6efd'}}>
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <label className="form-label mb-0 fw-bold">
+                                                <i className="fas fa-clock me-2 text-info"></i>
+                                                Durasi Video
+                                            </label>
+                                            <div className="mt-2">
+                                                {item?.duration_formatted ? (
+                                                    <div className="duration-badge d-inline-block">
+                                                        <span className="badge bg-success" style={{fontSize: '0.95rem', padding: '0.5rem 0.75rem'}}>
+                                                            <i className="fas fa-check-circle me-1"></i>
+                                                            {item.duration_formatted}
+                                                        </span>
+                                                        {/* ✨ PHASE 4.205: Only show extracted duration text after extraction attempt */}
+                                                        {extractedDuration[`${variantIndex}_${itemIndex}`] !== undefined && (
+                                                            <small className="text-muted d-block mt-1">
+                                                                Durasi terekstrak: {extractedDuration[`${variantIndex}_${itemIndex}`] ? formatSecondsToHMS(extractedDuration[`${variantIndex}_${itemIndex}`]) : '0:00:00'}
+                                                            </small>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div className="duration-empty">
+                                                        <span className="badge bg-secondary" style={{fontSize: '0.95rem', padding: '0.5rem 0.75rem'}}>
+                                                            <i className="fas fa-clock me-1"></i>
+                                                            00:00
+                                                        </span>
+                                                        <small className="text-muted d-block mt-1">
+                                                            {/* ✨ PHASE 4.205: Show extracted duration only after extraction attempt, else show info text */}
+                                                            {extractedDuration[`${variantIndex}_${itemIndex}`] !== undefined ? (
+                                                                <>Durasi terekstrak: {formatSecondsToHMS(extractedDuration[`${variantIndex}_${itemIndex}`])}</>
+                                                            ) : (
+                                                                <><i className="fas fa-info-circle me-1"></i>Klik "Edit" untuk memasukkan durasi secara manual</>
+                                                            )}
+                                                        </small>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className={`btn ${durationEditingMode[`${variantIndex}_${itemIndex}`] ? 'btn-success duration-selesai-btn' : 'btn-primary'}`}
+                                            onClick={() => toggleDurationEditMode(variantIndex, itemIndex)}
+                                            disabled={uiState.isSubmitting}
+                                        >
+                                            <i className={`fas fa-${durationEditingMode[`${variantIndex}_${itemIndex}`] ? 'times' : 'edit'} me-2`}></i>
+                                            {durationEditingMode[`${variantIndex}_${itemIndex}`] ? '✓ Selesai' : 'Edit'}
+                                        </button>
+                                    </div>
+
+                                    {/* Duration Edit Form - ✨ PHASE 4.61: Enhanced with Hour/Minute/Second inputs */}
+                                    {durationEditingMode[`${variantIndex}_${itemIndex}`] && (
+                                        <div className="mt-3 pt-3" style={{borderTop: '1px solid #dee2e6'}}>
+                                            <label className="form-label small fw-bold">
+                                                Masukkan durasi video:
+                                            </label>
+                                            <div className="row g-2">
+                                                {/* Hours Input */}
+                                                <div className="col-4">
+                                                    <div className="input-group input-group-sm">
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            placeholder="0"
+                                                            value={item?.duration_seconds ? Math.floor(item.duration_seconds / 3600) : ''}
+                                                            onChange={(e) => {
+                                                                const hours = parseInt(e.target.value) || 0;
+                                                                const currentMins = item?.duration_seconds ? Math.floor((item.duration_seconds % 3600) / 60) : 0;
+                                                                const currentSecs = item?.duration_seconds ? Math.floor(item.duration_seconds % 60) : 0;
+                                                                const totalSeconds = (hours * 3600) + (currentMins * 60) + currentSecs;
+                                                                handleDurationInput(variantIndex, itemIndex, totalSeconds.toString());
+                                                            }}
+                                                            min="0"
+                                                            max="23"
+                                                            disabled={uiState.isSubmitting}
+                                                        />
+                                                        <span className="input-group-text text-muted small">jam</span>
+                                                    </div>
+                                                </div>
+                                                {/* Minutes Input */}
+                                                <div className="col-4">
+                                                    <div className="input-group input-group-sm">
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            placeholder="0"
+                                                            value={item?.duration_seconds ? Math.floor((item.duration_seconds % 3600) / 60) : ''}
+                                                            onChange={(e) => {
+                                                                const minutes = parseInt(e.target.value) || 0;
+                                                                const currentHours = item?.duration_seconds ? Math.floor(item.duration_seconds / 3600) : 0;
+                                                                const currentSecs = item?.duration_seconds ? Math.floor(item.duration_seconds % 60) : 0;
+                                                                const totalSeconds = (currentHours * 3600) + (minutes * 60) + currentSecs;
+                                                                handleDurationInput(variantIndex, itemIndex, totalSeconds.toString());
+                                                            }}
+                                                            min="0"
+                                                            max="59"
+                                                            disabled={uiState.isSubmitting}
+                                                        />
+                                                        <span className="input-group-text text-muted small">menit</span>
+                                                    </div>
+                                                </div>
+                                                {/* Seconds Input */}
+                                                <div className="col-4">
+                                                    <div className="input-group input-group-sm">
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            placeholder="0"
+                                                            value={item?.duration_seconds ? Math.floor(item.duration_seconds % 60) : ''}
+                                                            onChange={(e) => {
+                                                                const seconds = parseInt(e.target.value) || 0;
+                                                                const currentHours = item?.duration_seconds ? Math.floor(item.duration_seconds / 3600) : 0;
+                                                                const currentMins = item?.duration_seconds ? Math.floor((item.duration_seconds % 3600) / 60) : 0;
+                                                                const totalSeconds = (currentHours * 3600) + (currentMins * 60) + seconds;
+                                                                handleDurationInput(variantIndex, itemIndex, totalSeconds.toString());
+                                                            }}
+                                                            min="0"
+                                                            max="59"
+                                                            disabled={uiState.isSubmitting}
+                                                        />
+                                                        <span className="input-group-text text-muted small">detik</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <small className="text-muted d-block mt-2">
+                                                <i className="fas fa-lightbulb me-1 text-warning"></i>
+                                                Masukkan durasi video menggunakan jam, menit, dan detik. Sistem akan otomatis menghitung total durasi dan menampilkannya dalam format yang mudah dibaca.
+                                            </small>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ✨ PHASE 4.70: Display duration validation error if present */}
+                        {validationState.errors[`item_${variantIndex}_${itemIndex}_duration`] && (
+                            <div className="curriculum-invalid-feedback mt-2">
+                                <i className="fas fa-exclamation-circle me-1"></i>
+                                {validationState.errors[`item_${variantIndex}_${itemIndex}_duration`]}
+                            </div>
+                        )}
 
                         <div className="form-check" style={{paddingLeft: 0, marginLeft: 0}}>
                             <input
@@ -880,114 +1052,499 @@ function SortableLessonItem({
                                 style={{marginLeft: 0}}
                             />
                             <label className="form-check-label" htmlFor={`preview-${variantIndex}-${itemIndex}`} style={{paddingLeft: 0}}>
-                                <i className="fas fa-eye me-2"></i>
                                 Izinkan Pratinjau (Siswa dapat melihat pelajaran ini sebelum mendaftar)
                             </label>
                         </div>
+
                     </div>
 
                     {/* Right Column: File Upload and Preview */}
-                    <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">
-                            <i className="fas fa-file-upload me-2 text-primary"></i>
-                            File Pelajaran
-                        </label>
-                        <input
-                            type="file"
-                            className="curriculum-form-control"
-                            onChange={(e) => handleLessonChange(variantIndex, itemIndex, "file", e.target.files[0], "file")}
-                            accept="video/*,application/pdf,.doc,.docx,.ppt,.pptx"
-                        />
-                        
-                        {uploadState.status === 'uploading' && (
-                            <div className="upload-progress mt-2">
-                                <div className="progress" style={{ height: '20px' }}>
-                                    <div 
-                                        className="progress-bar progress-bar-striped progress-bar-animated"
-                                        role="progressbar"
-                                        style={{ width: `${uploadState.progress}%` }}
-                                    >
-                                        {Math.round(uploadState.progress)}%
+                    <div className="col-md-6">
+                        {/* ✨ PHASE 4.173: Video Preview Section - Shows currently selected media */}
+                        {(item?.youtubeLink || item?.gdriveLink || item?.uploadedFile) && (
+                            <div className="mb-4">
+                                <div className="card border-info shadow-sm">
+                                    <div className="card-header bg-info text-white d-flex align-items-center justify-content-between" style={{ cursor: 'pointer' }} onClick={() => togglePreviewVisibility(variantIndex, itemIndex)}>
+                                        <div className="d-flex align-items-center">
+                                            <i className="fas fa-play-circle me-2"></i>
+                                            <strong>Pratinjau Video Pelajaran</strong>
+                                        </div>
+                                        <i className={`fas fa-chevron-${previewVisibility[`${variantIndex}_${itemIndex}`] ? 'up' : 'down'}`}></i>
                                     </div>
+                                    {previewVisibility[`${variantIndex}_${itemIndex}`] === true && (
+                                    <div className="card-body">
+                                        {/* YouTube Preview */}
+                                        {item?.youtubeLink && getMediaSourceForPreview(item) === 'youtube' && (
+                                            <div className="ratio ratio-16x9 mb-2">
+                                                <iframe
+                                                    src={`https://www.youtube-nocookie.com/embed/${extractYoutubeIdLesson(item.youtubeLink) || ''}`}
+                                                    title="YouTube video player"
+                                                    frameBorder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                ></iframe>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Google Drive Preview */}
+                                        {item?.gdriveLink && getMediaSourceForPreview(item) === 'google_drive' && (
+                                            <div className="ratio ratio-16x9 mb-2">
+                                                <iframe
+                                                    src={`https://drive.google.com/file/d/${extractGoogleDriveFileIdLesson(item.gdriveLink) || ''}/preview`}
+                                                    title="Google Drive video preview"
+                                                    sandbox="allow-scripts allow-same-origin"
+                                                    style={{ width: '100%', height: '100%', border: 'none' }}
+                                                ></iframe>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Uploaded File Preview */}
+                                        {item?.uploadedFile && getMediaSourceForPreview(item) === 'upload' && (
+                                            <div>
+                                                <video 
+                                                    width="100%" 
+                                                    controls 
+                                                    className="rounded"
+                                                    style={{ maxHeight: '400px', backgroundColor: '#000' }}
+                                                >
+                                                    <source src={item.uploadedFile} type="video/mp4" />
+                                                    <p>Browser Anda tidak mendukung putar video HTML5.</p>
+                                                </video>
+                                            </div>
+                                        )}
+                                    </div>
+                                    )}
                                 </div>
-                                <small className="text-muted d-block mt-1">
-                                    {uploadState.message || 'Mengunggah...'}
+                            </div>
+                        )}
+
+                        {/* ✨ PHASE 4.172: Enhanced Media Source Selector for Lessons - Matching VideoUpload.jsx Pattern */}
+                        <div className="mb-3">
+                            <label className="form-label fw-bold">
+                                <i className="fas fa-question-circle me-2 text-info"></i>
+                                {item?.gdriveLink || item?.youtubeLink || item?.uploadedFile ? "Ubah Sumber Media Pelajaran:" : "Pilih Sumber Media Pelajaran:"}
+                            </label>
+                            <div className="btn-group w-100 mb-3" role="group">
+
+                                <input 
+                                    type="radio" 
+                                    className="btn-check" 
+                                    name={`media-source-${variantIndex}-${itemIndex}`} 
+                                    id={`media-youtube-${variantIndex}-${itemIndex}`}
+                                    checked={getSelectedMediaSource(variantIndex, itemIndex, item) === 'youtube'}
+                                    onChange={() => switchLessonMediaSource(variantIndex, itemIndex, 'youtube')}
+                                />
+                                <label className="btn btn-outline-danger" htmlFor={`media-youtube-${variantIndex}-${itemIndex}`}>
+                                    <i className="fab fa-youtube me-2"></i>
+                                    YouTube
+                                </label>
+
+                                <input 
+                                    type="radio" 
+                                    className="btn-check" 
+                                    name={`media-source-${variantIndex}-${itemIndex}`} 
+                                    id={`media-google-${variantIndex}-${itemIndex}`}
+                                    checked={getSelectedMediaSource(variantIndex, itemIndex, item) === 'google_drive'}
+                                    onChange={() => switchLessonMediaSource(variantIndex, itemIndex, 'google_drive')}
+                                />
+                                <label className="btn btn-outline-primary" htmlFor={`media-google-${variantIndex}-${itemIndex}`}>
+                                    <i className="fab fa-google me-2"></i>
+                                    GDrive
+                                </label>
+
+                                <input 
+                                    type="radio" 
+                                    className="btn-check" 
+                                    name={`media-source-${variantIndex}-${itemIndex}`} 
+                                    id={`media-upload-${variantIndex}-${itemIndex}`}
+                                    checked={getSelectedMediaSource(variantIndex, itemIndex, item) === 'upload'}
+                                    onChange={() => switchLessonMediaSource(variantIndex, itemIndex, 'upload')}
+                                />
+                                <label className="btn btn-outline-success" htmlFor={`media-upload-${variantIndex}-${itemIndex}`}>
+                                    <i className="fas fa-cloud-upload-alt me-2"></i>
+                                    Upload
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* ✨ PHASE 4.172: Google Drive Link Input with validation */}
+                        {getSelectedMediaSource(variantIndex, itemIndex, item) === 'google_drive' && (
+                            <div className="mb-3">
+                                <label className="form-label fw-bold">
+                                    <i className="fab fa-google me-2 text-primary"></i>
+                                    Masukkan URL Google Drive Pelajaran
+                                </label>
+                                <div className="input-group">
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="https://drive.google.com/file/d/FILE_ID/view?usp=sharing"
+                                        value={lessonLinkInputs[`${variantIndex}_${itemIndex}_gdrive`] ?? (item?.gdriveLink || '')}
+                                        onChange={(e) => {
+                                            // ✨ PHASE 4.175: Use temporary state for GDrive input - don't auto-save yet
+                                            setLessonLinkInputs(prev => ({
+                                                ...prev,
+                                                [`${variantIndex}_${itemIndex}_gdrive`]: e.target.value
+                                            }));
+                                        }}
+
+                                    />
+                                    <button
+                                        className="btn btn-primary"
+                                        type="button"
+                                        onClick={() => {
+                                            // ✨ PHASE 4.175: Get link from temporary state and validate
+                                            const linkValue = lessonLinkInputs[`${variantIndex}_${itemIndex}_gdrive`] ?? '';
+                                            const validation = validateGoogleDriveLessonUrl(linkValue);
+                                            if (validation.isValid) {
+                                                // ✨ PHASE 4.193: Clear other media sources to prevent backend conflicts
+                                                // When saving GDrive link, clear YouTube and Upload to avoid conflicting data
+                                                handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
+                                                // ✨ PHASE 4.194: Delete uploaded file from server when switching to GDrive
+                                                // Use the item prop that's passed to this component
+                                                if (item?.uploadedFile) {
+                                                    handleDeleteLessonFile(variantIndex, itemIndex, item.uploadedFile);
+                                                }
+                                                handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
+                                                // Update actual item state and auto-save
+                                                handleLessonChange(variantIndex, itemIndex, "gdriveLink", linkValue);
+                                                // ✨ PHASE 4.189: Set media_source to 'google_drive' so it updates in admin panel
+                                                handleLessonChange(variantIndex, itemIndex, "media_source", "google_drive");
+                                                Toast().fire({
+                                                    icon: "success",
+                                                    title: "Link Google Drive Ditambahkan",
+                                                    text: "Link pelajaran dari Google Drive telah ditambahkan!",
+                                                    timer: 2000,
+                                                    showConfirmButton: false
+                                                });
+                                                autoSaveCurriculum();
+                                                // Clear temporary input
+                                                setLessonLinkInputs(prev => {
+                                                    const updated = { ...prev };
+                                                    delete updated[`${variantIndex}_${itemIndex}_gdrive`];
+                                                    return updated;
+                                                });
+                                            } else {
+                                                Toast().fire({
+                                                    icon: "warning",
+                                                    title: "URL Tidak Valid",
+                                                    text: validation.error,
+                                                });
+                                            }
+                                        }}
+                                        disabled={!(lessonLinkInputs[`${variantIndex}_${itemIndex}_gdrive`] ?? '').trim()}
+                                    >
+                                        <i className="fas fa-check me-2"></i>
+                                        Tambahkan
+                                    </button>
+                                </div>
+                                
+                                <small className="text-muted d-block mt-2">
+                                    <i className="fas fa-info-circle me-1"></i>
+                                    Format yang didukung: https://drive.google.com/file/d/FILE_ID/view (file harus dibagikan secara publik)
                                 </small>
                             </div>
                         )}
-                        
-                        {item?.file && (
-                            <div className="file-preview-card">
-                                <div className="file-preview-header">
-                                    <div className={`file-preview-icon ${getFileCategory(item.file)}`}>
-                                        <i className={getFileIcon(item.file)}></i>
-                                    </div>
-                                    <div className="file-preview-info">
-                                        <div className="file-preview-name">
-                                            {getFileName(item.file)}
-                                        </div>
-                                        <div className="file-preview-meta">
-                                            <span className={`file-type-badge ${getFileCategory(item.file)}`}>
-                                                {getFileTypeLabel(item.file)}
-                                            </span>
-                                            <span className="file-meta-item">
-                                                <i className="fas fa-link"></i>
-                                                Uploaded
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {/* Thumbnail preview for videos and images */}
-                                {(getFileCategory(item.file) === 'video' || getFileCategory(item.file) === 'image') && (
-                                    <div className="file-preview-thumbnail">
-                                        {getFileCategory(item.file) === 'video' ? (
-                                            <video 
-                                                src={item.file} 
-                                                controls 
-                                                preload="metadata"
-                                                style={{ width: '100%', maxHeight: '200px' }}
-                                            >
-                                                Browser Anda tidak mendukung tag video.
-                                            </video>
-                                        ) : (
-                                            <img 
-                                                src={item.file} 
-                                                alt="File preview"
-                                                style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
-                                            />
-                                        )}
-                                    </div>
-                                )}
-                                
-                                <div className="file-preview-actions">
-                                    <a 
-                                        href={item.file} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="btn btn-sm btn-outline-primary"
-                                    >
-                                        <i className="fas fa-external-link-alt me-1"></i>
-                                        Lihat File
-                                    </a>
+
+                        {/* ✨ PHASE 4.172: YouTube Link Input with validation */}
+                        {getSelectedMediaSource(variantIndex, itemIndex, item) === 'youtube' && (
+                            <div className="mb-3">
+                                <label className="form-label fw-bold">
+                                    <i className="fab fa-youtube me-2 text-danger"></i>
+                                    Masukkan URL YouTube Pelajaran
+                                </label>
+                                <div className="input-group">
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="https://www.youtube.com/watch?v=VIDEO_ID atau https://youtu.be/VIDEO_ID"
+                                        value={lessonLinkInputs[`${variantIndex}_${itemIndex}_youtube`] ?? (item?.youtubeLink || '')}
+                                        onChange={(e) => {
+                                            // ✨ PHASE 4.175: Use temporary state for YouTube input - don't auto-save yet
+                                            setLessonLinkInputs(prev => ({
+                                                ...prev,
+                                                [`${variantIndex}_${itemIndex}_youtube`]: e.target.value
+                                            }));
+                                        }}
+
+                                    />
                                     <button
+                                        className="btn btn-danger"
                                         type="button"
-                                        className="btn btn-sm btn-outline-danger"
                                         onClick={() => {
-                                            if (window.confirm('Apakah Anda yakin ingin menghapus file ini?')) {
-                                                handleLessonChange(variantIndex, itemIndex, "file", "");
+                                            // ✨ PHASE 4.175: Get link from temporary state and validate
+                                            const linkValue = lessonLinkInputs[`${variantIndex}_${itemIndex}_youtube`] ?? '';
+                                            const validation = validateYoutubeLessonUrl(linkValue);
+                                            if (validation.isValid) {
+                                                // ✨ PHASE 4.193: Clear other media sources to prevent backend conflicts
+                                                // When saving YouTube link, clear GDrive and Upload to avoid conflicting data
+                                                handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
+                                                // ✨ PHASE 4.194: Delete uploaded file from server when switching to YouTube
+                                                // Use the item prop that's passed to this component
+                                                if (item?.uploadedFile) {
+                                                    handleDeleteLessonFile(variantIndex, itemIndex, item.uploadedFile);
+                                                }
+                                                handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
+                                                // Update actual item state and auto-save
+                                                handleLessonChange(variantIndex, itemIndex, "youtubeLink", linkValue);
+                                                // ✨ PHASE 4.189: Set media_source to 'youtube' so it updates in admin panel
+                                                handleLessonChange(variantIndex, itemIndex, "media_source", "youtube");
+                                                Toast().fire({
+                                                    icon: "success",
+                                                    title: "Link YouTube Ditambahkan",
+                                                    text: "Link pelajaran dari YouTube telah ditambahkan!",
+                                                    timer: 2000,
+                                                    showConfirmButton: false
+                                                });
+                                                autoSaveCurriculum();
+                                                // Clear temporary input
+                                                setLessonLinkInputs(prev => {
+                                                    const updated = { ...prev };
+                                                    delete updated[`${variantIndex}_${itemIndex}_youtube`];
+                                                    return updated;
+                                                });
+                                            } else {
+                                                Toast().fire({
+                                                    icon: "warning",
+                                                    title: "URL Tidak Valid",
+                                                    text: validation.error,
+                                                });
                                             }
                                         }}
-                                        disabled={uiState.isSubmitting}
+                                        disabled={!(lessonLinkInputs[`${variantIndex}_${itemIndex}_youtube`] ?? '').trim()}
                                     >
-                                        <i className="fas fa-trash me-1"></i>
-                                        Hapus File
+                                        <i className="fas fa-check me-2"></i>
+                                        Tambahkan
                                     </button>
+                                </div>
+                                
+                                <small className="text-muted d-block mt-2">
+                                    <i className="fas fa-info-circle me-1"></i>
+                                    Format yang didukung: https://youtube.com/watch?v=VIDEO_ID atau https://youtu.be/VIDEO_ID
+                                </small>
+                            </div>
+                        )}
+
+
+                        {/* ✨ PHASE 4.172: File Upload Section - Enhanced with better docs matching VideoUpload */}
+                        {getSelectedMediaSource(variantIndex, itemIndex, item) === 'upload' && (
+                            <div className="mb-3">
+                                <label className="form-label fw-bold">
+                                    <i className="fas fa-cloud-upload-alt me-2 text-success"></i>
+                                    Unggah File Media Pelajaran
+                                </label>
+                                <div className="curriculum-file-upload-wrapper">
+                                    <div className="input-group mb-2">
+                                        <input
+                                            type="file"
+                                            className="form-control curriculum-form-control"
+                                            accept="video/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    // Validate file
+                                                    const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+                                                    if (!validTypes.includes(file.type) && !file.type.startsWith('video/')) {
+                                                        Toast().fire({
+                                                            icon: "error",
+                                                            title: "Tipe File Tidak Valid",
+                                                            text: "Silakan unggah file video (MP4, WebM, OGV, MOV, AVI)",
+                                                        });
+                                                        return;
+                                                    }
+
+                                                    // Validate file size (500MB)
+                                                    if (file.size > 500 * 1024 * 1024) {
+                                                        Toast().fire({
+                                                            icon: "error",
+                                                            title: "File Terlalu Besar",
+                                                            text: "Ukuran file maksimal 500MB. Ukuran file Anda: " + (file.size / 1024 / 1024).toFixed(2) + "MB",
+                                                        });
+                                                        return;
+                                                    }
+
+                                                // Handle file upload
+                                                const formData = new FormData();
+                                                formData.append("file", file);
+                                                if (course?.course_id) {
+                                                    formData.append("course_id", course.course_id);
+                                                }
+                                                // ✨ PHASE 4.107: Send upload type so backend knows this is curriculum media, not intro video
+                                                formData.append("upload_type", "curriculum");
+                                                // Send variant and item IDs for unique lesson naming
+                                                if (variant?.variant_id) {
+                                                    formData.append("variant_id", variant.variant_id);
+                                                }
+// ✨ PHASE 4.174: Use variant_item_id for more unique filename
+                                                                                        // This ensures each lesson gets unique filename: {course_id}_{variant_id}_{variant_item_id}.mp4
+                                                                                        if (item?.variant_item_id) {
+                                                                                            formData.append("item_id", item.variant_item_id);
+                                                                                        } else {
+                                                                                            // Fallback to itemIndex if variant_item_id not yet assigned
+                                                                                            formData.append("item_id", itemIndex + 1);
+                                                                                        }
+
+                                                // ✨ PHASE 4.108: Track upload progress with percentage
+                                                const progressKey = `${variantIndex}_${itemIndex}`;
+                                                setCurriculumUploadProgress(prev => ({
+                                                    ...prev,
+                                                    [progressKey]: { percentage: 0, isUploading: true }
+                                                }));
+
+                                                (async () => {
+                                                    try {
+                                                        const response = await useAxios.post("file-upload/", formData, {
+                                                            headers: {
+                                                                "Content-Type": "multipart/form-data",
+                                                            },
+                                                            onUploadProgress: (progressEvent) => {
+                                                                // ✨ PHASE 4.108: Calculate and update progress percentage
+                                                                const percentCompleted = Math.round(
+                                                                    (progressEvent.loaded * 100) / progressEvent.total
+                                                                );
+                                                                setCurriculumUploadProgress(prev => ({
+                                                                    ...prev,
+                                                                    [progressKey]: { percentage: percentCompleted, isUploading: true }
+                                                                }));
+                                                            }
+                                                        });
+
+                                                        if (response?.data?.url) {
+                                            // ✨ PHASE 4.193: Clear other media sources to prevent backend conflicts
+                                            // When upload completes, clear YouTube and GDrive to avoid conflicting data
+                                            handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
+                                            handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
+                                            handleLessonChange(variantIndex, itemIndex, "uploadedFile", response.data.url);
+                                                            // ✨ PHASE 4.189: Set media_source to 'upload' so it updates in admin panel
+                                                            handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
+                                                            
+                                                            // ✨ PHASE 4.110.1: Extract video duration from upload response
+                                                            // Backend uses VideoFileClip to extract duration and returns it
+                                                            // ✨ PHASE 4.197: Call handleDurationInput to properly calculate duration_formatted
+                                                            // ✨ PHASE 4.204: Also store in extractedDuration state
+                                                            if (response.data.duration_seconds) {
+                                                                const key = `${variantIndex}_${itemIndex}`;
+                                                                // Store extracted duration
+                                                                setExtractedDuration(prev => ({
+                                                                    ...prev,
+                                                                    [key]: response.data.duration_seconds
+                                                                }));
+                                                                // Also set as initial duration if not already set
+                                                                handleDurationInput(variantIndex, itemIndex, response.data.duration_seconds);
+                                                                console.log(`Duration extracted: ${response.data.video_duration} (${response.data.duration_seconds}s)`);
+                                                            }
+                                                            
+                                                            // ✨ PHASE 4.108: Clear progress after successful upload
+                                                            setCurriculumUploadProgress(prev => ({
+                                                                ...prev,
+                                                                [progressKey]: { percentage: 100, isUploading: false }
+                                                            }));
+                                                            // ✨ PHASE 4.110: Auto-save curriculum after file upload completes
+                                                            // This ensures uploaded file is persisted even if user closes/reloads page
+                                                            setTimeout(() => {
+                                                                autoSaveCurriculum();
+                                                            }, 100);
+                                                            Toast().fire({
+                                                                icon: "success",
+                                                                title: "File Berhasil Diunggah",
+                                                                text: response.data.video_duration 
+                                                                    ? `File media pelajaran berhasil diunggah! Durasi: ${response.data.video_duration}`
+                                                                    : "File media pelajaran berhasil diunggah!",
+                                                                timer: 2000,
+                                                                showConfirmButton: false
+                                                            });
+                                                            // Clear progress bar after a delay
+                                                            setTimeout(() => {
+                                                                setCurriculumUploadProgress(prev => {
+                                                                    const updated = { ...prev };
+                                                                    delete updated[progressKey];
+                                                                    return updated;
+                                                                });
+                                                            }, 1000);
+                                                        }
+                                                    } catch (error) {
+                                                        console.error("Error uploading file:", error);
+                                                        // ✨ PHASE 4.108: Clear progress on error
+                                                        setCurriculumUploadProgress(prev => {
+                                                            const updated = { ...prev };
+                                                            delete updated[progressKey];
+                                                            return updated;
+                                                        });
+                                                        Toast().fire({
+                                                            icon: "error",
+                                                            title: "Unggahan Gagal",
+                                                            text: error.response?.data?.message || "Gagal mengunggah file. Silakan coba lagi.",
+                                                        });
+                                                    }
+                                                    // Reset file input
+                                                    e.target.value = '';
+                                                })();
+                                            }
+                                        }}
+                                        id={`file-input-${variantIndex}-${itemIndex}`}
+                                    />
+                                    <label htmlFor={`file-input-${variantIndex}-${itemIndex}`} className="btn btn-success ms-2">
+                                        <i className="fas fa-folder-open me-2"></i>
+                                        Pilih File
+                                    </label>
+                                    </div>
+
+                                    <small className="text-muted d-block mt-2">
+                                        <i className="fas fa-info-circle me-1"></i>
+                                        Format yang didukikan: <strong>MP4</strong>, <strong>WebM</strong>, <strong>OGV</strong>, <strong>MOV</strong>, <strong>AVI</strong>
+                                    </small>
+                                    <small className="text-muted d-block mt-1">
+                                        <i className="fas fa-database me-1"></i>
+                                        Ukuran maksimal: <strong>500MB</strong>. Durasi akan dihitung otomatis.
+                                    </small>
+
+
                                 </div>
                             </div>
                         )}
+
+                        {/* ✨ PHASE 4.108: Upload Progress Bar for Curriculum Media */}
+                        {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.isUploading && (
+                            <div className="mt-3 mb-3">
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                    <label className="form-label mb-0 fw-bold text-info">
+                                        <i className="fas fa-spinner fa-spin me-2"></i>
+                                        Mengunggah File...
+                                    </label>
+                                    <span className="badge bg-info">
+                                        {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%
+                                    </span>
+                                </div>
+                                <div className="progress" style={{ height: '24px' }}>
+                                    <div
+                                        className="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                        role="progressbar"
+                                        style={{ 
+                                            width: `${curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%`
+                                        }}
+                                        aria-valuenow={curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}
+                                        aria-valuemin="0"
+                                        aria-valuemax="100"
+                                    >
+                                        <span className="d-flex align-items-center justify-content-center h-100 text-white fw-bold">
+                                            {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                 </div>
+
+                {/* ✨ PHASE 4.143: Lesson Completion Question Editor */}
+                <LessonCompletionQuestionEditor 
+                    variantItemId={item?.variant_item_id}
+                    onQuestionSaved={(question) => {
+                        // Refresh question data if needed
+                        console.log('Question saved:', question);
+                    }}
+                />
             </div>
         </div>
     );
@@ -1006,6 +1563,8 @@ function CourseEditCurriculum() {
     // Refs for form management
     const formRef = useRef(null);
     const submitButtonRef = useRef(null);
+    // ✨ PHASE 4.177: Fetch guard to prevent duplicate course data loads
+    const hasFetchedRef = useRef(false);
 
     // Configure drag sensors for @dnd-kit
     const sensors = useSensors(
@@ -1054,6 +1613,10 @@ function CourseEditCurriculum() {
         autoSaving: false, // Auto-save in progress
         hasUnsavedChanges: false, // Track if there are unsaved changes
     });
+    
+    // ✨ PHASE 4.170: Auto-save status tracking
+    const [autoSaveStatus, setAutoSaveStatus] = useState("idle"); // idle, saving, saved, error
+    const [lastAutoSaveTime, setLastAutoSaveTime] = useState(null); // Track last auto-save time
 
     // Validation state consolidated  
     const [validationState, setValidationState] = useState({
@@ -1069,12 +1632,207 @@ function CourseEditCurriculum() {
     // Default behavior: expand all sections if curriculum is empty or has only 1 section
     const [collapsedSections, setCollapsedSections] = useState({});
 
+    // ✨ PHASE 4.44: Duration editing mode - track which items are in duration edit mode
+    // Format: { 'variantIndex_itemIndex': true/false }
+    const [durationEditingMode, setDurationEditingMode] = useState({});
+
+    // ✨ PHASE 4.61: Media source selection for lesson items
+    // Format: { 'variantIndex_itemIndex': 'google_drive' | 'youtube' }
+    // Determines which input field to show (Google Drive or YouTube)
+    const [lessonMediaSource, setLessonMediaSource] = useState({});
+
+    // ✨ PHASE 4.108: Upload progress tracking for curriculum media
+    // Format: { 'variantIndex_itemIndex': { percentage: 0-100, isUploading: boolean } }
+    // Tracks upload progress for each lesson item to show progress bar
+    const [curriculumUploadProgress, setCurriculumUploadProgress] = useState({});
+
+    // ✨ PHASE 4.175: Temporary link inputs for YouTube/GDrive that don't auto-save
+    // Format: { 'variantIndex_itemIndex_youtube': 'url', 'variantIndex_itemIndex_gdrive': 'url' }
+    // Only updates actual item state when user clicks "Tambahkan" button
+    const [lessonLinkInputs, setLessonLinkInputs] = useState({});
+
+    // ✨ PHASE 4.191: Preview visibility toggle state for lesson items
+    // Format: { 'variantIndex_itemIndex': true/false }
+    // Tracks which lesson previews are visible/hidden
+    const [previewVisibility, setPreviewVisibility] = useState({});
+
+    // ✨ PHASE 4.204: Extracted duration state - separate from user-edited duration
+    // Format: { 'variantIndex_itemIndex': duration_in_seconds }
+    // Tracks AUTO-EXTRACTED duration from media (YouTube/GDrive/Upload)
+    // This is SEPARATE from duration_seconds which is the user's SAVED/EDITED duration
+    // Allows distinguishing between extracted (auto) vs saved (manual) durations
+    const [extractedDuration, setExtractedDuration] = useState({});
+
+    // Toggle preview visibility for a lesson item
+    const togglePreviewVisibility = (variantIndex, itemIndex) => {
+        const key = `${variantIndex}_${itemIndex}`;
+        setPreviewVisibility(prev => ({
+            ...prev,
+            [key]: !prev[key]
+        }));
+    };
+
     // Toggle section collapse/expand
     const toggleSectionCollapse = (variantIndex) => {
         setCollapsedSections(prev => ({
             ...prev,
             [variantIndex]: prev[variantIndex] === false ? true : false // ✅ FIX: Explicit boolean toggle
         }));
+    };
+
+    // Toggle duration edit mode for a lesson item
+    const toggleDurationEditMode = (variantIndex, itemIndex) => {
+        const key = `${variantIndex}_${itemIndex}`;
+        const isCurrentlyEditing = durationEditingMode[key];
+        
+        // If exiting edit mode (clicking "Selesai"), show confirmation notification
+        if (isCurrentlyEditing) {
+            const item = variants[variantIndex]?.items?.[itemIndex];
+            const formatted = item?.duration_formatted || 'Tidak ada';
+            Toast().fire({
+                icon: "success",
+                title: "Durasi Disimpan",
+                text: `Durasi: ${formatted}`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            // ✨ PHASE 4.70: Mark form as dirty when duration is saved
+            // This enables the "Simpan Draf" button so user can save their changes
+            setUiState(prev => ({
+                ...prev,
+                isDirty: true,
+                hasUnsavedChanges: true
+            }));
+        }
+        
+        setDurationEditingMode(prev => ({
+            ...prev,
+            [key]: !prev[key]
+        }));
+    };
+
+    // ✨ PHASE 4.61: Get the selected media source for a lesson item
+    // Determines which INPUT FIELD to show: 'google_drive', 'youtube', or 'upload'
+    // This includes both user's UI selection and saved data from database
+    const getSelectedMediaSource = (variantIndex, itemIndex, item) => {
+        const key = `${variantIndex}_${itemIndex}`;
+        
+        // If already selected in session, return saved selection (user clicked a button)
+        if (lessonMediaSource[key]) {
+            return lessonMediaSource[key];
+        }
+        
+        // ✨ PHASE 4.187: Check if media_source is saved in the item (from database)
+        if (item?.media_source) {
+            return item.media_source;
+        }
+        
+        // If item has data, infer from existing links
+        if (item?.uploadedFile && item.uploadedFile.trim()) {
+            return 'upload';
+        }
+        if (item?.gdriveLink && item.gdriveLink.trim()) {
+            return 'google_drive';
+        }
+        if (item?.youtubeLink && item.youtubeLink.trim()) {
+            return 'youtube';
+        }
+        
+        // Default to Google Drive if no selection made
+        return 'google_drive';
+    };
+
+    // ✨ PHASE 4.192: Get media source for PREVIEW only
+    // This function only returns what's ACTUALLY SAVED in the item, ignoring UI selection state
+    // Preview should only update after successful "Tambahkan" button click or file upload
+    // NOT when user just clicks a media source button
+    const getMediaSourceForPreview = (item) => {
+        // Only look at actual saved data, not the lessonMediaSource UI selection state
+        if (item?.uploadedFile && item.uploadedFile.trim()) {
+            return 'upload';
+        }
+        if (item?.youtubeLink && item.youtubeLink.trim()) {
+            return 'youtube';
+        }
+        if (item?.gdriveLink && item.gdriveLink.trim()) {
+            return 'google_drive';
+        }
+        
+        // No saved media
+        return null;
+    };
+
+    // ✨ PHASE 4.61: Switch media source (WITHOUT clearing other fields)
+    // ✨ PHASE 4.110: Support upload file media source
+    // ✨ PHASE 4.173: Don't clear values when switching - preserved like VideoUpload.jsx
+    // Users can switch between sources and their URLs/files are preserved
+    // ✨ PHASE 4.192: FIX - Don't clear or delete media when switching sources
+    // Just update media_source field to control which input is displayed
+    // ✨ PHASE 4.187: Save media_source to variant item state so it persists to database
+    // ✨ PHASE 4.188: Don't trigger auto-save on media source selection - only on Tambahkan button click
+    const switchLessonMediaSource = (variantIndex, itemIndex, newSource) => {
+        const key = `${variantIndex}_${itemIndex}`;
+        
+        // ✨ PHASE 4.192: FIX - Only update the UI selection state, don't clear existing media
+        // Users should be able to switch between sources and have all their data preserved
+        // Only delete files when explicitly removing them via a delete button, not on source switch
+        setLessonMediaSource(prev => ({
+            ...prev,
+            [key]: newSource
+        }));
+        
+        // ✨ PHASE 4.187: Save media_source to the variant item state to track which source is selected
+        // Don't clear any existing links/files - preserve all data for seamless switching
+        setVariants(prevVariants => {
+            const updated = JSON.parse(JSON.stringify(prevVariants));
+            if (updated[variantIndex]?.items[itemIndex]) {
+                // Only update media_source, preserve all links and files
+                updated[variantIndex].items[itemIndex].media_source = newSource;
+            }
+            return updated;
+        });
+        
+        // ✨ PHASE 4.188: Do NOT call trackFormChanges here - only trigger auto-save after Tambahkan button click
+        // Switching sources alone is not a content change, just a UI preference
+    };
+
+    // ✨ PHASE 4.172: Extract YouTube video ID from various URL formats (matching VideoUpload pattern)
+    const extractYoutubeIdLesson = (url) => {
+        if (!url) return null;
+        const regexps = [
+            /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,  // https://www.youtube.com/watch?v=ID
+            /youtu\.be\/([a-zA-Z0-9_-]{11})/,               // https://youtu.be/ID
+            /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,     // https://www.youtube.com/embed/ID
+            /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,         // https://www.youtube.com/v/ID
+            /^([a-zA-Z0-9_-]{11})$/                         // Just the ID
+        ];
+        
+        for (const regexp of regexps) {
+            const match = url.match(regexp);
+            if (match && match[1]) {
+                return match[1];
+            }
+        }
+        return null;
+    };
+
+    // ✨ PHASE 4.172: Extract Google Drive file ID from URL (matching VideoUpload pattern)
+    const extractGoogleDriveFileIdLesson = (url) => {
+        if (!url) return null;
+        try {
+            // Format 1: https://drive.google.com/file/d/FILE_ID/view...
+            const match1 = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            if (match1 && match1[1]) return match1[1];
+            
+            // Format 2: https://drive.google.com/uc?id=FILE_ID...
+            const match2 = url.match(/[?&]id=([a-zA-Z0-9-_]+)/);
+            if (match2 && match2[1]) return match2[1];
+            
+            return null;
+        } catch {
+            return null;
+        }
     };
 
     // Helper functions for file handling
@@ -1121,6 +1879,50 @@ function CourseEditCurriculum() {
         };
         
         return labelMap[extension] || 'File';
+    };
+
+    // ✨ PHASE 4.198: Format seconds to hh:mm:ss format
+    const formatSecondsToHMS = (seconds) => {
+        if (!seconds || isNaN(seconds)) return '0:00:00';
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    };
+
+    // ✨ PHASE 4.172: Validate YouTube URL format
+    const validateYoutubeLessonUrl = (url) => {
+        if (!url.trim()) {
+            return { isValid: false, error: "URL YouTube diperlukan" };
+        }
+
+        const videoId = extractYoutubeIdLesson(url);
+        if (!videoId) {
+            return { 
+                isValid: false, 
+                error: "URL YouTube tidak valid. Gunakan format: https://youtube.com/watch?v=ID atau https://youtu.be/ID" 
+            };
+        }
+
+        return { isValid: true, videoId };
+    };
+
+    // ✨ PHASE 4.172: Validate Google Drive URL format
+    const validateGoogleDriveLessonUrl = (url) => {
+        if (!url.trim()) {
+            return { isValid: false, error: "URL Google Drive diperlukan" };
+        }
+
+        if (!url.includes("drive.google.com") && !url.includes("drive.usercontent.google.com")) {
+            return { isValid: false, error: "URL harus dari Google Drive. Gunakan: https://drive.google.com/file/d/FILE_ID/view" };
+        }
+
+        const fileId = extractGoogleDriveFileIdLesson(url);
+        if (!fileId) {
+            return { isValid: false, error: "Tidak dapat mengekstrak ID file dari URL Google Drive. Pastikan URL benar." };
+        }
+
+        return { isValid: true, fileId };
     };
 
     /**
@@ -1195,8 +1997,31 @@ function CourseEditCurriculum() {
             }
         }
 
-        if (!item.file && !item.id) {
-            itemErrors.file = 'Silakan unggah file pelajaran';
+        // ✨ PHASE 4.110: Validate media sources - accept Google Drive, YouTube, or Uploaded File
+        const hasGoogleDriveLink = item.gdriveLink && item.gdriveLink.trim().length > 0;
+        const hasYouTubeLink = item.youtubeLink && item.youtubeLink.trim().length > 0;
+        const hasUploadedFile = item.uploadedFile && item.uploadedFile.trim().length > 0;
+        const hasValidLink = hasGoogleDriveLink || hasYouTubeLink || hasUploadedFile;
+        const isExistingItem = item.variant_item_id || item.id;
+        
+        if (!hasValidLink && !isExistingItem) {
+            itemErrors.mediaLink = 'Silakan tambahkan link media pelajaran (Google Drive, YouTube, atau Upload File)';
+        } else if (hasGoogleDriveLink && !item.gdriveLink.includes('drive.google.com') && !item.gdriveLink.includes('drive.usercontent.google.com')) {
+            // Validate Google Drive format - only if Google Drive is explicitly selected
+            itemErrors.gdriveLink = 'Link Google Drive harus dari drive.google.com';
+        } else if (hasYouTubeLink && !item.youtubeLink.includes('youtube.com') && !item.youtubeLink.includes('youtu.be')) {
+            // ✨ PHASE 4.73: Validate YouTube format - only if YouTube is explicitly selected
+            itemErrors.youtubeLink = 'Link YouTube harus dari youtube.com atau youtu.be';
+        }
+
+        // ✨ PHASE 4.110.1: Validate duration for all media types
+        // Duration is automatically extracted from uploaded videos by the backend
+        // Duration must be set and greater than 0 for all media (Google Drive, YouTube, or Uploaded Files)
+        if (hasGoogleDriveLink || hasYouTubeLink || hasUploadedFile) {
+            const durationSeconds = item.duration_seconds || 0;
+            if (!durationSeconds || durationSeconds === 0) {
+                itemErrors.duration = 'Durasi video harus diisi (tidak boleh 0m 0s). Durasi diekstraksi otomatis saat mengunggah file, atau gunakan tombol "Edit" untuk memasukkan durasi manual.';
+            }
         }
 
         return { errors: itemErrors, warnings: itemWarnings };
@@ -1217,10 +2042,10 @@ function CourseEditCurriculum() {
             const variantValidation = validateVariant(variant, variantIndex);
             
             if (Object.keys(variantValidation.errors).length > 0) {
-                allErrors.push(`Section ${variantIndex + 1}: ${Object.values(variantValidation.errors).join(', ')}`);
+                allErrors.push(`Bagian ${variantIndex + 1}: ${Object.values(variantValidation.errors).join(', ')}`);
             }
             if (Object.keys(variantValidation.warnings).length > 0) {
-                allWarnings.push(`Section ${variantIndex + 1}: ${Object.values(variantValidation.warnings).join(', ')}`);
+                allWarnings.push(`Bagian ${variantIndex + 1}: ${Object.values(variantValidation.warnings).join(', ')}`);
             }
 
             if (variant.items && Array.isArray(variant.items)) {
@@ -1230,10 +2055,10 @@ function CourseEditCurriculum() {
                     const itemValidation = validateVariantItem(item, variantIndex, itemIndex);
                     
                     if (Object.keys(itemValidation.errors).length > 0) {
-                        allErrors.push(`Section ${variantIndex + 1}, Lesson ${itemIndex + 1}: ${Object.values(itemValidation.errors).join(', ')}`);
+                        allErrors.push(`Bagian ${variantIndex + 1}, Pelajaran ${itemIndex + 1}: ${Object.values(itemValidation.errors).join(', ')}`);
                     }
                     if (Object.keys(itemValidation.warnings).length > 0) {
-                        allWarnings.push(`Section ${variantIndex + 1}, Lesson ${itemIndex + 1}: ${Object.values(itemValidation.warnings).join(', ')}`);
+                        allWarnings.push(`Bagian ${variantIndex + 1}, Pelajaran ${itemIndex + 1}: ${Object.values(itemValidation.warnings).join(', ')}`);
                     }
                 });
             }
@@ -1250,7 +2075,7 @@ function CourseEditCurriculum() {
         updateValidationSummary();
     }, [updateValidationSummary]);
 
-    // Track form changes for dirty state and auto-save
+    // Track form changes for dirty state
     const trackFormChanges = useCallback(() => {
         setUiState(prev => ({ 
             ...prev, 
@@ -1259,120 +2084,8 @@ function CourseEditCurriculum() {
         }));
     }, []);
 
-    // Auto-save functionality with debouncing
+    // ✨ PHASE 4.170: Auto-save debounce ref for preventing excessive saves
     const autoSaveTimeoutRef = useRef(null);
-    
-    const performAutoSave = useCallback(async () => {
-        // Don't auto-save if already submitting or if no changes
-        if (uiState.isSubmitting || !uiState.hasUnsavedChanges) {
-            return;
-        }
-
-        try {
-            setUiState(prev => ({ ...prev, autoSaving: true }));
-
-            const formData = new FormData();
-            
-            // Add course basic fields
-            formData.append("title", course.title || "");
-            formData.append("category", course.category || "");
-            formData.append("description", ckEditorData || "");
-            formData.append("level", course.level || "");
-            formData.append("language", course.language || "");
-            formData.append("price", course.price || "");
-            formData.append("teacher_course_status", course.teacher_course_status || "");
-            
-            // Handle course image
-            if (course.image && typeof course.image !== "string") {
-                formData.append("image", course.image);
-            }
-            
-            // Handle intro video
-            if (course.file && typeof course.file !== "string") {
-                formData.append("file", course.file);
-            }
-
-            // Filter out empty variants and items (same logic as main submit)
-            const validVariants = variants.filter(variant => {
-                if (!variant.title || variant.title.trim() === "") return false;
-                const validItems = (variant.items || []).filter(item => 
-                    item.title && item.title.trim() !== ""
-                );
-                return validItems.length > 0;
-            }).map((variant, index) => {
-                const validItems = (variant.items || []).filter(item => 
-                    item.title && item.title.trim() !== ""
-                );
-                
-                return {
-                    title: variant.title.trim(),
-                    variant_id: variant.variant_id,
-                    order: index,
-                    items: validItems.map((item, itemIndex) => ({
-                        title: item.title.trim(),
-                        description: (item.description || "").trim(),
-                        file: typeof item.file === 'string' ? item.file : "",
-                        preview: item.preview || false,
-                        variant_item_id: item.variant_item_id,
-                        order: itemIndex
-                    }))
-                };
-            });
-
-            formData.append("variants", JSON.stringify(validVariants));
-
-            // Send auto-save request to the correct update endpoint
-            await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-
-            // Update last saved timestamp
-            setUiState(prev => ({ 
-                ...prev, 
-                autoSaving: false,
-                hasUnsavedChanges: false,
-                lastSaved: new Date(),
-                submitStatus: SUBMIT_STATUS.SUCCESS,
-            }));
-
-            // Clear auto-save success indicator after 3 seconds
-            setTimeout(() => {
-                setUiState(prev => ({
-                    ...prev,
-                    submitStatus: SUBMIT_STATUS.IDLE,
-                }));
-            }, 5174);
-
-        } catch (error) {
-            console.error("Auto-save error:", error);
-            setUiState(prev => ({ ...prev, autoSaving: false }));
-            // Don't show error message for auto-save failures to avoid annoying users
-        }
-    }, [course, ckEditorData, variants, param.course_id, uiState.isSubmitting, uiState.hasUnsavedChanges]);
-
-    // Debounced auto-save - triggers 3 seconds after last change
-    useEffect(() => {
-        if (uiState.hasUnsavedChanges && !uiState.isSubmitting) {
-            // Clear existing timeout
-            if (autoSaveTimeoutRef.current) {
-                clearTimeout(autoSaveTimeoutRef.current);
-            }
-
-            // Set new timeout for auto-save
-            autoSaveTimeoutRef.current = setTimeout(() => {
-                performAutoSave();
-            }, 5174); // 3 seconds debounce
-
-            // Cleanup
-            return () => {
-                if (autoSaveTimeoutRef.current) {
-                    clearTimeout(autoSaveTimeoutRef.current);
-                }
-            };
-        }
-    }, [uiState.hasUnsavedChanges, uiState.isSubmitting, performAutoSave]);
 
     // Warning before leaving page with unsaved changes
     useEffect(() => {
@@ -1420,9 +2133,12 @@ function CourseEditCurriculum() {
         try {
             setUiState(prev => ({ ...prev, loading: true }));
             
-            // Fetch categories
-            const categoriesResponse = await useAxios.get(`course/category/`);
-            setCategory(categoriesResponse.data);
+            // ✨ PHASE 4.177: Only fetch categories if not already loaded
+            // Skip if category is already populated to avoid duplicate API calls
+            if (!category || category.length === 0) {
+                const categoriesResponse = await useAxios.get(`course/category/`);
+                setCategory(categoriesResponse.data);
+            }
 
             // Fetch course details
             const courseResponse = await useAxios.get(`teacher/course-detail/${param.course_id}/`);
@@ -1451,24 +2167,48 @@ function CourseEditCurriculum() {
                     title: variant.title || "",
                     variant_id: variant.variant_id || variant.id, // Use variant_id or fallback to id
                     order: variant.order !== undefined ? variant.order : index, // ✅ Preserve order field
-                    items: sortedItems.map((item, itemIndex) => ({
-                        title: item.title || "",
-                        description: item.description || "",
-                        file: item.file || "",
-                        preview: item.preview || false,
-                        variant_item_id: item.variant_item_id || item.id, // Preserve variant_item_id
-                        order: item.order !== undefined ? item.order : itemIndex // ✅ Preserve lesson order
-                    }))
+                    items: sortedItems.map((item, itemIndex) => {
+                        // ✨ PHASE 4.110: Detect media source type on initial load
+                        // Support three types: YouTube links, Uploaded files (/media/*), and Google Drive links
+                        const fileUrl = item.file || '';
+                        const isYouTubeLink = fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be');
+                        const isUploadedFile = fileUrl.includes('/media/') || 
+                                             /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl); // Check for video extensions
+                        
+                        return {
+                            title: item.title || "",
+                            description: item.description || "",
+                            gdriveLink: !isYouTubeLink && !isUploadedFile ? fileUrl : '',  // Store Google Drive links
+                            youtubeLink: isYouTubeLink ? fileUrl : '',  // Store YouTube URLs
+                            uploadedFile: isUploadedFile ? fileUrl : '',  // ✨ PHASE 4.110: Store uploaded file URLs
+                            preview: item.preview || false,
+                            variant_item_id: item.variant_item_id || item.id, // Preserve variant_item_id
+                            order: item.order !== undefined ? item.order : itemIndex, // ✅ Preserve lesson order
+                            duration_seconds: item.duration_seconds || null, // ✨ PHASE 4.43.9: Preserve duration_seconds from backend
+                            duration_formatted: item.content_duration || null, // ✨ PHASE 4.43.9: Also preserve formatted duration for display
+                            // ✨ PHASE 4.187: Load saved media_source from backend to remember user's source selection
+                            media_source: item.media_source || null
+                        };
+                    })
                 };
             }) : [
                 {
                     title: "",
                     order: 0,
-                    items: [{ title: "", description: "", file: "", preview: false, order: 0 }],
+                    items: [{ title: "", description: "", gdriveLink: "", youtubeLink: "", preview: false, order: 0, duration_seconds: null, duration_formatted: null, media_source: 'google_drive' }],
                 }
             ];
             
             setVariants(formattedVariants);
+            
+            // ✨ PHASE 4.205: DO NOT initialize extractedDuration on first load
+            // extractedDuration should remain empty until user performs extraction
+            // Only populate it when YouTube/GDrive link or file upload extraction is attempted
+            // This keeps "Durasi terekstrak" text hidden on first load as intended
+            
+            // ✨ PHASE 4.73: Clear lessonMediaSource state when variants are reloaded
+            // This ensures media source is re-detected from item data on next render
+            setLessonMediaSource({});
             
             setCKEditorData(courseResponse.data.description || "");
             
@@ -1485,7 +2225,7 @@ function CourseEditCurriculum() {
             setVariants([
                 {
                     title: "",
-                    items: [{ title: "", description: "", file: "", preview: false }],
+                    items: [{ title: "", description: "", gdriveLink: "", youtubeLink: "", preview: false }],
                 },
             ]);
             
@@ -1496,8 +2236,16 @@ function CourseEditCurriculum() {
 
     // Load course data on mount
     useEffect(() => {
+        // ✨ PHASE 4.177: Skip if course data is already loaded (prevents duplicate fetches in React Strict Mode)
+        // Checking course.id ensures we don't re-fetch when component remounts with existing data
+        if (course?.id) return;
+        
+        // Guard against duplicate course data loads in React Strict Mode
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
+        
         fetchCourseDetail();
-    }, []);
+    }, [course?.id]);
 
     /**
      * ✅ FIX: Initialize collapsed state based on curriculum content
@@ -1573,7 +2321,7 @@ function CourseEditCurriculum() {
             { types: FILE_UPLOAD_CONFIG.VIDEO_TYPES, maxSize: FILE_UPLOAD_CONFIG.MAX_VIDEO_SIZE };
 
         if (!config.types.includes(file.type)) {
-            return { isValid: false, error: `Please select a valid ${type} file` };
+            return { isValid: false, error: `Silakan pilih file ${type} yang valid` };
         }
 
         if (file.size > config.maxSize) {
@@ -1614,7 +2362,7 @@ function CourseEditCurriculum() {
             const formData = new FormData();
             formData.append("file", file);
 
-            const response = await useAxios.post("/file-upload/", formData, {
+            const response = await useAxios.post("file-upload/", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -1654,7 +2402,7 @@ function CourseEditCurriculum() {
                 ...prev,
                 errors: {
                     ...prev.errors,
-                    image: 'Failed to upload image. Please try again.'
+                    image: 'Gagal mengunggah gambar. Silakan coba lagi.'
                 }
             }));
             Toast().fire({
@@ -1691,7 +2439,7 @@ function CourseEditCurriculum() {
         if (typeof index !== 'number' || index < 0) {
             Toast().fire({
                 icon: "error",
-                title: "Invalid section. Please refresh the page.",
+                title: "Bagian tidak valid. Silakan segarkan halaman.",
             });
             return;
         }
@@ -1765,7 +2513,7 @@ function CourseEditCurriculum() {
         if (!variants || !Array.isArray(variants) || variantIndex < 0 || variantIndex >= variants.length) {
             Toast().fire({
                 icon: "error",
-                title: "Invalid section. Please refresh the page.",
+                title: "Bagian tidak valid. Silakan segarkan halaman.",
             });
             return;
         }
@@ -1780,45 +2528,36 @@ function CourseEditCurriculum() {
             return;
         }
 
-        // Handle file upload specifically
-        if (type === 'file' && value) {
-            const success = await handleFileUpload(value, variantIndex, itemIndex, propertyName);
-            
-            if (!success) {
-                return;
-            }
-        } else {
-            // Handle regular property changes
-            setVariants(prevVariants => {
-                try {
-                    // Validate prevVariants structure
-                    if (!prevVariants || !Array.isArray(prevVariants)) {
-                        return prevVariants;
-                    }
+        // Handle all property changes (including gdriveLink)
+        setVariants(prevVariants => {
+            try {
+                // Validate prevVariants structure
+                if (!prevVariants || !Array.isArray(prevVariants)) {
+                    return prevVariants;
+                }
 
-                    const updatedVariants = [...prevVariants];
-                    
-                    // Double-check indices are still valid (defensive programming)
-                    if (!updatedVariants[variantIndex] || 
-                        !updatedVariants[variantIndex].items || 
-                        !updatedVariants[variantIndex].items[itemIndex]) {
-                        return prevVariants; // Return unchanged on error
-                    }
-
-                    const currentItem = updatedVariants[variantIndex].items[itemIndex];
-                    
-                    // Preserve all existing properties including variant_item_id
-                    updatedVariants[variantIndex].items[itemIndex] = {
-                        ...currentItem,  // Preserve variant_item_id and other properties
-                        [propertyName]: value
-                    };
-                    
-                    return updatedVariants;
-                } catch (error) {
+                const updatedVariants = [...prevVariants];
+                
+                // Double-check indices are still valid (defensive programming)
+                if (!updatedVariants[variantIndex] || 
+                    !updatedVariants[variantIndex].items || 
+                    !updatedVariants[variantIndex].items[itemIndex]) {
                     return prevVariants; // Return unchanged on error
                 }
-            });
-        }
+
+                const currentItem = updatedVariants[variantIndex].items[itemIndex];
+                
+                // Preserve all existing properties including variant_item_id
+                updatedVariants[variantIndex].items[itemIndex] = {
+                    ...currentItem,  // Preserve variant_item_id and other properties
+                    [propertyName]: value
+                };
+                
+                return updatedVariants;
+            } catch (error) {
+                return prevVariants; // Return unchanged on error
+            }
+        });
 
         trackFormChanges();
 
@@ -1830,433 +2569,284 @@ function CourseEditCurriculum() {
                 [`item_${variantIndex}_${itemIndex}_${propertyName}`]: null
             }
         }));
-    };
-
-    /**
-     * Handle file upload for curriculum items
-     * Enhanced with comprehensive validation, compression, and error handling
-     */
-    const handleFileUpload = async (file, variantIndex, itemIndex, propertyName) => {
-        // Input validation
-        if (!file) {
-            Toast().fire({
-                icon: "error",
-                title: "Tidak ada file yang dipilih. Silakan pilih file untuk diunggah.",
-            });
-            return false;
-        }
-
-        // Validate indices
-        if (typeof variantIndex !== 'number' || typeof itemIndex !== 'number') {
-            Toast().fire({
-                icon: "error",
-                title: "Invalid upload parameters. Please try again.",
-            });
-            return false;
-        }
-
-        // Validate variants array and indices are within bounds
-        if (!variants || !Array.isArray(variants) || variantIndex < 0 || variantIndex >= variants.length) {
-            Toast().fire({
-                icon: "error",
-                title: "Invalid section. Please refresh the page and try again.",
-            });
-            return false;
-        }
-
-        const currentVariant = variants[variantIndex];
-        if (!currentVariant || !currentVariant.items || !Array.isArray(currentVariant.items) || 
-            itemIndex < 0 || itemIndex >= currentVariant.items.length) {
-            Toast().fire({
-                icon: "error",
-                title: "Invalid lesson. Please refresh the page and try again.",
-            });
-            return false;
-        }
-
-        const fileUploadKey = `${variantIndex}_${itemIndex}`;
         
-        // Determine file type for validation
-        const fileName = file.name || '';
-        if (!fileName) {
-            Toast().fire({
-                icon: "error",
-                title: "Invalid file. Please choose a valid file.",
-            });
-            return false;
-        }
-
-        const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-        const isVideo = ['mp4', 'avi', 'mov', 'mkv', 'webm', 'ogg'].includes(fileExtension);
-        const isDocument = ['pdf', 'doc', 'docx', 'txt'].includes(fileExtension);
-        const isPresentation = ['ppt', 'pptx'].includes(fileExtension);
-        const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExtension);
-        
-        // Validate file type
-        if (!isVideo && !isDocument && !isPresentation && !isImage) {
-            const errorMessage = `Unsupported file type: .${fileExtension}. Please upload video, document, presentation, or image files.`;
-            Toast().fire({
-                icon: "error",
-                title: errorMessage,
-            });
-            return false;
-        }
-
-        // Check file size and offer compression if needed
-        const maxSize = isVideo ? FILE_UPLOAD_CONFIG.MAX_VIDEO_SIZE : 
-                       isImage ? FILE_UPLOAD_CONFIG.MAX_IMAGE_SIZE : 
-                       10 * 1024 * 1024; // 10MB for documents
-        
-        let fileToUpload = file;
-        let wasCompressed = false;
-
-        // Handle files that exceed size limit
-        if (file.size > maxSize) {
-            const maxSizeMB = Math.round(maxSize / (1024 * 1024));
-            const fileSizeMB = Math.round(file.size / (1024 * 1024));
-
-            // For videos and images, offer compression
-            if (isVideo || isImage) {
-                // Calculate estimated compression time (rough estimate)
-                const estimatedMinutes = Math.ceil(fileSizeMB / 20); // ~20MB per minute for video
-                const timeWarning = isVideo 
-                    ? `<p class="text-warning"><i class="fas fa-clock me-1"></i> <strong>Estimated time: ${estimatedMinutes} ${estimatedMinutes === 1 ? 'minute' : 'minutes'}</strong></p>`
-                    : `<p class="text-info"><i class="fas fa-clock me-1"></i> <strong>This should only take a few seconds</strong></p>`;
-
-                const result = await Swal.fire({
-                    title: 'Ukuran File Terlalu Besar',
-                    html: `
-                        <div class="text-start">
-                            <p>File ${isVideo ? 'video' : 'gambar'} Anda adalah <strong>${fileSizeMB}MB</strong>, yang melebihi batas <strong>${maxSizeMB}MB</strong>.</p>
-                            <p>Apakah Anda ingin secara otomatis mengompresinya sebelum mengunggah?</p>
-                            ${timeWarning}
-                            <div class="alert alert-info mt-3" style="font-size: 0.9rem;">
-                                <i class="fas fa-info-circle me-1"></i>
-                                <strong>Note:</strong> You can cancel the compression at any time during the process.
-                            </div>
-                        </div>
-                    `,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: '<i class="fas fa-compress-alt me-2"></i>Ya, kompresi!',
-                    cancelButtonText: '<i class="fas fa-times me-2"></i>Batalkan unggahan',
-                    allowOutsideClick: false,
-                    customClass: {
-                        confirmButton: 'btn btn-primary btn-lg',
-                        cancelButton: 'btn btn-secondary btn-lg'
-                    }
-                });
-
-                if (!result.isConfirmed) {
-                    return false;
+        // ✨ PHASE 4.65: Extract video duration with smart fallback strategy
+        // YouTube: Use yt-dlp (100% reliable)
+        // Google Drive: Also use yt-dlp (can extract from GD video links)
+        if ((propertyName === 'gdriveLink' || propertyName === 'youtubeLink') && value && value.trim()) {
+            const linkStr = value.trim();
+            const isYouTube = linkStr.includes('youtube.com') || linkStr.includes('youtu.be');
+            const isGoogleDrive = linkStr.includes('drive.google.com');
+            
+            if (isYouTube || isGoogleDrive) {
+                // Attempt auto-extraction for both YouTube and Google Drive
+                // Both are supported by yt-dlp now
+                
+                if (isGoogleDrive) {
+                    console.log('[Curriculum] Google Drive detected - attempting duration extraction: ' + linkStr);
                 }
-
-                // Variable to track if compression was cancelled
-                let compressionCancelled = false;
-
-                // Show compression progress with cancel button
-                const compressionDialog = Swal.fire({
-                    title: isVideo ? 'Mengompresi Video...' : 'Mengompresi Gambar...',
-                    html: `
-                        <div class="text-center">
-                            <div class="mb-3">
-                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                                    <span class="visually-hidden">Compressing...</span>
-                                </div>
-                            </div>
-                            <p id="compression-progress" class="mb-3">Starting compression...</p>
-                            <div class="progress mb-3" style="height: 25px;">
-                                <div id="compression-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
-                                     role="progressbar" style="width: 0%">0%</div>
-                            </div>
-                            <small class="text-muted">This may take a few moments. Please wait...</small>
-                        </div>
-                    `,
-                    icon: 'info',
-                    showCancelButton: true,
-                    confirmButtonText: 'Running...',
-                    cancelButtonText: '<i class="fas fa-stop-circle me-2"></i>Batalkan Kompresi',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    showConfirmButton: false,
-                    customClass: {
-                        cancelButton: 'btn btn-danger'
-                    },
-                    didOpen: () => {
-                        // Handle cancel button click
-                        const cancelButton = Swal.getCancelButton();
-                        cancelButton.addEventListener('click', () => {
-                            compressionCancelled = true;
-                            Swal.close();
+                
+                // For YouTube or Google Drive, attempt extraction
+                if (isYouTube || isGoogleDrive) {
+                    if (isYouTube) {
+                        console.log(`[Curriculum] YouTube detected - attempting duration extraction: ${linkStr}`);
+                    }
+                    
+                    try {
+                        // ✨ PHASE 4.62: Fixed API path - use relative path without v1/ (already in baseURL)
+                        const response = await useAxios.post('media/video-metadata/', {
+                            url: linkStr
+                        });
+                        
+                        if (response.data && response.data.duration_seconds && !response.data.error) {
+                            console.log(`[Curriculum] Extraction success: ${response.data.duration_seconds}s (${response.data.duration_formatted})`);
+                            
+                            // ✨ PHASE 4.204: Store extracted duration SEPARATELY from user-edited duration
+                            // Only store in extractedDuration state to show in small text
+                            // Don't overwrite item duration if user has already set it
+                            const key = `${variantIndex}_${itemIndex}`;
+                            setExtractedDuration(prev => ({
+                                ...prev,
+                                [key]: response.data.duration_seconds
+                            }));
+                            
+                            // If item duration is not yet set, also set it as a convenience (user can accept the extracted value)
+                            // But if duration is already set, don't override it
+                            setVariants(prevVariants => {
+                                const updated = [...prevVariants];
+                                if (updated[variantIndex] && updated[variantIndex].items && updated[variantIndex].items[itemIndex]) {
+                                    const item = updated[variantIndex].items[itemIndex];
+                                    // Only set duration if not already set by user
+                                    if (!item.duration_seconds || item.duration_seconds === 0) {
+                                        item.duration_seconds = response.data.duration_seconds;
+                                        item.duration_formatted = response.data.duration_formatted;
+                                    }
+                                }
+                                return updated;
+                            });
                             
                             Toast().fire({
-                                icon: 'info',
-                                title: 'Kompresi dibatalkan oleh pengguna',
+                                icon: "success",
+                                title: "Durasi Berhasil Diekstrak",
+                                text: `Durasi: ${response.data.duration_formatted}`,
+                                timer: 2500,
+                                showConfirmButton: false
                             });
-
-                            // Reset file upload state
-                            setFileUploadStates(prevStates => ({
-                                ...prevStates,
-                                [fileUploadKey]: { status: 'cancelled', progress: 0 }
+                        } else if (response.data && response.data.error) {
+                            console.warn(`[Curriculum] Extraction failed: ${response.data.error}`);
+                            // ✨ PHASE 4.204: Set fallback extracted duration when extraction fails
+                            const key = `${variantIndex}_${itemIndex}`;
+                            setExtractedDuration(prev => ({
+                                ...prev,
+                                [key]: 0  // 0 means extraction failed, show default 00:00
                             }));
-                        });
-                    }
-                });
-
-                // Update progress UI
-                const updateCompressionProgress = (progress, message) => {
-                    const progressElement = document.getElementById('compression-progress');
-                    const progressBar = document.getElementById('compression-progress-bar');
-                    
-                    if (progressElement && progressBar) {
-                        progressElement.textContent = message || `Compressing: ${progress}%`;
-                        progressBar.style.width = `${progress}%`;
-                        progressBar.textContent = `${progress}%`;
-                    }
-                };
-
-                // Set upload state
-                setFileUploadStates(prevStates => ({
-                    ...prevStates,
-                    [fileUploadKey]: { 
-                        status: 'compressing', 
-                        progress: 0,
-                        message: 'Starting compression...'
-                    }
-                }));
-
-                try {
-                    if (isVideo) {
-                        // Compress video with cancel check
-                        fileToUpload = await VideoCompressionUtils.compressVideo(
-                            file,
-                            FILE_UPLOAD_CONFIG.TARGET_COMPRESSED_SIZE,
-                            (progress) => {
-                                // Check if compression was cancelled
-                                if (compressionCancelled) {
-                                    throw new Error('Compression cancelled by user');
-                                }
-
-                                updateCompressionProgress(progress, `Compressing video: ${progress}%`);
-                                
-                                setFileUploadStates(prevStates => ({
-                                    ...prevStates,
-                                    [fileUploadKey]: { 
-                                        status: 'compressing', 
-                                        progress: progress,
-                                        message: `Compressing video: ${progress}%`
-                                    }
-                                }));
-                            }
-                        );
-                    } else if (isImage) {
-                        // Compress image
-                        updateCompressionProgress(50, 'Compressing image...');
-                        
-                        setFileUploadStates(prevStates => ({
-                            ...prevStates,
-                            [fileUploadKey]: { 
-                                status: 'compressing', 
-                                progress: 50,
-                                message: 'Compressing image...'
-                            }
-                        }));
-                        
-                        fileToUpload = await VideoCompressionUtils.compressImage(file, maxSize);
-                        
-                        // Check if cancelled during image compression
-                        if (compressionCancelled) {
-                            throw new Error('Compression cancelled by user');
+                            
+                            Toast().fire({
+                                icon: "warning",
+                                title: "Gagal Mengekstrak Durasi",
+                                text: `${response.data.error}. Silakan set durasi secara manual.`,
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
                         }
-
-                        updateCompressionProgress(100, 'Image compressed!');
-                    }
-
-                    // Close compression dialog
-                    Swal.close();
-
-                    wasCompressed = true;
-                    const compressedSizeMB = Math.round(fileToUpload.size / (1024 * 1024));
-                    const compressionRatio = ((1 - fileToUpload.size / file.size) * 100).toFixed(1);
-
-                    Toast().fire({
-                        icon: 'success',
-                        title: `File compressed successfully!`,
-                        html: `
-                            <div>
-                                <p class="mb-1"><strong>${compressionRatio}% reduction</strong></p>
-                                <p class="mb-0"><small>From ${fileSizeMB}MB to ${compressedSizeMB}MB</small></p>
-                            </div>
-                        `,
-                        timer: 4000
-                    });
-
-                    // Check if compressed file still exceeds limit
-                    if (fileToUpload.size > maxSize) {
-                        const stillTooLargeMB = Math.round(fileToUpload.size / (1024 * 1024));
-                        setFileUploadStates(prevStates => ({
-                            ...prevStates,
-                            [fileUploadKey]: { status: 'error', progress: 0 }
+                    } catch (error) {
+                        console.error('[Curriculum] Duration extraction error:', error);
+                        // ✨ PHASE 4.204: Set fallback extracted duration when extraction throws error
+                        const key = `${variantIndex}_${itemIndex}`;
+                        setExtractedDuration(prev => ({
+                            ...prev,
+                            [key]: 0  // 0 means extraction failed, show default 00:00
                         }));
                         
                         Toast().fire({
-                            icon: 'error',
-                            title: `Even after compression, file is still ${stillTooLargeMB}MB. Please use a smaller file.`,
+                            icon: "warning",
+                            title: "Kesalahan Ekstraksi",
+                            text: "Tidak dapat mengekstrak durasi. Silakan set secara manual menggunakan tombol Edit.",
+                            timer: 3000,
+                            showConfirmButton: false
                         });
-                        return false;
                     }
-
-                } catch (compressionError) {
-                    // Close compression dialog if still open
-                    Swal.close();
-
-                    // Check if error was due to cancellation
-                    if (compressionError.message === 'Compression cancelled by user' || compressionCancelled) {
-                        return false; // User cancelled, just return
-                    }
-
-                    setFileUploadStates(prevStates => ({
-                        ...prevStates,
-                        [fileUploadKey]: { status: 'error', progress: 0 }
-                    }));
-                    
-                    console.error('Compression error:', compressionError);
-                    
-                    Toast().fire({
-                        icon: 'error',
-                        title: 'Compression Failed',
-                        text: 'Failed to compress file. Please try a smaller file or different format.',
-                    });
-                    return false;
                 }
-            } else {
-                // For documents, compression not available
-                const errorMessage = `File size too large (${fileSizeMB}MB). Maximum size is ${maxSizeMB}MB. Please use a smaller file.`;
-                Toast().fire({
-                    icon: "error",
-                    title: errorMessage,
-                });
-                return false;
             }
         }
+    };
 
-        // Set upload state
-        setFileUploadStates(prevStates => ({
-            ...prevStates,
-            [fileUploadKey]: { 
-                status: 'uploading', 
-                progress: 0,
-                message: wasCompressed ? 'Uploading compressed file...' : 'Uploading file...'
-            }
-        }));
-
+    /**
+     * ✨ PHASE 4.44: Handle manual duration input
+     * Allows users to manually set duration if auto-extraction fails or for local files
+     * Converts user input (seconds) to formatted string (e.g., "1m 44s")
+     */
+    const handleDurationInput = (variantIndex, itemIndex, durationSeconds) => {
         try {
-            const formData = new FormData();
-            formData.append("file", fileToUpload);
-
-            const response = await useAxios.post("/file-upload/", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-                onUploadProgress: (progressEvent) => {
-                    if (!progressEvent.total) return;
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    setFileUploadStates(prevStates => ({
-                        ...prevStates,
-                        [fileUploadKey]: { 
-                            status: 'uploading', 
-                            progress: percentCompleted,
-                            message: `Uploading: ${percentCompleted}%`
-                        }
-                    }));
-                },
-            });
-
-            // Validate response
-            if (!response || !response.data || !response.data.url) {
-                throw new Error('Invalid response from server - no file URL returned');
-            }
-
-            // Update variants state with the uploaded file data
-            setVariants(prevVariants => {
-                // Create a deep copy to ensure immutability
-                const updatedVariants = JSON.parse(JSON.stringify(prevVariants));
-                
-                // Validate indices again before updating (safety check)
-                if (!updatedVariants[variantIndex] || !updatedVariants[variantIndex].items || 
-                    !updatedVariants[variantIndex].items[itemIndex]) {
-                    return prevVariants; // Return unchanged if invalid
-                }
-                
-                // Update the file URL
-                updatedVariants[variantIndex].items[itemIndex][propertyName] = response.data.url;
-                
-                // If it's a video and has duration, store the duration in seconds
-                if (response.data.duration_seconds) {
-                    updatedVariants[variantIndex].items[itemIndex].duration_seconds = response.data.duration_seconds;
-                }
-                
-                // Store additional file metadata
-                updatedVariants[variantIndex].items[itemIndex].file_type = response.data.file_type || 'file';
-                updatedVariants[variantIndex].items[itemIndex].file_name = response.data.file_name || fileToUpload.name;
-                updatedVariants[variantIndex].items[itemIndex].was_compressed = wasCompressed;
-                
-                return updatedVariants;
-            });
-                
-            setFileUploadStates(prevStates => ({
-                ...prevStates,
-                [fileUploadKey]: { 
-                    status: 'success', 
-                    progress: 100, 
-                    url: response.data.url,
-                    fileType: response.data.file_type,
-                    duration: response.data.video_duration,
-                    wasCompressed: wasCompressed
-                }
-            }));
-
-            const fileTypeLabel = response.data.file_type === 'video' ? 'Video' : 
-                                   isDocument ? 'Document' : 
-                                   isPresentation ? 'Presentation' : 
-                                   isImage ? 'Image' : 'File';
-
-            const successMessage = wasCompressed 
-                ? `${fileTypeLabel} compressed and uploaded successfully!`
-                : `${fileTypeLabel} uploaded successfully!`;
-
-            Toast().fire({
-                icon: "success",
-                title: successMessage,
-            });
-            return true;
+            const seconds = parseFloat(durationSeconds);
             
-        } catch (error) {
-            // Set error state
-            setFileUploadStates(prevStates => ({
-                ...prevStates,
-                [fileUploadKey]: { status: 'error', progress: 0 }
-            }));
-
-            // Prepare user-friendly error message
-            let errorMessage = "Failed to upload file. Please try again.";
-            if (error.response?.data?.message) {
-                errorMessage = error.response.data.message;
-            } else if (error.response?.data?.error) {
-                errorMessage = error.response.data.error;
-            } else if (error.message) {
-                errorMessage = `Upload failed: ${error.message}`;
+            if (isNaN(seconds) || seconds < 0) {
+                // Invalid input - just store the raw value
+                setVariants(prevVariants => {
+                    const updated = [...prevVariants];
+                    if (updated[variantIndex]?.items?.[itemIndex]) {
+                        updated[variantIndex].items[itemIndex].duration_seconds = null;
+                        updated[variantIndex].items[itemIndex].duration_formatted = null;
+                    }
+                    return updated;
+                });
+                return;
             }
 
+            // Convert seconds to formatted duration (e.g., "1m 44s")
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            let formatted = '';
+            if (hours > 0) formatted += `${hours}h `;
+            if (minutes > 0 || hours > 0) formatted += `${minutes}m `;
+            if (secs > 0 || (hours === 0 && minutes === 0)) formatted += `${secs}s`;
+            formatted = formatted.trim();
+
+            setVariants(prevVariants => {
+                const updated = [...prevVariants];
+                if (updated[variantIndex]?.items?.[itemIndex]) {
+                    updated[variantIndex].items[itemIndex].duration_seconds = seconds;
+                    updated[variantIndex].items[itemIndex].duration_formatted = formatted;
+                }
+                return updated;
+            });
+            
+            // ✨ PHASE 4.70: Removed Toast notification on every input change for better UX
+            // Notification will only show when user clicks "Selesai" button
+
+        } catch (error) {
+            console.error('[Curriculum] Error setting duration:', error);
             Toast().fire({
                 icon: "error",
-                title: errorMessage,
+                title: "Error mengatur durasi",
+                text: "Silakan masukkan angka yang valid (detik)"
+            });
+        }
+    };
+
+    /**
+     * ✨ PHASE 4.146: Delete uploaded lesson file from server
+     * When instructor clicks "Hapus File", this function:
+     * 1. Sends DELETE request to backend to delete physical file
+     * 2. Then clears the uploadedFile field in state
+     * 3. ✨ PHASE 4.167: Auto-saves curriculum to persist changes to database
+     */
+    const handleDeleteLessonFile = async (variantIndex, itemIndex, fileUrl) => {
+        if (!fileUrl) {
+            // No file to delete, just clear the state
+            handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
+            return;
+        }
+
+        try {
+            // Call backend to delete the actual file
+            // ✨ PHASE 4.146: Use singleton useAxios with relative path
+            await useAxios.delete('file-cleanup/', {
+                data: { file_url: fileUrl }
             });
             
-            return false;
+            console.log('[Curriculum] File deleted successfully:', fileUrl);
+            
+            // ✨ PHASE 4.167: Clear state and immediately auto-save with updated variants
+            // Update variants directly to clear the uploadedFile field
+            setVariants(prevVariants => {
+                try {
+                    const updatedVariants = [...prevVariants];
+                    
+                    // Validate indices
+                    if (!updatedVariants[variantIndex] || 
+                        !updatedVariants[variantIndex].items || 
+                        !updatedVariants[variantIndex].items[itemIndex]) {
+                        return prevVariants;
+                    }
+
+                    const currentItem = updatedVariants[variantIndex].items[itemIndex];
+                    updatedVariants[variantIndex].items[itemIndex] = {
+                        ...currentItem,
+                        uploadedFile: ""  // Clear the file reference
+                    };
+                    
+                    // Auto-save immediately with the updated variants
+                    // Schedule after state update completes
+                    setTimeout(() => {
+                        autoSaveCurriculum();
+                    }, 50);
+                    
+                    return updatedVariants;
+                } catch (error) {
+                    console.error('[Curriculum] Error clearing file:', error);
+                    return prevVariants;
+                }
+            });
+
+            trackFormChanges();
+
+            // Clear validation errors for this item
+            setValidationState(prev => ({
+                ...prev,
+                errors: {
+                    ...prev.errors,
+                    [`item_${variantIndex}_${itemIndex}_uploadedFile`]: null
+                }
+            }));
+            
+            Toast().fire({
+                icon: "success",
+                title: "File berhasil dihapus",
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } catch (error) {
+            console.error('[Curriculum] Error deleting file:', error);
+            
+            // Still clear the state even if delete fails (file might not exist on server)
+            setVariants(prevVariants => {
+                try {
+                    const updatedVariants = [...prevVariants];
+                    
+                    if (!updatedVariants[variantIndex] || 
+                        !updatedVariants[variantIndex].items || 
+                        !updatedVariants[variantIndex].items[itemIndex]) {
+                        return prevVariants;
+                    }
+
+                    const currentItem = updatedVariants[variantIndex].items[itemIndex];
+                    updatedVariants[variantIndex].items[itemIndex] = {
+                        ...currentItem,
+                        uploadedFile: ""
+                    };
+                    
+                    return updatedVariants;
+                } catch (err) {
+                    console.error('[Curriculum] Error in fallback clear:', err);
+                    return prevVariants;
+                }
+            });
+
+            Toast().fire({
+                icon: "warning",
+                title: "File dihapus dari formulir",
+                text: "Catatan: File fisik mungkin tidak berhasil dihapus dari server",
+                timer: 3000
+            });
         }
+    };
+
+    /**
+     * DEPRECATED: handleFileUpload no longer used
+     * Google Drive links are now used directly via gdriveLink property
+     * This function is kept for reference but is not called
+     */
+    const handleFileUpload = async (file, variantIndex, itemIndex, propertyName) => {
+        // File uploads no longer needed - using Google Drive links instead
+        Toast().fire({
+            icon: "info",
+            title: "Gunakan link Google Drive untuk file pelajaran",
+            text: "Silakan masukkan link Google Drive share Anda di bidang yang disediakan"
+        });
+        return false;
     };
 
     /**
@@ -2276,9 +2866,12 @@ function CourseEditCurriculum() {
                     items: [{ 
                         title: "", 
                         description: "", 
-                        file: "", 
+                        gdriveLink: "",  // ✅ Use gdriveLink instead of file
+                        youtubeLink: "",  // ✨ PHASE 4.61: Initialize youtubeLink for new items
                         preview: false,
-                        order: 0 // ✅ Assign order to new lesson
+                        order: 0, // ✅ Assign order to new lesson
+                        duration_seconds: null,  // ✨ PHASE 4.43.9: Initialize duration_seconds for new items
+                        duration_formatted: null  // ✨ PHASE 4.44: Initialize duration_formatted for new items
                     }],
                 },
             ];
@@ -2337,15 +2930,15 @@ function CourseEditCurriculum() {
         } catch (error) {
             console.error("Error deleting variant:", error);
             
-            let errorMessage = "Failed to delete section. Please try again.";
+            let errorMessage = "Gagal menghapus bagian. Silakan coba lagi.";
             if (error.response?.data?.detail) {
                 errorMessage = error.response.data.detail;
             } else if (error.response?.status === 404) {
-                errorMessage = "Section not found or already deleted.";
+                errorMessage = "Bagian tidak ditemukan atau sudah dihapus.";
             } else if (error.response?.status === 403) {
-                errorMessage = "You don't have permission to delete this section.";
+                errorMessage = "Anda tidak memiliki izin untuk menghapus bagian ini.";
             } else if (error.response?.status === 500) {
-                errorMessage = "Server error occurred. Please try again later.";
+                errorMessage = "Kesalahan server terjadi. Silakan coba lagi nanti.";
             }
             
             Toast().fire({
@@ -2372,9 +2965,13 @@ function CourseEditCurriculum() {
         updatedVariants[variantIndex].items.push({
             title: "",
             description: "",
-            file: "",
+            gdriveLink: "",  // ✅ Use gdriveLink instead of file
+            youtubeLink: "",  // ✨ PHASE 4.61: Initialize youtubeLink for new items
             preview: false,
-            order: newOrder // ✅ Assign order to new lesson
+            order: newOrder, // ✅ Assign order to new lesson
+            duration_seconds: null,  // ✨ PHASE 4.43.9: Initialize duration_seconds for new items
+            duration_formatted: null,  // ✨ PHASE 4.44: Initialize duration_formatted for new items
+            media_source: 'google_drive'  // ✨ PHASE 4.187: Default to Google Drive for new items
         });
 
         setVariants(updatedVariants);
@@ -2435,15 +3032,15 @@ function CourseEditCurriculum() {
         } catch (error) {
             console.error("Error deleting item:", error);
             
-            let errorMessage = "Failed to delete lesson. Please try again.";
+            let errorMessage = "Gagal menghapus pelajaran. Silakan coba lagi.";
             if (error.response?.data?.detail) {
                 errorMessage = error.response.data.detail;
             } else if (error.response?.status === 404) {
-                errorMessage = "Lesson not found or already deleted.";
+                errorMessage = "Pelajaran tidak ditemukan atau sudah dihapus.";
             } else if (error.response?.status === 403) {
-                errorMessage = "You don't have permission to delete this lesson.";
+                errorMessage = "Anda tidak memiliki izin untuk menghapus pelajaran ini.";
             } else if (error.response?.status === 500) {
-                errorMessage = "Server error occurred. Please try again later.";
+                errorMessage = "Kesalahan server terjadi. Silakan coba lagi nanti.";
             }
             
             Toast().fire({
@@ -2589,8 +3186,258 @@ function CourseEditCurriculum() {
     };
 
     /**
+     * ✨ PHASE 4.110: Auto-save curriculum after file upload
+     * Saves curriculum without validation to preserve uploaded file reference
+     * Called automatically after successful file upload to prevent data loss on page reload
+     */
+    const autoSaveCurriculum = async () => {
+        try {
+            // Filter out completely blank sections and lessons
+            const nonEmptyVariants = variants.filter(variant => {
+                const hasTitle = variant.title && variant.title.trim().length > 0;
+                const hasNonEmptyLessons = variant.items && variant.items.some(item => 
+                    (item.title && item.title.trim().length > 0) || 
+                    (item.description && item.description.trim().length > 0) || 
+                    item.gdriveLink ||
+                    item.youtubeLink ||
+                    item.uploadedFile ||
+                    item.variant_item_id
+                );
+                return hasTitle || hasNonEmptyLessons || variant.variant_id;
+            });
+
+            const cleanedVariants = nonEmptyVariants.map(variant => ({
+                ...variant,
+                items: variant.items.filter(item => 
+                    (item.title && item.title.trim().length > 0) ||
+                    (item.description && item.description.trim().length > 0) ||
+                    item.gdriveLink ||
+                    item.youtubeLink ||
+                    item.uploadedFile ||
+                    item.variant_item_id
+                )
+            }));
+
+            // Skip save if no variants
+            if (!cleanedVariants || cleanedVariants.length === 0) {
+                return;
+            }
+
+            console.log("[AutoSave] Saving curriculum after file upload...");
+
+            // Prepare form data (same as handleSubmit)
+            const formData = new FormData();
+            formData.append("title", course.title);
+            formData.append("description", ckEditorData);
+            formData.append("category", course.category);
+            formData.append("language", course.language);
+            formData.append("level", course.level);
+            formData.append("price", course.price);
+            formData.append("file", course.file);
+            formData.append("teacher", UserData()?.teacher_id);
+
+            if (course.image && typeof course.image !== "string") {
+                formData.append("image", course.image);
+            }
+
+            // Add curriculum data
+            cleanedVariants.forEach((variant, variantIndex) => {
+                formData.append(`variants[${variantIndex}][variant_title]`, variant.title || '');
+                formData.append(`variants[${variantIndex}][order]`, variant.order !== undefined ? variant.order : variantIndex);
+                
+                if (variant.variant_id) {
+                    formData.append(`variants[${variantIndex}][variant_id]`, variant.variant_id);
+                }
+
+                if (variant.items && Array.isArray(variant.items)) {
+                    variant.items.forEach((item, itemIndex) => {
+                        formData.append(`variants[${variantIndex}][items][${itemIndex}][title]`, item.title || '');
+                        formData.append(`variants[${variantIndex}][items][${itemIndex}][description]`, item.description || '');
+                        formData.append(`variants[${variantIndex}][items][${itemIndex}][preview]`, item.preview || false);
+                        formData.append(`variants[${variantIndex}][items][${itemIndex}][order]`, item.order !== undefined ? item.order : itemIndex);
+                        
+                        // ✨ PHASE 4.195: FIX - Only append ONE media source to prevent FormData conflicts
+                        // Priority: youtube_link > gdriveLink > uploadedFile
+                        // This ensures backend only receives ONE file/link per item
+                        if (item.youtubeLink) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][youtube_link]`, item.youtubeLink);
+                        } else if (item.gdriveLink) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.gdriveLink);
+                        } else if (item.uploadedFile) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.uploadedFile);
+                        }
+                        
+                        // ✨ PHASE 4.187: Send media_source to remember which source was used
+                        if (item.media_source) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][media_source]`, item.media_source);
+                        }
+                        if (item.duration_seconds) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][duration_seconds]`, item.duration_seconds);
+                        }
+                        if (item.variant_item_id) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][variant_item_id]`, item.variant_item_id);
+                        }
+                    });
+                }
+            });
+
+            // Submit without awaiting to avoid blocking UI
+            // ✨ PHASE 4.110: Auto-save silently in background
+            // ✨ PHASE 4.196: Removed duplicate Toast notification - performAutoSave() already shows "Kurikulum Tersimpan" at top-end
+            useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData)
+                .then(response => {
+                    console.log("[AutoSave] ✅ Curriculum auto-saved successfully");
+                })
+                .catch(error => {
+                    console.warn("[AutoSave] ⚠️ Auto-save failed:", error);
+                });
+        } catch (error) {
+            console.warn("[AutoSave] Error preparing curriculum data:", error);
+            // ✨ PHASE 4.196: Silent auto-save - no Toast to avoid duplicates with performAutoSave()
+        }
+    };
+
+    /**
      * Handle form submission
      */
+    const performAutoSave = async () => {
+        if (!uiState.isDirty || autoSaveStatus === "saving") return;
+        
+        setAutoSaveStatus("saving");
+        
+        try {
+            // Filter out completely blank sections and lessons
+            const nonEmptyVariants = variants.filter(variant => {
+                const hasTitle = variant.title && variant.title.trim().length > 0;
+                const hasNonEmptyLessons = variant.items && variant.items.some(item => 
+                    (item.title && item.title.trim().length > 0) || 
+                    (item.description && item.description.trim().length > 0) || 
+                    item.gdriveLink ||
+                    item.youtubeLink ||
+                    item.uploadedFile ||
+                    item.variant_item_id
+                );
+                return hasTitle || hasNonEmptyLessons || variant.variant_id;
+            });
+
+            const cleanedVariants = nonEmptyVariants.map(variant => ({
+                ...variant,
+                items: variant.items.filter(item => 
+                    (item.title && item.title.trim().length > 0) ||
+                    (item.description && item.description.trim().length > 0) ||
+                    item.gdriveLink ||
+                    item.youtubeLink ||
+                    item.uploadedFile ||
+                    item.variant_item_id
+                )
+            }));
+
+            const formData = new FormData();
+            formData.append("title", course.title);
+            formData.append("description", ckEditorData);
+            formData.append("category", course.category);
+            formData.append("language", course.language);
+            formData.append("level", course.level);
+            formData.append("price", course.price);
+            formData.append("file", course.file);
+            formData.append("teacher", UserData()?.teacher_id);
+
+            if (course.image && typeof course.image !== "string") {
+                formData.append("image", course.image);
+            }
+
+            cleanedVariants.forEach((variant, variantIndex) => {
+                formData.append(`variants[${variantIndex}][variant_title]`, variant.title || '');
+                formData.append(`variants[${variantIndex}][order]`, variant.order !== undefined ? variant.order : variantIndex);
+                if (variant.variant_id) {
+                    formData.append(`variants[${variantIndex}][variant_id]`, variant.variant_id);
+                }
+
+                if (variant.items && Array.isArray(variant.items)) {
+                    variant.items.forEach((item, itemIndex) => {
+                        formData.append(`variants[${variantIndex}][items][${itemIndex}][title]`, item.title || '');
+                        formData.append(`variants[${variantIndex}][items][${itemIndex}][description]`, item.description || '');
+                        formData.append(`variants[${variantIndex}][items][${itemIndex}][preview]`, item.preview || false);
+                        formData.append(`variants[${variantIndex}][items][${itemIndex}][order]`, item.order !== undefined ? item.order : itemIndex);
+                        
+                        // ✨ PHASE 4.195: FIX - Only append ONE media source to prevent FormData conflicts
+                        // Priority: youtube_link > gdriveLink > uploadedFile
+                        // This ensures backend only receives ONE file/link per item
+                        if (item.youtubeLink) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][youtube_link]`, item.youtubeLink);
+                        } else if (item.gdriveLink) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.gdriveLink);
+                        } else if (item.uploadedFile) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.uploadedFile);
+                        }
+                        
+                        // ✨ PHASE 4.187: Send media_source to remember which source was used
+                        if (item.media_source) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][media_source]`, item.media_source);
+                        }
+                        if (item.duration_seconds) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][duration_seconds]`, item.duration_seconds);
+                        }
+                        if (item.variant_item_id) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][variant_item_id]`, item.variant_item_id);
+                        }
+                    });
+                }
+            });
+
+            await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData);
+            
+            setAutoSaveStatus("saved");
+            setLastAutoSaveTime(new Date());
+            setUiState(prev => ({
+                ...prev,
+                isDirty: false,
+                hasUnsavedChanges: false
+            }));
+            
+            // ✨ PHASE 4.186: Show Toast notification when auto-save completes
+            Toast().fire({
+                icon: "success",
+                title: "Kurikulum Tersimpan",
+                text: "Perubahan kurikulum telah disimpan otomatis",
+                timer: 1500,
+                showConfirmButton: false,
+                position: "top-end"
+            });
+            
+            setTimeout(() => {
+                setAutoSaveStatus("idle");
+            }, 2000);
+        } catch (error) {
+            console.error("[AutoSave] Error:", error);
+            setAutoSaveStatus("error");
+            
+            // ✨ PHASE 4.186: Show error notification on auto-save failure
+            Toast().fire({
+                icon: "error",
+                title: "Gagal Menyimpan",
+                text: "Terjadi kesalahan saat menyimpan kurikulum. Sistem akan mencoba lagi.",
+                timer: 2000,
+                position: "top-end"
+            });
+            
+            setTimeout(() => {
+                if (uiState.isDirty) {
+                    performAutoSave();
+                }
+            }, 5000);
+        }
+    };
+    
+    // ✨ PHASE 4.170: Debounced auto-save with 2-second delay
+    const debouncedAutoSave = useDebouncedCallback(performAutoSave, 2000, [uiState.isDirty, variants, course, ckEditorData]);
+    
+    // ✨ PHASE 4.170: Trigger auto-save when isDirty changes
+    useEffect(() => {
+        if (uiState.isDirty && autoSaveStatus !== "saving") {
+            debouncedAutoSave();
+        }
+    }, [uiState.isDirty, autoSaveStatus, debouncedAutoSave]);
 
     /**
      * Handle form submission
@@ -2616,7 +3463,8 @@ function CourseEditCurriculum() {
                 const hasNonEmptyLessons = variant.items && variant.items.some(item => 
                     (item.title && item.title.trim().length > 0) || 
                     (item.description && item.description.trim().length > 0) || 
-                    item.file ||
+                    item.gdriveLink ||
+                    item.youtubeLink ||  // ✨ PHASE 4.73: Include YouTube links
                     item.variant_item_id // Keep if it's already saved in database
                 );
                 return hasTitle || hasNonEmptyLessons || variant.variant_id; // Keep if already saved in database
@@ -2628,7 +3476,8 @@ function CourseEditCurriculum() {
                 items: variant.items.filter(item => 
                     (item.title && item.title.trim().length > 0) ||
                     (item.description && item.description.trim().length > 0) ||
-                    item.file ||
+                    item.gdriveLink ||
+                    item.youtubeLink ||  // ✨ PHASE 4.73: Include YouTube links
                     item.variant_item_id // Keep if already saved in database
                 )
             }));
@@ -2639,7 +3488,7 @@ function CourseEditCurriculum() {
 
             // Validate variants
             if (!cleanedVariants || cleanedVariants.length === 0) {
-                newErrors.variants = 'Curriculum must have at least one section with content';
+                newErrors.variants = 'Kurikulum harus memiliki setidaknya satu bagian dengan konten';
                 hasErrors = true;
             } else {
                 cleanedVariants.forEach((variant, variantIndex) => {
@@ -2683,7 +3532,7 @@ function CourseEditCurriculum() {
                 return;
             }
 
-            setUiState(prev => ({ ...prev, submitMessage: 'Memperbarui kurikulum...' }));
+            setUiState(prev => ({ ...prev, submitMessage: 'Menyimpan draf...' }));
 
             // Prepare form data
             const formData = new FormData();
@@ -2723,9 +3572,19 @@ function CourseEditCurriculum() {
                         // ✅ Include order field to maintain lesson sequence
                         formData.append(`variants[${variantIndex}][items][${itemIndex}][order]`, item.order !== undefined ? item.order : itemIndex);
                         
-                        // Handle file data
-                        if (item.file) {
-                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.file);
+                        // Handle Google Drive link
+                        if (item.gdriveLink) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.gdriveLink);
+                        }
+                        
+                        // ✨ PHASE 4.61: Handle YouTube link (alternative media link)
+                        if (item.youtubeLink) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][youtube_link]`, item.youtubeLink);
+                        }
+                        
+                        // ✨ PHASE 4.187: Send media_source to remember which source was used
+                        if (item.media_source) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][media_source]`, item.media_source);
                         }
                         
                         // Handle duration data for videos
@@ -2741,12 +3600,26 @@ function CourseEditCurriculum() {
                 }
             });
 
+            // ✅ DEBUG: Log FormData contents before submission to verify curriculum data is being sent
+            console.log("=== CURRICULUM SUBMIT DEBUG ===");
+            console.log("FormData entries:", Array.from(formData.entries()).map(([key, value]) => {
+                // Log keys and simplified values (avoid logging large objects)
+                return [key, typeof value === 'string' ? value.slice(0, 100) : `[${typeof value}]`];
+            }));
+            console.log("Cleaned variants count:", cleanedVariants.length);
+            console.log("Cleaned variants structure:", JSON.stringify(cleanedVariants.map(v => ({
+                title: v.title,
+                variant_id: v.variant_id,
+                itemCount: v.items?.length || 0,
+                items: v.items?.map(i => ({ title: i.title, variant_item_id: i.variant_item_id })) || []
+            })), null, 2));
+            console.log("=== END DEBUG ===");
+
             // Submit to server
-            const response = await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            // NOTE: DO NOT set Content-Type header when using FormData!
+            // Axios automatically detects FormData and sets the correct multipart/form-data header with boundary
+            // Manually setting it breaks the boundary parameter that the server needs
+            const response = await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData);
 
             // *** CRITICAL FIX: Use response data which now includes updated curriculum ***
             // Backend has been fixed to return refreshed data with curriculum
@@ -2767,11 +3640,18 @@ function CourseEditCurriculum() {
             
             // Rebuild variants state with fresh IDs from backend
             const freshVariants = updatedCourse.curriculum.map(variant => {
+                // ✨ PHASE 4.70: Check BOTH variant.variant_items and variant.items
+                // Backend serializer provides both fields, use whichever has data
+                const variantItemsList = (variant.variant_items && variant.variant_items.length > 0) 
+                    ? variant.variant_items 
+                    : (variant.items || []);
+                
                 // Validate variant structure
-                if (!variant || !variant.variant_items) {
+                if (!variant || !variantItemsList || variantItemsList.length === 0) {
                     return {
                         title: variant?.title || '',
                         variant_id: variant?.variant_id,
+                        order: variant?.order || 0,
                         items: []
                     };
                 }
@@ -2779,19 +3659,37 @@ function CourseEditCurriculum() {
                 return {
                     title: variant.title || '',
                     variant_id: variant.variant_id,  // ← Fresh ID from backend
-                    items: (variant.variant_items || []).map(item => ({
-                        title: item.title || '',
-                        description: item.description || '',
-                        file: item.file || '',
-                        preview: item.preview || false,
-                        variant_item_id: item.variant_item_id,  // ← Fresh ID from backend
-                        duration_seconds: item.duration_seconds,
-                        duration_formatted: item.duration_formatted
-                    }))
+                    order: variant.order !== undefined ? variant.order : 0,  // ← Fresh order from backend
+                    items: variantItemsList.map(item => {
+                        // ✨ PHASE 4.142: Detect media type on fresh load - Support YouTube, Uploaded, and Google Drive
+                        const fileUrl = item.file || '';
+                        const isYouTubeLink = fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be');
+                        const isUploadedFile = fileUrl.includes('/media/') || 
+                                             /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl); // Check for video extensions
+                        
+                        return {
+                            title: item.title || '',
+                            description: item.description || '',
+                            gdriveLink: !isYouTubeLink && !isUploadedFile ? fileUrl : '',  // Store only Google Drive links
+                            youtubeLink: isYouTubeLink ? fileUrl : '',  // Store YouTube URLs as youtubeLink
+                            uploadedFile: isUploadedFile ? fileUrl : '',  // ✨ PHASE 4.142: Store uploaded file URLs
+                            preview: item.preview || false,
+                            variant_item_id: item.variant_item_id,  // ← Fresh ID from backend
+                            order: item.order !== undefined ? item.order : 0,  // ← Fresh order from backend
+                            duration_seconds: item.duration_seconds,  // ✨ PHASE 4.43.9: Store duration in seconds
+                            duration_formatted: item.content_duration,  // Store formatted duration for potential display
+                            // ✨ PHASE 4.187: Load saved media_source from backend to remember user's source selection
+                            media_source: item.media_source || null
+                        };
+                    })
                 };
             });
             
             setVariants(freshVariants);
+            
+            // ✨ PHASE 4.73: Clear lessonMediaSource state after save
+            // This ensures media source is re-detected from refreshed item data
+            setLessonMediaSource({});
 
             // Count what was actually saved
             const savedSectionsCount = freshVariants.length;
@@ -2802,6 +3700,9 @@ function CourseEditCurriculum() {
             const blankLessonsCount = variants.reduce((total, variant) => 
                 total + variant.items.length, 0
             ) - savedLessonsCount;
+
+            // ✨ PHASE 4.43.11: Handle status change when published course curriculum is updated
+            const statusChanged = updatedCourse?.platform_status === "Review" && course?.platform_status === "Published";
 
             // Create detailed success message
             let successDetails = `✅ Successfully saved:\n`;
@@ -2828,10 +3729,16 @@ function CourseEditCurriculum() {
                 lastSaved: new Date(),
             }));
 
+            // ✨ PHASE 4.70: Only show save confirmation on curriculum page
+            // Do NOT auto-request admin review here - that should only happen from Edit Course page
+            // Admin review request belongs on the main course edit page, not curriculum
             Toast().fire({
                 icon: "success",
-                title: "Kurikulum Diperbarui!",
+                title: "Kurikulum Disimpan!",
                 html: successDetails.replace(/\n/g, '<br>'),
+                timer: 4000,
+                timerProgressBar: true,
+                showConfirmButton: false
             });
 
 
@@ -2847,8 +3754,8 @@ function CourseEditCurriculum() {
 
             Toast().fire({
                 icon: "error",
-                title: "Pembaruan Gagal",
-                text: error.response?.data?.message || "Gagal memperbarui kurikulum kursus. Silakan coba lagi.",
+                title: "Penyimpanan Gagal",
+                text: error.response?.data?.message || "Gagal menyimpan draf kurikulum. Silakan coba lagi.",
             });
         }
     };
@@ -2930,74 +3837,6 @@ function CourseEditCurriculum() {
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Auto-save Status Bar */}
-                            <div className="auto-save-status-bar" style={{
-                                background: '#f8f9fa',
-                                border: '1px solid #dee2e6',
-                                borderRadius: '8px',
-                                padding: '12px 20px',
-                                marginBottom: '20px',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                            }}>
-                                <div className="d-flex align-items-center gap-3">
-                                    {/* Auto-save indicator */}
-                                    {uiState.autoSaving && (
-                                        <div className="d-flex align-items-center text-primary">
-                                            <div className="spinner-border spinner-border-sm me-2" role="status">
-                                                <span className="visually-hidden">Auto-saving...</span>
-                                            </div>
-                                            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
-                                                Auto-saving...
-                                            </span>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Unsaved changes indicator */}
-                                    {!uiState.autoSaving && uiState.hasUnsavedChanges && (
-                                        <div className="d-flex align-items-center text-warning">
-                                            <i className="fas fa-exclamation-circle me-2"></i>
-                                            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
-                                                Perubahan belum disimpan (auto-save dalam {3} detik)
-                                            </span>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Last saved timestamp */}
-                                    {!uiState.autoSaving && !uiState.hasUnsavedChanges && uiState.lastSaved && (
-                                        <div className="d-flex align-items-center text-success">
-                                            <i className="fas fa-check-circle me-2"></i>
-                                            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
-                                                Semua perubahan tersimpan
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {/* Last saved timestamp - always visible when exists */}
-                                {uiState.lastSaved && (
-                                    <div className="text-muted" style={{ fontSize: '0.85rem' }}>
-                                        <i className="fas fa-clock me-1"></i>
-                                        Last saved: {new Date(uiState.lastSaved).toLocaleTimeString('en-US', {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                            second: '2-digit',
-                                            hour12: false
-                                        })}
-                                    </div>
-                                )}
-                                
-                                {/* No saves yet */}
-                                {!uiState.lastSaved && !uiState.hasUnsavedChanges && (
-                                    <div className="text-muted" style={{ fontSize: '0.85rem' }}>
-                                        <i className="fas fa-info-circle me-1"></i>
-                                        Perubahan akan menyimpan otomatis setelah 3 detik
-                                    </div>
-                                )}
                             </div>
 
                             <form onSubmit={handleSubmit} className="form-body-modern" ref={formRef}>
@@ -3107,6 +3946,29 @@ function CourseEditCurriculum() {
                                                                                     getFileCategory={getFileCategory}
                                                                                     getFileName={getFileName}
                                                                                     uiState={uiState}
+                                                                                    durationEditingMode={durationEditingMode}
+                                                                                    toggleDurationEditMode={toggleDurationEditMode}
+                                                                                    handleDurationInput={handleDurationInput}
+                                                                                    lessonMediaSource={lessonMediaSource}
+                                                                                    getSelectedMediaSource={getSelectedMediaSource}
+                                                                                    getMediaSourceForPreview={getMediaSourceForPreview}  // ✨ PHASE 4.192: Get actual saved media for preview
+                                                                                    switchLessonMediaSource={switchLessonMediaSource}
+                                                                                    extractYoutubeIdLesson={extractYoutubeIdLesson}  // ✨ PHASE 4.173: Extract YouTube ID for preview
+                                                                                    extractGoogleDriveFileIdLesson={extractGoogleDriveFileIdLesson}  // ✨ PHASE 4.173: Extract Google Drive ID for preview
+                                                                                    validateYoutubeLessonUrl={validateYoutubeLessonUrl}  // ✨ PHASE 4.190: Validate YouTube URLs
+                                                                                    validateGoogleDriveLessonUrl={validateGoogleDriveLessonUrl}  // ✨ PHASE 4.190: Validate Google Drive URLs
+                                                                                    previewVisibility={previewVisibility}  // ✨ PHASE 4.191: Preview visibility toggle
+                                                                                    togglePreviewVisibility={togglePreviewVisibility}  // ✨ PHASE 4.191: Toggle preview
+                                                                                    course={course}
+                                                                                    curriculumUploadProgress={curriculumUploadProgress}
+                                                                                    setCurriculumUploadProgress={setCurriculumUploadProgress}
+                                                                                    autoSaveCurriculum={autoSaveCurriculum}
+                                                                                    handleDeleteLessonFile={handleDeleteLessonFile}  // ✨ PHASE 4.146: Pass delete handler
+                                                                                    lessonLinkInputs={lessonLinkInputs}  // ✨ PHASE 4.175: Temporary link inputs
+                                                                                    setLessonLinkInputs={setLessonLinkInputs}  // ✨ PHASE 4.175: Setter for temp link inputs
+                                                                                    formatSecondsToHMS={formatSecondsToHMS}  // ✨ PHASE 4.198: Format seconds to hh:mm:ss
+                                                                                    extractedDuration={extractedDuration}  // ✨ PHASE 4.204: Extracted duration state
+                                                                                    setExtractedDuration={setExtractedDuration}  // ✨ PHASE 4.204: Setter for extracted duration
                                                                                 />
                                                                             );
                                                                         })}
@@ -3144,51 +4006,57 @@ function CourseEditCurriculum() {
                                         </div>
                                     </div>
 
-                                    {/* Validation Summary */}
-                                    {validationState.summary.errors.length > 0 && (
-                                        <div className="validation-summary">
-                                            <div className="validation-errors">
-                                                <strong>
-                                                    <i className="fas fa-exclamation-triangle me-2 text-danger"></i>
-                                                    Silakan perbaiki kesalahan berikut:
-                                                </strong>
-                                                <ul className="mt-2 mb-0">
-                                                    {validationState.summary.errors.map((error, index) => (
-                                                        <li key={index}>{error}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
+                                    {/* ✨ PHASE 4.170: Auto-save status and action buttons */}
+                                    <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+                                        {/* Auto-save status info on the left */}
+                                        <div className="form-status-info">
+                                            {autoSaveStatus === "saving" && (
+                                                <div className="text-info small">
+                                                    <div className="spinner-border spinner-border-sm me-1" style={{ width: '14px', height: '14px', display: 'inline-block' }}></div>
+                                                    Menyimpan kurikulum...
+                                                </div>
+                                            )}
+                                            {autoSaveStatus === "saved" && (
+                                                <div className="text-success small">
+                                                    <i className="fas fa-check-circle me-1"></i>
+                                                    Kurikulum tersimpan
+                                                    {lastAutoSaveTime && (
+                                                        <span className="ms-1 text-muted">
+                                                            pada {lastAutoSaveTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {autoSaveStatus === "error" && (
+                                                <div className="text-danger small">
+                                                    <i className="fas fa-exclamation-circle me-1"></i>
+                                                    Gagal menyimpan, akan dicoba lagi...
+                                                </div>
+                                            )}
+                                            {autoSaveStatus === "idle" && !uiState.isDirty && (
+                                                <div className="text-muted small">
+                                                    <i className="fas fa-save me-1"></i>
+                                                    Semua perubahan tersimpan
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
 
-
-                                    <div className="d-flex justify-content-end align-items-center gap-3">
-                                        {/* Alert on the right, before the button */}
-                                        {!uiState.isDirty && (
-                                        <div
-                                            className="alert alert-info mb-0 py-2 px-3"
-                                            style={{ fontSize: "1rem" }}
-                                        >
-                                            <i className="fas fa-info-circle me-2"></i>
-                                            Buat perubahan untuk mengaktifkan tombol simpan
-                                        </div>
-                                        )}
-                                        {/* Button on the far right */}
-                                        <button
-                                        type="submit"
-                                        className={`btn btn-update-course btn-lg ${uiState.submitStatus}`}
-                                        style={{ minHeight: "44px", paddingTop: "8px", paddingBottom: "8px" }}
-                                        disabled={!uiState.isDirty || uiState.isSubmitting}
-                                        ref={submitButtonRef}
-                                        >
-                                        {uiState.isSubmitting && (
-                                            <div className="spinner-border spinner-border-sm me-2" role="status">
-                                            <span className="visually-hidden">Loading...</span>
+                                        {/* Validation Summary */}
+                                        {validationState.summary.errors.length > 0 && (
+                                            <div className="validation-summary">
+                                                <div className="validation-errors">
+                                                    <strong>
+                                                        <i className="fas fa-exclamation-triangle me-2 text-danger"></i>
+                                                        Silakan perbaiki kesalahan berikut:
+                                                    </strong>
+                                                    <ul className="mt-2 mb-0">
+                                                        {validationState.summary.errors.map((error, index) => (
+                                                            <li key={index}>{error}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
                                             </div>
                                         )}
-                                        <i className={`fas ${uiState.isSubmitting ? "fa-spinner fa-spin" : "fa-save"} me-2`}></i>
-                                        {uiState.isSubmitting ? "Memperbarui Kurikulum..." : "Perbarui Kurikulum"}
-                                        </button>
                                     </div>
                                 </div>
 

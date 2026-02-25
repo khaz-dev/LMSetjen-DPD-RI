@@ -13,14 +13,17 @@ const LecturesTab = ({
     enrollmentId,
     fetchCourseDetail,
     completionPercentage,
-    // Video player modal state
-    show,
-    setShow,
+    // Video player state - now uses inline VideoPlayer (no modal)
     variantItem,
-    setVariantItem
+    setVariantItem,
+    isVideoPlaying,  // ✨ PHASE 4.105: Track if video is currently playing
+    toggleVideoPlayPause,  // ✨ PHASE 4.105: Function to toggle play/pause
+    onProgressUpdate,  // ✨ PHASE 4.115: Callback when progress is saved externally
+    onLessonCompletion  // ✨ PHASE 4.133: Callback to register lesson completion handler
 }) => {
     // Video player ref
     const playerRef = useRef(null);
+    const isClickingLessonRef = useRef(false);  // ✨ PHASE 4.111: Use ref to prevent concurrent clicks without causing re-renders
     
     // Video player states
     const [playing, setPlaying] = useState(false);
@@ -42,10 +45,12 @@ const LecturesTab = ({
     
     // Lesson completion state
     const [markAsCompletedStatus, setMarkAsCompletedStatus] = useState({});
+    const [isClickingLessonUI, setIsClickingLessonUI] = useState(false);  // ✨ PHASE 4.111: State for visual feedback
 
     // Helper function to check if a lesson is completed
     const isLessonCompleted = (variantItem) => {
-        if (!course.completed_lesson || !variantItem) return false;
+        // ✨ PHASE 4.145: Guard against null course data (may not be loaded yet)
+        if (!course || !course.completed_lesson || !variantItem) return false;
         
         return course.completed_lesson.some(cl => {
             // Use consistent variant_item_id field throughout
@@ -54,7 +59,12 @@ const LecturesTab = ({
     };
 
     // Helper functions for file handling
-    const getFileIcon = (fileUrl) => {
+    const getFileIcon = (fileUrl, variantItem = null) => {
+        // ✨ PHASE 4.10: Check for video content from all sources
+        if (variantItem && isVideoContent(variantItem)) {
+            return "fas fa-play";
+        }
+        
         if (!fileUrl) return "fas fa-file";
         
         const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0];
@@ -85,7 +95,12 @@ const LecturesTab = ({
         return iconMap[extension] || "fas fa-file";
     };
 
-    const getFileTypeIcon = (fileUrl) => {
+    const getFileTypeIcon = (fileUrl, variantItem = null) => {
+        // ✨ PHASE 4.10: Check for video content from all sources
+        if (variantItem && isVideoContent(variantItem)) {
+            return "fas fa-video";
+        }
+        
         if (!fileUrl) return "fas fa-file";
         
         const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0];
@@ -99,7 +114,12 @@ const LecturesTab = ({
         return iconMap[extension] || "fas fa-file";
     };
 
-    const getFileTypeLabel = (fileUrl) => {
+    const getFileTypeLabel = (fileUrl, variantItem = null) => {
+        // ✨ PHASE 4.10: Check for video content from all sources
+        if (variantItem && isVideoContent(variantItem)) {
+            return "Video";
+        }
+        
         if (!fileUrl) return "File";
         
         const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0];
@@ -113,14 +133,21 @@ const LecturesTab = ({
         return labelMap[extension] || "File";
     };
 
-    const getFileTypeTitle = (fileUrl) => {
-        const type = getFileTypeLabel(fileUrl);
+    const getFileTypeTitle = (fileUrl, variantItem = null) => {
+        // ✨ PHASE 4.10: Check if it's video content from all sources
+        if (variantItem && isVideoContent(variantItem)) {
+            return "Putar video";
+        }
+        
+        const type = getFileTypeLabel(fileUrl, variantItem);
         return type === "Video" ? "Putar video" : `Buka ${type.toLowerCase()}`;
     };
 
     // Helper function to get lesson progress status
     const getLessonProgressStatus = (variantItem) => {
-        if (!variantItem) return { status: "not-started", percentage: 0 };
+        if (!variantItem) {
+            return { status: "not-started", percentage: 0 };
+        }
         
         // Check if lesson is completed first (from backend data)
         const isCompleted = isLessonCompleted(variantItem);
@@ -134,10 +161,17 @@ const LecturesTab = ({
         const lessonProgress = progressStatus[progressKey];
         
         if (lessonProgress) {
-            // Use the stored progress data
-            if (lessonProgress.percentage > 0) {
-                return lessonProgress;
+            // Use the stored progress data - check status field, not just percentage
+            // Even 0.05% progress counts as "in-progress"
+            if (lessonProgress.status === "in-progress" || lessonProgress.percentage >= 0) {
+                // For display, ensure percentage shows at least 1% if in-progress
+                const displayPercentage = lessonProgress.status === "in-progress" && lessonProgress.percentage === 0 
+                    ? 1  // Show at least 1% for any in-progress content
+                    : lessonProgress.percentage;
+                return { ...lessonProgress, percentage: displayPercentage };
+            } else {
             }
+        } else {
         }
         
         // For video files, show "Ready to watch" only if no progress exists
@@ -147,6 +181,74 @@ const LecturesTab = ({
         
         return { status: "not-started", percentage: 0 };
     };
+
+    // ✨ PHASE 4.115: Define updateProgressStatus BEFORE useEffect that uses it
+    const updateProgressStatus = (variantItemId, progressData) => {
+        const progressKey = `progress_${variantItemId}`;
+        
+        
+        if (!progressData) {
+            setProgressStatus(prev => {
+                const newState = {
+                    ...prev,
+                    [progressKey]: { status: "not-started", percentage: 0 }
+                };
+                return newState;
+            });
+            return;
+        }
+
+        // Determine status based on progress data
+        let status = "not-started";
+        const percentage = progressData.percentage || 0;
+        
+        if (progressData.isCompleted || percentage >= 99.8) {
+            status = "completed";
+        } else if (progressData.isInProgress || percentage > 0) {
+            status = "in-progress";
+        }
+
+        // ✨ PHASE 4.117: Keep decimal precision instead of rounding to integer
+        // This preserves small percentages like 0.05%, 0.45%, 1.25% instead of truncating to 0%
+        const displayPercentage = Math.round(percentage * 10) / 10;  // Round to 1 decimal place
+
+        setProgressStatus(prev => {
+            const newState = {
+                ...prev,
+                [progressKey]: { 
+                    status, 
+                    percentage: Math.min(Math.max(displayPercentage, 0), 100),  // Keep 1 decimal precision
+                    position: progressData.position || 0,
+                    duration: progressData.duration || 0
+                }
+            };
+            return newState;
+        });
+    };
+
+    // ✨ PHASE 4.115: Set up external progress update callback for CourseDetail
+    useEffect(() => {
+        // Expose updateProgressStatus method for external updates from CourseDetail
+        if (onProgressUpdate) {
+            onProgressUpdate(updateProgressStatus);
+        } else {
+        }
+        
+        return () => {
+        };
+    }, [onProgressUpdate]);
+
+    // ✨ PHASE 4.133: Set up external lesson completion callback for CourseDetail
+    useEffect(() => {
+        // Expose handleMarkLessonAsCompleted method for external updates from VideoPlayer
+        if (onLessonCompletion) {
+            onLessonCompletion(handleMarkLessonAsCompleted);
+        } else {
+        }
+        
+        return () => {
+        };
+    }, [onLessonCompletion]);
 
     // Helper function to count unique completed lessons
     const getCompletedLessonsCount = () => {
@@ -160,9 +262,9 @@ const LecturesTab = ({
         return completedSet.size;
     };
 
-    // Modal handlers
-    const handleClose = () => {
-        setShow(false);
+    // Video player handlers
+    // ✨ PHASE 4.86: Removed setShow since using inline VideoPlayer component
+    const handleCloseVideo = () => {
         setVariantItem(null);
         // Reset video player state
         setPlaying(false);
@@ -172,17 +274,75 @@ const LecturesTab = ({
         setSeekOnReady(null); // Reset seek position
     };
 
-    const handleShow = (variant_item) => {
-        setShow(true);
-        setVariantItem(variant_item);
-        // Reset video player state
-        setPlaying(true);
-        setPlayed(0);
-        setLoaded(0);
-        setDuration(0);
-        setSeekOnReady(null); // Reset seek position
+    const handlePlayVideo = (variant_item) => {
+        // ✨ PHASE 4.111: Prevent rapid repeated clicks using ref + state
+        if (isClickingLessonRef.current) {
+            return;
+        }
+        
+        
+        // ✨ PHASE 4.106: Check if clicking the same video that's currently selected
+        const isSameVideo = variantItem?.variant_item_id === variant_item.variant_item_id;
+        
+        if (isSameVideo) {
+            // ✨ PHASE 4.107: Same video is selected - toggle play/pause (works when paused too!)
+            // ✨ PHASE 4.142+: For toggle operations, use very short lock (50ms) to prevent accidental double-toggles
+            isClickingLessonRef.current = true;
+            setIsClickingLessonUI(true);
+            
+            toggleVideoPlayPause();
+            
+            // Reset immediately for play/pause toggle - no UI blocking needed
+            setTimeout(() => {
+                isClickingLessonRef.current = false;
+                setIsClickingLessonUI(false);
+            }, 50);  // Much shorter - just prevents accidental double-click
+        } else {
+            // ✨ PHASE 4.107: Different video - start playing the new video
+            // Only block UI when switching videos
+            isClickingLessonRef.current = true;
+            setIsClickingLessonUI(true);
+            
+            // ✨ PHASE 4.117: Load saved progress BEFORE playing new video to enable resume
+            const itemId = variant_item.variant_item_id;
+            const progressKey = `progress_${itemId}`;
+            const savedProgress = progressStatus[progressKey];
+            
+            if (savedProgress && savedProgress.position > 0) {
+                // Don't reset played/loaded - let CourseDetail's useEffect handle seek
+            } else {
+                // Reset video player state only if no saved progress
+                setPlayed(0);
+                setLoaded(0);
+                setDuration(0);
+            }
+            
+            // Set variant item to trigger video loading
+            setVariantItem(variant_item);
+            setPlaying(true);
+            
+            // Reset click flag after brief delay to prevent accidental double-clicks when switching videos
+            setTimeout(() => {
+                isClickingLessonRef.current = false;
+                setIsClickingLessonUI(false);  // Update UI to show ready state
+            }, 150);  // Shorter than before - 150ms is enough for video switch
+        }
     };
 
+    // ✨ PHASE 4.111: Failsafe to reset click lock if needed
+    useEffect(() => {
+        if (isClickingLessonUI) {
+            // If we're in "clicking" state for too long, something went wrong
+            const failsafeTimer = setTimeout(() => {
+                if (isClickingLessonUI) {
+                    isClickingLessonRef.current = false;
+                    setIsClickingLessonUI(false);
+                }
+            }, 2000);  // 2 second failsafe timeout
+            
+            return () => clearTimeout(failsafeTimer);
+        }
+    }, [isClickingLessonUI]);
     
 	// Video Progress Tracking Functions
 	const saveVideoProgress = async (variantItemId, position, duration, isCompleted = false) => {
@@ -192,12 +352,13 @@ const LecturesTab = ({
 
         try {
             const progressPercentage = (position / duration) * 100;
+            
 
             // Call backend API to save progress
             await apiInstance.post("/student/video-progress/", {
-                user: UserData()?.user_id,
-                course: course.course.id,
-                variant_item: variantItemId,
+                user_id: UserData()?.user_id,         // ✨ PHASE 4.115: Use user_id instead of user
+                course_id: course.course.id,          // ✨ PHASE 4.115: Use course_id instead of course
+                variant_item_id: variantItemId,       // ✨ PHASE 4.115: Use variant_item_id instead of variant_item
                 progress_percentage: progressPercentage,
                 last_watched_position: position,
                 total_duration: duration
@@ -215,12 +376,11 @@ const LecturesTab = ({
             
             return true;
         } catch (error) {
-            console.error("[Video Progress] Error saving:", error);
             return false;
         }
     };
-	
-	    const loadVideoProgress = async (variantItemId) => {
+
+    const loadVideoProgress = async (variantItemId) => {
         if (!variantItemId || !course?.course?.id) {
             return null;
         }
@@ -231,12 +391,17 @@ const LecturesTab = ({
         }
 
         try {
+            
             // Call backend API to get progress
             const response = await apiInstance.get(`/student/video-progress/${UserData()?.user_id}/${variantItemId}/`);
-            const progressData = response.data;
+            const apiResponse = response.data;
+            
             
             // Mark as loaded
             setProgressLoadedLessons(prev => new Set([...prev, variantItemId]));
+            
+            // ✨ PHASE 4.117: Unwrap the data from {message, data} wrapper
+            const progressData = apiResponse.data || apiResponse;
             
             // Transform API response to expected format
             const transformedData = {
@@ -244,8 +409,9 @@ const LecturesTab = ({
                 duration: progressData.total_duration || 0,
                 percentage: progressData.progress_percentage || 0,
                 isCompleted: progressData.progress_percentage >= 99.8,
-                isInProgress: progressData.progress_percentage > 1 && progressData.progress_percentage < 99.8
+                isInProgress: progressData.progress_percentage > 0  // Any progress > 0 is in-progress
             };
+            
             
             // Update UI with loaded progress
             updateProgressStatus(variantItemId, transformedData);
@@ -275,22 +441,16 @@ const LecturesTab = ({
                         const resumeMinutes = Math.floor(transformedData.position / 60);
                         const resumeSeconds = Math.floor(transformedData.position % 60);
                         const timeString = `${resumeMinutes}:${resumeSeconds.toString().padStart(2, "0")}`;
-                        
-                        Toast().fire({
-                            icon: "info",
-                            title: "Melanjutkan Video",
-                            text: `Melanjutkan dari tempat Anda meninggalkannya pada ${timeString}`,
-                            timer: 5174,
-                            toast: true,
-                            position: "top-end"
-                        });
                     }
                 }
             }
             
             return transformedData;
         } catch (error) {
-            console.warn(`[Video Progress] Failed to load progress for lesson ${variantItemId}:`, error);
+            // Different handling for 404 vs other errors
+            if (error.response?.status === 404) {
+            } else {
+            }
             
             // Mark as loaded to avoid retries
             setProgressLoadedLessons(prev => new Set([...prev, variantItemId]));
@@ -299,40 +459,7 @@ const LecturesTab = ({
         }
     };
 	
-	   
-	   const updateProgressStatus = (variantItemId, progressData) => {
-        const progressKey = `progress_${variantItemId}`;
-        
-        if (!progressData) {
-            setProgressStatus(prev => ({
-                ...prev,
-                [progressKey]: { status: "not-started", percentage: 0 }
-            }));
-            return;
-        }
-
-        // Determine status based on progress data
-        let status = "not-started";
-        const percentage = progressData.percentage || 0;
-        
-        if (progressData.isCompleted || percentage >= 99.8) {
-            status = "completed";
-        } else if (progressData.isInProgress || percentage > 0) {
-            status = "in-progress";
-        }
-
-        setProgressStatus(prev => ({
-            ...prev,
-            [progressKey]: { 
-                status, 
-                percentage: Math.round(Math.min(Math.max(percentage, 0), 100)),
-                position: progressData.position || 0,
-                duration: progressData.duration || 0
-            }
-        }));
-    };
-
-    // Function to refresh progress data
+	// Function to refresh progress data
     const refreshProgressData = async () => {
         setProgressLoadedLessons(new Set()); // Clear loaded lessons to force reload
         setProgressStatus({}); // Clear current progress status
@@ -346,6 +473,13 @@ const LecturesTab = ({
     };
 
     const handleMarkLessonAsCompleted = async (variantItemId, isAutoComplete = false) => {
+        // ✨ PHASE 4.145: Guard - if course data not loaded yet, wait for it
+        if (!course) {
+            if (Math.random() < 0.1) { // Log selectively
+            }
+            return; // Early return if course not yet loaded
+        }
+        
         // Use helper function to check completion status consistently
         const variantItem = { variant_item_id: variantItemId };
         const isAlreadyCompleted = isLessonCompleted(variantItem);
@@ -368,10 +502,22 @@ const LecturesTab = ({
         });
 
         try {
+            // ✨ PHASE 4.144+: Safely get course_id - handle missing or nested data
+            const courseId = course?.course?.id || course?.id;
+            if (!courseId) {
+                Toast().fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Data kursus tidak ditemukan. Refresh halaman dan coba lagi.",
+                    timer: 2000
+                });
+                return;
+            }
+
             // The backend automatically toggles completion status
             const formdata = new FormData();
             formdata.append("user_id", UserData()?.user_id || 0);
-            formdata.append("course_id", course.course?.id);
+            formdata.append("course_id", courseId);  // ✨ PHASE 4.144+: Use safely extracted courseId
             formdata.append("variant_item_id", variantItemId);
 
             const response = await useAxios.post("student/course-completed/", formdata);
@@ -391,8 +537,9 @@ const LecturesTab = ({
                 });
             }
             
-            // Clear video progress for video lessons in different scenarios
-            if (lessonItem && isVideoFile(lessonItem.file)) {
+            // ✨ PHASE 4.126: Clear video progress for ALL video types (YouTube, uploaded, Google Drive)
+            // Changed from isVideoFile() to isVideoContent() to support YouTube links
+            if (lessonItem && isVideoContent(lessonItem)) {
                 if (isAlreadyCompleted && !isAutoComplete) {
                     // Case 1: User manually unmarked a completed lesson
                     try {
@@ -407,7 +554,6 @@ const LecturesTab = ({
                             return newStatus;
                         });
                     } catch (progressError) {
-                        console.error(`[Progress Cleanup] Failed to clear progress for unmarked lesson ${variantItemId}:`, progressError);
                     }
                 } else if (!isAlreadyCompleted) {
                     // Case 2: Lesson was just marked as completed (manually or automatically)
@@ -427,7 +573,6 @@ const LecturesTab = ({
                             }
                         }));
                     } catch (progressError) {
-                        console.error(`[Progress Cleanup] Failed to clear progress for completed lesson ${variantItemId}:`, progressError);
                     }
                 }
             }
@@ -474,7 +619,6 @@ const LecturesTab = ({
                 }
             }
         } catch (error) {
-            console.error("Error updating lesson completion:", error);
             setMarkAsCompletedStatus({
                 ...markAsCompletedStatus,
                 [key]: "Error",
@@ -489,11 +633,114 @@ const LecturesTab = ({
         }
     };
 
-    // Video file detection
+    // Video file detection - checks only uploaded files
     const isVideoFile = (filename) => {
         if (!filename) return false;
         const videoExtensions = [".mp4", ".webm", ".ogg", ".avi", ".mov", ".wmv", ".flv", ".mkv", ".m4v"];
         return videoExtensions.some(ext => filename.toLowerCase().includes(ext.toLowerCase()));
+    };
+
+    // ✨ PHASE 4.10: Extract Google Drive file ID from various URL formats
+    const extractGoogleDriveFileId = (url) => {
+        if (!url) return null;
+        try {
+            // Format 1: https://drive.google.com/file/d/FILE_ID/view...
+            const match1 = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            if (match1?.[1]) return match1[1];
+            
+            // Format 2: https://drive.google.com/uc?id=FILE_ID...
+            const match2 = url.match(/[?&]id=([a-zA-Z0-9-_]+)/);
+            if (match2?.[1]) return match2[1];
+            
+            return null;
+        } catch {
+            return null;
+        }
+    };
+
+    // ✨ PHASE 4.10: Extract YouTube video ID from various URL formats
+    const extractYoutubeId = (url) => {
+        if (!url) return null;
+        try {
+            const regexps = [
+                /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,     // https://www.youtube.com/watch?v=ID
+                /youtu\.be\/([a-zA-Z0-9_-]{11})/,                  // https://youtu.be/ID
+                /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,        // https://www.youtube.com/embed/ID
+                /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,            // https://www.youtube.com/v/ID
+                /youtube-nocookie\.com\/embed\/([a-zA-Z0-9_-]{11})/,  // https://www.youtube-nocookie.com/embed/ID
+                /^([a-zA-Z0-9_-]{11})$/                            // Just the ID
+            ];
+            
+            for (const regex of regexps) {
+                const match = url.match(regex);
+                if (match?.[1]) return match[1];
+            }
+            
+            return null;
+        } catch {
+            return null;
+        }
+    };
+
+    // ✨ PHASE 4.10+: Check if variant item contains any video content (uploaded, Google Drive, or YouTube)
+    // ✨ PHASE 4.84: Parse file field directly - backend stores all links (YouTube, Google Drive, uploaded files) in file field
+    const isVideoContent = (variantItem) => {
+        if (!variantItem) return false;
+        
+        const fileUrl = variantItem.file || '';
+        
+        // Check uploaded video files
+        if (isVideoFile(fileUrl)) {
+            return true;
+        }
+        
+        // Check Google Drive links - parse directly from file field
+        if (fileUrl.includes('drive.google.com')) {
+            return true;
+        }
+        
+        // Check YouTube links - parse directly from file field
+        if (
+            fileUrl.includes('youtube.com') || 
+            fileUrl.includes('youtu.be') ||
+            fileUrl.includes('youtube-nocookie.com')
+        ) {
+            return true;
+        }
+        
+        return false;
+    };
+
+    // ✨ PHASE 4.10+: Get the actual playable video URL from the appropriate source
+    // ✨ PHASE 4.84: Parse file field directly - backend stores all links in file field
+    const getVideoUrl = (variantItem) => {
+        if (!variantItem) return null;
+        
+        const fileUrl = variantItem.file || '';
+        
+        // Priority 1: Uploaded video file
+        if (isVideoFile(fileUrl)) {
+            return fileUrl.startsWith("http") 
+                ? fileUrl 
+                : getMediaUrl(fileUrl);
+        }
+        
+        // Priority 2: Google Drive link - convert to view format for embedded playback
+        // ✨ PHASE 4.85: Use /view instead of /preview (preview doesn't support embedding)
+        if (fileUrl.includes('drive.google.com')) {
+            const fileId = extractGoogleDriveFileId(fileUrl);
+            if (fileId) {
+                return `https://drive.google.com/file/d/${fileId}/view`;  // ✅ /view embeds properly
+            }
+            return fileUrl; // Fallback to original link
+        }
+        
+        // Priority 3: YouTube link
+        if (fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be') || fileUrl.includes('youtube-nocookie.com')) {
+            return fileUrl;
+        }
+        
+        return null;
     };
 
     // Video player event handlers
@@ -510,11 +757,18 @@ const LecturesTab = ({
         setPlayed(progress.played);
         setLoaded(progress.loaded);
         
+        // Debug: Log conditions (sample every ~30 frames, once per second)
+        if (Math.random() < 0.03) {
+        }
+        
         // Only save progress when video is actively playing and has meaningful progress
         if (variantItem && duration > 0 && playing && progress.played > 0.01) {
             const currentPosition = progress.played * duration;
             const progressPercentage = progress.played * 100;
             const itemId = variantItem.variant_item_id;
+            
+            if (Math.random() < 0.03) {
+            }
             
             // Only save progress if video is not completed (less than 100%)
             if (progressPercentage < 100) {
@@ -537,9 +791,9 @@ const LecturesTab = ({
                 
                 if (!isAlreadyCompleted) {
                     handleMarkLessonAsCompleted(itemId, true).then(() => {
-                        // Close modal after completion with delay to show message
+                        // Close video after completion with delay to show message
                         setTimeout(() => {
-                            handleClose();
+                            handleCloseVideo();
                         }, 4000);
                     });
                 }
@@ -678,25 +932,27 @@ const LecturesTab = ({
     // Keyboard shortcuts
     useEffect(() => {
         const handleKeyPress = (e) => {
-            if (!show || !isVideoFile(variantItem?.file)) return;
+            // ✨ PHASE 4.86: Check variantItem instead of show flag
+            if (!variantItem || !isVideoFile(variantItem?.file)) return;
             
             switch (e.code) {
                 case "Space":
                     e.preventDefault();
                     handlePlayPause();
                     break;
-                case "ArrowLeft":
-                    e.preventDefault();
-                    const backwardTime = Math.max(0, played - 0.05);
-                    setPlayed(backwardTime);
-                    playerRef.current?.seekTo(backwardTime);
-                    break;
-                case "ArrowRight":
-                    e.preventDefault();
-                    const forwardTime = Math.min(1, played + 0.05);
-                    setPlayed(forwardTime);
-                    playerRef.current?.seekTo(forwardTime);
-                    break;
+                // ✨ PHASE 4.91: Disabled arrow keys for video seeking
+                // case "ArrowLeft":
+                //     e.preventDefault();
+                //     const backwardTime = Math.max(0, played - 0.05);
+                //     setPlayed(backwardTime);
+                //     playerRef.current?.seekTo(backwardTime);
+                //     break;
+                // case "ArrowRight":
+                //     e.preventDefault();
+                //     const forwardTime = Math.min(1, played + 0.05);
+                //     setPlayed(forwardTime);
+                //     playerRef.current?.seekTo(forwardTime);
+                //     break;
                 case "ArrowUp":
                     e.preventDefault();
                     setVolume(Math.min(1, volume + 0.1));
@@ -720,7 +976,7 @@ const LecturesTab = ({
 
         document.addEventListener("keydown", handleKeyPress);
         return () => document.removeEventListener("keydown", handleKeyPress);
-    }, [show, variantItem, playing, played, volume, muted]);
+    }, [variantItem, playing, played, volume, muted]); // ✨ PHASE 4.86: Removed 'show' - now using inline display
 
     // Handle fullscreen changes
     useEffect(() => {
@@ -750,17 +1006,47 @@ const LecturesTab = ({
         if (course?.curriculum && course.curriculum.length > 0) {
             const loadAllProgress = async () => {
                 try {
-                    // Load progress for each video lesson individually
+                    
+                    // Count video lessons to load
+                    let videoLessonCount = 0;
+                    const lessonsTitles = [];
                     for (const section of course.curriculum) {
                         if (section.variant_items && section.variant_items.length > 0) {
                             for (const item of section.variant_items) {
-                                if (isVideoFile(item.file)) {
+                                // ✨ PHASE 4.118: Use isVideoContent to check ALL video types (uploaded, YouTube, Google Drive)
+                                if (isVideoContent(item)) {
+                                    videoLessonCount++;
+                                    lessonsTitles.push(`${item.title} (ID: ${item.variant_item_id})`);
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (videoLessonCount === 0) {
+                        return;
+                    }
+                    
+                    // Load progress for each video lesson individually
+                    let successCount = 0;
+                    let failureCount = 0;
+                    let noProgressCount = 0;
+                    
+                    for (const section of course.curriculum) {
+                        if (section.variant_items && section.variant_items.length > 0) {
+                            for (const item of section.variant_items) {
+                                // ✨ PHASE 4.118: Use isVideoContent to check ALL video types (uploaded, YouTube, Google Drive)
+                                if (isVideoContent(item)) {
                                     const itemId = item.variant_item_id;
                                     if (itemId) {
                                         try {
-                                            await loadVideoProgress(itemId);
+                                            const progressData = await loadVideoProgress(itemId);
+                                            if (progressData && progressData.percentage > 0) {
+                                                successCount++;
+                                            } else {
+                                                noProgressCount++;
+                                            }
                                         } catch (loadError) {
-                                            console.error(`[Video Progress] Failed to load progress for ${itemId}:`, loadError);
+                                            failureCount++;
                                         }
                                     }
                                 }
@@ -768,31 +1054,33 @@ const LecturesTab = ({
                         }
                     }
                 } catch (error) {
-                    console.error("[Video Progress] Failed to load all progress:", error);
                 }
             };
             
-            loadAllProgress();
+            // Add small delay to ensure component is fully mounted
+            const timer = setTimeout(loadAllProgress, 500);
+            return () => clearTimeout(timer);
+        } else {
         }
     }, [course]);
 
-    // Load video progress when modal opens (resume functionality)
+    // Load video progress when video is selected (resume functionality)
+    // ✨ PHASE 4.86: Check variantItem instead of show flag (inline display)
     useEffect(() => {
-        if (show && variantItem && isVideoFile(variantItem.file)) {
+        if (variantItem && isVideoContent(variantItem)) {  // ✨ PHASE 4.132: Changed from isVideoFile to isVideoContent to support YouTube, Google Drive, and uploaded videos
             const itemId = variantItem.variant_item_id;
             if (itemId) {
                 loadVideoProgress(itemId);
             } else {
-                console.warn(`[Video Progress] No variant_item_id found for modal lesson: ${variantItem.title}`);
             }
+        } else if (variantItem) {
         }
-    }, [show, variantItem]);
+    }, [variantItem]);
 
     // Enhanced seek to specific time when video is ready (improved resume functionality)
     useEffect(() => {
         const performSeek = async (timeToSeek, maxRetries = 5) => {
             if (!playerRef.current || !timeToSeek || timeToSeek <= 0 || !duration) {
-                console.warn("[Video Resume] Invalid conditions for seeking");
                 setSeekOnReady(null);
                 return;
             }
@@ -843,7 +1131,6 @@ const LecturesTab = ({
                         }, 800); // Give player more time to complete seek
                         
                     } catch (error) {
-                        console.error(`[Video Resume] Seek attempt ${attempt} failed:`, error);
                         resolve(false);
                     }
                 });
@@ -863,14 +1150,14 @@ const LecturesTab = ({
                 }
             }
 
-            console.error(`[Video Resume] Failed to seek to ${timeToSeek}s after ${maxRetries} attempts`);
             setSeekOnReady(null); // Clear seek request even on failure
         };
 
-        if (show && variantItem && playerRef.current && seekOnReady && duration > 0) {
+        // ✨ PHASE 4.86: Check variantItem instead of show (inline display mode)
+        if (variantItem && playerRef.current && seekOnReady && duration > 0) {
             performSeek(seekOnReady);
         }
-    }, [show, variantItem, duration, seekOnReady]);
+    }, [variantItem, duration, seekOnReady]);
 
     // ✨ Handle aria-expanded attribute and chevron rotation on collapse toggle
     useEffect(() => {
@@ -912,10 +1199,10 @@ const LecturesTab = ({
                         <div className="curriculum-progress-container">
                             {/* Move stats above the bar */}
                             <div className="course-progress-stats">
-                                <span className="progress-text text-white">
+                                <span className="progress-text text-white" style={{ color: "white" }}>
                                     {completedLessons}/{totalLessons} pelajaran
                                 </span>
-                                <span className="progress-percentage text-white">
+                                <span className="progress-percentage text-white" style={{ color: "white" }}>
                                     {progressPercentage}%
                                 </span>
                             </div>
@@ -963,12 +1250,12 @@ const LecturesTab = ({
                                 const progressStatus = getLessonProgressStatus(l);
                                 const isCompleted = progressStatus.status === "completed";
                                 const isInProgress = progressStatus.status === "in-progress";
-                                const isVideoLesson = isVideoFile(l.file);
+                                const isVideoLesson = isVideoContent(l);  // ✨ PHASE 4.10: Check all video sources
                                 const itemId = l.variant_item_id;
                                 
                                 return (
                                     <div key={l.variant_item_id || lessonIndex} className="mb-3">{/* Use only variant_item_id for key */}
-                                        <div className={`lesson-item ${isCompleted ? "completed" : isInProgress ? "in-progress" : ""} p-3 rounded-3 position-relative`}>
+                                        <div className={`lesson-item ${isCompleted ? "completed" : isInProgress ? "in-progress" : ""} ${variantItem?.variant_item_id === l.variant_item_id ? "active" : ""} p-3 rounded-3 position-relative`}>
                                             {/* Enhanced Progress indicator */}
                                             <div className={`lesson-progress-indicator ${progressStatus.status}`}>
                                                 {isInProgress && (
@@ -981,27 +1268,71 @@ const LecturesTab = ({
                                             
                                             <div className="d-flex align-items-center justify-content-between">
                                                 <div className="d-flex align-items-center gap-3 flex-grow-1">
-                                                    <button 
-                                                        onClick={() => handleShow(l)} 
-                                                        className={`lesson-play-btn ${progressStatus.status}`}
-                                                        title={getFileTypeTitle(l.file)}
-                                                    >
-                                                        {progressStatus.status === "completed" ? (
-                                                            <i className="fas fa-check"></i>
-                                                        ) : progressStatus.status === "in-progress" ? (
-                                                            <i className="fas fa-play text-warning"></i>
-                                                        ) : (
-                                                            <i className={getFileIcon(l.file)}></i>
-                                                        )}
-                                                    </button>
+                                                    {(() => {
+                                                        // ✨ PHASE 4.118: Define isSameLesson outside button so it can be used in disabled attribute
+                                                        const isSameLesson = variantItem?.variant_item_id === l.variant_item_id;
+                                                        
+                                                        return (
+                                                            <button 
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    // ✨ PHASE 4.142+: Double-check lock before processing click
+                                                                    if (isClickingLessonRef.current) {
+                                                                        return;
+                                                                    }
+                                                                    handlePlayVideo(l);
+                                                                }}
+                                                                onKeyPress={(e) => {
+                                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+                                                                        // ✨ PHASE 4.142+: Prevent keyboard access when button is locked
+                                                                        const isSameLesson = variantItem?.variant_item_id === l.variant_item_id;
+                                                                        if (isSameLesson && isClickingLessonUI) {
+                                                                            return;  // Blocked
+                                                                        }
+                                                                        handlePlayVideo(l);
+                                                                    }
+                                                                }}
+                                                                className={`lesson-play-btn ${progressStatus.status}`}
+                                                                title={getFileTypeTitle(l.file, l)}
+                                                                disabled={isSameLesson && isClickingLessonUI}
+                                                                style={{
+                                                                    cursor: (isSameLesson && isClickingLessonUI) ? 'not-allowed' : 'pointer',
+                                                                    opacity: (isSameLesson && isClickingLessonUI) ? 0.6 : 1,
+                                                                    transition: 'opacity 0.2s ease'
+                                                                }}
+                                                            >
+                                                                {(() => {
+                                                                    const shouldShowPause = isSameLesson && isVideoPlaying;
+                                                                    
+                                                                    // ✨ PHASE 4.107: Show play/pause icons for currently selected lesson, regardless of progress status
+                                                                    if (progressStatus.status === "completed") {
+                                                                        return <i className="fas fa-check"></i>;
+                                                                    } else if (isSameLesson) {
+                                                                        // Currently selected lesson - show play/pause icon
+                                                                        return shouldShowPause ? (
+                                                                            <i className="fas fa-pause text-warning"></i>
+                                                                        ) : (
+                                                                            <i className="fas fa-play text-warning"></i>
+                                                                        );
+                                                                    } else {
+                                                                        // Different lesson - show generic file icon
+                                                                        return <i className={getFileIcon(l.file, l)}></i>;
+                                                                    }
+                                                                })()}
+                                                            </button>
+                                                        );
+                                                    })()}
                                                     <div className="flex-grow-1">
                                                         <h6 className="mb-1 lesson-title">
                                                             {l.title}
                                                         </h6>
                                                         <div className="d-flex align-items-center gap-3 flex-wrap">
                                                             <small className="lesson-meta">
-                                                                <i className={`${getFileTypeIcon(l.file)} me-1`}></i>
-                                                                {getFileTypeLabel(l.file)}
+                                                                <i className={`${getFileTypeIcon(l.file, l)} me-1`}></i>  {/* ✨ PHASE 4.10: Pass variant item */}
+                                                                {getFileTypeLabel(l.file, l)}  {/* ✨ PHASE 4.10: Pass variant item */}
                                                             </small>
                                                             {l.content_duration && l.content_duration !== "0m 0s" && (
                                                                 <small className="lesson-meta">
@@ -1082,218 +1413,6 @@ const LecturesTab = ({
                     <p>Konten kursus akan segera tersedia</p>
                 </div>
             )}
-
-            {/* File Viewer Modal */}
-            <Modal show={show} onHide={handleClose} size="xl" className="viewer-modal-modern">
-                <Modal.Header 
-                    className="border-0 text-white position-relative"
-                    style={{
-                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                        padding: "1rem 2rem",
-                        zIndex: 10
-                    }}
-                >
-                    {/* Decorative background elements */}
-                    <div 
-                        style={{
-                            position: "absolute",
-                            top: "-50%",
-                            right: "-20%",
-                            width: "40%",
-                            height: "200%",
-                            background: "rgba(255, 255, 255, 0.1)",
-                            transform: "rotate(15deg)",
-                            zIndex: -1
-                        }}
-                    ></div>
-                    
-                    <Modal.Title className="d-flex align-items-center" style={{ zIndex: 2, position: "relative" }}>
-                        <div 
-                            className="me-3"
-                            style={{
-                                width: "50px",
-                                height: "50px",
-                                background: "rgba(255, 255, 255, 0.2)",
-                                borderRadius: "15px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center"
-                            }}
-                        >
-                            <i className={`${getFileTypeIcon(variantItem?.file)} text-white`} style={{ fontSize: "1.2rem" }}></i>
-                        </div>
-                        <div>
-                            <div className="fw-bold fs-4">{variantItem?.title}</div>
-                            <div className="d-flex align-items-center gap-3">
-                                <small className="opacity-90">
-                                    {getFileTypeLabel(variantItem?.file)} • {variantItem?.content_duration || "N/A"}
-                                </small>
-                            </div>
-                        </div>
-                    </Modal.Title>
-                    <button
-                        type="button"
-                        className="btn btn-close"
-                        aria-label="Close"
-                        onClick={handleClose}
-                        style={{
-                            position: "absolute",
-                            top: "1.5rem",
-                            right: "1.5rem",
-                            zIndex: 100
-                        }}
-                    >
-                        <i className="fas fa-times"></i>
-                    </button>
-                </Modal.Header>
-                <Modal.Body className="p-0 bg-dark position-relative">
-                    {variantItem?.file && (
-                        <>
-                            {isVideoFile(variantItem.file) ? (
-                                // Video Player
-                                <div className="video-container position-relative">
-                                    {/* Progress badge at top right */}
-                            {isVideoFile(variantItem?.file) && (
-                                <div
-                                    className="video-progress-badge"
-                                    style={{
-                                        position: "absolute",
-                                        top: "16px",
-                                        right: "24px",
-                                        background: "rgba(0,0,0,0.7)",
-                                        color: "#fff",
-                                        padding: "6px 14px",
-                                        borderRadius: "18px",
-                                        fontSize: "0.95rem",
-                                        zIndex: 2147483647,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "6px",
-                                        width: "fit-content",
-                                        maxWidth: "200px",
-                                        whiteSpace: "nowrap"
-                                    }}
-                                >
-                                    <i className="fas fa-chart-line"></i>
-                                    {Math.round(played * 100)}% ditonton
-                                </div>
-                            )}                                    <ReactPlayer
-                                        url={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
-                                        controls={true}
-                                        playing={playing}
-                                        width="100%"
-                                        height={"60vh"}
-                                        onProgress={handleProgress}
-                                        ref={playerRef}
-                                        onPause={() => {
-                                            // Save progress when user pauses the video
-                                            if (variantItem && duration > 0) {
-                                                const itemId = variantItem.variant_item_id;
-                                                const currentTime = playerRef.current?.getCurrentTime?.() || (played * duration);
-                                                const progressPercentage = (currentTime / duration) * 100;
-                                                saveVideoProgress(itemId, currentTime, duration, progressPercentage >= 99.8);
-                                            }
-                                        }}
-                                        onEnded={() => {
-                                            // Mark lesson as completed when video ends and close modal
-                                            const variantItemForCompletion = { variant_item_id: variantItem.variant_item_id };
-                                            
-                                            const completeLesson = () => {
-                                                if (!isLessonCompleted(variantItemForCompletion)) {
-                                                    handleMarkLessonAsCompleted(variantItem.variant_item_id, true).then(() => {
-                                                        // Close modal after completion with delay to show success message
-                                                        setTimeout(() => {
-                                                            handleClose();
-                                                        }, 4000);
-                                                    });
-                                                } else {
-                                                    // If already completed, just close modal with shorter delay
-                                                    setTimeout(() => {
-                                                        handleClose();
-                                                    }, 2000);
-                                                }
-                                            };
-                                            
-                                            // Check if video is in fullscreen mode
-                                            const isFullscreen = document.fullscreenElement || 
-                                                document.webkitFullscreenElement || 
-                                                document.mozFullScreenElement || 
-                                                document.msFullscreenElement;
-                                            
-                                            if (isFullscreen) {
-                                                // Exit fullscreen first
-                                                const exitFullscreen = document.exitFullscreen ||
-                                                    document.webkitExitFullscreen ||
-                                                    document.mozCancelFullScreen ||
-                                                    document.msExitFullscreen;
-                                                
-                                                if (exitFullscreen) {
-                                                    exitFullscreen.call(document).then(() => {
-                                                        // Show notification after exiting fullscreen with small delay
-                                                        setTimeout(() => {
-                                                            completeLesson();
-                                                        }, 300);
-                                                    }).catch((err) => {
-                                                        console.error("[Fullscreen] Error exiting fullscreen:", err);
-                                                        // Show notification anyway if exit fails
-                                                        completeLesson();
-                                                    });
-                                                } else {
-                                                    // Fallback if exit not supported
-                                                    completeLesson();
-                                                }
-                                            } else {
-                                                // Not in fullscreen, show notification normally
-                                                completeLesson();
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            ) : (
-                                // File Preview for Non-Video Files
-                                <div className="p-4 text-center" style={{ minHeight: "400px" }}>
-                                    <div className="file-preview-container">
-                                        <div className="file-icon-large mb-3">
-                                            <i className={`${getFileTypeIcon(variantItem.file)} fa-4x`} style={{ color: "#667eea" }}></i>
-                                        </div>
-                                        <h5 className="mb-2 text-white">{variantItem.title}</h5>
-                                        <p className="text-muted mb-4">
-                                            {getFileTypeLabel(variantItem.file)} File
-                                        </p>
-                                        <div className="d-flex gap-3 justify-content-center">
-                                            <a
-                                                href={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="btn btn-primary btn-lg"
-                                                onClick={() => {
-                                                    // Mark as completed when user opens the file
-                                                    if (!isLessonCompleted(variantItem)) {
-                                                        setTimeout(() => {
-                                                            handleMarkLessonAsCompleted(variantItem.variant_item_id, true);
-                                                        }, 1000);
-                                                    }
-                                                }}
-                                            >
-                                                <i className="fas fa-external-link-alt me-2"></i>
-                                                Buka File
-                                            </a>
-                                            <a
-                                                href={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
-                                                download
-                                                className="btn btn-outline-light btn-lg"
-                                            >
-                                                <i className="fas fa-download me-2"></i>
-                                                Unduh
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </Modal.Body>
-            </Modal>
         </div>
     );
 };

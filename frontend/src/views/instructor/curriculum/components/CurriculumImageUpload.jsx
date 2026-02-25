@@ -23,8 +23,8 @@ const CurriculumImageUpload = ({
         if (!validTypes.includes(file.type)) {
             Toast().fire({
                 icon: "error",
-                title: "Invalid File Type",
-                text: "Please upload a valid image file (JPEG, PNG, GIF, or WebP)",
+                title: "Jenis File Tidak Valid",
+                text: "Silakan unggah file gambar yang valid (JPEG, PNG, GIF, atau WebP)",
             });
             event.target.value = '';
             return;
@@ -33,8 +33,8 @@ const CurriculumImageUpload = ({
         if (file.size > 5 * 1024 * 1024) { // 5MB
             Toast().fire({
                 icon: "error",
-                title: "File Too Large",
-                text: "Please upload an image smaller than 5MB",
+                title: "File Terlalu Besar",
+                text: "Silakan unggah gambar dengan ukuran lebih kecil dari 5MB",
             });
             event.target.value = '';
             return;
@@ -73,8 +73,8 @@ const CurriculumImageUpload = ({
             console.error("Error uploading image:", error);
             Toast().fire({
                 icon: "error",
-                title: "Upload Failed",
-                text: error.response?.data?.message || "Failed to upload image. Please try again.",
+                title: "Unggahan Gagal",
+                text: error.response?.data?.message || "Gagal mengunggah gambar. Silakan coba lagi.",
             });
         } finally {
             setLoading(false);

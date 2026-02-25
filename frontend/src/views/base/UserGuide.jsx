@@ -702,7 +702,7 @@ function UserGuide() {
                     questions: [
                         {
                             q: "Apakah LMSetjen DPD RI gratis?",
-                            a: "Ya, platform ini disediakan gratis untuk semua pegawai Sekretariat Jenderal DPD RI."
+                            a: "Ya, platform ini disediakan gratis terutama untuk semua pegawai Sekretariat Jenderal DPD RI."
                         },
                         {
                             q: "Bisakah saya mengakses materi di perangkat mobile?",

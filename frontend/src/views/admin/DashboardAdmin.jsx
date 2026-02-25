@@ -180,7 +180,7 @@ function DashboardAdmin() {
                 course.title.length > 20 ? course.title.substring(0, 20) + "..." : course.title
             ),
             datasets: [{
-                label: "Enrollments",
+                label: "Pendaftaran",
                 data: enrollmentAnalytics.top_performing_courses.map(course => course.enrollments),
                 backgroundColor: "rgba(54, 162, 235, 0.6)",
                 borderColor: "rgba(54, 162, 235, 1)",
@@ -513,7 +513,7 @@ function DashboardAdmin() {
                                                             <div className="activity-content">
                                                                 <h6 className="activity-title">{teacher.full_name}</h6>
                                                                 <p className="activity-description">
-                                                                    {teacher.course_count} courses
+                                                                    {teacher.course_count} kursus
                                                                 </p>
                                                             </div>
                                                         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext, useCallback } from "react";
+import { useEffect, useState, useContext, useCallback, useRef } from "react";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import { Link } from "react-router-dom";
@@ -8,7 +8,8 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { WishlistContext } from "../plugin/Context";
 import apiInstance from "../../utils/axios";
-import { getImageUrl } from "../../utils/fileUtils";
+import { getImageUrl, getLevelText } from "../../utils/courseUtils";
+import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Calculate JP
 import SEO from "../../components/SEO";
 import TestimonialSection from "../../components/TestimonialSection";
 import "./Index.css";
@@ -36,6 +37,9 @@ function Index() {
         platform_rating: 4.8
     });
     const [wishlistCount, setWishlistCount, refreshWishlistCount] = useContext(WishlistContext);
+    
+    // ✨ PHASE 4.177: Fetch guard to prevent duplicate API calls in React Strict Mode
+    const hasFetchedRef = useRef(false);
 
     const userData = UserData();
     const userId = userData?.user_id;
@@ -136,6 +140,13 @@ function Index() {
         // Scroll to top on page load
         window.scrollTo(0, 0);
         
+        // ✨ PHASE 4.177: Guard against duplicate API calls in React Strict Mode
+        // Skip if data is already loaded (check for any course data)
+        if (courses && courses.length > 0) return;
+        
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
+        
         // Fetch data
         fetchData();
         fetchStatistics();
@@ -144,7 +155,7 @@ function Index() {
         if (userId && !isAdminOrTeacher) {
             fetchWishlistItems();
         }
-    }, [userId, isAdminOrTeacher]);
+    }, [userId, isAdminOrTeacher, courses?.length]);
 
     const addToWishlist = useCallback(async (courseId) => {
         if (!userId) {
@@ -185,6 +196,22 @@ function Index() {
             });
         }
     }, [userId, isAdminOrTeacher, refreshWishlistCount, fetchWishlistItems]);
+
+    // ✨ PHASE 4.77+: Calculate total JP (Jam Pelajaran) from course lectures
+    // 1 JP = 45 seconds, so JP = Math.ceil(totalSeconds / 2700)
+    const calculateTotalJP = useCallback((lectures) => {
+        if (!lectures || !Array.isArray(lectures)) return 0;
+        
+        let totalSeconds = 0;
+        lectures.forEach(lecture => {
+            if (lecture.content_duration) {
+                totalSeconds += parseDurationToSeconds(lecture.content_duration);
+            }
+        });
+        
+        // 1 JP = 45 minutes = 2700 seconds
+        return Math.ceil(totalSeconds / 2700);
+    }, []);
 
     // Section navigation configuration
     const sections = [
@@ -1667,11 +1694,11 @@ function Index() {
                                                 </button>
                                             )}
 
-                                            {/* Level Badge */}
+                                            {/* Level Badge - Positioned at top-left inside card image */}
                                             <div 
                                                 className="position-absolute"
                                                 style={{
-                                                    bottom: "10px",
+                                                    top: "10px",
                                                     left: "10px",
                                                     zIndex: 2
                                                 }}
@@ -1688,8 +1715,7 @@ function Index() {
                                                         boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)"
                                                     }}
                                                 >
-                                                    <i className="fas fa-signal me-1"></i>
-                                                    {course.level}
+                                                    {getLevelText(course.level)}
                                                 </span>
                                             </div>
                                         </div>
@@ -1798,6 +1824,21 @@ function Index() {
                                                     Aktif
                                                 </small>
                                             </div>
+
+                                            {/* Total Duration in JP (Jam Pelajaran) - ✨ PHASE 4.77+ */}
+                                            <div 
+                                                className="d-flex align-items-center justify-content-center p-2 mb-2"
+                                                style={{
+                                                    background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
+                                                    borderRadius: "8px",
+                                                    border: "1px solid rgba(102, 126, 234, 0.2)"
+                                                }}
+                                            >
+                                                <small className="fw-medium" style={{ fontSize: "0.8rem", color: "#667eea" }}>
+                                                    <i className="fas fa-clock me-1"></i>
+                                                    Total: <strong>{calculateTotalJP(course.lectures)}</strong> JP (Jam Pelajaran)
+                                                </small>
+                                            </div>
                                         </div>
 
                                         {/* Card Footer */}
@@ -1813,7 +1854,10 @@ function Index() {
                                                     transition: "all 0.3s ease",
                                                     padding: "0.6rem 1rem",
                                                     fontSize: "0.85rem",
-                                                    boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)"
+                                                    boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center"
                                                 }}
                                             >
                                                 <i className="fas fa-arrow-right me-2"></i>

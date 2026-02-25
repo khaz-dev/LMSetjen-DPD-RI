@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
 import dayjs, { moment } from "../../utils/dayjs";
@@ -9,17 +9,19 @@ import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import LecturesTab from "../../components/CourseDetail/LecturesTab";
+import VideoPlayer from "../../components/CourseDetail/VideoPlayer"; // ✨ PHASE 4.86: Inline video player (not modal)
 import CertificateTab from "../../components/CourseDetail/CertificateTab";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
+import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.9+: Add JP calculation for progress card
 import "./CourseDetail.css";
 import apiInstance from "../../utils/axios";
 
 function CourseDetail() {
     // Course data and progress
-    const [course, setCourse] = useState([]);
+    const [course, setCourse] = useState(null);  // ✨ PHASE 4.144+: Initialize as null instead of [] to avoid accessing .course on array
     const [isUpdatingCourse, setIsUpdatingCourse] = useState(false);
     const [isProgressCardLoading, setIsProgressCardLoading] = useState(true); // Track progress card loading state
     const [completionPercentage, setCompletionPercentage] = useState(0);
@@ -30,9 +32,266 @@ function CourseDetail() {
         passedQuizzes: 0
     });
     
-    // Video player modal (shared with LecturesTab)
-    const [show, setShow] = useState(false);
+    // Video player state (shared with LecturesTab)
+    // ✨ PHASE 4.86: Show/hide replaced with inline display based on variantItem
     const [variantItem, setVariantItem] = useState(null);
+    const [autoplayVideo, setAutoplayVideo] = useState(false);  // ✨ PHASE 4.103: Track if video should autoplay
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false);  // ✨ PHASE 4.105: Track if video is currently playing
+    const [seekPosition, setSeekPosition] = useState(null);  // ✨ PHASE 4.117: Position to seek to when video loads
+    const [isResuming, setIsResuming] = useState(false);  // ✨ PHASE 4.117: Flag to prevent progress saves during resume
+    const videoPlayerRef = useRef(null);  // ✨ PHASE 4.105: Ref to VideoPlayer component
+    const lecturesTabProgressRef = useRef(null);  // ✨ PHASE 4.115: Ref to external progress update callback
+    const lecturesTabCompletionRef = useRef(null);  // ✨ PHASE 4.133: Ref to lesson completion callback
+    
+    // ✨ PHASE 4.132: Memoize onProgressUpdate to prevent unnecessary re-registration
+    // Use useCallback with empty dependencies so the function reference never changes
+    // This ensures LecturesTab's useEffect only runs once on mount, not on every CourseDetail render
+    const handleProgressUpdateCallback = useCallback((callback) => {
+        lecturesTabProgressRef.current = callback;
+    }, []);  // Empty dependency array = stable reference
+    
+    // ✨ PHASE 4.143+: Memoize lesson completion handler to prevent VideoPlayerGoogle effect re-runs
+    const handleMarkLessonAsCompletedCallback = useCallback((lessonId, isAutoComplete) => {
+        if (lecturesTabCompletionRef.current) {
+            lecturesTabCompletionRef.current(lessonId, isAutoComplete);
+        }
+    }, []);  // Empty deps - function never changes
+    
+    // ✨ PHASE 4.143+: Memoize lesson completion registration to prevent LecturesTab effect re-runs
+    const handleLessonCompletionRegistration = useCallback((callback) => {
+        lecturesTabCompletionRef.current = callback;
+    }, []);  // Empty deps - function never changes
+    
+    // ✨ PHASE 4.118: Log variantItem changes (for debugging lesson selection)
+    useEffect(() => {
+        if (variantItem) {
+        } else {
+        }
+    }, [variantItem?.variant_item_id]);
+    
+    // ✨ PHASE 4.105: Log playing state changes (for debugging)
+    useEffect(() => {
+        // Playing state tracking
+    }, [isVideoPlaying]);
+    
+    // ✨ PHASE 4.105: Toggle video play/pause from lesson button
+    // ✨ PHASE 4.112: Added better logging for debugging toggle issues
+    const toggleVideoPlayPause = () => {
+        if (videoPlayerRef.current?.togglePlayPause) {
+            videoPlayerRef.current.togglePlayPause();
+        } else {
+        }
+    };
+    
+    // ✨ PHASE 4.115: Handle video progress updates from VideoPlayer
+    const lastProgressSaveRef = useRef(0);  // ✨ PHASE 4.116+: Time-based throttling instead of random
+    
+    // ✨ PHASE 4.117: Reset throttle timer when variant changes
+    useEffect(() => {
+        lastProgressSaveRef.current = 0;  // Allow immediate save when switching lessons
+    }, [variantItem?.variant_item_id]);
+    
+    // ✨ PHASE 4.143+: Memoize handleVideoProgress to prevent effect re-runs in VideoPlayerGoogle
+    const handleVideoProgress = useCallback(async (progress) => {
+        // ✨ PHASE 4.117: Skip saving progress during resume to prevent overwrite with 0%
+        if (isResuming) {
+            return;
+        }
+        
+        // ✨ PHASE 4.132: Add immediate debug log to verify callback is being called
+        if (Math.random() < 0.1) { // Log 10% of calls
+        }
+        
+        if (!variantItem) {
+            if (Math.random() < 0.1) {
+            }
+            return;
+        }
+        
+        const itemId = variantItem.variant_item_id;
+        const { played, duration, currentTime } = progress;
+        
+        if (!itemId) {
+            return;
+        }
+        
+        if (Math.random() < 0.05) { // Log every ~20 frames (~once per second)
+        }
+        
+        // Only save if we have valid progress
+        if (itemId && duration && currentTime >= 0) {
+            const progressPercentage = played * 100;
+            
+            // ✨ PHASE 4.116+: Time-based throttle - only save every 1 second (not random!)
+            const now = Date.now();
+            const timeSinceLastSave = now - lastProgressSaveRef.current;
+            
+            if (timeSinceLastSave > 1000) { // Save max once per second
+                lastProgressSaveRef.current = now;
+                
+                try {
+                    
+                    // ✨ PHASE 4.134: Get courseId from course data OR from localStorage if course not loaded yet (hard refresh case)
+                    let courseId = course?.course?.id;
+                    
+                    // Fallback to localStorage courseId if course data not loaded yet (hard refresh on autoplay)
+                    if (!courseId) {
+                        const savedData = localStorage.getItem("lms_current_lesson");
+                        if (savedData) {
+                            try {
+                                const parsed = JSON.parse(savedData);
+                                courseId = parsed.courseId;
+                                if (courseId) {
+                                }
+                            } catch (e) {
+                                // Ignore parse errors
+                            }
+                        }
+                    }
+                    
+                    // Still require courseId to save progress
+                    if (!courseId) {
+                        return;
+                    }
+                    
+                    const response = await apiInstance.post("/student/video-progress/", {
+                        user_id: UserData()?.user_id,  // ✨ PHASE 4.115: Use user_id instead of user
+                        course_id: courseId,    // ✨ PHASE 4.134: Use fallback courseId from localStorage if needed
+                        variant_item_id: itemId,        // ✨ PHASE 4.115: Use variant_item_id instead of variant_item
+                        progress_percentage: progressPercentage,
+                        last_watched_position: currentTime,
+                        total_duration: duration
+                    });
+                    
+                    
+                    // ✨ PHASE 4.115: Update LecturesTab progress status in real-time
+                    if (lecturesTabProgressRef.current) {
+                        lecturesTabProgressRef.current(itemId, {
+                            position: currentTime,
+                            duration: duration,
+                            percentage: progressPercentage,
+                            isCompleted: progressPercentage >= 99.8,
+                            isInProgress: progressPercentage > 1 && progressPercentage < 99.8
+                        });
+                    } else {
+                    }
+                } catch (error) {
+                }
+            }
+        }
+    }, [isResuming, variantItem, course]);  // ✨ PHASE 4.143+: Memoize dependencies
+    
+    // ✨ PHASE 4.103: Helper function to set variant item with autoplay
+    // ✨ PHASE 4.116: Save lesson to localStorage for hard refresh recovery
+    const handlePlayLessonWithAutoplay = (lesson) => {
+        setVariantItem(lesson);
+        setAutoplayVideo(false);
+        localStorage.setItem("lms_current_lesson", JSON.stringify({
+            courseId: course?.course?.id,
+            lessonId: lesson.variant_item_id,
+            lessonData: lesson,
+            savedAt: new Date().toISOString()
+        }));
+        // ✨ PHASE 4.103: DO NOT reset autoplay state - keep it true
+    };
+    
+    // ✨ PHASE 4.116: Load saved progress when video changes and notify user if resuming
+    useEffect(() => {
+        // ✨ PHASE 4.118: Fixed - load progress as soon as variantItem is set (don't wait for course)
+        if (!variantItem) {
+            return;  // Wait for variantItem to be set
+        }
+
+        const loadAndResumeProgress = async () => {
+            try {
+                const itemId = variantItem.variant_item_id;
+                const userId = UserData()?.user_id;
+                
+                if (!itemId || !userId) {
+                    return;
+                }
+                
+                // ✨ PHASE 4.124: Enhanced lesson-specific debugging
+                
+                const response = await apiInstance.get(`/student/video-progress/${userId}/${itemId}/`);
+                const progressData = response.data.data || response.data;  // ✨ PHASE 4.117: Unwrap API response wrapper
+                
+                // ✨ PHASE 4.124: Log full progress response for this specific lesson
+                
+                if (progressData && progressData.progress_percentage > 0 && progressData.progress_percentage < 99.8) {
+                    const resumePosition = progressData.last_watched_position || 0;
+                    const resumePercentage = progressData.progress_percentage || 0;
+                    
+                    // ✨ PHASE 4.117: Set resume flag to prevent progress saves during seek
+                    setIsResuming(true);
+                    
+                    // ✨ PHASE 4.117: Set seek position as state for VideoPlayer to use when ready
+                    setSeekPosition(resumePosition);
+                    
+                    // ✨ PHASE 4.122: Autoplay disabled
+                    setAutoplayVideo(false);
+                    
+                    // Clear resume flag after 1.5 seconds (gives time for seek to complete)
+                    const resumeTimer = setTimeout(() => {
+                        setIsResuming(false);
+                    }, 1500);
+                    
+                    return () => clearTimeout(resumeTimer);
+                } else {
+                    // ✨ PHASE 4.128: Don't reset autoplay when no saved progress - keep it enabled so video can play on click
+                    setSeekPosition(null);  // No resume position needed
+                    setIsResuming(false);
+                    // Note: autoplayVideo remains true from handlePlayLessonWithAutoplay - we don't override it here
+                }
+            } catch (error) {
+                // ✨ PHASE 4.128: Don't reset autoplay on error - keep video playable even if progress load fails
+                setSeekPosition(null);
+                setIsResuming(false);
+                // Note: autoplayVideo remains true from handlePlayLessonWithAutoplay - we don't override it here
+            }
+        };
+        
+        // Load progress immediately without delay - useEffect handles timing
+        loadAndResumeProgress();
+    }, [variantItem?.variant_item_id, course?.course?.id, variantItem]);
+
+    // ✨ PHASE 4.116+: Restore lesson from localStorage on page load (hard refresh recovery)
+    useEffect(() => {
+        if (!course?.course?.id) {
+            return;
+        }
+
+        try {
+            const savedData = localStorage.getItem("lms_current_lesson");
+            if (!savedData) {
+                return;
+            }
+
+            const parsed = JSON.parse(savedData);
+            const savedCourseId = parsed.courseId;
+            const currentCourseId = course?.course?.id;
+
+
+            // Only restore if we're viewing the same course
+            if (savedCourseId !== currentCourseId) {
+                return;
+            }
+
+            // If lesson already loaded, skip restoration
+            if (variantItem) {
+                return;
+            }
+
+            // Restore the lesson
+            const lessonData = parsed.lessonData;
+            if (lessonData && lessonData.variant_item_id) {
+                setVariantItem(lessonData);
+                setAutoplayVideo(false);
+            }
+        } catch (error) {
+            localStorage.removeItem("lms_current_lesson"); // Clear corrupted data
+        }
+    }, [course?.course?.id]);
     
     // Notes management
     const [noteShow, setNoteShow] = useState(false);
@@ -326,18 +585,7 @@ function CourseDetail() {
                     });
                 }, 1000);
             }, 500);
-            
-            Toast().fire({
-                icon: "success",
-                title: "Kuis Dilanjutkan dengan Berhasil! 🎯",
-                text: "Melanjutkan dari tempat Anda berhenti. Semoga beruntung!"
-            });
         } else {
-            Toast().fire({
-                icon: "error",
-                title: "Lanjutkan Gagal",
-                text: "Tidak dapat melanjutkan kuis. Silakan coba mulai kuis baru."
-            });
         }
     };
 
@@ -497,6 +745,28 @@ function CourseDetail() {
         return Math.round(percentageCompleted);
     };
 
+    // ✨ PHASE 4.9+: Calculate total JP (Jam Pelajaran) from curriculum lectures
+    const calculateTotalJP = (curriculum) => {
+        if (!curriculum || !Array.isArray(curriculum)) return 0;
+        
+        let totalSeconds = 0;
+        
+        // Iterate through all sections in curriculum
+        curriculum.forEach(section => {
+            const sectionItems = section.variant_items || section.items || [];
+            
+            // Sum up duration of all items
+            sectionItems.forEach(item => {
+                if (item.content_duration) {
+                    totalSeconds += parseDurationToSeconds(item.content_duration);
+                }
+            });
+        });
+        
+        // 1 JP = 45 minutes = 2700 seconds
+        return Math.ceil(totalSeconds / 2700);
+    };
+
     const fetchCourseDetail = async (preventLoadingState = false) => {
         if (!preventLoadingState) {
             setIsUpdatingCourse(true);
@@ -535,7 +805,6 @@ function CourseDetail() {
                 calculateCompletionPercentage(totalLessons, completedLessons, 0, 0);
             }
         }).catch((error) => {
-            console.error("Error fetching course detail:", error);
             Toast().fire({
                 icon: "error",
                 title: "Gagal memuat detail kursus",
@@ -575,7 +844,6 @@ function CourseDetail() {
         try {
             localStorage.setItem(progressKey, JSON.stringify(progressData));
         } catch (error) {
-            console.error("Failed to save quiz progress:", error);
             
             // If storage is full, try to clean up old quiz progress
             if (error.name === "QuotaExceededError") {
@@ -583,7 +851,6 @@ function CourseDetail() {
                 try {
                     localStorage.setItem(progressKey, JSON.stringify(progressData));
                 } catch (retryError) {
-                    console.error("Still failed to save quiz progress after cleanup:", retryError);
                 }
             }
         }
@@ -651,7 +918,6 @@ function CourseDetail() {
                     localStorage.removeItem(progressKey);
                 }
             } catch (error) {
-                console.error("Error parsing saved quiz progress:", error);
                 localStorage.removeItem(progressKey); // Clean up corrupted data
             }
         }
@@ -666,8 +932,6 @@ function CourseDetail() {
         
         const progressKey = `quiz_progress_${UserData()?.user_id}_${quizId}`;
         const savedProgress = localStorage.getItem(progressKey);
-        
-        // console.log(`[Resume Check] Quiz ID: ${quizId}, Progress Key: ${progressKey}, Has Data: ${!!savedProgress}`);
         
         if (savedProgress) {
             try {
@@ -689,10 +953,7 @@ function CourseDetail() {
                     return true;
                 }
             } catch (error) {
-                console.error("Error checking quiz progress:", error);
             }
-        } else {
-            // console.log(`[Resume Check] ❌ No saved progress for quiz ${quizId}`);
         }
         
         return false;
@@ -741,7 +1002,6 @@ function CourseDetail() {
                             localStorage.removeItem(key);
                         }
                     } catch (error) {
-                        console.error("Error parsing progress data:", error);
                         localStorage.removeItem(key); // Clean up corrupted data
                     }
                 }
@@ -813,7 +1073,6 @@ function CourseDetail() {
             }
             
         }).catch((error) => {
-            console.error("Error fetching quizzes:", error);
             // Still calculate completion with lessons only if quiz fetch fails
             if (totalLessons > 0) {
                 calculateCompletionPercentage(totalLessons, completedLessons, 0, 0);
@@ -863,6 +1122,73 @@ function CourseDetail() {
                 clearInterval(quizTimerRef.current);
                 quizTimerRef.current = null;
             }
+        };
+    }, []);
+
+    // ✨ PHASE 4.103: Block LEFT/RIGHT arrow keys on the entire course page
+    const lastKeyNotificationTimeRef = useRef(0);
+    const NOTIFICATION_THROTTLE_MS = 3000; // Show notification only once every 3 seconds
+
+    useEffect(() => {
+        const showArrowKeyNotification = (arrowType) => {
+            // Show notification with throttle to avoid spam
+            const now = Date.now();
+            if (now - lastKeyNotificationTimeRef.current > NOTIFICATION_THROTTLE_MS) {
+                lastKeyNotificationTimeRef.current = now;
+                const titles = {
+                    'ArrowLeft': 'Tombol Panah Kiri Dinonaktifkan',
+                    'ArrowRight': 'Tombol Panah Kanan Dinonaktifkan'
+                };
+                Toast().fire({
+                    icon: "info",
+                    title: titles[arrowType] || "Tombol Panah Dinonaktifkan",
+                    text: "Navigasi tombol panah tidak tersedia di halaman ini.",
+                    timer: 2000,
+                    toast: true,
+                    position: "top-end"
+                });
+            }
+        };
+
+        // Handler for document-level keyboard events
+        const handleArrowKeyBlock = (e) => {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                showArrowKeyNotification('ArrowLeft');
+                return false;
+            }
+            
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                showArrowKeyNotification('ArrowRight');
+                return false;
+            }
+        };
+
+        // Handler for custom events from video player
+        const handleVideoArrowKeyBlocked = (e) => {
+            if (e.detail && (e.detail.key === 'ArrowLeft' || e.detail.key === 'ArrowRight')) {
+                showArrowKeyNotification(e.detail.key);
+            }
+        };
+
+        // Attach listeners
+        // 1. Capture phase listener on document (highest priority)
+        document.addEventListener('keydown', handleArrowKeyBlock, true);
+        
+        // 2. Window level listener (for events that might not reach document)
+        window.addEventListener('keydown', handleArrowKeyBlock, true);
+
+        // 3. Listen for custom events from video player component
+        document.addEventListener('arrowKeyBlocked', handleVideoArrowKeyBlocked, true);
+        
+        // Cleanup on component unmount
+        return () => {
+            document.removeEventListener('keydown', handleArrowKeyBlock, true);
+            window.removeEventListener('keydown', handleArrowKeyBlock, true);
+            document.removeEventListener('arrowKeyBlocked', handleVideoArrowKeyBlocked, true);
         };
     }, []);
 
@@ -1295,6 +1621,7 @@ function CourseDetail() {
                                                         <div className="skeleton-item skeleton-badge"></div>
                                                         <div className="skeleton-item skeleton-badge"></div>
                                                         <div className="skeleton-item skeleton-badge"></div>
+                                                        <div className="skeleton-item skeleton-badge"></div>
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3 text-center d-flex align-items-center justify-content-end ps-0">
@@ -1328,6 +1655,12 @@ function CourseDetail() {
                                                             <i className="fas fa-tag me-1"></i>
                                                             {course?.course?.category?.title}
                                                         </span>
+                                                        {course?.curriculum && (
+                                                            <span className="badge bg-white text-warning px-3 py-2 rounded-pill badge-animated" style={{ animationDelay: "0.4s" }}>
+                                                                <i className="fas fa-clock me-1"></i>
+                                                                {calculateTotalJP(course.curriculum)} JP
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="col-md-3 text-center text-primary d-flex align-items-center justify-content-end ps-0">
@@ -1346,6 +1679,27 @@ function CourseDetail() {
                                             </div>
                                         </div>
                                     </div>
+                                )}
+
+                                {/* ✨ PHASE 4.86: Inline VideoPlayer - displays when variantItem is selected */}
+                                {variantItem && (
+                                    <VideoPlayer
+                                        ref={videoPlayerRef}
+                                        variantItem={variantItem}
+                                        courseId={course?.course?.id}  // ✨ PHASE 4.144+: Pass courseId for completion endpoint
+                                        onClose={() => {
+                                            setVariantItem(null);
+                                            setAutoplayVideo(false);  // ✨ PHASE 4.103: Reset autoplay when closing video
+                                            setIsVideoPlaying(false);  // ✨ PHASE 4.105: Reset playing state
+                                            setSeekPosition(null);  // ✨ PHASE 4.117: Reset seek position
+                                            setIsResuming(false);  // ✨ PHASE 4.117: Reset resume flag
+                                        }}
+                                        handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}  // ✨ PHASE 4.143+: Use memoized callback
+                                        autoplay={false}  // ✨ PHASE 4.103: Autoplay disabled
+                                        onPlayingChange={setIsVideoPlaying}  // ✨ PHASE 4.105: Track playing state
+                                        onProgress={handleVideoProgress}  // ✨ PHASE 4.115: Pass progress callback
+                                        seekPosition={seekPosition}  // ✨ PHASE 4.117: Pass seek position for resume
+                                    />
                                 )}
 
                                 <div className="modern-tabs">
@@ -1391,10 +1745,12 @@ function CourseDetail() {
                                             enrollmentId={param.enrollment_id}
                                             fetchCourseDetail={fetchCourseDetail}
                                             completionPercentage={completionPercentage}
-                                            show={show}
-                                            setShow={setShow}
                                             variantItem={variantItem}
-                                            setVariantItem={setVariantItem}
+                                            setVariantItem={handlePlayLessonWithAutoplay}  // ✨ PHASE 4.103: Use autoplay handler
+                                            isVideoPlaying={isVideoPlaying}  // ✨ PHASE 4.105: Pass video playing state
+                                            toggleVideoPlayPause={toggleVideoPlayPause}  // ✨ PHASE 4.105: Pass toggle function
+                                            onProgressUpdate={handleProgressUpdateCallback}  // ✨ PHASE 4.132: Use memoized callback
+                                            onLessonCompletion={handleLessonCompletionRegistration}  // ✨ PHASE 4.143+: Use memoized callback
                                         />
 
                                         {/* Notes Tab */}

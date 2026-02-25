@@ -1,5 +1,5 @@
-import { useState, useEffect, lazy, Suspense, useMemo } from "react";
-import { Route, Routes, BrowserRouter } from "react-router-dom";
+import { useState, useEffect, lazy, Suspense, useMemo, useRef } from "react";
+import { Route, Routes, BrowserRouter, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 
 import { ProfileContext, WishlistContext, RolesContext } from "./views/plugin/Context";
@@ -31,6 +31,7 @@ const CreateNewPassword = lazy(() => import("./views/auth/CreateNewPassword"));
 // Base Routes
 const Index = lazy(() => import("./views/base/Index"));
 const CourseDetail = lazy(() => import("./views/base/CourseDetail"));
+const InstructorProfilePage = lazy(() => import("./views/base/InstructorProfilePage"));
 const Search = lazy(() => import("./views/base/Search"));
 const UserGuide = lazy(() => import("./views/base/UserGuide"));
 const Contact = lazy(() => import("./views/base/Contact"));
@@ -69,8 +70,10 @@ const CourseQuiz = lazy(() => import("./views/instructor/CourseQuiz"));
 const DashboardAdmin = lazy(() => import("./views/admin/DashboardAdmin"));
 const UsersAdmin = lazy(() => import("./views/admin/UsersAdmin"));
 const SystemDocumentation = lazy(() => import("./views/admin/SystemDocumentation"));
-const KelolaMaterialAdmin = lazy(() => import("./views/admin/KelolaMaterialAdmin"));
-const TestimonialsAdmin = lazy(() => import("./views/admin/TestimonialsAdmin"));
+// ✨ PHASE 4: Merged content management page (replaces CourseReviewAdmin, TestimonialsAdmin, KelolaMaterialAdmin)
+const ContentManagementAdmin = lazy(() => import("./views/admin/ContentManagementAdmin"));
+// ✨ PHASE 4.37+: Dedicated admin course review detail page
+const AdminCourseReviewDetail = lazy(() => import("./views/admin/AdminCourseReviewDetail"));
 
 // Loading component for Suspense fallback - Centered spinner
 const LoadingFallback = () => (
@@ -106,6 +109,9 @@ function App() {
     const [availableRoles, setAvailableRoles] = useState([]);
     const [currentRole, setCurrentRole] = useState(null);
     const [rolesLoading, setRolesLoading] = useState(false);
+    
+    // ✨ PHASE 4.177: Fetch guards to prevent duplicate API calls in React Strict Mode
+    const hasFetchedRef = useRef(false);
 
     // PHASE 4: Fetch available roles for multi-role users
     const fetchAvailableRoles = () => {
@@ -114,12 +120,10 @@ function App() {
             if (userData?.user_id) {
                 setRolesLoading(true);
                 useAxios.get(`auth/available-roles/`).then((res) => {
-                    console.log("PHASE 4: Available roles fetched:", res.data.available_roles);
                     setAvailableRoles(res.data.available_roles || []);
                     setCurrentRole(res.data.current_role || null);
                     setRolesLoading(false);
                 }).catch((error) => {
-                    console.error("PHASE 4: Error fetching available roles:", error);
                     // Fallback: try to get roles from user data
                     if (userData?.roles) {
                         const roles = userData.roles.split(',').map(r => r.trim());
@@ -130,7 +134,6 @@ function App() {
                 });
             }
         } catch (error) {
-            console.error("PHASE 4: Error in fetchAvailableRoles:", error);
             setRolesLoading(false);
         }
     };
@@ -151,6 +154,13 @@ function App() {
     };
 
     useEffect(() => {
+        // ✨ PHASE 4.177: Skip if data is already loaded (prevents duplicates in React Strict Mode)
+        if (profile?.id || profile?.full_name) return;
+        
+        // Guard against duplicate API calls in React Strict Mode
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
+        
         try {
             const userData = UserData();
             
@@ -164,7 +174,6 @@ function App() {
                     setProfile(res.data);
                 }).catch((error) => {
                     if (process.env.NODE_ENV === "development") {
-                        console.error("App.jsx: Error fetching profile:", error);
                     }
                     setProfile(null);
                 });
@@ -175,12 +184,11 @@ function App() {
             }
         } catch (error) {
             if (process.env.NODE_ENV === "development") {
-                console.error("App.jsx: Error in useEffect:", error);
             }
             setWishlistCount(0);
             setProfile(null);
         }
-    }, []);
+    }, [profile?.id, profile?.full_name]);
 
     // Memoize context values to prevent unnecessary re-renders
     const wishlistContextValue = useMemo(
@@ -218,6 +226,7 @@ function App() {
                                 {/* Base Routes */}
                                 <Route path="/" element={<Index />} />
                                 <Route path="/course-detail/:slug/" element={<CourseDetail />} />
+                                <Route path="/instructor-profile/:teacher_id/" element={<InstructorProfilePage />} />
                                 <Route path="/search/" element={<Search />} />
                                 <Route path="/user-guide/" element={<UserGuide />} />
                                 <Route path="/contact/" element={<Contact />} />
@@ -455,25 +464,40 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
+                            {/* ✨ PHASE 4: Unified content management page */}
                             <Route
-                                path="/admin/kelola-materi/"
+                                path="/admin/content-management/"
                                 element={
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["admin"]}>
-                                            <KelolaMaterialAdmin />
+                                            <ContentManagementAdmin />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }
                             />
+                            {/* ✨ PHASE 4.37+: Dedicated admin course review detail page */}
                             <Route
-                                path="/admin/testimonials/"
+                                path="/admin/review-course/:course_id/"
                                 element={
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["admin"]}>
-                                            <TestimonialsAdmin />
+                                            <AdminCourseReviewDetail />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }
+                            />
+                            {/* Backward compatibility redirects */}
+                            <Route
+                                path="/admin/review-courses/"
+                                element={<Navigate to="/admin/content-management/?tab=courses" replace />}
+                            />
+                            <Route
+                                path="/admin/testimonials/"
+                                element={<Navigate to="/admin/content-management/?tab=testimonials" replace />}
+                            />
+                            <Route
+                                path="/admin/kelola-materi/"
+                                element={<Navigate to="/admin/content-management/?tab=materials" replace />}
                             />
 
                             {/* 404 Not Found - Must be last */}

@@ -30,7 +30,6 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                 setCertificate(response.data.certificate);
             }
         } catch (error) {
-            console.error("Error checking certificate eligibility:", error);
         }
     };
 
@@ -53,7 +52,6 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                 });
             }
         } catch (error) {
-            console.error("Error generating certificate:", error);
             Toast().fire({
                 icon: 'error',
                 title: 'Gagal Membuat Sertifikat',
@@ -78,7 +76,6 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                 text: 'Gunakan dialog cetak browser Anda untuk menyimpan sebagai PDF.'
             });
         } catch (error) {
-            console.error("Error downloading certificate:", error);
             Toast().fire({
                 icon: 'error',
                 title: 'Unduhan Gagal',

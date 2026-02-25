@@ -1,0 +1,360 @@
+/* Instructor Request Status Component Styles */
+
+.instructor-status-container {
+  width: 100%;
+  margin: 20px 0;
+}
+
+.instructor-status-compact {
+  width: 100%;
+}
+
+/* Loading State */
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px;
+  color: #667eea;
+  font-size: 14px;
+}
+
+.loading-spinner .spinner-border {
+  color: inherit;
+}
+
+/* Status Card */
+.status-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.status-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Card Header */
+.status-card .card-header {
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7ff 0%, #f0f4ff 100%);
+  border-left: 5px solid #667eea;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.status-card .header-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.status-card .header-content h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.status-card .header-content p {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Card Body */
+.status-card .card-body {
+  padding: 25px;
+}
+
+/* Details Grid */
+.status-card .details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.status-card .detail-item {
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+}
+
+.status-card .detail-item label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.status-card .detail-item p {
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.status-card .detail-full {
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+  margin-bottom: 20px;
+}
+
+.status-card .detail-full label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.status-card .detail-full p {
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+/* Alerts */
+.status-card .alert {
+  border-radius: 8px;
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.status-card .alert i {
+  min-width: 16px;
+  margin-top: 2px;
+  font-size: 14px;
+}
+
+.status-card .alert-info {
+  background-color: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  color: #004085;
+}
+
+.status-card .alert-warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
+.status-card .alert-success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.status-card .alert strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.status-card .alert p {
+  margin: 0;
+}
+
+/* Review Info */
+.status-card .review-info {
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+.status-card .review-info i {
+  margin-right: 6px;
+  color: #667eea;
+}
+
+/* Card Footer */
+.status-card .card-footer {
+  padding: 15px 25px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.status-card .btn {
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-card .btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+}
+
+.status-card .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* No Request State */
+.status-card.no-request {
+  text-align: center;
+  padding: 40px 25px;
+}
+
+.status-card.no-request .card-icon {
+  font-size: 48px;
+  color: #667eea;
+  margin-bottom: 15px;
+}
+
+.status-card.no-request h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.status-card.no-request p {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* Compact Version */
+.instructor-status-compact .status-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.instructor-status-compact .status-badge:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.instructor-status-compact .status-badge i {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.instructor-status-compact .badge-content {
+  text-align: left;
+  flex: 1;
+}
+
+.instructor-status-compact .badge-label {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.instructor-status-compact .badge-value {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* CTA State (no request) */
+.instructor-status-compact .status-cta {
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border: 2px dashed #667eea;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.instructor-status-compact .status-cta i {
+  font-size: 32px;
+  color: #667eea;
+  margin-bottom: 10px;
+}
+
+.instructor-status-compact .status-cta p {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.instructor-status-compact .status-cta .btn {
+  width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .status-card .card-header {
+    flex-direction: column;
+  }
+
+  .status-card .header-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .status-card .card-body {
+    padding: 20px;
+  }
+
+  .status-card .details-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .status-card .card-footer {
+    flex-direction: column;
+    padding: 15px;
+  }
+
+  .status-card .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .instructor-status-compact .status-badge {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .instructor-status-compact .badge-content {
+    text-align: center;
+  }
+}

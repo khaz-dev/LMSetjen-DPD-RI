@@ -1,10 +1,10 @@
 // Course creation constants and configuration
 
 export const COURSE_LEVELS = [
-  { value: "", label: "-- Select Level --" },
-  { value: "Beginner", label: "🟢 Beginner" },
-  { value: "Intermediate", label: "🟡 Intermediate" },
-  { value: "Advanced", label: "🔴 Advanced" },
+  { value: "", label: "-- Pilih Tingkat --" },
+  { value: "Beginner", label: "🟢 Pemula" },
+  { value: "Intermediate", label: "🟡 Menengah" },
+  { value: "Advanced", label: "🔴 Lanjutan" },
 ];
 
 export const DEFAULT_COURSE_DATA = {

@@ -283,13 +283,22 @@ function CourseQuiz() {
 
     const saveQuestionChoices = async (questionId, choices) => {
         try {
-            // If editing, delete existing choices first
-            if (editingQuestion) {
-                // This would require additional API endpoint to delete all choices for a question
-                // For now, we'll create new ones (you may want to implement choice updating)
+            // If editing, delete existing choices first (✨ PHASE 4.77 FIX: Use existing backend DELETE endpoint)
+            if (editingQuestion && editingQuestion.choices && editingQuestion.choices.length > 0) {
+                console.log(`[Quiz Choice] Deleting ${editingQuestion.choices.length} old choice(s)...`);
+                for (const oldChoice of editingQuestion.choices) {
+                    try {
+                        await apiInstance.delete(`quiz/choice/detail/${oldChoice.choice_id}/`);
+                    } catch (error) {
+                        console.error(`Failed to delete choice ${oldChoice.choice_id}:`, error);
+                        // Continue deleting other choices even if one fails
+                    }
+                }
+                console.log(`[Quiz Choice] [OK] Old choice(s) deleted successfully`);
             }
 
             // Create new choices
+            console.log(`[Quiz Choice] Creating ${choices.length} new choice(s)...`);
             for (const [index, choice] of choices.entries()) {
                 await apiInstance.post("quiz/choice/list-create/", {
                     question_id: questionId,
@@ -298,6 +307,7 @@ function CourseQuiz() {
                     order: index + 1
                 });
             }
+            console.log(`[Quiz Choice] [OK] New choice(s) created successfully`);
         } catch (error) {
             throw error;
         }
@@ -633,7 +643,7 @@ function CourseQuiz() {
                                                     </div>
                                                     <div className="quiz-card-footer">
                                                         <button 
-                                                            className="btn btn-outline-primary btn-sm"
+                                                            className="btn btn-primary btn-sm"
                                                             onClick={() => selectQuiz(quiz)}
                                                         >
                                                             <i className="fas fa-cog me-2"></i>
@@ -737,7 +747,7 @@ function CourseQuiz() {
                                             onClick={handleOpenQuestionModal}
                                         >
                                             <i className="fas fa-plus me-2"></i>
-                                            Add Question
+                                            Tambah Pertanyaan
                                         </button>
                                     </div>
                                 </div>

@@ -8,6 +8,9 @@ import Footer from "../partials/Footer";
 import ImageUpload from "./components/ImageUpload";
 import VideoUpload from "./components/VideoUpload";
 import FormField from "./components/FormField";
+import CourseFeaturesForm from "./components/CourseFeaturesForm";
+import CourseRequirementsForm from "./components/CourseRequirementsForm";
+import CourseLearningOutcomesForm from "./components/CourseLearningOutcomesForm";
 
 // Lazy load CKEditor component (1.24 MB)
 const RichTextEditor = lazy(() => import("./components/RichTextEditor"));
@@ -40,6 +43,7 @@ function CourseCreate() {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [warnings, setWarnings] = useState({});
+    const [createdCourseId, setCreatedCourseId] = useState(null); // ✨ PHASE 4.45
     const navigate = useNavigate();
     const isCollapsed = useInstructorSidebarCollapse();
 
@@ -49,8 +53,14 @@ function CourseCreate() {
     const imageRef = useRef(null);
     const levelRef = useRef(null);
     const ckeditorRef = useRef(null);
+    // ✨ PHASE 4.177: Fetch guard to prevent duplicate category loads
+    const hasFetchedRef = useRef(false);
 
     useEffect(() => {
+        // ✨ PHASE 4.177: Guard against duplicate category fetches in React Strict Mode
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
+        
         const fetchCategories = async () => {
             try {
                 const response = await useAxios.get("course/category/");
@@ -209,6 +219,9 @@ function CourseCreate() {
             
             const courseId = response.data.course_id;
             
+            // ✨ PHASE 4.45: Set course ID to show metadata forms
+            setCreatedCourseId(courseId);
+            
             // Show success message with draft status information
             Toast().fire({
                 icon: "success",
@@ -308,7 +321,64 @@ function CourseCreate() {
                                 </div>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="form-body-modern">
+                            {/* ✨ PHASE 4.45: Conditional rendering - Show metadata forms after course creation */}
+                            {createdCourseId ? (
+                                // Metadata forms after successful course creation
+                                <div className="form-body-modern">
+                                    <div className="alert alert-success d-flex align-items-start mb-4 border-0 shadow-sm">
+                                        <div className="me-3">
+                                            <i className="fas fa-check-circle fa-2x text-success"></i>
+                                        </div>
+                                        <div className="flex-grow-1">
+                                            <h6 className="alert-heading mb-2 fw-bold">
+                                                Kursus Berhasil Dibuat!
+                                            </h6>
+                                            <p className="mb-0 small">
+                                                Sekarang lengkapi metadata kursus Anda berikut ini: fitur, persyaratan, dan hasil pembelajaran.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* ✨ PHASE 4.45: Course Features, Requirements, and Learning Outcomes */}
+                                    <CourseFeaturesForm 
+                                        courseId={createdCourseId}
+                                        onFeaturesUpdate={() => {}}
+                                    />
+
+                                    <CourseRequirementsForm 
+                                        courseId={createdCourseId}
+                                        onRequirementsUpdate={() => {}}
+                                    />
+
+                                    <CourseLearningOutcomesForm 
+                                        courseId={createdCourseId}
+                                        onOutcomesUpdate={() => {}}
+                                    />
+
+                                    {/* Action Buttons for Metadata Forms */}
+                                    <div style={{ marginTop: "20px", marginBottom: "10px" }}>
+                                        <div className="d-flex justify-content-end gap-3">
+                                            <button 
+                                                type="button" 
+                                                className="btn btn-outline-primary"
+                                                onClick={() => setCreatedCourseId(null)}
+                                            >
+                                                <i className="fas fa-edit me-2"></i>
+                                                Edit Informasi Dasar
+                                            </button>
+                                            <Link 
+                                                to={`/instructor/edit-course/${createdCourseId}/`}
+                                                className="btn btn-create-course"
+                                            >
+                                                <i className="fas fa-arrow-right me-2"></i>
+                                                Lanjutkan ke Kurikulum
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                // Create course form (initial state)
+                                <form onSubmit={handleSubmit} className="form-body-modern">
                                 {/* Draft Status Information */}
                                 <div className="alert alert-info d-flex align-items-start mb-4 border-0 shadow-sm" style={{ 
                                     background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
@@ -368,9 +438,6 @@ function CourseCreate() {
                                     <VideoUpload 
                                         courseData={courseData}
                                         setCourseData={setCourseData}
-                                        errors={errors}
-                                        warnings={warnings}
-                                        validateField={validateField}
                                     />
                                 </div>
 
@@ -495,6 +562,7 @@ function CourseCreate() {
                                     </div>
                                 </div>
                             </form>
+                            )}
                         </div>
                     </div>
                 </div>

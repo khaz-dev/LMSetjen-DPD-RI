@@ -1,6 +1,39 @@
 // Course utilities
 import { getMediaUrl, DEFAULT_IMAGE_URL } from './constants';
 
+// ✨ PHASE 4.X: Extract Google Drive file ID from various URL formats
+const extractGoogleDriveFileId = (url) => {
+    try {
+        // Format 1: https://drive.google.com/file/d/FILE_ID/view...
+        const match1 = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (match1 && match1[1]) return match1[1];
+        
+        // Format 2: https://drive.google.com/uc?id=FILE_ID or ?export=view&id=FILE_ID
+        const match2 = url.match(/[?&]id=([a-zA-Z0-9-_]+)/);
+        if (match2 && match2[1]) return match2[1];
+        
+        return null;
+    } catch {
+        return null;
+    }
+};
+
+// ✨ PHASE 4.X: Convert Google Drive URLs to thumbnail format for proper image loading
+const convertGoogleDriveUrlToThumbnail = (url) => {
+    if (!url || !url.includes('drive.google.com')) {
+        return url;
+    }
+    
+    const fileId = extractGoogleDriveFileId(url);
+    if (fileId) {
+        // Use Google Drive's unofficial but reliable thumbnail endpoint
+        // sz=w1200 provides high-quality thumbnail suitable for course thumbnails
+        return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`;
+    }
+    
+    return url;
+};
+
 export const getImageUrl = (imageUrl) => {
     if (!imageUrl) {
         return DEFAULT_IMAGE_URL;
@@ -11,6 +44,11 @@ export const getImageUrl = (imageUrl) => {
     // If it contains encoded URLs, decode and extract the actual path
     if (cleanUrl.includes('%3A') || cleanUrl.includes('http%3A')) {
         cleanUrl = decodeURIComponent(cleanUrl);
+    }
+    
+    // ✨ PHASE 4.X: Handle Google Drive URLs specially - convert to thumbnail format
+    if (cleanUrl.includes('drive.google.com')) {
+        return convertGoogleDriveUrlToThumbnail(cleanUrl);
     }
     
     // If it's already a complete URL, return as is
@@ -57,12 +95,82 @@ export const getLevelBadgeStyle = (level) => {
 
 export const getLevelText = (level) => {
     const texts = {
-        Beginner: '🟢 Beginner',
-        Intermediate: '🟡 Intermediate',
-        Advanced: '🔴 Advanced',
+        Beginner: '🟢 Pemula',
+        Intermediate: '🟡 Menengah',
+        Advanced: '🔴 Lanjutan',
         default: 'N/A'
     };
     return texts[level] || texts.default;
+};
+
+export const getStatusText = (status) => {
+    const texts = {
+        Draft: 'Draf',
+        Published: 'Dipublikasikan',
+        Disabled: 'Dinonaktifkan',
+        Review: 'Ditinjau',
+        default: 'Tidak Tersedia'
+    };
+    return texts[status] || texts.default;
+};
+
+/**
+ * ✨ PHASE 4.40: Determine actual course status based on platform_status and rejection_reason
+ * Priority:
+ * 1. If rejection_reason exists or platform_status === 'Rejected' → Ditolak (Rejected)
+ * 2. If platform_status === 'Review' or teacher_course_status === 'Review' → Ditinjau (Review)
+ * 3. If teacher_course_status === 'Draft' → Draf (Draft)
+ * 4. If platform_status === 'Published' → Dipublikasikan (Published)
+ * 5. Default to Tidak Tersedia
+ */
+export const getActualCourseStatus = (course) => {
+    // Check if course has been rejected
+    if (course.rejection_reason || course.platform_status === 'Rejected') {
+        return {
+            status: 'Rejected',
+            text: 'Ditolak',
+            icon: 'fa-times-circle',
+            color: '#dc3545'
+        };
+    }
+
+    // Check if course is in review
+    if (course.platform_status === 'Review' || course.teacher_course_status === 'Review') {
+        return {
+            status: 'Review',
+            text: 'Menunggu Review',
+            icon: 'fa-hourglass-half',
+            color: '#17a2b8'
+        };
+    }
+
+    // Check if course is draft
+    if (course.teacher_course_status === 'Draft') {
+        return {
+            status: 'Draft',
+            text: 'Draf',
+            icon: 'fa-clock',
+            color: '#FF9800'
+        };
+    }
+
+    // Check if course is published
+    if (course.platform_status === 'Published') {
+        return {
+            status: 'Published',
+            text: 'Dipublikasikan',
+            icon: 'fa-check-circle',
+            color: '#4CAF50'
+        };
+    }
+
+    // Default
+    return {
+        status: 'Unknown',
+        text: 'Tidak Tersedia',
+        icon: 'fa-question-circle',
+        color: '#6c757d'
+    };
 };
 
 export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
@@ -96,6 +204,10 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
                 allowOutsideClick: false,
                 allowEscapeKey: false,
                 showConfirmButton: false,
+                customClass: {
+                    popup: 'modern-toast modern-toast-dialog',
+                    htmlContainer: 'modern-swal-html'
+                },
                 didOpen: () => {
                     Swal.showLoading();
                 }
@@ -126,7 +238,9 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
                     timer: 5174,
                     timerProgressBar: true,
                     customClass: {
-                        popup: 'modern-toast'
+                        popup: 'modern-toast modern-toast-dialog',
+                        title: 'modern-swal-title',
+                        htmlContainer: 'modern-swal-html'
                     }
                 });
                 
@@ -193,7 +307,9 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
                     confirmButtonText: 'OK',
                     confirmButtonColor: '#dc3545',
                     customClass: {
-                        popup: 'modern-toast'
+                        popup: 'modern-toast modern-toast-dialog',
+                        title: 'modern-swal-title',
+                        htmlContainer: 'modern-swal-html'
                     }
                 });
             }

@@ -13,6 +13,25 @@
     font-family: 'Inter', sans-serif !important;
 }
 
+/* ✨ PHASE 4.82: Modal dialog variant of modern-toast with proper centering */
+.modern-toast-dialog {
+    padding-right: 0 !important;  /* Remove padding-right used for toast close buttons */
+    text-align: center !important;
+}
+
+.modern-toast-dialog .swal2-icon {
+    margin: 0 auto 1rem auto !important;  /* Center the icon */
+}
+
+.modern-swal-title {
+    text-align: center !important;
+    margin: 0 auto !important;
+}
+
+.modern-swal-html {
+    text-align: center !important;
+}
+
 .modern-progress-bar {
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
     border-radius: 0 0 15px 15px !important;

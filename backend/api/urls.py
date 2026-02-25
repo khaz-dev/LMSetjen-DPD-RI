@@ -1,5 +1,6 @@
 from api import views as api_views
 from api import enhanced_upload_views
+from api.video_metadata_view import VideoMetadataAPIView
 from django.urls import path
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -98,10 +99,12 @@ urlpatterns = [
 
     # Teacher Routes
     path("teacher/summary/<teacher_id>/", api_views.TeacherSummaryAPIView.as_view()),
+    path("teacher/detail/<teacher_id>/", api_views.TeacherDetailAPIView.as_view()),  # ✨ PHASE 4.43: Public teacher detail endpoint
     path("teacher/profile/<user_id>/", api_views.TeacherProfileAPIView.as_view()),
     path("teacher/create-from-profile/", api_views.TeacherCreateFromProfileAPIView.as_view()),
     path("teacher/profile-update/<user_id>/", api_views.TeacherProfileUpdateAPIView.as_view()),
     path("teacher/course-lists/<teacher_id>/", api_views.TeacherCourseListAPIView.as_view()),
+    path("teacher/published-courses/<teacher_id>/", api_views.TeacherPublishedCoursesAPIView.as_view()),  # ✨ PHASE 4.77: Public profile courses
     path("teacher/review-lists/<teacher_id>/", api_views.TeacherReviewListAPIView.as_view()),
     path("teacher/review-detail/<teacher_id>/<review_id>/", api_views.TeacherReviewDetailAPIView.as_view()),
     path("teacher/student-lists/<teacher_id>/", api_views.TeacherStudentsListAPIView.as_view({'get': 'list'})),
@@ -114,6 +117,13 @@ urlpatterns = [
     path("teacher/course-update/<teacher_id>/<course_id>/", api_views.CourseUpdateAPIView.as_view()),
     path("teacher/course-detail/<course_id>/", api_views.TeacherCourseDetailAPIView.as_view()),
     path("teacher/course-publish/<course_id>/", api_views.CoursePublishAPIView.as_view()),
+    path("teacher/course-restore/<course_id>/", api_views.CourseRestoreAPIView.as_view()),  # ✨ PHASE 4.60D: Restore from published version
+    path("teacher/course-edit-published/<course_id>/", api_views.CourseEditPublishedAPIView.as_view()),  # ✨ PHASE 4.76: Edit published courses
+    
+    # ✨ PHASE 4.36: Course approval workflow endpoints
+    path("admin/course-approval/<course_id>/", api_views.CourseApprovalAPIView.as_view()),
+    path("admin/courses-pending-review/", api_views.AdminCourseListAPIView.as_view()),
+    
     path("teacher/course/variant-delete/<variant_id>/<teacher_id>/<course_id>/", api_views.CourseVariantDeleteAPIView.as_view()),
     path("teacher/course/variant-item-delete/<variant_id>/<variant_item_id>/<teacher_id>/<course_id>/", api_views.CourseVariantItemDeleteAPIVIew.as_view()),
 
@@ -125,12 +135,13 @@ urlpatterns = [
     path("quiz/choice/list-create/", api_views.QuizChoiceListCreateAPIView.as_view()),
     path("quiz/choice/detail/<choice_id>/", api_views.QuizChoiceDetailAPIView.as_view()),
 
-    # \u26a0\ufe0f DEPRECATED (Phase 3): File Upload APIs - Server-side file storage no longer used
+    # ⚠️ DEPRECATED (Phase 3): File Upload APIs - Server-side file storage no longer used
     # Kept for backward compatibility only. Will be removed in a future version.
     # Images and videos now handled via external URLs (Google Drive, YouTube, CDNs)
     path("file-upload/", api_views.FileUploadAPIView.as_view()),  # DEPRECATED - Use external URLs instead
+    path("file-cleanup/", api_views.FileCleanupAPIView.as_view()),  # ✨ PHASE 4.101.4: Delete files when switching sources
     
-    # \u26a0\ufe0f DEPRECATED (Phase 3): Enhanced Local Storage APIs - No longer needed
+    # ⚠️ DEPRECATED (Phase 3): Enhanced Local Storage APIs - No longer needed
     # Will be removed when all clients migrate to external URL-based approach
     path("upload/enhanced/", enhanced_upload_views.EnhancedFileUploadAPIView.as_view()),  # DEPRECATED
     path("upload/bulk/", enhanced_upload_views.BulkFileUploadAPIView.as_view()),  # DEPRECATED
@@ -193,4 +204,27 @@ urlpatterns = [
     # ✨ PHASE 3: MULTI-ROLE AUTHENTICATION ENDPOINTS
     path("auth/available-roles/", api_views.AvailableRolesAPIView.as_view()),
     path("auth/select-role/", api_views.SelectRoleAPIView.as_view()),
+    
+    # ✨ PHASE 4.43.10: Video Metadata Extraction API
+    path("media/video-metadata/", VideoMetadataAPIView.as_view()),
+
+    # ✨ PHASE 4.45: Course Features, Requirements, and Learning Outcomes Management
+    path("teacher/course-features/<course_id>/", api_views.CourseFeatureListCreateAPIView.as_view()),
+    path("teacher/course-features/<course_id>/<feature_id>/", api_views.CourseFeatureDetailAPIView.as_view()),
+    path("teacher/course-requirements/<course_id>/", api_views.CourseRequirementListCreateAPIView.as_view()),
+    path("teacher/course-requirements/<course_id>/<requirement_id>/", api_views.CourseRequirementDetailAPIView.as_view()),
+    path("teacher/course-learning-outcomes/<course_id>/", api_views.CourseLearningOutcomeListCreateAPIView.as_view()),
+    path("teacher/course-learning-outcomes/<course_id>/<outcome_id>/", api_views.CourseLearningOutcomeDetailAPIView.as_view()),
+    
+    # ✨ PHASE 4.78: Instructor Request System endpoints
+    path("instructor-request/", api_views.InstructorRequestCreateAPIView.as_view()),
+    path("instructor-request/<int:request_id>/", api_views.InstructorRequestDetailAPIView.as_view()),
+    path("admin/instructor-requests/", api_views.AdminInstructorRequestListAPIView.as_view()),
+    path("admin/instructor-request/<int:request_id>/approve/", api_views.AdminInstructorRequestApproveAPIView.as_view()),
+    path("admin/instructor-request/<int:request_id>/reject/", api_views.AdminInstructorRequestRejectAPIView.as_view()),
+
+    # ✨ PHASE 4.143: Lesson Completion Question endpoints
+    path("lesson-completion-question/", api_views.LessonCompletionQuestionListCreateAPIView.as_view()),
+    path("lesson-completion-question/<question_id>/", api_views.LessonCompletionQuestionDetailAPIView.as_view()),
+    path("lesson-completion-question/answer/", api_views.LessonCompletionQuestionAnswerAPIView.as_view()),
 ]

@@ -6,16 +6,16 @@ export const validateCurriculumTitle = (title) => {
     const warnings = [];
 
     if (!title?.trim()) {
-        errors.push("Course title is required");
+        errors.push("Judul kursus diperlukan");
     } else {
         if (title.length < 10) {
-            warnings.push("Title should be more descriptive (at least 10 characters)");
+            warnings.push("Judul harus lebih deskriptif (minimal 10 karakter)");
         }
         if (title.length > 60) {
-            warnings.push("Title is too long. Keep it under 60 characters for better display");
+            warnings.push("Judul terlalu panjang. Pertahankan di bawah 60 karakter untuk tampilan yang lebih baik");
         }
         if (!/^[a-zA-Z0-9\s\-_:&.,!?()]+$/.test(title)) {
-            errors.push("Title contains invalid characters");
+            errors.push("Judul berisi karakter yang tidak valid");
         }
     }
 
@@ -28,13 +28,13 @@ export const validateCurriculumDescription = (description) => {
     const plainText = description?.replace(/<[^>]*>/g, '').trim() || '';
 
     if (!plainText) {
-        errors.push("Course description is required");
+        errors.push("Deskripsi kursus diperlukan");
     } else {
         if (plainText.length < 30) {
-            warnings.push("Description is too short. Add more details about your course");
+            warnings.push("Deskripsi terlalu pendek. Tambahkan lebih banyak detail tentang kursus Anda");
         }
         if (plainText.length > 1000) {
-            warnings.push("Description is quite long. Consider making it more concise");
+            warnings.push("Deskripsi cukup panjang. Pertimbangkan untuk membuatnya lebih ringkas");
         }
     }
 
@@ -46,7 +46,7 @@ export const validateCurriculumImage = (image) => {
     const warnings = [];
 
     if (!image) {
-        warnings.push("Adding a course thumbnail improves student engagement");
+        warnings.push("Menambahkan thumbnail kursus meningkatkan keterlibatan siswa");
     }
 
     return { errors, warnings };
@@ -57,7 +57,7 @@ export const validateCurriculumCategory = (categoryId) => {
     const warnings = [];
 
     if (!categoryId) {
-        errors.push("Please select a course category");
+        errors.push("Silakan pilih kategori kursus");
     }
 
     return { errors, warnings };
@@ -68,7 +68,7 @@ export const validateCurriculumLevel = (level) => {
     const warnings = [];
 
     if (!level) {
-        warnings.push("Setting a difficulty level helps students choose appropriately");
+        warnings.push("Menetapkan tingkat kesulitan membantu siswa memilih dengan tepat");
     }
 
     return { errors, warnings };
@@ -79,7 +79,7 @@ export const validateCurriculumIntroVideo = (file) => {
     const warnings = [];
 
     if (!file) {
-        warnings.push("An intro video can significantly improve course engagement");
+        warnings.push("Video pengantar dapat secara signifikan meningkatkan keterlibatan kursus");
     }
 
     return { errors, warnings };

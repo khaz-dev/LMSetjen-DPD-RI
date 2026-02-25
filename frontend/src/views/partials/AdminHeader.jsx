@@ -79,9 +79,9 @@ function AdminHeader() {
     const adminMenuItems = [
         { to: "/admin/dashboard/", icon: "bi bi-grid-fill", text: "Dashboard", requiresSuperAdmin: false },
         { to: "/admin/users/", icon: "fas fa-users", text: "Kelola Pengguna", requiresSuperAdmin: false },
-        { to: "/admin/testimonials/", icon: "fas fa-comments", text: "Kurasi Testimoni", requiresSuperAdmin: false },
+        // ✨ PHASE 4: Unified content management page (replaces Review Kursus, Kurasi Testimoni, Kelola Materi)
+        { to: "/admin/content-management/", icon: "fas fa-cogs", text: "Manajemen Konten", requiresSuperAdmin: false },
         { to: "/admin/documentation/", icon: "fas fa-book", text: "Dokumentasi Sistem", requiresSuperAdmin: false },
-        { to: "/admin/kelola-materi/", icon: "fas fa-book-atlas", text: "Kelola Materi", requiresSuperAdmin: false },
         { to: "/admin/analytics/", icon: "fas fa-chart-line", text: "Analitik", requiresSuperAdmin: false },
         { to: "/admin/reports/", icon: "fas fa-file-alt", text: "Laporan", requiresSuperAdmin: false },
         { to: "/admin/system/", icon: "fas fa-cogs", text: "Pengaturan Sistem", requiresSuperAdmin: true },

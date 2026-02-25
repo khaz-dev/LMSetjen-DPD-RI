@@ -18,16 +18,16 @@ export const validateTitle = (title) => {
   const warnings = [];
 
   if (!title.trim()) {
-    errors.push("Course title is required");
+    errors.push("Judul kursus diperlukan");
   } else {
     if (title.length < courseValidationRules.title.minLength) {
-      warnings.push("Title is too short. Consider adding more descriptive words");
+      warnings.push("Judul terlalu pendek. Pertimbangkan untuk menambahkan kata-kata yang lebih deskriptif");
     }
     if (title.length > courseValidationRules.title.maxLength) {
-      errors.push(`Title is too long. Maximum ${courseValidationRules.title.maxLength} characters allowed`);
+      errors.push(`Judul terlalu panjang. Maksimal ${courseValidationRules.title.maxLength} karakter diizinkan`);
     }
     if (!courseValidationRules.title.pattern.test(title)) {
-      errors.push("Title contains invalid characters");
+      errors.push("Judul berisi karakter yang tidak valid");
     }
   }
 
@@ -40,13 +40,13 @@ export const validateDescription = (description) => {
   const plainText = description.replace(/<[^>]*>/g, '').trim();
 
   if (!plainText) {
-    errors.push("Course description is required");
+    errors.push("Deskripsi kursus diperlukan");
   } else {
     if (plainText.length < courseValidationRules.description.minLength) {
-      warnings.push("Description is too short. Add more details about your course");
+      warnings.push("Deskripsi terlalu pendek. Tambahkan lebih banyak detail tentang kursus Anda");
     }
     if (plainText.length > courseValidationRules.description.maxLength) {
-      warnings.push("Description is very long. Consider making it more concise");
+      warnings.push("Deskripsi sangat panjang. Pertimbangkan untuk membuatnya lebih ringkas");
     }
   }
 
@@ -58,7 +58,7 @@ export const validateImage = (image) => {
   const warnings = [];
 
   if (!image) {
-    warnings.push("Adding a thumbnail increases course appeal");
+    warnings.push("Menambahkan thumbnail meningkatkan daya tarik kursus");
   }
 
   return { errors, warnings };
@@ -67,7 +67,7 @@ export const validateImage = (image) => {
 export const validateCategory = (categoryId) => {
   const errors = [];
   if (!categoryId) {
-    errors.push("Please select a course category");
+    errors.push("Silakan pilih kategori kursus");
   }
   return { errors, warnings: [] };
 };
@@ -75,7 +75,7 @@ export const validateCategory = (categoryId) => {
 export const validateLevel = (level) => {
   const warnings = [];
   if (!level) {
-    warnings.push("Adding a difficulty level helps students choose appropriately");
+    warnings.push("Menambahkan tingkat kesulitan membantu siswa memilih dengan tepat");
   }
   return { errors: [], warnings };
 };

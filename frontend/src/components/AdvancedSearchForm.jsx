@@ -258,10 +258,10 @@ const AdvancedSearchForm = ({
                                 onChange={(e) => handleFilterChange('level', e.target.value)}
                                 disabled={loading}
                             >
-                                <option value="">All Levels</option>
-                                <option value="Beginner">Beginner</option>
-                                <option value="Intermediate">Intermediate</option>
-                                <option value="Advanced">Advanced</option>
+                                <option value=\"\">Semua Level</option>
+                                <option value=\"Beginner\">🟢 Pemula</option>
+                                <option value=\"Intermediate\">🟡 Menengah</option>
+                                <option value=\"Advanced\">🔴 Lanjutan</option>
                             </select>
                         </div>
 

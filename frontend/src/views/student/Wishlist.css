@@ -161,6 +161,18 @@
     gap: 0.3rem !important;  /* Reduce gap between icon and text */
 }
 
+.wishlist-card-body .badge.badge-jp {
+    margin-bottom: 0 !important;
+    padding: 0.35rem 0.7rem !important;
+    font-size: 0.8rem !important;
+    min-height: 28px !important;
+    gap: 0.3rem !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    align-items: center !important;  /* ✨ PHASE 4.77+: Center icon and text vertically */
+    display: inline-flex !important;
+}
+
 .badge-text {
     text-overflow: ellipsis;
     overflow: hidden;

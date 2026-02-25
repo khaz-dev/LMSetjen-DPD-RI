@@ -42,9 +42,29 @@ useAxios.interceptors.request.use(async (config) => {
     return Promise.reject(error);
 });
 
+// ✨ PHASE 4.143+: Track root endpoint calls to identify polling sources
+let rootEndpointCallCount = 0;
+let rootEndpointLastWarning = 0;
+
 // Response interceptor for handling errors
 useAxios.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // ✨ PHASE 4.143+: Warn if root endpoint is being called excessively
+        // Root endpoint should rarely be called directly from frontend
+        if (response.config?.url === '' || response.config?.url === '/') {
+            rootEndpointCallCount++;
+            const now = Date.now();
+            // Log warning every 10 calls, with 5-second throttle to avoid spam
+            if (now - rootEndpointLastWarning > 5000) {
+                console.warn(`⚠️ useAxios: Root endpoint (/) called ${rootEndpointCallCount} times. This may indicate missing component dependencies.`);
+                rootEndpointLastWarning = now;
+                rootEndpointCallCount = 0;
+                // Log the call stack to identify source
+                console.trace('Root endpoint call stack from useAxios');
+            }
+        }
+        return response;
+    },
     (error) => {
         // Check if this is a password validation request
         const isPasswordValidation = error.config?.url?.includes('user/token/') && 

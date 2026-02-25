@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import useAxios from "../../../utils/useAxios";
 import UserData from "../../plugin/UserData";
+import { getImageUrl } from "../../../utils/courseUtils";
+import { getMediaUrl } from "../../../utils/constants";
 
 const CourseSidebar = ({ 
     course, 
@@ -196,7 +198,7 @@ const CourseSidebar = ({
     // - No more courseIncludes array - can be derived from course data
 
     return (
-        <div className="sticky-top" style={{ top: '90px' }}> {/* Match CourseTabNavigation: 70px header + 10px gap + 10px offset */}
+        <div className="sidebar-content">
             {/* Modern Course Preview Card */}
             <div 
                 className="card border-0 shadow-lg mb-3"
@@ -205,13 +207,16 @@ const CourseSidebar = ({
                 {/* Video Preview */}
                 <div className="position-relative">
                     <img 
-                        src={course?.image || '/images/placeholders/default-course.svg'}
+                        src={getImageUrl(course?.image) || '/images/placeholders/default-course.svg'}
                         alt={course?.title}
                         className="card-img-top"
                         style={{ 
                             borderRadius: '15px 15px 0 0',
                             height: '160px',
                             objectFit: 'cover'
+                        }}
+                        onError={(e) => {
+                            e.target.src = '/images/placeholders/default-course.svg';
                         }}
                     />
                     <div className="position-absolute top-50 start-50 translate-middle">
@@ -224,7 +229,10 @@ const CourseSidebar = ({
                                 height: '50px',
                                 background: 'rgba(255, 255, 255, 0.9)',
                                 boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
-                                border: 'none'
+                                border: 'none',
+                                display: 'flex',           // ✨ PHASE 4.77+: Center icon
+                                alignItems: 'center',      // ✨ Center vertically
+                                justifyContent: 'center'   // ✨ Center horizontally
                             }}
                         >
                             <i className="fas fa-play" style={{ color: '#667eea', fontSize: '1rem' }}></i>
@@ -321,7 +329,7 @@ const CourseSidebar = ({
                                 ) : (
                                     <>
                                         <i className="fas fa-play me-2"></i>
-                                        Mulai Belajar Gratis
+                                        Mulai Belajar
                                     </>
                                 )}
                             </button>

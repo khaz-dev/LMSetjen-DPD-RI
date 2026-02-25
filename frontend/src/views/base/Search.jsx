@@ -8,8 +8,12 @@ import Footer from "../partials/Footer";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { WishlistContext } from "../plugin/Context";
-import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
+import { getImageUrl } from "../../utils/courseUtils";
+import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Calculate JP
+import { DEFAULT_IMAGE_URL } from "../../utils/constants";
 import Toast from "../plugin/Toast";
+import InstructorRequestModal from "../../components/InstructorRequestModal"; // ✨ PHASE 4.78: Instructor Request System
+import apiInstance from "../../utils/axios"; // ✨ PHASE 4.78: For fetching request status
 
 import "./Search.css";
 
@@ -23,10 +27,17 @@ function Search() {
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("all");
     
+    // ✨ PHASE 4.78: Instructor Request System state
+    const [showInstructorModal, setShowInstructorModal] = useState(false);
+    const [existingInstructorRequest, setExistingInstructorRequest] = useState(null);
+    
     const userData = UserData();
     const userId = userData?.user_id;
-    const userRole = userData?.role; // Get user role from token
-    const isTeacher = userRole === 'teacher'; // Check if user is teacher/instructor
+    const userRole = userData?.role; // Get user role from token (current_role)
+    // ✨ PHASE 4.81: Check is_instructor boolean OR current_role is teacher
+    // When admin approves instructor, is_instructor=true but current_role may still be 'student'
+    // So we check BOTH: either JWT has is_instructor=true OR current_role='teacher'
+    const isTeacher = userData?.is_instructor || userRole === 'teacher';
     
     // Fix: WishlistContext provides array, not object
     const wishlistContextValue = useContext(WishlistContext);
@@ -37,13 +48,6 @@ function Search() {
 
     // Constants
     const itemsPerPage = 8;
-
-    // Image URL helper function
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return DEFAULT_IMAGE_URL;
-        if (imagePath.startsWith("http")) return imagePath;
-        return getMediaUrl(imagePath);
-    };
 
     // Fetch courses from API
     const fetchCourse = async () => {
@@ -165,6 +169,22 @@ function Search() {
         }
     };
 
+    // ✨ PHASE 4.77+: Calculate total JP (Jam Pelajaran) from course lectures
+    // 1 JP = 45 seconds, so JP = Math.ceil(totalSeconds / 2700)
+    const calculateTotalJP = (lectures) => {
+        if (!lectures || !Array.isArray(lectures)) return 0;
+        
+        let totalSeconds = 0;
+        lectures.forEach(lecture => {
+            if (lecture.content_duration) {
+                totalSeconds += parseDurationToSeconds(lecture.content_duration);
+            }
+        });
+        
+        // 1 JP = 45 minutes = 2700 seconds
+        return Math.ceil(totalSeconds / 2700);
+    };
+
     // Search handler
     const handleSearch = (e) => {
         const query = e.target.value;
@@ -214,114 +234,70 @@ function Search() {
         }
     };
 
-    // Handle instructor application email
-    const handleStartTeaching = () => {
-        const email = "sdm@dpd.go.id";
-        const subject = "Aplikasi untuk Menjadi Instruktur";
-        const emailBody = `Halo,
+    // ✨ PHASE 4.78: Handle instructor request modal
+    // ✨ PHASE 4.80: Added APPROVED status check (works even if JWT not refreshed after admin approval)
+    const handleStartTeaching = async () => {
+        // Check if user is logged in
+        if (!userId) {
+            Toast().fire({
+                icon: "warning",
+                title: "Silakan login terlebih dahulu",
+                text: "Anda harus login untuk mengajukan permohonan instruktur"
+            });
+            return;
+        }
 
-Saya ingin mengajukan aplikasi untuk menjadi instruktur di platform LMS DPD RI.
+        // If already teacher, show message
+        if (isTeacher) {
+            Toast().fire({
+                icon: "info",
+                title: "Anda sudah menjadi instruktur",
+                text: "Anda dapat mulai membuat dan mengelola kursus"
+            });
+            return;
+        }
 
-Nama: [Nama Lengkap Anda]
-Email: [Email Anda]
-Nomor Telepon: [Nomor Telepon Anda]
-Area Keahlian: [Keahlian Anda]
-
-Terima kasih atas pertimbangan aplikasi saya.
-
-Salam hormat,`;
-
-        Swal.fire({
-            title: '<strong>Jadilah Instruktur</strong>',
-            html: `
-                <div style="text-align: left; padding: 20px;">
-                    <p style="margin-bottom: 15px; color: #555;">
-                        Untuk mendaftar sebagai instruktur, silakan kirim email dengan detail berikut:
-                    </p>
-                    
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #667eea;">
-                        <div style="margin-bottom: 15px;">
-                            <strong style="color: #667eea; display: block; margin-bottom: 5px;">
-                                📧 Kirim Email Ke:
-                            </strong>
-                            <code style="background: white; padding: 8px 12px; border-radius: 6px; display: inline-block; font-size: 14px;">
-                                ${email}
-                            </code>
-                            <button onclick="navigator.clipboard.writeText('${email}'); 
-                                this.innerHTML='✓ Disalin!'; 
-                                this.style.background='#28a745';
-                                setTimeout(() => { this.innerHTML='Salin'; this.style.background='#667eea'; }, 2000);"
-                                style="margin-left: 10px; padding: 5px 15px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                                Salin
-                            </button>
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <strong style="color: #667eea; display: block; margin-bottom: 5px;">
-                                📋 Subjek:
-                            </strong>
-                            <code style="background: white; padding: 8px 12px; border-radius: 6px; display: block; font-size: 14px;">
-                                ${subject}
-                            </code>
-                        </div>
-                        
-                        <div>
-                            <strong style="color: #667eea; display: block; margin-bottom: 5px;">
-                                ✉️ Template Email:
-                            </strong>
-                            <textarea readonly
-                                style="width: 100%; height: 200px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 13px; resize: vertical;"
-                                onclick="this.select();"
-                            >${emailBody}</textarea>
-                            <button onclick="navigator.clipboard.writeText(\`${emailBody.replace(/`/g, '\\`')}\`); 
-                                this.innerHTML='✓ Template Disalin!'; 
-                                this.style.background='#28a745';
-                                setTimeout(() => { this.innerHTML='Salin Template'; this.style.background='#667eea'; }, 2000);"
-                                style="width: 100%; margin-top: 10px; padding: 10px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                                Salin Template
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196f3;">
-                        <strong style="color: #1976d2; display: block; margin-bottom: 5px;">
-                            💡 Cara Mendaftar:
-                        </strong>
-                        <ol style="margin: 5px 0; padding-left: 20px; color: #555; font-size: 14px;">
-                            <li>Salin alamat email dan template di atas</li>
-                            <li>Buka klien email Anda (Gmail, Outlook, dll)</li>
-                            <li>Tempel alamat email di bidang "Ke"</li>
-                            <li>Tempel baris subjek</li>
-                            <li>Tempel template dan isi detail Anda</li>
-                            <li>Klik tombol "Kirim Email" di bawah untuk akses cepat</li>
-                        </ol>
-                    </div>
-                </div>
-            `,
-            icon: 'info',
-            width: '700px',
-            showCancelButton: true,
-            confirmButtonText: '<i class="fas fa-envelope"></i> Kirim Email',
-            cancelButtonText: 'Tutup',
-            confirmButtonColor: '#667eea',
-            cancelButtonColor: '#6c757d',
-            customClass: {
-                confirmButton: 'btn-lg',
-                cancelButton: 'btn-lg'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Try to open email client with mailto
-                const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
-                window.open(mailtoLink, '_blank');
+        // Fetch existing request status
+        try {
+            const response = await apiInstance.get('/instructor-request/');
+            if (response.data) {
+                const requestData = Array.isArray(response.data) ? response.data[0] : response.data;
                 
-                Toast().fire({
-                    icon: "success",
-                    title: "Membuka klien email Anda...",
-                    timer: 5174
-                });
+                // ✨ PHASE 4.80: Check if request is APPROVED (works even if JWT not refreshed yet)
+                // Admin may have approved the request but JWT token not updated in browser cache
+                if (requestData.status === 'APPROVED') {
+                    Toast().fire({
+                        icon: "info",
+                        title: "Anda sudah menjadi instruktur",
+                        text: "Anda dapat mulai membuat dan mengelola kursus"
+                    });
+                    setExistingInstructorRequest(requestData);
+                    return;
+                }
+                
+                setExistingInstructorRequest(requestData);
             }
-        });
+        } catch (error) {
+            // No existing request, that's fine
+            setExistingInstructorRequest(null);
+        }
+
+        // Show modal
+        setShowInstructorModal(true);
+    };
+
+    // Handle modal close
+    const handleCloseInstructorModal = () => {
+        setShowInstructorModal(false);
+    };
+
+    // Handle successful request submission
+    const handleInstructorRequestSuccess = async (requestData) => {
+        // Refresh the request status
+        setExistingInstructorRequest(requestData);
+        
+        // Close modal
+        setShowInstructorModal(false);
     };
 
     // Pagination calculations
@@ -577,9 +553,25 @@ Salam hormat,`;
                                                         <span>{c.teacher?.full_name || 'Instruktur Tidak Diketahui'}</span>
                                                     </div>
                                                     
-                                                    <div className="course-meta-search">
-                                                        <i className="fas fa-users me-1"></i>
-                                                        <span>{c.students?.length || 0} Siswa{(c.students?.length || 0) !== 1 ? 's' : ''}</span>
+                                                    {/* Students and Rating on same line - ✨ PHASE 4.77+ */}
+                                                    <div className="d-flex align-items-center justify-content-between mb-2">
+                                                        <div className="course-meta-search">
+                                                            <i className="fas fa-users me-1"></i>
+                                                            <span>{c.students?.length || 0} Siswa</span>
+                                                        </div>
+
+                                                        {/* Rating */}
+                                                        <div className="rating-container" style={{ margin: 0 }}>
+                                                            <Rating
+                                                                initialValue={c.average_rating || 0}
+                                                                readonly={true}
+                                                                size={16}
+                                                                fillColor="#ffc107"
+                                                                emptyColor="#e4e5e9"
+                                                            />
+                                                            <span className="rating-score">{c.average_rating || 0}</span>
+                                                            <span className="text-muted">({c.reviews?.length || 0})</span>
+                                                        </div>
                                                     </div>
 
                                                     <div className="course-meta-search mb-2">
@@ -587,17 +579,19 @@ Salam hormat,`;
                                                         <span className="badge bg-success">{c.category?.title || 'Umum'}</span>
                                                     </div>
 
-                                                    {/* Rating */}
-                                                    <div className="rating-container">
-                                                        <Rating
-                                                            initialValue={c.average_rating || 0}
-                                                            readonly={true}
-                                                            size={16}
-                                                            fillColor="#ffc107"
-                                                            emptyColor="#e4e5e9"
-                                                        />
-                                                        <span className="rating-score">{c.average_rating || 0}</span>
-                                                        <span className="text-muted">({c.reviews?.length || 0})</span>
+                                                    {/* Total Duration in JP (Jam Pelajaran) - ✨ PHASE 4.77+ */}
+                                                    <div style={{
+                                                        padding: "0.6rem 0.8rem",
+                                                        marginBottom: "0.8rem",
+                                                        background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
+                                                        borderRadius: "6px",
+                                                        border: "1px solid rgba(102, 126, 234, 0.2)",
+                                                        textAlign: "center"
+                                                    }}>
+                                                        <small style={{ fontSize: "0.8rem", color: "#667eea", fontWeight: "500" }}>
+                                                            <i className="fas fa-clock me-1"></i>
+                                                            Total: <strong>{calculateTotalJP(c.lectures)}</strong> JP
+                                                        </small>
                                                     </div>
 
                                                     {/* View Course Button */}
@@ -670,6 +664,15 @@ Salam hormat,`;
                     </div>
                 </section>
             </div>
+        {/* ✨ PHASE 4.78: Instructor Request Modal */}
+        <InstructorRequestModal
+            show={showInstructorModal}
+            onClose={handleCloseInstructorModal}
+            onSuccess={handleInstructorRequestSuccess}
+            user={userData}
+            existingRequest={existingInstructorRequest}
+        />
+
         <Footer />
         </>
     );

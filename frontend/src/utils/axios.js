@@ -37,9 +37,29 @@ apiInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+// ✨ PHASE 4.143+: Track root endpoint calls to identify polling sources
+let rootEndpointCallCount = 0;
+let rootEndpointLastWarning = 0;
+
 // Response interceptor - suppress console logging for expected errors
 apiInstance.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // ✨ PHASE 4.143+: Warn if root endpoint is being called excessively
+        // Root endpoint should rarely be called directly from frontend
+        if (response.config?.url === '' || response.config?.url === '/') {
+            rootEndpointCallCount++;
+            const now = Date.now();
+            // Log warning every 10 calls to avoid spam
+            if (now - rootEndpointLastWarning > 5000) {
+                console.warn(`⚠️ Root API endpoint (/) called ${rootEndpointCallCount} times. This may indicate missing component dependencies.`);
+                rootEndpointLastWarning = now;
+                rootEndpointCallCount = 0;
+                // Log the call stack to identify source
+                console.trace('Root endpoint call stack');
+            }
+        }
+        return response;
+    },
     (error) => {
         // Completely suppress console logging for authentication-related endpoints
         const isAuthEndpoint = error.config?.url?.includes('user/token/') || 

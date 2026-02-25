@@ -8,7 +8,8 @@ import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
-import { calculateTotalDuration, parseDurationToSeconds } from "../../utils/durationUtils";
+import { calculateTotalDuration, parseDurationToSeconds, formatDurationWithJP, secondsToJP } from "../../utils/durationUtils";
+import { getImageUrl } from "../../utils/courseUtils";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import "./Dashboard.css";
 
@@ -51,6 +52,9 @@ function Dashboard() {
                     progressPercentage = Math.round((completedItems / totalItems) * 100);
                 }
                 
+                // ===== Calculate Course Duration with JP =====
+                const totalDuration = calculateTotalDuration(course.lectures || []);
+                
                 return {
                     ...course,
                     progressPercentage,
@@ -59,7 +63,9 @@ function Dashboard() {
                     totalQuizzes,
                     completedQuizzes: passedQuizzes,
                     quizProgress: totalQuizzes > 0 ? Math.round((passedQuizzes / totalQuizzes) * 100) : 0,
-                    lessonProgress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
+                    lessonProgress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
+                    courseDurationFormatted: totalDuration.formatted,
+                    courseDurationWithJP: totalDuration.withJP
                 };
             });
 
@@ -171,13 +177,13 @@ function Dashboard() {
     }, [progressData]);
 
     const totalLearningTime = useMemo(() => {
-        if (courses.length === 0) return "0m";
+        if (courses.length === 0) return "0h 0m 0s (0JP)";
         const allLectures = courses.flatMap(course => course.lectures || []);
-        return calculateTotalDuration(allLectures);
+        return calculateTotalDuration(allLectures).withJP;
     }, [courses]);
 
     const completedLearningTime = useMemo(() => {
-        if (courses.length === 0) return "0m";
+        if (courses.length === 0) return "0h 0m 0s (0JP)";
         let totalSeconds = 0;
         
         courses.forEach(course => {
@@ -200,17 +206,8 @@ function Dashboard() {
             });
         });
         
-        // Format seconds back to readable duration
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        
-        let result = "";
-        if (hours > 0) result += `${hours}h `;
-        if (minutes > 0) result += `${minutes}m `;
-        if (seconds > 0 && hours === 0) result += `${seconds}s`;
-        
-        return result.trim() || "0m";
+        // Use formatDurationWithJP to get proper format with JP calculation
+        return formatDurationWithJP(totalSeconds);
     }, [courses]);
 
     // Legacy function wrappers (for backward compatibility)
@@ -463,12 +460,15 @@ function Dashboard() {
                                                             {course?.course?.image ? (
                                                                 <>
                                                                     <img
-                                                                        src={course.course.image}
+                                                                        src={getImageUrl(course.course.image)}
                                                                         alt={course.course.title || "Course"}
                                                                         className="course-image"
                                                                         onError={(e) => {
                                                                             e.target.style.display = "none";
-                                                                            e.target.parentElement.querySelector(".course-placeholder").style.display = "flex";
+                                                                            const placeholder = e.target.parentElement?.querySelector(".course-placeholder");
+                                                                            if (placeholder) {
+                                                                                placeholder.style.display = "flex";
+                                                                            }
                                                                         }}
                                                                     />
                                                                     <div className="course-image-overlay">
@@ -504,7 +504,7 @@ function Dashboard() {
                                                                             </div>
                                                                             <div className="meta-item">
                                                                                 <i className="fas fa-clock meta-icon"></i>
-                                                                                <span>Bergerak sendiri</span>
+                                                                                <span>{course.courseDurationWithJP || "0h 0m 0s (0JP)"}</span>
                                                                             </div>
                                                                         </div>
                                                                         

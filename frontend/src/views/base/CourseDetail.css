@@ -117,23 +117,48 @@
     padding-bottom: 6rem !important; /* More gap on top of footer */
 }
 
-/* Course Tab Navigation - Sticky with floating effect */
+/* Course Tab Navigation - Fixed positioning removed, now flows naturally */
 .course-tab-navigation {
-    position: sticky;
-    top: 90px; /* Match sidebar: 70px header + 10px gap + 10px offset */
-    z-index: 999; /* Below header but above content */
+    position: relative;
+    z-index: 10;
     transition: all 0.3s ease;
     margin-bottom: 1.5rem;
     border-radius: 20px !important;
     background: #ffffff !important;
-    padding: 1rem 1rem !important;
+    padding: 1rem !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(102, 126, 234, 0.3) rgba(102, 126, 234, 0.05);
+}
 
+/* Webkit browsers scrollbar styling */
+.course-tab-navigation::-webkit-scrollbar {
+    height: 6px;
+}
+
+.course-tab-navigation::-webkit-scrollbar-track {
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 10px;
+}
+
+.course-tab-navigation::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 10px;
+}
+
+.course-tab-navigation::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.5);
 }
 
 .course-tab-navigation.scrolled {
-    transform: translateY(0);
-    border-radius: 20px !important;
-    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15) !important;
+}
+
+/* Keep scrolled state styling consistent with normal state - no padding/margin changes */
+.course-tab-navigation.scrolled .nav-link {
+    /* No padding changes on scroll - keep consistent with non-scrolled state */
 }
 
 /* Enhanced Tab Navigation Styling - Force override Bootstrap defaults */
@@ -144,6 +169,19 @@
     border-radius: 20px !important;
     backdrop-filter: blur(10px);
     overflow: hidden !important; /* Ensure corners are properly clipped */
+}
+
+/* Nav container for horizontal scrolling */
+.course-tab-navigation nav {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.course-tab-navigation .nav {
+    flex-wrap: nowrap; /* Prevent wrapping, force horizontal scroll */
+    display: flex;
+    gap: 0.75rem;
 }
 
 .course-tab-navigation .card-header {
@@ -164,23 +202,11 @@
     transition: all 0.3s ease;
     border: 2px solid transparent;
     position: relative;
-    overflow: hidden;
-}
-
-.course-tab-navigation .nav-link::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    transition: left 0.3s ease;
-    z-index: -1;
-}
-
-.course-tab-navigation .nav-link:hover::before {
-    left: 0;
+    overflow: visible;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: max-content;
+    padding: 0.75rem 1rem !important;
 }
 
 .course-tab-navigation .nav-link:hover {

@@ -28,17 +28,14 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
     useEffect(() => {
         // Check if user is logged in first
         if (!loggedIn) {
-            console.log("🚫 RoleRoute: User not logged in (isLoggedIn=false)");
             setHasCheckedRole(true);
             setShouldRender(false);
             return;
         }
 
-        console.log("✅ RoleRoute: User logged in, checking role...");
         
         // Still loading roles from API
         if (rolesLoading) {
-            console.log("⏳ RoleRoute: Roles still loading...");
             return;
         }
 
@@ -50,32 +47,23 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
         let hasPermission = false;
         const normalizedAllowedRoles = allowedRoles.map(role => role.toLowerCase());
         
-        console.log("👤 RoleRoute: Checking boolean role fields");
-        console.log("   is_student:", userData?.is_student);
-        console.log("   is_instructor:", userData?.is_instructor);
-        console.log("   is_admin:", userData?.is_admin);
-        console.log("   allowedRoles:", normalizedAllowedRoles);
         
         // Check if user has one of the allowed roles using boolean fields
         for (const allowedRole of normalizedAllowedRoles) {
             if (allowedRole === 'student' && userData?.is_student) {
                 hasPermission = true;
-                console.log("✅ RoleRoute: User has 'student' role (is_student=true)");
                 break;
             } else if ((allowedRole === 'teacher' || allowedRole === 'instructor') && userData?.is_instructor) {
                 hasPermission = true;
-                console.log("✅ RoleRoute: User has 'instructor' role (is_instructor=true)");
                 break;
             } else if (allowedRole === 'admin' && userData?.is_admin) {
                 hasPermission = true;
-                console.log("✅ RoleRoute: User has 'admin' role (is_admin=true)");
                 break;
             }
         }
         
         if (!hasPermission) {
             // User doesn't have permission - show error
-            console.error("❌ RoleRoute: Permission denied - user doesn't have any of the allowed roles");
             
             // Determine which role user currently has for display
             let currentRoleDisplay = 'Tidak Diketahui';
@@ -105,7 +93,6 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
             });
             setShouldRender(false);
         } else {
-            console.log("✅ RoleRoute: User has permission!");
             setShouldRender(true);
         }
         

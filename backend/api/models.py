@@ -65,9 +65,11 @@ NOTI_TYPE = (
 )
 
 # ✨ PHASE 4.18: Video source types for course intro videos
+# ✨ PHASE 4.52: Added google_drive option for Google Drive video support
 INTRO_VIDEO_SOURCE = (
     ("upload", "Upload File"),
     ("youtube", "YouTube Link"),
+    ("google_drive", "Google Drive"),
 )
 
 class Teacher(models.Model):
@@ -83,6 +85,16 @@ class Teacher(models.Model):
 
     def __str__(self):
         return self.full_name
+    
+    def save(self, *args, **kwargs):
+        """
+        ✨ PHASE 4.39: Auto-sync full_name from user.full_name to ensure it's always correct
+        Teacher.full_name should always reflect User.full_name as the source of truth
+        """
+        # Always ensure full_name is synced from the user's full_name
+        if self.user and self.user.full_name:
+            self.full_name = self.user.full_name
+        super().save(*args, **kwargs)
     
     @classmethod
     def create_from_profile(cls, user):
@@ -130,7 +142,15 @@ class Category(models.Model):
         return self.title
     
     def course_count(self):
-        return Course.objects.filter(category=self).count()
+        # ✨ PHASE 4+: Only count published courses for public display
+        # Excludes courses in "Review", "Draft", or "Rejected" status
+        # [*] PHASE 4.77 FIX: Also filter by is_published_version=True to avoid double counting
+        # In dual-copy versioning system: draft has is_published_version=False, published copy has is_published_version=True
+        return Course.objects.filter(
+            category=self,
+            platform_status="Published",
+            is_published_version=True  # [*] PHASE 4.77: Count only published copies, not drafts
+        ).count()
     
     def save(self, *args, **kwargs):
         if self.slug == "" or self.slug == None:
@@ -157,6 +177,40 @@ class Course(models.Model):
     
     # ✨ PHASE 4: PostgreSQL Full-Text Search field
     search_vector = SearchVectorField(null=True, blank=True)
+    
+    # ✨ PHASE 4.36: Course approval workflow
+    # When instructor submits for review, platform_status = "Review"
+    # When admin approves, platform_status = "Published"
+    # When admin rejects, platform_status = "Rejected" and rejection_reason is set
+    rejection_reason = models.TextField(null=True, blank=True)  # Admin's reason for rejection
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="approved_courses")  # Admin who approved
+    approval_date = models.DateTimeField(null=True, blank=True)  # When course was approved
+    review_submitted_date = models.DateTimeField(null=True, blank=True)  # When instructor submitted for review
+    
+    # ✨ PHASE 4.60: Course Versioning - Dual-Copy System
+    # Prevents instructor edits from affecting students' learning experience
+    is_published_version = models.BooleanField(
+        default=False,
+        help_text="Flag indicating this is the student-facing published version"
+    )
+    parent_course = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='published_copies',
+        help_text="Points to instructor's draft if this is a published version copy"
+    )
+    
+    # ✨ PHASE 4.72: Published Snapshot for Restore Functionality
+    # Stores a JSON snapshot of the course data when it's published
+    # Used to restore published course if instructor makes mistakes during edit
+    # Format: {"title": "...", "description": "...", "image": "...", etc}
+    published_snapshot = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="JSON snapshot of course state when published (for restore functionality)"
+    )
 
     class Meta:
         # ✨ PHASE 4: GIN index for fast full-text search queries
@@ -196,6 +250,406 @@ class Course(models.Model):
         average_rating = Review.objects.filter(course=self, active=True).aggregate(avg_rating=models.Avg('rating'))
         return average_rating['avg_rating']
     
+    # ✨ PHASE 4.60: Versioning support methods
+    def create_published_copy(self):
+        """
+        Creates a published copy of this course for student viewing.
+        Used when instructor submits course for the first time or when admin approves changes.
+        
+        [*] PHASE 4.85 FIX: Initial status is "Review" (not "Published")
+        - When instructor submits NEW course, published copy created with platform_status="Review"
+        - Published copy hidden from students until admin approves
+        - When admin approves, status changed to "Published" by CourseApprovalAPIView
+        - This prevents unreview courses from appearing on homepage
+        
+        Returns: The newly created published course copy
+        """
+        from django.db import transaction
+        from shortuuid import ShortUUID
+        
+        with transaction.atomic():
+            # Generate unique course_id for published copy
+            su = ShortUUID(alphabet="0123456789")
+            unique_course_id = su.random(6)
+            
+            # Create copy of this course
+            published_copy = Course.objects.create(
+                teacher=self.teacher,
+                category=self.category,
+                file=self.file,
+                image=self.image,
+                title=self.title,
+                description=self.description,
+                level=self.level,
+                intro_video_source=self.intro_video_source,
+                course_id=unique_course_id,  # Unique ID for published copy
+                
+                # Status fields
+                # [*] PHASE 4.85 FIX: Start as "Review" (will become "Published" when admin approves)
+                # This prevents new courses from appearing on homepage before admin review complete
+                platform_status="Review",
+                teacher_course_status=self.teacher_course_status,
+                
+                # Versioning
+                parent_course=self,
+                is_published_version=True,
+                
+                # Meta
+                featured=self.featured,
+            )
+            
+            # Copy all course content
+            self._copy_content_to(published_copy)
+            
+            return published_copy
+    
+    def create_draft_version(self):
+        """
+        Creates a new draft version of a published course for editing.
+        Used when instructor edits an already-published course.
+        
+        Returns: The newly created draft course
+        """
+        from django.db import transaction
+        
+        with transaction.atomic():
+            # Create copy of this course with Review status
+            draft_copy = Course.objects.create(
+                teacher=self.teacher,
+                category=self.category,
+                file=self.file,
+                image=self.image,
+                title=self.title,
+                description=self.description,
+                level=self.level,
+                intro_video_source=self.intro_video_source,
+                
+                # Status fields
+                platform_status="Review",
+                teacher_course_status=self.teacher_course_status,
+                
+                # Versioning
+                parent_course=self,
+                is_published_version=False,
+                
+                # Meta
+                featured=self.featured,
+            )
+            
+            # Copy all course content
+            self._copy_content_to(draft_copy)
+            
+            return draft_copy
+    
+    def save_published_snapshot(self):
+        """
+        ✨ PHASE 4.72: Save a JSON snapshot of the course's current state
+        Called when course is first published or when published changes are approved
+        
+        Used for restore functionality - allows instructors to undo changes
+        if they make mistakes while editing a published course
+        """
+        self.published_snapshot = {
+            "title": self.title,
+            "description": self.description,
+            "level": self.level,
+            "image": self.image,
+            "file": self.file,
+            "featured": self.featured,
+            "intro_video_source": self.intro_video_source,
+            "category_id": self.category.id if self.category else None,
+        }
+        self.save()
+    
+    def restore_from_published_snapshot(self):
+        """
+        ✨ PHASE 4.72: Restore course to its last published state from snapshot
+        
+        Used when instructor clicks "Restore Kursus" button
+        Returns True if restore was successful, False if no snapshot available
+        """
+        if not self.published_snapshot:
+            return False
+        
+        snapshot = self.published_snapshot
+        
+        # Restore all fields from snapshot
+        self.title = snapshot.get("title", self.title)
+        self.description = snapshot.get("description", self.description)
+        self.level = snapshot.get("level", self.level)
+        self.image = snapshot.get("image", self.image)
+        self.file = snapshot.get("file", self.file)
+        self.featured = snapshot.get("featured", self.featured)
+        self.intro_video_source = snapshot.get("intro_video_source", self.intro_video_source)
+        
+        # Restore category
+        category_id = snapshot.get("category_id")
+        if category_id:
+            try:
+                self.category = Category.objects.get(id=category_id)
+            except Category.DoesNotExist:
+                pass  # Keep existing category if not found
+        
+        # Reset status back to Published (it was changed to Review during edit)
+        self.platform_status = "Published"
+        
+        self.save()
+        return True
+    
+    def _copy_content_to(self, target_course, clear_target=True):
+        """
+        ✨ PHASE 4.74: Enhanced method to copy ALL course-related content to target course.
+        ✨ PHASE 4.77 FIXED: Now also copies course metadata (image, title, description, level, etc.)
+        
+        Copies: course metadata + curriculum, features, requirements, learning outcomes, AND quizzes with questions/choices
+        Used by: submit_for_publication, admin approval, restore operations
+        
+        This is the PRIMARY method for versioning - ensures complete content sync
+        
+        Args:
+            target_course: The course to copy content to
+            clear_target: If True, delete all existing content in target before copying (prevents duplicates)
+        """
+        from django.db import transaction
+        
+        with transaction.atomic():
+            print(f"[Content Copy] Starting copy from {self.title} to {target_course.title}")
+            
+            # ✨ PHASE 4.77 FIXED: Copy core course metadata first
+            print(f"[Content Copy] Syncing course metadata (title, description, image, level, etc.)...")
+            target_course.title = self.title
+            target_course.description = self.description
+            target_course.level = self.level
+            target_course.image = self.image
+            target_course.file = self.file
+            target_course.intro_video_source = self.intro_video_source
+            target_course.featured = self.featured
+            target_course.save()
+            print(f"[Content Copy] [OK] Course metadata synced")
+            
+            # ✨ PHASE 4.77: Clear existing content BEFORE copying to prevent duplicates
+            if clear_target:
+                print(f"[Content Copy] Clearing existing content from target course...")
+                target_course.curriculum.all().delete()
+                target_course.quizzes.all().delete()
+                target_course.features.all().delete()
+                target_course.requirements.all().delete()
+                target_course.learning_outcomes.all().delete()
+                print(f"[Content Copy] [OK] Target course content cleared")
+            
+            try:
+                # STEP 1: Copy curriculum variants (Bagian)
+                print("[Content Copy] Copying curriculum sections (Bagian)...")
+                variant_map = {}  # Map old variant IDs to new ones
+                for variant in self.curriculum.all():
+                    new_variant = Variant.objects.create(
+                        course=target_course,
+                        title=variant.title,
+                        order=variant.order,
+                    )
+                    variant_map[variant.id] = new_variant
+                    
+                    # Copy variant items (Pelajaran - lessons)
+                    print(f"[Content Copy] Copying lessons for section: {variant.title}")
+                    for item in variant.variant_items.all():
+                        VariantItem.objects.create(
+                            variant=new_variant,
+                            title=item.title,
+                            description=item.description,
+                            file=item.file,
+                            duration=item.duration,
+                            preview=item.preview,
+                            order=item.order,
+                        )
+                    print(f"[Content Copy] [OK] Copied {variant.variant_items.count()} lessons")
+                
+                print(f"[Content Copy] [OK] Copied {len(variant_map)} curriculum sections")
+                
+                # STEP 2: Copy quizzes (Kuis) with all questions and choices
+                print("[Content Copy] Copying quizzes (Kuis) with questions and choices...")
+                quiz_map = {}  # Map old quiz IDs to new ones
+                for quiz in self.quizzes.all():
+                    new_quiz = Quiz.objects.create(
+                        course=target_course,
+                        title=quiz.title,
+                        description=quiz.description,
+                        is_active=quiz.is_active,
+                    )
+                    quiz_map[quiz.id] = new_quiz
+                    
+                    # Copy quiz questions and their choices
+                    print(f"[Content Copy] Copying questions for quiz: {quiz.title}")
+                    question_map = {}
+                    for question in quiz.questions.all():
+                        new_question = QuizQuestion.objects.create(
+                            quiz=new_quiz,
+                            question_text=question.question_text,
+                            order=question.order,
+                        )
+                        question_map[question.id] = new_question
+                        
+                        # Copy quiz choices (answers) for this question
+                        for choice in question.choices.all():
+                            QuizChoice.objects.create(
+                                question=new_question,
+                                choice_text=choice.choice_text,
+                                is_correct=choice.is_correct,
+                                order=choice.order,
+                            )
+                    
+                    print(f"[Content Copy] [OK] Copied {quiz.questions.count()} questions with choices")
+                
+                print(f"[Content Copy] [OK] Copied {len(quiz_map)} quizzes")
+                
+                # STEP 3: Copy course features (Fitur)
+                print("[Content Copy] Copying course features (Fitur)...")
+                for feature in self.features.all():
+                    CourseFeature.objects.create(
+                        course=target_course,
+                        icon=feature.icon,
+                        text=feature.text,
+                        highlight=feature.highlight,
+                        order=feature.order,
+                    )
+                print(f"[Content Copy] [OK] Copied {self.features.count()} features")
+                
+                # STEP 4: Copy course requirements (Persyaratan)
+                print("[Content Copy] Copying course requirements (Persyaratan)...")
+                for req in self.requirements.all():
+                    CourseRequirement.objects.create(
+                        course=target_course,
+                        requirement=req.requirement,
+                        order=req.order,
+                    )
+                print(f"[Content Copy] [OK] Copied {self.requirements.count()} requirements")
+                
+                # STEP 5: Copy learning outcomes (Hasil Pembelajaran)
+                print("[Content Copy] Copying learning outcomes (Hasil Pembelajaran)...")
+                for outcome in self.learning_outcomes.all():
+                    CourseLearningOutcome.objects.create(
+                        course=target_course,
+                        outcome=outcome.outcome,
+                        order=outcome.order,
+                    )
+                print(f"[Content Copy] [OK] Copied {self.learning_outcomes.count()} learning outcomes")
+                
+                print("[Content Copy] [DONE] ALL CONTENT COPIED SUCCESSFULLY")
+                
+            except Exception as e:
+                print(f"[Content Copy] [FAIL] ERROR during content copy: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                raise
+    
+    def submit_for_publication(self):
+        """
+        ✨ PHASE 4.74 FIXED (PHASE 4.75): When instructor clicks "Ajukan Publikasi Kursus"
+        
+        KEY FIX: NEVER update published version before admin approval!
+        - If NEVER published: Creates new published course copy with all content
+        - If ALREADY published: DO NOT update here - wait for admin approval via CourseApprovalAPIView
+        
+        Published version only changes when:
+        1. Admin clicks "Approve" → CourseApprovalAPIView._get_or_create_published_copy() updates it
+        2. OR course never existed → create initial published copy
+        
+        Returns: (published_course, is_new)
+        """
+        from django.db import transaction
+        
+        with transaction.atomic():
+            print(f"[Submit] Processing submission for: {self.title}")
+            
+            # Get existing published copy if any
+            published_copies = self.published_copies.filter(
+                is_published_version=True
+            )
+            
+            if published_copies.exists():
+                # ALREADY PUBLISHED: Do NOT update! Admin will do that on approval
+                published = published_copies.first()
+                print(f"[Submit] [OK] Found existing published copy (ID: {published.id})")
+                print(f"[Submit] [WARN]  IMPORTANT: Published version NOT updated. Admin will approve changes.")
+                is_new = False
+            else:
+                # FIRST TIME PUBLISHING: Create initial published copy with current draft content
+                published = self.create_published_copy()
+                print(f"[Submit] [OK] Created new published copy (ID: {published.id})")
+                is_new = True
+            
+            # Set status to Review (waiting for admin approval)
+            self.platform_status = "Review"
+            self.review_submitted_date = timezone.now()
+            self.rejection_reason = None
+            self.save()
+            print(f"[Submit] [OK] Course status set to Review, awaiting admin approval")
+            print(f"[Submit] [OK] Published version remains UNCHANGED. Students see old content until admin approves.")
+            
+            return published, is_new
+    
+    def restore_to_published(self):
+        """
+        ✨ PHASE 4.74: Restore draft course to published state
+        
+        Called when instructor clicks "Restore Kursus" button
+        - Deletes all draft content
+        - Re-copies everything from published version
+        - Restores metadata from published_snapshot
+        
+        Returns: (success, message)
+        """
+        from django.db import transaction
+        
+        with transaction.atomic():
+            print(f"[Restore] Starting restore for: {self.title}")
+            
+            # Get published version
+            published_copies = self.published_copies.filter(
+                is_published_version=True,
+                platform_status="Published"
+            )
+            
+            if not published_copies.exists():
+                msg = "Tidak ada versi terpublikasi untuk dikembalikan"
+                print(f"[Restore] [FAIL] {msg}")
+                return False, msg
+            
+            published = published_copies.first()
+            
+            # Delete all draft content
+            print(f"[Restore] Deleting draft content...")
+            self.curriculum.all().delete()
+            self.quizzes.all().delete()
+            self.features.all().delete()
+            self.requirements.all().delete()
+            self.learning_outcomes.all().delete()
+            print(f"[Restore] [OK] Deleted draft content")
+            
+            # Re-copy from published version (clear_target=False since we already deleted above)
+            print(f"[Restore] Re-copying from published version...")
+            published._copy_content_to(self, clear_target=False)
+            
+            # Restore metadata from snapshot
+            if self.published_snapshot:
+                print(f"[Restore] Restoring metadata from snapshot...")
+                self.restore_from_published_snapshot()
+            else:
+                # No snapshot, just copy metadata from published
+                self.title = published.title
+                self.description = published.description
+                self.level = published.level
+                self.image = published.image
+                self.file = published.file
+                self.featured = published.featured
+                self.intro_video_source = published.intro_video_source
+                if published.category:
+                    self.category = published.category
+                self.platform_status = "Published"
+                self.save()
+            
+            print(f"[Restore] [DONE] Course successfully restored to published state")
+            return True, "Kursus berhasil dikembalikan ke versi yang dipublikasikan"
+    
     def rating_count(self):
         return Review.objects.filter(course=self, active=True).count()
     
@@ -211,6 +665,8 @@ class Variant(models.Model):
 
     class Meta:
         ordering = ['order', 'date']  # Ensure consistent retrieval order
+        verbose_name = "Bagian"  # Section in Indonesian
+        verbose_name_plural = "Bagian-Bagian"
 
     def __str__(self):
         return self.title
@@ -232,12 +688,13 @@ class VariantItem(models.Model):
     variant_item_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     order = models.IntegerField(default=0, db_index=True)  # For consistent ordering
     date = models.DateTimeField(default=timezone.now)
+    # ✨ PHASE 4.187: Store lesson media source to remember which source was used (youtube, google_drive, or upload)
+    media_source = models.CharField(choices=INTRO_VIDEO_SOURCE, default="google_drive", max_length=20, blank=True, null=True)
 
     class Meta:
         ordering = ['order', 'date']  # Ensure consistent retrieval order
-
-    def __str__(self):
-        return f"{self.variant.title} - {self.title}"
+        verbose_name = "Pelajaran"  # Lesson in Indonesian
+        verbose_name_plural = "Pelajaran-Pelajaran"
     
     @property
     def content_duration(self):
@@ -282,11 +739,126 @@ class VariantItem(models.Model):
         }
         return icon_map.get(file_type, "fas fa-file")
     
+    def clean(self):
+        """✨ PHASE 4.170: Validate that duration is cleared when file is empty"""
+        from django.core.exceptions import ValidationError
+        
+        # If file is empty, duration should also be empty
+        if not self.file and self.duration:
+            raise ValidationError({
+                'duration': 'Durasi harus kosong ketika File field kosong. Silakan bersihkan field durasi.',
+            })
+    
     def save(self, *args, **kwargs):
+        # ✨ PHASE 4.170: Auto-clear duration when file is removed
+        if not self.file:
+            self.duration = None
+        
         super().save(*args, **kwargs)
 
         # Note: Video duration extraction is now handled by the file-upload API
         # The duration information is returned when uploading the video file
+
+
+# ✨ PHASE 4.143: Lesson Completion Verification System
+# Questions students must answer before marking lesson as complete
+QUESTION_TYPE_CHOICES = (
+    ('multiple_choice', 'Multiple Choice (Single Select)'),
+    ('multi_select', 'Multi-Select'),
+    ('short_answer', 'Short Answer'),
+    ('fill_in_blank', 'Fill in the Blank'),
+)
+
+class LessonCompletionQuestion(models.Model):
+    """
+    Question displayed when student finishes watching a lesson (100% duration).
+    Student must answer correctly before lesson is marked as complete.
+    """
+    variant_item = models.OneToOneField(VariantItem, on_delete=models.CASCADE, related_name='completion_question')
+    question_text = models.TextField(help_text="The question that will be displayed to the student")
+    question_type = models.CharField(
+        max_length=20,
+        choices=QUESTION_TYPE_CHOICES,
+        default='multiple_choice',
+        help_text="Type of question: multiple choice, multi-select, short answer, or fill in blank"
+    )
+    
+    # For short answer and fill in blank - the correct answer text
+    correct_answer_text = models.TextField(
+        blank=True,
+        null=True,
+        help_text="For short answer/fill in blank: the correct answer text"
+    )
+    
+    # Case sensitivity for text-based answers
+    case_sensitive = models.BooleanField(
+        default=False,
+        help_text="For short answer/fill in blank: whether answer is case-sensitive"
+    )
+    
+    question_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Lesson Completion Question"
+        verbose_name_plural = "Lesson Completion Questions"
+    
+    def __str__(self):
+        return f"{self.variant_item.title} - {self.get_question_type_display()}"
+    
+    def check_answer(self, student_answer):
+        """
+        Check if student's answer is correct.
+        Returns True if correct, False otherwise.
+        """
+        if self.question_type in ['short_answer', 'fill_in_blank']:
+            correct_text = self.correct_answer_text.strip()
+            student_text = student_answer.strip()
+            
+            if not self.case_sensitive:
+                correct_text = correct_text.lower()
+                student_text = student_text.lower()
+            
+            return student_text == correct_text
+        
+        # For multiple choice and multi-select, checking done via choices
+        return False
+
+
+class LessonCompletionQuestionChoice(models.Model):
+    """
+    Choices for multiple choice and multi-select completion questions
+    """
+    question = models.ForeignKey(
+        LessonCompletionQuestion,
+        on_delete=models.CASCADE,
+        related_name='choices',
+        limit_choices_to={'question_type__in': ['multiple_choice', 'multi_select']}
+    )
+    choice_text = models.CharField(max_length=500)
+    is_correct = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+    choice_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    
+    class Meta:
+        ordering = ['order']
+        verbose_name = "Lesson Completion Question Choice"
+        verbose_name_plural = "Lesson Completion Question Choices"
+    
+    def __str__(self):
+        status = "[✓]" if self.is_correct else "[ ]"
+        return f"{status} {self.choice_text[:50]}"
+    
+    def save(self, *args, **kwargs):
+        # For single-select multiple choice, ensure only one correct answer
+        if self.is_correct and self.question.question_type == 'multiple_choice':
+            LessonCompletionQuestionChoice.objects.filter(
+                question=self.question,
+                is_correct=True
+            ).exclude(pk=self.pk).update(is_correct=False)
+        super().save(*args, **kwargs)
+
 
 class Question_Answer(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
@@ -617,7 +1189,7 @@ class QuizChoice(models.Model):
         ordering = ['order']
 
     def __str__(self):
-        status = "✓" if self.is_correct else "✗"
+        status = "[OK]" if self.is_correct else "✗"
         return f"{status} {self.choice_text}"
 
     def save(self, *args, **kwargs):
@@ -2165,6 +2737,177 @@ class QuizMetrics(models.Model):
         )
         
         return metrics
+
+
+# ✨ PHASE 4.78: Instructor Request Model for role request workflow
+class InstructorRequest(models.Model):
+    """
+    ✨ PHASE 4.78: Instructor role request system
+    Allows students to request instructor/teacher role with admin approval workflow
+    
+    Workflow:
+    1. Student submits request with details about expertise
+    2. Request status: PENDING
+    3. Admin reviews request
+    4. Admin approves (status=APPROVED) → User gets instructor role + Teacher object
+    5. Admin rejects (status=REJECTED) → Stores rejection reason, user can reapply
+    """
+    
+    REQUEST_STATUS_CHOICES = [
+        ('PENDING', 'Menunggu Review Admin'),
+        ('APPROVED', 'Disetujui'),
+        ('REJECTED', 'Ditolak'),
+    ]
+    
+    EXPERIENCE_LEVEL_CHOICES = [
+        ('BEGINNER', 'Pemula (0-2 tahun)'),
+        ('INTERMEDIATE', 'Menengah (2-5 tahun)'),
+        ('ADVANCED', 'Lanjutan (5+ tahun)'),
+    ]
+    
+    # Request Information
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='instructor_requests')
+    expertise_areas = models.CharField(
+        max_length=500,
+        help_text="Bidang keahlian yang ingin diajarkan (pisahkan dengan koma)"
+    )
+    bio = models.TextField(help_text="Pengenalan singkat tentang Anda dan pengalaman mengajar")
+    experience_level = models.CharField(
+        max_length=20,
+        choices=EXPERIENCE_LEVEL_CHOICES,
+        default='BEGINNER'
+    )
+    
+    # Status and Timeline
+    status = models.CharField(
+        max_length=20,
+        choices=REQUEST_STATUS_CHOICES,
+        default='PENDING',
+        db_index=True
+    )
+    request_date = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    # Admin Review Information
+    reviewed_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='instructor_requests_reviewed'
+    )
+    reviewed_date = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Alasan penolakan (jika status=REJECTED)"
+    )
+    
+    class Meta:
+        ordering = ['-request_date']
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['status', '-request_date']),
+            models.Index(fields=['reviewed_date']),
+        ]
+        verbose_name = "Instructor Request"
+        verbose_name_plural = "Instructor Requests"
+    
+    def __str__(self):
+        return f"{self.user.full_name} - {self.get_status_display()} ({self.request_date.strftime('%Y-%m-%d')})"
+    
+    def approve(self, reviewed_by):
+        """
+        Admin approve instructor request
+        - Sets status to APPROVED
+        - Creates Teacher object if not exists
+        - Grants instructor role to user
+        - Records admin who approved
+        """
+        # Create or get Teacher object
+        teacher, created = Teacher.objects.get_or_create(
+            user=self.user,
+            defaults={
+                'full_name': self.user.full_name,
+                'image': '',
+            }
+        )
+        
+        # Grant instructor role
+        self.user.is_instructor = True
+        self.user.roles = 'student,teacher'  # Add teacher to roles
+        # ✨ PHASE 4.81: Set current_role to 'teacher' so JWT token is updated correctly
+        # This ensures that when user logs in next time or refreshes, they get 'teacher' role
+        self.user.current_role = 'teacher'
+        self.user.save()
+        
+        # Update request
+        self.status = 'APPROVED'
+        self.reviewed_by = reviewed_by
+        self.reviewed_date = timezone.now()
+        self.rejection_reason = None
+        self.save()
+        
+        return True
+    
+    def reject(self, reviewed_by, reason):
+        """
+        Admin reject instructor request
+        - Sets status to REJECTED
+        - Records rejection reason
+        - User can see reason and reapply later
+        """
+        self.status = 'REJECTED'
+        self.reviewed_by = reviewed_by
+        self.reviewed_date = timezone.now()
+        self.rejection_reason = reason
+        self.save()
+        
+        return True
+    
+    @classmethod
+    def can_user_request(cls, user):
+        """
+        Check if user can submit a new request
+        Returns: (can_request: bool, reason: str)
+        
+        ✨ PHASE 4.79: Allows reapplication on rejected requests
+        - Blocks if user already is instructor
+        - Blocks if user has pending request
+        - Allows if previous request was rejected (can reapply)
+        """
+        # Check if user is already instructor
+        if user.is_instructor:
+            return False, "Anda sudah menjadi instruktur"
+        
+        # Check if user already has pending request
+        pending = cls.objects.filter(user=user, status='PENDING').exists()
+        if pending:
+            return False, "Anda sudah memiliki permintaan yang menunggu review"
+        
+        # Allow reapplication on rejected requests (no block here)
+        return True, ""
+    
+    @classmethod
+    def get_or_create_for_user(cls, user):
+        """
+        ✨ PHASE 4.79: Get or create instructor request for user
+        
+        Handles both new requests and reapplication on rejected requests:
+        - If no request exists: Create new PENDING request
+        - If REJECTED request exists: Return existing (will be updated)
+        - If PENDING request exists: Raises error (handled by can_user_request)
+        
+        Returns: (request, created: bool)
+        """
+        # Try to get existing rejected request (for reapplication)
+        rejected = cls.objects.filter(user=user, status='REJECTED').first()
+        if rejected:
+            # Return existing rejected request to be updated
+            return rejected, False
+        
+        # No rejected request, create new one
+        new_request = cls.objects.create(user=user)
+        return new_request, True
 
 
 # ✨ PHASE 4.10: Signal handler for taxonomy updates

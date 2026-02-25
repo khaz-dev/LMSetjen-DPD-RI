@@ -1,14 +1,14 @@
 // Course Form Constants
 export const COURSE_LEVELS = [
-    { value: "Beginner", label: "Beginner" },
-    { value: "Intermediate", label: "Intermediate" },
-    { value: "Advanced", label: "Advanced" }
+    { value: "Beginner", label: "🟢 Pemula" },
+    { value: "Intermediate", label: "🟡 Menengah" },
+    { value: "Advanced", label: "🔴 Lanjutan" }
 ];
 
 export const COURSE_STATUS_OPTIONS = [
-    { value: "Draft", label: "Draft" },
-    { value: "Published", label: "Published" },
-    { value: "Disabled", label: "Disabled" }
+    { value: "Draft", label: "Draf" },
+    { value: "Published", label: "Dipublikasikan" },
+    { value: "Disabled", label: "Dinonaktifkan" }
 ];
 
 // File Upload Constants

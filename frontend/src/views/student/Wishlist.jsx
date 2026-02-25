@@ -12,6 +12,8 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { WishlistContext } from "../plugin/Context";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
+import { getImageUrl, getLevelText } from "../../utils/courseUtils";
+import { calculateTotalDuration, parseDurationToSeconds } from "../../utils/durationUtils";
 import "./Wishlist.css";
 
 function Wishlist() {
@@ -20,6 +22,20 @@ function Wishlist() {
     const [error, setError] = useState(null);
     const [wishlistCount, setWishlistCount, refreshWishlistCount] = useContext(WishlistContext);
     const isCollapsed = useSidebarCollapse();
+
+    // ✨ PHASE 4.77+: Calculate total JP (Jam Pelajaran) from course lectures
+    const calculateTotalJP = (lectures) => {
+        if (!lectures || !Array.isArray(lectures)) return 0;
+        
+        let totalSeconds = 0;
+        lectures.forEach(lecture => {
+            if (lecture.content_duration) {
+                totalSeconds += parseDurationToSeconds(lecture.content_duration);
+            }
+        });
+        
+        return Math.ceil(totalSeconds / 2700); // 1 JP = 45 minutes = 2700 seconds
+    };
 
     const fetchWishlist = async () => {
         try {
@@ -176,9 +192,12 @@ function Wishlist() {
                                                         <div className="position-relative" style={{ borderRadius: '20px 20px 0 0', overflow: 'hidden' }}>
                                                             <Link to={`/course-detail/${w.course?.slug || '#'}/`}>
                                                                 <img
-                                                                    src={w.course?.image || '/default-course-image.jpg'}
+                                                                    src={getImageUrl(w.course?.image)}
                                                                     alt="course"
                                                                     className="course-image"
+                                                                    onError={(e) => {
+                                                                        e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+                                                                    }}
                                                                 />
                                                             </Link>
                                                             {/* Wishlist Button */}
@@ -205,9 +224,15 @@ function Wishlist() {
                                                                     <span className="badge-text">{w.course?.category?.title || 'Umum'}</span>
                                                                 </span>
                                                                 <span className="badge badge-level">
-                                                                    <i className="fas fa-signal"></i>
-                                                                    <span className="badge-text">{w.course?.level}</span>
+                                                                    <span className="badge-text">{getLevelText(w.course?.level)}</span>
                                                                 </span>
+                                                                {/* ✨ PHASE 4.77: Display Kursus JP */}
+                                                                {w.course?.lectures && w.course?.lectures.length > 0 && (
+                                                                    <span className="badge badge-jp">
+                                                                        <i className="fas fa-clock"></i>
+                                                                        <span className="badge-text">{calculateTotalJP(w.course?.lectures)} JP</span>
+                                                                    </span>
+                                                                )}
                                                             </div>
 
                                                             {/* Course Title */}
@@ -229,29 +254,30 @@ function Wishlist() {
 
                                                             {/* Course Meta */}
                                                             <div className="mb-3">
-                                                                <small className="text-muted d-block mb-1">
+                                                                <small className="text-muted d-block mb-2">
                                                                     <i className="fas fa-user me-1" style={{ color: '#667eea' }}></i>
                                                                     Oleh: {w.course?.teacher?.full_name || 'Instruktur Tidak Diketahui'}
                                                                 </small>
-                                                                <small className="text-muted d-block">
-                                                                    <i className="fas fa-users me-1" style={{ color: '#667eea' }}></i>
-                                                                    {w.course?.students?.length || 0} Siswa{(w.course?.students?.length || 0) !== 1 && "s"}
-                                                                </small>
-                                                            </div>
-
-                                                            {/* Rating */}
-                                                            <div className="d-flex align-items-center mb-3">
-                                                                <div className="me-2">
-                                                                    <Rating
-                                                                        initialValue={w.course?.average_rating || 0}
-                                                                        readonly={true}
-                                                                        size={16}
-                                                                        fillColor="#ffc107"
-                                                                        emptyColor="#e4e5e9"
-                                                                    />
+                                                                
+                                                                {/* Students & Rating Row */}
+                                                                <div className="d-flex justify-content-between align-items-center">
+                                                                    <small className="text-muted">
+                                                                        <i className="fas fa-users me-1" style={{ color: '#667eea' }}></i>
+                                                                        {w.course?.students?.length || 0} Siswa{(w.course?.students?.length || 0) !== 1 && "s"}
+                                                                    </small>
+                                                                    
+                                                                    <div className="d-flex align-items-center gap-2">
+                                                                        <Rating
+                                                                            initialValue={w.course?.average_rating || 0}
+                                                                            readonly={true}
+                                                                            size={16}
+                                                                            fillColor="#ffc107"
+                                                                            emptyColor="#e4e5e9"
+                                                                        />
+                                                                        <span className="text-warning fw-medium">{w.course?.average_rating || 0}</span>
+                                                                        <small className="text-muted">({w.course?.reviews?.length || 0} ulasan)</small>
+                                                                    </div>
                                                                 </div>
-                                                                <span className="text-warning fw-medium me-1">{w.course?.average_rating || 0}</span>
-                                                                <small className="text-muted">({w.course?.reviews?.length || 0} ulasan)</small>
                                                             </div>
                                                         </div>
 

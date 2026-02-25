@@ -1,0 +1,1148 @@
+/**
+ * Admin Course Review Detail - Styling
+ * ✨ PHASE 4.37+: Dedicated full course review page for comprehensive admin evaluation
+ * Provides detailed view of course content, curriculum, quizzes, and approval controls
+ */
+
+/* ========================================
+   Container & Layout
+   ======================================== */
+.admin-dashboard {
+    background: transparent !important;
+    min-height: 100vh;
+}
+
+
+.acrd-container {
+    width: 100%;
+    margin-bottom: 40px;
+}
+
+.acrd-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+    gap: 20px;
+    position: relative;
+}
+
+.acrd-header button {
+    position: absolute;
+    left: 0;
+    min-width: 120px;
+}
+
+.acrd-header .acrd-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    white-space: nowrap;
+    flex: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.acrd-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* Override title styling in header context - highest specificity */
+.acrd-header .acrd-title {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+}
+
+.acrd-title i {
+    font-size: 1rem;
+    margin-right: 8px;
+    color: #667eea;
+}
+
+/* ========================================
+   Card Styles
+   ======================================== */
+
+.acrd-card {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.acrd-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    border-color: #e0e0e0;
+}
+
+/* ========================================
+   Course Header Card
+   ======================================== */
+
+.acrd-course-header {
+    background: white;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.acrd-course-header:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    border-color: #e0e0e0;
+}
+
+.acrd-course-header .row {
+    margin: 0;
+    padding: 0;
+}
+
+.acrd-course-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+}
+
+.acrd-course-image:hover {
+    transform: scale(1.02);
+}
+
+.acrd-course-info {
+    padding: 20px 0;
+}
+
+.acrd-course-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.acrd-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.acrd-meta-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.acrd-meta-item i {
+    font-size: 1.1rem;
+}
+
+.acrd-meta-item strong {
+    color: #2c3e50;
+}
+
+.acrd-meta-item span {
+    color: #667eea;
+    font-weight: 500;
+}
+
+.acrd-course-stats {
+    display: flex;
+    gap: 20px;
+    padding: 20px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+.acrd-stat {
+    flex: 1;
+    text-align: center;
+    padding: 15px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 8px;
+}
+
+.acrd-stat-number {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #667eea;
+    line-height: 1;
+}
+
+.acrd-stat-label {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+.acrd-ratings {
+    padding: 12px 16px;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 8px;
+    width: fit-content;
+}
+
+/* ========================================
+   Section Styles
+   ======================================== */
+
+.acrd-section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #667eea;
+}
+
+.acrd-section-title i {
+    color: #667eea;
+    margin-right: 8px;
+}
+
+.acrd-description {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #555;
+    margin: 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.02);
+    border-left: 4px solid #667eea;
+    border-radius: 4px;
+    word-break: break-word;
+}
+
+/* Styling for HTML content within description (from rich text editor) */
+.acrd-description h1,
+.acrd-description h2,
+.acrd-description h3,
+.acrd-description h4,
+.acrd-description h5,
+.acrd-description h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.acrd-description h1 {
+    font-size: 1.75rem;
+}
+
+.acrd-description h2 {
+    font-size: 1.5rem;
+}
+
+.acrd-description h3 {
+    font-size: 1.25rem;
+}
+
+.acrd-description h4 {
+    font-size: 1.1rem;
+}
+
+.acrd-description h5 {
+    font-size: 1rem;
+}
+
+.acrd-description h6 {
+    font-size: 0.95rem;
+}
+
+.acrd-description p {
+    margin-bottom: 1rem;
+    color: #555;
+    line-height: 1.7;
+}
+
+.acrd-description ul,
+.acrd-description ol {
+    margin-bottom: 1rem;
+    margin-left: 1.5rem;
+    padding-left: 0;
+}
+
+.acrd-description li {
+    margin-bottom: 0.5rem;
+    color: #555;
+}
+
+.acrd-description blockquote {
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+    border-left: 4px solid #667eea;
+    color: #666;
+    font-style: italic;
+}
+
+.acrd-description strong,
+.acrd-description b {
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+.acrd-description em,
+.acrd-description i {
+    font-style: italic;
+}
+
+.acrd-description code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #d63384;
+}
+
+.acrd-description pre {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.acrd-description pre code {
+    padding: 0;
+    color: #555;
+}
+
+.acrd-description table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+
+.acrd-description table th,
+.acrd-description table td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.acrd-description table th {
+    background: #f5f5f5;
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+.acrd-description a {
+    color: #667eea;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.acrd-description a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+.acrd-description img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   Curriculum Section
+   ======================================== */
+
+.acrd-curriculum {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.acrd-section {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.acrd-section:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.acrd-section-header {
+    width: 100%;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #f9fbfd 100%);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+}
+
+.acrd-section-header:hover {
+    background: linear-gradient(135deg, #eef2f8 0%, #f3f8fc 100%);
+    color: #667eea;
+}
+
+.acrd-section-num {
+    background: #667eea;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.acrd-section-name {
+    flex: 1;
+    text-align: left;
+}
+
+.transition-icon {
+    transition: transform 0.3s ease;
+    color: #999;
+}
+
+.transition-icon.expanded {
+    transform: rotate(180deg);
+    color: #667eea;
+}
+
+.acrd-section-content {
+    padding: 20px;
+    background: #fafbfc;
+    border-top: 1px solid #e0e0e0;
+}
+
+.acrd-empty-message {
+    padding: 20px;
+    text-align: center;
+    color: #999;
+    font-style: italic;
+}
+
+.acrd-lectures-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.acrd-lecture-item {
+    padding: 14px 16px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e8e8e8;
+    transition: all 0.3s ease;
+}
+
+.acrd-lecture-item:hover {
+    border-color: #667eea;
+    background: #f9fbfd;
+}
+
+.acrd-lecture-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.acrd-lecture-num {
+    font-weight: 600;
+    color: #2c3e50;
+    flex: 1;
+}
+
+.acrd-lecture-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.acrd-lecture-type {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #667eea;
+    font-weight: 600;
+}
+
+/* ✨ PHASE 4.142: Duration display in lecture item */
+.acrd-lecture-duration {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #4CAF50;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.acrd-lecture-detail {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 8px 0;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.02);
+    border-left: 3px solid #667eea;
+    border-radius: 2px;
+}
+
+.acrd-lecture-video {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.acrd-video-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: #667eea;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.acrd-video-link:hover {
+    background: #764ba2;
+    color: white;
+    transform: translateX(2px);
+}
+
+/* ========================================
+   Lesson Completion Question
+   ======================================== */
+.acrd-completion-question {
+    font-size: 0.9rem;
+}
+
+.acrd-completion-question .badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+}
+
+.acrd-completion-question ul {
+    padding-left: 1.5rem;
+    list-style-type: none;
+}
+
+.acrd-completion-question ul li {
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.acrd-completion-question ul li::before {
+    content: '○';
+    position: absolute;
+    left: 0;
+    color: #999;
+}
+
+.acrd-completion-question ul li i {
+    font-size: 0.75rem;
+}
+
+/* ========================================
+   Quizzes Section
+   ======================================== */
+
+.acrd-quizzes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.acrd-quiz-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.acrd-quiz-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.acrd-quiz-header-btn {
+    width: 100%;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #f9fbfd 100%);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+    flex-wrap: wrap;
+}
+
+.acrd-quiz-header-btn:hover {
+    background: linear-gradient(135deg, #eef2f8 0%, #f3f8fc 100%);
+    color: #667eea;
+}
+
+.acrd-quiz-num {
+    background: #667eea;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.acrd-quiz-title {
+    flex: 1;
+    text-align: left;
+}
+
+.acrd-quiz-content {
+    padding: 20px;
+    background: #fafbfc;
+    border-top: 1px solid #e0e0e0;
+}
+
+.acrd-quiz-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: flex-end;
+}
+
+/* ========================================
+   Quiz Questions and Answers
+   ======================================== */
+
+.acrd-quiz-questions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #e0e0e0;
+}
+
+.acrd-quiz-questions h5 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.acrd-question-item {
+    padding: 15px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.acrd-question-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.acrd-question-header {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+    flex-direction: row-reverse;
+}
+
+.acrd-question-num {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.acrd-question-text {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1.5;
+    flex: 1;
+}
+
+.acrd-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.acrd-choice-item {
+    padding: 12px;
+    background: #f9fbfd;
+    border: 1px solid #e8eaf6;
+    border-radius: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+.acrd-choice-item:hover {
+    background: #f3f8fc;
+    border-color: #667eea;
+}
+
+.acrd-choice-item.correct {
+    background: rgba(76, 175, 80, 0.05);
+    border-color: #4CAF50;
+}
+
+.acrd-choice-indicator {
+    font-size: 1.2rem;
+    line-height: 1;
+    padding-top: 4px;
+    flex-shrink: 0;
+}
+
+.acrd-choice-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.acrd-choice-letter {
+    font-weight: 700;
+    color: #667eea;
+    min-width: 24px;
+}
+
+.acrd-choice-text {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.4;
+}
+
+/* ========================================
+   Intro Video Section
+   ======================================== */
+
+.acrd-intro-video {
+    padding: 20px;
+    background: #f9fbfd;
+    border-left: 4px solid #667eea;
+    border-radius: 8px;
+}
+
+.acrd-intro-video > div:last-child {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.acrd-video-container {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e8eaf6;
+    margin-bottom: 15px;
+}
+
+.acrd-video-container i {
+    font-size: 1.5rem;
+}
+
+.acrd-video-container strong {
+    color: #2c3e50;
+    margin-left: 10px;
+}
+
+.acrd-video-container span {
+    color: #667eea;
+    font-weight: 500;
+}
+
+/* ========================================
+   Actions Card
+   ======================================== */
+
+.acrd-actions {
+    background: white;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.acrd-actions:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    border-color: #e0e0e0;
+}
+
+.acrd-actions .btn {
+    min-height: 48px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+
+.acrd-actions .btn-success:hover:not(:disabled) {
+    background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.acrd-actions .btn-danger:hover:not(:disabled) {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.acrd-actions .btn:disabled {
+    opacity: 0.6;
+}
+
+/* ========================================
+   Info Box
+   ======================================== */
+
+.acrd-info-box {
+    padding: 15px;
+    background: #f9fbfd;
+    border: 1px solid #e8eaf6;
+    border-radius: 8px;
+}
+
+.acrd-info-box strong {
+    color: #2c3e50;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.acrd-info-box p {
+    margin: 0;
+    word-break: break-all;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.text-monospace {
+    font-family: 'Monaco', 'Courier New', monospace;
+    background: rgba(0, 0, 0, 0.02);
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 768px) {
+    .acrd-header {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        position: static;
+    }
+
+    .acrd-header button {
+        position: static;
+        margin-bottom: 10px;
+        width: 100%;
+    }
+
+    .acrd-header .acrd-title {
+        font-size: 1.25rem;
+        margin-top: 0;
+        justify-content: flex-start;
+        text-align: left;
+        flex: auto;
+        width: 100%;
+    }
+
+    .acrd-title {
+        font-size: 1.5rem;
+    }
+
+    .acrd-title i {
+        font-size: 1.75rem;
+        margin-right: 10px;
+    }
+
+    .acrd-course-image {
+        height: 200px;
+    }
+
+    .acrd-course-title {
+        font-size: 1.4rem;
+    }
+
+    .acrd-meta-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .acrd-course-stats {
+        justify-content: space-around;
+        gap: 10px;
+    }
+
+    .acrd-stat {
+        padding: 12px;
+    }
+
+    .acrd-stat-number {
+        font-size: 1.4rem;
+    }
+
+    .acrd-section-header {
+        padding: 12px 15px;
+        font-size: 0.9rem;
+    }
+
+    .acrd-actions .d-grid {
+        gap: 12px;
+    }
+
+    .acrd-actions .btn {
+        min-height: 44px;
+        font-size: 0.95rem;
+    }
+
+    .acrd-section-name {
+        margin: 0;
+    }
+
+    .acrd-quiz-header {
+        gap: 8px;
+    }
+
+    .acrd-quiz-title {
+        font-size: 0.9rem;
+    }
+
+    .acrd-question-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .acrd-question-num {
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .acrd-card {
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .acrd-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        position: static;
+    }
+
+    .acrd-header button {
+        position: static;
+        width: 100%;
+    }
+
+    .acrd-header .acrd-title {
+        font-size: 1rem;
+        justify-content: flex-start;
+        text-align: left;
+        width: 100%;
+    }
+
+    .acrd-title {
+        font-size: 1.25rem;
+    }
+
+    .acrd-section-title {
+        font-size: 1.1rem;
+    }
+
+    .acrd-course-header .row > * {
+        margin-bottom: 20px;
+    }
+
+    .acrd-course-image {
+        height: 180px;
+    }
+
+    .acrd-course-title {
+        font-size: 1.2rem;
+    }
+
+    .acrd-meta-item {
+        font-size: 0.85rem;
+    }
+
+    .acrd-stat-number {
+        font-size: 1.2rem;
+    }
+
+    .acrd-stat-label {
+        font-size: 0.75rem;
+    }
+
+    .acrd-actions .d-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .acrd-actions .btn {
+        width: 100%;
+    }
+
+    .acrd-section-header {
+        padding: 12px;
+    }
+
+    .acrd-section-num {
+        padding: 3px 8px;
+        font-size: 0.7rem;
+    }
+
+    .acrd-lecture-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .acrd-lecture-type {
+        align-self: flex-end;
+    }
+}
+
+/* ========================================
+   Course Metadata Sections - ✨ PHASE 4.85
+   Features, Requirements, Learning Outcomes
+   ======================================== */
+
+.acrd-features-list,
+.acrd-requirements-list,
+.acrd-outcomes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.acrd-feature-item,
+.acrd-outcome-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8fbff;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.acrd-feature-item:hover,
+.acrd-outcome-item:hover {
+    background: #f0f7ff;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.acrd-requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: #fffbf0;
+    border-radius: 8px;
+    border-left: 4px solid #ff9800;
+    transition: all 0.3s ease;
+}
+
+.acrd-requirement-item:hover {
+    background: #fff7e6;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.15);
+}
+
+.acrd-requirement-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #ff9800;
+    color: white;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+/* ========================================
+   Print Styles
+   ======================================== */
+
+@media print {
+    .acrd-header,
+    .acrd-actions {
+        display: none;
+    }
+
+    .acrd-card {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    .acrd-section-content {
+        background: white;
+    }
+}

@@ -18,6 +18,49 @@ function Toast(){
             toast.style.border = '1px solid rgba(255, 255, 255, 0.2)';
             toast.style.backdropFilter = 'blur(15px)';
             toast.style.webkitBackdropFilter = 'blur(15px)';
+            toast.style.position = 'relative';
+            toast.style.paddingRight = '48px';
+            
+            // ✨ PHASE 4.58: Manually add close button since showCloseButton doesn't work for toasts
+            const closeButton = document.createElement('button');
+            closeButton.innerHTML = '✕';
+            closeButton.type = 'button';
+            closeButton.className = 'toast-close-btn';
+            closeButton.onmouseenter = () => {
+                closeButton.style.color = '#2d3748';
+                closeButton.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                closeButton.style.opacity = '1';
+            };
+            closeButton.onmouseleave = () => {
+                closeButton.style.color = '#718096';
+                closeButton.style.backgroundColor = 'transparent';
+                closeButton.style.opacity = '0.8';
+            };
+            // ✨ PHASE 4.59: Fix close button - use Swal.close() instead of hideLoading()
+            closeButton.onclick = () => Swal.close();
+            
+            // Style close button
+            closeButton.style.position = 'absolute';
+            closeButton.style.right = '8px';
+            closeButton.style.top = '8px';
+            closeButton.style.background = 'transparent';
+            closeButton.style.border = 'none';
+            closeButton.style.fontSize = '20px';
+            closeButton.style.cursor = 'pointer';
+            closeButton.style.color = '#718096';
+            closeButton.style.padding = '0';
+            closeButton.style.width = '32px';
+            closeButton.style.height = '32px';
+            closeButton.style.display = 'flex';
+            closeButton.style.alignItems = 'center';
+            closeButton.style.justifyContent = 'center';
+            closeButton.style.transition = 'all 0.2s ease';
+            closeButton.style.borderRadius = '6px';
+            closeButton.style.opacity = '0.8';
+            closeButton.style.fontWeight = 'bold';
+            
+            // Append close button to toast
+            toast.appendChild(closeButton);
         },
         customClass: {
             popup: 'modern-toast',
@@ -76,11 +119,11 @@ function LogoutConfirmation() {
     });
 }
 
-   // Place this near the top of your file, after imports
+   // ✨ PHASE 4.82: Delete confirmation dialog with proper centering
 function DeleteConfirmation({ title = "Konfirmasi Penghapusan", text = "Apakah Anda yakin ingin menghapus item ini? Tindakan ini tidak dapat dibatalkan." }) {
     return Swal.fire({
         title: title,
-        html: `<div style="color: #4a5568; font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">
+        html: `<div style="text-align: center; color: #4a5568; font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">
                 ${text}
                 <br><small style="color: #718096;">Tindakan ini bersifat permanen.</small>
             </div>`,
@@ -97,7 +140,9 @@ function DeleteConfirmation({ title = "Konfirmasi Penghapusan", text = "Apakah A
         allowEscapeKey: true,
         allowOutsideClick: false,
         customClass: {
-            popup: 'modern-toast',
+            popup: 'modern-toast modern-toast-dialog',
+            title: 'modern-swal-title',
+            htmlContainer: 'modern-swal-html'
         }
     });
 }

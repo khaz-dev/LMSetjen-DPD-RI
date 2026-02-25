@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useAxios from "../../../../utils/useAxios";
 import UserData from "../../../plugin/UserData";
 import Toast from "../../../plugin/Toast";
@@ -236,8 +236,47 @@ export const useCurriculumCategories = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    // ✨ PHASE 4.177: Fetch guard to prevent duplicate category loads
+    const hasFetchedRef = useRef(false);
 
     useEffect(() => {
+        // ✨ PHASE 4.177: Skip if categories already loaded (prevents duplicates in React Strict Mode)
+        if (categories && categories.length > 0) return;
+        
+        // Guard against multiple fetches in React Strict Mode
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
+        
+        const fetchCategories = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                
+                const response = await useAxios.get("/course/category/");
+                
+                if (response?.data) {
+                    setCategories(response.data);
+                } else {
+                    setError("Failed to load categories");
+                }
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+                setError("Failed to load categories");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, [categories?.length]);
+
+    return {
+        categories,
+        loading,
+        error
+    };
+};
+        
         const fetchCategories = async () => {
             try {
                 setLoading(true);

@@ -212,89 +212,27 @@ const ImageUpload = ({
             </div>
           </div>
         ) : (imagePreview || courseData?.image) ? (
-          <>
-            {/* Show comparison when both old and new images exist */}
-            {courseData?.image && imagePreview && courseData.image !== imagePreview ? (
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <div className="text-center">
-                    <small className="text-muted fw-bold d-block mb-2">
-                      <i className="fas fa-history me-1"></i>
-                      Gambar Kursus Saat Ini
-                    </small>
-                    <div className="image-preview-container" style={{ height: '400px' }}>
-                      <img
-                        className="image-preview"
-                        src={convertGoogleDriveUrl(courseData.image)}
-                        alt="Current Course Thumbnail"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.target.src = PLACEHOLDER_SVG;
-                          e.target.style.backgroundColor = '#f0f0f0';
-                        }}
-                        style={{ opacity: 0.7, objectFit: 'contain', height: '100%' }}
-                      />
-                      <div className="position-absolute top-0 end-0 m-2">
-                        <span className="badge bg-secondary">
-                          <i className="fas fa-clock me-1"></i>
-                          Saat Ini
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <div className="text-center">
-                    <small className="text-success fw-bold d-block mb-2">
-                      <i className="fas fa-sparkles me-1"></i>
-                      Gambar Baru
-                    </small>
-                    <div className="image-preview-container" style={{ height: '400px' }}>
-                      <img
-                        className={getImagePreviewClass()}
-                        src={convertGoogleDriveUrl(imagePreview)}
-                        alt="New Course Thumbnail Preview"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.target.src = PLACEHOLDER_SVG;
-                          e.target.style.backgroundColor = '#f0f0f0';
-                        }}
-                        style={{ objectFit: 'contain', height: '100%' }}
-                      />
-                      <div className="position-absolute top-0 end-0 m-2">
-                        <span className="badge bg-success">
-                          <i className="fas fa-link me-1"></i>
-                          Ditambahkan
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="image-preview-container" style={{ height: '400px' }}>
-                <img
-                  className={getImagePreviewClass()}
-                  src={convertGoogleDriveUrl(imagePreview || courseData?.image || PLACEHOLDER_SVG)}
-                  alt="Course Thumbnail Preview"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    e.target.src = PLACEHOLDER_SVG;
-                    e.target.style.backgroundColor = '#f0f0f0';
-                  }}
-                  style={{ objectFit: 'contain', height: '100%' }}
-                />
-                {(imagePreview || courseData?.image) && (
-                  <div className="position-absolute top-0 end-0 m-2">
-                    <span className="badge bg-success">
-                      <i className="fas fa-check me-1"></i>
-                      Aktif
-                    </span>
-                  </div>
-                )}
+          <div className="image-preview-container" style={{ height: '400px' }}>
+            <img
+              className={getImagePreviewClass()}
+              src={convertGoogleDriveUrl(imagePreview || courseData?.image || PLACEHOLDER_SVG)}
+              alt="Course Thumbnail Preview"
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.target.src = PLACEHOLDER_SVG;
+                e.target.style.backgroundColor = '#f0f0f0';
+              }}
+              style={{ objectFit: 'contain', height: '100%' }}
+            />
+            {(imagePreview || courseData?.image) && (
+              <div className="position-absolute top-0 end-0 m-2">
+                <span className="badge bg-success">
+                  <i className="fas fa-check me-1"></i>
+                  Aktif
+                </span>
               </div>
             )}
-          </>
+          </div>
         ) : null}
       </div>
 
@@ -305,24 +243,6 @@ const ImageUpload = ({
           {courseData?.image ? 'Ganti URL Gambar' : 'Masukkan URL Gambar'}
           <span className="text-danger ms-1">*</span>
         </label>
-        
-        {/* Current Value Display */}
-        {courseData?.image && (
-          <div className="current-value-display mb-3 p-3 bg-light border rounded">
-            <div className="d-flex align-items-center">
-              <i className="fas fa-image text-primary me-2"></i>
-              <div className="flex-grow-1">
-                <strong className="text-dark">URL Gambar Saat Ini:</strong>
-                <br />
-                <small className="text-muted text-break">{courseData.image}</small>
-              </div>
-              <span className="badge bg-success ms-2">
-                <i className="fas fa-check me-1"></i>
-                Aktif
-              </span>
-            </div>
-          </div>
-        )}
         
         {/* URL Input */}
         <div className="input-group mb-3">
