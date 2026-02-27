@@ -7,8 +7,9 @@ from django.db import models
 from django.db.models import Q, F, Value, Count, Sum, Avg, Max
 from django.db.models.functions import ExtractMonth
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
@@ -3206,6 +3207,225 @@ class TeacherReviewDetailAPIView(generics.RetrieveUpdateAPIView):
             from rest_framework.exceptions import NotFound
             raise NotFound('Teacher not found')
 
+# ✨ PHASE 4.210: Review Abuse Report API
+class ReviewAbuseReportAPIView(generics.CreateAPIView):
+    """
+    Report a review for abuse
+    
+    Allows instructors to report inappropriate student reviews to admins
+    """
+    serializer_class = api_serializer.ReviewAbuseSerializer
+    permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        try:
+            review_id = self.kwargs.get('review_id')
+            
+            try:
+                review = api_models.Review.objects.get(id=review_id)
+            except api_models.Review.DoesNotExist:
+                return Response(
+                    {'error': 'Ulasan tidak ditemukan'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Get the current user (teacher)
+            user_id = request.data.get('reported_by')
+            
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response(
+                    {'error': 'Pengguna tidak ditemukan'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Check if user already reported this review
+            existing_report = api_models.ReviewAbuse.objects.filter(
+                review=review,
+                reported_by=user
+            ).exists()
+            
+            if existing_report:
+                return Response(
+                    {'error': 'Anda sudah melaporkan review ini sebelumnya'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create the abuse report
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(review=review, reported_by=user)
+            
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Laporan penyalahgunaan berhasil dikirim ke Admin',
+                    'data': serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        except api_models.ReviewAbuse.DoesNotExist:
+            return Response(
+                {'error': 'Database belum siap. Hubungi Administrator.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {'error': f'Terjadi kesalahan server: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+# ✨ PHASE 4.210: Teacher Abuse Reports - View submitted abuse reports
+class TeacherAbuseReportsAPIView(generics.ListAPIView):
+    """
+    List all abuse reports submitted by a teacher
+    """
+    serializer_class = api_serializer.ReviewAbuseSerializer
+    permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        teacher_id = self.kwargs.get('teacher_id')
+        
+        try:
+            teacher = api_models.Teacher.objects.get(id=teacher_id)
+            user = teacher.user
+            return api_models.ReviewAbuse.objects.filter(reported_by=user).select_related('review', 'reviewed_by')
+        except api_models.Teacher.DoesNotExist:
+            return api_models.ReviewAbuse.objects.none()
+
+# ✨ PHASE 4.210: Teacher Update Abuse Report - Allow instructors to update their own reports
+class TeacherAbuseReportDetailAPIView(generics.UpdateAPIView):
+    """
+    Allow teachers to update their own abuse reports
+    """
+    serializer_class = api_serializer.ReviewAbuseSerializer
+    permission_classes = [IsAuthenticated]  # Require authentication
+    lookup_field = 'id'
+    
+    def get_queryset(self):
+        # Only allow teachers to update their own reports
+        return api_models.ReviewAbuse.objects.filter(reported_by=self.request.user).select_related('review', 'reported_by', 'reviewed_by')
+    
+    def update(self, request, *args, **kwargs):
+        report = self.get_object()
+        
+        # Allow updating reason and description if status is pending, reviewed, or dismissed
+        # Teachers can update their report at any stage except if action was already taken
+        if report.status not in ['pending', 'dismissed', 'reviewed']:
+            return Response(
+                {"error": "Laporan dengan status 'Action Taken' tidak dapat diperbarui. Hubungi admin untuk informasi lebih lanjut."},
+                status=400
+            )
+        
+        # Update only allowed fields
+        reason = request.data.get('reason')
+        description = request.data.get('description')
+        
+        if reason:
+            report.reason = reason
+        if description is not None:
+            report.description = description
+        
+        # Reset status to pending when resubmitting
+        report.status = 'pending'
+        report.reviewed_by = None
+        report.reviewed_at = None
+        report.review_notes = ''
+        
+        report.save()
+        
+        serializer = self.get_serializer(report)
+        return Response(serializer.data)
+
+# ✨ PHASE 4.210: Teacher Close Abuse Report - Allow instructors to mark report as resolved
+class TeacherAbuseReportCloseAPIView(generics.UpdateAPIView):
+    """
+    Allow teachers to mark their abuse reports as resolved/closed
+    """
+    serializer_class = api_serializer.ReviewAbuseSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+    
+    def get_queryset(self):
+        # Only allow teachers to close their own reports
+        return api_models.ReviewAbuse.objects.filter(reported_by=self.request.user).select_related('review', 'reported_by', 'reviewed_by')
+    
+    def update(self, request, *args, **kwargs):
+        from django.utils import timezone
+        from rest_framework.response import Response
+        
+        report = self.get_object()
+        
+        # Check if already closed
+        if report.closed_by_reporter:
+            return Response(
+                {"error": "Laporan ini sudah ditandai sebagai selesai"},
+                status=400
+            )
+        
+        # Mark as closed
+        report.closed_by_reporter = True
+        report.closed_by_reporter_at = timezone.now()
+        report.save()
+        
+        serializer = self.get_serializer(report)
+        return Response(serializer.data)
+
+# ✨ PHASE 4.210: Admin Abuse Reports - List all abuse reports
+class AdminAbuseReportsListAPIView(generics.ListAPIView):
+    """
+    List all abuse reports for admin review
+    """
+    serializer_class = api_serializer.ReviewAbuseSerializer
+    permission_classes = [IsAdminUser]  # ✨ PHASE 4.210: Require admin permission
+    
+    def get_queryset(self):
+        # Filter by status if provided
+        status_filter = self.request.query_params.get('status')
+        
+        queryset = api_models.ReviewAbuse.objects.all().select_related('review', 'reported_by', 'reviewed_by').order_by('-reported_at')
+        
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        
+        return queryset
+
+# ✨ PHASE 4.210: Admin Abuse Report Detail - Manage individual reports
+class AdminAbuseReportDetailAPIView(generics.RetrieveUpdateAPIView):
+    """
+    Retrieve, update, and manage individual abuse reports
+    """
+    serializer_class = api_serializer.ReviewAbuseSerializer
+    permission_classes = [IsAdminUser]  # ✨ PHASE 4.210: Require admin permission
+    lookup_field = 'id'
+    lookup_url_kwarg = 'report_id'
+    
+    def get_queryset(self):
+        return api_models.ReviewAbuse.objects.all().select_related('review', 'reported_by', 'reviewed_by')
+    
+    def update(self, request, *args, **kwargs):
+        report = self.get_object()
+        
+        # Update status and review notes
+        status_new = request.data.get('status')
+        review_notes = request.data.get('review_notes')
+        
+        if status_new:
+            report.status = status_new
+            report.reviewed_at = timezone.now()
+            report.reviewed_by_id = request.data.get('reviewed_by', None)
+        
+        if review_notes:
+            report.review_notes = review_notes
+        
+        report.save()
+        
+        serializer = self.get_serializer(report)
+        return Response(serializer.data)
+
 class TeacherStudentsListAPIView(viewsets.ViewSet):
     permission_classes = [AllowAny]
     
@@ -5702,12 +5922,184 @@ class StudentCertificateGenerateAPIView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# ✨ PHASE 4.222: Save certificate image to server (filename format: course_id_user_id.png)
 @method_decorator(csrf_exempt, name='dispatch')
+class StudentCertificateSaveImageAPIView(APIView):
+    """Save certificate image (PNG only) to server media directory with filename: course_id_user_id.png"""
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    parser_classes = (MultiPartParser, FormParser)
+    
+    def post(self, request):
+        try:
+            file = request.FILES.get('file')
+            user_id = request.data.get('user_id')
+            course_id = request.data.get('course_id')
+            
+            if not file:
+                return Response({
+                    'error': 'No image file provided'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if not user_id or not course_id:
+                return Response({
+                    'error': 'user_id and course_id are required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get or create certificate
+            try:
+                user = api_models.User.objects.get(id=user_id)
+                course = api_models.Course.objects.get(course_id=course_id)
+            except (api_models.User.DoesNotExist, api_models.Course.DoesNotExist):
+                return Response({
+                    'error': 'User or Course not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            certificate = api_models.Certificate.objects.filter(
+                user=user, course=course
+            ).first()
+            
+            if not certificate:
+                return Response({
+                    'error': 'Certificate not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # ✨ PHASE 4.222: Save image with filename format: {course_id}_{user_id}.png
+            filename = f'{course_id}_{user_id}.png'
+            certificate.image_file.save(filename, file, save=True)
+            
+            print(f"[CertificateSaveImage] Saved certificate image: {filename}")
+            print(f"[CertificateSaveImage] File path: {certificate.image_file.path if certificate.image_file else 'N/A'}")
+            
+            return Response({
+                'success': True,
+                'message': 'Certificate image saved successfully',
+                'image_file_url': certificate.image_file.url if certificate.image_file else '',
+                'filename': filename
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ✨ PHASE 4.210: Save certificate PDF to server (DEPRECATED - kept for backward compatibility)
+@method_decorator(csrf_exempt, name='dispatch')
+class StudentCertificateSavePDFAPIView(APIView):
+    """Save certificate files (image + PDF) to server media directory - DEPRECATED, use certificate-save-image instead"""
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    parser_classes = (MultiPartParser, FormParser)
+    
+    def post(self, request):
+        try:
+            # ✨ PHASE 4.222: Redirect to image endpoint if PNG is provided
+            file = request.FILES.get('file')
+            user_id = request.data.get('user_id')
+            course_id = request.data.get('course_id')
+            
+            if not file:
+                return Response({
+                    'error': 'No file provided'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # If it's a PNG image, treat it as certificate image
+            if file.content_type == 'image/png' or file.name.endswith('.png'):
+                if user_id and course_id:
+                    # Use new image endpoint
+                    return StudentCertificateSaveImageAPIView().post(request)
+                else:
+                    return Response({
+                        'error': 'user_id and course_id required for PNG files'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # For other file types, continue with old logic (backward compatibility)
+            certificate_id = request.data.get('certificate_id')
+            
+            if not certificate_id:
+                return Response({
+                    'error': 'certificate_id required for PDF files'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            certificate = api_models.Certificate.objects.get(certificate_id=certificate_id)
+            
+            # Save as PDF (backward compatibility)
+            if file and (file.content_type == 'application/pdf' or file.name.endswith('.pdf')):
+                filename = f'Sertifikat_{certificate_id}.pdf'
+                certificate.pdf_file.save(filename, file, save=True)
+            
+            return Response({
+                'success': True,
+                'message': 'Certificate file saved successfully (deprecated endpoint)'
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(xframe_options_exempt, name='dispatch')
 class StudentCertificateDownloadAPIView(APIView):
-    """Download certificate as PDF"""
+    """Download certificate image (PNG) from server using course_id and user_id"""
+    authentication_classes = []
+    permission_classes = [AllowAny]  # Allow anyone with course_id and user_id to download
+    
+    @xframe_options_exempt
+    def get(self, request, course_id, user_id):
+        try:
+            # ✨ PHASE 4.222: Get certificate by course_id and user_id (new format)
+            user = api_models.User.objects.get(id=user_id)
+            course = api_models.Course.objects.get(course_id=course_id)
+            certificate = api_models.Certificate.objects.get(user=user, course=course)
+            
+            if not certificate.is_valid:
+                return Response({
+                    'error': 'Certificate is not valid'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # ✨ PHASE 4.222: Serve the certificate image file
+            if certificate.image_file:
+                import os
+                file_path = certificate.image_file.path
+                
+                if os.path.exists(file_path):
+                    with open(file_path, 'rb') as image_file:
+                        response = HttpResponse(image_file.read(), content_type='image/png')
+                        # Use attachment disposition for download
+                        filename = f'{course_id}_{user_id}.png'
+                        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                        response['Content-Type'] = 'image/png'
+                        return response
+            
+            # Fallback: return JSON with message
+            return Response({
+                'error': 'Certificate image not available',
+                'message': 'Certificate image has not been generated yet. Please generate certificate first.'
+            }, status=status.HTTP_404_NOT_FOUND)
+                
+        except api_models.User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.Course.DoesNotExist:
+            return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.Certificate.DoesNotExist:
+            return Response({'error': 'Certificate not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ✨ PHASE 4.221: Certificate Image Display Endpoint
+@method_decorator(xframe_options_exempt, name='dispatch')
+class StudentCertificateImageAPIView(APIView):
+    """Serve certificate image (PNG) for display in frontend - allows img tag embedding"""
     authentication_classes = []
     permission_classes = [AllowAny]  # Allow anyone with certificate ID to view
     
+    @xframe_options_exempt
     def get(self, request, certificate_id):
         try:
             # Get certificate
@@ -5718,27 +6110,79 @@ class StudentCertificateDownloadAPIView(APIView):
                     'error': 'Certificate is not valid'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # For now, return certificate data for frontend to handle PDF generation
-            # In production, you might want to use a proper PDF library like reportlab
-            certificate_data = {
-                'certificate_id': certificate.certificate_id,
-                'student_name': certificate.user.full_name,
-                'course_title': certificate.course.title,
-                'instructor_name': certificate.course.teacher.full_name if certificate.course.teacher else '',
-                'completion_date': certificate.date.strftime('%B %d, %Y'),
-                'is_valid': certificate.is_valid
-            }
+            # ✨ PHASE 4.221: Serve certificate image if available
+            if certificate.image_file:
+                import os
+                file_path = certificate.image_file.path
+                
+                if os.path.exists(file_path):
+                    with open(file_path, 'rb') as image_file:
+                        response = HttpResponse(image_file.read(), content_type='image/png')
+                        # Use inline disposition for img tag display
+                        response['Content-Disposition'] = f'inline; filename="Sertifikat_{certificate.certificate_id}.png"'
+                        response['Cache-Control'] = 'max-age=86400'  # Cache for 24 hours
+                        return response
             
-            # Return JSON data instead of PDF for frontend to handle
+            # Fallback: return JSON with message
             return Response({
-                'certificate_data': certificate_data,
-                'message': 'Certificate data retrieved successfully'
-            }, status=status.HTTP_200_OK)
+                'error': 'Certificate image not available',
+                'message': 'Certificate image is being generated. Please refresh the page.'
+            }, status=status.HTTP_404_NOT_FOUND)
                 
         except api_models.Certificate.DoesNotExist:
             return Response({'error': 'Certificate not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ✨ PHASE 4.228: List all certificates for a student (new endpoint for "Sertifikat Kursus" page)
+@method_decorator(csrf_exempt, name='dispatch')
+class StudentCertificateListAPIView(APIView):
+    """List all certificates for the current student"""
+    authentication_classes = []
+    permission_classes = [AllowAny]  # Allow any student to view their own certificates
+    
+    def get(self, request, user_id):
+        """Get all certificates for a specific student"""
+        try:
+            # Get all certificates for the user
+            certificates = api_models.Certificate.objects.filter(
+                user_id=user_id,
+                is_valid=True  # Only show valid certificates
+            ).select_related('course', 'course__teacher', 'course__category', 'user').order_by('-created_at')
+            
+            if not certificates.exists():
+                return Response({
+                    'count': 0,
+                    'results': [],
+                    'message': 'Tidak ada sertifikat yang tersedia'
+                }, status=status.HTTP_200_OK)
+            
+            # Serialize certificates
+            certificate_data = api_serializer.CertificateSerializer(
+                certificates,
+                many=True,
+                context={'request': request}
+            ).data
+            
+            return Response({
+                'count': len(certificate_data),
+                'results': certificate_data,
+                'message': 'Sertifikat berhasil diambil'
+            }, status=status.HTTP_200_OK)
+            
+        except api_models.User.DoesNotExist:
+            return Response({
+                'count': 0,
+                'results': [],
+                'error': 'User tidak ditemukan'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'count': 0,
+                'results': [],
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -5765,6 +6209,7 @@ class CertificateValidationAPIView(APIView):
             # Certificate is valid - return full details
             certificate_details = {
                 'certificate_id': certificate.certificate_id,
+                'formatted_certificate_id': certificate.get_formatted_certificate_id(),  # ✨ PHASE 4.227: Professional certificate ID format
                 'student_name': certificate.user.full_name if certificate.user else 'Unknown',
                 'student_email': certificate.user.email if certificate.user else 'Unknown',
                 'course_title': certificate.course.title,

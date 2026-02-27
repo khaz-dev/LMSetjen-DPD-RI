@@ -138,7 +138,6 @@ function Courses() {
                                                 key={course.course_id || course.id || index} 
                                                 course={course} 
                                                 index={index}
-                                                onDelete={fetchCourseData}
                                             />
                                         ))}
                                     </div>

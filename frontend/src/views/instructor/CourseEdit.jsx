@@ -638,8 +638,10 @@ function CourseEdit() {
                         confirmButtonColor: "#2196F3"
                     });
                     
-                    // Refresh course data to show new status
-                    fetchCourseData();
+                    // ✨ PHASE 4.169: Don't refresh full course data to preserve published_version
+                    // Just update the status fields locally instead
+                    // The published_version will remain available if it existed before
+                    // This keeps the Pratinjau Publis and Restore buttons visible
                 } else {
                     throw new Error(response.data.message || "Gagal mengajukan kursus untuk review");
                 }
@@ -767,8 +769,9 @@ function CourseEdit() {
                     confirmButtonColor: "#2196F3"
                 });
 
-                // Refresh course data
-                fetchCourseData();
+                // ✨ PHASE 4.169: Don't refresh full course data to preserve published_version
+                // The response already contains the restored course data merged above
+                // No need for full fetch - this preserves buttons visibility
             } else {
                 throw new Error(response.data.message || "Gagal mengembalikan kursus");
             }
@@ -1216,33 +1219,33 @@ function CourseEdit() {
 
                                 {/* Enhanced Action Buttons */}
                                 <div className="action-buttons d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
-                                    {/* ✨ PHASE 4.169: Preview Buttons Section (Left) */}
+                                    {/* ✨ PHASE 4.169: Preview Buttons Section (Left) - Always Visible */}
                                     <div className="preview-buttons d-flex flex-wrap gap-2 align-items-center">
-                                        {/* Preview Published Version Button */}
-                                        {courseData?.platform_status === "Published" && (
+                                        {/* Preview Draft Version Button - Always available */}
+                                        <Link 
+                                            to={`/instructor/preview-course/${param?.course_id}/`}
+                                            target="_blank"
+                                            className="btn btn-outline-primary"
+                                            disabled={submitStatus === "submitting" || autoSaveStatus === "saving"}
+                                            title="Lihat pratinjau kursus dalam format read-only"
+                                        >
+                                            <i className="fas fa-eye me-2"></i>
+                                            Pratinjau Draf
+                                        </Link>
+                                        
+                                        {/* Preview Published Version Button - Only if published_version exists */}
+                                        {courseData?.published_version && (
                                             <Link 
-                                                to={`/course-detail/${courseData?.slug}/`}
+                                                to={`/instructor/preview-course/${courseData?.course_id}/?view=published`}
                                                 target="_blank"
                                                 className="btn btn-outline-success"
                                                 disabled={submitStatus === "submitting" || autoSaveStatus === "saving"}
-                                                title="Lihat versi kursus yang telah dipublikasikan"
+                                                title="Lihat pratinjau versi kursus yang telah dipublikasikan"
                                             >
                                                 <i className="fas fa-eye me-2"></i>
                                                 Pratinjau Publis
                                             </Link>
                                         )}
-                                        
-                                        {/* Preview Draft Version Button */}
-                                        <Link 
-                                            to={`/course-detail/${courseData?.slug}/?draft=true`}
-                                            target="_blank"
-                                            className="btn btn-outline-primary"
-                                            disabled={submitStatus === "submitting" || autoSaveStatus === "saving"}
-                                            title="Lihat versi draft kursus"
-                                        >
-                                            <i className="fas fa-eye me-2"></i>
-                                            Pratinjau Draf
-                                        </Link>
                                     </div>
 
                                     {/* ✨ PHASE 4.169: Status Info and Management Buttons (Right) */}
@@ -1354,8 +1357,8 @@ function CourseEdit() {
                                     </div>
                                 )}
 
-                                {/* ✨ PHASE 4.71 UPDATED: Buttons aligned horizontally for published courses */}
-                                {courseData?.platform_status === "Published" ? (
+                                {/* ✨ PHASE 4.71 UPDATED: Buttons aligned horizontally when published_version exists */}
+                                {courseData?.published_version ? (
                                     // Show both buttons in a horizontal line for published courses
                                     <div className="d-flex justify-content-center gap-3 mt-3 w-100 flex-wrap">
                                         {/* Restore Button */}
@@ -1531,7 +1534,7 @@ function CourseEdit() {
                                                     <>
                                                         <i className={`fas ${canPublish ? "fa-paper-plane" : "fa-lock"} me-2`}></i>
                                                         <span>
-                                                            {courseData?.platform_status === "Rejected" ? "Ajukan Ulang Publikasi Kursus" : "Ajukan Publikasi Kursus"}
+                                                            {courseData?.platform_status === "Rejected" ? "Ajukan Ulang Publikasi" : "Ajukan Publikasi"}
                                                         </span>
                                                     </>
                                                 )}
@@ -1545,54 +1548,6 @@ function CourseEdit() {
                                                 </small>
                                             )}
                                         </div>
-                                    </div>
-                                )}
-                                
-                                {/* ✨ PHASE 4.74: Restore Button for Published Courses */}
-                                {courseData?.platform_status === "Published" && courseData?.published_copies && (
-                                    <div className="d-flex justify-content-center mt-3 w-100">
-                                        <button 
-                                            type="button"
-                                            className="btn"
-                                            onClick={handleRestoreCourse}
-                                            disabled={isPublishing}
-                                            style={{
-                                                background: "linear-gradient(135deg, #FF9800 0%, #F57C00 100%)",
-                                                color: "white",
-                                                border: "none",
-                                                padding: "12px 25px",
-                                                borderRadius: "8px",
-                                                fontWeight: "600",
-                                                fontSize: "0.95rem",
-                                                boxShadow: "0 4px 15px rgba(255, 152, 0, 0.3)",
-                                                transition: "all 0.3s ease",
-                                                cursor: isPublishing ? "not-allowed" : "pointer",
-                                                opacity: isPublishing ? 0.7 : 1
-                                            }}
-                                            onMouseOver={(e) => {
-                                                if (!isPublishing) {
-                                                    e.currentTarget.style.transform = "translateY(-2px)";
-                                                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(255, 152, 0, 0.4)";
-                                                }
-                                            }}
-                                            onMouseOut={(e) => {
-                                                e.currentTarget.style.transform = "translateY(0)";
-                                                e.currentTarget.style.boxShadow = "0 4px 15px rgba(255, 152, 0, 0.3)";
-                                            }}
-                                            title="Kembalikan kursus ke versi yang dipublikasikan (undo changes)"
-                                        >
-                                            {isPublishing ? (
-                                                <>
-                                                    <div className="spinner-border spinner-border-sm me-2"></div>
-                                                    <span>Memulihkan...</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <i className="fas fa-undo me-2"></i>
-                                                    <span>Restore Kursus</span>
-                                                </>
-                                            )}
-                                        </button>
                                     </div>
                                 )}
                                 

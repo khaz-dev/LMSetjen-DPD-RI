@@ -1,0 +1,810 @@
+/* ========================================================================
+   Instructor Course Preview - Comprehensive Course Details Page
+   ======================================================================== */
+
+.instructor-preview-container {
+    background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
+    min-height: 100vh;
+}
+
+.icp-container {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================================
+   HEADER SECTION
+   ================================ */
+
+.icp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.icp-header .btn {
+    flex-shrink: 0;
+}
+
+.icp-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+}
+
+.icp-title i {
+    color: #3498db;
+    font-size: 1.1rem;
+}
+
+/* ================================
+   CARD STYLING
+   ================================ */
+
+.icp-card {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e8eef5;
+    transition: all 0.3s ease;
+    margin-bottom: 2rem;
+}
+
+.icp-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.icp-card.icp-course-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 2px solid #e8eef5;
+}
+
+/* ================================
+   COURSE HEADER CARD
+   ================================ */
+
+.icp-course-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.icp-course-info {
+    padding: 1rem 0;
+}
+
+.icp-course-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    line-height: 1.4;
+}
+
+.icp-meta-row {
+    display: flex;
+    flex-direction: row;
+    gap: 5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.icp-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.icp-meta-item strong {
+    color: #34495e;
+    min-width: 100px;
+}
+
+.icp-meta-item span {
+    color: #555;
+}
+
+/* ================================
+   COURSE STATS SECTION
+   ================================ */
+
+.icp-course-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+    background: #f5f7fa;
+    border-radius: 8px;
+    border: 1px solid #e8eef5;
+}
+
+.icp-stat {
+    text-align: center;
+    padding: 1rem;
+}
+
+.icp-stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #3498db;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.icp-stat-label {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ================================
+   SECTION TITLE STYLING
+   ================================ */
+
+.icp-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e8eef5;
+}
+
+.icp-section-title i {
+    color: #3498db;
+    font-size: 1.1rem;
+}
+
+.icp-section-content {
+    padding: 0;
+}
+
+/* ================================
+   VIDEO PENGANTAR SECTION
+   ================================ */
+
+.icp-intro-video {
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    border-left: none;
+}
+
+.icp-video-source {
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #555;
+    flex: 1;
+}
+
+.icp-video-source i {
+    font-size: 1.25rem;
+}
+
+.icp-video-source strong {
+    color: #2c3e50;
+    margin: 0 0.5rem;
+}
+
+/* ================================
+   FEATURES, REQUIREMENTS, OUTCOMES
+   ================================ */
+
+.icp-features-list,
+.icp-requirements-list,
+.icp-outcomes-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.icp-feature-item,
+.icp-requirement-item,
+.icp-outcome-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f9f9f9;
+    border-radius: 6px;
+    border-left: 3px solid #3498db;
+    transition: all 0.2s ease;
+}
+
+.icp-feature-item:hover,
+.icp-requirement-item:hover,
+.icp-outcome-item:hover {
+    background: #f5f7fa;
+    border-left-color: #2980b9;
+}
+
+.icp-feature-item i,
+.icp-requirement-item i,
+.icp-outcome-item i {
+    flex-shrink: 0;
+    margin-top: 2px;
+    min-width: 20px;
+}
+
+.icp-requirement-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: #3498db;
+    color: white;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.icp-requirement-item {
+    border-left: none;
+    padding-left: 1.5rem;
+}
+
+/* ================================
+   CURRICULUM SECTION
+   ================================ */
+
+.icp-curriculum {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.icp-section {
+    background: white;
+    border: 1px solid #e8eef5;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.icp-section-header {
+    background: #f5f7fa;
+    border: none;
+    padding: 1.25rem;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #2c3e50;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.icp-section-header:hover {
+    background: #eef2f7;
+    border-left: 3px solid #3498db;
+    padding-left: calc(1.25rem - 3px);
+}
+
+.icp-section-num {
+    display: inline-block;
+    min-width: 70px;
+    font-weight: 600;
+    color: #3498db;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.icp-section-name {
+    flex-grow: 1;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.icp-section-header i {
+    transition: transform 0.2s ease;
+    color: #7f8c8d;
+}
+
+.icp-section-header i.expanded {
+    transform: rotate(180deg);
+}
+
+.icp-section-content {
+    padding: 1.5rem;
+    background: white;
+    border-top: 1px solid #e8eef5;
+}
+
+.icp-empty-message {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #7f8c8d;
+    font-size: 0.95rem;
+}
+
+.icp-lectures-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.icp-lecture-item {
+    background: #f9f9f9;
+    padding: 1.25rem;
+    border-radius: 8px;
+    border-left: 3px solid #27ae60;
+}
+
+.icp-lecture-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.icp-lecture-num {
+    display: block;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95rem;
+}
+
+.icp-lecture-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.icp-lecture-type,
+.icp-lecture-duration {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.icp-lecture-type i {
+    font-size: 1rem;
+}
+
+.icp-lecture-detail {
+    margin: 0.75rem 0;
+    color: #555;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.icp-lecture-video {
+    margin-top: 0.75rem;
+}
+
+.icp-lecture-preview {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e8eef5;
+    margin-top: 1rem;
+}
+
+.icp-video-preview {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e8eef5;
+    margin-top: 1rem;
+}
+
+/* ================================
+   COMPLETION QUESTION
+   ================================ */
+
+.icp-completion-question {
+    border: 1px solid #d4edda !important;
+    background: #f0f8f4 !important;
+}
+
+.icp-completion-question p {
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.icp-completion-question .fa-question-circle {
+    font-size: 1.1rem;
+}
+
+.icp-completion-question strong {
+    color: #27ae60;
+}
+
+.icp-completion-question .badge {
+    font-size: 0.75rem;
+}
+
+/* ================================
+   QUIZ SECTION
+   ================================ */
+
+.icp-quizzes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.icp-quiz-item {
+    background: white;
+    border: 1px solid #e8eef5;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.icp-quiz-header-btn {
+    background: #f5f7fa;
+    border: none;
+    padding: 1.25rem;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #2c3e50;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.icp-quiz-header-btn:hover {
+    background: #eef2f7;
+    border-left: 3px solid #9b59b6;
+    padding-left: calc(1.25rem - 3px);
+}
+
+.icp-quiz-num {
+    display: inline-block;
+    min-width: 70px;
+    font-weight: 600;
+    color: #9b59b6;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.icp-quiz-title {
+    flex-grow: 1;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.icp-quiz-header-btn .badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+}
+
+.icp-quiz-header-btn .transition-icon {
+    transition: transform 0.2s ease;
+    color: #7f8c8d;
+}
+
+.icp-quiz-header-btn .transition-icon.expanded {
+    transform: rotate(180deg);
+}
+
+.icp-quiz-content {
+    padding: 1.5rem;
+    background: white;
+    border-top: 1px solid #e8eef5;
+}
+
+.icp-quiz-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.icp-quiz-stats.justify-content-end {
+    justify-content: flex-end;
+}
+
+.icp-quiz-stats .badge {
+    font-size: 0.85rem;
+    padding: 0.6rem 1rem;
+}
+
+/* ================================
+   QUIZ QUESTIONS AND ANSWERS
+   ================================ */
+
+.icp-quiz-questions {
+    border-top: 1px solid #e8eef5;
+    padding-top: 1.5rem;
+}
+
+.icp-question-item {
+    background: #f9f9f9;
+    padding: 1.25rem;
+    border-radius: 8px;
+    border-left: 3px solid #9b59b6;
+}
+
+.icp-question-header {
+    margin-bottom: 1rem;
+}
+
+.icp-question-num {
+    display: inline-block;
+    font-weight: 600;
+    color: #9b59b6;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.icp-question-text {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95rem;
+    margin: 0.5rem 0 0 0;
+    line-height: 1.4;
+}
+
+.icp-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.icp-choice-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border: 1px solid #e8eef5;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.icp-choice-item.correct {
+    background: #f0f8f4;
+    border-color: #27ae60;
+    border-left: 3px solid #27ae60;
+}
+
+.icp-choice-item:hover {
+    border-color: #3498db;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.icp-choice-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.icp-choice-indicator i {
+    font-size: 1.1rem;
+}
+
+.icp-choice-content {
+    flex-grow: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.icp-choice-letter {
+    font-weight: 700;
+    color: #7f8c8d;
+    min-width: 25px;
+    text-align: center;
+}
+
+.icp-choice-text {
+    color: #2c3e50;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    flex-grow: 1;
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+
+@media (max-width: 992px) {
+    .icp-course-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .icp-header {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+
+    .icp-title {
+        font-size: 1.5rem;
+        width: 100%;
+    }
+
+    .icp-course-header .row {
+        --bs-gutter: 0;
+    }
+
+    .icp-course-image {
+        height: 200px;
+        margin-bottom: 1rem;
+    }
+
+    .icp-course-title {
+        font-size: 1.5rem;
+    }
+
+    .icp-meta-row {
+        gap: 0.75rem;
+    }
+
+    .icp-course-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .icp-stat {
+        padding: 0.75rem;
+    }
+
+    .icp-stat-number {
+        font-size: 1.75rem;
+    }
+
+    .icp-section-title {
+        font-size: 1.1rem;
+    }
+
+    .icp-card {
+        padding: 1.5rem;
+    }
+
+    .icp-meta-item {
+        font-size: 0.9rem;
+    }
+
+    .icp-lecture-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .icp-lecture-meta {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .icp-features-list,
+    .icp-requirements-list,
+    .icp-outcomes-list {
+        gap: 0.75rem;
+    }
+
+    .icp-feature-item,
+    .icp-requirement-item,
+    .icp-outcome-item {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .icp-header {
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .icp-title {
+        font-size: 1.25rem;
+    }
+
+    .icp-course-title {
+        font-size: 1.25rem;
+    }
+
+    .icp-card {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .icp-course-stats {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+
+    .icp-stat {
+        padding: 0.5rem;
+    }
+
+    .icp-stat-number {
+        font-size: 1.5rem;
+    }
+
+    .icp-stat-label {
+        font-size: 0.75rem;
+    }
+
+    .icp-section-header,
+    .icp-quiz-header-btn {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .icp-section-num,
+    .icp-quiz-num {
+        min-width: 60px;
+        font-size: 0.75rem;
+    }
+
+    .icp-lecture-item,
+    .icp-question-item {
+        padding: 1rem;
+    }
+
+    .icp-choice-item {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .icp-feature-item,
+    .icp-requirement-item,
+    .icp-outcome-item {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .icp-requirement-number {
+        width: 26px;
+        height: 26px;
+        font-size: 0.85rem;
+    }
+}
+
+

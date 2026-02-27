@@ -21,6 +21,20 @@ function Review() {
     const [filteredReviews, setFilteredReview] = useState([]);
     const [loadingReply, setLoadingReply] = useState({});
     const [loading, setLoading] = useState(true);
+    const [reportingAbuseReviewId, setReportingAbuseReviewId] = useState(null);
+    const [showAbuseModal, setShowAbuseModal] = useState(false);
+    const [abuseReason, setAbuseReason] = useState('');
+    const [abuseDescription, setAbuseDescription] = useState('');
+    const [reportingAbuse, setReportingAbuse] = useState(false);
+    const [abuseReports, setAbuseReports] = useState([]);  // ✨ PHASE 4.210: Track submitted abuse reports
+    const [loadingAbuseReports, setLoadingAbuseReports] = useState(false);
+    const [showExistingReportModal, setShowExistingReportModal] = useState(false);  // ✨ PHASE 4.210: Modal for viewing existing reports
+    const [selectedExistingReport, setSelectedExistingReport] = useState(null);  // ✨ PHASE 4.210: Currently viewed report
+    const [isEditingReport, setIsEditingReport] = useState(false);  // ✨ PHASE 4.210: Edit mode for existing report
+    const [editReason, setEditReason] = useState('');  // ✨ PHASE 4.210: Edited reason
+    const [editDescription, setEditDescription] = useState('');  // ✨ PHASE 4.210: Edited description
+    const [updatingExistingReport, setUpdatingExistingReport] = useState(false);  // ✨ PHASE 4.210: Loading state for updating
+    const [closingReport, setClosingReport] = useState(false);  // ✨ PHASE 4.210: Loading state for closing
     const isCollapsed = useInstructorSidebarCollapse();
 
     const fetchReviewsData = async () => {
@@ -42,8 +56,27 @@ function Review() {
         }
     };
 
+    // ✨ PHASE 4.210: Fetch abuse reports submitted by this teacher
+    const fetchAbuseReports = async () => {
+        try {
+            const userData = UserData();
+            if (!userData?.teacher_id) return;
+            
+            const res = await useAxios.get(`teacher/abuse-reports/${userData.teacher_id}/`);
+            const reports = res.data.results || res.data;
+            console.log("[Review] Fetched abuse reports:", reports);
+            reports.forEach(r => {
+                console.log(`[Review] Report ${r.id}: review.id = ${r.review?.id}, status = ${r.status}`);
+            });
+            setAbuseReports(reports);
+        } catch (error) {
+            console.error("Error fetching abuse reports:", error);
+        }
+    };
+
     useEffect(() => {
         fetchReviewsData();
+        fetchAbuseReports();
     }, []);
 
     const handleSubmitReply = async (reviewId) => {
@@ -119,6 +152,193 @@ function Review() {
                 return review.course.title.toLowerCase().includes(query);
             });
             setFilteredReview(filtered);
+        }
+    };
+
+    // ✨ PHASE 4.210: Abuse Report Handlers
+    const handleOpenAbuseModal = (reviewId) => {
+        console.log(`[Review] Looking for existing reports for review ${reviewId}`);
+        console.log("[Review] Available reports:", abuseReports);
+        
+        // Check if already reported
+        const existingReport = abuseReports.find(r => r.review?.id === reviewId);
+        
+        console.log(`[Review] Found existing report:`, existingReport);
+        
+        if (existingReport) {
+            // Open the existing report details modal instead
+            console.log("[Review] Showing existing report modal");
+            setSelectedExistingReport(existingReport);
+            setShowExistingReportModal(true);
+            return;
+        }
+        
+        console.log("[Review] Showing new report modal");
+        setReportingAbuseReviewId(reviewId);
+        setShowAbuseModal(true);
+        setAbuseReason('');
+        setAbuseDescription('');
+    };
+
+    const handleCloseAbuseModal = () => {
+        setShowAbuseModal(false);
+        setReportingAbuseReviewId(null);
+        setAbuseReason('');
+        setAbuseDescription('');
+    };
+
+    const handleCloseExistingReportModal = () => {
+        setShowExistingReportModal(false);
+        setSelectedExistingReport(null);
+        setIsEditingReport(false);
+        setEditReason('');
+        setEditDescription('');
+    };
+
+    // ✨ PHASE 4.210: Enter edit mode for existing report
+    const handleEditExistingReport = () => {
+        if (selectedExistingReport) {
+            setEditReason(selectedExistingReport.reason || '');
+            setEditDescription(selectedExistingReport.description || '');
+            setIsEditingReport(true);
+        }
+    };
+
+    // ✨ PHASE 4.210: Submit updated report
+    const handleUpdateExistingReport = async () => {
+        if (!editReason.trim()) {
+            Toast().fire({
+                icon: "warning",
+                title: "Silakan pilih alasan laporan",
+            });
+            return;
+        }
+
+        setUpdatingExistingReport(true);
+
+        try {
+            const userData = UserData();
+            
+            // Send updated data to backend
+            const response = await useAxios.put(
+                `teacher/abuse-reports/${selectedExistingReport.id}/update/`,
+                {
+                    reason: editReason,
+                    description: editDescription,
+                }
+            );
+
+            Toast().fire({
+                icon: "success",
+                title: "Laporan Diperbarui!",
+                text: "Laporan Anda telah diperbarui dan dikirim kembali untuk ditinjau admin.",
+            });
+
+            console.log("[Review] Updated report response:", response.data);
+            
+            // Update local state
+            const updatedReport = response.data;
+            setSelectedExistingReport(updatedReport);
+            
+            // Refresh abuse reports
+            fetchAbuseReports();
+            
+            // Exit edit mode
+            setIsEditingReport(false);
+        } catch (error) {
+            console.error("Error updating report:", error);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal memperbarui laporan",
+                text: error.response?.data?.detail || error.response?.data?.error || "Terjadi kesalahan",
+            });
+        } finally {
+            setUpdatingExistingReport(false);
+        }
+    };
+
+    // ✨ PHASE 4.210: Close/Resolve the abuse report
+    const handleCloseReport = async () => {
+        setClosingReport(true);
+
+        try {
+            const response = await useAxios.put(
+                `teacher/abuse-reports/${selectedExistingReport.id}/close/`
+            );
+
+            Toast().fire({
+                icon: "success",
+                title: "Masalah Selesai!",
+                text: "Laporan ditandai sebagai selesai. Admin telah diberitahu.",
+            });
+
+            console.log("[Review] Close report response:", response.data);
+            
+            // Update local state
+            const closedReport = response.data;
+            setSelectedExistingReport(closedReport);
+            
+            // Refresh abuse reports
+            fetchAbuseReports();
+        } catch (error) {
+            console.error("Error closing report:", error);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal menyelesaikan laporan",
+                text: error.response?.data?.detail || error.response?.data?.error || "Terjadi kesalahan",
+            });
+        } finally {
+            setClosingReport(false);
+        }
+    };
+
+    const handleSubmitAbuseReport = async () => {
+        if (!abuseReason.trim()) {
+            Toast().fire({
+                icon: "warning",
+                title: "Silakan pilih alasan laporan",
+            });
+            return;
+        }
+
+        setReportingAbuse(true);
+
+        try {
+            const userData = UserData();
+            if (!userData?.id) {
+                throw new Error("User ID not found");
+            }
+
+            await useAxios.post(`teacher/review-report-abuse/${reportingAbuseReviewId}/`, {
+                reported_by: userData.id,
+                reason: abuseReason,
+                description: abuseDescription,
+            });
+
+            Toast().fire({
+                icon: "success",
+                title: "Laporan berhasil dikirim!",
+                text: "Admin akan meninjau laporan Anda dalam waktu singkat.",
+            });
+
+            // Refresh abuse reports list
+            fetchAbuseReports();
+            handleCloseAbuseModal();
+        } catch (error) {
+            console.error("Error reporting abuse:", error);
+            if (error.response?.data?.error) {
+                Toast().fire({
+                    icon: "error",
+                    title: error.response.data.error,
+                });
+            } else {
+                Toast().fire({
+                    icon: "error",
+                    title: "Gagal mengirim laporan. Silakan coba lagi.",
+                });
+            }
+        } finally {
+            setReportingAbuse(false);
         }
     };
 
@@ -232,9 +452,9 @@ function Review() {
                                                     <div className="row g-3">
                                                         <div className="col-auto">
                                                             <div className="modern-avatar-container">
-                                                                {r.profile?.image ? (
+                                                                {r.user?.image ? (
                                                                     <img
-                                                                        src={r.profile.image}
+                                                                        src={r.user.image}
                                                                         alt="avatar"
                                                                         className="reviewer-avatar rounded-circle"
                                                                         onError={(e) => {
@@ -256,21 +476,36 @@ function Review() {
                                                             <div className="review-header">
                                                                 <div className="reviewer-info">
                                                                     <h4 className="reviewer-name">
-                                                                        {r.profile.full_name}
+                                                                        {r.user?.full_name || 'Anonymous'}
                                                                     </h4>
                                                                     <span className="review-date">
                                                                         <i className="fas fa-calendar-alt review-date-icon"></i>
                                                                         {moment(r.date).format("DD MMM, YYYY")}
                                                                     </span>
                                                                 </div>
-                                                                <button 
-                                                                    className="btn report-btn" 
-                                                                    data-bs-toggle="tooltip" 
-                                                                    data-placement="top" 
-                                                                    title="Report Abuse"
-                                                                >
-                                                                    <i className="fas fa-flag" />
-                                                                </button>
+                                                                {/* ✨ PHASE 4.210: Report button with status */}
+                                                                <div className="review-report-section">
+                                                                    {abuseReports.find(rpt => rpt.review?.id === r.id) ? (
+                                                                        <button 
+                                                                            className={`report-status-badge-btn ${abuseReports.find(rpt => rpt.review?.id === r.id)?.status}`}
+                                                                            onClick={() => handleOpenAbuseModal(r.id)}
+                                                                            title="Klik untuk melihat detail laporan"
+                                                                        >
+                                                                            <i className="fas fa-flag-checkered me-1"></i>
+                                                                            <span>{abuseReports.find(rpt => rpt.review?.id === r.id)?.status || 'reported'}</span>
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button 
+                                                                            className="btn report-btn" 
+                                                                            data-bs-toggle="tooltip" 
+                                                                            data-placement="top" 
+                                                                            title="Report Abuse"
+                                                                            onClick={() => handleOpenAbuseModal(r.id)}
+                                                                        >
+                                                                            <i className="fas fa-flag" />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                             
                                                             <div className="rating-section">
@@ -285,7 +520,7 @@ function Review() {
                                                             <div className="course-info">
                                                                 <span className="rating-label">untuk</span>
                                                                 <span className="course-title">
-                                                                    {r.course?.title}
+                                                                    {r.course?.title || 'Kursus Tidak Tersedia'}
                                                                 </span>
                                                             </div>
 
@@ -405,6 +640,285 @@ function Review() {
                     </div>
                 </div>
             </section>
+
+            {/* ✨ PHASE 4.210: Abuse Report Modal */}
+            {showAbuseModal && (
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content abuse-report-modal">
+                            <div className="modal-header abuse-modal-header">
+                                <h5 className="modal-title">
+                                    <i className="fas fa-exclamation-triangle me-2"></i>
+                                    Laporkan Ulasan Penyalahgunaan
+                                </h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close" 
+                                    onClick={handleCloseAbuseModal}
+                                    disabled={reportingAbuse}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                <p className="abuse-modal-text">
+                                    Bantu kami menjaga kualitas komunitas dengan melaporkan ulasan yang tidak sesuai.
+                                </p>
+                                
+                                <div className="mb-3">
+                                    <label className="form-label fw-semibold">Alasan Laporan <span className="text-danger">*</span></label>
+                                    <select 
+                                        className="form-select form-select-modern"
+                                        value={abuseReason}
+                                        onChange={(e) => setAbuseReason(e.target.value)}
+                                        disabled={reportingAbuse}
+                                    >
+                                        <option value="">-- Pilih Alasan --</option>
+                                        <option value="inappropriate_content">Konten Tidak Pantas</option>
+                                        <option value="spam">Spam</option>
+                                        <option value="offensive_language">Bahasa Kasar/Menyinggung</option>
+                                        <option value="false_information">Informasi Palsu</option>
+                                        <option value="harassment">Pelecehan</option>
+                                        <option value="other">Lainnya</option>
+                                    </select>
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label fw-semibold">Penjelasan Tambahan (Opsional)</label>
+                                    <textarea 
+                                        className="form-control"
+                                        rows="3"
+                                        placeholder="Berikan rincian untuk membantu Admin memahami masalah ini..."
+                                        value={abuseDescription}
+                                        onChange={(e) => setAbuseDescription(e.target.value)}
+                                        disabled={reportingAbuse}
+                                    ></textarea>
+                                    <small className="text-muted">Maksimal 500 karakter</small>
+                                </div>
+
+                                <div className="alert alert-info">
+                                    <i className="fas fa-info-circle me-2"></i>
+                                    Tim Admin kami akan meninjau laporan ini dan mengambil tindakan yang sesuai.
+                                </div>
+                            </div>
+                            <div className="modal-footer abuse-modal-footer">
+                                <button 
+                                    type="button" 
+                                    className="btn btn-outline-secondary"
+                                    onClick={handleCloseAbuseModal}
+                                    disabled={reportingAbuse}
+                                >
+                                    Batal
+                                </button>
+                                <button 
+                                    type="button" 
+                                    className="btn btn-danger"
+                                    onClick={handleSubmitAbuseReport}
+                                    disabled={reportingAbuse || !abuseReason.trim()}
+                                >
+                                    {reportingAbuse ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            Mengirim...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fas fa-paper-plane me-2"></i>
+                                            Laporkan
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ✨ PHASE 4.210: Existing Report Details Modal */}
+            {showExistingReportModal && selectedExistingReport && (
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content abuse-report-modal">
+                            <div className="modal-header abuse-modal-header">
+                                <h5 className="modal-title">
+                                    <i className="fas fa-file-alt me-2"></i>
+                                    Detail Laporan Penyalahgunaan
+                                </h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close" 
+                                    onClick={handleCloseExistingReportModal}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                {/* Report Status */}
+                                <div className="mb-4">
+                                    <label className="form-label fw-semibold">Status Laporan</label>
+                                    <div className={`alert alert-${selectedExistingReport.status === 'pending' ? 'warning' : selectedExistingReport.status === 'reviewed' ? 'info' : selectedExistingReport.status === 'action_taken' ? 'success' : 'danger'}`}>
+                                        <i className={`fas ${selectedExistingReport.status === 'pending' ? 'fa-clock' : selectedExistingReport.status === 'reviewed' ? 'fa-eye' : selectedExistingReport.status === 'action_taken' ? 'fa-check-circle' : 'fa-times-circle'} me-2`}></i>
+                                        <strong>
+                                            {selectedExistingReport.status === 'pending' && 'Menunggu Review'}
+                                            {selectedExistingReport.status === 'reviewed' && 'Sudah Direviu'}
+                                            {selectedExistingReport.status === 'action_taken' && 'Tindakan Telah Diambil'}
+                                            {selectedExistingReport.status === 'dismissed' && 'Laporan Ditolak'}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                {/* Reason */}
+                                <div className="mb-3">
+                                    <label className="form-label fw-semibold">Alasan Laporan</label>
+                                    {isEditingReport ? (
+                                        <select 
+                                            className="form-select"
+                                            value={editReason}
+                                            onChange={(e) => setEditReason(e.target.value)}
+                                            disabled={updatingExistingReport}
+                                        >
+                                            <option value="">-- Pilih Alasan --</option>
+                                            <option value="inappropriate_content">Konten Tidak Pantas</option>
+                                            <option value="spam">Spam</option>
+                                            <option value="offensive_language">Bahasa Kasar/Menyinggung</option>
+                                            <option value="false_information">Informasi Palsu</option>
+                                            <option value="harassment">Pelecehan</option>
+                                            <option value="other">Lainnya</option>
+                                        </select>
+                                    ) : (
+                                        <p className="text-muted">{selectedExistingReport.reason || '-'}</p>
+                                    )}
+                                </div>
+
+                                {/* Your Description */}
+                                <div className="mb-3">
+                                    <label className="form-label fw-semibold">Deskripsi Anda</label>
+                                    {isEditingReport ? (
+                                        <textarea 
+                                            className="form-control"
+                                            rows="3"
+                                            placeholder="Berikan rincian untuk membantu Admin memahami masalah ini..."
+                                            value={editDescription}
+                                            onChange={(e) => setEditDescription(e.target.value)}
+                                            disabled={updatingExistingReport}
+                                            maxLength={500}
+                                        ></textarea>
+                                    ) : (
+                                        <p className="text-muted" style={{ whiteSpace: 'pre-wrap' }}>{selectedExistingReport.description || '-'}</p>
+                                    )}
+                                    {isEditingReport && (
+                                        <small className="text-muted">Maksimal 500 karakter ({editDescription.length}/500)</small>
+                                    )}
+                                </div>
+
+                                {/* Admin Notes */}
+                                {selectedExistingReport.review_notes && (
+                                    <div className="mb-3">
+                                        <label className="form-label fw-semibold">Catatan dari Admin</label>
+                                        <div className="alert alert-light border">
+                                            <p style={{ whiteSpace: 'pre-wrap' }}>{selectedExistingReport.review_notes}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Reported Date */}
+                                <div className="mb-3">
+                                    <label className="form-label fw-semibold">Tanggal Laporan</label>
+                                    <p className="text-muted">{moment(selectedExistingReport.reported_at).format("DD MMM YYYY HH:mm")}</p>
+                                </div>
+
+                                {/* Reviewed Date */}
+                                {selectedExistingReport.reviewed_at && (
+                                    <div className="mb-3">
+                                        <label className="form-label fw-semibold">Tanggal Review</label>
+                                        <p className="text-muted">{moment(selectedExistingReport.reviewed_at).format("DD MMM YYYY HH:mm")}</p>
+                                    </div>
+                                )}
+
+                                {!isEditingReport && (
+                                    <div className="alert alert-info mt-4">
+                                        <i className="fas fa-info-circle me-2"></i>
+                                        Terima kasih telah membantu kami menjaga komunitas yang sehat. Admin kami telah meninjau laporan Anda.
+                                    </div>
+                                )}
+                            </div>
+                            <div className="modal-footer abuse-modal-footer">
+                                {selectedExistingReport.closed_by_reporter ? (
+                                    // Report is closed - show only close button
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-primary"
+                                        onClick={handleCloseExistingReportModal}
+                                    >
+                                        Tutup
+                                    </button>
+                                ) : isEditingReport ? (
+                                    // Editing mode - show cancel and update
+                                    <>
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-outline-secondary"
+                                            onClick={() => setIsEditingReport(false)}
+                                            disabled={updatingExistingReport}
+                                        >
+                                            Batal
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-danger"
+                                            onClick={handleUpdateExistingReport}
+                                            disabled={updatingExistingReport || !editReason.trim()}
+                                        >
+                                            {updatingExistingReport ? (
+                                                <>
+                                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                    Mengirim...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-paper-plane me-2"></i>
+                                                    Perbarui Laporan
+                                                </>
+                                            )}
+                                        </button>
+                                    </>
+                                ) : (
+                                    // View mode - show edit and resolve buttons
+                                    <>
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-outline-secondary"
+                                            onClick={handleEditExistingReport}
+                                            // ✨ PHASE 4.210: Only allow re-reporting if status is pending
+                                            disabled={selectedExistingReport.status !== 'pending'}
+                                        >
+                                            <i className="fas fa-edit me-2"></i>
+                                            Laporkan Ulang
+                                        </button>
+                                        {/* ✨ PHASE 4.210: Show "Masalah Selesai" button only after status is reviewed/dismissed/action_taken */}
+                                        {selectedExistingReport.status !== 'pending' && (
+                                            <button 
+                                                type="button" 
+                                                className="btn btn-success"
+                                                onClick={handleCloseReport}
+                                                disabled={closingReport}
+                                            >
+                                                {closingReport ? (
+                                                    <>
+                                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                        Memproses...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-check-circle me-2"></i>
+                                                        Masalah Selesai
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </>

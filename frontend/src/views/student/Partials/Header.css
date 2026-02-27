@@ -2,11 +2,11 @@
 /* ✨ PHASE 4.20: Removed aggressive negative margins that caused width inconsistency */
 /* The header should stay within the container using normal Bootstrap grid, not break out */
 .student-header-row {
-    /* Removed: margin-left/right negative calculations and width expansion */
-    /* Now uses standard Bootstrap row behavior for consistent width across all pages */
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    /* ✨ PHASE 4.228: Fixed alignment - removed width expansion that caused right shift */
+    /* Standard Bootstrap row behavior for consistent alignment with page content */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
     display: flex;
     flex-wrap: wrap;
     gap: 0;

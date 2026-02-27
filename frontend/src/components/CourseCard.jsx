@@ -1,14 +1,14 @@
 import React, { memo, useState } from 'react';
 import dayjs, { moment } from '../utils/dayjs';
 import { Link, useNavigate } from 'react-router-dom';
-import { getImageUrl, getStatusBadgeStyle, getLevelBadgeStyle, getLevelText, getStatusText, handleDeleteCourse, getActualCourseStatus } from '../utils/courseUtils.js';
+import { getImageUrl, getStatusBadgeStyle, getLevelBadgeStyle, getLevelText, getStatusText, getActualCourseStatus } from '../utils/courseUtils.js';
 import { calculateTotalDuration, parseDurationToSeconds } from '../utils/durationUtils'; // ✨ PHASE 4.77+: Add parseDurationToSeconds for JP
 import useAxios from '../utils/useAxios';
 import Toast from '../views/plugin/Toast';
 
 import './CourseCard.css';
 
-const CourseCard = ({ course, index, onDelete }) => {
+const CourseCard = ({ course, index }) => {
     const navigate = useNavigate();
     const [editingCourse, setEditingCourse] = useState(false);
     // Calculate course completion
@@ -285,14 +285,6 @@ const CourseCard = ({ course, index, onDelete }) => {
                         >
                             <i className="fas fa-eye me-1"></i>
                             Lihat
-                        </button>
-                        
-                        <button 
-                            className="btn course-action-btn course-action-btn-sm btn-delete"
-                            onClick={() => handleDeleteCourse(course.course_id, course.title, onDelete)}
-                        >
-                            <i className="fas fa-trash me-1"></i>
-                            Hapus
                         </button>
                     </div>
                 </div>

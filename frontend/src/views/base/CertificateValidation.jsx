@@ -5,7 +5,13 @@ import Toast from '../plugin/Toast';
 import { Helmet } from 'react-helmet-async';
 import BaseHeader from '../partials/BaseHeader';
 import BaseFooter from '../partials/BaseFooter';
+import { getLevelText } from '../../utils/courseUtils';
 import './CertificateValidation.css';
+
+// ✨ Function to translate course level from English to Indonesian
+const translateLevel = (level) => {
+    return getLevelText(level);
+};
 
 function CertificateValidation() {
     const { validation_token } = useParams();
@@ -24,12 +30,12 @@ function CertificateValidation() {
                     setCertificate(response.data.details);
                     setError(null);
                 } else {
-                    setError(response.data.message || 'Certificate is not valid');
+                    setError(response.data.message || 'Sertifikat tidak valid');
                     setCertificate(null);
                 }
             } catch (err) {
                 console.error('Error validating certificate:', err);
-                setError(err.response?.data?.message || 'Failed to validate certificate. Please try again.');
+                setError(err.response?.data?.message || 'Gagal memvalidasi sertifikat. Silakan coba lagi.');
                 setCertificate(null);
             } finally {
                 setLoading(false);
@@ -39,7 +45,7 @@ function CertificateValidation() {
         if (validation_token) {
             validateCertificate();
         } else {
-            setError('Invalid certificate token');
+            setError('Token sertifikat tidak valid');
             setLoading(false);
         }
     }, [validation_token]);
@@ -48,15 +54,15 @@ function CertificateValidation() {
         return (
             <>
                 <Helmet>
-                    <title>Validating Certificate - LMSetjen</title>
+                    <title>Validasi Sertifikat - LMSetjen</title>
                 </Helmet>
                 <BaseHeader />
                 <div className="certificate-validation-container">
                     <div className="validation-loader">
                         <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">Loading...</span>
+                            <span className="visually-hidden">Memuat...</span>
                         </div>
-                        <p className="mt-3">Validating certificate...</p>
+                        <p className="mt-3">Memvalidasi sertifikat...</p>
                     </div>
                 </div>
                 <BaseFooter />
@@ -67,7 +73,7 @@ function CertificateValidation() {
     return (
         <>
             <Helmet>
-                <title>Certificate Validation - LMSetjen</title>
+                <title>Validasi Sertifikat - LMSetjen</title>
             </Helmet>
             <BaseHeader />
             <div className="certificate-validation-container">
@@ -76,14 +82,14 @@ function CertificateValidation() {
                         <div className="result-icon error-icon">
                             <i className="fas fa-times-circle"></i>
                         </div>
-                        <h2>Certificate Invalid</h2>
+                        <h2>Sertifikat Tidak Valid</h2>
                         <p className="error-message">{error}</p>
                         <button 
                             className="btn btn-primary mt-4"
                             onClick={() => navigate('/')}
                         >
                             <i className="fas fa-home me-2"></i>
-                            Back to Home
+                            Kembali ke Beranda
                         </button>
                     </div>
                 ) : certificate ? (
@@ -93,8 +99,8 @@ function CertificateValidation() {
                         </div>
                         
                         <div className="result-header">
-                            <h1>Certificate Authenticity Verified</h1>
-                            <p className="subtitle">This certificate is valid and authentic</p>
+                            <h1>Keaslian Sertifikat Terverifikasi</h1>
+                            <p className="subtitle">Sertifikat ini valid dan asli</p>
                         </div>
 
                         <div className="certificate-details-grid">
@@ -102,10 +108,10 @@ function CertificateValidation() {
                             <div className="details-section">
                                 <h3 className="section-title">
                                     <i className="fas fa-user me-2"></i>
-                                    Certificate Holder
+                                    Pemegang Sertifikat
                                 </h3>
                                 <div className="detail-row">
-                                    <span className="detail-label">Name:</span>
+                                    <span className="detail-label">Nama:</span>
                                     <span className="detail-value">{certificate.student_name}</span>
                                 </div>
                                 <div className="detail-row">
@@ -115,18 +121,18 @@ function CertificateValidation() {
 
                                 <h3 className="section-title mt-4">
                                     <i className="fas fa-book me-2"></i>
-                                    Course Information
+                                    Informasi Kursus
                                 </h3>
                                 <div className="detail-row">
-                                    <span className="detail-label">Course:</span>
+                                    <span className="detail-label">Kursus:</span>
                                     <span className="detail-value">{certificate.course_title}</span>
                                 </div>
                                 <div className="detail-row">
                                     <span className="detail-label">Level:</span>
-                                    <span className="detail-value">{certificate.course_level || 'N/A'}</span>
+                                    <span className="detail-value">{translateLevel(certificate.course_level) || 'Tidak Tersedia'}</span>
                                 </div>
                                 <div className="detail-row">
-                                    <span className="detail-label">Category:</span>
+                                    <span className="detail-label">Kategori:</span>
                                     <span className="detail-value">{certificate.course_category}</span>
                                 </div>
                             </div>
@@ -135,10 +141,10 @@ function CertificateValidation() {
                             <div className="details-section">
                                 <h3 className="section-title">
                                     <i className="fas fa-chalkboard-user me-2"></i>
-                                    Instructor
+                                    Pengajar
                                 </h3>
                                 <div className="detail-row">
-                                    <span className="detail-label">Name:</span>
+                                    <span className="detail-label">Nama:</span>
                                     <span className="detail-value">{certificate.instructor_name}</span>
                                 </div>
                                 <div className="detail-row">
@@ -148,23 +154,23 @@ function CertificateValidation() {
 
                                 <h3 className="section-title mt-4">
                                     <i className="fas fa-calendar me-2"></i>
-                                    Important Dates
+                                    Tanggal Penting
                                 </h3>
                                 <div className="detail-row">
-                                    <span className="detail-label">Issued Date:</span>
+                                    <span className="detail-label">Tanggal Penerbitan:</span>
                                     <span className="detail-value">{certificate.issued_date}</span>
                                 </div>
                                 <div className="detail-row">
-                                    <span className="detail-label">Completion Date:</span>
+                                    <span className="detail-label">Tanggal Penyelesaian:</span>
                                     <span className="detail-value">{certificate.completion_date}</span>
                                 </div>
 
                                 <h3 className="section-title mt-4">
                                     <i className="fas fa-key me-2"></i>
-                                    Certificate ID
+                                    Nomor Sertifikat
                                 </h3>
                                 <div className="certificate-id-box">
-                                    <code>{certificate.certificate_id}</code>
+                                    <code>{certificate.formatted_certificate_id}</code>
                                 </div>
                             </div>
                         </div>
@@ -202,7 +208,7 @@ function CertificateValidation() {
                                     }}
                                 >
                                     <i className="fas fa-book-open"></i>
-                                    <span>View Course Details</span>
+                                    <span>Lihat Detail Kursus</span>
                                 </a>
                             </div>
                         )}
@@ -211,7 +217,7 @@ function CertificateValidation() {
                         <div className="verification-badge">
                             <div className="badge-content">
                                 <i className="fas fa-seal"></i>
-                                <span>Verified by LMSetjen DPD RI System</span>
+                                <span>Diverifikasi oleh Sistem LMSetjen DPD RI</span>
                             </div>
                         </div>
 
@@ -222,14 +228,14 @@ function CertificateValidation() {
                                 onClick={() => navigate('/')}
                             >
                                 <i className="fas fa-home me-2"></i>
-                                Back to Home
+                                Kembali ke Beranda
                             </button>
                             <button 
                                 className="btn btn-outline-secondary"
                                 onClick={() => window.print()}
                             >
                                 <i className="fas fa-print me-2"></i>
-                                Print Verification
+                                Cetak Verifikasi
                             </button>
                         </div>
                     </div>

@@ -569,14 +569,21 @@ class CertificateSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source='user.full_name', read_only=True)
     instructor_name = serializers.CharField(source='course.teacher.full_name', read_only=True)
     qr_code_url = serializers.SerializerMethodField(read_only=True)
+    image_file_url = serializers.SerializerMethodField(read_only=True)  # ✨ PHASE 4.221: Image URL for display
+    pdf_file_url = serializers.SerializerMethodField(read_only=True)  # ✨ PHASE 4.220: PDF file URL (kept for download)
+    formatted_certificate_id = serializers.SerializerMethodField(read_only=True)  # ✨ PHASE 4.227: Professional certificate ID format
 
     class Meta:
         fields = [
-            'id', 'course', 'user', 'enrollment', 'certificate_id', 
+            'id', 'course', 'user', 'enrollment', 'certificate_id', 'formatted_certificate_id',
             'validation_token', 'is_valid', 'date', 'course_title', 'student_name', 
-            'instructor_name', 'qr_code_url', 'created_at', 'updated_at'
+            'instructor_name', 'qr_code_url', 'image_file_url', 'pdf_file_url', 'created_at', 'updated_at'
         ]
         model = api_models.Certificate
+
+    def get_formatted_certificate_id(self, obj):
+        """✨ PHASE 4.227: Get professionally formatted certificate ID"""
+        return obj.get_formatted_certificate_id()
 
     def get_qr_code_url(self, obj):
         """Generate QR code URL for certificate validation (frontend route)"""
@@ -585,6 +592,42 @@ class CertificateSerializer(serializers.ModelSerializer):
             domain = request.get_host()
             protocol = 'https' if request.is_secure() else 'http'
             return f"{protocol}://{domain}/certificate/validate/{obj.validation_token}/"
+        return None
+
+    def get_image_file_url(self, obj):
+        """✨ PHASE 4.221: Return image file URL for display (PNG/JPG image of certificate)"""
+        request = self.context.get('request')
+        
+        # Return API endpoint URL for image display
+        if obj.image_file and request:
+            try:
+                # Use dedicated image display endpoint
+                image_url = request.build_absolute_uri(f'/api/v1/student/certificate-image/{obj.certificate_id}/')
+                return image_url
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"[CertificateSerializer] ERROR building image URL: {e}")
+                return None
+        
+        return None
+
+    def get_pdf_file_url(self, obj):
+        """✨ PHASE 4.220: Return PDF file URL for server-stored certificates via iframe-safe API endpoint"""
+        request = self.context.get('request')
+        
+        # Return API endpoint URL instead of direct media URL to avoid X-Frame-Options header blocking
+        if obj.pdf_file and request:
+            try:
+                # Use the iframe-safe certificate download endpoint
+                pdf_url = request.build_absolute_uri(f'/api/v1/student/certificate-download/{obj.certificate_id}/')
+                return pdf_url
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"[CertificateSerializer] ERROR building PDF URL: {e}")
+                return None
+        
         return None
 
     def __init__(self, *args, **kwargs):
@@ -656,6 +699,7 @@ class NoteSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     # Include user data with profile information
     user = serializers.SerializerMethodField()
+    course = serializers.SerializerMethodField()
 
     class Meta:
         fields = ['id', 'user', 'course', 'role', 'review', 'rating', 'reply', 'active', 'date']
@@ -687,6 +731,26 @@ class ReviewSerializer(serializers.ModelSerializer):
             return user_data
         return None
 
+    def get_course(self, obj):
+        """Get course with essential details"""
+        if obj.course:
+            return {
+                'id': obj.course.id,
+                'title': obj.course.title,
+                'slug': obj.course.slug,
+            }
+        return None
+
+# ✨ PHASE 4.210: Review Abuse Serializer
+class ReviewAbuseSerializer(serializers.ModelSerializer):
+    reported_by_name = serializers.CharField(source='reported_by.full_name', read_only=True)
+    review = ReviewSerializer(read_only=True)  # ✨ PHASE 4.210: Include full review details
+
+    class Meta:
+        fields = ['id', 'review', 'reported_by', 'reported_by_name', 'reason', 'description', 'status', 'reported_at', 'reviewed_at', 'review_notes', 'closed_by_reporter', 'closed_by_reporter_at']
+        model = api_models.ReviewAbuse
+        read_only_fields = ['review', 'reported_by', 'reported_by_name', 'reported_at', 'status', 'reviewed_at', 'review_notes', 'closed_by_reporter_at']
+
 class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -704,6 +768,8 @@ class CountrySerializer(serializers.ModelSerializer):
 
 
 class EnrolledCourseSerializer(serializers.ModelSerializer):
+    # ✨ PHASE 4.228: Explicitly define course serializer to include total_jam_pelatihan
+    course = serializers.SerializerMethodField()
     lectures = VariantItemSerializer(many=True, read_only=True)
     completed_lesson = CompletedLessonSerializer(many=True, read_only=True)
     video_progress = VideoProgressSerializer(many=True, read_only=True)
@@ -719,6 +785,102 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = api_models.EnrolledCourse
 
+    def get_course(self, obj):
+        """✨ PHASE 4.228: Return course with total_jam_pelatihan calculated
+        
+        Avoids circular references by returning only essential fields without nested relationships.
+        Manually calculates total_jam_pelatihan (JP) from course curriculum.
+        Includes quizzes for student quiz tab display.
+        Converts all values to JSON-serializable types (Decimal→float, etc).
+        """
+        import math
+        from decimal import Decimal
+        
+        course = obj.course
+        
+        # Calculate total_jam_pelatihan (JP) from all curriculum items
+        total_seconds = 0
+        for variant in course.curriculum.all():
+            for item in variant.variant_items.all():
+                if item.duration:
+                    total_seconds += int(item.duration.total_seconds())
+        
+        # 1 JP = 2700 seconds (45 minutes)
+        total_jp = math.ceil(total_seconds / 2700) if total_seconds > 0 else 0
+        
+        # Serialize quizzes for student quiz tab
+        quizzes = []
+        try:
+            from . import serializer as ser
+            quiz_objs = course.quizzes.all()
+            if quiz_objs.exists():
+                quizzes = ser.QuizSerializer(quiz_objs, many=True).data
+        except Exception as e:
+            # If quiz serialization fails, continue without quizzes
+            pass
+        
+        # Serialize teacher for instructor info display
+        teacher = None
+        try:
+            from . import serializer as ser
+            if course.teacher:
+                teacher = ser.BasicTeacherSerializer(course.teacher).data
+        except Exception as e:
+            # If teacher serialization fails, continue without teacher
+            pass
+        
+        # ✨ PHASE 4.231: Serialize category for student course detail display
+        category = None
+        try:
+            from . import serializer as ser
+            if course.category:
+                category = ser.CategorySerializer(course.category).data
+        except Exception as e:
+            # If category serialization fails, continue without category
+            pass
+        
+        # Safe conversion function for JSON serialization
+        def safe_value(val):
+            """Convert any value to JSON-serializable type"""
+            if val is None:
+                return None
+            if isinstance(val, Decimal):
+                return float(val)
+            if isinstance(val, bool):
+                return val
+            if isinstance(val, (int, float)):
+                return val
+            return str(val)
+        
+        # Return essential course data safely
+        try:
+            return {
+                'id': safe_value(course.id),
+                'course_id': safe_value(course.course_id),  # ✨ PHASE 4.229: Add course_id for quiz operations
+                'title': safe_value(course.title) if course.title else '',
+                'slug': safe_value(course.slug) if hasattr(course, 'slug') else '',
+                'description': safe_value(course.description) if course.description else '',
+                'image': safe_value(course.image) if course.image else None,
+                'level': safe_value(course.level) if course.level else None,
+                'date': safe_value(course.date) if hasattr(course, 'date') and course.date else None,
+                'featured': bool(course.featured) if hasattr(course, 'featured') else False,
+                'platform_status': safe_value(course.platform_status) if hasattr(course, 'platform_status') else None,
+                'category': category,  # ✨ PHASE 4.231: Include category for progress card display
+                'total_jam_pelatihan': int(total_jp),  # ✨ PHASE 4.228: Include calculated JP
+                'quizzes': quizzes,  # ✨ PHASE 4.229: Include quizzes for student quiz tab
+                'teacher': teacher,  # ✨ PHASE 4.230: Include teacher for instructor info display
+            }
+        except Exception as e:
+            # Fallback: return minimal data with just JP in case of any field access errors
+            return {
+                'id': safe_value(course.id),
+                'title': safe_value(course.title) if course.title else 'Course',
+                'category': category,  # ✨ PHASE 4.231: Include category in fallback
+                'total_jam_pelatihan': int(total_jp),
+                'quizzes': quizzes,
+                'teacher': teacher,
+            }
+
     def get_quiz_results(self, obj):
         """Return quiz results for this enrollment"""
         return obj.quiz_results()
@@ -733,7 +895,31 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
         if request and request.method == "POST":
             self.Meta.depth = 0
         else:
-            self.Meta.depth = 3
+            self.Meta.depth = 0  # ✨ PHASE 4.228: Reduced to 0 to avoid Decimal serialization issues
+
+    def to_representation(self, instance):
+        """Override to convert all non-JSON-serializable values for JSON serialization"""
+        from decimal import Decimal
+        from datetime import datetime, date, time
+        import uuid
+        
+        representation = super().to_representation(instance)
+        
+        def convert_non_serializable(obj):
+            """Recursively convert non-JSON-serializable types to JSON-safe types"""
+            if isinstance(obj, dict):
+                return {k: convert_non_serializable(v) for k, v in obj.items()}
+            elif isinstance(obj, (list, tuple)):
+                return [convert_non_serializable(item) for item in obj]
+            elif isinstance(obj, Decimal):
+                return float(obj)
+            elif isinstance(obj, (datetime, date, time)):
+                return obj.isoformat()
+            elif isinstance(obj, uuid.UUID):
+                return str(obj)
+            return obj
+        
+        return convert_non_serializable(representation)
 
 
 # ==================== NEW SERIALIZERS FOR COURSE DETAIL ENHANCEMENTS ====================
@@ -826,9 +1012,11 @@ class CourseSerializer(serializers.ModelSerializer):
     quizzes = serializers.SerializerMethodField()  # ✨ PHASE 4.71: Return actual quiz objects for canPublish logic
     teacher = BasicTeacherSerializer(read_only=True)  # ✨ PHASE 4.39: Explicit teacher serialization with full details
     qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.16: Add QA count for instructor QA page
+    # ✨ PHASE 4.228: Add total_jam_pelatihan (JP) calculated from course lectures
+    total_jam_pelatihan = serializers.SerializerMethodField()
     
     class Meta:
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "qa_count", "quizzes", "intro_video_source", "rejection_reason", "review_submitted_date"]
+        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "qa_count", "quizzes", "intro_video_source", "rejection_reason", "review_submitted_date", "total_jam_pelatihan"]
         model = api_models.Course
     
     def get_qa_count(self, obj):
@@ -844,6 +1032,37 @@ class CourseSerializer(serializers.ModelSerializer):
         from . import serializer as ser  # Lazy import to avoid circular reference
         quizzes = obj.quizzes.all()
         return ser.QuizSerializer(quizzes, many=True).data if quizzes.exists() else []
+
+    def get_total_jam_pelatihan(self, obj):
+        """
+        ✨ PHASE 4.228: Calculate total JP (Jam Pelajaran) from all course lectures
+        1 JP = 45 minutes = 2700 seconds
+        Formula: Math.ceil(totalSeconds / 2700)
+        
+        Returns the total hours of training (JP) for the course
+        """
+        import math
+        total_seconds = 0
+        
+        # Get all curriculum sections (variants) for this course
+        curriculum = obj.curriculum.all()
+        
+        # Iterate through each section and sum up all item durations
+        for variant in curriculum:
+            # Use .all() to properly access the RelatedManager queryset
+            variant_items = variant.variant_items.all()
+            for item in variant_items:
+                if item.duration:
+                    total_seconds += int(item.duration.total_seconds())
+        
+        # 1 JP = 2700 seconds (45 minutes)
+        # Use ceiling division to round up (e.g., 1 second = 1 JP)
+        if total_seconds > 0:
+            jp_value = math.ceil(total_seconds / 2700)
+        else:
+            jp_value = 0
+        
+        return jp_value
 
     def __init__(self, *args, **kwargs):
         super(CourseSerializer, self).__init__(*args, **kwargs)
@@ -978,8 +1197,11 @@ class CourseEditSerializer(serializers.ModelSerializer):
                         many=True,
                         read_only=True
                     ).data,
-                    # Include quiz count so frontend knows it exists
-                    'quizzes_count': published_copies.quizzes.count()
+                    'quizzes': ser.QuizSerializer(
+                        published_copies.quizzes.all(),
+                        many=True,
+                        read_only=True
+                    ).data
                 }
         return None
     

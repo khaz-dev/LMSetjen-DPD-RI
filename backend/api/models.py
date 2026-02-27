@@ -452,7 +452,7 @@ class Course(models.Model):
                     # Copy variant items (Pelajaran - lessons)
                     print(f"[Content Copy] Copying lessons for section: {variant.title}")
                     for item in variant.variant_items.all():
-                        VariantItem.objects.create(
+                        new_item = VariantItem.objects.create(
                             variant=new_variant,
                             title=item.title,
                             description=item.description,
@@ -460,8 +460,35 @@ class Course(models.Model):
                             duration=item.duration,
                             preview=item.preview,
                             order=item.order,
+                            media_source=item.media_source,  # ✨ Also copy media_source
                         )
-                    print(f"[Content Copy] [OK] Copied {variant.variant_items.count()} lessons")
+                        
+                        # ✨ NEW FIX: Copy lesson completion questions (Pertanyaan Penyelesaian Pelajaran)
+                        if hasattr(item, 'completion_question') and item.completion_question:
+                            original_question = item.completion_question
+                            print(f"[Content Copy] Copying completion question for lesson: {item.title}")
+                            
+                            # Create new completion question linked to new variant item
+                            new_question = LessonCompletionQuestion.objects.create(
+                                variant_item=new_item,
+                                question_text=original_question.question_text,
+                                question_type=original_question.question_type,
+                                correct_answer_text=original_question.correct_answer_text,
+                                case_sensitive=original_question.case_sensitive,
+                            )
+                            
+                            # Copy all question choices (for multiple choice/multi-select)
+                            for choice in original_question.choices.all():
+                                LessonCompletionQuestionChoice.objects.create(
+                                    question=new_question,
+                                    choice_text=choice.choice_text,
+                                    is_correct=choice.is_correct,
+                                    order=choice.order,
+                                )
+                            
+                            print(f"[Content Copy] [OK] Copied completion question with {original_question.choices.count()} choices")
+                    
+                    print(f"[Content Copy] [OK] Copied {variant.variant_items.count()} lessons (including completion questions)")
                 
                 print(f"[Content Copy] [OK] Copied {len(variant_map)} curriculum sections")
                 
@@ -900,6 +927,12 @@ class Question_Answer_Message(models.Model):
 # Cart, CartOrder, and CartOrderItem models removed - not used in this LMS
     
 class Certificate(models.Model):
+    # ✨ PHASE 4.227: Convert month number to Roman numerals for certificate ID format
+    MONTH_ROMAN = {
+        1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI',
+        7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X', 11: 'XI', 12: 'XII'
+    }
+    
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     enrollment = models.ForeignKey('EnrolledCourse', on_delete=models.CASCADE, null=True, blank=True)
@@ -909,9 +942,23 @@ class Certificate(models.Model):
     date = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    image_file = models.FileField(upload_to='certificates/images/', null=True, blank=True)  # ✨ PHASE 4.221: Store certificate image for display
+    pdf_file = models.FileField(upload_to='certificates/', null=True, blank=True)  # ✨ PHASE 4.210: Store PDF file (kept for download)
 
     def __str__(self):
         return f"{self.course.title} - {self.user.full_name if self.user else 'Unknown'}"
+    
+    def get_formatted_certificate_id(self):
+        """
+        ✨ PHASE 4.227: Generate professional certificate ID format
+        Format: KP.04/LMS/{certificate_id}/DPDRI/{month_roman}/{year}
+        Example: KP.04/LMS/123456/DPDRI/II/2026
+        """
+        created_month = self.created_at.month if self.created_at else self.date.month
+        created_year = self.created_at.year if self.created_at else self.date.year
+        month_roman = self.MONTH_ROMAN.get(created_month, 'I')
+        
+        return f"KP.04/LMS/{self.certificate_id}/DPDRI/{month_roman}/{created_year}"
     
     class Meta:
         unique_together = ['course', 'user']  # One certificate per user per course
@@ -1134,6 +1181,45 @@ class Wishlist(models.Model):
     
     def __str__(self):
         return str(self.course.title)
+
+# ✨ PHASE 4.210: Review Abuse Report System
+ABUSE_REASON_CHOICES = [
+    ('inappropriate_content', 'Konten Tidak Pantas'),
+    ('spam', 'Spam'),
+    ('offensive_language', 'Bahasa Kasar/Menyinggung'),
+    ('false_information', 'Informasi Palsu'),
+    ('harassment', 'Pelecehan'),
+    ('other', 'Lainnya'),
+]
+
+class ReviewAbuse(models.Model):
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='abuse_reports')
+    reported_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)  # Teacher who reported
+    reason = models.CharField(max_length=50, choices=ABUSE_REASON_CHOICES)
+    description = models.TextField(blank=True, null=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending Review'),
+            ('reviewed', 'Reviewed'),
+            ('dismissed', 'Dismissed'),
+            ('action_taken', 'Action Taken'),
+        ],
+        default='pending'
+    )
+    reported_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='abuse_reviews')  # Admin who reviewed
+    review_notes = models.TextField(blank=True, null=True)
+    closed_by_reporter = models.BooleanField(default=False)  # ✨ PHASE 4.210: Whether reporter marked it as resolved
+    closed_by_reporter_at = models.DateTimeField(null=True, blank=True)  # ✨ PHASE 4.210: When reporter closed it
+
+    class Meta:
+        unique_together = ('review', 'reported_by')  # Prevent duplicate reports from same user
+
+    def __str__(self):
+        return f"Abuse Report for Review {self.review.id} - {self.status}"
+
     
 class Country(models.Model):
     name = models.CharField(max_length=100)

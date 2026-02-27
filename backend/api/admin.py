@@ -159,3 +159,34 @@ admin.site.register(models.QuizMetrics)
 # ✨ PHASE 4.143: Lesson Completion Question System
 admin.site.register(models.LessonCompletionQuestion)
 admin.site.register(models.LessonCompletionQuestionChoice)
+
+# ✨ PHASE 4.210: Review Abuse Reporting System
+class ReviewAbuseAdmin(admin.ModelAdmin):
+    """Admin interface for managing review abuse reports"""
+    list_display = ('id', 'review_id', 'reported_by_name', 'reason', 'status', 'reported_at', 'reviewed_at')
+    list_filter = ('status', 'reason', 'reported_at', 'reviewed_at')
+    search_fields = ('review__id', 'reported_by__user__first_name', 'reported_by__user__last_name', 'reason', 'description')
+    readonly_fields = ('review', 'reported_by', 'reported_at', 'reviewed_at')
+    
+    fieldsets = (
+        ('Report Information', {
+            'fields': ('review', 'reported_by', 'reported_at', 'reason', 'description')
+        }),
+        ('Review Status', {
+            'fields': ('status', 'reviewed_by', 'reviewed_at', 'review_notes')
+        })
+    )
+    
+    ordering = ('-reported_at',)
+    
+    def review_id(self, obj):
+        """Display review ID for easier identification"""
+        return obj.review.id if obj.review else '-'
+    review_id.short_description = 'Review ID'
+    
+    def reported_by_name(self, obj):
+        """Display the name of the person who reported"""
+        return obj.reported_by.get_full_name() if obj.reported_by else '-'
+    reported_by_name.short_description = 'Reported By'
+
+admin.site.register(models.ReviewAbuse, ReviewAbuseAdmin)

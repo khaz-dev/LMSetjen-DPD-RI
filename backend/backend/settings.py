@@ -608,6 +608,9 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
 
+# Allow iframes from same origin (for PDF display in CertificateTab)
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 # CRITICAL: Proxy SSL Header Configuration
 # This tells Django to trust the X-Forwarded-Proto header from nginx
 # Without this, build_absolute_uri() generates HTTP URLs even when accessed via HTTPS

@@ -6,9 +6,11 @@ import Toast from '../../views/plugin/Toast';
 import QRCode from 'qrcode.react';
 import certificateBackgroundWebP from '../../assets/certificate-bg.webp';
 import certificateBackgroundPNG from '../../assets/certificate-bg.png';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import './CertificateTab.css';
 
-function CertificateTab({ course, enrollmentId, completionPercentage }) {
+function CertificateTab({ course, enrollmentId, completionPercentage, onCertificateGenerated }) {
     const [certificate, setCertificate] = useState(null);
     const [isEligible, setIsEligible] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -27,13 +29,19 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
             setQuizResults(response.data.quiz_results || []);
             
             if (response.data.certificate) {
+                console.log('✨ Certificate from API:', response.data.certificate); // DEBUG
+                console.log('✨ PDF File URL:', response.data.certificate.pdf_file_url); // DEBUG
                 setCertificate(response.data.certificate);
+                // ✨ PHASE 4.146: Notify parent that existing certificate was found
+                if (onCertificateGenerated) {
+                    onCertificateGenerated(response.data.certificate);
+                }
             }
         } catch (error) {
         }
     };
 
-    // Generate certificate
+    // ✨ PHASE 4.146: Generate certificate (PDF auto-generated on backend, but frontend uploads it)
     const generateCertificate = async () => {
         setGenerating(true);
         try {
@@ -45,10 +53,18 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
 
             if (response.data.certificate) {
                 setCertificate(response.data.certificate);
+                
+                // ✨ PHASE 4.225: Generate and upload image (PNG) to server, then notify parent with complete data
+                setTimeout(() => {
+                    if (certificateRef.current) {
+                        generateAndSaveImage(response.data.certificate, onCertificateGenerated);
+                    }
+                }, 500);
+                
                 Toast().fire({
                     icon: 'success',
                     title: 'Sertifikat Berhasil Dibuat!',
-                    text: 'Sertifikat Anda telah berhasil dibuat.'
+                    text: 'Sertifikat Anda telah berhasil dibuat dan disimpan.'
                 });
             }
         } catch (error) {
@@ -62,38 +78,109 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
         }
     };
 
-    // Download certificate as PDF
-    const downloadCertificate = async () => {
-        if (!certificate) return;
-
+    // ✨ PHASE 4.222: Generate certificate image (PNG) with filename format: {course_id}_{user_id}.png
+    // ✨ PHASE 4.225: Updated to notify parent component with complete certificate data after image is saved
+    const generateAndSaveImage = async (certificateData, onCertificateGenerated) => {
         try {
-            // For now, use the browser's print functionality to "download" as PDF
-            printCertificate();
+            if (!certificateRef.current) return;
+
+            // Get the certificate element
+            const certificateElement = certificateRef.current;
+            const userId = UserData()?.user_id;
+            const courseId = course?.course?.course_id;
             
-            Toast().fire({
-                icon: 'info',
-                title: 'Cetak ke PDF',
-                text: 'Gunakan dialog cetak browser Anda untuk menyimpan sebagai PDF.'
+            // ✨ PHASE 4.222: Convert HTML to canvas (as PNG for display)
+            const canvas = await html2canvas(certificateElement, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
             });
+
+            // ✨ PHASE 4.222: Convert canvas to PNG image blob
+            canvas.toBlob(async (blob) => {
+                try {
+                    // Send PNG image to server for storage with filename: course_id_user_id.png
+                    const formData = new FormData();
+                    formData.append('file', blob, `${courseId}_${userId}.png`);
+                    formData.append('user_id', userId);
+                    formData.append('course_id', courseId);
+
+                    const response = await apiInstance.post('student/certificate-save-image/', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+
+                    console.log('✨ Certificate image saved successfully:', response.data);
+                    console.log(`✨ Certificate filename: ${courseId}_${userId}.png`);
+                    
+                    // ✨ PHASE 4.225: Refresh certificate data to show the image
+                    const certResponse = await apiInstance.get(
+                        `student/certificate-eligibility/${userId}/${courseId}/`
+                    );
+                    if (certResponse.data.certificate) {
+                        const updatedCertificate = certResponse.data.certificate;
+                        setCertificate(updatedCertificate);
+                        
+                        // ✨ PHASE 4.225: NOW notify parent component with COMPLETE certificate data (includes image_file_url)
+                        if (onCertificateGenerated) {
+                            onCertificateGenerated(updatedCertificate);
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Error saving certificate image:', error);
+                }
+            }, 'image/png');
+
         } catch (error) {
-            Toast().fire({
-                icon: 'error',
-                title: 'Unduhan Gagal',
-                text: 'Gagal mengunduh sertifikat.'
-            });
+            console.error('Error generating certificate image:', error);
         }
     };
 
-    // Print certificate
-    const printCertificate = () => {
-        if (certificateRef.current) {
-            const printContent = certificateRef.current.innerHTML;
-            const originalContent = document.body.innerHTML;
+    // ✨ PHASE 4.222: Download certificate image from server (PNG format)
+    const downloadCertificateFromServer = async () => {
+        if (!certificate || !course?.course?.course_id) {
+            Toast().fire({
+                icon: 'warning',
+                title: 'Tidak ada sertifikat',
+                text: 'Tidak ada sertifikat untuk diunduh.'
+            });
+            return;
+        }
+
+        try {
+            Toast().fire({
+                icon: 'info',
+                title: 'Mengunduh...',
+                text: 'Mengunduh sertifikat Anda...'
+            });
+
+            // ✨ PHASE 4.222: Download certificate image (course_id_user_id.png)
+            const courseId = course?.course?.course_id;
+            const userId = UserData()?.user_id;
+            const downloadUrl = `student/certificate-download/${courseId}/${userId}/`;
             
-            document.body.innerHTML = printContent;
-            window.print();
-            document.body.innerHTML = originalContent;
-            window.location.reload(); // Reload to restore the page
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.setAttribute('download', `${courseId}_${userId}.png`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+
+            Toast().fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Sertifikat berhasil diunduh.'
+            });
+        } catch (error) {
+            console.error('Error downloading certificate:', error);
+            Toast().fire({
+                icon: 'error',
+                title: 'Unduhan Gagal',
+                text: 'Gagal mengunduh sertifikat. Silakan coba lagi.'
+            });
         }
     };
 
@@ -123,12 +210,106 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
     return (
         <div className="tab-pane fade" id="certificate" role="tabpanel">
             <div className="certificate-container">
-                <div className="certificate-header">
-                    <h4 className="mb-4">
+                <div className="certificate-header d-flex justify-content-between align-items-center mb-4">
+                    <h4 className="mb-0">
                         <i className="fas fa-certificate me-3 text-warning"></i>
                         Sertifikat Kursus
                     </h4>
+                    {certificate && certificate.image_file_url && (
+                        <button 
+                            className="btn btn-primary"
+                            onClick={downloadCertificateFromServer}
+                        >
+                            <i className="fas fa-download me-2"></i>
+                            Unduh Sertifikat
+                        </button>
+                    )}
                 </div>
+
+                {/* ✨ PHASE 4.224: Certificate display moved to main course view, only show fallback if pending */}
+                {certificate && !certificate.image_file_url ? (
+                    // ✨ PHASE 4.222: Fallback to manual certificate if image not yet generated
+                    <div className="certificate-display" style={{ border: '2px solid #f39c12', borderRadius: '8px' }}>
+                        <p className="text-center text-muted mb-3">
+                            {certificate.image_file_url === undefined 
+                                ? '❌ Gambar sertifikat tidak tersedia. Mohon tunggu atau segarkan halaman.'
+                                : 'Sertifikat Anda sedang diproses. Silakan unduh atau segarkan halaman.'
+                            }
+                        </p>
+                        <div 
+                            className="certificate-document" 
+                            ref={certificateRef}
+                        >
+                            <img 
+                                src={certificateBackground}
+                                alt="Certificate Background" 
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'contain',
+                                    zIndex: 0
+                                }}
+                            />
+                            <div className="certificate-content">
+                                {/* Certificate Number Section - Professional Format */}
+                                <div className="certificate-number-section">
+                                    <span className="certificate-number">
+                                        <strong>Nomor:</strong> {certificate.formatted_certificate_id}
+                                    </span>
+                                </div>
+                                
+                                {/* Certificate Statement */}
+                                <div className="certificate-statement">
+                                    <p className="statement-intro">Diberikan kepada:</p>
+                                </div>
+
+                                {/* Student Name - Highlighted Section */}
+                                <div className="student-section">
+                                    <h2 className="student-name">{UserData()?.full_name}</h2>
+                                </div>
+
+                                {/* Course Completion Statement */}
+                                <div className="completion-statement">
+                                    <p>telah berhasil menyelesaikan program pembelajaran</p>
+                                    <h3 className="course-title">{course?.course?.title}</h3>
+                                    <p className="statement-middle">
+                                        dengan sangat baik serta menunjukkan pemahaman penuh atas semua materi pembelajaran 
+                                        dan telah memenuhi semua penilaian yang dipersyaratkan setara dengan {course?.course?.total_jam_pelatihan || 0}JP di LMSetjen DPD RI
+                                    </p>
+                                </div>
+
+                                {/* Instructor Information Section */}
+                                <div className="instructor-section">
+                                    <p className="certification-by">Disertifikasi oleh:</p>
+                                    <p className="instructor-name">{course?.course?.teacher?.full_name}</p>
+                                    <p className="instructor-title">Pengajar Kursus</p>
+                                </div>
+
+                                {/* Date Section */}
+                                <div className="date-section">
+                                    <p className="date-label">Tanggal Penyelesaian:</p>
+                                    <p className="date-value">{formatDate(certificate.date)}</p>
+                                </div>
+                                
+                                {/* QR Code for Certificate Validation */}
+                                {certificate.qr_code_url && (
+                                    <div className="certificate-qr-code">
+                                        <QRCode 
+                                            value={certificate.qr_code_url}
+                                            size={100}
+                                            level="H"
+                                            includeMargin={false}
+                                            renderAs="canvas"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ) : null}
 
                 {/* Eligibility Status */}
                 <div className="eligibility-section mb-0">
@@ -166,6 +347,29 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                     </div>
                 </div>
 
+                {/* Quiz Results Summary (if available) - Moved before certificate actions */}
+                {quizResults.length > 0 && (
+                    <div className="quiz-results-summary mt-4">
+                        <h6>Ringkasan Kinerja Kuis</h6>
+                        <div className="quiz-results-list">
+                            {quizResults.map((quiz, index) => (
+                                <div key={index} className={`quiz-result-item ${quiz.passed ? 'passed' : 'failed'}`}>
+                                    <div className="quiz-result-info">
+                                        <strong>{quiz.title}</strong>
+                                        <span className="quiz-score">
+                                            {quiz.percentage}% ({quiz.score}/{quiz.total_questions})
+                                        </span>
+                                    </div>
+                                    <div className="quiz-result-status">
+                                        <i className={`fas ${quiz.passed ? 'fa-check-circle' : 'fa-times-circle'}`}></i>
+                                        <span>{quiz.passed ? 'Lulus' : 'Gagal'}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Certificate Actions */}
                 {isFullyComplete ? (
                     <div className="certificate-actions mb-0">
@@ -175,7 +379,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                     <div className="congratulations-content">
                                         <i className="fas fa-trophy congratulations-icon"></i>
                                         <h5>Selamat! 🎉</h5>
-                                        <p>Anda telah berhasil menyelesaikan semua persyaratan kursus ini. Buatlah sertifikat profesional Anda sekarang!</p>
+                                        <p>Anda telah berhasil menyelesaikan semua persyaratan. Buatlah sertifikat penyelesaian kursus Anda sekarang!</p>
                                         <button 
                                             className="btn btn-primary btn-lg generate-btn"
                                             onClick={generateCertificate}
@@ -196,26 +400,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                                     </div>
                                 </div>
                             </div>
-                        ) : (
-                            <div className="certificate-ready">
-                                <div className="certificate-actions-buttons">
-                                    <button 
-                                        className="btn btn-success btn-lg me-3"
-                                        onClick={downloadCertificate}
-                                    >
-                                        <i className="fas fa-download me-2"></i>
-                                        Simpan sebagai PDF
-                                    </button>
-                                    <button 
-                                        className="btn btn-outline-primary btn-lg"
-                                        onClick={printCertificate}
-                                    >
-                                        <i className="fas fa-print me-2"></i>
-                                        Cetak
-                                    </button>
-                                </div>
-                            </div>
-                        )}
+                        ) : null}
                     </div>
                 ) : (
                     <div className="requirements-section">
@@ -242,88 +427,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage }) {
                     </div>
                 )}
 
-                {/* Certificate Preview */}
-                {certificate && (
-                    <div className="certificate-preview mt-0">
-                        <h5 className="mb-4">Pratinjau Sertifikat</h5>
-                        <div 
-                            className="certificate-document" 
-                            ref={certificateRef}
-                        >
-                            <img 
-                                src={certificateBackground}
-                                alt="Certificate Background" 
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'contain',
-                                    zIndex: 0
-                                }}
-                            />
-                            <div className="certificate-content">
-                                <div className="certificate-id">
-                                    <span>Certificate ID: {certificate.certificate_id}</span>
-                                </div>
-                                <h5 className="show-student">Ini adalah untuk memastikan bahwa:</h5>
-                                <h2 className="student-name">{UserData()?.full_name}</h2>
-                                <div className="certificate-body">
-                                    <h6 className="show-course-title">telah berhasil menyelesaikan kursus</h6>
-                                    <h3 className="course-title">{course?.course?.title}</h3>
-                                </div>
-                                <div className="course-instructor">
-                                    <h6 className="show-instructor">dengan prestasi cemerlang, menunjukkan penguasaan dalam semua</h6>
-                                    <h6 className="show-instructor">materi kursus dan penilaian oleh</h6>
-                                    <span>{course?.course?.teacher?.full_name}</span>
-                                </div>
-                                <div className="certificate-date">
-                                    <strong>Tanggal Penyelesaian:</strong>
-                                    <span>{formatDate(certificate.date)}</span>
-                                </div>
-                                
-                                {/* QR Code for Certificate Validation */}
-                                {certificate.qr_code_url && (
-                                    <div className="certificate-qr-code">
-                                        <QRCode 
-                                            value={certificate.qr_code_url}
-                                            size={100}
-                                            level="H"
-                                            includeMargin={false}
-                                            renderAs="svg"
-                                        />
-                                        <p className="qr-label">Pindai untuk Verifikasi</p>
-                                    </div>
-                                )}
-                            </div>
-                            
-                        </div>
-                    </div>
-                )}
 
-                {/* Quiz Results Summary (if available) */}
-                {quizResults.length > 0 && (
-                    <div className="quiz-results-summary mt-4">
-                        <h6>Ringkasan Kinerja Kuis</h6>
-                        <div className="quiz-results-list">
-                            {quizResults.map((quiz, index) => (
-                                <div key={index} className={`quiz-result-item ${quiz.passed ? 'passed' : 'failed'}`}>
-                                    <div className="quiz-result-info">
-                                        <strong>{quiz.title}</strong>
-                                        <span className="quiz-score">
-                                            {quiz.percentage}% ({quiz.score}/{quiz.total_questions})
-                                        </span>
-                                    </div>
-                                    <div className="quiz-result-status">
-                                        <i className={`fas ${quiz.passed ? 'fa-check-circle' : 'fa-times-circle'}`}></i>
-                                        <span>{quiz.passed ? 'Lulus' : 'Gagal'}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

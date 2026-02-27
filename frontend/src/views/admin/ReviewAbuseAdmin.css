@@ -1,0 +1,550 @@
+/* ========================================
+   REVIEW ABUSE ADMIN STYLES
+   PHASE 4.210
+   ======================================== */
+
+.review-abuse-admin-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding-top: calc(70px + 2rem) !important;
+    padding-bottom: 3rem !important;
+}
+
+/* ========================================
+   HEADER SECTION
+   ======================================== */
+.review-abuse-admin-page .admin-header-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.review-abuse-admin-page .page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.review-abuse-admin-page .page-subtitle {
+    font-size: 1rem;
+    color: #6c757d;
+    margin: 0.5rem 0 0 0;
+}
+
+.review-abuse-admin-page .stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.review-abuse-admin-page .stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.review-abuse-admin-page .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========================================
+   FILTER SECTION
+   ======================================== */
+.review-abuse-admin-page .filter-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.review-abuse-admin-page .form-label {
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.review-abuse-admin-page .filter-select {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.review-abuse-admin-page .filter-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* ========================================
+   REPORTS CONTAINER
+   ======================================== */
+.review-abuse-admin-page .reports-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+/* ========================================
+   REPORT CARD
+   ======================================== */
+.review-abuse-admin-page .report-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #dc3545;
+    transition: all 0.3s ease;
+}
+
+.review-abuse-admin-page .report-card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.review-abuse-admin-page .report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.review-abuse-admin-page .report-info {
+    flex: 1;
+}
+
+.review-abuse-admin-page .report-meta {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.review-abuse-admin-page .report-id {
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 0.9rem;
+}
+
+.review-abuse-admin-page .report-date {
+    font-size: 0.9rem;
+}
+
+.review-abuse-admin-page .report-instructor {
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.review-abuse-admin-page .report-reason {
+    color: #dc3545;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}
+
+.review-abuse-admin-page .report-status {
+    flex-shrink: 0;
+}
+
+/* ========================================
+   STATUS BADGES
+   ======================================== */
+.review-abuse-admin-page .badge {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.review-abuse-admin-page .badge-warning {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ff9800;
+    border-left: 3px solid #ff9800;
+}
+
+.review-abuse-admin-page .badge-info {
+    background: rgba(13, 110, 253, 0.15);
+    color: #0d6efd;
+    border-left: 3px solid #0d6efd;
+}
+
+.review-abuse-admin-page .badge-danger {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    border-left: 3px solid #dc3545;
+}
+
+.review-abuse-admin-page .badge-success {
+    background: rgba(25, 135, 84, 0.15);
+    color: #198754;
+    border-left: 3px solid #198754;
+}
+
+.review-abuse-admin-page .badge-light {
+    background: #f8f9fa;
+    color: #666;
+    border-left: none;
+}
+
+/* ========================================
+   REPORT DESCRIPTION
+   ======================================== */
+.review-abuse-admin-page .report-description {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.review-abuse-admin-page .report-description p {
+    margin: 0;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* ========================================
+   REPORT FOOTER
+   ======================================== */
+.review-abuse-admin-page .report-footer {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.review-abuse-admin-page .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.review-abuse-admin-page .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+.review-abuse-admin-page .btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+.review-abuse-admin-page .empty-state {
+    background: white;
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.review-abuse-admin-page .empty-state i {
+    opacity: 0.5;
+}
+
+.review-abuse-admin-page .empty-state p {
+    font-size: 1.1rem;
+}
+
+/* ========================================
+   DETAIL MODAL
+   ======================================== */
+.review-abuse-admin-page .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 1rem;
+}
+
+.review-abuse-admin-page .modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.review-abuse-admin-page .detail-modal {
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.review-abuse-admin-page .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+}
+
+.review-abuse-admin-page .modal-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.review-abuse-admin-page .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.7;
+}
+
+.review-abuse-admin-page .btn-close:hover {
+    opacity: 1;
+}
+
+.review-abuse-admin-page .modal-body {
+    padding: 2rem;
+}
+
+.review-abuse-admin-page .detail-section {
+    margin-bottom: 2rem;
+}
+
+.review-abuse-admin-page .detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.review-abuse-admin-page .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+}
+
+/* ========================================
+   INFO GRID
+   ======================================== */
+.review-abuse-admin-page .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.review-abuse-admin-page .info-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 3px solid #667eea;
+}
+
+.review-abuse-admin-page .info-item label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.review-abuse-admin-page .info-item p {
+    margin: 0;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+}
+
+/* ========================================
+   REVIEW CONTENT BOX
+   ======================================== */
+.review-abuse-admin-page .review-content-box {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #dc3545;
+}
+
+.review-abuse-admin-page .review-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+}
+
+.review-abuse-admin-page .review-text {
+    margin: 0;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.review-abuse-admin-page .review-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* ========================================
+   DESCRIPTION BOX
+   ======================================== */
+.review-abuse-admin-page .description-box {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 3px solid #667eea;
+}
+
+.review-abuse-admin-page .description-box p {
+    margin: 0;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* ========================================
+   FORM CONTROLS
+   ======================================== */
+.review-abuse-admin-page .form-control,
+.review-abuse-admin-page .form-select {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.review-abuse-admin-page .form-control:focus,
+.review-abuse-admin-page .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.review-abuse-admin-page .form-control:disabled,
+.review-abuse-admin-page .form-select:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+}
+
+.review-abuse-admin-page small {
+    display: block;
+    margin-top: 0.5rem;
+}
+
+/* ========================================
+   MODAL FOOTER
+   ======================================== */
+.review-abuse-admin-page .modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.review-abuse-admin-page .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.review-abuse-admin-page .btn-secondary:hover:not(:disabled) {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+.review-abuse-admin-page .btn-secondary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.review-abuse-admin-page .btn-primary {
+    padding: 0.6rem 1.5rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.review-abuse-admin-page .btn-primary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.review-abuse-admin-page .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.2em;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 768px) {
+    .review-abuse-admin-page .page-title {
+        font-size: 1.75rem;
+    }
+
+    .review-abuse-admin-page .report-header {
+        flex-direction: column;
+    }
+
+    .review-abuse-admin-page .report-status {
+        align-self: flex-start;
+    }
+
+    .review-abuse-admin-page .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .review-abuse-admin-page .report-meta {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .review-abuse-admin-page .modal-overlay {
+        padding: 0.5rem;
+    }
+
+    .review-abuse-admin-page .modal-body {
+        padding: 1rem;
+    }
+
+    .review-abuse-admin-page .modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .review-abuse-admin-page .btn {
+        width: 100%;
+    }
+}

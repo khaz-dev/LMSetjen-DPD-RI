@@ -523,7 +523,7 @@
     padding-top: 10px;
     border-top: 1px solid #eee;
     display: flex;
-    justify-content: flex-end;
+    flex-direction: column;
 }
 
 .acrd-video-link {
@@ -803,6 +803,31 @@
 .acrd-video-container span {
     color: #667eea;
     font-weight: 500;
+}
+
+/* ✨ NEW: Video Preview Styles for Intro and Lesson Videos */
+.acrd-video-preview {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e8eef5;
+    margin-top: 1rem;
+}
+
+.acrd-lecture-preview {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e8eef5;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.acrd-video-source {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
 }
 
 /* ========================================

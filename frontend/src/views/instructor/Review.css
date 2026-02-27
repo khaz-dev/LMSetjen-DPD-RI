@@ -292,12 +292,40 @@
     font-size: 0.95rem;
     background: white;
     transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    padding-right: 2.25rem;
 }
 
 .instructor-review-page .modern-select:focus {
     border-color: #3498db;
     box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
     outline: none;
+}
+
+.instructor-review-page .modern-select option {
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border-radius: 4px;
+    background: white;
+    color: #2c3e50;
+    font-size: 0.95rem;
+}
+
+.instructor-review-page .modern-select option:hover {
+    background: #3498db;
+    color: white;
+}
+
+/* ========================================
+   FILTER SECTION
+   ======================================== */
+.instructor-review-page .modern-filter-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* ========================================
@@ -424,6 +452,110 @@
 .instructor-review-page .report-btn:hover {
     background: rgba(220, 53, 69, 0.15);
     color: #dc3545;
+}
+
+/* ✨ PHASE 4.210: Report Status Badge Styling */
+.instructor-review-page .report-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.instructor-review-page .report-status-badge.pending {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ff9800;
+    border-left: 3px solid #ff9800;
+}
+
+.instructor-review-page .report-status-badge.reviewed {
+    background: rgba(13, 110, 253, 0.15);
+    color: #0d6efd;
+    border-left: 3px solid #0d6efd;
+}
+
+.instructor-review-page .report-status-badge.dismissed {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    border-left: 3px solid #dc3545;
+}
+
+.instructor-review-page .report-status-badge.action_taken {
+    background: rgba(25, 135, 84, 0.15);
+    color: #198754;
+    border-left: 3px solid #198754;
+}
+
+/* ✨ PHASE 4.210: Report Status Badge Button (Clickable) */
+.instructor-review-page .report-status-badge-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.instructor-review-page .report-status-badge-btn.pending {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ff9800;
+    border-left: 3px solid #ff9800;
+}
+
+.instructor-review-page .report-status-badge-btn.pending:hover {
+    background: rgba(255, 193, 7, 0.25);
+    transform: translateY(-2px);
+}
+
+.instructor-review-page .report-status-badge-btn.reviewed {
+    background: rgba(13, 110, 253, 0.15);
+    color: #0d6efd;
+    border-left: 3px solid #0d6efd;
+}
+
+.instructor-review-page .report-status-badge-btn.reviewed:hover {
+    background: rgba(13, 110, 253, 0.25);
+    transform: translateY(-2px);
+}
+
+.instructor-review-page .report-status-badge-btn.dismissed {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    border-left: 3px solid #dc3545;
+}
+
+.instructor-review-page .report-status-badge-btn.dismissed:hover {
+    background: rgba(220, 53, 69, 0.25);
+    transform: translateY(-2px);
+}
+
+.instructor-review-page .report-status-badge-btn.action_taken {
+    background: rgba(25, 135, 84, 0.15);
+    color: #198754;
+    border-left: 3px solid #198754;
+}
+
+.instructor-review-page .report-status-badge-btn.action_taken:hover {
+    background: rgba(25, 135, 84, 0.25);
+    transform: translateY(-2px);
+}
+
+/* ✨ PHASE 4.210: Review Report Section */
+.instructor-review-page .review-report-section {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 /* ========================================
@@ -773,6 +905,11 @@
         width: 100%;
     }
 
+    .instructor-review-page .report-status-badge {
+        width: 100%;
+        justify-content: center;
+    }
+
     .instructor-review-page .modern-input,
     .instructor-review-page .modern-select {
         height: 45px;
@@ -1007,3 +1144,139 @@
     max-width: 100%;
   }
 }
+/* ========================================
+   ABUSE REPORT MODAL STYLES - PHASE 4.210
+   ======================================== */
+.abuse-report-modal {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.abuse-modal-header {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border: none;
+    border-radius: 15px 15px 0 0;
+    padding: 1.5rem;
+}
+
+.abuse-modal-header .modal-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.abuse-modal-header .modal-title i {
+    color: white;
+}
+
+.abuse-modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.abuse-modal-text {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-select-modern {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-select-modern:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-body .form-label {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+}
+
+.modal-body .alert {
+    border-radius: 8px;
+    border: 1px solid rgba(23, 162, 184, 0.2);
+    background: rgba(23, 162, 184, 0.05);
+    color: #155c7a;
+}
+
+.abuse-modal-footer {
+    background: #f8f9fa;
+    border: none;
+    border-radius: 0 0 15px 15px;
+    padding: 1.5rem;
+}
+
+.abuse-modal-footer .btn {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.abuse-modal-footer .btn-outline-secondary {
+    border: 2px solid #e9ecef;
+    color: #6c757d;
+}
+
+.abuse-modal-footer .btn-outline-secondary:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #495057;
+}
+
+.abuse-modal-footer .btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.abuse-modal-footer .btn-danger:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+    background: linear-gradient(135deg, #d63841 0%, #b91d2d 100%);
+}
+
+.abuse-modal-footer .btn-danger:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+```

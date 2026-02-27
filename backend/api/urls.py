@@ -93,7 +93,11 @@ urlpatterns = [
     # Certificate Endpoints
     path("student/certificate-eligibility/<user_id>/<course_id>/", api_views.StudentCertificateEligibilityAPIView.as_view()),
     path("student/certificate-generate/", api_views.StudentCertificateGenerateAPIView.as_view()),
-    path("student/certificate-download/<certificate_id>/", api_views.StudentCertificateDownloadAPIView.as_view()),
+    path("student/certificate-save-image/", api_views.StudentCertificateSaveImageAPIView.as_view()),  # ✨ PHASE 4.222: Save certificate image with filename format: course_id_user_id.png
+    path("student/certificate-save-pdf/", api_views.StudentCertificateSavePDFAPIView.as_view()),  # ✨ PHASE 4.210: Deprecated - kept for backward compatibility
+    path("student/certificate-image/<certificate_id>/", api_views.StudentCertificateImageAPIView.as_view()),  # ✨ PHASE 4.221: Serve certificate image by certificate_id
+    path("student/certificate-download/<course_id>/<user_id>/", api_views.StudentCertificateDownloadAPIView.as_view()),  # ✨ PHASE 4.222: Download certificate image by course_id and user_id
+    path("student/certificates/<user_id>/", api_views.StudentCertificateListAPIView.as_view()),  # ✨ PHASE 4.228: List all student certificates for "Sertifikat Kursus" page
     path("certificate/validate/<validation_token>/", api_views.CertificateValidationAPIView.as_view(), name="certificate-validate"),
 
 
@@ -107,7 +111,13 @@ urlpatterns = [
     path("teacher/published-courses/<teacher_id>/", api_views.TeacherPublishedCoursesAPIView.as_view()),  # ✨ PHASE 4.77: Public profile courses
     path("teacher/review-lists/<teacher_id>/", api_views.TeacherReviewListAPIView.as_view()),
     path("teacher/review-detail/<teacher_id>/<review_id>/", api_views.TeacherReviewDetailAPIView.as_view()),
-    path("teacher/student-lists/<teacher_id>/", api_views.TeacherStudentsListAPIView.as_view({'get': 'list'})),
+    path("teacher/review-report-abuse/<int:review_id>/", api_views.ReviewAbuseReportAPIView.as_view()),  # ✨ PHASE 4.210: Report review abuse
+    path("teacher/abuse-reports/<teacher_id>/", api_views.TeacherAbuseReportsAPIView.as_view()),  # ✨ PHASE 4.210: View submitted abuse reports
+    path("teacher/abuse-reports/<int:id>/update/", api_views.TeacherAbuseReportDetailAPIView.as_view()),  # ✨ PHASE 4.210: Update own abuse reports
+    path("teacher/abuse-reports/<int:id>/close/", api_views.TeacherAbuseReportCloseAPIView.as_view()),  # ✨ PHASE 4.210: Close own abuse reports
+    # Admin Routes - Abuse Reports
+    path("admin/abuse-reports/", api_views.AdminAbuseReportsListAPIView.as_view()),  # ✨ PHASE 4.210: List all abuse reports
+    path("admin/abuse-reports/<int:report_id>/", api_views.AdminAbuseReportDetailAPIView.as_view()),  # ✨ PHASE 4.210: Review/update abuse report
     path("teacher/best-course-earning/<teacher_id>/", api_views.TeacherBestSellingCourseAPIView.as_view({'get': 'list'})),
     path("teacher/course-order-list/<teacher_id>/", api_views.TeacherCourseOrdersListAPIView.as_view()),
     path("teacher/question-answer-list/<teacher_id>/", api_views.TeacherQuestionAnswerListAPIView.as_view()),

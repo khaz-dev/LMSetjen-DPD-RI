@@ -51,6 +51,7 @@ const StudentTestimonials = lazy(() => import("./views/student/Testimonials"));
 const Wishlist = lazy(() => import("./views/student/Wishlist"));
 const StudentQA = lazy(() => import("./views/student/QA"));
 const StudentProfile = lazy(() => import("./views/student/Profile"));
+const SertifikatKursus = lazy(() => import("./views/student/SertifikatKursus"));  // ✨ PHASE 4.228: Student certificate page
 
 // Instructor Routes
 const Dashboard = lazy(() => import("./views/instructor/Dashboard"));
@@ -65,6 +66,7 @@ const CourseCreate = lazy(() => import("./views/instructor/CourseCreate"));
 const CourseEdit = lazy(() => import("./views/instructor/CourseEdit"));
 const CourseEditCurriculum = lazy(() => import("./views/instructor/CourseEditCurriculum"));
 const CourseQuiz = lazy(() => import("./views/instructor/CourseQuiz"));
+const InstructorCoursePreview = lazy(() => import("./views/instructor/InstructorCoursePreview"));
 
 // Admin Routes
 const DashboardAdmin = lazy(() => import("./views/admin/DashboardAdmin"));
@@ -74,6 +76,8 @@ const SystemDocumentation = lazy(() => import("./views/admin/SystemDocumentation
 const ContentManagementAdmin = lazy(() => import("./views/admin/ContentManagementAdmin"));
 // ✨ PHASE 4.37+: Dedicated admin course review detail page
 const AdminCourseReviewDetail = lazy(() => import("./views/admin/AdminCourseReviewDetail"));
+// ✨ PHASE 4.210: Unified reports management page
+const ReportsAdmin = lazy(() => import("./views/admin/ReportsAdmin"));
 
 // Loading component for Suspense fallback - Centered spinner
 const LoadingFallback = () => (
@@ -308,6 +312,16 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
+                            <Route
+                                path="/student/sertifikat/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["student"]}>
+                                            <SertifikatKursus />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
                             
                             {/* Instructor Routes */}
 
@@ -432,6 +446,16 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
+                            <Route
+                                path="/instructor/preview-course/:course_id/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                            <InstructorCoursePreview />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
 
                             {/* Admin Routes */}
                             <Route
@@ -482,6 +506,17 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["admin"]}>
                                             <AdminCourseReviewDetail />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            {/* ✨ PHASE 4.210: Unified reports management page */}
+                            <Route
+                                path="/admin/reports/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["admin"]}>
+                                            <ReportsAdmin />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }
