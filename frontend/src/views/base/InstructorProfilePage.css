@@ -328,15 +328,14 @@
     gap: 0.5rem;
 }
 
-.course-title {
+/* ✨ PHASE 8c: Scoped course-title for InstructorProfilePage layout - inherits from CourseCard.css
+   Page-specific overrides are scoped to .course-content to avoid conflicts with global .course-title
+*/
+.course-content .course-title {
     font-size: 0.95rem;
     font-weight: 600;
     color: #2c3e50;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    margin: 0 0 0.5rem 0; /* Adjust margin for this scoped context */
     line-height: 1.3;
 }
 
@@ -897,7 +896,8 @@
         padding: 1rem;
     }
 
-    .course-title {
+    /* ✨ PHASE 8c: Responsive override for scoped course-title in tablet view */
+    .course-content .course-title {
         font-size: 0.9rem;
     }
 
@@ -1037,7 +1037,8 @@
         padding: 0.75rem;
     }
 
-    .course-title {
+    /* ✨ PHASE 8c: Responsive override for scoped course-title in mobile view */
+    .course-content .course-title {
         font-size: 0.8rem;
         margin-bottom: 0.5rem;
     }

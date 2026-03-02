@@ -123,13 +123,14 @@
   font-weight: 600;
 }
 
-.stat-value {
+/* ✨ SCOPED: Search dashboard stat value - only apply in search dashboard context */
+.search-dashboard-components .stat-value {
   font-size: 1.3rem;
   font-weight: 700;
   color: #333;
 }
 
-.stat-value.trend {
+.search-dashboard-components .stat-value.trend {
   font-size: 1rem;
   color: #4CAF50;
 }
@@ -484,7 +485,8 @@
   font-weight: 500;
 }
 
-.stat-value {
+/* ✨ SCOPED: Search dashboard footer stat value - only apply in search dashboard context */
+.search-dashboard-components .stat-value {
   font-weight: 700;
   color: #333;
 }

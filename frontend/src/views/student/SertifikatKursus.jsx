@@ -259,9 +259,9 @@ function SertifikatKursus() {
                                     <p className="text-muted mb-4">
                                         Selesaikan kursus dan lulus semua kuis untuk mendapatkan sertifikat
                                     </p>
-                                    <Link to="/student/courses/" className="btn btn-modern">
-                                        <i className="fas fa-book me-2"></i>
-                                        Lihat Kursus Saya
+                                    <Link to="/student/courses/" className="empty-state-link-btn">
+                                        <i className="fas fa-book"></i>
+                                        <span>Lihat Kursus Saya</span>
                                     </Link>
                                 </div>
                             )}

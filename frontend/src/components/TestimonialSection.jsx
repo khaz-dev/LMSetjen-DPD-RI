@@ -165,9 +165,16 @@ function TestimonialSection() {
           </p>
         </div>
 
-        <div className="row g-3">
+        <div 
+          className={`row g-3 ${testimonials.length < 3 ? 'justify-content-center' : ''}`}
+          style={testimonials.length < 3 ? { display: 'flex', justifyContent: 'center', flexWrap: 'wrap' } : {}}
+        >
           {testimonials.map((testimonial, index) => (
-            <div key={testimonial.id} className="col-lg-4">
+            <div 
+              key={testimonial.id} 
+              className="col-lg-4"
+              style={testimonials.length < 3 ? { maxWidth: '400px' } : {}}
+            >
               <div 
                 className="card border-0 h-100"
                 style={{
@@ -240,12 +247,31 @@ function TestimonialSection() {
                         color: 'white',
                         padding: '0.35rem 0.75rem',
                         fontSize: '0.8rem',
-                        borderRadius: '20px'
+                        borderRadius: '20px',
+                        marginRight: '0.5rem'
                       }}
                     >
                       <i className={`fas ${testimonial.role === 'instructor' ? 'fa-chalkboard-user' : 'fa-graduation-cap'} me-1`}></i>
                       {testimonial.role === 'instructor' ? 'Sebagai Instruktur' : 'Sebagai Siswa'}
                     </span>
+                    
+                    {/* ✨ PHASE 4.12.2: Public User Indicator - if NIP is missing, user is from public */}
+                    {testimonial.is_public_user && (
+                      <span 
+                        className="badge"
+                        style={{
+                          background: 'linear-gradient(135deg, #17a2b8 0%, #20c997 100%)',
+                          color: 'white',
+                          padding: '0.35rem 0.75rem',
+                          fontSize: '0.8rem',
+                          borderRadius: '20px'
+                        }}
+                        title="Pengguna dari luar Setjen DPD RI (tidak terdaftar di data Pegawai AWS)"
+                      >
+                        <i className="fas fa-globe me-1"></i>
+                        Pengguna Publik
+                      </span>
+                    )}
                   </div>
                   
                   {/* User Info */}
@@ -257,6 +283,19 @@ function TestimonialSection() {
                       ? `${testimonial.position} (${testimonial.golongan})`
                       : testimonial.position || testimonial.golongan || 'Karyawan Setjen DPD RI'}
                   </small>
+                  
+                  {/* ✨ PHASE 4.12.1: Display Unit Organisasi and Posisi if available */}
+                  {/* ✨ PHASE 4.12.2: Also display NIP for government employees */}
+                  {(testimonial.unit_organisasi || testimonial.position || (!testimonial.is_public_user && testimonial.nip)) && (
+                    <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#6c757d', lineHeight: '1.4' }}>
+                      {testimonial.unit_organisasi && (
+                        <div>
+                          <i className="fas fa-building me-1" style={{ color: '#667eea' }}></i>
+                          <span>{testimonial.unit_organisasi}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

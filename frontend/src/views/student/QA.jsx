@@ -405,7 +405,7 @@ function QA() {
                             <div className="qa-header-card">
                                 <div className="qa-header-content">
                                     <div className="row align-items-center">
-                                        <div className="col-lg-8">
+                                        <div className="col-lg-7">
                                             <h1 className="mb-3 fw-bold d-flex align-items-center">
                                                 <i className="fas fa-comments me-3 qa-page-icon"></i>
                                                 Tanya & Jawab
@@ -415,9 +415,9 @@ function QA() {
                                             </p>
                                         </div>
                                         <div className="col-lg-4">
-                                            <div className="stats-grid mt-0">
-                                                <div className="qa-stat-card">
-                                                    <div className="qa-stat-number justify-content-end">
+                                            <div className="stat-card-header-wrapper">
+                                                <div className="stat-card-header">
+                                                    <div className="stat-number justify-content-end">
                                                         {enrolledCourses.length}
                                                     </div>
                                                     <div className="stat-label">Kursus Aktif</div>
@@ -624,7 +624,9 @@ function QA() {
                                                                         <img
                                                                             src={q.profile.image.startsWith("http") 
                                                                                 ? q.profile.image 
-                                                                                : "getMediaUrl(q.profile.image)"
+                                                                                : q.profile.image.startsWith("/images/")
+                                                                                    ? q.profile.image
+                                                                                    : getMediaUrl(q.profile.image)
                                                                             }
                                                                             className="avatar-modern"
                                                                             alt={`${q.profile?.full_name || "User"} avatar`}
@@ -742,7 +744,7 @@ function QA() {
                     <div className="messages-container-qa">
                         {selectedConversation?.messages?.map((m, index) => {
                             const currentUser = UserData();
-                            const isCurrentUser = m.profile?.user_id === currentUser?.user_id || m.profile?.id === currentUser?.user_id;
+                            const isCurrentUser = m.profile?.user_id === currentUser?.user_id || m.user_id === currentUser?.user_id;
                             return (
                                 <div key={m.id || `message-${index}`} className={`message-item-qa ${isCurrentUser ? "message-item-qa-current-user" : ""}`}>
                                     <div className={`d-flex ${isCurrentUser ? "flex-row-reverse" : ""}`}>
@@ -752,7 +754,9 @@ function QA() {
                                                     className="message-avatar-qa"
                                                     src={m.profile.image.startsWith("http") 
                                                         ? m.profile.image 
-                                                        : "getMediaUrl(m.profile.image)"
+                                                        : m.profile.image.startsWith("/images/")
+                                                            ? m.profile.image
+                                                            : getMediaUrl(m.profile.image)
                                                     }
                                                     alt={`${m.profile?.full_name || "User"} avatar`}
                                                     onError={(e) => {

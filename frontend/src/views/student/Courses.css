@@ -20,30 +20,63 @@
 
 .page-header-card {
     background: var(--theme-gradient) !important;
-    border-radius: 20px;
+    border-radius: 20px !important;
     color: white !important;
-    padding: 2.5rem;
+    padding: 2.5rem !important;
     margin-bottom: 1.5rem !important;
-    position: relative;
-    overflow: hidden;
+    position: relative !important;
+    overflow: hidden !important;
     box-shadow: 0 15px 35px var(--theme-shadow-color) !important;
 }
 
 .page-header-card::before {
-    content: '';
-    position: absolute;
-    top: -30%;
-    right: -15%;
-    width: 30%;
-    height: 160%;
-    background: rgba(255, 255, 255, 0.1);
-    transform: rotate(15deg);
-    z-index: 1;
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    right: -20% !important;
+    width: 40% !important;
+    height: 200% !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: rotate(15deg) !important;
+    z-index: 1 !important;
 }
 
 .page-header-content {
-    position: relative;
-    z-index: 2;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* Ensure inner row inside page-header-card flexes properly */
+.page-header-card .row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.page-header-card .col-lg-8 {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    padding-right: 1rem !important;
+}
+
+/* Make col-lg-4 a flex container so stats-grid aligns right */
+.page-header-card .col-lg-4 {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    padding-right: 0 !important;
+}
+
+.page-header-card h1 {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    color: white !important;
 }
 
 .search-card {
@@ -98,46 +131,48 @@
     font-size: 1.1rem;
 }
 
-.stats-row {
-    text-align: center;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    padding: 1.5rem;
-    margin-top: 0;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.stats-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    margin-left: auto;
+    width: fit-content;
 }
 
-.stat-item {
-    padding: 1rem;
-    border-radius: 15px;
-    background: rgba(255, 255, 255, 0.15);
-    margin-bottom: 0.5rem;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.stat-card-header-wrapper {
+    display: inline-block;
+    width: auto;
+    max-width: 100%;
+    flex-shrink: 0;
 }
 
-.course-stat-number {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: white;
-    line-height: 1;
+.stat-card-header {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px;
+    padding: 0.8rem 1.2rem;
     text-align: right;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
 }
 
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: white;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ✨ SCOPED: Courses page stat label - only apply on courses page */
 .modern-course-page .stat-label {
-    font-size: 0.85rem !important;
-    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 0.8rem !important;
+    opacity: 0.9 !important;
     font-weight: 500 !important;
-    margin-top: 0.25rem !important;
     text-align: right !important;
-    margin-left: auto !important;
-    margin-right: 0 !important;
-}
-
-/* More specific selector to ensure font-size changes take effect */
-.page-header-card .stats-row .stat-label {
-    font-size: 0.85rem !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .courses-grid {
@@ -415,25 +450,55 @@
 
 /* ✨ badge-modern and badge-level are now consistently styled globally from index.css - applies to all pages */
 
+/* Consistent Button/Link Styles - PHASE 4.228.5 */
+.courses-empty-link-btn,
 .btn-modern {
     background: var(--theme-gradient) !important;
-    border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    color: white;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 0.5rem 1rem !important;
+    color: white !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    font-size: 0.9rem !important;
+    line-height: 1 !important;
+    height: auto !important;
+    min-height: 38px !important;
+    cursor: pointer !important;
 }
 
+.courses-empty-link-btn:hover,
 .btn-modern:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
-    color: white;
+    transform: translateY(-2px) !important;
+    box-shadow: var(--theme-hover-shadow) !important;
+    color: white !important;
+}
+
+.courses-empty-link-btn i,
+.courses-empty-link-btn span,
+.btn-modern i,
+.btn-modern span,
+.btn-modern > * {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    flex-shrink: 0 !important;
+    line-height: 1 !important;
+}
+
+.courses-empty-link-btn i,
+.btn-modern i {
+    font-size: 0.9em !important;
+    width: 1em !important;
+    height: 1em !important;
 }
 
 .empty-state {
@@ -458,12 +523,17 @@
 /* Responsive Design */
 @media (max-width: 768px) {
     .page-header-card {
-        padding: 0.8rem;
-        border-radius: 10px;
-        margin-bottom: 0.8rem;
+        padding: 1.2rem 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+        border-radius: 20px !important;
     }
 
-    .course-title {
+    .page-header-card h1 {
+        font-size: 1.3rem !important;
+    }
+
+    /* ✨ PHASE 8c: Responsive override for modern-course-page scoped styling */
+    .modern-course-page .course-title {
         font-size: 1.1rem;
     }
 
@@ -496,6 +566,15 @@
 }
 
 @media (max-width: 576px) {
+    .page-header-card {
+        padding: 1.25rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+
+    .page-header-card h1 {
+        font-size: 1.25rem !important;
+    }
+
     .course-card {
         margin-bottom: 1rem;
     }
@@ -507,18 +586,18 @@
 }
 
 /* Fix text selection and cursor issues - SCOPED to Courses page */
-.page-header-card h1,
-.page-header-card p,
-.stat-number,
-.stat-label,
+.modern-course-page .page-header-card h1,
+.modern-course-page .page-header-card p,
+.modern-course-page .stat-number,
+.modern-course-page .stat-label,
 .modern-course-page .course-card h5,
 .modern-course-page .course-card p,
 .modern-course-page .course-card span,
 .modern-course-page .course-card small,
-.search-card h4,
-.search-card p,
-.empty-state h4,
-.empty-state p {
+.modern-course-page .search-card h4,
+.modern-course-page .search-card p,
+.modern-course-page .empty-state h4,
+.modern-course-page .empty-state p {
     cursor: default !important;
     user-select: none !important;
     -webkit-user-select: none !important;

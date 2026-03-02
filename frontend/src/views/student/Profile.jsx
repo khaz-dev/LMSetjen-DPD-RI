@@ -5,6 +5,7 @@ import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import ProfilePictureCropModal from "../../components/ProfilePictureCropModal/ProfilePictureCropModal";
 import CountrySelector from "../../components/CountrySelector/CountrySelector";
+import OptionSelector from "../../components/OptionSelector/OptionSelector";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
@@ -171,7 +172,9 @@ function Profile() {
     const [uiState, setUiState] = useState({
         loading: true,
         imagePreview: "",
-        showCropModal: false
+        showCropModal: false,
+        autoSaving: false,      // ✨ PHASE 4.12.4: Track auto-save status
+        autoSaveStatus: "idle"  // ✨ PHASE 4.12.4: idle | saving | saved | error
     });
     
     const [imageState, setImageState] = useState({
@@ -185,16 +188,114 @@ function Profile() {
         completedCrop: null
     });
     
+    // ✨ PHASE 4.12.3: Employee information options
+    const [employeeOptions, setEmployeeOptions] = useState({
+        organizations: [],
+        positions: [],
+        golongan: [],
+        jenis_jabatan: []
+    });
+    
     const imgRef = useRef(null);
+    
+    // ✨ PHASE 4.12.4: Auto-save debounce timer and previous data tracking
+    const autoSaveTimeoutRef = useRef(null);
+    const previousDataRef = useRef(profileData);
 
     // API Functions
+    
+    // ✨ PHASE 4.12.4: Auto-save profile with debounce (without image upload)
+    const autoSaveProfile = async (dataToSave) => {
+        try {
+            setUiState(prev => ({ ...prev, autoSaving: true, autoSaveStatus: "saving" }));
+            
+            const userId = UserData()?.user_id;
+            if (!userId) throw new Error("User ID not found");
+            
+            // Create a simple form data with only changed fields (no images)
+            const formdata = new FormData();
+            Object.keys(dataToSave).forEach(key => {
+                if (dataToSave[key] !== null && dataToSave[key] !== undefined) {
+                    // Skip image files in auto-save (only button click with manual image cropping does images)
+                    if (key !== 'image' && !(dataToSave[key] instanceof File || dataToSave[key] instanceof Blob)) {
+                        formdata.append(key, dataToSave[key]);
+                    }
+                }
+            });
+            
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata, {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                }
+            });
+            
+            // Update local state with server response
+            setProfileData(updateRes.data);
+            previousDataRef.current = updateRes.data;
+            
+            setUiState(prev => ({ ...prev, autoSaving: false, autoSaveStatus: "saved" }));
+            
+            // ✨ PHASE 4.12.5: Show Toast notification on top-right
+            Toast().fire({
+                icon: "success",
+                title: "Perubahan Tersimpan",
+                text: "Profil Anda telah diperbarui",
+                timer: 3000,
+                showConfirmButton: false
+            });
+            
+            // Clear "saved" status after 2 seconds
+            setTimeout(() => {
+                setUiState(prev => ({ ...prev, autoSaveStatus: "idle" }));
+            }, 2000);
+            
+        } catch (error) {
+            console.error("❌ Error auto-saving profile:", error);
+            setUiState(prev => ({ ...prev, autoSaving: false, autoSaveStatus: "error" }));
+            
+            // ✨ PHASE 4.12.5: Show Toast error notification on top-right
+            Toast().fire({
+                icon: "error",
+                title: "Gagal Menyimpan",
+                text: error.response?.data?.detail || "Terjadi kesalahan saat menyimpan profil",
+                timer: 4000,
+                showConfirmButton: false
+            });
+            
+            // Clear "error" status after 3 seconds
+            setTimeout(() => {
+                setUiState(prev => ({ ...prev, autoSaveStatus: "idle" }));
+            }, 3000);
+        }
+    };
+
     const fetchProfile = async () => {
         setUiState(prev => ({ ...prev, loading: true }));
+
         
         try {
             const profileRes = await useAxios.get(`user/profile/${UserData()?.user_id}/`);
+            console.log('📥 Profile API Response:', profileRes.data);
+            console.log('   - jenis_jabatan value:', profileRes.data.jenis_jabatan);
+            console.log('   - jenis_jabatan type:', typeof profileRes.data.jenis_jabatan);
+            console.log('   - jenis_jabatan is null?', profileRes.data.jenis_jabatan === null);
+            console.log('   - jenis_jabatan is undefined?', profileRes.data.jenis_jabatan === undefined);
+            console.log('   - jenis_jabatan is empty string?', profileRes.data.jenis_jabatan === "");
+            console.log('   - Full employee fields:', {
+                jenis_jabatan: profileRes.data.jenis_jabatan,
+                golongan: profileRes.data.golongan,
+                nip: profileRes.data.nip,
+                kelas_jabatan: profileRes.data.kelas_jabatan
+            });
+            
+            // ✨ PHASE 4.12.5: Ensure jenis_jabatan is string, not null/undefined
+            const processedData = {
+                ...profileRes.data,
+                jenis_jabatan: profileRes.data.jenis_jabatan || ""  // Convert null/undefined to empty string
+            };
+            
             setProfile(profileRes.data);
-            setProfileData(profileRes.data);
+            setProfileData(processedData);
             
             // ✅ FIX: Validate image URL before setting (handles null, invalid strings)
             const validImageUrl = getValidProfileImageUrl(profileRes.data.image, "");
@@ -205,7 +306,7 @@ function Profile() {
                 fileName: extractFileName(profileRes.data.image)
             }));
         } catch (error) {
-            console.error("Error fetching profile:", error);
+            console.error("❌ Error fetching profile:", error);
             Toast().fire({
                 icon: "error",
                 title: VALIDATION_MESSAGES.PROFILE_LOAD_ERROR
@@ -280,6 +381,16 @@ function Profile() {
                 ...prev,
                 [name]: formattedValue,
             }));
+            
+            // ✨ PHASE 4.12.4: Trigger auto-save with debounce
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
+            autoSaveTimeoutRef.current = setTimeout(() => {
+                autoSaveProfile({
+                    [name]: formattedValue
+                });
+            }, 1000); // 1 second debounce
             return;
         }
 
@@ -287,6 +398,16 @@ function Profile() {
             ...prev,
             [name]: value,
         }));
+        
+        // ✨ PHASE 4.12.4: Trigger auto-save with debounce for regular fields
+        if (autoSaveTimeoutRef.current) {
+            clearTimeout(autoSaveTimeoutRef.current);
+        }
+        autoSaveTimeoutRef.current = setTimeout(() => {
+            autoSaveProfile({
+                [name]: value
+            });
+        }, 1000); // 1 second debounce
     };
 
     const handleFileChange = (event) => {
@@ -399,10 +520,77 @@ function Profile() {
         }
     };
 
+    // ✨ PHASE 4.12.3: Fetch employee information options
+    const fetchEmployeeOptions = async () => {
+        try {
+            console.log('🔄 Fetching employee options from /api/v1/employee/options/...');
+            const res = await useAxios.get('employee/options/');
+            console.log('✅ Employee options loaded successfully:', res.data);
+            
+            // Validate response has required fields
+            if (!res.data) {
+                throw new Error('Empty response from employee options API');
+            }
+            
+            const { organizations = [], positions = [], golongan = [], jenis_jabatan = [] } = res.data;
+            
+            console.log(`📊 Options loaded: ${organizations.length} organizations, ${positions.length} positions, ${golongan.length} golongan, ${jenis_jabatan.length} jenis_jabatan`);
+            
+            setEmployeeOptions({
+                organizations: Array.isArray(organizations) ? organizations : [],
+                positions: Array.isArray(positions) ? positions : [],
+                golongan: Array.isArray(golongan) ? golongan : [],
+                jenis_jabatan: Array.isArray(jenis_jabatan) ? jenis_jabatan : []
+            });
+        } catch (error) {
+            console.error('❌ Error fetching employee options:');
+            console.error('   Status:', error.response?.status);
+            console.error('   URL:', error.config?.url);
+            console.error('   Message:', error.response?.data?.detail || error.message);
+            console.error('   Full error:', error);
+            
+            // Set default empty lists if fetch fails
+            setEmployeeOptions({
+                organizations: [],
+                positions: [],
+                golongan: [],
+                jenis_jabatan: []
+            });
+        }
+    };
+    
     // Effects
     useEffect(() => {
         fetchProfile();
+        fetchEmployeeOptions();  // ✨ PHASE 4.12.3: Load employee options on mount
+        
+        // ✨ PHASE 4.12.5: Cleanup on unmount
+        return () => {
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
+        };
     }, []);
+    
+    // ✨ PHASE 4.12.5: Log when employee options are updated
+    useEffect(() => {
+        console.log('📋 Employee options state updated:', {
+            organizations: employeeOptions.organizations.length,
+            positions: employeeOptions.positions.length,
+            golongan: employeeOptions.golongan.length,
+            jenis_jabatan: employeeOptions.jenis_jabatan.length,
+            data: employeeOptions
+        });
+    }, [employeeOptions]);
+    
+    // ✨ PHASE 4.12.5: Log when profileData.jenis_jabatan changes
+    useEffect(() => {
+        console.log('👤 ProfileData.jenis_jabatan updated:', {
+            value: profileData.jenis_jabatan,
+            type: typeof profileData.jenis_jabatan,
+            isEmpty: !profileData.jenis_jabatan || profileData.jenis_jabatan === ""
+        });
+    }, [profileData.jenis_jabatan]);
 
     // Component Rendering Functions
     const renderLoadingAvatar = () => (
@@ -587,24 +775,141 @@ function Profile() {
                 <small className="text-muted ms-2">(Detail Organisasi)</small>
             </h4>
             
+            {/* ✨ PHASE 4.12.3: Warning alert for temporary edits */}
+            <div style={{
+                padding: "12px 16px",
+                backgroundColor: "#fff3cd",
+                border: "1px solid #ffc107",
+                borderRadius: "8px",
+                marginBottom: "20px",
+                color: "#856404",
+                fontSize: "0.9rem",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "10px"
+            }}>
+                <i className="fas fa-exclamation-triangle" style={{ marginTop: "2px", flexShrink: 0 }}></i>
+                <div>
+                    <strong>⚠️ Perubahan Sementara</strong>
+                    <p style={{ marginBottom: 0, marginTop: "4px" }}>Perubahan di sini bersifat sementara dan hanya tersimpan di profil lokal Anda. Perubahan akan dihapus setelah "Sync Data Pegawai" dilakukan. Untuk perubahan permanen, perbarui data di sistem Kepegawaian Setjen DPD RI.</p>
+                </div>
+            </div>
+            
             <div className="row g-3">
                 <div className="col-md-6">
                     {renderFormField("nip", "NIP (ID Karyawan)", "fas fa-id-card", "text", "Masukkan NIP Anda", null, false, true)}
                 </div>
+                
+                {/* ✨ PHASE 4.12.3: Golongan Selector */}
                 <div className="col-md-6">
-                    {renderFormField("golongan", "Golongan", "fas fa-layer-group", "text", "Masukkan golongan Anda", null, false, true)}
+                    <OptionSelector
+                        value={profileData.golongan || ""}
+                        onChange={handleProfileChange}
+                        onBlur={handleProfileChange}
+                        options={employeeOptions.golongan.map((g) => ({ id: g, name: g }))}
+                        name="golongan"
+                        id="golongan"
+                        label="Golongan"
+                        icon="fas fa-layer-group"
+                        placeholder="Pilih golongan..."
+                        required={false}
+                        disabled={uiState.loading}
+                        displayKey="name"
+                        valueKey="id"
+                    />
                 </div>
+                
+                {/* ✨ PHASE 4.12.4: Jenis Jabatan Selector */}
                 <div className="col-md-6">
-                    {renderFormField("jenis_jabatan", "Jenis Jabatan", "fas fa-tags", "text", "Masukkan jenis jabatan Anda", null, false, true)}
+                    <OptionSelector
+                        value={profileData.jenis_jabatan || ""}
+                        onChange={(event) => {
+                            const newValue = event.target.value || "";
+                            setProfileData(prev => ({
+                                ...prev,
+                                jenis_jabatan: newValue
+                            }));
+                            
+                            // Trigger auto-save with debounce
+                            if (autoSaveTimeoutRef.current) {
+                                clearTimeout(autoSaveTimeoutRef.current);
+                            }
+                            autoSaveTimeoutRef.current = setTimeout(() => {
+                                autoSaveProfile({
+                                    jenis_jabatan: newValue
+                                });
+                            }, 1000);
+                        }}
+                        onBlur={handleProfileChange}
+                        options={employeeOptions.jenis_jabatan.map((j) => ({ id: j, name: j }))}
+                        name="jenis_jabatan_selector"
+                        id="jenis_jabatan"
+                        label="Jenis Jabatan"
+                        icon="fas fa-tags"
+                        placeholder="Pilih jenis jabatan..."
+                        required={false}
+                        disabled={uiState.loading || uiState.autoSaving}
+                        displayKey="name"
+                        valueKey="id"
+                    />
                 </div>
+                
+                {/* ✨ PHASE 4.12.3: Unit Organisasi Selector */}
                 <div className="col-md-6">
-                    {renderFormField("organization_unit_name", "Unit Organisasi", "fas fa-building", "text", "Nama unit organisasi", null, false, true)}
+                    <OptionSelector
+                        value={profileData.organization_unit_name || ""}
+                        onChange={(event) => {
+                            handleProfileChange({
+                                target: {
+                                    name: "organization_unit_name",
+                                    value: event.target.value || ""
+                                }
+                            });
+                        }}
+                        onBlur={handleProfileChange}
+                        options={employeeOptions.organizations}
+                        name="organization_unit_name"
+                        id="organization_unit_name"
+                        label="Unit Organisasi"
+                        icon="fas fa-building"
+                        placeholder="Pilih unit organisasi..."
+                        required={false}
+                        disabled={uiState.loading}
+                        displayKey="name"
+                        valueKey="name"
+                    />
                 </div>
+                
+                {/* ✨ PHASE 4.12.3: Posisi Selector */}
                 <div className="col-md-6">
-                    {renderFormField("position_name", "Posisi", "fas fa-user-tie", "text", "Judul posisi", null, false, true)}
+                    <OptionSelector
+                        value={profileData.position_name || ""}
+                        onChange={(event) => {
+                            handleProfileChange({
+                                target: {
+                                    name: "position_name",
+                                    value: event.target.value || ""
+                                }
+                            });
+                        }}
+                        onBlur={handleProfileChange}
+                        options={employeeOptions.positions}
+                        name="position_name"
+                        id="position_name"
+                        label="Posisi"
+                        icon="fas fa-user-tie"
+                        placeholder="Pilih posisi..."
+                        required={false}
+                        disabled={uiState.loading}
+                        displayKey="name"
+                        valueKey="name"
+                    />
                 </div>
             </div>
-            <small className="field-help-text">Informasi karyawan secara otomatis disinkronkan dari sistem organisasi</small>
+            <small className="field-help-text">
+                <i className="fas fa-info-circle me-1"></i>
+                Informasi karyawan disinkronkan dari sistem organisasi. Perubahan sementara Anda akan ditimpa saat sinkronisasi berikutnya.
+            </small>
         </div>
     );
 
@@ -640,23 +945,44 @@ function Profile() {
 
     const renderSubmitButton = () => (
         <div className="form-actions">
-            <button 
-                className="btn modern-submit-btn" 
-                type="submit"
-                disabled={uiState.loading}
-            >
-                {uiState.loading ? (
+            {/* ✨ PHASE 4.12.5: Minimal status indicator - main notifications now via Toast (top-right) */}
+            <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                minHeight: "36px",
+                borderRadius: "8px",
+                backgroundColor: uiState.autoSaveStatus === "saved" ? "#d4edda" : 
+                                 uiState.autoSaveStatus === "error" ? "#f8d7da" : "#f8f9fa",
+                border: uiState.autoSaveStatus === "saved" ? "1px solid #28a745" :
+                        uiState.autoSaveStatus === "error" ? "1px solid #dc3545" : "1px solid #dee2e6",
+                transition: "all 0.3s ease",
+                fontSize: "0.9rem"
+            }}>
+                {uiState.autoSaveStatus === "saving" || uiState.autoSaving ? (
                     <>
-                        <span className="spinner-border spinner-border-sm loading-spinner-sm" role="status" aria-hidden="true"></span>
-                        <strong>Memperbarui Profil...</strong>
+                        <span className="spinner-border spinner-border-sm" role="status" style={{ width: "14px", height: "14px", borderWidth: "2px" }}></span>
+                        <span style={{ color: "#667eea", fontWeight: "500" }}>Menyimpan...</span>
+                    </>
+                ) : uiState.autoSaveStatus === "saved" ? (
+                    <>
+                        <i className="fas fa-check-circle" style={{ color: "#28a745", fontSize: "1rem" }}></i>
+                        <span style={{ color: "#28a745", fontWeight: "500" }}>Tersimpan</span>
+                    </>
+                ) : uiState.autoSaveStatus === "error" ? (
+                    <>
+                        <i className="fas fa-exclamation-circle" style={{ color: "#dc3545", fontSize: "1rem" }}></i>
+                        <span style={{ color: "#dc3545", fontWeight: "500" }}>Gagal</span>
                     </>
                 ) : (
                     <>
-                        <i className="fas fa-save submit-icon"></i>
-                        Perbarui Profil
+                        <i className="fas fa-check" style={{ color: "#6c757d", fontSize: "0.9rem" }}></i>
+                        <span style={{ color: "#6c757d", fontWeight: "500" }}>Otomatis tersimpan</span>
                     </>
                 )}
-            </button>
+            </div>
         </div>
     );
 
@@ -734,8 +1060,8 @@ function Profile() {
                                 </div>
                             </div>
 
-                            {/* Modern Profile Form */}
-                            <form onSubmit={submitProfile}>
+                            {/* Modern Profile Form - Changed from form to div to prevent button submission */}
+                            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                                 {/* Avatar Section */}
                                 {renderAvatarSection()}
 
@@ -751,9 +1077,9 @@ function Profile() {
                                 {/* Social Media Section */}
                                 {renderSocialMediaSection()}
 
-                                {/* Submit Section */}
+                                {/* Auto-save Status Section */}
                                 {renderSubmitButton()}
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>

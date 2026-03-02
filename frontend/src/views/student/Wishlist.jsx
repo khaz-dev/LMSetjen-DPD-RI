@@ -151,12 +151,12 @@ function Wishlist() {
                                             </p>
                                         </div>
                                         <div className="col-lg-4">
-                                            <div className="stats-grid mt-0">
-                                                <div className="wishlist-stat-card">
-                                                    <div className="wishlist-stat-number justify-content-end">
+                                            <div className="stat-card-header-wrapper">
+                                                <div className="stat-card-header">
+                                                    <div className="stat-number justify-content-end">
                                                         {wishlist?.length || 0}
                                                     </div>
-                                                    <div className="wishlist-stat-label">Kursus Tersimpan</div>
+                                                    <div className="stat-label">Kursus Tersimpan</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -302,9 +302,9 @@ function Wishlist() {
                                             <p className="text-muted mb-4">
                                                 Anda belum menyimpan kursus apapun. Jelajahi katalog kursus kami dan simpan kursus yang Anda minati!
                                             </p>
-                                            <Link to="/search" className="btn btn-modern">
-                                                <i className="fas fa-search me-2"></i>
-                                                Jelajahi Kursus
+                                            <Link to="/search" className="wishlist-empty-link-btn">
+                                                <i className="fas fa-search"></i>
+                                                <span>Jelajahi Kursus</span>
                                             </Link>
                                         </div>
                                     )}

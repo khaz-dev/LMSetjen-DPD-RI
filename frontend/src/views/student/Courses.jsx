@@ -119,7 +119,7 @@ function Courses() {
                             <div className="page-header-card">
                                 <div className="page-header-content">
                                     <div className="row align-items-center">
-                                        <div className="col-lg-8">
+                                        <div className="col-lg-7">
                                             <h1 className="mb-2 fw-bold d-flex align-items-center">
                                                 <i className="fas fa-graduation-cap me-3" style={{ fontSize: "2rem" }}></i>
                                                 Perjalanan Belajar Saya
@@ -128,20 +128,18 @@ function Courses() {
                                                 Lanjutkan petualangan belajar Anda. Lacak kemajuan dan temukan pengetahuan baru.
                                             </p>
                                         </div>
-                                        <div className="col-lg-4">
-                                            <div className="stats-row mt-0">
-                                                <div className="row h-100">
-                                                    <div className="col-6">
-                                                        <div className="d-flex flex-column justify-content-between h-100 text-center">
-                                                            <div className="course-stat-number justify-content-end">{courses?.filter(c => c.completed_lesson?.length > 0).length || 0}</div>
-                                                            <div className="stat-label">Sedang Berlangsung</div>
-                                                        </div>
+                                        <div className="col-lg-5">
+                                            <div className="stats-grid mt-0">
+                                                <div className="stat-card-header-wrapper">
+                                                    <div className="stat-card-header">
+                                                        <div className="stat-number justify-content-end">{courses?.filter(c => c.completed_lesson?.length > 0).length || 0}</div>
+                                                        <div className="stat-label">Sedang Berlangsung</div>
                                                     </div>
-                                                    <div className="col-6">
-                                                        <div className="d-flex flex-column justify-content-between h-100 text-center">
-                                                            <div className="course-stat-number justify-content-end">{courses?.length || 0}</div>
-                                                            <div className="stat-label">Total Kursus</div>
-                                                        </div>
+                                                </div>
+                                                <div className="stat-card-header-wrapper">
+                                                    <div className="stat-card-header">
+                                                        <div className="stat-number justify-content-end">{courses?.length || 0}</div>
+                                                        <div className="stat-label">Total Kursus</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -336,9 +334,9 @@ function Courses() {
                                             <p className="text-muted mb-4">
                                                 Anda belum terdaftar di kursus manapun. Mulai perjalanan belajar Anda hari ini!
                                             </p>
-                                            <Link to="/search" className="btn btn-modern-primary">
-                                                <i className="fas fa-search me-2" style={{ verticalAlign: "middle", fontSize: "1rem", lineHeight: 1 }}></i>
-                                                Jelajahi Kursus
+                                            <Link to="/search" className="courses-empty-link-btn">
+                                                <i className="fas fa-search"></i>
+                                                <span>Jelajahi Kursus</span>
                                             </Link>
                                         </div>
                                     )}

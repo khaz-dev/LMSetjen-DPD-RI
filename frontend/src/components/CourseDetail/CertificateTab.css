@@ -363,7 +363,9 @@
     line-height: 1.1;
 }
 
-.course-title {
+/* ✨ PHASE 8c: Scoped course-title for certificate display - very specific styling for certificates */
+.certificate-body .course-title,
+.certificate-content .course-title {
     font-size: 2rem !important;
     color: #2c3e50;
     font-weight: 600 !important;

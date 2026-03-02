@@ -28,6 +28,10 @@ class SSOUserSerializer(serializers.Serializer):
     exp = serializers.IntegerField(required=False)  # Expiration
     name = serializers.CharField(required=False, allow_null=True)
     email = serializers.CharField(required=False, allow_null=True)
+    # ✨ PHASE 5.1: Support employee information fields from SSO
+    jenis_jabatan = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    golongan = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    kelas_jabatan = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     
     def validate_nip(self, value):
         if not value:
@@ -174,6 +178,10 @@ class SSOUserManager:
         nip = sso_data.get('nip')
         name = sso_data.get('name', '')
         email = sso_data.get('email', '')
+        # ✨ PHASE 5.1: Support jenis_jabatan from SSO data
+        jenis_jabatan = sso_data.get('jenis_jabatan', '')
+        golongan = sso_data.get('golongan', '')
+        kelas_jabatan = sso_data.get('kelas_jabatan', '')
         
         # Generate username and email if not provided
         if not email:
@@ -185,12 +193,16 @@ class SSOUserManager:
         # Generate unique username
         username = SSOUserManager.generate_unique_username(email)
         
-        # Create user
+        # Create user with full employee information from SSO
         user = User.objects.create(
             username=username,
             email=email,
             full_name=name,
             nip=nip,
+            # ✨ PHASE 5.1: Populate employee information fields
+            jenis_jabatan=jenis_jabatan,
+            golongan=golongan,
+            kelas_jabatan=kelas_jabatan,
             role='student',  # Default role for SSO users
             is_active=True,
             external_status='ACTIVE'
@@ -210,10 +222,15 @@ class SSOUserManager:
         - Merge Gmail accounts with SSO accounts
         - Keep all existing role permissions
         - Preserve name from sync (Sinkronisasi Data Pegawai) process
+        - ✨ PHASE 5.1: Sync employee information fields (jenis_jabatan, golongan, kelas_jabatan)
         """
         name = sso_data.get('name')
         email = sso_data.get('email')
         nip = sso_data.get('nip')
+        # ✨ PHASE 5.1: Get employee information from SSO data
+        jenis_jabatan = sso_data.get('jenis_jabatan')
+        golongan = sso_data.get('golongan')
+        kelas_jabatan = sso_data.get('kelas_jabatan')
         
         # ✨ PHASE 5: Only update full_name if currently blank
         # Preserve name set during sync, don't override on SSO login
@@ -227,6 +244,17 @@ class SSOUserManager:
         # This merges users who first signed up via Google
         if nip and not user.nip:
             user.nip = nip
+        
+        # ✨ PHASE 5.1: Sync employee information fields
+        # Only update if provided AND current value is empty
+        if jenis_jabatan and not user.jenis_jabatan:
+            user.jenis_jabatan = jenis_jabatan
+        
+        if golongan and not user.golongan:
+            user.golongan = golongan
+        
+        if kelas_jabatan and not user.kelas_jabatan:
+            user.kelas_jabatan = kelas_jabatan
         
         # Update external fields
         if 'iat' in sso_data:

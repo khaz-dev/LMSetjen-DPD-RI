@@ -4,6 +4,7 @@ import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
 import BaseHeader from "../partials/BaseHeader";
 import ReviewAbuseReportsTab from "./AdminReportsTabs/ReviewAbuseReportsTab";
+import QAReportsTab from "./AdminReportsTabs/QAReportsTab";  // ✨ PHASE 7.16: Import Q&A Reports Tab
 import "./ReportsAdmin.css";
 
 /**
@@ -32,19 +33,26 @@ function ReportsAdmin() {
             icon: "fas fa-flag",
             description: "Kelola laporan penyalahgunaan review yang dikirim oleh instruktur",
             component: <ReviewAbuseReportsTab />
+        },
+        {
+            id: "qa-reports",  // ✨ PHASE 7.16: Q&A Reports tab
+            label: "Laporan Pertanyaan & Balasan",
+            icon: "fas fa-comments",
+            description: "Kelola laporan pertanyaan dan balasan yang tidak pantas di forum diskusi",
+            component: <QAReportsTab />
         }
     ];
 
     return (
         <>
             <BaseHeader />
-            <section className="admin-dashboard pt-5 pb-5">
+            <section className="admin-dashboard pt-4 pb-5">
                 <div className="container">
                     <AdminHeader />
                     
                     <div className="reports-container">
                         {/* Page Header */}
-                        <div className="reports-page-header mb-5">
+                        <div className="reports-page-header mb-4">
                             <div className="reports-header-content">
                                 <h1 className="reports-page-title">
                                     <i className="fas fa-file-alt me-3"></i>

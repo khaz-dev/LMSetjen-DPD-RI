@@ -199,10 +199,13 @@ class ProfileSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='user.full_name', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
-    nip = serializers.CharField(source='user.nip', read_only=True)
-    golongan = serializers.CharField(source='user.golongan', read_only=True)
-    kelas_jabatan = serializers.CharField(source='user.kelas_jabatan', read_only=True)
-    jenis_jabatan = serializers.CharField(source='user.jenis_jabatan', read_only=True)
+    nip = serializers.CharField(source='user.nip', read_only=True, allow_null=True)
+    golongan = serializers.CharField(source='user.golongan', read_only=True, allow_null=True)
+    kelas_jabatan = serializers.CharField(source='user.kelas_jabatan', read_only=True, allow_null=True)
+    # ✨ PHASE 4.12.5: Allow null values for jenis_jabatan field
+    jenis_jabatan = serializers.CharField(source='user.jenis_jabatan', read_only=True, allow_null=True)
+    # ✨ PHASE 7.20: Include user_id for instructor badge comparison in forums
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
     
     # Computed fields for frontend display
     organization_unit_name = serializers.SerializerMethodField()
@@ -220,8 +223,19 @@ class ProfileSerializer(serializers.ModelSerializer):
         if instance.image and str(instance.image).strip():
             representation['image'] = str(instance.image)
         else:
-            # Return default profile image if no image is set
-            representation['image'] = "/images/placeholders/default-instructor.svg"
+            # ✨ PHASE 7.16+: Return empty string instead of frontend-specific path
+            # Let frontend handle default fallback, don't hard-code paths in backend
+            representation['image'] = ""
+        
+        # ✨ PHASE 4.12.5: Ensure jenis_jabatan is properly returned (could be null from database)
+        if 'jenis_jabatan' in representation and representation['jenis_jabatan'] is None:
+            representation['jenis_jabatan'] = ""
+        
+        # Also ensure other nullable user fields are properly converted
+        nullable_fields = ['nip', 'golongan', 'kelas_jabatan']
+        for field in nullable_fields:
+            if field in representation and representation[field] is None:
+                representation[field] = ""
             
         return representation
     
@@ -453,9 +467,10 @@ class BasicTeacherSerializer(serializers.ModelSerializer):
     """Simplified Teacher serializer for basic operations without related fields"""
     image = serializers.SerializerMethodField()
     full_name = serializers.SerializerMethodField()  # ✨ PHASE 4.39: Ensure full_name returns teacher name or user full_name fallback
+    user_id = serializers.IntegerField(source='user.id', read_only=True)  # ✨ PHASE 7.20: Include user_id for instructor badge comparison
 
     class Meta:
-        fields = ["id", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "about", "country"]
+        fields = ["id", "user_id", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "about", "country"]
         model = api_models.Teacher
     
     def get_image(self, obj):
@@ -534,17 +549,63 @@ class VariantSerializer(serializers.ModelSerializer):
 
 
 class Question_Answer_MessageSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer(many=False, read_only=True)
+    # ✨ PHASE 7.16: Explicitly get profile from user relationship using source
+    profile = ProfileSerializer(source='user.profile', many=False, read_only=True)
+    # ✨ PHASE 7.16: Include user info for display (full_name, id, etc)
+    user_id = serializers.IntegerField(read_only=True)
+    likes_count = serializers.SerializerMethodField()
+    # ✨ PHASE 7.24: Track if current user has liked this message
+    user_liked = serializers.SerializerMethodField()
 
     class Meta:
         fields = '__all__'
         model = api_models.Question_Answer_Message
+    
+    def get_likes_count(self, obj):
+        """✨ PHASE 7.16: Count total likes on this message"""
+        return api_models.Question_Answer_Message_Like.objects.filter(message=obj).count()
+    
+    def get_user_liked(self, obj):
+        """✨ PHASE 7.24: Check if current user has liked this message"""
+        # ✨ PHASE 7.24.3: Try to get user from context first (set by view)
+        request = self.context.get('request')
+        current_user = self.context.get('current_user')  # View passes this in context
+        
+        # If not in context, try authenticated request
+        if not current_user and request and request.user and request.user.is_authenticated:
+            current_user = request.user
+        
+        # If still no user, try to get user_id from request data (for AllowAny endpoints)
+        if not current_user and request:
+            user_id = request.data.get('user_id') or request.query_params.get('user_id')
+            if user_id:
+                try:
+                    current_user = User.objects.get(id=int(user_id))
+                except (User.DoesNotExist, ValueError):
+                    current_user = None
+        
+        if current_user:
+            return api_models.Question_Answer_Message_Like.objects.filter(
+                message=obj,
+                user=current_user
+            ).exists()
+        return False
 
 
 class Question_AnswerSerializer(serializers.ModelSerializer):
-    messages = Question_Answer_MessageSerializer(many=True)
-    profile = ProfileSerializer(many=False)
+    messages = Question_Answer_MessageSerializer(source='reply_messages', many=True, read_only=True)  # ✨ PHASE 7.20: Use source='reply_messages' to match ForeignKey related_name
+    profile = ProfileSerializer(many=False, read_only=True)  # ✨ PHASE 7.20: Added read_only=True for proper serialization
+    # ✨ PHASE 7.21: Explicitly include user_id for instructor badge comparison
+    user_id = serializers.IntegerField(read_only=True)
     course = serializers.SerializerMethodField()  # ✨ PHASE 4.16: Return full course object for QA
+    # ✨ PHASE 7.7: Return lesson context for filtering and display
+    variant_item = serializers.SerializerMethodField()
+    variant = serializers.SerializerMethodField()
+    # ✨ PHASE 7.16: Count likes for this question
+    likes_count = serializers.SerializerMethodField()
+    reports_count = serializers.SerializerMethodField()
+    # ✨ PHASE 7.24: Track if current user has liked this question
+    user_liked = serializers.SerializerMethodField()
     
     class Meta:
         fields = '__all__'
@@ -559,6 +620,60 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
                 'course_id': obj.course.course_id,
             }
         return None
+
+    def get_variant_item(self, obj):
+        """Return lesson context information"""
+        if obj.variant_item:
+            return {
+                'variant_item_id': obj.variant_item.variant_item_id,
+                'title': obj.variant_item.title,
+                'variant_id': obj.variant_item.variant.variant_id,
+            }
+        return None
+
+    def get_variant(self, obj):
+        """Return section (Bagian) context information"""
+        if obj.variant_item and obj.variant_item.variant:
+            return {
+                'variant_id': obj.variant_item.variant.variant_id,
+                'title': obj.variant_item.variant.title,
+            }
+        return None
+
+    def get_likes_count(self, obj):
+        """✨ PHASE 7.16: Count total likes on this question"""
+        return api_models.Question_Answer_Like.objects.filter(question=obj).count()
+
+    def get_reports_count(self, obj):
+        """✨ PHASE 7.16: Count total reports on this question"""
+        return api_models.Question_Answer_Report.objects.filter(question=obj).count()
+    
+    def get_user_liked(self, obj):
+        """✨ PHASE 7.24: Check if current user has liked this question"""
+        # ✨ PHASE 7.24.3: Try to get user from context first (set by view)
+        request = self.context.get('request')
+        current_user = self.context.get('current_user')  # View passes this in context
+        
+        # If not in context, try authenticated request
+        if not current_user and request and request.user and request.user.is_authenticated:
+            current_user = request.user
+        
+        # If still no user, try to get user_id from request data (for AllowAny endpoints)
+        if not current_user and request:
+            user_id = request.data.get('user_id') or request.query_params.get('user_id')
+            if user_id:
+                try:
+                    current_user = User.objects.get(id=int(user_id))
+                except (User.DoesNotExist, ValueError):
+                    current_user = None
+        
+        if current_user:
+            return api_models.Question_Answer_Like.objects.filter(
+                question=obj,
+                user=current_user
+            ).exists()
+        return False
+
 
 
 
@@ -750,6 +865,32 @@ class ReviewAbuseSerializer(serializers.ModelSerializer):
         fields = ['id', 'review', 'reported_by', 'reported_by_name', 'reason', 'description', 'status', 'reported_at', 'reviewed_at', 'review_notes', 'closed_by_reporter', 'closed_by_reporter_at']
         model = api_models.ReviewAbuse
         read_only_fields = ['review', 'reported_by', 'reported_by_name', 'reported_at', 'status', 'reviewed_at', 'review_notes', 'closed_by_reporter_at']
+
+
+# ✨ PHASE 7.16: Q&A Report Serializers
+class QuestionAnswerReportSerializer(serializers.ModelSerializer):
+    reported_by_name = serializers.CharField(source='reported_by.full_name', read_only=True)
+    question_title = serializers.CharField(source='question.title', read_only=True)
+    question_user = serializers.CharField(source='question.user.full_name', read_only=True)
+    reviewed_by_name = serializers.CharField(source='reviewed_by.full_name', read_only=True, required=False)
+    
+    class Meta:
+        fields = ['id', 'question', 'question_title', 'question_user', 'reported_by', 'reported_by_name', 'reason', 'description', 'status', 'reported_at', 'reviewed_at', 'reviewed_by', 'reviewed_by_name', 'review_notes']
+        model = api_models.Question_Answer_Report
+        read_only_fields = ['question', 'reported_by', 'reported_by_name', 'reported_at']
+
+
+class QuestionAnswerMessageReportSerializer(serializers.ModelSerializer):
+    reported_by_name = serializers.CharField(source='reported_by.full_name', read_only=True)
+    message_content = serializers.CharField(source='message.message', read_only=True)
+    message_user = serializers.CharField(source='message.user.full_name', read_only=True)
+    reviewed_by_name = serializers.CharField(source='reviewed_by.full_name', read_only=True, required=False)
+    
+    class Meta:
+        fields = ['id', 'message', 'message_content', 'message_user', 'reported_by', 'reported_by_name', 'reason', 'description', 'status', 'reported_at', 'reviewed_at', 'reviewed_by', 'reviewed_by_name', 'review_notes']
+        model = api_models.Question_Answer_Message_Report
+        read_only_fields = ['message', 'reported_by', 'reported_by_name', 'reported_at']
+
 
 class NotificationSerializer(serializers.ModelSerializer):
 
@@ -1020,7 +1161,25 @@ class CourseSerializer(serializers.ModelSerializer):
         model = api_models.Course
     
     def get_qa_count(self, obj):
-        """✨ PHASE 4.16: Count total questions for this course"""
+        """✨ PHASE 4.16 + PHASE 7.13 FIX: Count total questions from published version if exists
+        
+        CRITICAL FIX: When returning draft courses, check if published version exists.
+        If yes, count questions from published version (where they're actually stored).
+        This ensures instructor Q&A shows correct question counts even for draft courses.
+        
+        Logic:
+        1. If this is a draft course with published copies → count from published
+        2. If this is a published course → count from this course
+        3. If this is draft with no published yet → count from draft (0)
+        """
+        # Check if this course has published copies
+        if not obj.is_published_version:
+            published_copy = obj.published_copies.filter(is_published_version=True).first()
+            if published_copy:
+                # Count questions from the published version
+                return api_models.Question_Answer.objects.filter(course=published_copy).count()
+        
+        # Either it's a published course, or draft with no published copies yet
         return api_models.Question_Answer.objects.filter(course=obj).count()
     
     def get_quizzes(self, obj):
@@ -1142,10 +1301,12 @@ class CourseEditSerializer(serializers.ModelSerializer):
     learning_outcomes = CourseLearningOutcomeSerializer(many=True, read_only=True, required=False)
     approved_by_name = serializers.CharField(source='approved_by.get_full_name', read_only=True, allow_null=True)
     published_version = serializers.SerializerMethodField()  # ✨ PHASE 4.75: Include published version data
+    qa_count = serializers.SerializerMethodField()  # ✨ PHASE 7.13: Add QA count for course detail pages
     
     class Meta:
         # ✨ PHASE 4.85: Added "features", "requirements", "learning_outcomes"
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count", "intro_video_source", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version"]
+        # ✨ PHASE 7.13: Added "qa_count" to CourseEditSerializer
+        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count", "intro_video_source", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
         model = api_models.Course
     
     def get_quizzes(self, obj):
@@ -1201,9 +1362,28 @@ class CourseEditSerializer(serializers.ModelSerializer):
                         published_copies.quizzes.all(),
                         many=True,
                         read_only=True
-                    ).data
+                    ).data,
+                    # ✨ PHASE 7.13: Add qa_count for published version
+                    # Frontend needs correct question count from published course, not draft
+                    'qa_count': api_models.Question_Answer.objects.filter(course=published_copies).count()
                 }
         return None
+    
+    def get_qa_count(self, obj):
+        """✨ PHASE 7.13: Count total questions from published version if exists
+        
+        Same logic as CourseSerializer but for course detail/editing pages.
+        Ensures instructor sees correct question counts when editing draft courses.
+        """
+        # Check if this course has published copies
+        if not obj.is_published_version:
+            published_copy = obj.published_copies.filter(is_published_version=True).first()
+            if published_copy:
+                # Count questions from the published version
+                return api_models.Question_Answer.objects.filter(course=published_copy).count()
+        
+        # Either it's a published course, or draft with no published copies yet
+        return api_models.Question_Answer.objects.filter(course=obj).count()
     
     def to_representation(self, instance):
         """Override to return full URL for image and file fields"""

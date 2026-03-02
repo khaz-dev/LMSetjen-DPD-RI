@@ -21,6 +21,7 @@ import "./VideoPlayerGoogle.css";
 
 const VideoPlayerGoogle = forwardRef(({
     variantItem,
+    variantContext,  // ✨ PHASE 6.3: Bagian/section context for header display
     onClose,
     handleMarkLessonAsCompleted,
     courseId,  // ✨ PHASE 4.144+: Add courseId prop for completion endpoint
@@ -282,9 +283,20 @@ const VideoPlayerGoogle = forwardRef(({
                         <i className="fab fa-google"></i>
                     </div>
                     <div className="video-player-title-wrapper">
-                        <div className="video-player-title">{variantItem?.title}</div>
+                        {/* ✨ PHASE 6.3: Show Bagian context in title */}
+                        <div className="video-player-title">
+                            {variantContext ? (
+                                <>
+                                    <span style={{ fontSize: '0.85em', opacity: 0.9 }}>{variantContext.variantTitle}</span>
+                                    <span style={{ margin: '0 0.5rem', opacity: 0.7 }}>|</span>
+                                    <span style={{ fontWeight: 600 }}>{variantItem?.title}</span>
+                                </>
+                            ) : (
+                                variantItem?.title
+                            )}
+                        </div>
                         <small className="video-player-progress-info">
-                            Google Drive Video - {String(Math.floor(elapsedTime / 60)).padStart(2, '0')}:{String(Math.floor(elapsedTime % 60)).padStart(2, '0')} / {String(Math.floor(durationSeconds / 60)).padStart(2, '0')}:{String(Math.floor(durationSeconds % 60)).padStart(2, '0')} | {progressPercentage}%
+                            {String(Math.floor(elapsedTime / 60)).padStart(2, '0')}:{String(Math.floor(elapsedTime % 60)).padStart(2, '0')} / {String(Math.floor(durationSeconds / 60)).padStart(2, '0')}:{String(Math.floor(durationSeconds % 60)).padStart(2, '0')} | {progressPercentage}%
                         </small>
                     </div>
                 </div>

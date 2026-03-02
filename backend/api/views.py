@@ -873,9 +873,11 @@ class TestimonialListAPIView(generics.GenericAPIView):
             # [*] PHASE 4.11: Accept role parameter to filter testimonials by the role they testified as
             role = request.query_params.get('role', None)
             
+            # ✨ PHASE 4.12.1: Fetch ONLY platform testimonials (course__isnull=True), NOT course reviews
             # Fetch all active reviews with related user and profile data
             reviews_query = api_models.Review.objects.filter(
-                active=True
+                active=True,
+                course__isnull=True  # ✨ PHASE 4.12.1: CRITICAL FIX - Only show platform testimonials, not course reviews
             ).select_related('user', 'user__profile').order_by('-date')
             
             # [*] PHASE 4.11: Filter by review role, NOT user role flags
@@ -902,12 +904,29 @@ class TestimonialListAPIView(generics.GenericAPIView):
                 user = review.user
                 profile = user.profile if user else None
                 
+                # ✨ PHASE 4.12.1: Fixed field references to correctly access organization_unit and position
+                org_unit_name = 'Setjen DPD RI'
+                position_name = ''
+                
+                if profile and profile.organization_unit:
+                    org_unit_name = profile.organization_unit.name
+                
+                if profile and profile.position:
+                    position_name = profile.position.name
+                elif user and user.kelas_jabatan:
+                    position_name = user.kelas_jabatan
+                
+                # ✨ PHASE 4.12.2: Determine if user is public (no NIP = not from Pegawai AWS Sync)
+                is_public_user = not (user and user.nip)
+                
                 testimonials_data.append({
                     'id': review.id,
                     'full_name': user.full_name if user else 'Anonymous',
                     'golongan': user.golongan if user else '',
-                    'position': user.kelas_jabatan if user else '',
-                    'organization': user.unit_organisasi.name if hasattr(user, 'unit_organisasi') else 'Setjen DPD RI',
+                    'position': position_name,
+                    'unit_organisasi': org_unit_name,  # ✨ PHASE 4.12.1: Renamed from 'organization' for clarity
+                    'nip': user.nip if user else None,  # ✨ PHASE 4.12.2: Include NIP for public user distinction
+                    'is_public_user': is_public_user,  # ✨ PHASE 4.12.2: Flag for public users (no NIP from Pegawai AWS)
                     'review': review.review,
                     'rating': review.rating,
                     'role': review.role,  # [*] PHASE 4.11: Include role in response
@@ -2109,6 +2128,95 @@ class TeacherFilterAPIView(generics.GenericAPIView):
         })
 
 
+class EmployeeInfoOptionsAPIView(generics.GenericAPIView):
+    """
+    GET /api/v1/employee/options/
+    Get dropdown options for employee information (organizations, positions, golongan, jenis_jabatan)
+    Used for employee profile editing
+    
+    ✨ PHASE 5.2: Reads actual values from database to ensure options match real data
+    
+    Returns:
+    {
+        "organizations": [{"id": 1, "name": "Bidang Humas"}, ...],  // From OrganizationUnit table
+        "positions": [{"id": 1, "name": "Kepala Bagian"}, ...],     // From Position table
+        "golongan": ["I/a", "II/a", "III/c", ...],                 // Distinct values from User.golongan
+        "jenis_jabatan": ["Struktural", "Fungsional", ...]         // Distinct values from User.jenis_jabatan
+    }
+    
+    Note: golongan and jenis_jabatan lists are dynamically generated from database values,
+    not hardcoded. This ensures dropdown options always match the actual user data.
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request, *args, **kwargs):
+        try:
+            # ✨ PHASE 4.12.3: Get all organization units
+            from userauths.models import OrganizationUnit, Position
+            
+            organizations = OrganizationUnit.objects.all().values('id', 'name').order_by('name')
+            positions = Position.objects.all().values('id', 'name').order_by('name')
+            
+            # ✨ PHASE 5.2: Read actual golongan values from database instead of hardcoded list
+            # This ensures dropdown options match the actual data in the system
+            golongan_choices = list(
+                User.objects.filter(
+                    golongan__isnull=False
+                ).exclude(
+                    golongan=''
+                ).values_list('golongan', flat=True).distinct().order_by('golongan')
+            )
+            
+            # Fallback to standard government golongan if no data in database
+            if not golongan_choices:
+                golongan_choices = [
+                    "I/a", "I/b", "I/c", "I/d",
+                    "II/a", "II/b", "II/c", "II/d",
+                    "III/a", "III/b", "III/c", "III/d",
+                    "IV/a", "IV/b", "IV/c", "IV/d", "IV/e"
+                ]
+            
+            # ✨ PHASE 5.2: Read actual jenis_jabatan values from database instead of hardcoded list
+            # This ensures dropdown options match the actual data in the system
+            jenis_jabatan_choices = list(
+                User.objects.filter(
+                    jenis_jabatan__isnull=False
+                ).exclude(
+                    jenis_jabatan=''
+                ).values_list('jenis_jabatan', flat=True).distinct().order_by('jenis_jabatan')
+            )
+            
+            # Fallback to standard position types if no data in database
+            if not jenis_jabatan_choices:
+                jenis_jabatan_choices = [
+                    "Struktural",      # Structural position
+                    "Fungsional",      # Functional position
+                    "Ahli",            # Expert/Specialist position
+                    "Reguler"          # Regular position
+                ]
+            
+            print(f"📊 Employee info options loaded from database:")
+            print(f"   - Golongan: {len(golongan_choices)} unique values")
+            print(f"   - Jenis Jabatan: {len(jenis_jabatan_choices)} unique values")
+            
+            return Response({
+                'organizations': list(organizations),
+                'positions': list(positions),
+                'golongan': golongan_choices,
+                'jenis_jabatan': jenis_jabatan_choices
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"Error in EmployeeInfoOptionsAPIView: {str(e)}")
+            return Response({
+                'error': str(e),
+                'organizations': [],
+                'positions': [],
+                'golongan': [],
+                'jenis_jabatan': []
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # [*] PHASE 4.6: Integrated Search with Advanced Filters
 
 class AdvancedSearchAPIView(generics.GenericAPIView):
@@ -2333,6 +2441,20 @@ class StudentCourseDetailAPIView(generics.RetrieveAPIView):
             return api_models.EnrolledCourse.objects.get(user=user, enrollment_id=enrollment_id)
         except api_models.EnrolledCourse.DoesNotExist:
             raise Http404("Enrollment not found")
+    
+    # ✨ PHASE 7.24.3: Pass user to serializer context so get_user_liked can check likes
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        user_id = self.kwargs.get('user_id')
+        
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+                context['current_user'] = user
+            except User.DoesNotExist:
+                context['current_user'] = None
+        
+        return context
         
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
@@ -2954,14 +3076,25 @@ class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
         user_id = request.data['user_id']
         title = request.data['title']
         message = request.data['message']
+        # ✨ PHASE 7.7: Extract variant_item_id to store lesson context
+        variant_item_id = request.data.get('variant_item_id', None)
 
         user = User.objects.get(id=user_id)
         course = api_models.Course.objects.get(id=course_id)
         
+        # Get variant_item if provided
+        variant_item = None
+        if variant_item_id:
+            try:
+                variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
+            except api_models.VariantItem.DoesNotExist:
+                variant_item = None
+        
         question = api_models.Question_Answer.objects.create(
             course=course,
             user=user,
-            title=title
+            title=title,
+            variant_item=variant_item  # Save the lesson context
         )
 
         api_models.Question_Answer_Message.objects.create(
@@ -3041,6 +3174,595 @@ class QuestionAnswerMessageSendAPIView(generics.CreateAPIView):
                 {"error": f"Internal server error: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+# ✨ PHASE 7.16: Q&A Like endpoint
+class QuestionAnswerLikeAPIView(generics.CreateAPIView):
+    """
+    Q&A Like API - Toggle like on a question/answer
+    
+    POST /api/v1/student/question-answer-like/{qa_id}/
+    Body: {user_id, course_id}
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def create(self, request, qa_id=None):
+        try:
+            user_id = request.data.get('user_id')
+            course_id = request.data.get('course_id')
+
+            if not all([user_id, course_id, qa_id]):
+                return Response(
+                    {"error": "Missing required fields: user_id, course_id, qa_id"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user = User.objects.get(id=user_id)
+            question = api_models.Question_Answer.objects.get(qa_id=qa_id)
+            
+            # Toggle like - if exists, delete it; if not, create it
+            like_obj, created = api_models.Question_Answer_Like.objects.get_or_create(
+                question=question,
+                user=user
+            )
+            
+            if not created:
+                # Already liked, so unlike it
+                like_obj.delete()
+                message = "Tarik Suka berhasil"
+            else:
+                message = "Suka berhasil"
+            
+            # Count current likes
+            likes_count = api_models.Question_Answer_Like.objects.filter(question=question).count()
+            
+            return Response({
+                "message": message,
+                "likes_count": likes_count,
+                "liked": created
+            }, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"error": "User tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.Question_Answer.DoesNotExist:
+            return Response({"error": "Question tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ✨ PHASE 7.16: Q&A Message Like endpoint
+class QuestionAnswerMessageLikeAPIView(generics.CreateAPIView):
+    """
+    Q&A Message Like API - Toggle like on a message/reply
+    
+    POST /api/v1/student/question-answer-message-like/{qa_id}/
+    Body: {user_id, course_id, message_id}
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def create(self, request, qa_id=None):
+        try:
+            user_id = request.data.get('user_id')
+            course_id = request.data.get('course_id')
+            message_id = request.data.get('message_id')
+
+            if not all([user_id, course_id, qa_id, message_id]):
+                return Response(
+                    {"error": "Missing required fields: user_id, course_id, qa_id, message_id"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user = User.objects.get(id=user_id)
+            # ✨ PHASE 7.16: Get message by ID and verify it belongs to the correct question (via question__qa_id)
+            message = api_models.Question_Answer_Message.objects.get(id=message_id, question__qa_id=qa_id)
+            
+            # Toggle like - if exists, delete it; if not, create it
+            like_obj, created = api_models.Question_Answer_Message_Like.objects.get_or_create(
+                message=message,
+                user=user
+            )
+            
+            if not created:
+                # Already liked, so unlike it
+                like_obj.delete()
+                message_text = "Tarik Suka berhasil"
+            else:
+                message_text = "Suka berhasil"
+            
+            # Count current likes
+            likes_count = api_models.Question_Answer_Message_Like.objects.filter(message=message).count()
+            
+            return Response({
+                "message": message_text,
+                "likes_count": likes_count,
+                "liked": created
+            }, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"error": "User tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.Question_Answer_Message.DoesNotExist:
+            return Response({"error": "Message tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ✨ PHASE 7.16: Q&A Report endpoint
+class QuestionAnswerReportAPIView(generics.CreateAPIView):
+    """
+    Q&A Report API - Report inappropriate question/answer
+    
+    POST /api/v1/student/question-answer-report/{qa_id}/
+    Body: {user_id, reason, description}
+    Reasons: spam, inappropriate, offensive, misinformation, other
+    
+    PUT /api/v1/student/question-answer-report/{report_id}/
+    Body: {user_id, reason, description, status}
+    Purpose: Update existing report (edit mode) and reset status to pending
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def create(self, request, *args, **kwargs):
+        try:
+            qa_id = self.kwargs.get('qa_id')
+            user_id = request.data.get('user_id')
+            reason = request.data.get('reason', 'other')
+            description = request.data.get('description', '')
+
+            print(f"DEBUG: QuestionAnswerReportAPIView.create() called")
+            print(f"  qa_id: {qa_id}")
+            print(f"  user_id: {user_id}")
+            print(f"  reason: {reason}")
+            print(f"  description: {description}")
+
+            if not all([user_id, qa_id]):
+                return Response(
+                    {"error": "Missing required fields: user_id, qa_id"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate reason choice
+            valid_reasons = ['spam', 'inappropriate', 'offensive', 'misinformation', 'other']
+            if reason not in valid_reasons:
+                return Response(
+                    {"error": f"Invalid reason. Valid options: {', '.join(valid_reasons)}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            print(f"  Getting user with id={user_id}")
+            user = User.objects.get(id=user_id)
+            print(f"  User found: {user}")
+            
+            print(f"  Getting question with qa_id={qa_id}")
+            question = api_models.Question_Answer.objects.get(qa_id=qa_id)
+            print(f"  Question found: {question}")
+            
+            # Check if already reported by this user
+            existing_report = api_models.Question_Answer_Report.objects.filter(
+                question=question,
+                reported_by=user
+            ).first()
+            
+            if existing_report:
+                return Response({
+                    "error": "Anda sudah melaporkan pertanyaan ini sebelumnya",
+                    "message": "Report sudah ada"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create report
+            print(f"  Creating report...")
+            report = api_models.Question_Answer_Report.objects.create(
+                question=question,
+                reported_by=user,
+                reason=reason,
+                description=description
+            )
+            print(f"  Report created: {report.id}")
+            
+            return Response({
+                "message": "Laporan berhasil dikirim. Terima kasih atas laporannya.",
+                "report_id": report.id
+            }, status=status.HTTP_201_CREATED)
+
+        except User.DoesNotExist:
+            print(f"ERROR: User not found with id={user_id}")
+            return Response({"error": "User tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.Question_Answer.DoesNotExist:
+            print(f"ERROR: Question not found with qa_id={qa_id}")
+            return Response({"error": "Question tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"ERROR in QuestionAnswerReportAPIView: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request, *args, **kwargs):
+        """
+        ✨ PHASE 7.16+: Update existing Q&A report (edit mode)
+        PUT /api/v1/student/question-answer-report/{report_id}/
+        Body: {user_id, reason, description, status}
+        """
+        try:
+            report_id = self.kwargs.get('qa_id')  # Note: URL param is qa_id but it's actually the report_id
+            user_id = request.data.get('user_id')
+            reason = request.data.get('reason', 'other')
+            description = request.data.get('description', '')
+            status_update = request.data.get('status', 'pending')
+
+            print(f"DEBUG: QuestionAnswerReportAPIView.put() called")
+            print(f"  report_id: {report_id}")
+            print(f"  user_id: {user_id}")
+            print(f"  reason: {reason}")
+            print(f"  description: {description}")
+            print(f"  status: {status_update}")
+
+            if not all([user_id, report_id]):
+                return Response(
+                    {"error": "Missing required fields: user_id, report_id"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate reason choice
+            valid_reasons = ['spam', 'inappropriate', 'offensive', 'misinformation', 'other']
+            if reason not in valid_reasons:
+                return Response(
+                    {"error": f"Invalid reason. Valid options: {', '.join(valid_reasons)}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Get existing report
+            print(f"  Getting report with id={report_id}")
+            report = api_models.Question_Answer_Report.objects.get(id=report_id)
+            print(f"  Report found: {report}")
+
+            # Verify the user is the one who created this report
+            if report.reported_by.id != int(user_id):
+                return Response(
+                    {"error": "Anda tidak memiliki izin untuk mengubah laporan ini"}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Update report fields
+            print(f"  Updating report...")
+            report.reason = reason
+            report.description = description
+            # Always reset to pending when user re-applies
+            report.status = 'pending'
+            report.save()
+            print(f"  Report updated: {report.id}")
+
+            return Response({
+                "message": "Laporan berhasil diperbarui. Laporan akan ditinjau ulang oleh Admin.",
+                "report_id": report.id,
+                "status": report.status
+            }, status=status.HTTP_200_OK)
+
+        except api_models.Question_Answer_Report.DoesNotExist:
+            print(f"ERROR: Report not found with id={report_id}")
+            return Response({"error": "Laporan tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            print(f"ERROR: User not found with id={user_id}")
+            return Response({"error": "User tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"ERROR in QuestionAnswerReportAPIView.put: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ✨ PHASE 7.16: Q&A Message Report endpoint
+class QuestionAnswerMessageReportAPIView(generics.CreateAPIView):
+    """
+    Q&A Message Report API - Report inappropriate message/reply
+    
+    POST /api/v1/student/question-answer-message-report/{qa_id}/
+    Body: {user_id, reason, description}
+    Reasons: spam, inappropriate, offensive, misinformation, other
+    Note: qa_id here refers to the message qa_id (qam_id), not the question qa_id
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def create(self, request, *args, **kwargs):
+        try:
+            qa_id = self.kwargs.get('qa_id')
+            user_id = request.data.get('user_id')
+            reason = request.data.get('reason', 'other')
+            description = request.data.get('description', '')
+
+            print(f"DEBUG: QuestionAnswerMessageReportAPIView.create() called")
+            print(f"  qa_id: {qa_id}")
+            print(f"  user_id: {user_id}")
+            print(f"  reason: {reason}")
+            print(f"  description: {description}")
+
+            if not all([user_id, qa_id]):
+                return Response(
+                    {"error": "Missing required fields: user_id, qa_id"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate reason choice
+            valid_reasons = ['spam', 'inappropriate', 'offensive', 'misinformation', 'other']
+            if reason not in valid_reasons:
+                return Response(
+                    {"error": f"Invalid reason. Valid options: {', '.join(valid_reasons)}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            print(f"  Getting user with id={user_id}")
+            user = User.objects.get(id=user_id)
+            print(f"  User found: {user}")
+            
+            print(f"  Getting message with qa_id={qa_id}")
+            # qa_id here is actually the message qa_id (qam_id)
+            message = api_models.Question_Answer_Message.objects.get(qa_id=qa_id)
+            print(f"  Message found: {message}")
+            
+            # Check if already reported by this user
+            existing_report = api_models.Question_Answer_Message_Report.objects.filter(
+                message=message,
+                reported_by=user
+            ).first()
+            
+            if existing_report:
+                return Response({
+                    "error": "Anda sudah melaporkan pesan ini sebelumnya",
+                    "message": "Report sudah ada"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create report
+            print(f"  Creating message report...")
+            report = api_models.Question_Answer_Message_Report.objects.create(
+                message=message,
+                reported_by=user,
+                reason=reason,
+                description=description
+            )
+            print(f"  Message report created: {report.id}")
+            
+            return Response({
+                "message": "Laporan berhasil dikirim. Terima kasih atas laporannya.",
+                "report_id": report.id
+            }, status=status.HTTP_201_CREATED)
+
+        except User.DoesNotExist:
+            print(f"ERROR: User not found with id={user_id}")
+            return Response({"error": "User tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.Question_Answer_Message.DoesNotExist:
+            print(f"ERROR: Message not found with qa_id={qa_id}")
+            return Response({"error": "Message tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"ERROR in QuestionAnswerMessageReportAPIView: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request, *args, **kwargs):
+        """
+        ✨ PHASE 7.16+: Update existing Q&A message report (edit mode)
+        PUT /api/v1/student/question-answer-message-report/{report_id}/
+        Body: {user_id, reason, description, status}
+        """
+        try:
+            report_id = self.kwargs.get('qa_id')  # Note: URL param is qa_id but it's actually the report_id
+            user_id = request.data.get('user_id')
+            reason = request.data.get('reason', 'other')
+            description = request.data.get('description', '')
+            status_update = request.data.get('status', 'pending')
+
+            print(f"DEBUG: QuestionAnswerMessageReportAPIView.put() called")
+            print(f"  report_id: {report_id}")
+            print(f"  user_id: {user_id}")
+            print(f"  reason: {reason}")
+            print(f"  description: {description}")
+            print(f"  status: {status_update}")
+
+            if not all([user_id, report_id]):
+                return Response(
+                    {"error": "Missing required fields: user_id, report_id"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate reason choice
+            valid_reasons = ['spam', 'inappropriate', 'offensive', 'misinformation', 'other']
+            if reason not in valid_reasons:
+                return Response(
+                    {"error": f"Invalid reason. Valid options: {', '.join(valid_reasons)}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Get existing message report
+            print(f"  Getting message report with id={report_id}")
+            report = api_models.Question_Answer_Message_Report.objects.get(id=report_id)
+            print(f"  Message report found: {report}")
+
+            # Verify the user is the one who created this report
+            if report.reported_by.id != int(user_id):
+                return Response(
+                    {"error": "Anda tidak memiliki izin untuk mengubah laporan ini"}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Update report fields
+            print(f"  Updating message report...")
+            report.reason = reason
+            report.description = description
+            # Always reset to pending when user re-applies
+            report.status = 'pending'
+            report.save()
+            print(f"  Message report updated: {report.id}")
+
+            return Response({
+                "message": "Laporan berhasil diperbarui. Laporan akan ditinjau ulang oleh Admin.",
+                "report_id": report.id,
+                "status": report.status
+            }, status=status.HTTP_200_OK)
+
+        except api_models.Question_Answer_Message_Report.DoesNotExist:
+            print(f"ERROR: Message report not found with id={report_id}")
+            return Response({"error": "Laporan tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            print(f"ERROR: User not found with id={user_id}")
+            return Response({"error": "User tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"ERROR in QuestionAnswerMessageReportAPIView.put: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ✨ PHASE 7.16: Fetch Q&A Reports for User
+class StudentQAReportsAPIView(generics.ListAPIView):
+    """
+    Get Q&A reports submitted by the current user for a course
+    
+    GET /api/v1/student/qa-reports/{course_id}/
+    Returns: List of Q&A reports submitted by this user
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user_id_str = request.query_params.get('user_id')
+            course_id_str = self.kwargs.get('course_id')
+
+            print(f"\n[StudentQAReportsAPIView] Request received")
+            print(f"  user_id param: {user_id_str} (type: {type(user_id_str).__name__})")
+            print(f"  course_id param: {course_id_str} (type: {type(course_id_str).__name__})")
+
+            # ✨ Validate user_id
+            try:
+                user_id = int(user_id_str) if user_id_str else None
+            except (ValueError, TypeError) as e:
+                print(f"[StudentQAReportsAPIView] ❌ Invalid user_id type: {e}")
+                return Response(
+                    {"error": f"Invalid user_id: {e}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # ✨ PHASE 7.17+: Make course_id optional - get all user reports or filtered by course
+            if not user_id:
+                print(f"[StudentQAReportsAPIView] ❌ Missing required user_id parameter")
+                return Response(
+                    {"error": "Missing user_id parameter"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            print(f"[StudentQAReportsAPIView] ✅ Converted user_id={user_id} (int)")
+
+            # ✨ PHASE 7.16+: Enhanced endpoint to include admin review feedback
+            # Get Q&A reports for this user (all courses, or filtered by course if provided)
+            print(f"[StudentQAReportsAPIView] Querying Question_Answer_Report...")
+            
+            # Build filter dynamically
+            # ✨ PHASE 7.17+: FIX - course_id from frontend is ShortUUID, need to find actual course database id
+            qa_filter = {'reported_by': user_id}
+            actual_course_db_id = None
+            
+            if course_id_str:
+                print(f"  Frontend provided course_id={course_id_str} (ShortUUID)")
+                try:
+                    # course_id_str is the Course.course_id field (ShortUUID), need to find Course database id
+                    course_obj = api_models.Course.objects.get(course_id=course_id_str)
+                    actual_course_db_id = course_obj.id
+                    qa_filter['question__course_id'] = actual_course_db_id
+                    print(f"  ✅ Resolved ShortUUID {course_id_str} → Course database id={actual_course_db_id}")
+                    print(f"  Filters: reported_by={user_id}, question__course_id={actual_course_db_id}")
+                except api_models.Course.DoesNotExist:
+                    print(f"  ❌ Course with course_id (ShortUUID)={course_id_str} not found, will return all user reports")
+            else:
+                print(f"  No course_id provided, fetching all user reports")
+            
+            # ✨ DIAGNOSTIC: Show what records exist before/after filtering
+            print(f"\n[StudentQAReportsAPIView] 🔍 DIAGNOSTIC CHECK")
+            all_reports = api_models.Question_Answer_Report.objects.all()
+            print(f"  Total reports in database: {all_reports.count()}")
+            
+            user_reports = api_models.Question_Answer_Report.objects.filter(reported_by=user_id)
+            print(f"  Reports by user_id={user_id}: {user_reports.count()}")
+            if user_reports.exists():
+                for r in user_reports[:3]:
+                    print(f"    - ID {r.id}: Q{r.question.qa_id}, Course DB id {r.question.course_id}, Status {r.status}")
+            
+            if actual_course_db_id:
+                course_reports = api_models.Question_Answer_Report.objects.filter(question__course_id=actual_course_db_id)
+                print(f"  Reports for course DB id={actual_course_db_id}: {course_reports.count()}")
+                if course_reports.exists():
+                    for r in course_reports[:3]:
+                        print(f"    - ID {r.id}: Q{r.question.qa_id}, User {r.reported_by_id}, Status {r.status}")
+            
+            print(f"  Applying filter...")
+            
+            question_reports = list(
+                api_models.Question_Answer_Report.objects.filter(
+                    **qa_filter
+                ).values(
+                    'id', 
+                    'question__qa_id',
+                    'question__course_id',  # Include course database id
+                    'status', 
+                    'reason', 
+                    'reported_at',
+                    'reviewed_at',  # When admin reviewed
+                    'review_notes',  # Admin's decision/feedback
+                    'reviewed_by__first_name',  # Admin's name
+                    'reviewed_by__username',  # Admin's username as fallback
+                    'description'  # Original report description
+                )
+            )
+            
+            print(f"[StudentQAReportsAPIView] Question reports found: {len(question_reports)}")
+            if question_reports:
+                for r in question_reports:
+                    print(f"  ✅ Found: Q{r['question__qa_id']}, Course DB id {r['question__course_id']}, Status {r['status']}")
+            
+            print(f"[StudentQAReportsAPIView] Querying Question_Answer_Message_Report...")
+            
+            # Build message filter dynamically
+            msg_filter = {'reported_by': user_id}
+            
+            if actual_course_db_id:
+                msg_filter['message__course_id'] = actual_course_db_id
+            
+            message_reports = list(
+                api_models.Question_Answer_Message_Report.objects.filter(
+                    **msg_filter
+                ).values(
+                    'id', 
+                    'message__qa_id',
+                    'message__course_id',  # Include course database id
+                    'status', 
+                    'reason', 
+                    'reported_at',
+                    'reviewed_at',  # When admin reviewed
+                    'review_notes',  # Admin's decision/feedback
+                    'reviewed_by__first_name',  # Admin's name
+                    'reviewed_by__username',  # Admin's username as fallback
+                    'description'  # Original report description
+                )
+            )
+            
+            print(f"[StudentQAReportsAPIView] Message reports found: {len(message_reports)}")
+
+            # Format response
+            reports = {
+                'question_reports': question_reports,
+                'message_reports': message_reports
+            }
+
+            print(f"[StudentQAReportsAPIView] Returning response with {len(question_reports)} question reports and {len(message_reports)} message reports")
+            return Response(reports, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(f"ERROR in StudentQAReportsAPIView: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class TeacherSummaryAPIView(generics.ListAPIView):
     serializer_class = api_serializer.TeacherSummarySerializer
@@ -3426,6 +4148,78 @@ class AdminAbuseReportDetailAPIView(generics.RetrieveUpdateAPIView):
         serializer = self.get_serializer(report)
         return Response(serializer.data)
 
+
+# ✨ PHASE 7.16: Admin Q&A Reports List - View all Q&A and reply reports
+class AdminQAReportsListAPIView(generics.ListAPIView):
+    """
+    List all Q&A and reply reports for admin review
+    """
+    permission_classes = [IsAdminUser]
+    
+    def get_serializer_class(self):
+        report_type = self.request.query_params.get('type', 'question')
+        if report_type == 'message':
+            return api_serializer.QuestionAnswerMessageReportSerializer
+        return api_serializer.QuestionAnswerReportSerializer
+    
+    def get_queryset(self):
+        report_type = self.request.query_params.get('type', 'question')
+        status_filter = self.request.query_params.get('status')
+        
+        if report_type == 'message':
+            queryset = api_models.Question_Answer_Message_Report.objects.all().select_related('message', 'reported_by', 'reviewed_by').order_by('-reported_at')
+        else:
+            queryset = api_models.Question_Answer_Report.objects.all().select_related('question', 'reported_by', 'reviewed_by').order_by('-reported_at')
+        
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        
+        return queryset
+
+
+# ✨ PHASE 7.16: Admin Q&A Report Detail - Manage individual Q&A reports
+class AdminQAReportDetailAPIView(generics.RetrieveUpdateAPIView):
+    """
+    Retrieve, update, and manage individual Q&A reports
+    """
+    permission_classes = [IsAdminUser]
+    lookup_field = 'id'
+    lookup_url_kwarg = 'report_id'
+    
+    def get_serializer_class(self):
+        obj = self.get_object()
+        if isinstance(obj, api_models.Question_Answer_Message_Report):
+            return api_serializer.QuestionAnswerMessageReportSerializer
+        return api_serializer.QuestionAnswerReportSerializer
+    
+    def get_queryset(self):
+        report_type = self.request.query_params.get('type', 'question')
+        
+        if report_type == 'message':
+            return api_models.Question_Answer_Message_Report.objects.all().select_related('message', 'reported_by', 'reviewed_by')
+        return api_models.Question_Answer_Report.objects.all().select_related('question', 'reported_by', 'reviewed_by')
+    
+    def update(self, request, *args, **kwargs):
+        report = self.get_object()
+        
+        # Update status and review notes
+        status_new = request.data.get('status')
+        review_notes = request.data.get('review_notes')
+        
+        if status_new:
+            report.status = status_new
+            report.reviewed_at = timezone.now()
+            report.reviewed_by_id = request.data.get('reviewed_by', request.user.id)
+        
+        if review_notes:
+            report.review_notes = review_notes
+        
+        report.save()
+        
+        serializer = self.get_serializer(report)
+        return Response(serializer.data)
+
+
 class TeacherStudentsListAPIView(viewsets.ViewSet):
     permission_classes = [AllowAny]
     
@@ -3602,7 +4396,16 @@ class TeacherQuestionAnswerListAPIView(generics.ListAPIView):
         
         try:
             teacher = api_models.Teacher.objects.get(id=teacher_id)
-            return api_models.Question_Answer.objects.filter(course__teacher=teacher)
+            # ✨ PHASE 7.10+: Handle dual-copy versioning system
+            # Questions can be associated with EITHER:
+            # 1. Draft courses (is_published_version=False, parent_course__isnull=True)
+            # 2. Published versions (is_published_version=True, parent_course__isnull=False)
+            # We need to return questions from both to show all discussions to instructor
+            from django.db.models import Q
+            return api_models.Question_Answer.objects.filter(
+                Q(course__teacher=teacher) &  # All courses for this teacher
+                (Q(course__is_published_version=False) | Q(course__is_published_version=True))  # Both draft and published
+            ).order_by('-date')
         except api_models.Teacher.DoesNotExist:
             return api_models.Question_Answer.objects.none()
     

@@ -71,7 +71,9 @@
     color: #667eea;
 }
 
-.stat-label {
+/* ✨ SCOPED: Testimonials Admin stat label - only apply on testimonials admin page */
+.testimonials-admin-page .stat-label,
+.testimonials-admin-container .stat-label {
     display: block;
     font-size: 0.85rem;
     color: #6c757d;

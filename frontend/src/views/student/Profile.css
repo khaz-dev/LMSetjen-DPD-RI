@@ -88,14 +88,15 @@
     padding: 30px;
     border: 1px solid rgba(102, 126, 234, 0.1);
     box-shadow: 0 8px 32px rgba(102, 126, 234, 0.12);
-    margin-bottom: 1.5rem;
     position: relative; /* Create positioning context */
     z-index: 1; /* Base z-index for form sections */
+    overflow: visible; /* ✨ PHASE 4.12.4: Allow dropdown to overflow visually */
 }
 
-/* Ensure form section with dropdowns appears above other sections */
-.student-profile-page .modern-form-section:has(.country-selector-wrapper) {
-    z-index: 10; /* Higher z-index for section containing CountrySelector */
+/* ✨ PHASE 4.12.4: Ensure form sections with any dropdown selectors appear above others */
+.student-profile-page .modern-form-section:has(.country-selector-wrapper),
+.student-profile-page .modern-form-section:has(.option-selector-container) {
+    z-index: 10; /* Higher z-index for section containing selectors */
     overflow: visible; /* Ensure dropdown isn't clipped */
 }
 
@@ -113,7 +114,6 @@
 .student-profile-page .form-section-title {
     color: #2c3e50;
     font-weight: 600;
-    margin-bottom: 1.5rem;
 }
 
 .student-profile-page .form-section-icon {
@@ -334,7 +334,7 @@
 .student-profile-page .field-help-text {
     color: #6c757d;
     font-size: 0.875rem;
-    margin-top: -0.5rem;
+    margin-top: 1rem;
     margin-bottom: 0;
     text-align: right;
     display: block;
@@ -505,7 +505,6 @@
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    margin-top: 1rem;
 }
 
 /* ========================================

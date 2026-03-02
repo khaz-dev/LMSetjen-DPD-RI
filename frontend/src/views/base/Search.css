@@ -629,22 +629,9 @@
     position: relative;
 }
 
-.course-title {
-    font-size: 1.15rem; /* Slightly larger for better readability */
-    font-weight: 700;
-    color: #1a202c;
-    margin-bottom: 0.35rem; /* Slightly more margin */
-    line-height: 1.45; /* Better line spacing */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-height: 3.2rem; /* Adjusted for larger font */
-    letter-spacing: -0.02em;
-    transition: color 0.2s ease;
-}
+/* ✨ PHASE 8c: Course title base styles are consolidated in CourseCard.css
+   Search page-specific hover styles for links are defined below
+*/
 
 .course-title a {
     color: inherit;
@@ -946,7 +933,8 @@
         gap: 0.5rem;
     }
     
-    .course-title {
+    /* ✨ PHASE 8c: Responsive override for search page course-title */
+    .modern-search-item .course-title {
         font-size: 1.08rem;
         min-height: 3rem;
     }
@@ -1027,7 +1015,8 @@
         min-height: 350px;
     }
     
-    .course-title {
+    /* ✨ PHASE 8c: Responsive override for mobile search page */
+    .modern-search-item .course-title {
         font-size: 1.05rem;
         min-height: 3rem;
     }

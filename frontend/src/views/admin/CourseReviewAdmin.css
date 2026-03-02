@@ -76,11 +76,14 @@
     padding: 20px !important;
 }
 
-.course-title {
+/* ✨ PHASE 8c: Scoped course-title for CourseReviewAdmin page - base styles from CourseCard.css */
+.course-review-admin .course-title,
+.course-review-container .course-title {
     font-size: 1.25rem;
     font-weight: 700;
     color: #1a1a1a;
     line-height: 1.4;
+    margin-bottom: 0.75rem;
 }
 
 .course-meta {
@@ -118,7 +121,9 @@
     color: #667eea;
 }
 
-.stat-label {
+/* ✨ SCOPED: Course Review Admin stat label - only apply on course review admin page */
+.course-review-admin .stat-label,
+.admin-course-review-page .stat-label {
     font-size: 0.85rem;
     color: #666;
     text-transform: uppercase;
@@ -191,7 +196,9 @@
         padding: 15px !important;
     }
 
-    .course-title {
+    /* ✨ PHASE 8c: Responsive override for scoped course-title */
+    .course-review-admin .course-title,
+    .course-review-container .course-title {
         font-size: 1.1rem;
     }
 

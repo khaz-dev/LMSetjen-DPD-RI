@@ -630,7 +630,7 @@ html, body, #root {
     background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
     border: 2px solid #e9ecef;
     border-radius: 20px;
-    padding: 2rem;
+    padding: 1.5rem 2rem;
     margin-bottom: 1.5rem;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -665,7 +665,7 @@ html, body, #root {
 
 .question-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 1.25rem;
 }
 
@@ -681,6 +681,7 @@ html, body, #root {
     margin-bottom: 0.75rem;
     line-height: 1.4;
     transition: color 0.3s ease;
+    text-align: left;
 }
 
 .question-card:hover .question-title {
@@ -692,15 +693,32 @@ html, body, #root {
     flex-wrap: wrap;
     gap: 1rem;
     align-items: center;
-    margin-bottom: 1rem;
     font-size: 0.9rem;
     color: #6c757d;
+    justify-content: space-between;  /* ✨ PHASE 7.15: Move user/time to right */
 }
 
 .question-meta-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* ✨ PHASE 7.15: Push user and time items to the right */
+.question-meta .question-meta-item:nth-child(n+2) {
+    margin-left: auto;
+}
+
+/* ✨ PHASE 7.10: Message preview section styling */
+.question-message-preview {
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .question-meta-icon {
@@ -713,7 +731,6 @@ html, body, #root {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 1.25rem;
 }
 
 .question-stats {
@@ -1018,35 +1035,479 @@ html, body, #root {
 }
 
 /* Create Question Modal Styles */
+/* Override Bootstrap's modal-lg to prevent interference */
+.create-question-modal.modal .modal-dialog.modal-lg {
+    max-width: none !important;
+}
+
+/* ✨ PHASE 6.4: Ensure CSS variables are available */
+.create-question-modal {
+    --modal-x: 0px;
+    --modal-y: 50px;
+    --modal-width: 900px;
+    --modal-height: auto;
+}
+
 .create-question-modal .modal-content {
     border: none;
     border-radius: 20px;
-    overflow: hidden;
+    overflow: hidden;  /* Prevent content escape */
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
     margin: 0;
     padding: 0;
-    max-width: 600px;
     width: 100%;
+    height: 100%;  /* ✨ PHASE 7.13: Match parent height exactly */
+    position: relative;
+    /* ✨ PHASE 7.2: Remove padding - use absolute positioning for body instead */
+    display: block;  /* Changed from flex to block */
+    box-sizing: border-box;
 }
 
+/* ✨ PHASE 6.3: Match modal width with col-lg-9/col-md-8/col-12 containers */
+/* ✨ PHASE 6.4: Support draggable and resizable modal using CSS variables */
+/* ✨ PHASE 7.1: Position relative for absolute-positioned children (header/footer) */
+/* ✨ PHASE 7.12: Use fixed positioning for proper dragging and resizing */
+/* ✨ PHASE 7.13: Height controlled by JavaScript for drag/resize */
 .create-question-modal .modal-dialog {
-    max-width: 600px;
-    margin: 1.75rem auto;
+    position: fixed;
+    margin: 0;
+    max-width: none;
+    width: 900px;
+    height: 500px;  /* ✨ PHASE 7.13: Initial height - will be overridden by JavaScript */
+    left: 0;
+    top: 50px;
+    /* Position will be overridden by JavaScript for dragging/resizing */
+    /* NO !important to allow JavaScript inline styles to work */
+}
+
+.create-question-modal .modal {
+    border-radius: 20px !important;
+    pointer-events: auto !important;
+}
+
+/* ✨ PHASE 7.11+: Draggable/Resizable Modal Header */
+/* ✨ PHASE 7.12: Modal header - draggable by default */
+.create-question-modal .modal-header-modern {
+    position: absolute !important;     /* Stick to top of modal-dialog */
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 10 !important;            /* Above body content */
+    padding: 20px !important;
+    margin: 0 !important;
+    width: 100% !important;            /* Full width */
+    box-sizing: border-box !important;
+    cursor: move !important;           /* Show draggable cursor */
+    user-select: none !important;      /* Prevent text selection while dragging */
+    border-radius: 20px 20px 0 0 !important;  /* Round top corners */
+    /* Use generic header styles but override critical properties */
+    display: flex !important;          /* From generic */
+    flex-direction: row !important;    /* Ensure horizontal layout */
+    align-items: center !important;    /* From generic */
+    justify-content: space-between !important;  /* From generic */
+    background: linear-gradient(135deg, #3498db, #2980b9) !important;  /* Blue gradient - visible! */
+    color: white !important;           /* White text on blue background */
+    border: none !important;
+    height: 70px !important;           /* Fixed header height */
+    gap: 1rem !important;              /* From generic */
+}
+
+/* ✨ PHASE 7.12: Media queries disabled - JavaScript now handles responsive positioning */
+/* Large screens - JavaScript controls width and positioning */
+@media (min-width: 992px) {
+    /* Width and positioning controlled by JavaScript */
+}
+
+/* Medium screens - JavaScript controls width and positioning */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    /* Width and positioning controlled by JavaScript */
+}
+
+/* Small screens - JavaScript controls width and positioning */
+@media (max-width: 767.98px) {
+    /* Width and positioning controlled by JavaScript */
+}
+
+/* ✨ PHASE 7.6: Modal body scrolls as a whole, content grows freely - CLEANED */
+/* ✨ PHASE 7.13: Single column grid since sidebar not rendered in question modal */
+.create-question-modal .modal-body-modern {
+    position: absolute !important;
+    top: 70px !important;
+    bottom: 60px !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 16px 20px !important;
+    display: grid;
+    grid-template-columns: 1fr;  /* ✨ PHASE 7.13: Single column - form fills width */
+    grid-template-rows: 1fr;
+    gap: 20px;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    z-index: 5;
+}
+
+/* ✨ PHASE 7.3: Form container - content grows freely, no internal scrolling */
+/* ✨ PHASE 7.13: Fill full width since sidebar column is not used */
+.create-question-modal .question-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    grid-column: 1 / -1;  /* Span all columns */
+    grid-row: 1;
+    overflow: visible !important;      /* ✨ No scrolling - body handles it */
+    height: auto;                      /* Grow with content */
+    min-height: auto;                  /* Don't constrain height */
+    width: 100%;  /* ✨ PHASE 7.13: Ensure full width */
+}
+
+/* ✨ PHASE 7.3: Sidebar - content grows freely, body scrolls */
+.create-question-modal .modal-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    grid-column: 2;  /* Right column */
+    grid-row: 1;     /* Same row as form */
+    overflow: visible !important;      /* ✨ No scrolling - body handles it */
+    height: auto;                      /* Grow with content */
+    min-height: auto;                  /* Don't constrain height */
+}
+
+/* 
+   SIDEBAR WIDTH CUSTOMIZATION:
+   The sidebar width is defined by grid-template-columns in .modal-body-modern
+   Currently: grid-template-columns: 1fr 320px;
+   
+   To adjust sidebar width, change "320px" to desired width:
+   - 250px  = Narrower sidebar (more space for form)
+   - 280px  = Original width
+   - 320px  = Current width (slightly wider)
+   - 350px  = Much wider sidebar
+   - 400px  = Very wide sidebar
+   
+   The "1fr" is flexible and automatically takes remaining space.
+   Increasing sidebar width reduces form column space.
+*/
+
+/* ✨ PHASE 7.6: Form group - clean layout for auto-resize */
+.create-question-modal .form-group-modern {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+/* ✨ PHASE 7.1: Footer positioned absolutely at bottom of modal-dialog */
+/* ✨ PHASE 7.2: Footer positioned absolutely at bottom, always visible */
+.create-question-modal .modal-footer-modern {
+    position: absolute !important;     /* Stick to bottom of modal-dialog */
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 10 !important;            /* Above body content */
+    padding: 12px 16px;                /* Padding inside footer */
+    margin: 0 !important;
+    width: 100% !important;            /* Full width */
+    height: 75px !important;           /* Fixed footer height */
+    box-sizing: border-box !important;
+    background: #f8f9fa !important;
+    border-top: 1px solid #e9ecef !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 0 20px 20px !important;  /* Round bottom corners */
+    padding-left: 36px !important;
+    padding-right: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+}
+
+/* ✨ PHASE 7.3: Form inputs - standard height, no height limits */
+.create-question-modal .form-input-modern {
+    width: 100%;
+    box-sizing: border-box;
+    /* Input keeps standard height - NO min-height constraint */
+}
+
+/* ✨ PHASE 7.6: Form textarea - CLEANED for reliable auto-resize */
+/* ✨ PHASE 7.14: JavaScript-based auto-resize with scrollHeight */
+.create-question-modal .form-textarea-modern {
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;  /* Disabled browser resize - JavaScript handles it */
+    overflow: hidden !important;  /* Hide scrollbars for auto-resize */
+    min-height: 100px;
+    max-height: 400px;  /* Prevent infinite growth */
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+/* ✨ PHASE 6.5: Konteks card styling - moved to sidebar */
+.create-question-modal .konteks-pelajaran {
+    background: linear-gradient(135deg, #e7f5ff 0%, #d0ebff 100%);
+    border: 1px solid #91a7ce;
+    border-radius: 12px;
+    padding: 14px 12px;
+    font-size: 0.85rem;
+    color: #1c3a4b;
+    flex-shrink: 0;
+}
+
+.create-question-modal .konteks-pelajaran-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.create-question-modal .konteks-pelajaran-content {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.create-question-modal .konteks-pelajaran-item {
+    word-break: break-word;
+}
+
+.create-question-modal .konteks-pelajaran-note {
+    font-size: 0.75rem;
+    color: #495057;
+    margin-top: 6px;
+    font-style: italic;
+    padding-top: 6px;
+    border-top: 1px solid rgba(145, 167, 206, 0.3);
+}
+
+/* ✨ PHASE 6.4: Modal resize handle - Styled corner indicator with shape customization guide */
+/*
+   RESIZE HANDLE SHAPE CUSTOMIZATION GUIDE:
+   
+   To change the handle shape, modify the border-radius, clip-path, or use SVG background.
+   
+   SHAPE OPTIONS:
+   
+   1. CURRENT (Quarter Circle at bottom-left):
+      border-radius: 0 0 0 30px;
+      → Curved corner pointing to bottom-left
+      → Best for: Modern, subtle indicator
+   
+   2. FULL CIRCLE:
+      border-radius: 50%;
+      → Perfect circle shape
+      → Best for: Minimal, centered handle
+   
+   3. ROUNDED CORNERS (All sides):
+      border-radius: 8px;
+      → Smooth rounded rectangle
+      → Best for: Consistent design
+   
+   4. TRIANGLE (using clip-path):
+      clip-path: polygon(0 100%, 100% 100%, 100% 0);
+      border-radius: 0;
+      → Right-pointing triangle
+      → Best for: Directional indicator
+   
+   5. DIAMOND:
+      clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+      → Diamond shape
+      → Best for: Unique, geometric look
+   
+   6. ARROW/CHEVRON:
+      clip-path: polygon(30% 0, 70% 0, 100% 50%, 70% 100%, 30% 100%, 0 50%);
+      → Hexagon that looks like arrow
+      → Best for: Clear directional cue
+   
+   7. TOP-LEFT CORNER (inverted):
+      border-radius: 30px 0 0 0;
+      → Corner at top-left instead
+      → Best for: Alternative positioning
+   
+   MODIFICATION STEPS:
+   1. Find the .modal-resize-handle CSS rule below
+   2. Change or add border-radius property
+   3. Optionally add clip-path for more complex shapes
+   4. Test in browser and adjust size if needed
+   
+   EXAMPLE CHANGES:
+   - For full circle: Change \"border-radius: 0 0 0 30px !important;\" to \"border-radius: 50% !important;\"
+   - For triangle: Add \"clip-path: polygon(0 100%, 100% 100%, 100% 0) !important;\"
+   - For rounded rect: Change to \"border-radius: 8px !important;\"
+*/
+.modal-resize-handle {
+    position: fixed !important;
+    width: 30px !important;
+    height: 30px !important;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+    opacity: 0.85 !important;
+    border: none !important;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    cursor: se-resize !important;
+    z-index: 1051 !important;  /* Above modal */
+    pointer-events: auto !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    /* Positioning controlled by JavaScript */
+}
+
+.modal-resize-handle:hover {
+    opacity: 1 !important;
+    box-shadow: -2px -2px 12px rgba(0, 0, 0, 0.25) !important;
+    background: linear-gradient(135deg, #2980b9 0%, #1f6391 100%) !important;
+    transform: scale(1.1) !important;
+}
+
+/* ✨ PHASE 6.1: Bottom-positioned horizontal modal for question creation */
+.create-question-modal-bottom .modal-dialog {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 auto !important;
+    max-width: none !important;
+    width: 100% !important;
+    max-height: 85vh !important;
+    z-index: 1050 !important;
+    padding: 0 15px !important;
+    top: auto !important;
+}
+
+/* Large screens - col-lg-9: 75% width */
+@media (min-width: 992px) {
+    .create-question-modal-bottom .modal-dialog {
+        width: 75% !important;
+        max-width: none !important;
+    }
+}
+
+/* Medium screens - col-md-8: 66.666667% width */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .create-question-modal-bottom .modal-dialog {
+        width: 66.666667% !important;
+        max-width: none !important;
+        padding: 0 12px !important;
+    }
+}
+
+/* Small screens - 100% width */
+@media (max-width: 767.98px) {
+    .create-question-modal-bottom .modal-dialog {
+        width: calc(100% - 30px) !important;
+        left: 15px !important;
+        right: auto !important;
+    }
+}
+
+.create-question-modal-bottom .modal-content {
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px 16px 0 0;
+}
+
+.create-question-modal-bottom .modal-body-modern {
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(85vh - 180px);
+    padding: 16px 20px !important;
+}
+
+.create-question-modal-bottom .question-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.create-question-modal-bottom .form-group-modern {
+    margin-bottom: 0;
+    gap: 0.5rem;
+}
+
+.create-question-modal-bottom .form-label-modern {
+    font-size: 0.9rem;
+    gap: 0.5rem;
+}
+
+.create-question-modal-bottom .form-input-modern {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+}
+
+.create-question-modal-bottom .form-textarea-modern {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    min-height: 80px;
+    max-height: 120px;
+}
+
+.create-question-modal-bottom .character-counter {
+    font-size: 0.8rem;
+}
+
+.create-question-modal-bottom .tips-section {
+    padding: 0.75rem;
+    margin-top: 0;
+    border-radius: 8px;
+}
+
+.create-question-modal-bottom .tips-header {
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.create-question-modal-bottom .tips-list {
+    gap: 0.3rem;
+}
+
+.create-question-modal-bottom .tips-list li {
+    font-size: 0.8rem;
+}
+
+/* Ensure modal is displayed properly without fade effect */
+.create-question-modal-bottom.show {
+    display: block;
+    animation: slideUpBottom 0.3s ease-out;
+}
+
+@keyframes slideUpBottom {
+    from {
+        transform: translateX(-50%) translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
 }
 
 .modal-header-modern {
     background: linear-gradient(135deg, #3498db, #2980b9) !important;
     color: white;
+    /* ✨ PHASE 6.4: Prevent text selection while dragging */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     border: none !important;
     border-bottom: none !important;
-    padding: 20px 24px !important;
+    padding: 16px 20px !important;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     position: relative;
     z-index: 2;
+    min-height: auto;
+    flex-shrink: 0;
 }
 
 .modal-header-modern::before {
@@ -1056,48 +1517,51 @@ html, body, #root {
 .modal-header-content {
     flex: 1;
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    align-items: flex-start;
+    gap: 0.75rem;
     z-index: 1;
 }
 
 .modal-header-info {
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    align-items: center;  /* ✨ PHASE 7.13: Vertically center icon with text */
+    gap: 0.75rem;
     flex: 1;
 }
 
 .modal-icon-wrapper {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
+    border-radius: 8px;
+    flex-shrink: 0;
 }
 
 .modal-title-section {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.1rem;
 }
 
 .modal-title-modern {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: white;
     margin: 0;
+    line-height: 1.2;
 }
 
 .modal-subtitle {
-    font-size: 0.85rem;
-    opacity: 0.9;
+    font-size: 0.75rem;
+    opacity: 0.85;
     color: white;
     margin: 0;
+    line-height: 1.2;
 }
 
 .btn-close-modern {
@@ -1121,11 +1585,11 @@ html, body, #root {
 }
 
 .modal-body-modern {
-    padding: 20px 24px !important;
+    padding: 16px 20px !important;
     background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
     overflow-y: auto;
     flex: 1;
 }
@@ -1133,15 +1597,15 @@ html, body, #root {
 .form-group-modern {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .form-label-modern {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    font-size: 1rem;
+    gap: 0.5rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #2c3e50;
     margin: 0;
@@ -1173,10 +1637,10 @@ html, body, #root {
 
 .form-input-modern {
     width: 100%;
-    padding: 1rem 1.25rem;
+    padding: 0.7rem 1rem;
     border: 2px solid #e9ecef;
-    border-radius: 12px;
-    font-size: 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
     font-weight: 500;
     color: #2c3e50;
     background: #fafbfc;
@@ -1198,23 +1662,27 @@ html, body, #root {
 
 .textarea-wrapper-modern {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .form-textarea-modern {
     width: 100%;
-    padding: 1rem 1.25rem;
+    padding: 0.7rem 1rem;
     border: 2px solid #e9ecef;
-    border-radius: 12px;
-    font-size: 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
     font-weight: 500;
     color: #2c3e50;
     background: #fafbfc;
-    transition: all 0.3s ease;
     outline: none;
-    resize: vertical;
-    min-height: 100px;
+    resize: none;
+    overflow: hidden !important;
     font-family: inherit;
     line-height: 1.5;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .form-textarea-modern:focus {
@@ -1230,12 +1698,11 @@ html, body, #root {
 }
 
 .character-counter {
-    position: absolute;
-    bottom: -1.5rem;
-    right: 0;
     font-size: 0.85rem;
     color: #6c757d;
     font-weight: 500;
+    text-align: right;
+    padding-top: 0.25rem;
 }
 
 .tips-section {
@@ -1243,7 +1710,13 @@ html, body, #root {
     border-radius: 12px;
     padding: 1rem;
     border: 1px solid #dee2e6;
-    margin-top: 0.5rem;
+    margin-top: 0;
+    flex-shrink: 0;
+}
+
+.create-question-modal .tips-section {
+    background: linear-gradient(135deg, #f0f7ff 0%, #e9f1ff 100%);
+    border: 1px solid #bde0ff;
 }
 
 .tips-header {
@@ -1252,13 +1725,17 @@ html, body, #root {
     gap: 0.5rem;
     margin-bottom: 0.75rem;
     font-weight: 600;
-    color: #495057;
-    font-size: 0.9rem;
+    color: #1971c2;
+    font-size: 0.85rem;
 }
 
 .tips-icon {
-    color: #ffc107;
-    font-size: 1.1rem;
+    color: #0d6efd;
+    font-size: 0.95rem;
+}
+
+.create-question-modal .tips-header {
+    color: #0d6efd;
 }
 
 .tips-list {
@@ -1266,34 +1743,30 @@ html, body, #root {
     padding: 0;
     margin: 0;
     display: grid;
-    gap: 0.5rem;
+    gap: 0.4rem;
 }
 
 .tips-list li {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: #6c757d;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: #495057;
     font-weight: 500;
+    line-height: 1.3;
 }
 
 .tips-list li i {
     color: #28a745;
-    font-size: 0.8rem;
-    width: 12px;
-}
-
-.modal-footer-modern {
-    padding: 1.5rem 2rem;
-    background: #f8f9fa;
-    border-radius: 0 0 20px 20px;
-    border: none;
+    font-size: 0.75rem;
+    width: 10px;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .footer-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     justify-content: flex-end;
     align-items: center;
 }
@@ -1302,12 +1775,13 @@ html, body, #root {
     background: #6c757d;
     color: white;
     border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
     font-weight: 600;
+    font-size: 0.9rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
@@ -1322,15 +1796,17 @@ html, body, #root {
     background: var(--theme-gradient) !important;
     color: white;
     border: none;
-    padding: 0.75rem 2rem;
-    border-radius: 12px;
+    padding: 0.6rem 1.4rem;
+    border-radius: 8px;
     font-weight: 600;
+    font-size: 0.9rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    white-space: nowrap;
 }
 
 .btn-submit-modern:hover:not(:disabled) {
@@ -1622,6 +2098,38 @@ html, body, #root {
     .color-option {
         width: 35px;
         height: 35px;
+    }
+
+    /* Responsive styles for bottom-positioned modal */
+    .create-question-modal-bottom .modal-dialog {
+        padding: 0 10px;
+        left: auto;
+        right: auto;
+        /* transform: none; */
+        width: 100%;
+        max-width: none;
+        max-height: 90vh;
+    }
+
+    .create-question-modal-bottom .modal-body-modern {
+        max-height: calc(90vh - 200px);
+        padding: 12px 16px !important;
+    }
+
+    .create-question-modal-bottom .modal-header-modern {
+        padding: 12px 16px !important;
+    }
+
+    .create-question-modal-bottom .modal-footer-modern {
+        padding: 12px 16px;
+    }
+
+    .create-question-modal-bottom .form-textarea-modern {
+        min-height: 70px;
+    }
+
+    .create-question-modal-bottom .tips-section {
+        padding: 0.5rem;
     }
 }
 
@@ -2762,7 +3270,10 @@ html, body, #root {
     letter-spacing: 0.5px;
 }
 
-.stat-value {
+/* ✨ SCOPED: Course detail quiz results stat value - only apply in quiz results context */
+.quiz-result-stat-card .stat-value,
+.result-stat-item .stat-value,
+.inline-quiz-fullscreen .stat-value {
     display: block;
     font-size: 1.8rem;
     font-weight: 700;
@@ -4690,4 +5201,927 @@ html, body, #root {
 
 .inline-quiz-fullscreen::-webkit-scrollbar-thumb:hover {
     background: #0052cc;
+}
+
+/* ✨ PHASE 7.10-7.11: Professional Forum Discussion View - Stack Overflow Style */
+
+/* ===== Main Container ===== */
+.forum-thread-container {
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    animation: fadeInContainer 0.4s ease-out;
+}
+
+@keyframes fadeInContainer {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== Thread Header with Title & Meta ===== */
+.forum-thread-header {
+    padding-bottom: 1rem;
+    border-radius: 12px 12px 0 0;
+    display: flex;  /* ✨ PHASE 7.15: Flex layout for header */
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.forum-thread-title-area {
+    display: flex;  /* ✨ PHASE 7.15: Flex row for title + breadcrumb */
+    align-items: flex-start;
+    gap: 2rem;
+    justify-content: space-between;
+}
+
+.forum-thread-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.5px;
+    flex: 1;  /* ✨ PHASE 7.15: Allow title to grow */
+}
+
+.forum-breadcrumb {
+    font-size: 0.95rem;
+    color: #6c757d;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;  /* ✨ PHASE 7.15: Stick to right end */
+    white-space: nowrap;
+}
+
+.forum-breadcrumb i {
+    font-size: 0.85rem;
+}
+
+/* ✨ PHASE 7.15: Header footer with breadcrumb and meta inline */
+.forum-header-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 2rem;  /* ✨ PHASE 7.15: Add left/right margin */
+}
+
+.forum-thread-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.forum-meta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    font-size: 0.9rem;
+    color: #495057;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.forum-meta-badge:hover {
+    border-color: #dee2e6;
+    background: #f8f9fa;
+}
+
+.forum-meta-badge i {
+    font-size: 0.85rem;
+    color: #3498db;
+}
+
+/* ✨ PHASE 7.15: Button wrapper in forum title area */
+.forum-thread-title-area .d-flex {
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;  /* Allow flex item to shrink below content size */
+}
+
+.forum-thread-title-area .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ===== Post Card Styles ===== */
+.forum-post-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.forum-post-card:hover {
+    border-color: #dee2e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.forum-original-post {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 2px solid #dee2e6;
+    padding: 1.5rem 2rem;
+}
+
+.forum-original-post:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    border-color: #cfe4e7;
+}
+
+.forum-reply-post {
+    border-left: 4px solid #e9ecef;
+    transition: border-color 0.3s ease;
+    padding: 1.5rem 2rem;
+}
+
+.forum-reply-post:hover {
+    border-left-color: #3498db;
+}
+
+/* ===== Post Header (Author Info) ===== */
+.forum-post-header {
+    padding-bottom: 1rem;
+}
+
+.forum-user-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.forum-user-avatar-wrapper {
+    flex-shrink: 0;
+    display: flex;  /* ✨ PHASE 7.15: Perfect circle */
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.forum-user-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transition: transform 0.3s ease;
+}
+
+.forum-user-avatar:hover {
+    transform: scale(1.05);
+}
+
+.forum-user-avatar-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e8f4f8 0%, #d0e8ec 100%);
+    color: #016b87;
+    font-size: 1.5rem;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.forum-user-details {
+    flex: 1;
+}
+
+.forum-user-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.forum-user-badge-asker {
+    display: inline-flex;
+    padding: 0.25rem 0.75rem;
+    background: #fff3cd;
+    color: #8a6d3b;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #ffeaa7;
+}
+
+.forum-user-badge-current {
+    display: inline-flex;
+    padding: 0.25rem 0.75rem;
+    background: #d4edda;
+    color: #155724;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #c3e6cb;
+}
+
+/* ✨ PHASE 7.16: Reported badge styling */
+.forum-user-badge-reported {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    background: #f8d7da;
+    color: #721c24;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #f5c6cb;
+    margin-left: 0.5rem;
+}
+
+/* ✨ Instructor Badge - Shows course creator/instructor */
+.forum-user-badge-instructor {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.75rem;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    color: #1565c0;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #90caf9;
+    margin-left: 0.5rem;
+}
+
+.forum-user-badge-instructor i {
+    font-size: 0.65rem;
+    color: #1565c0;
+}
+
+.forum-user-timestamp {
+    font-size: 0.9rem;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    justify-content: flex-start;
+}
+
+/* ===== Post Content ===== */
+.forum-post-content {
+    font-size: 1.05rem;
+    color: #495057;
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+/* ===== Post Footer (Tags & Actions) ===== */
+.forum-post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.forum-post-tags {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.forum-tag {
+    display: inline-flex;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: default;
+}
+
+.forum-tag i {
+    font-size: 0.8rem;
+}
+
+.forum-tag-section {
+    background: #e8f4f8;
+    color: #016b87;
+    border: 1px solid #a8d8dc;
+}
+
+.forum-tag-section:hover {
+    background: #d4e9f0;
+    border-color: #7fc8d4;
+}
+
+.forum-tag-lesson {
+    background: #f0e8f4;
+    color: #662d91;
+    border: 1px solid #d4b5e0;
+}
+
+.forum-tag-lesson:hover {
+    background: #e1d0e8;
+    border-color: #c08fcb;
+}
+
+.forum-post-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-left: auto;
+}
+
+/* ✨ PHASE 7.16: Like button styling */
+.forum-like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    color: #6c757d;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.forum-like-btn:hover {
+    border-color: #e9366d;
+    color: #e9366d;
+    background: #fff5f8;
+}
+
+.forum-like-btn i {
+    font-size: 0.95rem;
+}
+
+.forum-like-btn .like-count {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* ✨ PHASE 7.16: Report button styling */
+.forum-report-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    color: #6c757d;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.forum-report-btn:hover {
+    border-color: #dc3545;
+    color: #dc3545;
+    background: #fff5f6;
+}
+
+.forum-report-btn i {
+    font-size: 0.95rem;
+}
+
+/* ===== Replies Section ===== */
+.forum-replies-section {
+    margin-bottom: 1.5rem;
+}
+
+.forum-replies-header {
+    padding: 1.5rem 2rem;
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+    border-radius: 8px 8px 0 0;
+}
+
+.forum-replies-title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.forum-replies-title i {
+    color: #3498db;
+    font-size: 1rem;
+}
+
+.forum-replies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.forum-replies-list .forum-reply-post:last-child {
+    margin-bottom: 0;
+}
+
+/* ===== No Replies State ===== */
+.forum-no-replies {
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.forum-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.forum-empty-state i {
+    font-size: 3.5rem;
+    color: #cfe4e7;
+    opacity: 0.6;
+}
+
+.forum-empty-state h4 {
+    margin: 0;
+    color: #6c757d;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.forum-empty-state p {
+    margin: 0;
+    color: #adb5bd;
+    font-size: 0.95rem;
+}
+
+/* ===== Reply Form Section ===== */
+.forum-reply-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.forum-reply-section-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.forum-reply-section-title i {
+    color: #3498db;
+}
+
+.forum-reply-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.forum-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.forum-reply-textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1rem;
+    color: #2c3e50;
+    resize: vertical;
+    transition: all 0.3s ease;
+    background: white;
+    min-height: 120px;
+    line-height: 1.6;
+}
+
+.forum-reply-textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+    background: white;
+}
+
+.forum-reply-textarea::placeholder {
+    color: #adb5bd;
+}
+
+.forum-form-actions {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ✨ PHASE 7.15: Button container for right alignment */
+.forum-action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.forum-btn-primary {
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.95rem;
+}
+
+.forum-btn-primary:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #1f618d 100%);
+    box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+    transform: translateY(-2px);
+}
+
+.forum-btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+}
+
+.forum-btn-primary i {
+    font-size: 0.9rem;
+}
+
+.forum-form-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.forum-form-hint i {
+    color: #3498db;
+    font-size: 0.8rem;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+    .forum-thread-header {
+        padding: 1.5rem;
+    }
+
+    .forum-thread-title {
+        font-size: 1.5rem;
+    }
+
+    .forum-post-card,
+    .forum-original-post {
+        padding: 1.25rem;
+    }
+
+    .forum-post-card {
+        margin-bottom: 1rem;
+    }
+
+    .forum-thread-meta {
+        gap: 0.75rem;
+    }
+
+    .forum-meta-badge {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.75rem;
+    }
+
+    .forum-user-avatar {
+        width: 48px;
+        height: 48px;
+    }
+
+    .forum-user-avatar-placeholder {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+    }
+
+    .forum-user-name {
+        font-size: 1rem;
+    }
+
+    .forum-post-content {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .forum-replies-header {
+        padding: 1rem 1.25rem;
+    }
+
+    .forum-replies-title {
+        font-size: 1.05rem;
+    }
+
+    .forum-reply-section {
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .forum-reply-textarea {
+        min-height: 100px;
+        font-size: 1rem;
+    }
+
+    .forum-btn-primary {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .forum-form-hint {
+        font-size: 0.8rem;
+    }
+
+    .forum-post-tags {
+        gap: 0.5rem;
+    }
+
+    .forum-tag {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .forum-thread-title {
+        font-size: 1.25rem;
+    }
+
+    .forum-breadcrumb {
+        font-size: 0.85rem;
+    }
+
+    .forum-post-card,
+    .forum-original-post {
+        padding: 1rem;
+        border-radius: 6px;
+    }
+
+    .forum-user-info {
+        gap: 0.75rem;
+    }
+
+    .forum-user-avatar,
+    .forum-user-avatar-placeholder {
+        width: 40px;
+        height: 40px;
+        border-width: 2px;
+    }
+
+    .forum-posts-action {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* ✨ PHASE 7.16: Q&A Report Modal Styling - Matches ReviewAbuse pattern */
+.abuse-report-modal {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease;
+}
+
+/* ✨ PHASE 7.16+: Ensure modal body has enough space for cards */
+.abuse-report-modal .modal-body {
+    padding: 2rem;
+}
+
+/* ✨ PHASE 7.16+: Stack cards horizontally - adjust responsive breakpoint */
+@media (min-width: 1024px) {
+    /* Make modal wider on larger screens */
+    .modal-dialog.modal-dialog-centered {
+        max-width: 1000px;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.abuse-modal-header {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border: none;
+    border-radius: 15px 15px 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.abuse-modal-header .modal-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.abuse-modal-header .modal-title i {
+    color: white;
+}
+
+.abuse-modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.abuse-modal-text {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.abuse-report-modal .alert-info {
+    /* Your custom styles */
+    background-color: #e7f3ff;
+    border-color: #0066cc;
+    color: #003d99;
+    margin-bottom: 0.5rem;
+}
+
+.form-select-modern {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+    color: #212529;
+}
+
+.form-select-modern:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    background-color: #ffffff;
+    color: #212529;
+}
+
+.abuse-report-modal .form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    background-color: #ffffff;
+    color: #212529;
+    transition: all 0.3s ease;
+}
+
+.abuse-report-modal .form-control:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    background-color: #ffffff;
+    color: #212529;
+}
+
+.abuse-report-modal .form-control::placeholder {
+    color: #adb5bd;
+}
+
+.abuse-modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    border-radius: 0 0 15px 15px;
+}
+
+/* ✨ PHASE 7.16+: Make report status cards display horizontally with Status Laporan on top */
+.abuse-report-modal .modal-body > .mb-0 {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
+/* Status Laporan badge section - full width on top */
+.abuse-report-modal .modal-body > .mb-0 > .d-flex:first-child {
+    width: 100%;
+}
+
+/* Wrapper for cards - display them side by side */
+.abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+/* Report Detail and Admin Feedback cards - equal width side by side */
+.abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) > .card {
+    flex: 1 1 calc(50% - 0.75rem);
+    min-width: 250px;
+    margin-bottom: 0;
+}
+
+/* ✨ PHASE 7.16+: Stack cards vertically on smaller screens (tablets/phones) */
+@media (max-width: 768px) {
+    .abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) {
+        flex-direction: column;
+    }
+
+    .abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) > .card {
+        flex: 1 1 100%;
+    }
+}
+
+/* ✨ PHASE 7.18: Horizontal layout for report details with values right-aligned */
+.abuse-report-modal .card-body > .d-flex.justify-content-between {
+  gap: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.75rem;
+}
+
+.abuse-report-modal .card-body > .d-flex.justify-content-between:last-child {
+  border-bottom: none;
+}
+
+.abuse-report-modal .card-body > .d-flex.justify-content-between label {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding-top: 0.25rem;
+}
+
+.abuse-report-modal .card-body > .d-flex.justify-content-between p {
+  flex-grow: 1;
+  max-width: 50%;
+  word-break: break-word;
 }

@@ -544,7 +544,8 @@
   margin-bottom: 4px;
 }
 
-.stat-value {
+/* ✨ SCOPED: Analytics widgets stat value - only apply in analytics context */
+.analytics-widgets .stat-value {
   font-size: 20px;
   font-weight: 700;
   color: #3498db;

@@ -15,6 +15,7 @@ import VideoPlayerGoogle from "./VideoPlayerGoogle";
 
 const VideoPlayer = forwardRef(({
     variantItem,
+    variantContext,  // ✨ PHASE 6.3: Pass bagian/section context
     onClose,
     handleMarkLessonAsCompleted,
     courseId,  // ✨ PHASE 4.144+: courseId prop
@@ -42,6 +43,7 @@ const VideoPlayer = forwardRef(({
             <VideoPlayerUnggah
                 ref={ref}
                 variantItem={variantItem}
+                variantContext={variantContext}  // ✨ PHASE 6.3: Pass context
                 onClose={onClose}
                 handleMarkLessonAsCompleted={handleMarkLessonAsCompleted}
                 courseId={courseId}  // ✨ PHASE 4.144+: Pass courseId
@@ -58,6 +60,7 @@ const VideoPlayer = forwardRef(({
             <VideoPlayerYoutube
                 ref={ref}
                 variantItem={variantItem}
+                variantContext={variantContext}  // ✨ PHASE 6.3: Pass context
                 onClose={onClose}
                 handleMarkLessonAsCompleted={handleMarkLessonAsCompleted}
                 courseId={courseId}  // ✨ PHASE 4.144+: Pass courseId
@@ -74,6 +77,7 @@ const VideoPlayer = forwardRef(({
             <VideoPlayerGoogle
                 ref={ref}
                 variantItem={variantItem}
+                variantContext={variantContext}  // ✨ PHASE 6.3: Pass context
                 onClose={onClose}
                 handleMarkLessonAsCompleted={handleMarkLessonAsCompleted}
                 courseId={courseId}  // ✨ PHASE 4.144+: Pass courseId

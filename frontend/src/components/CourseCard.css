@@ -1,3 +1,40 @@
+/* ✨ PHASE 8c: Consolidated Course Title Styling - Source of Truth for CourseCard Component
+   This is the primary location for all .course-title styles to prevent inconsistency issues
+   Page-specific overrides should be scoped to their container (e.g., .instructor-review-page .course-title)
+*/
+.course-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2d3748;
+    line-height: 1.3;
+    margin-bottom: 0.75rem; /* ✨ Use margin-bottom instead of padding for spacing consistency */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.3s ease;
+    user-select: none; /* Prevent text selection */
+    cursor: pointer; /* Pointer cursor for clickable titles */
+}
+
+/* ✨ PHASE 8c: Ensure pb-0 utility class works with course-title by neutralizing margin
+   The pb-0 (padding-bottom: 0) utility may be applied directly to course-title elements.
+   Since we use margin-bottom for spacing, pb-0 won't conflict, but ensure consistency.
+*/
+.course-title.pb-0 {
+    padding-bottom: 0; /* Bootstrap utility - no conflict with margin-bottom */
+}
+
+/* Hover state for course cards */
+.course-card:hover .course-title {
+    color: var(--theme-primary, #667eea) !important;
+}
+
+.course-title:hover {
+    text-decoration: none; /* Prevent underline on hover */
+}
+
 .course-action-btn-sm {
     padding: 0.25rem 0.75rem !important;
     font-size: 1rem !important;

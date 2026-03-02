@@ -61,6 +61,122 @@ function CourseDetail() {
     const [showLeftQuizNotification, setShowLeftQuizNotification] = useState(false);  // ✨ PHASE 4.225+: Show notification when leaving quiz area
     const inlineQuizContainerRef = useRef(null);  // ✨ PHASE 4.225+: Ref for inline quiz container
     
+    // ✨ PHASE 7.13: Draggable/Resizable Modal State - Initial position: bottom-centered
+    // Calculate initial position: centered horizontally, at bottom of viewport
+    const getInitialModalPosition = () => {
+        const width = 900;
+        const height = 500;
+        return {
+            x: Math.max(0, (window.innerWidth - width) / 2),
+            y: Math.max(50, window.innerHeight - height - 20)  // 20px margin from bottom
+        };
+    };
+    
+    const [modalPosition, setModalPosition] = useState(getInitialModalPosition());
+    const [modalSize, setModalSize] = useState({ width: 900, height: 500 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
+    const dragStartPos = useRef({ x: 0, y: 0, modalX: 0, modalY: 0, modalWidth: 900, modalHeight: 500 });
+    // ✨ PHASE 7.13: Use refs to avoid closure issues during drag/resize
+    const initialPos = getInitialModalPosition();
+    const modalPositionRef = useRef(initialPos);
+    const modalSizeRef = useRef({ width: 900, height: 500 });
+    const isDraggingRef = useRef(false);
+    const isResizingRef = useRef(false);
+    
+    // ✨ PHASE 7.14: Textarea auto-resize ref
+    const questionTextareaRef = useRef(null);
+    
+    // ✨ PHASE 7.7-7.9: Q&A management - Declare early before useEffect that references them
+    const [questions, setQuestions] = useState([]);
+    const [addQuestionShow, setAddQuestionShow] = useState(false);
+    const [ConversationShow, setConversationShow] = useState(false);
+    const [selectedConversation, setSelectedConversation] = useState(null);
+    const [createMessage, setCreateMessage] = useState({ title: "", message: "" });
+    const [currentVariantContext, setCurrentVariantContext] = useState(null);
+    const [discussionFilters, setDiscussionFilters] = useState({ search: '', bagian: null, pelajaran: null });
+    const [filteredQuestions, setFilteredQuestions] = useState([]);
+    // ✨ PHASE 7.10: Inline forum view - track opened question for inline display instead of modal
+    const [openedQuestionId, setOpenedQuestionId] = useState(null);
+    
+    // ✨ PHASE 7.16: Q&A Report Modal State - Modeled after ReviewAbuse report system
+    const [showQAReportModal, setShowQAReportModal] = useState(false);
+    const [reportingQAId, setReportingQAId] = useState(null);  // qa_id being reported
+    const [reportingQAType, setReportingQAType] = useState('question');  // 'question' or 'message'
+    const [qaReportReason, setQaReportReason] = useState('');
+    const [qaReportDescription, setQaReportDescription] = useState('');
+    const [reportingQA, setReportingQA] = useState(false);  // Loading state during submission
+    
+    // ✨ PHASE 7.16: Track submitted Q&A reports for status display
+    const [qaReports, setQaReports] = useState({
+        question_reports: [],
+        message_reports: []
+    });
+    const [loadingQAReports, setLoadingQAReports] = useState(false);
+    
+    // ✨ PHASE 7.16+: Track the current report being viewed in modal (for showing feedback)
+    const [currentReportData, setCurrentReportData] = useState(null);
+    
+    // ✨ PHASE 7.16+: Track if we're editing an existing report
+    const [editingReportId, setEditingReportId] = useState(null);
+    
+    // ✨ PHASE 7.16+: Track which reports have been closed by user (Set of report IDs)
+    const [closedReports, setClosedReports] = useState(new Set());
+    
+    // ✨ PHASE 7.23: Track user's likes on questions and messages for UI feedback
+    const [userLikedQuestions, setUserLikedQuestions] = useState(new Set());  // Set of qa_ids that user has liked
+    const [userLikedMessages, setUserLikedMessages] = useState(new Set());  // Set of message IDs that user has liked
+    
+    // ✨ PHASE 7.23: Polling for live updates in forum
+    const forumPollingIntervalRef = useRef(null);
+    
+    // ✨ PHASE 7.8-7.9: Filter questions by search term, bagian, and pelajaran
+    useEffect(() => {
+        let filtered = questions;
+        
+        // Filter by search term (title or message)
+        if (discussionFilters.search?.trim()) {
+            const searchLower = discussionFilters.search.toLowerCase();
+            filtered = filtered.filter(q => {
+                const titleMatch = q.title?.toLowerCase().includes(searchLower);
+                const messageMatch = q.message?.toLowerCase().includes(searchLower);
+                return titleMatch || messageMatch;
+            });
+        }
+        
+        // Filter by bagian (section)
+        if (discussionFilters.bagian) {
+            filtered = filtered.filter(q => 
+                q.variant?.variant_id === discussionFilters.bagian
+            );
+        }
+        
+        // Filter by pelajaran (lesson)
+        if (discussionFilters.pelajaran) {
+            filtered = filtered.filter(q => 
+                q.variant_item?.variant_item_id === discussionFilters.pelajaran
+            );
+        }
+        
+        setFilteredQuestions(filtered);
+        
+        // ✨ PHASE 7.24: Populate user's liked questions from API data (user_liked field)
+        // This ensures question-cards in list view show correct like status
+        const likedQuestionIds = new Set();
+        filtered.forEach(q => {
+            if (q.user_liked) {
+                likedQuestionIds.add(q.qa_id);
+            }
+        });
+        setUserLikedQuestions(likedQuestionIds);
+        
+        console.log("[CourseDetail] 📋 Populated user likes from question list:", {
+            totalQuestions: filtered.length,
+            likedCount: likedQuestionIds.size,
+            likedIds: Array.from(likedQuestionIds)
+        });
+    }, [questions, discussionFilters]);
+
     // ✨ PHASE 4.224: Set up Bootstrap tab change listeners
     useEffect(() => {
         const tabElements = document.querySelectorAll('[data-bs-toggle="tab"]');
@@ -478,14 +594,7 @@ function CourseDetail() {
     const [selectedNote, setSelectedNote] = useState(null);
     const [selectedNoteColor, setSelectedNoteColor] = useState("#f39c12");
     
-    // Q&A management
-    const [questions, setQuestions] = useState([]);
-    const [addQuestionShow, setAddQuestionShow] = useState(false);
-    const [ConversationShow, setConversationShow] = useState(false);
-    const [selectedConversation, setSelectedConversation] = useState(null);
-    const [createMessage, setCreateMessage] = useState({ title: "", message: "" });
-    
-    // Review management
+    // Reviews management
     const [createReview, setCreateReview] = useState({ rating: 1, review: "" });
     const [studentReview, setStudentReview] = useState([]);
     const [isEditingReview, setIsEditingReview] = useState(false);
@@ -541,14 +650,313 @@ function CourseDetail() {
         }
     };
 
-    const handleConversationClose = () => setConversationShow(false);
+    // ✨ PHASE 7.25: Start polling for live updates when Diskusi tab is opened (not just detail view)
+    useEffect(() => {
+        if (activeTab === 'discussions') {
+            console.log("[CourseDetail] 🕐 Diskusi tab activated - starting live update polling for list view");
+            // Start polling for the entire list view, not just individual conversations
+            startForumPolling(null);  // null = polling for list view
+        } else {
+            // Stop polling when leaving Diskusi tab
+            if (forumPollingIntervalRef.current) {
+                console.log("[CourseDetail] 🛑 Diskusi tab deactivated - stopping polling");
+                clearInterval(forumPollingIntervalRef.current);
+                forumPollingIntervalRef.current = null;
+            }
+        }
+        
+        // Cleanup: stop polling when component unmounts or tab changes
+        return () => {
+            if (forumPollingIntervalRef.current && activeTab !== 'discussions') {
+                clearInterval(forumPollingIntervalRef.current);
+                forumPollingIntervalRef.current = null;
+            }
+        };
+    }, [activeTab]);  // ✨ Only depend on activeTab (startForumPolling is stable via useCallback)
+
+    const handleConversationClose = () => {
+        // ✨ PHASE 7.10: Close inline forum view instead of modal
+        setOpenedQuestionId(null);
+        setSelectedConversation(null);
+        
+        // ✨ PHASE 7.23: Clear polling when closing forum (but keep running if still on Diskusi tab)
+        // Don't clear polling here - let the tab change handler manage it
+        
+        // Clear likes state when closing conversation
+        setUserLikedQuestions(new Set());
+        setUserLikedMessages(new Set());
+    };
+    
+    // ✨ PHASE 7.23+: Populate user's likes when viewing conversation - Fixed to use user_liked field
+    const populateUserLikes = useCallback((conversation) => {
+        if (!conversation) return;
+        
+        const userId = UserData()?.user_id;
+        if (!userId) return;
+        
+        try {
+            // ✨ FIX: Check if current user likes the question using user_liked boolean field
+            const likedQuestionIds = new Set();
+            if (conversation.user_liked) {
+                likedQuestionIds.add(conversation.qa_id);
+            }
+            setUserLikedQuestions(likedQuestionIds);
+            
+            // ✨ FIX: Check if current user likes each message using msg.user_liked field
+            const likedMessageIds = new Set();
+            if (conversation.messages && Array.isArray(conversation.messages)) {
+                conversation.messages.forEach(msg => {
+                    if (msg.user_liked) {
+                        likedMessageIds.add(msg.id);
+                    }
+                });
+            }
+            setUserLikedMessages(likedMessageIds);
+            
+            console.log("[populateUserLikes] ✅ User likes populated:", {
+                likedQuestions: Array.from(likedQuestionIds),
+                likedMessages: Array.from(likedMessageIds),
+                question_user_liked: conversation.user_liked,
+                messages_count: conversation.messages?.length
+            });
+        } catch (error) {
+            console.log("[populateUserLikes] Could not determine user likes:", error);
+            // Continue without likes state - not critical
+        }
+    }, []);
+    
+    // ✨ PHASE 7.24: Refs to hold current implementations of fetch functions (defined later in component)
+    const fetchCourseDetailRef = useRef(null);
+    const fetchQAReportsRef = useRef(null);
+    
+    // ✨ PHASE 7.23+PHASE 7.24: Set up polling for live forum updates
+    const startForumPolling = useCallback((qaId) => {
+        // Clear existing polling
+        if (forumPollingIntervalRef.current) {
+            clearInterval(forumPollingIntervalRef.current);
+        }
+        
+        // Poll every 5 seconds to refresh course data which includes updated messages and like counts
+        forumPollingIntervalRef.current = setInterval(async () => {
+            try {
+                // ✨ PHASE 7.24: Call functions via refs to avoid closure issues
+                if (fetchCourseDetailRef.current) {
+                    await fetchCourseDetailRef.current(true);  // true = prevent loading state to avoid UI flash
+                }
+                if (fetchQAReportsRef.current) {
+                    await fetchQAReportsRef.current();
+                }
+                
+                console.log("[Forum Polling] ✅ Live data refreshed - questions, likes, and reports updated");
+            } catch (error) {
+                // Silently fail - polling is best-effort
+                console.log("[Forum Polling] Error fetching updates:", error);
+            }
+        }, 5000);  // Poll every 5 seconds
+    }, []);  // ✨ PHASE 7.24: No dependencies needed - uses refs to call functions
+    
+    // ✨ PHASE 7.24: Clean up forum polling interval on component unmount
+    useEffect(() => {
+        return () => {
+            if (forumPollingIntervalRef.current) {
+                clearInterval(forumPollingIntervalRef.current);
+                forumPollingIntervalRef.current = null;
+            }
+        };
+    }, []);
+    
+    // ✨ PHASE 7.24: Update refs after render so polling always calls latest implementations
+    useEffect(() => {
+        fetchCourseDetailRef.current = fetchCourseDetail;
+        fetchQAReportsRef.current = fetchQAReports;
+    });  // No dependencies - runs after every render to keep refs fresh
+    
     const handleConversationShow = (conversation) => {
-        setConversationShow(true);
+        // ✨ PHASE 7.10: Show inline forum view instead of modal
+        setOpenedQuestionId(conversation?.qa_id);
         setSelectedConversation(conversation);
+        
+        // ✨ PHASE 7.23: Populate user's likes and set up live polling
+        populateUserLikes(conversation);
+        startForumPolling(conversation?.qa_id);
+        
+        // ✨ DEBUG: Log selectedConversation details
+        console.log("[handleConversationShow] 📌 === CONVERSATION OPENED ===");
+        console.log("  - qa_id:", conversation?.qa_id);
+        console.log("  - title:", conversation?.title);
+        console.log("  - Full conversation object:", conversation);
+        console.log("  - messages array:", conversation?.messages);
+        console.log("  - messages count:", conversation?.messages?.length);
+        if (conversation?.messages?.length > 0) {
+            conversation.messages.forEach((msg, idx) => {
+                console.log(`  - Message ${idx}:`, {
+                    user_id: msg.user_id,
+                    profile: msg.profile,
+                    profile_user_id: msg.profile?.user_id,
+                    message_text: msg.message?.substring(0, 50)
+                });
+            });
+        }
+        
+        // Scroll to top of discussions tab
+        setTimeout(() => {
+            const discussionsTab = document.getElementById('discussions');
+            if (discussionsTab) {
+                discussionsTab.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, 100);
     };
 
     const handleQuestionClose = () => setAddQuestionShow(false);
     const handleQuestionShow = () => setAddQuestionShow(true);
+    
+    // ✨ PHASE 7.12: Sync state refs when state changes
+    useEffect(() => {
+        modalPositionRef.current = modalPosition;
+        modalSizeRef.current = modalSize;
+        isDraggingRef.current = isDragging;
+        isResizingRef.current = isResizing;
+    }, [modalPosition, modalSize, isDragging, isResizing]);
+    
+    // ✨ PHASE 7.12: Modal Drag and Resize Functionality with fixed positioning
+    useEffect(() => {
+        if (!addQuestionShow) return;
+        
+        const modalDialog = document.querySelector('.create-question-modal .modal-dialog');
+        const header = modalDialog?.querySelector('.modal-header-modern');
+        const resizeHandle = document.querySelector('.modal-resize-handle');
+        
+        if (!modalDialog || !header) return;
+        
+        // Apply initial position
+        const applyPosition = (dialog, pos, size) => {
+            if (!dialog) return;
+            dialog.style.position = 'fixed';
+            dialog.style.left = `${pos.x}px`;
+            dialog.style.top = `${pos.y}px`;
+            dialog.style.width = `${size.width}px`;
+            dialog.style.height = `${size.height}px`;  /* ✨ PHASE 7.13: Use height instead of minHeight */
+            dialog.style.zIndex = '1050';
+        };
+        
+        // \u2728 PHASE 7.13: Update resize handle position - use top/left for fixed positioning
+        const updateResizeHandle = (handle, pos, size) => {
+            if (!handle) return;
+            handle.style.position = 'fixed';
+            // Position at bottom-right corner of modal (offset by 15px for diamond shape)
+            handle.style.top = `${pos.y + size.height - 15}px`;
+            handle.style.left = `${pos.x + size.width - 15}px`;
+            handle.style.zIndex = '1051';
+        };
+        
+        applyPosition(modalDialog, modalPositionRef.current, modalSizeRef.current);
+        updateResizeHandle(resizeHandle, modalPositionRef.current, modalSizeRef.current);
+        
+        // Handle drag on header
+        const handleHeaderMouseDown = (e) => {
+            if (e.target.closest('.btn-close-modern')) return;
+            e.preventDefault();
+            isDraggingRef.current = true;
+            setIsDragging(true);
+            dragStartPos.current = {
+                x: e.clientX,
+                y: e.clientY,
+                modalX: modalPositionRef.current.x,
+                modalY: modalPositionRef.current.y,
+                modalWidth: modalSizeRef.current.width,
+                modalHeight: modalSizeRef.current.height
+            };
+        };
+        
+        // Handle resize on resize handle
+        const handleResizeMouseDown = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isResizingRef.current = true;
+            setIsResizing(true);
+            dragStartPos.current = {
+                x: e.clientX,
+                y: e.clientY,
+                modalX: modalPositionRef.current.x,
+                modalY: modalPositionRef.current.y,
+                modalWidth: modalSizeRef.current.width,
+                modalHeight: modalSizeRef.current.height
+            };
+        };
+        
+        const handleMouseMove = (e) => {
+            // Use refs to avoid closure issues
+            if (isDraggingRef.current) {
+                const deltaX = e.clientX - dragStartPos.current.x;
+                const deltaY = e.clientY - dragStartPos.current.y;
+                
+                const newX = dragStartPos.current.modalX + deltaX;
+                const newY = dragStartPos.current.modalY + deltaY;
+                
+                // Constrain to viewport
+                const constrainedX = Math.max(0, Math.min(newX, window.innerWidth - modalSizeRef.current.width));
+                const constrainedY = Math.max(0, newY);
+                
+                // Update state for React to track
+                setModalPosition({
+                    x: constrainedX,
+                    y: constrainedY
+                });
+                
+                // Update DOM immediately without waiting for state
+                modalDialog.style.left = `${constrainedX}px`;
+                modalDialog.style.top = `${constrainedY}px`;
+                
+                // Update resize handle position
+                updateResizeHandle(resizeHandle, 
+                    { x: constrainedX, y: constrainedY }, 
+                    modalSizeRef.current
+                );
+            } else if (isResizingRef.current) {
+                const deltaX = e.clientX - dragStartPos.current.x;
+                const deltaY = e.clientY - dragStartPos.current.y;
+                
+                const newWidth = Math.max(400, dragStartPos.current.modalWidth + deltaX);
+                const newHeight = Math.max(300, dragStartPos.current.modalHeight + deltaY);
+                
+                // Update state for React to track
+                setModalSize({
+                    width: newWidth,
+                    height: newHeight
+                });
+                
+                // Update DOM immediately without waiting for state
+                modalDialog.style.width = `${newWidth}px`;
+                modalDialog.style.height = `${newHeight}px`;  /* ✨ PHASE 7.13: Use height instead of minHeight for resize */
+                
+                // Update resize handle position
+                updateResizeHandle(resizeHandle, 
+                    modalPositionRef.current,
+                    { width: newWidth, height: newHeight }
+                );
+            }
+        };
+        
+        const handleMouseUp = () => {
+            isDraggingRef.current = false;
+            isResizingRef.current = false;
+            setIsDragging(false);
+            setIsResizing(false);
+        };
+        
+        header.addEventListener('mousedown', handleHeaderMouseDown);
+        if (resizeHandle) resizeHandle.addEventListener('mousedown', handleResizeMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        
+        return () => {
+            header.removeEventListener('mousedown', handleHeaderMouseDown);
+            if (resizeHandle) resizeHandle.removeEventListener('mousedown', handleResizeMouseDown);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [addQuestionShow]);
+    
 
     // Quiz handlers
     const handleQuizClose = () => {
@@ -940,15 +1348,64 @@ function CourseDetail() {
         return Math.ceil(totalSeconds / 2700);
     };
 
+    // ✨ PHASE 7.24: Regular function - no memoization needed since we use refs for polling
     const fetchCourseDetail = async (preventLoadingState = false) => {
         if (!preventLoadingState) {
             setIsUpdatingCourse(true);
         }
         
         useAxios.get(`student/course-detail/${UserData()?.user_id}/${param.enrollment_id}/`).then((res) => {
+            console.log("[CourseDetail] 📥 Course detail API response received");
+            console.log("[CourseDetail] - course.teacher:", res.data.course?.teacher);
+            console.log("[CourseDetail] - course.teacher.user_id:", res.data.course?.teacher?.user_id);
+            console.log("[CourseDetail] ✨ PHASE 7.22: Verifying teacher data structure:");
+            console.log("[CourseDetail]   Full course object structure:", res.data.course);
+            console.log("[CourseDetail]   Teacher object:", res.data.course?.teacher);
+            console.log("[CourseDetail]   Teacher user_id:", res.data.course?.teacher?.user_id);
+            console.log("[CourseDetail] - question_answer[0]:", res.data.question_answer?.[0]);
+            if (res.data.question_answer?.[0]) {
+                console.log("[CourseDetail] - question_answer[0].profile:", res.data.question_answer[0].profile);
+                console.log("[CourseDetail] - question_answer[0].user_id:", res.data.question_answer[0].user_id);
+                console.log("[CourseDetail] - question_answer[0].messages[0]:", res.data.question_answer[0].messages?.[0]);
+                if (res.data.question_answer[0].messages?.[0]) {
+                    console.log("[CourseDetail] - message[0].profile:", res.data.question_answer[0].messages[0].profile);
+                    console.log("[CourseDetail] - message[0].profile.user_id:", res.data.question_answer[0].messages[0].profile?.user_id);
+                    console.log("[CourseDetail] - message[0].user_id:", res.data.question_answer[0].messages[0].user_id);
+                }
+            }
             setCourse(res.data);
             setQuestions(res.data.question_answer);
             setStudentReview(res.data.review);
+            
+            // ✨ PHASE 7.23+: Sync selectedConversation with fresh data when polling updates questions
+            if (openedQuestionId && res.data.question_answer) {
+                const updatedQuestion = res.data.question_answer.find(q => q.qa_id === openedQuestionId);
+                if (updatedQuestion) {
+                    console.log("[CourseDetail] ✨ LIVE SYNC: Updating selectedConversation with fresh data from polling");
+                    console.log("[CourseDetail] - New likes_count:", updatedQuestion.likes_count);
+                    console.log("[CourseDetail] - New messages count:", updatedQuestion.messages?.length);
+                    console.log("[CourseDetail] - user_liked:", updatedQuestion.user_liked);
+                    setSelectedConversation(updatedQuestion);
+                    
+                    // ✨ PHASE 7.23+: Update user's liked status based on fresh API data (user_liked field)
+                    if (updatedQuestion.user_liked) {
+                        setUserLikedQuestions(prev => new Set([...prev, updatedQuestion.qa_id]));
+                    } else {
+                        setUserLikedQuestions(prev => new Set([...prev].filter(id => id !== updatedQuestion.qa_id)));
+                    }
+                    
+                    // ✨ PHASE 7.23+: Update message likes if messages exist
+                    if (updatedQuestion.messages && Array.isArray(updatedQuestion.messages)) {
+                        const likedMessageIds = new Set();
+                        updatedQuestion.messages.forEach(msg => {
+                            if (msg.user_liked) {
+                                likedMessageIds.add(msg.id);
+                            }
+                        });
+                        setUserLikedMessages(likedMessageIds);
+                    }
+                }
+            }
             
             // Calculate total lessons from curriculum more accurately
             const totalLessons = res.data.curriculum?.reduce((total, section) => {
@@ -987,7 +1444,7 @@ function CourseDetail() {
         }).finally(() => {
             setIsUpdatingCourse(false);
         });
-    };
+    };  // ✨ PHASE 7.24: Regular function version - refs will hold latest implementation
 
     // Quiz Resume Functions
     const saveQuizProgress = (quizData, answers, currentIndex, timeLeft, startTime) => {
@@ -1253,6 +1710,7 @@ function CourseDetail() {
         });
     };    useEffect(() => {
         fetchCourseDetail();
+        fetchQAReports(); // ✨ PHASE 7.16: Load user's submitted Q&A reports
         
         // Debug helper - add a test function to window for testing resume functionality
         window.testQuizResume = (quizId) => {
@@ -1287,6 +1745,44 @@ function CourseDetail() {
         
         // checkForResumeableQuiz will be called after quizzes are loaded
     }, []);
+
+    // ✨ PHASE 7.16+: Refetch Q&A reports whenever questions load
+    useEffect(() => {
+        if (questions && questions.length > 0) {
+            console.log("[CourseDetail] Questions loaded, refetching Q&A reports...");
+            // Small delay to ensure data is ready
+            setTimeout(() => {
+                fetchQAReports();  // ✨ PHASE 7.24: fetchQAReports is now memoized
+            }, 100);
+        }
+    }, [questions.length]);  // ✨ PHASE 7.24: fetchQAReports is regular function, not in dependencies
+
+    // ✨ PHASE 7.16+: Set currentReportData when modal opens and reports are ready
+    useEffect(() => {
+        if (showQAReportModal && reportingQAId && qaReports) {
+            console.log("[CourseDetail] Modal opened, looking up report for:", reportingQAId);
+            
+            let report = null;
+            if (reportingQAType === 'question') {
+                report = qaReports?.question_reports?.find(r => r.question__qa_id === reportingQAId);
+            } else {
+                report = qaReports?.message_reports?.find(r => r.message__qa_id === reportingQAId);
+            }
+            
+            console.log("[CourseDetail] Found report:", report);
+            if (report) {
+                setCurrentReportData(report);
+            }
+        }
+    }, [showQAReportModal, reportingQAId, qaReports]);
+
+    // ✨ PHASE 7.16+: Refetch Q&A reports when courseId becomes available
+    useEffect(() => {
+        if (courseId) {
+            console.log("[CourseDetail] Course ID loaded, fetching Q&A reports...");
+            fetchQAReports();
+        }
+    }, [courseId]);
 
     // Cleanup timer on component unmount
     useEffect(() => {
@@ -1531,6 +2027,13 @@ function CourseDetail() {
             ...createMessage,
             [event.target.name]: event.target.value,
         });
+        
+        // ✨ PHASE 7.14: Auto-resize textarea on input
+        if (questionTextareaRef.current && event.target.name === 'message') {
+            const textarea = questionTextareaRef.current;
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 400) + 'px';  // Max height 400px
+        }
     };
 
     const handleSaveQuestion = async (e) => {
@@ -1541,6 +2044,10 @@ function CourseDetail() {
         formdata.append("user_id", UserData()?.user_id);
         formdata.append("title", createMessage.title);
         formdata.append("message", createMessage.message);
+        // ✨ PHASE 7.7: Send lesson context to backend for proper organization and filtering
+        if (currentVariantContext?.variant_item_id) {
+            formdata.append("variant_item_id", currentVariantContext.variant_item_id);
+        }
 
         await useAxios.post(`student/question-answer-list-create/${course.course?.id}/`, formdata).then((res) => {
             fetchCourseDetail();
@@ -1607,6 +2114,465 @@ function CourseDetail() {
             Toast().fire({
                 icon: "error",
                 title: "Gagal mengirim pesan"
+            });
+        }
+    };
+
+    // ✨ PHASE 7.16+PHASE 7.24: Fetch Q&A Reports - Regular function (not memoized, refs will hold latest)
+    const fetchQAReports = async () => {
+        try {
+            console.log("\n[fetchQAReports] ========== STARTING REPORT FETCH ==========");
+            const userData = UserData();
+            console.log("[fetchQAReports] Current UserData:", userData);
+            
+            if (!userData?.id && !userData?.user_id) {
+                console.warn("[fetchQAReports] ❌ User ID not found, skipping report fetch");
+                return;
+            }
+
+            const userId = userData?.id || userData?.user_id;
+            // ✨ Use courseId from state (populated by fetchCourseDetail), not URL params
+            const crsId = courseId;
+            
+            console.log(`[fetchQAReports] 📤 Fetching with userId=${userId} (type: ${typeof userId}), courseId=${crsId} (type: ${typeof crsId})`);
+            console.log(`[fetchQAReports] 📡 Endpoint: /api/v1/student/qa-reports/${crsId}/?user_id=${userId}`);
+            
+            const res = await useAxios.get(`student/qa-reports/${crsId}/?user_id=${userId}`);
+            const reports = res.data;
+            
+            console.log("[fetchQAReports] ✅ API Response received:");
+            console.log("[fetchQAReports]   Full Response:", res);
+            console.log("[fetchQAReports]   Response Status:", res.status);
+            console.log("[fetchQAReports]   Response Data:", reports);
+            console.log("[fetchQAReports]   Question reports count:", reports?.question_reports?.length || 0);
+            console.log("[fetchQAReports]   Question reports data:", reports?.question_reports);
+            console.log("[fetchQAReports]   Message reports count:", reports?.message_reports?.length || 0);
+            console.log("[fetchQAReports]   Message reports data:", reports?.message_reports);
+            
+            // Ensure data structure is correct
+            const normalizedReports = {
+                question_reports: reports?.question_reports || [],
+                message_reports: reports?.message_reports || []
+            };
+            
+            console.log("[fetchQAReports] 📊 Normalized reports state:", normalizedReports);
+            console.log("[fetchQAReports] ========== REPORT FETCH COMPLETE ==========\n");
+            setQaReports(normalizedReports);
+        } catch (error) {
+            console.error("\n[fetchQAReports] ❌ ========== ERROR FETCHING REPORTS ==========");
+            console.error("[fetchQAReports] Error object:", error);
+            console.error("[fetchQAReports] Error response:", error.response);
+            console.error("[fetchQAReports] Error message:", error.message);
+            console.error("[fetchQAReports] Error status:", error.response?.status);
+            if (error.response?.status === 401) {
+                console.error("[fetchQAReports] 🔐 AUTHENTICATION ERROR - user may not be logged in");
+            }
+            if (error.response?.status === 403) {
+                console.error("[fetchQAReports] 🛑 PERMISSION ERROR - user may not have access");
+            }
+            console.error("[fetchQAReports] ========== ERROR COMPLETE ==========\n");
+        }
+    };  // ✨ PHASE 7.24: Regular function version - refs will hold latest implementation
+
+    // ✨ PHASE 7.16+: Enhanced Q&A Report Modal Handlers - Check for existing report to show feedback
+    const handleOpenQAReportModal = (question, type = 'question') => {
+        setReportingQAId(question.qa_id);
+        setReportingQAType(type);
+        setShowQAReportModal(true);
+        
+        console.log("[handleOpenQAReportModal] Opening modal for:", { qaId: question.qa_id, type, qaReports });
+        
+        // ✨ PHASE 7.16+: Check if user already has a report for this item
+        let existingReport = null;
+        
+        if (type === 'question') {
+            console.log("[handleOpenQAReportModal] Searching question_reports for:", question.qa_id);
+            console.log("[handleOpenQAReportModal] Available question reports:", qaReports?.question_reports);
+            
+            existingReport = qaReports?.question_reports?.find(r => {
+                console.log(`[handleOpenQAReportModal] Comparing ${r.question__qa_id} === ${question.qa_id}: ${r.question__qa_id === question.qa_id}`);
+                return r.question__qa_id === question.qa_id;
+            });
+        } else {
+            console.log("[handleOpenQAReportModal] Searching message_reports for:", question.qa_id);
+            console.log("[handleOpenQAReportModal] Available message reports:", qaReports?.message_reports);
+            
+            existingReport = qaReports?.message_reports?.find(r => {
+                console.log(`[handleOpenQAReportModal] Comparing ${r.message__qa_id} === ${question.qa_id}: ${r.message__qa_id === question.qa_id}`);
+                return r.message__qa_id === question.qa_id;
+            });
+        }
+        
+        console.log("[handleOpenQAReportModal] Found existing report:", existingReport);
+        
+        if (existingReport) {
+            // Show existing report feedback
+            setCurrentReportData(existingReport);
+            setQaReportReason('');
+            setQaReportDescription('');
+            console.log("[handleOpenQAReportModal] Setting current report data:", existingReport);
+        } else {
+            // Show form for new report
+            setCurrentReportData(null);
+            setQaReportReason('');
+            setQaReportDescription('');
+            console.log("[handleOpenQAReportModal] No existing report, showing form");
+        }
+    };
+
+    // ✨ PHASE 7.16: Helper function to check if a Q&A item has been reported by current user
+    const isQAItemReported = (qaId) => {
+        const question_reports = qaReports?.question_reports || [];
+        const message_reports = qaReports?.message_reports || [];
+        return question_reports.some(r => r.question__qa_id === qaId) || 
+               message_reports.some(r => r.message__qa_id === qaId);
+    };
+
+    // ✨ PHASE 7.16+: Helper function to get report status for a Q&A item
+    const getQAReportStatus = (qaId, type = 'question') => {
+        if (type === 'question') {
+            return qaReports?.question_reports?.find(r => r.question__qa_id === qaId);
+        } else {
+            return qaReports?.message_reports?.find(r => r.message__qa_id === qaId);
+        }
+    };
+
+    const handleOpenQAMessageReportModal = (message) => {
+        setReportingQAId(message.qa_id);
+        setReportingQAType('message');
+        setShowQAReportModal(true);
+        
+        // ✨ PHASE 7.16+: Check if user already has a report for this message
+        const existingReport = qaReports.message_reports?.find(r => r.message__qa_id === message.qa_id);
+        if (existingReport) {
+            setCurrentReportData(existingReport);
+            setQaReportReason('');
+            setQaReportDescription('');
+        } else {
+            setCurrentReportData(null);
+            setQaReportReason('');
+            setQaReportDescription('');
+        }
+    };
+
+    const handleCloseQAReportModal = () => {
+        console.log("[handleCloseQAReportModal] Closing modal");
+        
+        // ✨ PHASE 7.16+: If report is reviewed (not pending), mark case as closed for this session
+        if (currentReportData && currentReportData.status !== 'pending') {
+            console.log("[handleCloseQAReportModal] Report is reviewed, marking case as closed");
+            setClosedReports(prev => new Set([...prev, currentReportData.id]));
+            console.log("[handleCloseQAReportModal] Case marked closed - user cannot edit or interact with it");
+        }
+        
+        setShowQAReportModal(false);
+        setReportingQAId(null);
+        setReportingQAType('question');
+        setQaReportReason('');
+        setQaReportDescription('');
+        setCurrentReportData(null);  // ✨ PHASE 7.16+: Clear current report data on close
+        setEditingReportId(null);  // ✨ PHASE 7.16+: Clear editing state
+        console.log("[handleCloseQAReportModal] Modal state cleared");
+    };
+
+    const handleEditQAReport = () => {
+        console.log("[handleEditQAReport] Entering edit mode for Q&A report", currentReportData);
+        // Load previous report data into form fields
+        if (currentReportData) {
+            setQaReportReason(currentReportData.reason || '');
+            setQaReportDescription(currentReportData.description || '');
+            setEditingReportId(currentReportData.id);  // ✨ PHASE 7.16+: Track the report ID being edited
+            console.log("[handleEditQAReport] Form loaded with previous data, ready for re-submission");
+        }
+    };
+
+    const handleSubmitQAReport = async () => {
+        if (!qaReportReason.trim()) {
+            Toast().fire({
+                icon: "warning",
+                title: "Silakan pilih alasan laporan",
+            });
+            return;
+        }
+
+        setReportingQA(true);
+
+        try {
+            const userData = UserData();
+            if (!userData?.id && !userData?.user_id) {
+                throw new Error("User ID not found");
+            }
+
+            // ✨ PHASE 7.16+: Use editingReportId for PUT requests, reportingQAId for POST requests
+            const urlId = editingReportId || reportingQAId;
+            const endpoint = reportingQAType === 'message' 
+                ? `student/question-answer-message-report/${urlId}/`
+                : `student/question-answer-report/${urlId}/`;
+
+            // ✨ PHASE 7.16+: Handle both new reports (POST) and edited reports (PUT)
+            if (editingReportId) {
+                // Update existing report and reset status to "pending"
+                await useAxios.put(endpoint, {
+                    user_id: userData?.user_id || userData?.id,
+                    reason: qaReportReason,
+                    description: qaReportDescription,
+                    status: 'pending',  // Reset to pending review
+                });
+                console.log("[handleSubmitQAReport] Report updated with status reset to 'pending'");
+            } else {
+                // Create new report
+                await useAxios.post(endpoint, {
+                    user_id: userData?.user_id || userData?.id,
+                    reason: qaReportReason,
+                    description: qaReportDescription,
+                });
+                console.log("[handleSubmitQAReport] New report created");
+            }
+
+            Toast().fire({
+                icon: "success",
+                title: editingReportId ? "Laporan berhasil diperbarui!" : "Laporan berhasil dikirim!",
+                text: editingReportId ? "Laporan Anda telah diperbarui dan menunggu tinjauan ulang." : "Admin akan meninjau laporan Anda dalam waktu singkat.",
+            });
+
+            // ✨ PHASE 7.16+: Close modal first, then refetch and reopen to show status
+            console.log("[handleSubmitQAReport] Closing modal first");
+            setShowQAReportModal(false);
+            
+            setTimeout(() => {
+                console.log("[handleSubmitQAReport] Fetching fresh reports after 500ms");
+                fetchQAReports();
+                
+                // Reopen modal with the new report status
+                setTimeout(() => {
+                    console.log("[handleSubmitQAReport] Reopening modal to show report status");
+                    const qaIdValue = reportingQAId;
+                    const typeValue = reportingQAType;
+                    
+                    setReportingQAId(qaIdValue);
+                    setReportingQAType(typeValue);
+                    setShowQAReportModal(true);
+                    setQaReportReason('');
+                    setQaReportDescription('');
+                    setEditingReportId(null);  // ✨ PHASE 7.16+: Clear editing state after successful submission
+                    
+                    console.log("[handleSubmitQAReport] Modal reopened - should show report status");
+                }, 600);
+            }, 100);
+        } catch (error) {
+            console.error("Error submitting Q&A report:", error);
+            if (error.response?.data?.error) {
+                Toast().fire({
+                    icon: "error",
+                    title: error.response.data.error,
+                });
+            } else {
+                Toast().fire({
+                    icon: "error",
+                    title: "Gagal mengirim laporan. Silakan coba lagi.",
+                });
+            }
+        } finally {
+            setReportingQA(false);
+        }
+    };
+
+    // ✨ PHASE 7.16: Like question handler
+    const handleLikeQuestion = async (question) => {
+        try {
+            const userId = UserData()?.user_id;
+            const isCurrentlyLiked = userLikedQuestions.has(question.qa_id);
+            
+            // ✨ PHASE 7.23: Optimistically update UI before API response
+            if (isCurrentlyLiked) {
+                // Unliking
+                setUserLikedQuestions(prev => new Set([...prev].filter(id => id !== question.qa_id)));
+                
+                // ✨ PHASE 7.24: Update underlying questions state to keep in sync
+                setQuestions(prev => prev.map(q =>
+                    q.qa_id === question.qa_id
+                        ? { ...q, likes_count: Math.max(0, (q.likes_count || 0) - 1), user_liked: false }
+                        : q
+                ));
+                
+                setFilteredQuestions(prev => prev.map(q => 
+                    q.qa_id === question.qa_id 
+                        ? { ...q, likes_count: Math.max(0, (q.likes_count || 0) - 1), user_liked: false }
+                        : q
+                ));
+                // ✨ PHASE 7.24: Sync selectedConversation if viewing this question
+                if (selectedConversation?.qa_id === question.qa_id) {
+                    setSelectedConversation(prev => ({
+                        ...prev,
+                        likes_count: Math.max(0, (prev.likes_count || 0) - 1),
+                        user_liked: false
+                    }));
+                }
+            } else {
+                // Liking
+                setUserLikedQuestions(prev => new Set([...prev, question.qa_id]));
+                
+                // ✨ PHASE 7.24: Update underlying questions state to keep in sync
+                setQuestions(prev => prev.map(q =>
+                    q.qa_id === question.qa_id
+                        ? { ...q, likes_count: (q.likes_count || 0) + 1, user_liked: true }
+                        : q
+                ));
+                
+                setFilteredQuestions(prev => prev.map(q => 
+                    q.qa_id === question.qa_id 
+                        ? { ...q, likes_count: (q.likes_count || 0) + 1, user_liked: true }
+                        : q
+                ));
+                // ✨ PHASE 7.24: Sync selectedConversation if viewing this question
+                if (selectedConversation?.qa_id === question.qa_id) {
+                    setSelectedConversation(prev => ({
+                        ...prev,
+                        likes_count: (prev.likes_count || 0) + 1,
+                        user_liked: true
+                    }));
+                }
+            }
+            
+            const response = await useAxios.post(`student/question-answer-like/${question.qa_id}/`, {
+                user_id: userId,
+                course_id: course.course?.id,
+            });
+            
+            // Update with actual count from server
+            if (response.data) {
+                // ✨ PHASE 7.24: Update both questions states with server response
+                setQuestions(prev => prev.map(q =>
+                    q.qa_id === question.qa_id
+                        ? { ...q, likes_count: response.data.likes_count || 0, user_liked: response.data.liked || false }
+                        : q
+                ));
+                
+                // Update in filteredQuestions list
+                setFilteredQuestions(prev => prev.map(q => 
+                    q.qa_id === question.qa_id 
+                        ? { ...q, likes_count: response.data.likes_count || 0, user_liked: response.data.liked || false }
+                        : q
+                ));
+                
+                // ✨ PHASE 7.23: Update user's liked status based on server response
+                if (response.data.liked) {
+                    setUserLikedQuestions(prev => new Set([...prev, question.qa_id]));
+                } else {
+                    setUserLikedQuestions(prev => new Set([...prev].filter(id => id !== question.qa_id)));
+                }
+                
+                // ✨ PHASE 7.24: Also update selectedConversation if viewing this question - Use server response
+                if (selectedConversation?.qa_id === question.qa_id) {
+                    setSelectedConversation(prev => ({
+                        ...prev,
+                        likes_count: response.data.likes_count || 0,
+                        user_liked: response.data.liked || false  // ✨ PHASE 7.24: Sync user_liked status
+                    }));
+                }
+                
+                Toast().fire({
+                    icon: "success",
+                    title: response.data.message || "Berhasil sukai pertanyaan"
+                });
+            }
+        } catch (error) {
+            // Revert optimistic updates on error
+            setUserLikedQuestions(prev => {
+                const isCurrentlyLiked = prev.has(question.qa_id);
+                if (!isCurrentlyLiked) {
+                    return new Set([...prev, question.qa_id]);
+                } else {
+                    return new Set([...prev].filter(id => id !== question.qa_id));
+                }
+            });
+            
+            Toast().fire({
+                icon: "error",
+                title: error.response?.data?.message || "Gagal sukai pertanyaan"
+            });
+        }
+    };
+
+    const handleLikeMessage = async (message) => {
+        try {
+            const userId = UserData()?.user_id;
+            const isCurrentlyLiked = userLikedMessages.has(message.id);
+            
+            // ✨ PHASE 7.23: Optimistically update UI before API response
+            if (isCurrentlyLiked) {
+                // Unliking
+                setUserLikedMessages(prev => new Set([...prev].filter(id => id !== message.id)));
+                // ✨ PHASE 7.24: Sync message likes in selectedConversation immediately
+                if (selectedConversation?.messages) {
+                    setSelectedConversation(prev => ({
+                        ...prev,
+                        messages: prev.messages.map(m => 
+                            m.id === message.id 
+                                ? { ...m, likes_count: Math.max(0, (m.likes_count || 0) - 1), user_liked: false }
+                                : m
+                        )
+                    }));
+                }
+            } else {
+                // Liking
+                setUserLikedMessages(prev => new Set([...prev, message.id]));
+                // ✨ PHASE 7.24: Sync message likes in selectedConversation immediately
+                if (selectedConversation?.messages) {
+                    setSelectedConversation(prev => ({
+                        ...prev,
+                        messages: prev.messages.map(m => 
+                            m.id === message.id 
+                                ? { ...m, likes_count: (m.likes_count || 0) + 1, user_liked: true }
+                                : m
+                        )
+                    }));
+                }
+            }
+            
+            const response = await useAxios.post(`student/question-answer-message-like/${selectedConversation.qa_id}/`, {
+                user_id: userId,
+                course_id: course.course?.id,
+                message_id: message.id,
+            });
+            
+            // Update message likes count in selectedConversation with server response
+            if (response.data) {
+                setSelectedConversation(prev => ({
+                    ...prev,
+                    messages: prev.messages.map(m => 
+                        m.id === message.id 
+                            ? { ...m, likes_count: response.data.likes_count || 0, user_liked: response.data.liked || false }  // ✨ PHASE 7.24: Sync user_liked
+                            : m
+                    )
+                }));
+                
+                // ✨ PHASE 7.23: Update user's liked status based on server response
+                if (response.data.liked) {
+                    setUserLikedMessages(prev => new Set([...prev, message.id]));
+                } else {
+                    setUserLikedMessages(prev => new Set([...prev].filter(id => id !== message.id)));
+                }
+                
+                Toast().fire({
+                    icon: "success",
+                    title: response.data.message || "Berhasil sukai jawaban"
+                });
+            }
+        } catch (error) {
+            // Revert optimistic updates on error
+            setUserLikedMessages(prev => {
+                const isCurrentlyLiked = prev.has(message.id);
+                if (!isCurrentlyLiked) {
+                    return new Set([...prev, message.id]);
+                } else {
+                    return new Set([...prev].filter(id => id !== message.id));
+                }
+            });
+            
+            Toast().fire({
+                icon: "error",
+                title: error.response?.data?.message || "Gagal sukai jawaban"
             });
         }
     };
@@ -2358,99 +3324,633 @@ function CourseDetail() {
 
                                         {/* Discussions Tab */}
                                         <div className="tab-pane fade" id="discussions" role="tabpanel">
-                                            <div className="d-flex justify-content-between align-items-center mb-4">
-                                                <h4 className="mb-0">Diskusi Kursus</h4>
-                                                <button 
-                                                    className="add-btn-modern" 
-                                                    onClick={handleQuestionShow}
-                                                >
-                                                    <i className="fas fa-plus"></i>
-                                                    Ajukan Pertanyaan
-                                                </button>
+                                            {/* ✨ PHASE 7.10: Header - shows "Diskusi Kursus" when viewing list, question title when viewing detail */}
+                                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                                {!openedQuestionId && (
+                                                    <>
+                                                        <h4 className="mb-0">Diskusi Kursus</h4>
+                                                        <button 
+                                                            className="add-btn-modern" 
+                                                            onClick={handleQuestionShow}
+                                                        >
+                                                            <i className="fas fa-plus"></i>
+                                                            Ajukan Pertanyaan
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
                                             
-                                            {questions?.length > 0 ? (
-                                                questions.map((q, index) => (
-                                                    <div 
-                                                        key={q.qa_id || index} 
-                                                        className="question-card"
-                                                        onClick={() => handleConversationShow(q)}
-                                                    >
-                                                        <div className="question-header">
-                                                            <div className="question-avatar">
-                                                                {q.profile?.image ? (
-                                                                    <img
-                                                                        src={q.profile.image.startsWith("http") 
-                                                                            ? q.profile.image 
-                                                                            : getMediaUrl(q.profile.image)
-                                                                        }
-                                                                        className="avatar-modern"
-                                                                        alt={`${q.profile?.full_name || "User"} avatar`}
-                                                                        onError={(e) => {
-                                                                            e.target.style.display = "none";
-                                                                            e.target.nextSibling.style.display = "flex";
-                                                                        }}
-                                                                    />
-                                                                ) : null}
-                                                                <div 
-                                                                    className={`avatar-placeholder ${q.profile?.image ? 'd-none' : 'd-flex'}`}
+                                            {/* ✨ PHASE 7.10: Inline forum view - show when a question is opened */}
+                                            {openedQuestionId && selectedConversation ? (
+                                                <div className="forum-thread-container">
+                                                    {/* Professional Forum Header */}
+                                                    <div className="forum-thread-header">
+                                                        <div className="forum-thread-title-area">
+                                                            <div className="d-flex align-items-center gap-3">
+                                                                <button
+                                                                    className="btn btn-outline-primary"
+                                                                    onClick={handleConversationClose}
+                                                                    style={{ minWidth: '50px', padding: '0.5rem 1rem', flexShrink: 0 }}
                                                                 >
-                                                                    <i className="fas fa-user"></i>
-                                                                </div>
+                                                                    <i className="fas fa-arrow-left me-2"></i>
+                                                                    Kembali
+                                                                </button>
+                                                                <h2 className="forum-thread-title">
+                                                                    {selectedConversation.title || 'Tidak Ada Judul'}
+                                                                </h2>
                                                             </div>
-                                                            
-                                                            <div className="question-content">
-                                                                <h5 className="question-title">
-                                                                    {q.title || "Tidak Ada Judul"}
-                                                                </h5>
-                                                                
-                                                                <div className="question-meta">
-                                                                    <div className="question-meta-item">
-                                                                        <i className="fas fa-user question-meta-icon"></i>
-                                                                        <span>{q.profile?.full_name || "Pengguna Anonim"}</span>
+                                                        </div>
+                                                        {/* ✨ PHASE 7.15: Breadcrumb and Meta in one line */}
+                                                        <div className="forum-header-footer">
+                                                            <div className="forum-breadcrumb">
+                                                                {selectedConversation.variant && (
+                                                                    <>
+                                                                        <i className="fas fa-folder me-1" style={{ color: '#016b87' }}></i>
+                                                                        <span>{selectedConversation.variant.title}</span>
+                                                                        {selectedConversation.variant_item && <span className="mx-2">/</span>}
+                                                                    </>
+                                                                )}
+                                                                {selectedConversation.variant_item && (
+                                                                    <>
+                                                                        <i className="fas fa-file me-1" style={{ color: '#662d91' }}></i>
+                                                                        <span>{selectedConversation.variant_item.title}</span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                            <div className="forum-thread-meta">
+                                                                <span className="forum-meta-badge">
+                                                                    <i className="fas fa-comments"></i>
+                                                                    {selectedConversation.messages?.length || 0} Balasan
+                                                                </span>
+                                                                <span className="forum-meta-badge">
+                                                                    <i className="fas fa-clock"></i>
+                                                                    {moment(selectedConversation.date).fromNow()}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Original Question Card - Professional Style */}
+                                                    <div className="forum-post-card forum-original-post">
+{/* Post Header */}
+                                                        <div className="forum-post-header">
+                                                            <div className="forum-user-info">
+                                                                <div className="forum-user-avatar-wrapper">
+                                                                    {selectedConversation.profile?.image ? (
+                                                                        <img
+                                                                            src={selectedConversation.profile.image.startsWith("http") 
+                                                                                ? selectedConversation.profile.image 
+                                                                                : selectedConversation.profile.image.startsWith("/images/")
+                                                                                    ? selectedConversation.profile.image
+                                                                                    : getMediaUrl(selectedConversation.profile.image)}
+                                                                            alt={selectedConversation.profile?.full_name || "User"}
+                                                                            className="forum-user-avatar"
+                                                                            onError={(e) => {
+                                                                                e.target.style.display = "none";
+                                                                                e.target.nextSibling.style.display = "flex";
+                                                                            }}
+                                                                        />
+                                                                    ) : null}
+                                                                    <div 
+                                                                        className="forum-user-avatar-placeholder"
+                                                                        style={{ display: selectedConversation.profile?.image ? "none" : "flex" }}
+                                                                    >
+                                                                        <i className="fas fa-user"></i>
                                                                     </div>
-                                                                    <div className="question-meta-item">
-                                                                        <i className="fas fa-calendar-alt question-meta-icon"></i>
-                                                                        <span>{moment(q.date).format("DD MMM, YYYY")}</span>
+                                                                </div>
+                                                                <div className="forum-user-details">
+                                                                    <div className="forum-user-name">
+                                                                        {selectedConversation.profile?.full_name || 'Pengguna Anonim'}
+                                                                        <span className="forum-user-badge-asker">Penanya</span>
+                                                                        {/* ✨ PHASE 7.23: Show "Anda" badge if user created this question */}
+                                                                        {(selectedConversation?.user_id === UserData()?.user_id) || 
+                                                                         (selectedConversation?.profile?.user_id === UserData()?.user_id) ? (
+                                                                            <span className="forum-user-badge-current">Anda</span>
+                                                                        ) : null}
+                                                                        {/* ✨ PHASE 7.22: Fix teacher path - nested at course.course?.teacher, not course.teacher */}
+                                                                        {course?.course?.teacher && (
+                                                                            (selectedConversation?.user_id === course.course.teacher.user_id) ||
+                                                                            (selectedConversation?.profile?.user_id === course.course.teacher.user_id)
+                                                                        ) && (
+                                                                            <span className="forum-user-badge-instructor" title="Instruktur Kursus">
+                                                                                <i className="fas fa-chalkboard-user"></i>
+                                                                                Instruktur
+                                                                            </span>
+                                                                        )}
+                                                                        {/* ✨ PHASE 7.16: Show "Reported" badge if current user has reported this question */}
+                                                                        {isQAItemReported(selectedConversation.qa_id) && (
+                                                                            <span className="forum-user-badge-reported">
+                                                                                <i className="fas fa-flag me-1"></i>
+                                                                                Sudah Dilaporkan
+                                                                            </span>
+                                                                        )}
                                                                     </div>
-                                                                    <div className="question-meta-item">
-                                                                        <i className="fas fa-clock question-meta-icon"></i>
-                                                                        <span>{moment(q.date).fromNow()}</span>
+                                                                    <div className="forum-user-timestamp">
+                                                                        <i className="fas fa-clock-o me-1"></i>
+                                                                        {moment(selectedConversation.date).format("DD MMM YYYY [pada] HH:mm")}
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        <p className="mb-0">{q.message}</p>
-                                                        
-                                                        <div className="question-actions">
-                                                            <div className="question-stats">
-                                                                <span className="replies-badge">
-                                                                    <i className="fas fa-comments"></i>
-                                                                    {q.messages?.length || 0} Balasan
-                                                                </span>
+                                                        {/* Post Content */}
+                                                        <div className="forum-post-content">
+                                                            {selectedConversation.message || (selectedConversation.messages?.[0]?.message) || 'Tidak ada pesan'}
+                                                        </div>
+
+                                                        {/* Post Footer with Like and Report Button */}
+                                                        <div className="forum-post-footer">
+                                                            <div className="forum-post-actions">
+                                                                <button 
+                                                                    className="forum-like-btn" 
+                                                                    title={userLikedQuestions.has(selectedConversation.qa_id) ? "Batalkan suka" : "Sukai pertanyaan ini"}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleLikeQuestion(selectedConversation);
+                                                                    }}
+                                                                    style={userLikedQuestions.has(selectedConversation.qa_id) ? { color: '#ff4757' } : {}}
+                                                                >
+                                                                    <i className={userLikedQuestions.has(selectedConversation.qa_id) ? "fas fa-heart" : "far fa-heart"}></i>
+                                                                    <span className="like-count">{selectedConversation.likes_count || 0}</span>
+                                                                </button>
+                                                                {(() => {
+                                                                    const reportStatus = getQAReportStatus(selectedConversation.qa_id, 'question');
+                                                                    return (
+                                                                        <button 
+                                                                            className="forum-report-btn" 
+                                                                            title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
+                                                                            onClick={() => handleOpenQAReportModal(selectedConversation, 'question')}
+                                                                            style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
+                                                                        >
+                                                                            <i className="fas fa-flag"></i>
+                                                                            {reportStatus && (
+                                                                                <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
+                                                                            )}
+                                                                        </button>
+                                                                    );
+                                                                })()}
                                                             </div>
-                                                            
-                                                            <button 
-                                                                className="join-discussion-primary" 
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleConversationShow(q);
-                                                                }}
-                                                            >
-                                                                <i className="fas fa-comment-dots"></i>
-                                                                Bergabung dengan Percakapan
-                                                                <i className="fas fa-arrow-right discussion-arrow"></i>
-                                                            </button>
                                                         </div>
                                                     </div>
-                                                ))
-                                            ) : (
-                                                <div className="empty-state">
-                                                    <i className="fas fa-comments empty-icon"></i>
-                                                    <h5>Belum ada diskusi</h5>
-                                                    <p>Jadilah yang pertama mengajukan pertanyaan atau memulai diskusi</p>
+
+                                                    {/* Replies Section */}
+                                                    {selectedConversation.messages && selectedConversation.messages.length > 0 && (
+                                                        <div className="forum-replies-section">
+                                                            <div className="forum-replies-list">
+                                                                {selectedConversation.messages.slice(1).map((msg, index) => {  /* ✨ PHASE 7.16: Skip first message (original question) */
+                                                                    const currentUser = UserData();
+                                                                    // ✨ PHASE 7.16: Better current user detection
+                                                                    const isCurrentUser = msg.profile?.user_id === currentUser?.user_id || 
+                                                                                        (msg.user_id && msg.user_id === currentUser?.user_id);
+                                                                    // Check if this reply is from the course instructor
+                                                                    const isInstructor = course?.course?.teacher && (
+                                                                        msg.user_id === course.course.teacher.user_id ||
+                                                                        msg.profile?.user_id === course.course.teacher.user_id
+                                                                    );
+                                                                    // ✨ DEBUG: Log instructor badge comparison for ALL messages
+                                                                    console.log(`[CourseDetail.Forum] Message ${index + 1}:`, {
+                                                                        msg_user_id: msg.user_id,
+                                                                        msg_profile_user_id: msg.profile?.user_id,
+                                                                        teacher_user_id: course?.course?.teacher?.user_id,
+                                                                        msg_profile: msg.profile,
+                                                                        course_teacher: course?.course?.teacher,
+                                                                        isInstructor: isInstructor,
+                                                                        comparison1: msg.user_id === course?.course?.teacher?.user_id,
+                                                                        comparison2: msg.profile?.user_id === course?.course?.teacher?.user_id,
+                                                                    });
+                                                                    return (
+                                                                        <div key={msg.id || `message-${index}`} className="forum-post-card forum-reply-post">
+                                                                            {/* Reply Header */}
+                                                                            <div className="forum-post-header">
+                                                                                <div className="forum-user-info">
+                                                                                    <div className="forum-user-avatar-wrapper">
+                                                                                        {msg.profile?.image ? (
+                                                                                            <img
+                                                                                                src={msg.profile.image.startsWith("http") 
+                                                                                                    ? msg.profile.image 
+                                                                                                    : msg.profile.image.startsWith("/images/")
+                                                                                                        ? msg.profile.image
+                                                                                                        : getMediaUrl(msg.profile.image)}
+                                                                                                alt={`${msg.profile?.full_name || "User"} avatar`}
+                                                                                                className="forum-user-avatar"
+                                                                                                onError={(e) => {
+                                                                                                    e.target.style.display = "none";
+                                                                                                    e.target.nextSibling.style.display = "flex";
+                                                                                                }}
+                                                                                            />
+                                                                                        ) : null}
+                                                                                        <div 
+                                                                                            className="forum-user-avatar-placeholder"
+                                                                                            style={{ display: msg.profile?.image ? "none" : "flex" }}
+                                                                                        >
+                                                                                            <i className="fas fa-user"></i>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div className="forum-user-details">
+                                                                                        <div className="forum-user-name">
+                                                                                            {msg.profile?.full_name || 'Pengguna Anonim'}
+                                                                                            {isInstructor && (
+                                                                                                <span className="forum-user-badge-instructor" title="Instruktur Kursus">
+                                                                                                    <i className="fas fa-chalkboard-user"></i>
+                                                                                                    Instruktur
+                                                                                                </span>
+                                                                                            )}
+                                                                                            {isCurrentUser && <span className="forum-user-badge-current">Anda</span>}
+                                                                                            {/* ✨ PHASE 7.16: Show "Reported" badge if current user has reported this message */}
+                                                                                            {isQAItemReported(msg.qa_id) && (
+                                                                                                <span className="forum-user-badge-reported">
+                                                                                                    <i className="fas fa-flag me-1"></i>
+                                                                                                    Sudah Dilaporkan
+                                                                                                </span>
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div className="forum-user-timestamp">
+                                                                                            <i className="fas fa-clock-o me-1"></i>
+                                                                                            {moment(msg.date).format("DD MMM YYYY [pada] HH:mm")}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* Reply Content */}
+                                                                            <div className="forum-post-content">
+                                                                                {msg.message}
+                                                                            </div>
+
+                                                                            {/* Post Footer with Like and Report Button */}
+                                                                            <div className="forum-post-footer">
+                                                                                <div className="forum-post-actions">
+                                                                                    <button 
+                                                                                        className="forum-like-btn" 
+                                                                                        title={userLikedMessages.has(msg.id) ? "Batalkan suka" : "Sukai jawaban ini"}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            handleLikeMessage(msg);
+                                                                                        }}
+                                                                                        style={userLikedMessages.has(msg.id) ? { color: '#ff4757' } : {}}
+                                                                                    >
+                                                                                        <i className={userLikedMessages.has(msg.id) ? "fas fa-heart" : "far fa-heart"}></i>
+                                                                                        <span className="like-count">{msg.likes_count || 0}</span>
+                                                                                    </button>
+                                                                                    {(() => {
+                                                                                        const reportStatus = getQAReportStatus(msg.qa_id, 'message');
+                                                                                        return (
+                                                                                            <button 
+                                                                                                className="forum-report-btn" 
+                                                                                                title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan jawaban ini"}
+                                                                                                onClick={() => handleOpenQAMessageReportModal(msg)}
+                                                                                                style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
+                                                                                            >
+                                                                                                <i className="fas fa-flag"></i>
+                                                                                                {reportStatus && (
+                                                                                                    <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
+                                                                                                )}
+                                                                                            </button>
+                                                                                        );
+                                                                                    })()}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* No Replies State */}
+                                                    {(!selectedConversation.messages || selectedConversation.messages.length === 0) && (
+                                                        <div className="forum-no-replies">
+                                                            <div className="forum-empty-state">
+                                                                <i className="fas fa-comment-dots"></i>
+                                                                <h4>Belum ada balasan</h4>
+                                                                <p>Jadilah yang pertama memberikan balasan untuk pertanyaan ini!</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Reply Form Section */}
+                                                    <div className="forum-reply-section">
+                                                        <h3 className="forum-reply-section-title">
+                                                            <i className="fas fa-edit me-2"></i>Berikan Balasan Anda
+                                                        </h3>
+                                                        <form onSubmit={sendNewMessage} className="forum-reply-form">
+                                                            <div className="forum-form-group">
+                                                                <textarea 
+                                                                    name="message" 
+                                                                    className="forum-reply-textarea"
+                                                                    placeholder="Tulis balasan Anda di sini... Jelaskan dengan detail untuk memberikan nilai maksimal kepada komunitas."
+                                                                    rows="6"
+                                                                    onChange={handleMessageChange}
+                                                                    value={createMessage.message}
+                                                                    required
+                                                                />
+                                                            </div>
+                                                            <div className="forum-form-actions">
+                                                                <p className="forum-form-hint">
+                                                                        <i className="fas fa-info-circle me-1"></i>Formulir Markdown didukung. Pastikan kode Anda diformat dengan benar.
+                                                                </p>
+                                                                <div className="forum-action-buttons">
+                                                                    
+                                                                    <button 
+                                                                        type="submit"
+                                                                        className="forum-btn-primary"
+                                                                    >
+                                                                        <i className="fas fa-paper-plane me-2"></i>Kirim Balasan
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
                                                 </div>
+                                            ) : (
+                                                <>
+                                                    {/* ✨ PHASE 7.9-7.10: Filter controls - Search and dropdowns with proportional widths */}
+                                                    <div className="mb-4" style={{ display: 'flex', gap: '1rem', flexWrap: 'nowrap', alignItems: 'flex-end' }}>
+                                                        {/* Search Input - 50% */}
+                                                        <div style={{ flex: '1 1 50%' }}>
+                                                            <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
+                                                                <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#3498db' }}></i>
+                                                                Cari Pertanyaan
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Cari berdasarkan judul atau isi..."
+                                                                value={discussionFilters.search}
+                                                                onChange={(e) => setDiscussionFilters({ ...discussionFilters, search: e.target.value })}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    fontSize: '1rem',
+                                                                    borderRadius: '12px',
+                                                                    border: '2px solid #e9ecef',
+                                                                    backgroundColor: '#ffffff',
+                                                                    color: '#2c3e50',
+                                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                                                    padding: '0.75rem 1rem',
+                                                                    transition: 'all 0.3s ease',
+                                                                    outline: 'none'
+                                                                }}
+                                                                onFocus={(e) => {
+                                                                    e.target.style.borderColor = '#3498db';
+                                                                    e.target.style.boxShadow = '0 0 0 3px rgba(52, 152, 219, 0.1)';
+                                                                }}
+                                                                onBlur={(e) => {
+                                                                    e.target.style.borderColor = '#e9ecef';
+                                                                    e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        
+                                                        {/* Bagian Filter Dropdown - 25% */}
+                                                        <div style={{ flex: '1 1 25%' }}>
+                                                            <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
+                                                                <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#9b59b6' }}></i>
+                                                                Bagian
+                                                            </label>
+                                                            <select
+                                                                value={discussionFilters.bagian || ''}
+                                                                onChange={(e) => setDiscussionFilters({ ...discussionFilters, bagian: e.target.value || null, pelajaran: null })}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    fontSize: '1rem',
+                                                                    borderRadius: '12px',
+                                                                    border: '2px solid #e9ecef',
+                                                                    backgroundColor: '#ffffff',
+                                                                    color: '#2c3e50',
+                                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                                                    padding: '0.75rem 1rem',
+                                                                    transition: 'all 0.3s ease',
+                                                                    outline: 'none',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                onFocus={(e) => {
+                                                                    e.target.style.borderColor = '#9b59b6';
+                                                                    e.target.style.boxShadow = '0 0 0 3px rgba(155, 89, 182, 0.1)';
+                                                                }}
+                                                                onBlur={(e) => {
+                                                                    e.target.style.borderColor = '#e9ecef';
+                                                                    e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                                                                }}
+                                                            >
+                                                                <option value="">Semua Bagian</option>
+                                                                {course?.curriculum?.map((variant) => (
+                                                                    <option key={variant.variant_id} value={variant.variant_id}>
+                                                                        {variant.title}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        
+                                                        {/* Pelajaran Filter Dropdown - 25% */}
+                                                        <div style={{ flex: '1 1 25%' }}>
+                                                            <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
+                                                                <i className="fas fa-book" style={{ marginRight: '0.5rem', color: '#e74c3c' }}></i>
+                                                                Pelajaran
+                                                            </label>
+                                                            <select
+                                                                value={discussionFilters.pelajaran || ''}
+                                                                onChange={(e) => setDiscussionFilters({ ...discussionFilters, pelajaran: e.target.value || null })}
+                                                                disabled={!discussionFilters.bagian}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    fontSize: '1rem',
+                                                                    borderRadius: '12px',
+                                                                    border: '2px solid #e9ecef',
+                                                                    backgroundColor: discussionFilters.bagian ? '#ffffff' : '#f8f9fa',
+                                                                    color: '#2c3e50',
+                                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                                                    padding: '0.75rem 1rem',
+                                                                    transition: 'all 0.3s ease',
+                                                                    outline: 'none',
+                                                                    cursor: discussionFilters.bagian ? 'pointer' : 'not-allowed',
+                                                                    opacity: discussionFilters.bagian ? 1 : 0.6
+                                                                }}
+                                                                onFocus={(e) => {
+                                                                    if (discussionFilters.bagian) {
+                                                                        e.target.style.borderColor = '#e74c3c';
+                                                                        e.target.style.boxShadow = '0 0 0 3px rgba(231, 76, 60, 0.1)';
+                                                                    }
+                                                                }}
+                                                                onBlur={(e) => {
+                                                                    e.target.style.borderColor = '#e9ecef';
+                                                                    e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                                                                }}
+                                                            >
+                                                                <option value="">Semua Pelajaran</option>
+                                                                {discussionFilters.bagian && course?.curriculum?.find(v => v.variant_id === discussionFilters.bagian)?.variant_items?.map((item) => (
+                                                                    <option key={item.variant_item_id} value={item.variant_item_id}>
+                                                                        {item.title}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        
+                                                        {/* Clear Filters Button */}
+                                                        {(discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran) && (
+                                                            <button
+                                                                onClick={() => setDiscussionFilters({ search: '', bagian: null, pelajaran: null })}
+                                                                className="add-btn-modern"
+                                                                style={{ background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', padding: '0.75rem 1.5rem' }}
+                                                            >
+                                                                <i className="fas fa-times"></i>Bersihkan Filter
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    {filteredQuestions?.length > 0 ? (
+                                                        filteredQuestions.map((q, index) => (
+                                                            <div 
+                                                                key={q.qa_id || index} 
+                                                                className="question-card"
+                                                                onClick={() => handleConversationShow(q)}
+                                                            >
+                                                                {/* Top section: Title on left, Badges on right */}
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem'}}>
+                                                                    {/* Header row - title with avatar */}
+                                                                    <div className="question-header">
+                                                                        <img
+                                                                            src={q.profile?.image?.startsWith("http") 
+                                                                                ? q.profile.image 
+                                                                                : q.profile?.image?.startsWith("/images/")
+                                                                                    ? q.profile.image
+                                                                                    : getMediaUrl(q.profile?.image || '')}
+                                                                            alt={q.profile?.full_name || "User"}
+                                                                            className="avatar-modern"
+                                                                            onError={(e) => {
+                                                                                e.target.style.display = "none";
+                                                                            }}
+                                                                            style={{ display: q.profile?.image ? 'block' : 'none' }}
+                                                                        />
+                                                                        {!q.profile?.image && (
+                                                                            <div style={{
+                                                                                width: '60px',
+                                                                                height: '60px',
+                                                                                borderRadius: '50%',
+                                                                                backgroundColor: '#e8f4f8',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                flexShrink: 0,
+                                                                                border: '3px solid white',
+                                                                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                                                            }}>
+                                                                                <i className="fas fa-user" style={{ color: '#016b87', fontSize: '1.5rem' }}></i>
+                                                                            </div>
+                                                                        )}
+                                                                        
+                                                                        <div className="question-content">
+                                                                            <h5 className="question-title">{q.title || 'Tidak Ada Judul'}</h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    {/* Context badges on right */}
+                                                                    {(q.variant || q.variant_item) && (
+                                                                        <div style={{ 
+                                                                            display: 'flex', 
+                                                                            gap: '0.75rem',
+                                                                            flexWrap: 'wrap',
+                                                                            justifyContent: 'flex-end',
+                                                                            flexShrink: 0
+                                                                        }}>
+                                                                            {q.variant && (
+                                                                                <span style={{
+                                                                                    backgroundColor: '#e8f4f8',
+                                                                                    color: '#016b87',
+                                                                                    padding: '0.4rem 0.9rem',
+                                                                                    borderRadius: '12px',
+                                                                                    fontSize: '0.9rem',
+                                                                                    fontWeight: 600,
+                                                                                    border: '1px solid #a8d8dc',
+                                                                                    whiteSpace: 'nowrap',
+                                                                                    display: 'inline-block'
+                                                                                }}>
+                                                                                    <i className="fas fa-layer-group" style={{ marginRight: '0.4rem' }}></i>{q.variant.title}
+                                                                                </span>
+                                                                            )}
+                                                                            {q.variant_item && (
+                                                                                <span style={{
+                                                                                    backgroundColor: '#f0e8f4',
+                                                                                    color: '#662d91',
+                                                                                    padding: '0.4rem 0.9rem',
+                                                                                    borderRadius: '12px',
+                                                                                    fontSize: '0.9rem',
+                                                                                    fontWeight: 600,
+                                                                                    border: '1px solid #d4b5e0',
+                                                                                    whiteSpace: 'nowrap',
+                                                                                    display: 'inline-block'
+                                                                                }}>
+                                                                                    <i className="fas fa-book" style={{ marginRight: '0.4rem' }}></i>{q.variant_item.title}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                {/* Message preview - MAX 2 LINES */}
+                                                                {(q.message || (q.messages && q.messages[0]?.message)) && (
+                                                                    <p className="question-message-preview">
+                                                                        {(q.message || q.messages?.[0]?.message || 'Tidak ada pesan').substring(0, 200)}
+                                                                        {(q.message || q.messages?.[0]?.message || '').length > 200 ? '...' : ''}
+                                                                    </p>
+                                                                )}
+                                                                
+                                                                {/* Meta information at bottom - Replies badge first, like button on right */}
+                                                                <div className="question-meta" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                                                                        <span className="question-meta-item">
+                                                                            <span className="replies-badge">
+                                                                                <i className="fas fa-comments" style={{ marginRight: '0.5rem' }}></i>
+                                                                                {q.messages?.length || 0} Balasan
+                                                                            </span>
+                                                                        </span>
+                                                                        <span className="question-meta-item">
+                                                                            <i className="fas fa-user" style={{ marginRight: '0.5rem', color: '#3498db' }}></i>
+                                                                            {q.profile?.full_name || 'Anonim'}
+                                                                        </span>
+                                                                        <span className="question-meta-item">
+                                                                            <i className="fas fa-clock" style={{ marginRight: '0.5rem', color: '#f39c12' }}></i>
+                                                                            {moment(q.date).fromNow()}
+                                                                        </span>
+                                                                    </div>
+                                                                    {/* ✨ PHASE 7.16+: Like and Report buttons on question card - Enhanced with status */}
+                                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                                        <button 
+                                                                            className="forum-like-btn" 
+                                                                            title={userLikedQuestions.has(q.qa_id) ? "Batalkan suka" : "Sukai pertanyaan ini"} 
+                                                                            onClick={(e) => { e.stopPropagation(); handleLikeQuestion(q); }}
+                                                                            style={userLikedQuestions.has(q.qa_id) ? { color: '#ff4757' } : {}}
+                                                                        >
+                                                                            <i className={userLikedQuestions.has(q.qa_id) ? "fas fa-heart" : "far fa-heart"}></i>
+                                                                            <span className="like-count">{q.likes_count || 0}</span>
+                                                                        </button>
+                                                                        {(() => {
+                                                                            const reportStatus = getQAReportStatus(q.qa_id, 'question');
+                                                                            return (
+                                                                                <button 
+                                                                                    className="forum-report-btn" 
+                                                                                    title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
+                                                                                    onClick={(e) => { e.stopPropagation(); handleOpenQAReportModal(q, 'question'); }}
+                                                                                    style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
+                                                                                >
+                                                                                    <i className={reportStatus ? "fas fa-flag" : "fas fa-flag"}></i>
+                                                                                    {reportStatus && (
+                                                                                        <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
+                                                                                    )}
+                                                                                </button>
+                                                                            );
+                                                                        })()}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="empty-state">
+                                                            <i className="fas fa-comments empty-icon"></i>
+                                                            <h5>Belum ada diskusi</h5>
+                                                            <p>Jadilah yang pertama mengajukan pertanyaan atau memulai diskusi</p>
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
 
@@ -2741,7 +4241,7 @@ function CourseDetail() {
                                                 <div className="review-card-modern">
                                                     <h5 className="mb-3">Beri Rating Kursus Ini</h5>
                                                     <form onSubmit={handleCreateReviewSubmit}>
-                                                        <div className="mb-3">
+                                                        <div className="mb-0">
                                                             <label className="form-label">Rating</label>
                                                             <div className="star-rating">
                                                                 {[1, 2, 3, 4, 5].map((star) => (
@@ -3005,8 +4505,15 @@ function CourseDetail() {
                 </form>
             </Modal>
 
-            {/* Create Question Modal */}
-            <Modal show={addQuestionShow} onHide={handleQuestionClose} size="lg" centered className="create-question-modal">
+            {/* ✨ PHASE 7.12: Create Question Modal - Draggable & Resizable with transparent backdrop */}
+            <Modal 
+                show={addQuestionShow} 
+                onHide={handleQuestionClose} 
+                size="lg"
+                backdrop={false}
+                keyboard={true}
+                className="create-question-modal"
+            >
                 {/* Modal Header */}
                 <form onSubmit={handleSaveQuestion}>
                 <div className="modal-header-modern">
@@ -3017,7 +4524,14 @@ function CourseDetail() {
                             </div>
                             <div className="modal-title-section">
                                 <h4 className="modal-title-modern">Ajukan Pertanyaan</h4>
-                                <p className="modal-subtitle">Bagikan pertanyaan Anda dengan komunitas kursus dan dapatkan jawaban ahli</p>
+                                <p className="modal-subtitle">
+                                    Bagikan pertanyaan Anda dengan komunitas kursus dan dapatkan jawaban ahli
+                                    <br />
+                                    <span style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem', display: 'inline-block' }}>
+                                        <i className="fas fa-arrows-alt me-1"></i>
+                                        Drag dialog by header to move it
+                                    </span>
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -3057,6 +4571,54 @@ function CourseDetail() {
                             </div>
                         </div>
 
+                        {/* ✨ PHASE 7.9: Context selector - choose which lesson this question is about */}
+                        <div className="form-group-modern">
+                            <label className="form-label-modern">
+                                <i className="fas fa-layer-group form-label-icon"></i>
+                                Bagian/Pelajaran (Opsional)
+                            </label>
+                            <div className="input-wrapper-modern">
+                                <select
+                                    className="form-input-modern"
+                                    value={currentVariantContext?.variant_item_id || ''}
+                                    onChange={(e) => {
+                                        const selected = e.target.value;
+                                        if (selected) {
+                                            // Find the variant_item from curriculum
+                                            let foundVariantItem = null;
+                                            course?.curriculum?.forEach(variant => {
+                                                (variant.variant_items || variant.items || []).forEach(item => {
+                                                    if (item.variant_item_id === selected) {
+                                                        foundVariantItem = {
+                                                            variant_item_id: item.variant_item_id,
+                                                            title: item.title,
+                                                            variant_id: variant.variant_id,
+                                                            variant_title: variant.title
+                                                        };
+                                                    }
+                                                });
+                                            });
+                                            setCurrentVariantContext(foundVariantItem);
+                                        } else {
+                                            setCurrentVariantContext(null);
+                                        }
+                                    }}
+                                    style={{ padding: '0.75rem', borderRadius: '6px', border: '1px solid #ddd' }}
+                                >
+                                    <option value="">-- Pilih Bagian/Pelajaran (opsional) --</option>
+                                    {course?.curriculum?.map((variant) => (
+                                        <optgroup key={variant.variant_id} label={variant.title}>
+                                            {(variant.variant_items || variant.items || []).map((item) => (
+                                                <option key={item.variant_item_id} value={item.variant_item_id}>
+                                                    {item.title}
+                                                </option>
+                                            ))}
+                                        </optgroup>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
                         {/* Question Message */}
                         <div className="form-group-modern">
                             <label className="form-label-modern">
@@ -3066,6 +4628,7 @@ function CourseDetail() {
                             </label>
                             <div className="textarea-wrapper-modern">
                                 <textarea
+                                    ref={questionTextareaRef}
                                     name="message"
                                     className="form-textarea-modern"
                                     rows="4"
@@ -3118,123 +4681,13 @@ function CourseDetail() {
                     </div>
                 </div>
                 </form>
+
+                {/* ✨ PHASE 7.12: Resize handle - bottom-right corner diamond for resizing */}
+                <div className="modal-resize-handle" title="Drag to resize modal"></div>
             </Modal>
 
-            {/* Conversation Modal */}
-            <Modal show={ConversationShow} onHide={handleConversationClose} size="lg" className="conversation-modal-qa">
-                {/* Modal Header */}
-                <div className="modal-header-modern">
-                    <div className="modal-header-content">
-                        <div className="modal-header-info">
-                            <div className="modal-icon-wrapper">
-                                <i className="fas fa-comments"></i>
-                            </div>
-                            <div className="modal-title-section">
-                                <h4 className="modal-title-modern">{selectedConversation?.title || "Diskusi"}</h4>
-                                <p className="modal-subtitle">Bergabunglah dalam percakapan dan bagikan pemikiran Anda</p>
-                            </div>
-                        </div>
-                    </div>
-                    <button 
-                        type="button" 
-                        className="btn-close-modern" 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleConversationClose();
-                        }}
-                    >
-                        <i className="fas fa-times"></i>
-                    </button>
-                </div>
-
-                {/* Modal Body */}
-                <div className="modal-body-modern">
-                    <div className="messages-container-qa">
-                        
-                        {/* Replies */}
-                        {selectedConversation?.messages?.map((msg, index) => {
-                            const currentUser = UserData();
-                            const isCurrentUser = msg.profile?.user_id === currentUser?.user_id || msg.profile?.id === currentUser?.user_id;
-                            return (
-                                <div key={msg.id || `message-${index}`} className={`message-item-qa ${isCurrentUser ? "message-item-qa-current-user" : ""}`}>
-                                    <div className={`d-flex ${isCurrentUser ? "flex-row-reverse" : ""}`}>
-                                        <div className="flex-shrink-0">
-                                            {msg.profile?.image ? (
-                                                <img
-                                                    className="message-avatar-qa"
-                                                    src={msg.profile.image.startsWith("http") 
-                                                        ? msg.profile.image 
-                                                        : getMediaUrl(msg.profile.image)
-                                                    }
-                                                    alt={`${msg.profile?.full_name || "User"} avatar`}
-                                                    onError={(e) => {
-                                                        e.target.style.display = "none";
-                                                        e.target.nextSibling.style.display = "flex";
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div 
-                                                    className="message-avatar-qa d-flex align-items-center justify-content-center"
-                                                    style={{ 
-                                                        background: isCurrentUser 
-                                                            ? "linear-gradient(135deg, #28a745 0%, #20c997 100%)"
-                                                            : "linear-gradient(135deg, #3498db 0%, #2980b9 100%)",
-                                                        color: "white",
-                                                        fontSize: "1.2rem"
-                                                    }}
-                                                >
-                                                    <i className="fas fa-user"></i>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className={`${isCurrentUser ? "me-3" : "ms-3"} flex-grow-1`}>
-                                            <div className={`message-content-qa ${isCurrentUser ? "message-content-qa-current-user" : ""}`}>
-                                                <div className="message-author-qa">
-                                                    <div className="message-time-qa">
-                                                        <i className="fas fa-clock me-1"></i>
-                                                        {moment(msg.date).format("DD MMM, YYYY - HH:mm")}
-                                                    </div>
-                                                    <span>{msg.profile?.full_name || "Pengguna Anonim"}</span>
-                                                </div>
-                                                <div className="message-text-qa">{msg.message}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-
-                        {selectedConversation && (!selectedConversation.messages || selectedConversation.messages.length === 0) && (
-                            <div className="empty-conversation-qa">
-                                <i className="fas fa-comment"></i>
-                                <h5>Belum ada balasan</h5>
-                                <p>Jadilah yang pertama membalas pertanyaan ini!</p>
-                            </div>
-                        )}
-
-                        <div ref={lastElementRef}></div>
-                    </div>
-
-                    <form className="message-form-qa" onSubmit={sendNewMessage}>
-                        <textarea 
-                            name="message" 
-                            className="message-textarea-qa" 
-                            placeholder="Bagikan pemikiran atau balas..." 
-                            rows="3"
-                            onChange={handleMessageChange}
-                            value={createMessage.message}
-                            required
-                        />
-                        <button 
-                            className="message-send-btn-qa" 
-                            type="submit"
-                        >
-                            <i className="fas fa-paper-plane"></i>
-                            Kirim Balasan
-                        </button>
-                    </form>
-                </div>
-            </Modal>
+            {/* ✨ PHASE 7.10: Conversation Modal - HIDDEN (now using inline forum view in Diskusi tab) */}
+            {/* Modal removed and replaced with inline forum container */}
 
             {/* ✨ PHASE 4.225+: Quiz Modal - HIDDEN (quiz now displayed inline) */}
             <Modal 
@@ -3559,6 +5012,271 @@ function CourseDetail() {
                     </div>
                 )}
             </Modal>
+
+            {/* ✨ PHASE 7.16: Q&A Report Modal - Modeled after ReviewAbuse report system */}
+            {/* ✨ PHASE 7.16+: Enhanced Q&A Report Modal - Shows feedback if report exists, form if not */}
+            {showQAReportModal && (
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content abuse-report-modal">
+                            <div className="modal-header abuse-modal-header">
+                                <h5 className="modal-title">
+                                    {currentReportData ? (
+                                        <>
+                                            <i className="fas fa-file-check me-2"></i>
+                                            Status Laporan {reportingQAType === 'message' ? 'Balasan' : 'Pertanyaan'}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fas fa-exclamation-triangle me-2"></i>
+                                            Laporkan {reportingQAType === 'message' ? 'Balasan' : 'Pertanyaan'}
+                                        </>
+                                    )}
+                                </h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close" 
+                                    onClick={handleCloseQAReportModal}
+                                    disabled={reportingQA}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                {/* ✨ PHASE 7.16+: Show existing report feedback if available, unless editing */}
+                                {currentReportData && !editingReportId ? (
+                                    <>
+                                        {/* Report Status Section */}
+                                        <div className="mb-0">
+                                            <div className="d-flex align-items-center gap-2 mb-0">
+                                                <span className="fw-semibold">Status Laporan:</span>
+                                                {currentReportData.status === 'pending' && (
+                                                    <span className="badge bg-warning">
+                                                        <i className="fas fa-hourglass-half me-1"></i>
+                                                        Menunggu Tinjauan
+                                                    </span>
+                                                )}
+                                                {currentReportData.status === 'reviewed' && (
+                                                    <span className="badge bg-info">
+                                                        <i className="fas fa-eye me-1"></i>
+                                                        Sudah Ditinjau
+                                                    </span>
+                                                )}
+                                                {currentReportData.status === 'action_taken' && (
+                                                    <span className="badge bg-success">
+                                                        <i className="fas fa-check-circle me-1"></i>
+                                                        Tindakan Diambil
+                                                    </span>
+                                                )}
+                                                {currentReportData.status === 'dismissed' && (
+                                                    <span className="badge bg-secondary">
+                                                        <i className="fas fa-times-circle me-1"></i>
+                                                        Ditolak
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                            {/* Report Details */}
+                                            <div className="card bg-light mb-3">
+                                                <div className="card-body">
+                                                    {/* Horizontal Layout for Reason */}
+                                                    <div className="d-flex justify-content-between align-items-start mb-3">
+                                                        <label className="form-label fw-semibold text-muted mb-0">Alasan yang Dilaporkan:</label>
+                                                        <p className="mb-0 text-end">
+                                                            {currentReportData.reason === 'spam' && '🚫 Spam'}
+                                                            {currentReportData.reason === 'inappropriate' && '⚠️ Konten Tidak Pantas'}
+                                                            {currentReportData.reason === 'offensive' && '😠 Konten Menyinggung'}
+                                                            {currentReportData.reason === 'misinformation' && '❌ Informasi Salah'}
+                                                            {currentReportData.reason === 'other' && '❓ Lainnya'}
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    {currentReportData.description && (
+                                                        <div className="d-flex justify-content-between align-items-start mb-3">
+                                                            <label className="form-label fw-semibold text-muted mb-0">Deskripsi Laporan:</label>
+                                                            <p className="mb-0 text-break text-end ps-2">{currentReportData.description}</p>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="d-flex justify-content-between align-items-start">
+                                                        <label className="form-label fw-semibold text-muted mb-0">Tanggal Lapor:</label>
+                                                        <p className="mb-0 text-end">{currentReportData.reported_at ? new Date(currentReportData.reported_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Admin Feedback Section */}
+                                            {currentReportData.reviewed_at && (
+                                                <div className="card border-success mb-0">
+                                                    <div className="card-body border-success">
+                                                        <h6 className="card-title text-success mb-3">
+                                                            <i className="fas fa-shield-alt me-2"></i>
+                                                            Umpan Balik Admin
+                                                        </h6>
+                                                        
+                                                        {/* Horizontal Layout for Review Timestamp */}
+                                                        <div className="d-flex justify-content-between align-items-start mb-3">
+                                                            <label className="form-label fw-semibold text-muted mb-0">Ditinjau Pada:</label>
+                                                            <p className="mb-0 text-end">{new Date(currentReportData.reviewed_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                                                        </div>
+
+                                                        {/* Horizontal Layout for Reviewer */}
+                                                        {currentReportData.reviewed_by__first_name || currentReportData.reviewed_by__username ? (
+                                                            <div className="d-flex justify-content-between align-items-start mb-3">
+                                                                <label className="form-label fw-semibold text-muted mb-0">Ditinjau Oleh:</label>
+                                                                <p className="mb-0 text-end">{currentReportData.reviewed_by__first_name || currentReportData.reviewed_by__username || 'Admin'}</p>
+                                                            </div>
+                                                        ) : null}
+
+                                                        {/* Admin Notes Section */}
+                                                        {currentReportData.review_notes && (
+                                                            <div className="mb-0">
+                                                                <label className="form-label fw-semibold text-muted mb-2">Catatan Admin:</label>
+                                                                <div className="alert alert-info mb-0">
+                                                                    <p className="mb-0 text-break">{currentReportData.review_notes}</p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            </div>
+
+                                            {/* Pending Status Message */}
+                                            {currentReportData.status === 'pending' && !currentReportData.reviewed_at && (
+                                                <div className="alert alert-warning mb-2">
+                                                    <i className="fas fa-info-circle me-2"></i>
+                                                    Laporan ini sedang dalam proses tinjauan. Tim Admin kami akan memberikan umpan balik dalam waktu singkat.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* ✨ PHASE 7.16+: Form untuk laporan baru atau edit laporan yang ada */}
+                                        {editingReportId && (
+                                            <div className="alert alert-info mb-3">
+                                                <i className="fas fa-pencil-alt me-2"></i>
+                                                Anda sedang mengedit laporan Anda. Laporan akan dikirim ke Admin untuk tinjauan ulang.
+                                            </div>
+                                        )}
+                                        {!editingReportId && (
+                                            <p className="abuse-modal-text">
+                                                Bantu kami menjaga kualitas komunitas dengan melaporkan konten yang tidak sesuai.
+                                            </p>
+                                        )}
+                                        
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">Alasan Laporan <span className="text-danger">*</span></label>
+                                            <select 
+                                                className="form-select form-select-modern"
+                                                value={qaReportReason}
+                                                onChange={(e) => setQaReportReason(e.target.value)}
+                                                disabled={reportingQA}
+                                            >
+                                                <option value="">-- Pilih Alasan --</option>
+                                                <option value="spam">Spam</option>
+                                                <option value="inappropriate">Konten Tidak Pantas</option>
+                                                <option value="offensive">Konten Menyinggung</option>
+                                                <option value="misinformation">Informasi Salah</option>
+                                                <option value="other">Lainnya</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">Penjelasan Tambahan (Opsional)</label>
+                                            <textarea 
+                                                className="form-control"
+                                                rows="3"
+                                                placeholder="Berikan rincian untuk membantu Admin memahami masalah ini..."
+                                                value={qaReportDescription}
+                                                onChange={(e) => setQaReportDescription(e.target.value)}
+                                                disabled={reportingQA}
+                                            ></textarea>
+                                            <small className="text-muted">Maksimal 500 karakter</small>
+                                        </div>
+
+                                        <div className="alert alert-info">
+                                            <i className="fas fa-info-circle me-2"></i>
+                                            {editingReportId 
+                                                ? 'Perubahan laporan Anda akan ditinjau ulang oleh Admin.'
+                                                : 'Tim Admin kami akan meninjau laporan ini dan mengambil tindakan yang sesuai.'
+                                            }
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                            <div className="modal-footer abuse-modal-footer">
+                                {/* ✨ PHASE 7.16+: Close/Cancel button - only when NOT editing and report is not pending and NOT closed */}
+                                {!editingReportId && (!currentReportData || (currentReportData?.status !== 'pending' && !closedReports.has(currentReportData?.id))) && (
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-outline-secondary"
+                                        onClick={handleCloseQAReportModal}
+                                        disabled={reportingQA}
+                                    >
+                                        {currentReportData ? 'Selesai' : 'Batal'}
+                                    </button>
+                                )}
+                                
+                                {/* ✨ PHASE 7.16+: Edit Laporan button - only when viewing existing report (NOT editing) and status is reviewed and NOT closed */}
+                                {currentReportData && !editingReportId && currentReportData?.status !== 'pending' && !closedReports.has(currentReportData?.id) && (
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-warning"
+                                        onClick={handleEditQAReport}
+                                        disabled={reportingQA}
+                                    >
+                                        <i className="fas fa-edit me-2"></i>
+                                        Edit Laporan
+                                    </button>
+                                )}
+                                
+                                {/* ✨ PHASE 7.16+: Submit button - for new reports OR when editing existing reports */}
+                                {(!currentReportData || editingReportId) && (
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-danger"
+                                        onClick={handleSubmitQAReport}
+                                        disabled={reportingQA || !qaReportReason.trim()}
+                                    >
+                                        {reportingQA ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                {editingReportId ? 'Mengirim ulang...' : 'Mengirim...'}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className={`fas ${editingReportId ? 'fa-redo' : 'fa-paper-plane'} me-2`}></i>
+                                                {editingReportId ? 'Laporkan Ulang' : 'Laporkan'}
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                                
+                                {/* ✨ PHASE 7.16+: Pending message - show info when report is waiting for admin review */}
+                                {currentReportData && !editingReportId && currentReportData?.status === 'pending' && (
+                                    <div className="flex-grow-1">
+                                        <p className="text-center text-muted mb-0 small">
+                                            <i className="fas fa-clock me-2"></i>
+                                            Laporan sedang ditinjau oleh Admin
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {/* ✨ PHASE 7.16+: Case closed message - show when user has closed the case */}
+                                {currentReportData && !editingReportId && currentReportData?.status !== 'pending' && closedReports.has(currentReportData?.id) && (
+                                    <div className="flex-grow-1">
+                                        <p className="text-center text-success mb-0 small fw-semibold">
+                                            <i className="fas fa-check-circle me-2"></i>
+                                            Kasus Ditutup - Laporan Selesai
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Video Resume Dialog */}
             <Footer />

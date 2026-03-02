@@ -893,6 +893,8 @@ class Question_Answer(models.Model):
     title = models.CharField(max_length=1000, null=True, blank=True)
     qa_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date = models.DateTimeField(default=timezone.now)
+    # ✨ PHASE 7.7: Store lesson context (Bagian/Pelajaran) for better organization
+    variant_item = models.ForeignKey(VariantItem, on_delete=models.SET_NULL, null=True, blank=True, related_name="questions")
 
     def __str__(self):
         return f"{self.user.username} - {self.course.title}"
@@ -908,7 +910,7 @@ class Question_Answer(models.Model):
     
 class Question_Answer_Message(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    question = models.ForeignKey(Question_Answer, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question_Answer, on_delete=models.CASCADE, related_name='reply_messages')  # ✨ PHASE 7.20: Changed from 'messages' to avoid conflict with messages() method
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     message = models.TextField(null=True, blank=True)
     qam_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
@@ -923,6 +925,108 @@ class Question_Answer_Message(models.Model):
 
     def profile(self):
         return Profile.objects.get(user=self.user)
+    
+
+# ✨ PHASE 7.16: Q&A Like System - Track user likes on questions and replies
+class Question_Answer_Like(models.Model):
+    question = models.ForeignKey(Question_Answer, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('question', 'user')  # Prevent duplicate likes from same user
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} liked Q&A {self.question.qa_id}"
+
+
+# ✨ PHASE 7.16: Q&A Message Like System - Track user likes on replies
+class Question_Answer_Message_Like(models.Model):
+    message = models.ForeignKey(Question_Answer_Message, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('message', 'user')  # Prevent duplicate likes from same user
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} liked reply {self.message.qa_id}"
+
+
+# ✨ PHASE 7.16: Q&A Report System - Track reports on inappropriate Q&A content
+class Question_Answer_Report(models.Model):
+    REPORT_REASONS = [
+        ('spam', 'Spam'),
+        ('inappropriate', 'Konten Tidak Pantas'),
+        ('offensive', 'Konten Menyinggung'),
+        ('misinformation', 'Informasi Salah'),
+        ('other', 'Lainnya'),
+    ]
+    
+    question = models.ForeignKey(Question_Answer, on_delete=models.CASCADE, related_name='reports')
+    reported_by = models.ForeignKey(User, on_delete=models.CASCADE)  # User who reported
+    reason = models.CharField(max_length=50, choices=REPORT_REASONS, default='other')
+    description = models.TextField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending Review'),
+            ('reviewed', 'Reviewed'),
+            ('dismissed', 'Dismissed'),
+            ('action_taken', 'Action Taken'),
+        ],
+        default='pending'
+    )
+    reported_at = models.DateTimeField(default=timezone.now)
+    reviewed_at = models.DateTimeField(null=True, blank=True)  # When admin reviewed
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='qa_report_reviews')  # Admin who reviewed
+    review_notes = models.TextField(blank=True, null=True)  # Admin notes on review
+    
+    class Meta:
+        unique_together = ('question', 'reported_by')  # Prevent duplicate reports from same user
+        ordering = ['-reported_at']
+    
+    def __str__(self):
+        return f"Report for Q&A {self.question.qa_id} - {self.status}"
+
+
+# ✨ PHASE 7.16: Q&A Message Report System - Track reports on inappropriate replies
+class Question_Answer_Message_Report(models.Model):
+    REPORT_REASONS = [
+        ('spam', 'Spam'),
+        ('inappropriate', 'Konten Tidak Pantas'),
+        ('offensive', 'Konten Menyinggung'),
+        ('misinformation', 'Informasi Salah'),
+        ('other', 'Lainnya'),
+    ]
+    
+    message = models.ForeignKey(Question_Answer_Message, on_delete=models.CASCADE, related_name='reports')
+    reported_by = models.ForeignKey(User, on_delete=models.CASCADE)  # User who reported
+    reason = models.CharField(max_length=50, choices=REPORT_REASONS, default='other')
+    description = models.TextField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending Review'),
+            ('reviewed', 'Reviewed'),
+            ('dismissed', 'Dismissed'),
+            ('action_taken', 'Action Taken'),
+        ],
+        default='pending'
+    )
+    reported_at = models.DateTimeField(default=timezone.now)
+    reviewed_at = models.DateTimeField(null=True, blank=True)  # When admin reviewed
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='qa_message_report_reviews')  # Admin who reviewed
+    review_notes = models.TextField(blank=True, null=True)  # Admin notes on review
+    
+    class Meta:
+        unique_together = ('message', 'reported_by')  # Prevent duplicate reports from same user
+        ordering = ['-reported_at']
+    
+    def __str__(self):
+        return f"Report for Reply {self.message.qa_id} - {self.status}"
     
 # Cart, CartOrder, and CartOrderItem models removed - not used in this LMS
     

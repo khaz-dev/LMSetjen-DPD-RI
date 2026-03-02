@@ -581,11 +581,15 @@
     font-size: 0.8rem;
 }
 
+/* ✨ PHASE 8c: Scoped course-title for InstructorReviewPage - properly namespaced to avoid conflicts
+   Base .course-title styles are consolidated in CourseCard.css
+*/
 .instructor-review-page .course-title {
     font-weight: bold;
     color: #3498db;
     font-size: 0.85rem;
     word-break: break-word;
+    margin-bottom: 0.5rem; /* Consistent with scoped context */
 }
 
 /* ========================================

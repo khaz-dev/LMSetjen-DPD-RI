@@ -433,7 +433,7 @@ function Dashboard() {
                                 {/* Course Progress Overview */}
                                 <div className="col-lg-8">
                                     <div className="dashboard-card">
-                                        <div className="card-header bg-transparent border-0 p-4 d-flex justify-content-between align-items-center">
+                                        <div className="card-header p-4 d-flex justify-content-between align-items-center">
                                             <h5 className="mb-0 fw-bold">
                                                 <i className="fas fa-chart-line me-2"></i>
                                                 Kursus Saya
@@ -452,7 +452,7 @@ function Dashboard() {
                                             {progressData.length > 0 ? (
                                                 <div className="row">
                                                     {progressData.slice(0, 6).map((course, index) => (
-                                                        <div key={course.enrollment_id || index} className="col-md-6 mb-4">
+                                                        <div key={course.enrollment_id || index} className="col-md-6 mb-0">
                                                             <div className="course-card">
                                                                 <div className="card-body p-4 d-flex flex-column h-100">
                                                         {/* Course Image with Overlay */}

@@ -556,7 +556,8 @@
     padding: 15px 0;
 }
 
-.info-item {
+/* ✨ SCOPED: Admin dashboard info-item - only apply on admin dashboard */
+.admin-dashboard .info-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -564,7 +565,7 @@
     border-bottom: 1px solid #f1f5f9;
 }
 
-.info-item:last-child {
+.admin-dashboard .info-item:last-child {
     border-bottom: none;
 }
 

@@ -185,7 +185,7 @@
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    padding: 30px;
+    padding: 20px 30px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     position: relative;
@@ -390,40 +390,51 @@
 
 .form-section-header {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 2rem;
+    padding: 1rem 2rem;
     border-bottom: 1px solid #e9ecef;
 }
 
 .search-card {
     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
     border-radius: 15px;
-    border: 1px solid #e9ecef;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-control-modern {
     border: 2px solid #e9ecef;
     border-radius: 12px;
-    padding: 0.875rem 3rem 0.875rem 1.25rem;
+    padding: 0.875rem 2.75rem 0.875rem 2.5rem !important;
     font-size: 1rem;
     transition: all 0.3s ease;
     background: #f8f9fa;
+    width: 100%;
 }
 
 .form-control-modern:focus {
     border-color: #9b59b6;
     box-shadow: 0 0 0 0.2rem rgba(155, 89, 182, 0.25);
     background: white;
+    outline: none;
+}
+
+/* Position relative container for search icon */
+.search-card > .position-relative {
+    width: 100%;
+}
+
+.search-card .btn-secondary {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
 }
 
 .search-icon {
     position: absolute;
-    right: 1rem;
+    left: 1rem;
     top: 50%;
     transform: translateY(-50%);
     color: #9b59b6;
     z-index: 3;
+    pointer-events: none;
 }
 
 /* ===== COURSE CARD STYLES ===== */
@@ -432,15 +443,16 @@
     border: 1px solid #e9ecef;
     border-radius: 16px;
     overflow: hidden;
-    margin-bottom: 1.2rem;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     animation: fadeInUp 0.6s ease-out;
     display: flex;
-    flex-direction: column;
-    height: 100%;
+    flex-direction: row;
+    align-items: center;
+    height: auto;
+    min-height: 140px;
 }
 
 @keyframes fadeInUp {
@@ -479,7 +491,8 @@
 }
 
 .course-image-container {
-    width: 100%;
+    width: 160px;
+    min-width: 160px;
     height: 140px;
     overflow: hidden;
     background: #f8f9fa;
@@ -491,7 +504,7 @@
 }
 
 .course-image {
-    width: 100%;
+    width: 160px;
     height: 140px;
     object-fit: cover;
     transition: transform 0.4s ease;
@@ -542,6 +555,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    min-height: 140px;
 }
 
 .student-qa-course-title {
@@ -556,6 +571,8 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     transition: color 0.3s ease;
+    flex: 1;
+    word-break: break-word;
 }
 
 .student-qa-course-card:hover .student-qa-course-title {
@@ -581,11 +598,14 @@
 }
 
 .student-qa-course-meta {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    grid-template-rows: auto 1fr auto;
     gap: 0.4rem;
     margin-bottom: 0;
-    margin-top: auto;
+    margin-top: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .qa-stats-badge {
@@ -601,6 +621,9 @@
     box-shadow: 0 2px 8px rgba(155, 89, 182, 0.3);
     transition: all 0.3s ease;
     white-space: nowrap;
+    flex-shrink: 0;
+    grid-column: 2;
+    grid-row: 1;
 }
 
 .qa-stats-badge i {
@@ -625,6 +648,9 @@
     box-shadow: 0 2px 8px rgba(52, 152, 219, 0.25);
     transition: all 0.3s ease;
     white-space: nowrap;
+    flex-shrink: 0;
+    grid-column: 3;
+    grid-row: 1;
 }
 
 .discussion-activity i {
@@ -636,15 +662,9 @@
     box-shadow: 0 4px 12px rgba(52, 152, 219, 0.35);
 }
 
-/* Course Action Area */
+/* Course Action Area - DEPRECATED */
 .course-action-area {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border-top: 1px solid #f0f0f0;
-    background: linear-gradient(135deg, rgba(155, 89, 182, 0.02) 0%, rgba(52, 152, 219, 0.02) 100%);
+    display: none;
 }
 
 .join-discussion-btn {
@@ -662,9 +682,14 @@
     transition: all 0.3s ease;
     box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
     transform: translateX(0);
-    width: 100%;
-    max-width: 200px;
+    width: auto;
+    white-space: nowrap;
     text-decoration: none;
+    flex-shrink: 0;
+    align-self: flex-end;
+    margin-top: auto;
+    grid-column: 2 / 4;
+    grid-row: 3;
 }
 
 .student-qa-course-card:hover .join-discussion-btn {
@@ -782,41 +807,78 @@
 }
 
 /* Question Cards */
+/* ✨ PHASE 7.16: Modern question card styling - matches student QA card exactly */
 .modern-question-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 18px;
-    padding: 25px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border: 2px solid #e9ecef;
+    border-radius: 20px;
+    padding: 1.5rem 2rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* ✨ PHASE 7.16: Top gradient border animation */
+.modern-question-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3498db 0%, #9b59b6 50%, #e74c3c 100%);
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+    transform-origin: left;
+}
+
+/* ✨ PHASE 7.16: Hover effects - apply to card directly */
+.qa-card-hover:hover::before {
+    transform: scaleX(1);
 }
 
 .qa-card-hover:hover {
+    border-color: #3498db;
+    box-shadow: 0 12px 30px rgba(52, 152, 219, 0.15);
     transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
 }
 
+/* ✨ PHASE 7.16: Avatar styling - simple and clean */
 .qa-avatar-gradient {
     position: relative;
-    padding: 3px;
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    overflow: hidden;
 }
 
 .qa-avatar-img {
-    width: 60px;
-    height: 60px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border: 3px solid white;
+    border-radius: 50%;
+}
+
+/* ✨ PHASE 7.16: Avatar placeholder fallback */
+.qa-avatar-gradient:has(img[style*="display: none"]) {
+    background: linear-gradient(135deg, #3498db20, #2980b920);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .qa-avatar-status {
     position: absolute;
-    bottom: 3px;
-    right: 3px;
+    bottom: 0;
+    right: 0;
     width: 18px;
     height: 18px;
     background: #28a745;
@@ -828,58 +890,177 @@
 }
 
 .qa-avatar-status-icon {
-    font-size: 8px;
+    font-size: 10px;
     color: white;
 }
 
+/* ✨ PHASE 7.16: User name styling - matches student version */
 .qa-user-name {
     color: #2c3e50;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
 }
 
+/* ✨ PHASE 7.16: Replies badge - exact student styling */
 .qa-replies-badge {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
+.qa-card-hover:hover .qa-replies-badge {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
+/* ✨ PHASE 7.16: Question title styling */
 .qa-question-title {
     color: #2c3e50;
-    font-weight: 600;
-    font-size: 1.2rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+    transition: color 0.3s ease;
 }
 
+.qa-card-hover:hover .qa-question-title {
+    color: #3498db;
+}
+
+/* ✨ PHASE 7.16: Question message body */
 .qa-question-message {
     line-height: 1.6;
     font-size: 0.95rem;
+    color: #6c757d;
 }
 
-.qa-course-badge {
-    background: rgba(52, 152, 219, 0.1);
-    color: #3498db;
-    padding: 6px 12px;
-    border-radius: 8px;
+/* ✨ PHASE 7.16: Metadata styling - matches student version exactly */
+.question-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.question-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.question-meta-icon {
+    width: 16px;
+    height: 16px;
+    color: #9b59b6;
+}
+
+/* ✨ PHASE 7.16: Draft badge */
+.qa-draft-badge {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
 }
 
+/* ✨ PHASE 7.16: Reply button - matches student join-discussion-primary */
 .qa-reply-btn {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    border: none;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
     color: white;
-    border-radius: 10px;
-    padding: 8px 16px;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+    transform: translateX(0);
+    cursor: pointer;
+}
+
+.qa-card-hover:hover .qa-reply-btn {
+    transform: translateX(8px) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    color: white;
+}
+
+/* ✨ PHASE 7.17: Like and Report button styling - matches student CourseDetail */
+.forum-like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    color: #6c757d;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.forum-like-btn:hover {
+    border-color: #e9366d;
+    color: #e9366d;
+    background: #fff5f8;
+}
+
+.forum-like-btn i {
+    font-size: 0.95rem;
+}
+
+.forum-like-btn .like-count {
     font-size: 0.85rem;
     font-weight: 600;
-    transition: all 0.3s ease;
 }
 
-.qa-reply-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
-    color: white;
+/* ✨ PHASE 7.17: Report button styling */
+.forum-report-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    color: #6c757d;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.forum-report-btn:hover {
+    border-color: #dc3545;
+    color: #dc3545;
+    background: #fff5f6;
+}
+
+.forum-report-btn i {
+    font-size: 0.95rem;
 }
 
 /* Empty State */
@@ -1607,6 +1788,666 @@
   }
 }
 
+/* ===== FORUM THREAD VIEW STYLES (INSTRUCTOR QA) ===== */
+/* ✨ PHASE 4+ : Inline forum thread display for instructor */
+
+.forum-thread-container-instructor {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  animation: fadeInContainer 0.4s ease-out;
+}
+
+@keyframes fadeInContainer {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Thread Header with Title & Meta ===== */
+.forum-thread-header {
+  padding: 1rem 2rem;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.forum-thread-title-area {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  justify-content: flex-start;
+  width: fit-content;
+}
+
+.forum-thread-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+  flex: 1;
+}
+
+.forum-breadcrumb {
+  font-size: 0.95rem;
+  color: #6c757d;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  flex: 1;
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
+.forum-breadcrumb i {
+  font-size: 0.85rem;
+}
+
+/* ✨ Header footer with breadcrumb and meta inline */
+.forum-header-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 2rem;
+}
+
+.forum-thread-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.forum-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  font-size: 0.9rem;
+  color: #495057;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.forum-meta-badge:hover {
+  border-color: #dee2e6;
+  background: #f8f9fa;
+}
+
+.forum-meta-badge i {
+  font-size: 0.85rem;
+  color: #3498db;
+}
+
+/* ✨ Button wrapper in forum title area */
+.forum-thread-title-area .d-flex {
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.forum-thread-title-area .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ===== Post Card Styles ===== */
+.forum-post-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+  animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.forum-post-card:hover {
+  border-color: #dee2e6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.forum-original-post {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 2px solid #dee2e6;
+  padding: 1.5rem 2rem;
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
+.forum-original-post:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  border-color: #cfe4e7;
+}
+
+.forum-reply-post {
+  border-left: 4px solid #e9ecef;
+  transition: border-color 0.3s ease;
+  padding: 1.5rem 2rem;
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
+.forum-reply-post:hover {
+  border-left-color: #9b59b6;
+}
+
+/* Post Header (Author Info) */
+.forum-post-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.forum-user-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.forum-user-avatar-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.forum-user-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s ease;
+}
+
+.forum-user-avatar:hover {
+  transform: scale(1.05);
+}
+
+.forum-user-avatar-placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0e8f4 0%, #e8d0f0 100%);
+  color: #9b59b6;
+  font-size: 1.5rem;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.forum-user-details {
+  flex: 1;
+}
+
+.forum-user-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ✨ PHASE 7.16: Badge Styling */
+.forum-user-badge-asker {
+  display: inline-flex;
+  padding: 0.25rem 0.75rem;
+  background: #fff3cd;
+  color: #8a6d3b;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid #ffeaa7;
+}
+
+.forum-user-badge-current {
+  display: inline-flex;
+  padding: 0.25rem 0.75rem;
+  background: #d4edda;
+  color: #155724;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid #c3e6cb;
+}
+
+.forum-user-badge-reported {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background: #f8d7da;
+  color: #721c24;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid #f5c6cb;
+  margin-left: 0.5rem;
+}
+
+/* ✨ Instructor Badge - Shows course creator/instructor */
+.forum-user-badge-instructor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  color: #1565c0;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid #90caf9;
+  margin-left: 0.5rem;
+}
+
+.forum-user-badge-instructor i {
+  font-size: 0.65rem;
+  color: #1565c0;
+}
+
+.forum-user-timestamp {
+  font-size: 0.9rem;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+/* Post Content */
+.forum-post-content {
+  font-size: 1.05rem;
+  color: #495057;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.forum-post-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.forum-post-text {
+  margin: 0;
+}
+
+/* Post Footer (Stats & Actions) */
+.forum-post-footer {
+  border-top: 1px solid #f1f3f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.forum-post-tags {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.forum-tag {
+  display: inline-flex;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: default;
+}
+
+.forum-tag i {
+  font-size: 0.8rem;
+}
+
+.forum-post-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-left: auto;
+}
+
+/* ✨ PHASE 7.16: Like button styling */
+.forum-like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  color: #6c757d;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.forum-like-btn:hover {
+  border-color: #e9366d;
+  color: #e9366d;
+  background: #fff5f8;
+}
+
+.forum-like-btn i {
+  font-size: 0.95rem;
+}
+
+.forum-like-btn .like-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ✨ PHASE 7.16: Report button styling */
+.forum-report-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  color: #6c757d;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.forum-report-btn:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+  background: #fff5f6;
+}
+
+.forum-report-btn i {
+  font-size: 0.95rem;
+}
+
+.forum-post-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6c757d;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.forum-post-stat i {
+  color: #e9366d;
+}
+
+/* ===== Replies Section ===== */
+.forum-replies-section {
+  margin-bottom: 1.5rem;
+}
+
+.forum-replies-header {
+  padding: 1.5rem 2rem;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+  border-radius: 8px 8px 0 0;
+}
+
+.forum-replies-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.forum-replies-title i {
+  color: #3498db;
+  font-size: 1rem;
+}
+
+.forum-replies-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.forum-replies-list .forum-reply-post:last-child {
+  margin-bottom: 0;
+}
+
+/* ===== No Replies State ===== */
+.forum-no-replies {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.forum-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.forum-empty-state i {
+  font-size: 3.5rem;
+  color: #cfe4e7;
+  opacity: 0.6;
+}
+
+.forum-empty-state h4 {
+  margin: 0;
+  color: #6c757d;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.forum-empty-state p {
+  margin: 0;
+  color: #adb5bd;
+  font-size: 0.95rem;
+}
+}
+
+.forum-replies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Reply Form Section */
+.forum-reply-form-section {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 2rem;
+}
+
+.forum-reply-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+/* Message textarea and button styles reuse from existing QA styles */
+.message-textarea-qa {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+  color: #495057;
+}
+
+.message-textarea-qa:focus {
+  outline: none;
+  border-color: #9b59b6;
+  box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.1);
+}
+
+.message-textarea-qa:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.message-form-qa {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.qa-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  background: #9b59b6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-end;
+}
+
+.qa-send-btn:hover:not(:disabled) {
+  background: #8e4db0;
+  box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
+}
+
+.qa-send-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive adjustments for forum thread */
+@media (max-width: 768px) {
+  .forum-post-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .forum-post-content {
+    font-size: 0.95rem;
+  }
+
+  .forum-post-title {
+    font-size: 1.15rem;
+  }
+
+  .forum-thread-header {
+    flex-wrap: wrap;
+  }
+
+  .forum-thread-title {
+    font-size: 1.5rem;
+  }
+
+  .forum-post-footer {
+    gap: 1rem;
+  }
+}
+
+/* Mobile: Full width stacked */
+/* Responsive adjustments for horizontal course cards */
+@media (max-width: 768px) {
+  .student-qa-course-card {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .course-image-container {
+    width: 100%;
+    height: 140px;
+    border-radius: 15px 15px 0 0;
+  }
+
+  .course-image {
+    width: 100%;
+  }
+
+  .course-info {
+    min-height: auto;
+    padding: 1rem;
+  }
+
+  .student-qa-course-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0.75rem;
+  }
+
+  .qa-stats-badge, .discussion-activity {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .join-discussion-btn {
+    width: 100%;
+    max-width: none;
+    grid-column: auto;
+    grid-row: auto;
+    margin-top: 0.75rem;
+  }
+}
+
 /* Mobile: Full width stacked */
 @media (max-width: 767px) {
   .qa-bg-section .row {
@@ -1618,5 +2459,259 @@
     flex: 0 0 100%;
     width: 100%;
     max-width: 100%;
+  }
+}
+
+/* ✨ PHASE 7.18: Question Card Styling - Matches Student Version */
+
+/* Question header with avatar and title side-by-side */
+.question-header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.avatar-modern {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease;
+}
+
+.avatar-modern:hover {
+  transform: scale(1.05);
+}
+
+.question-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Question title styling */
+.question-title {
+  color: #2c3e50;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+  transition: color 0.3s ease;
+}
+
+.qa-card-hover:hover .question-title {
+  color: #3498db;
+}
+
+/* Message preview in card - truncated to 2 lines */
+.question-message-preview {
+  color: #6c757d;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 1rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+/* Replies badge styling */
+.replies-badge {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* ✨ PHASE 7.17: Report Modal Dialog Styling */
+.abuse-report-modal {
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* ✨ PHASE 7.18+: Make modal wider on larger screens for horizontal card layout */
+@media (min-width: 1024px) {
+  .modal-dialog.modal-dialog-centered {
+    max-width: 1000px;
+  }
+}
+
+.abuse-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+  border: none;
+  padding: 1rem 1.5rem;
+}
+
+.abuse-modal-header h5 {
+  color: white;
+  margin: 0;
+  font-weight: 600;
+}
+
+.abuse-modal-header .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.abuse-modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.modal-body.abuse-report-modal {
+  padding: 1.5rem;
+}
+
+.abuse-modal-text {
+  color: #495057;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.form-select-modern {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.form-select-modern:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.modal-body textarea {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.modal-body textarea:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.modal-body .alert {
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  background-color: #f0f4ff;
+  color: #495057;
+}
+
+.modal-body .alert i {
+  color: #667eea;
+}
+
+.abuse-modal-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  border-radius: 0 0 12px 12px;
+  padding: 1rem 1.5rem;
+}
+
+.abuse-modal-footer .btn {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.6rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.abuse-modal-footer .btn-outline-secondary {
+  border-color: #dee2e6;
+  color: #495057;
+}
+
+.abuse-modal-footer .btn-outline-secondary:hover {
+  background-color: transparent;
+  border-color: #adb5bd;
+  color: #212529;
+}
+
+.abuse-modal-footer .btn-danger {
+  background: linear-gradient(135deg, #f5576c 0%, #ff6b6b 100%);
+  border: none;
+  color: white;
+}
+
+.abuse-modal-footer .btn-danger:hover {
+  background: linear-gradient(135deg, #f03f5d 0%, #ff5555 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 87, 108, 0.3);
+}
+
+.abuse-modal-footer .btn-danger:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Spinner styling in modal button */
+.abuse-modal-footer .spinner-border-sm {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+/* ✨ PHASE 7.18: Horizontal layout for report details with values right-aligned */
+.abuse-report-modal .card-body > .d-flex.justify-content-between {
+  gap: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.75rem;
+}
+
+.abuse-report-modal .card-body > .d-flex.justify-content-between:last-child {
+  border-bottom: none;
+}
+
+.abuse-report-modal .card-body > .d-flex.justify-content-between label {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding-top: 0.25rem;
+}
+
+.abuse-report-modal .card-body > .d-flex.justify-content-between p {
+  flex-grow: 1;
+  max-width: 50%;
+  word-break: break-word;
+}
+
+/* ✨ PHASE 7.18+: Make cards display side by side - Report Details and Admin Feedback */
+.abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* Report Detail and Admin Feedback cards - equal width side by side */
+.abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) > .card {
+  flex: 1 1 calc(50% - 0.75rem);
+  min-width: 280px;
+  margin-bottom: 0;
+}
+
+/* ✨ PHASE 7.18+: Stack cards vertically on smaller screens (tablets/phones) */
+@media (max-width: 900px) {
+  .abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) {
+    flex-direction: column;
+  }
+
+  .abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) > .card {
+    flex: 1 1 100%;
   }
 }

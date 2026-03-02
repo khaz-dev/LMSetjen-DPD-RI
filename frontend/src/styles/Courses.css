@@ -388,7 +388,10 @@
     font-weight: 600;
 }
 
-.course-title {
+/* ✨ PHASE 8c: NOTE - This file appears to be orphaned (not imported by any JSX)
+   Scoping .course-title to avoid conflicts with CourseCard.css consolidated definition
+*/
+.courses-global-styles .course-title {
     color: #2c3e50;
     font-weight: 600;
     font-size: 1.2rem;

@@ -621,12 +621,9 @@
     font-weight: 600;
 }
 
-.course-title {
-    color: #2c3e50;
-    font-weight: 600;
-    font-size: 1.2rem;
-    line-height: 1.4;
-}
+/* ✨ PHASE 8c: NOTE - .course-title base styles are in CourseCard.css (consolidated source of truth)
+   Removed duplicate definition to prevent style conflicts and inconsistencies across pages
+*/
 
 .course-date {
     color: #6c757d;

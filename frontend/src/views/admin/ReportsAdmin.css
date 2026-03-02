@@ -5,7 +5,7 @@
 
 .admin-dashboard {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: transparent;
 }
 
 /* ========================================
@@ -59,49 +59,57 @@
 .reports-tabs-header {
     display: flex;
     gap: 0;
-    border-bottom: 2px solid #f0f0f0;
-    background: linear-gradient(to right, #f8f9fa, #ffffff);
+    border-bottom: 3px solid #e9ecef;
+    background: white;
     padding: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .reports-tab-button {
     flex: 1;
-    padding: 1.25rem;
-    background: none;
+    padding: 1rem 1.5rem;
+    background: transparent;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.75rem;
     color: #6c757d;
     font-size: 0.95rem;
-    font-weight: 500;
+    font-weight: 600;
     transition: all 0.3s ease;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
+    border-bottom: 4px solid transparent;
+    margin-bottom: -3px;
+    position: relative;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
 }
 
 .reports-tab-button:hover:not(.active) {
     background-color: #f8f9fa;
     color: #495057;
+    border-bottom-color: #dee2e6;
 }
 
 .reports-tab-button.active {
     color: #667eea;
     border-bottom-color: #667eea;
-    background-color: white;
+    background-color: #f8f9ff;
+    font-weight: 700;
 }
 
 .reports-tab-icon {
     font-size: 1.1rem;
     display: flex;
     align-items: center;
+    justify-content: center;
+    width: 24px;
 }
 
 .reports-tab-label {
     white-space: nowrap;
+    display: block;
 }
 
 /* ========================================
@@ -206,27 +214,33 @@
 }
 
 .review-abuse-tab .stat-badge {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    height: auto;
-    width: fit-content;
-    justify-content: center;
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 1rem 1.5rem !important;
+    border-radius: 8px !important;
+    height: auto !important;
+    width: fit-content !important;
+    justify-content: center !important;
 }
 
 .review-abuse-tab .stat-value {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    color: white !important;
 }
 
 .review-abuse-tab .stat-label {
-    font-size: 0.85rem;
-    opacity: 0.9;
-    color: white;
+    font-size: 0.85rem !important;
+    opacity: 0.9 !important;
+    color: white !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    text-align: left !important;
 }
 
 /* ========================================
@@ -523,27 +537,30 @@
 }
 
 .review-abuse-tab .info-item {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 8px;
-    border-left: 3px solid #667eea;
+    background: #f8f9fa !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+    border-left: 3px solid #667eea !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
 }
 
 .review-abuse-tab .info-item label {
-    font-size: 0.8rem;
-    color: #6c757d;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    display: block;
-    margin-bottom: 0.5rem;
+    font-size: 0.8rem !important;
+    color: #6c757d !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    display: block !important;
+    margin-bottom: 0.5rem !important;
 }
 
 .review-abuse-tab .info-item p {
-    margin: 0;
-    color: #1a1a1a;
-    font-size: 0.95rem;
-    text-align: right;
+    margin: 0 !important;
+    color: #1a1a1a !important;
+    font-size: 0.95rem !important;
+    text-align: right !important;
 }
 
 /* ========================================
@@ -736,6 +753,580 @@
     }
 
     .review-abuse-tab .btn {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   Q&A REPORTS TAB STYLES (PHASE 7.16)
+   ======================================== */
+/* ✨ PHASE 7.16: Q&A Reports Tab - Mirror ReviewAbuseTab styling */
+
+.qa-reports-tab .filter-section {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.qa-reports-tab .filter-section .row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.qa-reports-tab .filter-section .col-md-4 {
+    flex: 1 !important;
+}
+
+.qa-reports-tab .filter-section .col-md-4:last-child {
+    flex: 0 !important;
+    width: auto !important;
+}
+
+.qa-reports-tab .form-label {
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.qa-reports-tab .filter-select {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.qa-reports-tab .filter-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.qa-reports-tab .stat-badge {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 1rem 1.5rem !important;
+    border-radius: 8px !important;
+    height: auto !important;
+    width: fit-content !important;
+    justify-content: center !important;
+}
+
+.qa-reports-tab .stat-value {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    color: white !important;
+}
+
+.qa-reports-tab .stat-label {
+    font-size: 0.85rem !important;
+    opacity: 0.9 !important;
+    color: white !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    text-align: left !important;
+}
+
+/* ========================================
+   Q&A REPORTS LIST
+   ======================================== */
+.qa-reports-tab .reports-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+/* ========================================
+   Q&A REPORT CARD
+   ======================================== */
+.qa-reports-tab .report-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #dc3545;
+    transition: all 0.3s ease;
+}
+
+.qa-reports-tab .report-card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.qa-reports-tab .report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.qa-reports-tab .report-info {
+    flex: 1;
+}
+
+.qa-reports-tab .report-meta {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.qa-reports-tab .report-id {
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 0.9rem;
+}
+
+.qa-reports-tab .report-date {
+    display: block;
+    width: 100%;
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.qa-reports-tab .report-instructor {
+    width: 100%;
+    margin-bottom: 0.75rem;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.qa-reports-tab .report-content-title {
+    width: 100%;
+    margin-bottom: 0.75rem;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.qa-reports-tab .report-reason {
+    width: 100%;
+    color: #dc3545;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.qa-reports-tab .report-status {
+    flex-shrink: 0;
+    align-self: flex-start;
+    padding-top: 0.25rem;
+}
+
+/* ========================================
+   Q&A STATUS BADGES
+   ======================================== */
+.qa-reports-tab .badge {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.qa-reports-tab .badge-warning {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ff9800;
+    border-left: 3px solid #ff9800;
+}
+
+.qa-reports-tab .badge-info {
+    background: rgba(13, 110, 253, 0.15);
+    color: #0d6efd;
+    border-left: 3px solid #0d6efd;
+}
+
+.qa-reports-tab .badge-danger {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    border-left: 3px solid #dc3545;
+}
+
+.qa-reports-tab .badge-success {
+    background: rgba(25, 135, 84, 0.15);
+    color: #198754;
+    border-left: 3px solid #198754;
+}
+
+.qa-reports-tab .badge-light {
+    background: #f8f9fa;
+    color: #666;
+    border-left: none;
+}
+
+/* ========================================
+   Q&A REPORT DESCRIPTION
+   ======================================== */
+.qa-reports-tab .report-description {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.qa-reports-tab .report-description p {
+    margin: 0;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* ========================================
+   Q&A REPORT FOOTER
+   ======================================== */
+.qa-reports-tab .report-footer {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.qa-reports-tab .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.qa-reports-tab .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+.qa-reports-tab .btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* ========================================
+   Q&A EMPTY STATE
+   ======================================== */
+.qa-reports-tab .empty-state {
+    background: white;
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.qa-reports-tab .empty-state i {
+    opacity: 0.5;
+}
+
+.qa-reports-tab .empty-state p {
+    font-size: 1.1rem;
+}
+
+/* ========================================
+   Q&A DETAIL MODAL
+   ======================================== */
+.qa-reports-tab .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 1rem;
+}
+
+.qa-reports-tab .modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.qa-reports-tab .detail-modal {
+    animation: slideUp 0.3s ease;
+}
+
+.qa-reports-tab .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+}
+
+.qa-reports-tab .modal-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+    color: white;
+}
+
+.qa-reports-tab .modal-title i {
+    color: white;
+}
+
+.qa-reports-tab .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.7;
+}
+
+.qa-reports-tab .btn-close:hover {
+    opacity: 1;
+}
+
+.qa-reports-tab .modal-body {
+    padding: 2rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.qa-reports-tab .detail-section {
+    margin-bottom: 1.5rem;
+}
+
+.qa-reports-tab .detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.qa-reports-tab .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+}
+
+/* ========================================
+   Q&A INFO GRID
+   ======================================== */
+.qa-reports-tab .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.qa-reports-tab .info-item {
+    background: #f8f9fa !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+    border-left: 3px solid #667eea !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+}
+
+.qa-reports-tab .info-item label {
+    font-size: 0.8rem !important;
+    color: #6c757d !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    display: block !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.qa-reports-tab .info-item p {
+    margin: 0 !important;
+    color: #1a1a1a !important;
+    font-size: 0.95rem !important;
+}
+
+/* ========================================
+   Q&A CONTENT BOX (for questions and messages)
+   ======================================== */
+.qa-reports-tab .content-box {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #dc3545;
+}
+
+.qa-reports-tab .content-item {
+    background: white;
+    padding: 0rem;
+    border-radius: 6px;
+}
+
+.qa-reports-tab .content-title {
+    margin: 0;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.6;
+}
+
+.qa-reports-tab .content-text {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.qa-reports-tab .content-author {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* ========================================
+   Q&A DESCRIPTION BOX
+   ======================================== */
+.qa-reports-tab .description-box {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 3px solid #667eea;
+}
+
+.qa-reports-tab .description-box p {
+    margin: 0;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* ========================================
+   Q&A FORM CONTROLS
+   ======================================== */
+.qa-reports-tab .form-control,
+.qa-reports-tab .form-select {
+    background-color: white;
+    color: #1a1a1a;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.qa-reports-tab .form-control:focus,
+.qa-reports-tab .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.qa-reports-tab .form-control:disabled,
+.qa-reports-tab .form-select:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+}
+
+.qa-reports-tab small {
+    display: block;
+    margin-top: 0.5rem;
+}
+
+.qa-reports-tab .form-group {
+    margin-bottom: 1rem;
+}
+
+/* ========================================
+   Q&A MODAL FOOTER
+   ======================================== */
+.qa-reports-tab .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.qa-reports-tab .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.qa-reports-tab .btn-secondary:hover:not(:disabled) {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+.qa-reports-tab .btn-secondary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.qa-reports-tab .btn-primary {
+    padding: 0.6rem 1.5rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.qa-reports-tab .btn-primary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.qa-reports-tab .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.2em;
+}
+
+/* ========================================
+   Q&A RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 768px) {
+    .qa-reports-tab .report-header {
+        flex-direction: column;
+    }
+
+    .qa-reports-tab .report-status {
+        align-self: flex-start;
+    }
+
+    .qa-reports-tab .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .qa-reports-tab .report-meta {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .qa-reports-tab .modal-overlay {
+        padding: 0.5rem;
+    }
+
+    .qa-reports-tab .modal-body {
+        padding: 1rem;
+    }
+
+    .qa-reports-tab .modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .qa-reports-tab .btn {
         width: 100%;
     }
 }

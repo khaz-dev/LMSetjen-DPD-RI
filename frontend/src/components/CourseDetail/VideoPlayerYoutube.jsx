@@ -14,8 +14,10 @@ import "./VideoPlayerYoutube.css";
 
 const VideoPlayerYoutube = forwardRef(({
     variantItem,
+    variantContext,  // ✨ PHASE 6.3: Bagian/section context for header display
     onClose,
     handleMarkLessonAsCompleted,
+    courseId,  // ✨ PHASE 4.144+: Add courseId prop for completion endpoint
     autoplay = false,
     onPlayingChange,
     onProgress,
@@ -387,8 +389,19 @@ const VideoPlayerYoutube = forwardRef(({
                         <i className="fab fa-youtube"></i>
                     </div>
                     <div className="video-player-title-wrapper">
-                        <div className="video-player-title">{variantItem?.title}</div>
-                        <small>YouTube Video - {Math.round(progressPercentage)}%</small>
+                        {/* ✨ PHASE 6.3: Show Bagian context in title */}
+                        <div className="video-player-title">
+                            {variantContext ? (
+                                <>
+                                    <span style={{ fontSize: '0.85em', opacity: 0.9 }}>{variantContext.variantTitle}</span>
+                                    <span style={{ margin: '0 0.5rem', opacity: 0.7 }}>|</span>
+                                    <span style={{ fontWeight: 600 }}>{variantItem?.title}</span>
+                                </>
+                            ) : (
+                                variantItem?.title
+                            )}
+                        </div>
+                        <small>{Math.round(progressPercentage)}%</small>
                     </div>
                 </div>
                 <button

@@ -114,6 +114,89 @@ admin.site.register(models.Variant, VariantAdmin)
 admin.site.register(models.VariantItem, VariantItemAdmin)
 admin.site.register(models.Question_Answer)
 admin.site.register(models.Question_Answer_Message)
+
+# ✨ PHASE 7.16: Q&A Report System Admin
+class QuestionAnswerReportAdmin(admin.ModelAdmin):
+    """Admin interface for Q&A report management"""
+    list_display = ('id', 'qa_id', 'reported_by_name', 'reason', 'status', 'reported_at', 'reviewed_at', 'reviewed_by_name')
+    list_filter = ('status', 'reason', 'reported_at', 'reviewed_at')
+    search_fields = ('question__qa_id', 'reported_by__user__first_name', 'reported_by__user__last_name', 'reason', 'description')
+    readonly_fields = ('question', 'reported_by', 'reported_at')
+    
+    fieldsets = (
+        ('Report Information', {
+            'fields': ('question', 'reported_by', 'reported_at', 'reason', 'description')
+        }),
+        ('Review Status', {
+            'fields': ('status', 'reviewed_by', 'reviewed_at', 'review_notes')
+        })
+    )
+    
+    ordering = ('-reported_at',)
+    
+    def qa_id(self, obj):
+        """Display the Q&A ID for easier identification"""
+        return obj.question.qa_id if obj.question else '-'
+    qa_id.short_description = 'Q&A ID'
+    
+    def reported_by_name(self, obj):
+        """Display the name of the person who reported"""
+        if obj.reported_by and hasattr(obj.reported_by, 'get_full_name'):
+            return obj.reported_by.get_full_name() or obj.reported_by.username
+        return '-'
+    reported_by_name.short_description = 'Reported By'
+    
+    def reviewed_by_name(self, obj):
+        """Display the name of the admin who reviewed"""
+        if obj.reviewed_by and hasattr(obj.reviewed_by, 'get_full_name'):
+            return obj.reviewed_by.get_full_name() or obj.reviewed_by.username
+        return '-'
+    reviewed_by_name.short_description = 'Reviewed By'
+
+class QuestionAnswerMessageReportAdmin(admin.ModelAdmin):
+    """Admin interface for Q&A message report management"""
+    list_display = ('id', 'qa_id', 'reported_by_name', 'reason', 'status', 'reported_at', 'reviewed_at', 'reviewed_by_name')
+    list_filter = ('status', 'reason', 'reported_at', 'reviewed_at')
+    search_fields = ('message__qa_id', 'reported_by__user__first_name', 'reported_by__user__last_name', 'reason', 'description')
+    readonly_fields = ('message', 'reported_by', 'reported_at')
+    
+    fieldsets = (
+        ('Report Information', {
+            'fields': ('message', 'reported_by', 'reported_at', 'reason', 'description')
+        }),
+        ('Review Status', {
+            'fields': ('status', 'reviewed_by', 'reviewed_at', 'review_notes')
+        })
+    )
+    
+    ordering = ('-reported_at',)
+    
+    def qa_id(self, obj):
+        """Display the Q&A message ID for easier identification"""
+        return obj.message.qa_id if obj.message else '-'
+    qa_id.short_description = 'Message QA ID'
+    
+    def reported_by_name(self, obj):
+        """Display the name of the person who reported"""
+        if obj.reported_by and hasattr(obj.reported_by, 'get_full_name'):
+            return obj.reported_by.get_full_name() or obj.reported_by.username
+        return '-'
+    reported_by_name.short_description = 'Reported By'
+    
+    def reviewed_by_name(self, obj):
+        """Display the name of the admin who reviewed"""
+        if obj.reviewed_by and hasattr(obj.reviewed_by, 'get_full_name'):
+            return obj.reviewed_by.get_full_name() or obj.reviewed_by.username
+        return '-'
+    reviewed_by_name.short_description = 'Reviewed By'
+
+admin.site.register(models.Question_Answer_Report, QuestionAnswerReportAdmin)
+admin.site.register(models.Question_Answer_Message_Report, QuestionAnswerMessageReportAdmin)
+
+# ✨ PHASE 7.16: Q&A Like System
+admin.site.register(models.Question_Answer_Like)
+admin.site.register(models.Question_Answer_Message_Like)
+
 admin.site.register(models.Certificate)
 admin.site.register(models.CompletedLesson)
 admin.site.register(models.VideoProgress)

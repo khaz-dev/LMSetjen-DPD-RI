@@ -57,6 +57,7 @@ urlpatterns = [
     path("filters/levels/", api_views.LevelFilterAPIView.as_view()),
     path("filters/ratings/", api_views.RatingFilterAPIView.as_view()),
     path("filters/teachers/", api_views.TeacherFilterAPIView.as_view()),
+    path("employee/options/", api_views.EmployeeInfoOptionsAPIView.as_view()),  # ✨ PHASE 4.12.3: Employee info options
     
     # ✨ PHASE 4.6: Integrated Search Endpoints
     path("search/advanced/", api_views.AdvancedSearchAPIView.as_view()),
@@ -82,6 +83,12 @@ urlpatterns = [
     path("student/wishlist/<user_id>/", api_views.StudentWishListListCreateAPIView.as_view()),
     path("student/question-answer-list-create/<course_id>/", api_views.QuestionAnswerListCreateAPIView.as_view()),
     path("student/question-answer-message-create/", api_views.QuestionAnswerMessageSendAPIView.as_view()),
+    # ✨ PHASE 7.16: Q&A Like and Report endpoints
+    path("student/question-answer-like/<qa_id>/", api_views.QuestionAnswerLikeAPIView.as_view()),
+    path("student/question-answer-message-like/<qa_id>/", api_views.QuestionAnswerMessageLikeAPIView.as_view()),
+    path("student/question-answer-report/<qa_id>/", api_views.QuestionAnswerReportAPIView.as_view()),
+    path("student/question-answer-message-report/<qa_id>/", api_views.QuestionAnswerMessageReportAPIView.as_view()),
+    path("student/qa-reports/<course_id>/", api_views.StudentQAReportsAPIView.as_view()),
 
     # Student Quiz Endpoints
     path("student/quiz-list/<user_id>/<course_id>/", api_views.StudentQuizListAPIView.as_view()),
@@ -108,6 +115,7 @@ urlpatterns = [
     path("teacher/create-from-profile/", api_views.TeacherCreateFromProfileAPIView.as_view()),
     path("teacher/profile-update/<user_id>/", api_views.TeacherProfileUpdateAPIView.as_view()),
     path("teacher/course-lists/<teacher_id>/", api_views.TeacherCourseListAPIView.as_view()),
+    path("teacher/student-lists/<teacher_id>/", api_views.TeacherStudentsListAPIView.as_view({'get': 'list'})),  # ✨ PHASE 4.X: Students enrolled in teacher's courses
     path("teacher/published-courses/<teacher_id>/", api_views.TeacherPublishedCoursesAPIView.as_view()),  # ✨ PHASE 4.77: Public profile courses
     path("teacher/review-lists/<teacher_id>/", api_views.TeacherReviewListAPIView.as_view()),
     path("teacher/review-detail/<teacher_id>/<review_id>/", api_views.TeacherReviewDetailAPIView.as_view()),
@@ -118,6 +126,9 @@ urlpatterns = [
     # Admin Routes - Abuse Reports
     path("admin/abuse-reports/", api_views.AdminAbuseReportsListAPIView.as_view()),  # ✨ PHASE 4.210: List all abuse reports
     path("admin/abuse-reports/<int:report_id>/", api_views.AdminAbuseReportDetailAPIView.as_view()),  # ✨ PHASE 4.210: Review/update abuse report
+    # ✨ PHASE 7.16: Admin Routes - Q&A Reports
+    path("admin/qa-reports/", api_views.AdminQAReportsListAPIView.as_view()),  # List all Q&A reports
+    path("admin/qa-reports/<int:report_id>/", api_views.AdminQAReportDetailAPIView.as_view()),  # Review/update Q&A report
     path("teacher/best-course-earning/<teacher_id>/", api_views.TeacherBestSellingCourseAPIView.as_view({'get': 'list'})),
     path("teacher/course-order-list/<teacher_id>/", api_views.TeacherCourseOrdersListAPIView.as_view()),
     path("teacher/question-answer-list/<teacher_id>/", api_views.TeacherQuestionAnswerListAPIView.as_view()),
