@@ -185,6 +185,13 @@
     height: 1em !important;
 }
 
+/* ✨ PHASE 51: Make button fill card-footer width */
+.card-footer.bg-transparent .btn-modern {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
 /* ✨ badge-modern and badge-level are now consistently styled globally from index.css - applies to all pages */
 
 /* Card Body - Base styles WITHOUT flex overrides */

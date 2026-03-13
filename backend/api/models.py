@@ -1438,6 +1438,7 @@ class QuizAttempt(models.Model):
     time_taken = models.DurationField(null=True, blank=True)  # Time taken to complete
     attempt_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date_attempted = models.DateTimeField(default=timezone.now)
+    _points_awarded = models.BooleanField(default=False, db_index=True, editable=False, help_text="Points awarded for this attempt")  # ✨ PHASE 11.169: Add missing field from migration
 
     class Meta:
         ordering = ['-date_attempted']

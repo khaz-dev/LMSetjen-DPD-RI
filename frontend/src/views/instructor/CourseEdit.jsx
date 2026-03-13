@@ -1240,8 +1240,8 @@ function CourseEdit() {
                                             Pratinjau Draf
                                         </Link>
                                         
-                                        {/* Preview Published Version Button - Only if published_version exists */}
-                                        {courseData?.published_version && (
+                                        {/* Preview Published Version Button - Only if published_version exists or course was published */}
+                                        {(courseData?.published_version || courseData?.platform_status === "Published" || courseData?.platform_status === "Review") && (
                                             <Link 
                                                 to={`/instructor/preview-course/${courseData?.course_id}/?view=published`}
                                                 target="_blank"
@@ -1365,7 +1365,8 @@ function CourseEdit() {
                                 )}
 
                                 {/* ✨ PHASE 4.71 UPDATED: Buttons aligned horizontally when published_version exists */}
-                                {courseData?.published_version ? (
+                                {/* ✨ PHASE 11.169a: Don't show buttons if course is in Review status (waiting for admin) */}
+                                {courseData?.published_version && courseData?.platform_status !== "Review" ? (
                                     // Show both buttons in a horizontal line for published courses
                                     <div className="d-flex justify-content-center gap-3 mt-3 w-100 flex-wrap">
                                         {/* Restore Button */}
@@ -1488,8 +1489,8 @@ function CourseEdit() {
                                             )}
                                         </div>
                                     </div>
-                                ) : (courseData?.platform_status === "Draft" || courseData?.platform_status === "Rejected" || courseData?.platform_status === "Review") && (
-                                    // Show only submit button for non-published courses
+                                ) : (courseData?.platform_status === "Draft" || courseData?.platform_status === "Rejected") && (
+                                    // ✨ PHASE 11.169a: Show only submit button for Draft and Rejected courses (not Review/in-progress)
                                     <div className="d-flex justify-content-center mt-3 w-100">
                                         <div className="position-relative d-flex flex-column align-items-center">
                                             <button 

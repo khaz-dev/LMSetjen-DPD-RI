@@ -26,7 +26,14 @@ def award_points_on_course_completion(sender, instance, created, **kwargs):
     NOTE: This signal handles course completion by checking CompletedLesson records,
     which is required because CompletedLesson is what's actually saved when a
     student marks lessons as complete (not EnrolledCourse).
+    
+    ✨ PHASE 46: CRITICAL - Temporarily DISABLED this signal due to transaction rollback issues
+    The signal calls enrollment.is_course_completed() which queries CompletedLesson records
+    WITHIN the atomic() block, potentially causing issues with nested transactions.
     """
+    # ✨ PHASE 46: Temporarily disable signal to fix lesson completion
+    return  # EXIT EARLY - DISABLE ALL LOGIC BELOW
+    
     try:
         # Only process if this is a new CompletedLesson being created
         if not created:

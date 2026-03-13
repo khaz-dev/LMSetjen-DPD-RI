@@ -144,7 +144,9 @@ if _database_url:
     DATABASES = {
         'default': dj_database_url.config(
             default=_database_url,
-            conn_max_age=0,  # Close connections immediately for development
+            conn_max_age=600,  # ✨ PHASE 45: CRITICAL FIX - Keep connections alive for 600s
+                               # CONN_MAX_AGE=0 breaks transaction.atomic() by closing connections
+                               # immediately after use, causing commits to fail unpredictably
         )
     }
     print(f"DEBUG: DATABASES config: {DATABASES}")
@@ -163,7 +165,9 @@ else:
             'PASSWORD': env('DB_PASSWORD', default='secure_password'),
             'HOST': env('DB_HOST', default='host.docker.internal'),  # Use Docker host for Windows
             'PORT': env('DB_PORT', default='5432'),
-            'CONN_MAX_AGE': 0,  # Close connections immediately for development
+            'CONN_MAX_AGE': 600,  # ✨ PHASE 45: CRITICAL FIX - Keep connections alive for 600s
+                                   # Prevents transaction rollback due to closed connections
+                                   # Was causing CompletedLesson records to vanish after insert
             'OPTIONS': {
                 'connect_timeout': 10,
             },

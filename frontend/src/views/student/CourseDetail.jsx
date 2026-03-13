@@ -1797,6 +1797,14 @@ function CourseDetail() {
             setShowQuizResult(false);
             setQuizResult(null);
             setIsQuizActive(false);
+            
+            // ✨ PHASE 11.168: Scroll to inline quiz container when quiz is opened
+            // ✨ PHASE 11.168a: Center quiz view vertically in viewport
+            setTimeout(() => {
+                if (inlineQuizContainerRef.current) {
+                    inlineQuizContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
         } catch (error) {
             Toast().fire({
                 icon: "error",
@@ -1914,6 +1922,14 @@ function CourseDetail() {
             setTimeRemaining(resumeData.timeRemaining);
             setShowQuizResult(false);
             setIsTimeExpired(false);
+            
+            // ✨ PHASE 11.168: Scroll to inline quiz container when quiz is resumed
+            // ✨ PHASE 11.168a: Center quiz view vertically in viewport
+            setTimeout(() => {
+                if (inlineQuizContainerRef.current) {
+                    inlineQuizContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+            }, 100);
             
             // Update ref for timer access
             currentQuizStateRef.current = {
@@ -2491,20 +2507,22 @@ function CourseDetail() {
             console.log(`[CourseDetail] Event received: Lesson ${variantItemId} answered correctly - refetching course data`);
             console.log(`[PHASE 12.16] 🎯 Event triggered for lesson ID: ${variantItemId}`);
             
-            // Small delay to allow backend to finish processing
+            // ✨ PHASE 44: CRITICAL FIX - Increased from 500ms to 1000ms
+            // Backend wraps answer + completion in single transaction (transaction.atomic)
+            // Database needs time to fully commit both records before we query
+            // 500ms was insufficient on slower systems, causing race condition where
+            // answer record not visible when serializer queries for it
             setTimeout(async () => {
                 try {
-                    console.log(`[PHASE 12.16] ⏳ Fetching course detail after 500ms delay...`);
+                    console.log(`[PHASE 44] ⏳ Fetching course detail after 1000ms delay (answer + completion transaction committed)...`);
                     await fetchCourseDetail(true);  // true = prevent loading state
                     console.log('[CourseDetail] ✅ Course data refreshed after correct answer');
-                    
-                    // NEW - Check what we got back
-                    console.log(`[PHASE 12.16] 📊 Course data updated. Checking completed_lesson array...`);
+                    console.log(`[PHASE 44] 📊 Course data updated. Checking completed_lesson array...`);
                     
                 } catch (error) {
                     console.error('[CourseDetail] Error refetching course data:', error);
                 }
-            }, 500);
+            }, 1000);
         };
         
         window.addEventListener('lessonAnsweredCorrectly', handleLessonAnsweredCorrectly);
@@ -2551,6 +2569,47 @@ function CourseDetail() {
         
         // checkForResumeableQuiz will be called after quizzes are loaded
     }, []);
+
+    // ✨ PHASE 48 FIX: Auto-select first lesson from Bagian 1 on page load if no lesson selected
+    // When course data loads and user hasn't selected or resumed a lesson, automatically load the first lesson
+    useEffect(() => {
+        // ✨ PHASE 48: Only auto-select if:
+        // 1. Course data has loaded
+        // 2. No lesson is currently selected (variantItem is null)
+        // 3. No saved lesson in localStorage (not a resumed session)
+        if (!course || variantItem) {
+            return;  // Skip if no course data or lesson already selected
+        }
+
+        try {
+            const savedData = localStorage.getItem("lms_current_lesson");
+            if (savedData) {
+                return;  // Skip if there's a saved lesson (user is resuming)
+            }
+
+            // Get first section (Bagian 1) from curriculum
+            if (!course.curriculum || !Array.isArray(course.curriculum) || course.curriculum.length === 0) {
+                return;  // No curriculum available
+            }
+
+            const firstSection = course.curriculum[0];
+            const sectionItems = firstSection.variant_items || firstSection.items || [];
+            
+            if (sectionItems.length === 0) {
+                return;  // No lessons in first section
+            }
+
+            const firstLesson = sectionItems[0];
+            
+            if (firstLesson && firstLesson.variant_item_id) {
+                console.log(`[CourseDetail.PHASE_48] 🎬 Auto-selecting first lesson: ${firstLesson.title}`);
+                handlePlayLessonWithAutoplay(firstLesson);
+            }
+        } catch (error) {
+            console.warn('[CourseDetail.PHASE_48] Error auto-selecting first lesson:', error);
+            // Silently continue - this is not critical functionality
+        }
+    }, [course]);  // Only re-run when course data arrives
 
     // ✨ PHASE 7.16+: Refetch Q&A reports whenever questions load
     useEffect(() => {
@@ -3601,7 +3660,7 @@ function CourseDetail() {
 
                                 {/* ✨ PHASE 4.224: Certificate Display - appears between progress card and tabs when Sertifikat tab active */}
                                 {existingCertificate && existingCertificate.image_file_url && activeTab === 'certificate' && (
-                                    <div className="certificate-display mb-4">
+                                    <div className="certificate-display">
                                         <img
                                             src={existingCertificate.image_file_url}
                                             alt="Sertifikat"
@@ -3630,7 +3689,7 @@ function CourseDetail() {
                                 {(quizShow || (isQuizActive && selectedQuiz)) && selectedQuiz && activeTab === 'quiz' && (
                                     <div 
                                         ref={inlineQuizContainerRef}
-                                        className={`inline-quiz-fullscreen mb-4 ${isQuizActive ? 'quiz-active' : ''} ${!isMouseInQuizArea && isQuizActive ? 'quiz-mouse-left' : ''}`}
+                                        className={`inline-quiz-fullscreen ${isQuizActive ? 'quiz-active' : ''} ${!isMouseInQuizArea && isQuizActive ? 'quiz-mouse-left' : ''}`}
                                     >
                                         {/* Quiz Start Screen */}
                                         {!isQuizActive && !showQuizResult && selectedQuiz && (
@@ -5229,20 +5288,20 @@ function CourseDetail() {
                                                             </div>
                                                             <div className="review-edit-actions d-flex gap-2">
                                                                 <button 
-                                                                    type="submit" 
-                                                                    className="add-btn-modern"
-                                                                    disabled={!createReview.review.trim() || !createReview.rating}
-                                                                >
-                                                                    <i className="fas fa-save me-2"></i>
-                                                                    Perbarui Ulasan
-                                                                </button>
-                                                                <button 
                                                                     type="button" 
                                                                     className="btn btn-secondary"
                                                                     onClick={handleCancelEditReview}
                                                                 >
                                                                     <i className="fas fa-times me-2"></i>
                                                                     Batal
+                                                                </button>
+                                                                <button 
+                                                                    type="submit" 
+                                                                    className="add-btn-modern"
+                                                                    disabled={!createReview.review.trim() || !createReview.rating}
+                                                                >
+                                                                    <i className="fas fa-save me-2"></i>
+                                                                    Perbarui Ulasan
                                                                 </button>
                                                             </div>
                                                         </form>

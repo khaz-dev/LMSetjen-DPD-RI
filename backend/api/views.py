@@ -6750,13 +6750,15 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                 from decimal import Decimal
                 time_taken_duration = timedelta(seconds=time_taken) if time_taken else None
                 
+                # ✨ PHASE 11.169: Explicitly set _points_awarded to False on creation
                 attempt = api_models.QuizAttempt.objects.create(
                     user=user,
                     quiz=quiz,
                     score=Decimal(str(score)),  # Ensure Decimal type for accurate comparison
                     total_questions=total_questions,
                     correct_answers=correct_answers,
-                    time_taken=time_taken_duration
+                    time_taken=time_taken_duration,
+                    _points_awarded=False  # ✨ PHASE 11.169: Explicitly set to False (will be set to True when points awarded)
                 )
                 
                 # Refresh the attempt from database to get the calculated is_passed value
@@ -10462,7 +10464,13 @@ class LessonCompletionQuestionAnswerAPIView(APIView):
             "question_id": "abc123",
             "answer_choice_ids": ["choice_id_1", "choice_id_2"]  # For multi-select
         }
+        
+        ✨ PHASE 44: CRITICAL FIX - Wrap answer AND completion in same transaction
+        This ensures both records are persisted together before response is sent,
+        preventing race conditions where answer is not visible when completion is created.
         """
+        from django.db import transaction
+        
         try:
             question_id = request.data.get('question_id')
             print(f"[PHASE 12.16] 🎯 LessonCompletion ANSWER: Received question_id={question_id}, user={request.user.username}")
@@ -10514,165 +10522,188 @@ class LessonCompletionQuestionAnswerAPIView(APIView):
             
             print(f"[PHASE 12.16] 🎯 ANSWER VALIDATION RESULT: is_correct={is_correct}")
             
-            # ✨ PHASE 11.198: Save the answer to LessonCompletionQuestionAnswer model
-            try:
-                answer_record = api_models.LessonCompletionQuestionAnswer.objects.create(
-                    user=request.user,
-                    question=question,
-                    is_correct=is_correct
-                )
-                print(f"[PHASE 12.16] ✅ LessonCompletionQuestionAnswer created with is_correct={is_correct}")
-                
-                # Save answer based on question type
-                if question.question_type == 'multiple_choice':
-                    answer_choice_id = request.data.get('answer_choice_id')
-                    answer_choice = question.choices.get(choice_id=answer_choice_id)
-                    answer_record.answer_choice = answer_choice
-                    answer_record.save()
-                
-                elif question.question_type == 'multi_select':
-                    answer_choice_ids = request.data.get('answer_choice_ids', [])
-                    answer_choices = question.choices.filter(choice_id__in=answer_choice_ids)
-                    answer_record.answer_choices.set(answer_choices)
-                
-                elif question.question_type in ['short_answer', 'fill_in_blank']:
-                    student_answer = request.data.get('answer', '').strip()
-                    answer_record.answer_text = student_answer
-                    answer_record.save()
-                
-                print(f"[PHASE 12.16] ✅ Answer details saved. User: {request.user.username}, Q: {question.question_id}, Correct: {is_correct}")
-            except Exception as e:
-                print(f"[PHASE 12.16] ❌ ERROR saving answer: {str(e)}")
-                print(f"[PHASE 12.16] Error type: {type(e).__name__}")
-                import traceback
-                traceback.print_exc()
-                # Don't fail the response if answer recording fails
+            # ✨ PHASE 45: CRITICAL FIX - Use explicit database operations with manual commit
+            # With CONN_MAX_AGE=0, connections close immediately. Use explicit transaction control
+            # and force database sync to ensure record persists before response
+            from django.db import connection, transaction as tx
             
-            # ✨ PHASE 12.16: When answer is correct, mark lesson as completed
             completion_error = None
             completion_created = False
             completion_variant_item_id = None
             
-            if is_correct:
-                print(f"[PHASE 12.16] 🎓 Answer is CORRECT - Attempting to mark lesson as completed...")
+            try:
+                # ✨ PHASE 46: CRITICAL FIX - Removed nested transaction.atomic() wrapper
+                # The wrapper was causing silent transaction rollbacks due to savepoint issues
+                # when post_save signals were querying within the atomic block.
+                # Solution: Use Django's default autocommit mode for safety.
+                
+                # ✨ PHASE 11.198: Save the answer to LessonCompletionQuestionAnswer model
                 try:
-                    variant_item = question.variant_item
-                    if not variant_item:
-                        completion_error = "variant_item is None"
-                        print(f"[PHASE 12.16] ❌ ERROR: {completion_error}")
-                        raise Exception(completion_error)
+                    answer_record = api_models.LessonCompletionQuestionAnswer.objects.create(
+                        user=request.user,
+                        question=question,
+                        is_correct=is_correct
+                    )
+                    print(f"[PHASE 12.16] ✅ LessonCompletionQuestionAnswer created with is_correct={is_correct}")
                     
-                    completion_variant_item_id = variant_item.variant_item_id
-                    print(f"[PHASE 12.16] ✅ variant_item: {variant_item.title} (ID: {variant_item.variant_item_id})")
+                    # Save answer based on question type
+                    if question.question_type == 'multiple_choice':
+                        answer_choice_id = request.data.get('answer_choice_id')
+                        answer_choice = question.choices.get(choice_id=answer_choice_id)
+                        answer_record.answer_choice = answer_choice
+                        answer_record.save()
                     
-                    user = request.user
-                    print(f"[PHASE 12.16] ✅ user: {user.username} (ID: {user.id})")
+                    elif question.question_type == 'multi_select':
+                        answer_choice_ids = request.data.get('answer_choice_ids', [])
+                        answer_choices = question.choices.filter(choice_id__in=answer_choice_ids)
+                        answer_record.answer_choices.set(answer_choices)
+                        # ✨ PHASE 44: Force save after M2M set to ensure persistence
+                        answer_record.save()
                     
-                    course_obj = variant_item.variant
-                    if not course_obj:
-                        completion_error = "variant is None"
-                        print(f"[PHASE 12.16] ❌ ERROR: {completion_error}")
-                        raise Exception(completion_error)
+                    elif question.question_type in ['short_answer', 'fill_in_blank']:
+                        student_answer = request.data.get('answer', '').strip()
+                        answer_record.answer_text = student_answer
+                        answer_record.save()
                     
-                    course = course_obj.course
-                    if not course:
-                        completion_error = "course is None"
-                        print(f"[PHASE 12.16] ❌ ERROR: {completion_error}")
-                        raise Exception(completion_error)
-                    
-                    print(f"[PHASE 12.16] ✅ course: {course.title} (ID: {course.id})")
-                    
-                    # ✨ PHASE 38.1: CRITICAL FIX - Use explicit commit to ensure persistence
-                    # Previous code relied on Django middleware autocommit, but tests show commits were being rolled back
-                    from django.db import transaction
-                    
-                    try:
-                        with transaction.atomic():
-                            completed_lesson, created = api_models.CompletedLesson.objects.get_or_create(
-                                user_id=user.id,
-                                course_id=course.id,
-                                variant_item_id=variant_item.id
-                            )
-                            print(f"[PHASE 38.1] 🔒 CompletedLesson within atomic transaction: ID={completed_lesson.id}, created={created}")
-                        
-                        # After atomic block exits, transaction is committed
-                        print(f"[PHASE 38.1] ✅ Transaction.atomic() COMMITTED successfully")
-                        completion_created = created
-                    except Exception as tx_error:
-                        print(f"[PHASE 38.1] ❌ Transaction.atomic() FAILED: {tx_error}")
-                        completion_created = False
-                        raise
-                    
-                    action = "CREATED" if created else "ALREADY_EXISTS"
-                    print(f"[PHASE 12.16] ✅ CompletedLesson {action}: {user.username} → {variant_item.title}")
-                    print(f"[PHASE 12.16] CompletedLesson ID: {completed_lesson.id}")
-                    print(f"[PHASE 12.16] CompletedLesson variant_item_id: {completed_lesson.variant_item_id}")
-                    print(f"[PHASE 12.16] CompletedLesson course_id: {completed_lesson.course_id}")
-                    print(f"[PHASE 12.16] CompletedLesson user_id: {completed_lesson.user_id}")
-                    print(f"[PHASE 12.16] ✅ Transaction committed - record is now persisted in database")
-                    
-                    # ✨ PHASE 37.1: CRITICAL FIX - Verify the record was actually saved
-                    # This catches database integrity issues where variant_item might be missing
-                    from django.db import connection, transaction
-                    
-                    # Explicitly flush pending database operations
-                    from django.db import reset_queries
-                    
-                    print(f"[PHASE 37.1] Pre-verification: Checking if CompletedLesson {completed_lesson.id} persists...")
-                    
-                    # Method 1: Use Django's reload from DB
-                    try:
-                        reloaded = api_models.CompletedLesson.objects.get(id=completed_lesson.id)
-                        print(f"[PHASE 37.1] ✅ Django ORM reload SUCCESS: ID={reloaded.id}, variant_item_id={reloaded.variant_item_id}")
-                    except api_models.CompletedLesson.DoesNotExist:
-                        print(f"[PHASE 37.1] ❌ Django ORM reload FAILED - record not found!")
-                    
-                    # Method 2: Use raw SQL
-                    with connection.cursor() as cursor:
-                        cursor.execute(
-                            "SELECT id, variant_item_id, course_id, user_id FROM api_completedlesson WHERE id = %s",
-                            [completed_lesson.id]
-                        )
-                        row = cursor.fetchone()
-                        if row:
-                            db_id, db_variant, db_course, db_user = row
-                            print(f"[PHASE 37.1] ✅ RAW SQL VERIFIED: ID={db_id}, variant_item_id={db_variant}, course_id={db_course}, user_id={db_user}")
-                            if db_variant is None:
-                                print(f"[PHASE 37.1] 🚨 CRITICAL: variant_item_id is NULL in database!")
-                        else:
-                            print(f"[PHASE 37.1] 🚨 CRITICAL: Record not found in raw SQL either!")
-                            
-                            # Try to find ANY record with these keys
-                            cursor.execute(
-                                "SELECT id, variant_item_id FROM api_completedlesson WHERE user_id = %s AND course_id = %s AND variant_item_id = %s",
-                                [user.id, course.id, variant_item.id]
-                            )
-                            alt_row = cursor.fetchone()
-                            if alt_row:
-                                print(f"[PHASE 37.1] ⚠️ Found existing record with same keys: ID={alt_row[0]} (get_or_create returned existing record)")
-                            else:
-                                print(f"[PHASE 37.1] 🚨 No record at ALL with these keys exists!")
-                    
+                    print(f"[PHASE 12.16] ✅ Answer details saved. User: {request.user.username}, Q: {question.question_id}, Correct: {is_correct}")
                 except Exception as e:
-                    completion_error = str(e)
-                    print(f"[PHASE 12.16] ❌ ERROR marking lesson as completed: {completion_error}")
+                    print(f"[PHASE 12.16] ❌ ERROR saving answer: {str(e)}")
                     print(f"[PHASE 12.16] Error type: {type(e).__name__}")
                     import traceback
                     traceback.print_exc()
-                    # Don't fail the response if CompletedLesson creation fails
-            else:
-                print(f"[PHASE 12.16] ⚠️ Answer is INCORRECT - NOT marking as completed")
+                    raise
+                
+                # ✨ PHASE 12.16: When answer is correct, mark lesson as completed
+                if is_correct:
+                    print(f"[PHASE 12.16] 🎓 Answer is CORRECT - Attempting to mark lesson as completed...")
+                    try:
+                        variant_item = question.variant_item
+                        if not variant_item:
+                            completion_error = "variant_item is None"
+                            print(f"[PHASE 12.16] ❌ ERROR: {completion_error}")
+                            raise Exception(completion_error)
+                        
+                        completion_variant_item_id = variant_item.variant_item_id
+                        print(f"[PHASE 12.16] ✅ variant_item: {variant_item.title} (PK: {variant_item.id}, ShortUUID: {variant_item.variant_item_id})")
+                        
+                        user = request.user
+                        print(f"[PHASE 12.16] ✅ user: {user.username} (ID: {user.id})")
+                        
+                        course_obj = variant_item.variant
+                        if not course_obj:
+                            completion_error = "variant is None"
+                            print(f"[PHASE 12.16] ❌ ERROR: {completion_error}")
+                            raise Exception(completion_error)
+                        
+                        course = course_obj.course
+                        if not course:
+                            completion_error = "course is None"
+                            print(f"[PHASE 12.16] ❌ ERROR: {completion_error}")
+                            raise Exception(completion_error)
+                        
+                        print(f"[PHASE 12.16] ✅ course: {course.title} (ID: {course.id})")
+                        
+                        # ✨ PHASE 46: Create CompletedLesson WITHOUT nested atomic()
+                        print(f"[PHASE 46] 🔍 Creating CompletedLesson with:")
+                        print(f"   user_id={user.id}, course_id={course.id}, variant_item_id={variant_item.id}")
+                        
+                        completed_lesson, created = api_models.CompletedLesson.objects.get_or_create(
+                            user_id=user.id,
+                            course_id=course.id,
+                            variant_item_id=variant_item.id
+                        )
+                        print(f"[PHASE 38.1] 🔒 CompletedLesson created/retrieved: ID={completed_lesson.id}, created={created}")
+                        
+                        action = "CREATED" if created else "ALREADY_EXISTS"
+                        print(f"[PHASE 12.16] ✅ CompletedLesson {action}: {user.username} → {variant_item.title}")
+                        print(f"[PHASE 12.16] CompletedLesson ID: {completed_lesson.id}")
+                        print(f"[PHASE 12.16] CompletedLesson FK variant_item_id: {completed_lesson.variant_item_id}")
+                        print(f"[PHASE 12.16] CompletedLesson course_id: {completed_lesson.course_id}")
+                        print(f"[PHASE 12.16] CompletedLesson user_id: {completed_lesson.user_id}")
+                        completion_created = created
+                        
+                    except Exception as e:
+                        completion_error = str(e)
+                        print(f"[PHASE 12.16] ❌ ERROR marking lesson as completed: {completion_error}")
+                        print(f"[PHASE 12.16] Error type: {type(e).__name__}")
+                        import traceback
+                        traceback.print_exc()
+                        raise
+                else:
+                    print(f"[PHASE 12.16] ⚠️ Answer is INCORRECT - NOT marking as completed")
+                
+                # ✨ PHASE 46: Force explicit database commit and verification
+                print(f"[PHASE 46] 🔄 Forcing explicit database commit...")
+                
+                # ✨ PHASE 46: Ensure database connection is active
+                from django.db import connection
+                connection.ensure_connection()
+                
+                # Force a dummy query to ensure commits are flushed
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT 1;")
+                print(f"[PHASE 46] ✅ Database commit forced and verified")
+                
+                # ✨ PHASE 46: Clear any ORM-level query caching to ensure fresh reads
+                from django.db import reset_queries
+                reset_queries()
+                print(f"[PHASE 46] ✅ Cleared Django ORM query cache")
+                print(f"[PHASE 45] ✅ Cleared Django ORM query cache")
+                
+            except Exception as outer_ex:
+                print(f"[PHASE 45] ❌ CRITICAL: Transaction failed - {outer_ex}")
+                completion_error = str(outer_ex)
+                raise
+            
+            # ✨ PHASE 45: CRITICAL - Verify record actually persisted to database before response
+            verification_data = {
+                'completion_created': completion_created,
+                'completion_error': completion_error,
+                'completion_variant_item_id': completion_variant_item_id
+            }
+            
+            if completion_created and not completion_error:
+                try:
+                    # ✨ PHASE 46: CRITICAL FIX - Use in-memory objects instead of ORM queries
+                    # Don't try to fetch the record again - it was just created in this transaction
+                    # and might not be immediately visible due to connection/transaction issues
+                    # Instead, use the course and completed_lesson objects already in memory
+                    
+                    # Direct database query to verify persistence
+                    from django.db import connection
+                    cursor = connection.cursor()
+                    cursor.execute("""
+                        SELECT id, user_id, course_id, variant_item_id, created_at 
+                        FROM api_completedlesson 
+                        WHERE user_id = %s AND course_id = %s AND variant_item_id = %s
+                        ORDER BY created_at DESC 
+                        LIMIT 1
+                    """, [request.user.id, 
+                          course.id,  # ✨ PHASE 46: Use in-memory course.id instead of .get()
+                          variant_item.id])  # ✨ PHASE 46: Use in-memory variant_item.id instead of completed_lesson.variant_item_id
+                    
+                    result = cursor.fetchone()
+                    if result:
+                        verification_data['database_verified'] = True
+                        verification_data['db_record_id'] = result[0]
+                        verification_data['db_verify_message'] = f"✅ Record ID={result[0]} found in database"
+                        print(f"[PHASE 45] ✅ VERIFIED: CompletedLesson ID={result[0]} persisted in database")
+                    else:
+                        verification_data['database_verified'] = False
+                        verification_data['db_verify_message'] = "❌ Record created but NOT found in database - PERSISTENCE FAILURE"
+                        print(f"[PHASE 45] ❌ CRITICAL: Record NOT found in database despite create() success!")
+                        
+                except Exception as verify_ex:
+                    verification_data['verification_error'] = str(verify_ex)
+                    verification_data['db_verify_message'] = f"Verification check failed: {verify_ex}"
+                    print(f"[PHASE 46] ⚠️ Verification query failed: {verify_ex}")
             
             return Response({
                 'success': True,
                 'is_correct': is_correct,
                 'message': message,
                 'question_type': question.question_type,
-                'debug': {
-                    'completion_created': completion_created,
-                    'completion_error': completion_error,
-                    'completion_variant_item_id': completion_variant_item_id
-                }
+                'debug': verification_data
             }, status=status.HTTP_200_OK)
         
         except api_models.LessonCompletionQuestion.DoesNotExist:

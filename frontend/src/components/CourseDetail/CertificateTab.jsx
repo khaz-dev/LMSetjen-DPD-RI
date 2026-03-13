@@ -66,6 +66,17 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                     title: 'Sertifikat Berhasil Dibuat!',
                     text: 'Sertifikat Anda telah berhasil dibuat dan disimpan.'
                 });
+                
+                // ✨ PHASE 50: Scroll to course progress card after successful creation
+                setTimeout(() => {
+                    const progressCard = document.querySelector('.course-progress-card-loaded');
+                    if (progressCard) {
+                        progressCard.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                    }
+                }, 1000);  // Wait for image generation to complete before scrolling
             }
         } catch (error) {
             Toast().fire({
@@ -160,14 +171,25 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
             // ✨ PHASE 4.222: Download certificate image (course_id_user_id.png)
             const courseId = course?.course?.course_id;
             const userId = UserData()?.user_id;
-            const downloadUrl = `student/certificate-download/${courseId}/${userId}/`;
             
+            // ✨ PHASE 51: Use apiInstance to fetch the file with correct API base URL
+            const response = await apiInstance.get(
+                `student/certificate-download/${courseId}/${userId}/`,
+                {
+                    responseType: 'blob'  // Important: Get response as blob for binary file
+                }
+            );
+
+            // Create blob URL and download
+            const blob = new Blob([response.data], { type: 'image/png' });
+            const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = downloadUrl;
+            link.href = url;
             link.setAttribute('download', `${courseId}_${userId}.png`);
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
+            window.URL.revokeObjectURL(url);
 
             Toast().fire({
                 icon: 'success',
@@ -191,7 +213,8 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
     }, [course]);
 
     const formatDate = (date) => {
-        return moment(date).format('MMMM D, YYYY');
+        // ✨ PHASE 51: Indonesian locale is now set globally in dayjs.js, no need to set again
+        return moment(date).format('DD MMMM YYYY');
     };
 
     const getCompletionStatus = () => {
@@ -227,6 +250,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                 </div>
 
                 {/* ✨ PHASE 4.224: Certificate display moved to main course view, only show fallback if pending */}
+                {/* ✨ PHASE 49: Added ref to scroll to certificate display area after creation */}
                 {certificate && !certificate.image_file_url ? (
                     // ✨ PHASE 4.222: Fallback to manual certificate if image not yet generated
                     <div className="certificate-display" style={{ border: '2px solid #f39c12', borderRadius: '8px' }}>
@@ -285,7 +309,6 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                                 <div className="instructor-section">
                                     <p className="certification-by">Disertifikasi oleh:</p>
                                     <p className="instructor-name">{course?.course?.teacher?.full_name}</p>
-                                    <p className="instructor-title">Pengajar Kursus</p>
                                 </div>
 
                                 {/* Date Section */}

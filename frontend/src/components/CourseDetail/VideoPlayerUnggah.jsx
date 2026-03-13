@@ -29,7 +29,9 @@ const VideoPlayerUnggah = forwardRef(({
     course,  // ✨ PHASE 36.1: Pass full course data to check actual completed_lesson array (source of truth)
 }, ref) => {
     const [loadError, setLoadError] = useState(false);
-    const [isPlaying, setIsPlaying] = useState(autoplay);
+    // ✨ PHASE 47 FIX: Only initialize isPlaying=true if variantItem has a file AND autoplay is true
+    // Otherwise, autoplay=true with no variantItem causes video to appear "playing" even when no lesson selected
+    const [isPlaying, setIsPlaying] = useState(variantItem?.file && autoplay ? autoplay : false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [mouseActive, setMouseActive] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -67,6 +69,14 @@ const VideoPlayerUnggah = forwardRef(({
         // ✨ PHASE 40.1: Only use is_completed - is_fully_watched causes FULL MODE prematurely at 95% progress
         setAllowVideoAccess(variantItem?.is_completed || false);
     }, [variantItem?.variant_item_id]);
+    
+    // ✨ PHASE 47 FIX: Reset playing state when lesson becomes null/empty
+    // Prevents video from appearing to "play" when no lesson is selected
+    useEffect(() => {
+        if (!variantItem?.file) {
+            setIsPlaying(false);
+        }
+    }, [variantItem?.file]);
     
     const containerRef = useRef(null);
     const mouseInactiveTimer = useRef(null);

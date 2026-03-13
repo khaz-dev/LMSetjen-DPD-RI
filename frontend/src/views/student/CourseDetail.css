@@ -6138,6 +6138,7 @@ html, body, #root {
     border-left: 4px solid #e9ecef;
     transition: border-color 0.3s ease;
     padding: 1.5rem 2rem;
+    margin-bottom: 0rem;
 }
 
 .forum-reply-post:hover {

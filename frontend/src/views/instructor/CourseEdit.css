@@ -29,6 +29,7 @@
     padding-top: var(--page-top-spacing) !important;
     padding-bottom: var(--page-bottom-spacing) !important;
     margin-bottom: 8rem;
+    overflow-x: hidden; /* ✨ PHASE 11.170: Prevent horizontal scroll */
 }
 
 /* Ensure proper scroll context for sticky sidebar */
@@ -44,7 +45,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0;
-    width: calc(100% + var(--bs-gutter-x, 24px));
+    width: 100% !important; /* ✨ PHASE 11.170: Fixed width calculation causing horizontal scroll */
 }
 
 /* Protect Header on edit page from row CSS rules */

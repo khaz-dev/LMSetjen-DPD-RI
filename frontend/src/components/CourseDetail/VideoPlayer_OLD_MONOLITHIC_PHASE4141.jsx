@@ -25,7 +25,8 @@ const VideoPlayer = forwardRef(({
     seekPosition,  // ✨ PHASE 4.117: Position in seconds to seek to when video loads
 }, ref) => {
     const [loadError, setLoadError] = useState(false);
-    const [isPlaying, setIsPlaying] = useState(autoplay);  // Initialize with autoplay state
+    // ✨ PHASE 47 FIX: Guard autoplay initialization - only play if variantItem has file
+    const [isPlaying, setIsPlaying] = useState(variantItem?.file && autoplay ? autoplay : false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isVideoFocused, setIsVideoFocused] = useState(false);
     const [googleDriveClickExpired, setGoogleDriveClickExpired] = useState(false);  // ✨ PHASE 4.103: Track if 5-second window expired
@@ -378,6 +379,15 @@ const VideoPlayer = forwardRef(({
             console.warn("⚠️ [VideoPlayer] onPlayingChange NOT provided!");
         }
     }, [isPlaying, onPlayingChange]);
+
+    // ✨ PHASE 47 FIX: Reset playing state when lesson becomes null/empty
+    // Prevents video from appearing to "play" when no lesson is selected
+    useEffect(() => {
+        if (!variantItem?.file) {
+            console.log("📴 [VideoPlayer] variantItem cleared - resetting isPlaying to false");
+            setIsPlaying(false);
+        }
+    }, [variantItem?.file]);
 
     // ✨ PHASE 4.107: Load YouTube IFrame API for play/pause control via postMessage
     // ✨ PHASE 4.118: Load YouTube API globally once (not per component)

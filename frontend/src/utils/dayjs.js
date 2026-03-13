@@ -6,6 +6,8 @@ import duration from 'dayjs/plugin/duration';
 import isBetween from 'dayjs/plugin/isBetween';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+// ✨ PHASE 51: Import Indonesian locale for dayjs
+import 'dayjs/locale/id';
 
 // Extend dayjs with plugins
 dayjs.extend(relativeTime);
@@ -14,6 +16,9 @@ dayjs.extend(duration);
 dayjs.extend(isBetween);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
+
+// ✨ PHASE 51: Set Indonesian as default locale for dayjs
+dayjs.locale('id');
 
 // Export dayjs as default
 export default dayjs;

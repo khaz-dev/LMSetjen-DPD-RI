@@ -87,10 +87,21 @@
     text-align: center;
 }
 
+/* ✨ PHASE 49: Center Buat Sertifikat button with flexbox */
+.generate-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
 .congratulations-card {
+    width: 100%;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 16px;
-    padding: 3rem 2rem;
+    padding: 2.5rem 2rem 1.5rem 2rem;
     color: white;
     text-align: center;
     position: relative;
@@ -123,6 +134,10 @@
 .congratulations-content {
     position: relative;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
 }
 
 .congratulations-icon {
@@ -152,7 +167,6 @@
 
 .congratulations-card p {
     font-size: 1.1rem;
-    margin-bottom: 2rem;
     opacity: 0.9;
 }
 
@@ -341,7 +355,7 @@
 }
 
 .student-name {
-    font-size: 2.5rem !important;
+    font-size: 2rem !important;
     color: #2c3e50;
     margin: 0.4rem 0 0.3rem 0 !important;
     font-weight: 600 !important;
@@ -366,7 +380,7 @@
 /* ✨ PHASE 8c: Scoped course-title for certificate display - very specific styling for certificates */
 .certificate-body .course-title,
 .certificate-content .course-title {
-    font-size: 2rem !important;
+    font-size: 1rem !important;
     color: #2c3e50;
     font-weight: 600 !important;
     margin: 0 0 0.2rem 0;
@@ -469,7 +483,7 @@
 .certificate-qr-code svg {
     width: 100px;
     height: 100px;
-    border: 2px solid #2c3e50;
+    border: 0.5px solid #2c3e50;
     padding: 4px;
     background: white;
     border-radius: 4px;
@@ -765,9 +779,9 @@
 }
 
 .certificate-number {
-    font-size: 1.1rem;
+    font-size: .90rem;
     color: #2c3e50;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
     letter-spacing: 1px;
 }
 
@@ -779,7 +793,7 @@
 }
 
 .statement-intro {
-    font-size: 1.1rem;
+    font-size: 0.8rem;
     color: #2c3e50;
     font-weight: 600;
     font-style: italic;
@@ -811,15 +825,15 @@
 }
 
 .completion-statement > p:first-child {
-    font-size: 1rem;
+    font-size: 0.8rem;
     color: #2c3e50;
-    margin-top: 1.2rem !important;
+    margin-top: 1rem !important;
     margin-bottom: 0.2rem;
     font-weight: 600;
 }
 
 .completion-statement .course-title {
-    font-size: 1.8rem !important;
+    font-size: 1.2rem !important;
     color: #1a5f3d !important;
     font-weight: 600 !important;
     margin: 0rem !important;
@@ -827,7 +841,7 @@
 }
 
 .statement-middle {
-    font-size: 1rem;
+    font-size: 0.8rem;
     color: #2c3e50;
     line-height: 1.5;
     margin: 0.5rem !important;
@@ -843,7 +857,7 @@
 }
 
 .certification-by {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     color: #666;
     margin: 0 0 0rem 0 !important;
     padding: 0rem !important;
@@ -851,15 +865,15 @@
 }
 
 .instructor-name {
-    font-size: 1.1rem !important;
+    font-size: 0.9rem !important;
     color: #1a5f3d;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
     margin: 0.1rem 0;
     padding: 0;
 }
 
 .instructor-title {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #666;
     margin: 0.1rem 0 0 0;
     font-style: italic;
@@ -868,22 +882,24 @@
 
 .date-section {
     text-align: right;
-    margin-top: 1rem !important;
+    margin-top: 1.4rem !important;
     margin-bottom: 0.15rem;
-    width: 90%;
+    width: 75%;                    /* ✨ PHASE 51: Reduced from 90% to move more to the right */
+    margin-left: auto;             /* ✨ PHASE 51: Push section to the right */
+    margin-right: 0;               /* ✨ PHASE 51: Align to right edge */
 }
 
 .date-label {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #666;
     margin-bottom: 0.1rem;
     font-weight: 600;
 }
 
 .date-value {
-    font-size: 1rem;
+    font-size: 0.8rem;
     color: #2c3e50;
-    font-weight: 700;
+    font-weight: 600;
     margin: 0;
 }
 
@@ -902,7 +918,7 @@
 .certificate-qr-code canvas {
     width: 250px;
     height: 250px;
-    border: 3px solid #2c3e50;
+    border: 1px solid #2c3e50 !important;           /* ✨ PHASE 51: Reduced from 3px to 1px for thinner border */
     padding: 8px !important;
     margin: 0rem !important;
     background: white;
