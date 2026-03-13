@@ -3,12 +3,17 @@ import { Route, Routes, BrowserRouter, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 
 import { ProfileContext, WishlistContext, RolesContext } from "./views/plugin/Context";
+// ✨ PHASE 11.12: Import Page Cache Context for seamless navigation
+import { PageCacheProvider } from "./views/plugin/PageCacheContext";
 import apiInstance from "./utils/axios";
 import useAxios from "./utils/useAxios";
 import UserData from "./views/plugin/UserData";
 
 // Import theme provider
 import ThemeProvider from "./components/ThemeProvider";
+
+// ✨ PHASE 11.1: Import Feedback Floating Button
+import FeedbackFloatingButton from "./components/Feedback/FeedbackFloatingButton";
 
 // Import mobile-optimized Toast styles
 import "./views/plugin/toast-mobile.css";
@@ -49,7 +54,6 @@ const StudentCourses = lazy(() => import("./views/student/Courses"));
 const StudentCourseDetail = lazy(() => import("./views/student/CourseDetail"));
 const StudentTestimonials = lazy(() => import("./views/student/Testimonials"));
 const Wishlist = lazy(() => import("./views/student/Wishlist"));
-const StudentQA = lazy(() => import("./views/student/QA"));
 const StudentProfile = lazy(() => import("./views/student/Profile"));
 const SertifikatKursus = lazy(() => import("./views/student/SertifikatKursus"));  // ✨ PHASE 4.228: Student certificate page
 
@@ -78,6 +82,8 @@ const ContentManagementAdmin = lazy(() => import("./views/admin/ContentManagemen
 const AdminCourseReviewDetail = lazy(() => import("./views/admin/AdminCourseReviewDetail"));
 // ✨ PHASE 4.210: Unified reports management page
 const ReportsAdmin = lazy(() => import("./views/admin/ReportsAdmin"));
+// ✨ PHASE 11.1: Admin Feedback Management
+const AdminFeedback = lazy(() => import("./views/admin/AdminFeedback"));
 
 // Loading component for Suspense fallback - Centered spinner
 const LoadingFallback = () => (
@@ -99,9 +105,9 @@ const LoadingFallback = () => (
                     borderWidth: "0.25rem"
                 }}
             >
-                <span className="visually-hidden">Loading...</span>
+                <span className="visually-hidden">Memuat...</span>
             </div>
-            <p className="mt-3 text-muted" style={{ fontSize: "0.95rem" }}>Loading page...</p>
+            <p className="mt-3 text-muted" style={{ fontSize: "0.95rem" }}>Memuat halaman...</p>
         </div>
     </div>
 );
@@ -213,6 +219,8 @@ function App() {
 
     return (
         <HelmetProvider>
+            {/* ✨ PHASE 11.12: Page Cache Provider for seamless navigation */}
+            <PageCacheProvider>
             <WishlistContext.Provider value={wishlistContextValue}>
                 <ProfileContext.Provider value={profileContextValue}>
                     <RolesContext.Provider value={rolesContextValue}>
@@ -282,16 +290,7 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
-                            <Route
-                                path="/student/question-answer/"
-                                element={
-                                    <PrivateRoute>
-                                        <RoleRoute allowedRoles={["student"]}>
-                                            <StudentQA />
-                                        </RoleRoute>
-                                    </PrivateRoute>
-                                }
-                            />
+
                             <Route
                                 path="/student/profile/"
                                 element={
@@ -376,8 +375,8 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
-                            <Route
-                                path="/instructor/question-answer/"
+
+                            <Route                                path="/instructor/question-answer/"
                                 element={
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["teacher", "instructor"]}>
@@ -386,8 +385,8 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
-                            <Route
-                                path="/instructor/profile/"
+
+                            <Route                                path="/instructor/profile/"
                                 element={
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["teacher", "instructor"]}>
@@ -521,6 +520,17 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
+                            {/* ✨ PHASE 11.1: User Feedback Management */}
+                            <Route
+                                path="/admin/feedback/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["admin"]}>
+                                            <AdminFeedback />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
                             {/* Backward compatibility redirects */}
                             <Route
                                 path="/admin/review-courses/"
@@ -542,9 +552,12 @@ function App() {
                     </MainWrapper>
                 </ThemeProvider>
                     </BrowserRouter>
+                    {/* ✨ PHASE 11.1: Feedback floating button visible across all pages */}
+                    <FeedbackFloatingButton />
                     </RolesContext.Provider>
             </ProfileContext.Provider>
         </WishlistContext.Provider>
+        </PageCacheProvider>
         </HelmetProvider>
     );
 }

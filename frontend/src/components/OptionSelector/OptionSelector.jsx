@@ -32,7 +32,8 @@ const OptionSelector = ({
     disabled = false,
     displayKey = "name",
     valueKey = "id",
-    onBlur = () => {}
+    onBlur = () => {},
+    isLoading = false  // ✨ PHASE 11.9: Add loading state to suppress warning while fetching
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -137,12 +138,15 @@ const OptionSelector = ({
     // Show loading state
     if (!options || options.length === 0) {
         const optionCount = options ? options.length : 0;
-        console.warn(`⚠️ OptionSelector "${label}" (id="${id}") has ${optionCount} options.`, {
-            received: options,
-            displayKey,
-            valueKey,
-            currentValue: value
-        });
+        // ✨ PHASE 11.9: Only warn if not loading (avoid false warnings while data is being fetched)
+        if (!isLoading) {
+            console.warn(`⚠️ OptionSelector "${label}" (id="${id}") has ${optionCount} options.`, {
+                received: options,
+                displayKey,
+                valueKey,
+                currentValue: value
+            });
+        }
         return (
             <div className="form-field-container">
                 <label className="form-label modern-label" htmlFor={id}>

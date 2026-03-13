@@ -419,7 +419,7 @@ function CourseQuiz() {
         return (
             <>
                 <BaseHeader />
-                <section className="pt-5 pb-5 course-quiz-container course-quiz-loading-section">
+                <section className="course-quiz-container course-quiz-loading-section">
                     <div className="container course-quiz-loading-container">
                         <Header />
                         <div className="row">
@@ -444,7 +444,7 @@ function CourseQuiz() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5 course-quiz-container">
+            <section className="course-quiz-container">
                 <div className="container">
                     <Header />
                     <div className="row">

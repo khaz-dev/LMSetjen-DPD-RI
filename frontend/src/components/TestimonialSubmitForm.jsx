@@ -194,6 +194,12 @@ function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student'
     );
   }
 
+  // ✨ PHASE 42: Check if form data has changed from original
+  // Only allow submit if data is different from existing testimonial or if creating new one
+  const hasFormChanged = !existingTestimonial || 
+    formData.rating !== existingTestimonial.rating || 
+    formData.review !== existingTestimonial.review;
+
   const isEditing = !!existingTestimonial;
   const roleLabel = role === 'instructor' ? 'Instruktur' : 'Siswa';  // ✨ PHASE 4.11: Role label
   const formTitle = isEditing ? `Edit Testimoni Anda sebagai ${roleLabel}` : `Bagikan Testimoni Anda sebagai ${roleLabel}`;
@@ -203,14 +209,14 @@ function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student'
   return (
     <div className="testimonial-submit-form">
       <div className="form-card">
-        <h3 className="form-title mb-4">
+        <h3 className="form-title mb-3">
           <i className={`fas ${submitButtonIcon} text-primary me-2`}></i>
           {formTitle}
         </h3>
         
         <form onSubmit={handleSubmit}>
           {/* Rating Section */}
-          <div className="mb-4">
+          <div className="mb-3">
             <label className="form-label fw-bold">
               Rating <span className="text-danger">*</span>
             </label>
@@ -233,7 +239,7 @@ function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student'
           </div>
 
           {/* Review/Testimonial Text */}
-          <div className="mb-4">
+          <div>
             <label className="form-label fw-bold">
               Testimoni Anda <span className="text-danger">*</span>
             </label>
@@ -283,27 +289,9 @@ Contoh: Kursus ini sangat membantu saya dalam mengembangkan keterampilan..."
               </button>
             )}
             <button
-              type="reset"
-              className="btn btn-outline-secondary"
-              disabled={loading || deleting}
-              onClick={() => {
-                if (isEditing) {
-                  setFormData({
-                    rating: existingTestimonial.rating,
-                    review: existingTestimonial.review,
-                  });
-                } else {
-                  setFormData({ rating: 5, review: '' });
-                }
-              }}
-            >
-              <i className="fas fa-times me-2"></i>
-              {isEditing ? 'Batal' : 'Ulang'}
-            </button>
-            <button
               type="submit"
               className="btn btn-primary"
-              disabled={loading || deleting || !formData.review.trim()}
+              disabled={loading || deleting || !formData.review.trim() || !hasFormChanged}
             >
               {loading ? (
                 <>
@@ -326,7 +314,7 @@ Contoh: Kursus ini sangat membantu saya dalam mengembangkan keterampilan..."
 
         {/* Info Box */}
         <div
-          className="mt-4 p-3"
+          className="mt-3 p-3"
           style={{
             background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
             borderLeft: '4px solid #667eea',

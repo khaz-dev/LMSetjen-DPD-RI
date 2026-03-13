@@ -3,9 +3,9 @@
 .student-testimonials-page {
     background: transparent;
     min-height: 100vh;
-    padding: 3rem 0;
-    padding-top: calc(70px + 3rem) !important;  /* Account for fixed BaseHeader (60px) + spacing (10px) + pt-5 */
-    padding-bottom: 3rem !important;
+    padding: var(--page-top-spacing) 0;
+    padding-top: var(--page-top-spacing) !important;  /* ✨ PHASE 42: Uses CSS variable for consistent spacing */
+    padding-bottom: var(--page-bottom-spacing) !important;
     margin-top: 0 !important;
     margin-bottom: 8rem;
     overflow-x: hidden;
@@ -17,7 +17,7 @@
 }
 
 .student-testimonials-page.pb-5 {
-    padding-bottom: 3rem !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
 }
 
 /* Adaptive Layout for Sidebar Collapse - MUST match Profile.css structure */
@@ -25,24 +25,30 @@
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap;
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
     gap: 0 !important;
+    overflow: visible;
 }
 
-/* Align main row with Header row using same negative margins */
+/* Align main row with Header row - keep within container bounds */
 .student-testimonials-page > .container > .row.mt-0 {
-    width: calc(90 + var(--bs-gutter-x, 24px)) !important;
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
-/* SCOPED: Column styling for direct children of main layout row */
+/* SCOPED: Column styling for direct children of main layout row - NO negative padding */
 .student-testimonials-page > .container > .row > [class*="col-"] {
     margin-bottom: 0;
-    padding-left: calc(-0.5 * var(--bs-gutter-x, 24px));
-    padding-right: calc(1 * var(--bs-gutter-x, 24px));
+    padding-left: 0 !important;
+    padding-right: 0 !important;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    max-width: 100%;
+    width: 100%;
 }
 
 /* Testimonials Grid */
@@ -51,6 +57,36 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 25px;
     margin-top: 30px;
+}
+
+/* ✨ PHASE 4.11: Sidebar Collapsed Adapted - ensure content respects column bounds */
+.sidebar-collapsed-adapted {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow: hidden;
+}
+
+.sidebar-collapsed-adapted > * {
+    max-width: 100%;
+    width: 100%;
+}
+
+/* Ensure cards and header sections stay within bounds */
+.student-testimonials-page .col-lg-9.modern-header-section,
+.student-testimonials-page .col-lg-9.card,
+.student-testimonials-page .col-lg-9.row,
+.student-testimonials-page .col-md-8.modern-header-section,
+.student-testimonials-page .col-md-8.card,
+.student-testimonials-page .col-md-8.row {
+    max-width: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.student-testimonials-page .modern-header-section,
+.student-testimonials-page .card {
+    max-width: 100%;
+    overflow: hidden;
 }
 
 /* ✨ PHASE 4.10: Form Card Styling */
@@ -244,7 +280,7 @@
 .student-testimonials-page .testimonial-submit-form .form-card {
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
     border-radius: 15px;
-    padding: 2rem;
+    padding: 1.5rem 2rem;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
     border: 1px solid rgba(102, 126, 234, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -375,40 +411,64 @@
     }
 }
 
-/* ✨ PHASE 4.10: Remove Bootstrap gutter padding on columns with sidebar */
+/* ✨ PHASE 4.10: Column styling for wide screens with sidebar */
 @media (min-width: 992px) {
-    .student-testimonials-page .row:has(.student-sidebar-column) > .col-lg-9 {
+    .student-testimonials-page .row:has(.student-sidebar-column) > .col-lg-9,
+    .student-testimonials-page .col-lg-9.sidebar-collapsed-adapted {
         margin-left: 0 !important;
         margin-right: 0 !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
         flex: 1 1 auto !important;
         min-width: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow: hidden;
     }
 
-    /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
+    /* Inner rows inside col-lg-9: keep within bounds, NO width expansion */
     .student-testimonials-page .row:has(.student-sidebar-column) > .col-lg-9 > .row {
-        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .student-testimonials-page .col-lg-9.sidebar-collapsed-adapted > .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
-    .student-testimonials-page .row:has(.student-sidebar-column) > .col-md-8 {
+    .student-testimonials-page .row:has(.student-sidebar-column) > .col-md-8,
+    .student-testimonials-page .col-md-8.sidebar-collapsed-adapted {
         margin-left: 0 !important;
         margin-right: 0 !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
         flex: 1 1 auto !important;
         min-width: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow: hidden;
     }
 
-    /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
+    /* Inner rows inside col-md-8: keep within bounds, NO width expansion */
     .student-testimonials-page .row:has(.student-sidebar-column) > .col-md-8 > .row {
-        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-        width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .student-testimonials-page .col-md-8.sidebar-collapsed-adapted > .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 }
 

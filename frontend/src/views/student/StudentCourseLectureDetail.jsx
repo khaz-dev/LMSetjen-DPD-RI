@@ -6,6 +6,7 @@ import Header from './Partials/Header'
 import { useSidebarCollapse } from './Partials/useSidebarCollapse'
 
 import ReactPlayer from 'react-player'
+import './StudentCourseLectureDetail.css'
 
 function StudentCourseLectureDetail() {
     const isCollapsed = useSidebarCollapse();
@@ -13,7 +14,7 @@ function StudentCourseLectureDetail() {
         <>
             <BaseHeader />
 
-            <section style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
+            <section className="student-lecture-detail-page">
                 <div className="container">
                     {/* Header Here */}
                     <Header />
@@ -1368,4 +1369,4 @@ function StudentCourseLectureDetail() {
     )
 }
 
-export default StudentCourseLectureDetail
+export default React.memo(StudentCourseLectureDetail)

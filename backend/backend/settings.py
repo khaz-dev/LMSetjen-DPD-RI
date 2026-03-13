@@ -144,7 +144,7 @@ if _database_url:
     DATABASES = {
         'default': dj_database_url.config(
             default=_database_url,
-            conn_max_age=600,
+            conn_max_age=0,  # Close connections immediately for development
         )
     }
     print(f"DEBUG: DATABASES config: {DATABASES}")
@@ -163,7 +163,7 @@ else:
             'PASSWORD': env('DB_PASSWORD', default='secure_password'),
             'HOST': env('DB_HOST', default='host.docker.internal'),  # Use Docker host for Windows
             'PORT': env('DB_PORT', default='5432'),
-            'CONN_MAX_AGE': 600,  # 10 minutes connection persistence
+            'CONN_MAX_AGE': 0,  # Close connections immediately for development
             'OPTIONS': {
                 'connect_timeout': 10,
             },

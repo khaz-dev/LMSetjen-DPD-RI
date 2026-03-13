@@ -1,12 +1,13 @@
 /* Instructor Header Component Styles */
-/* ✨ PHASE 4.21: Adopted student Header design with instructor branding */
-/* Instructor gradient uses blue/purple theme matching teacher identity */
+/* ✨ PHASE 11.3: Rebuilt from student-header-card template with instructor branding */
+/* Instructor gradient uses blue theme, matching teacher identity exactly */
 
 .instructor-header-row {
-    /* Uses standard Bootstrap row behavior for consistent width */
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+    /* ✨ PHASE 4.228: Fixed alignment - removed width expansion that caused right shift */
+    /* Standard Bootstrap row behavior for consistent alignment with page content */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
     display: flex;
     flex-wrap: wrap;
     gap: 0;
@@ -41,6 +42,8 @@
     user-select: none;
     z-index: 101;
     margin-bottom: 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
     /* ✨ PHASE 7.1: Changed overflow from hidden to visible to allow dropdown menu to display */
     /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
 }
@@ -74,10 +77,38 @@
 .instructor-header-content {
     position: relative;
     z-index: 2;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100%;
+}
+
+/* ✨ PHASE 11.5: Ensure row displays flex for 2-column layout */
+.instructor-header-content .row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    margin: 0 !important;
+    align-items: stretch !important;
+    flex: 1;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
 /* Profile Avatar Container */
+.instructor-header-content .col-lg-9 {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.instructor-header-content .col-lg-8 {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Action Buttons Container */
 .instructor-header-content .col-lg-3 {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.instructor-header-content .col-lg-4 {
     transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
@@ -115,6 +146,63 @@
     flex-direction: column !important;
     justify-content: flex-end !important;
     align-self: flex-end !important;
+}
+
+/* Inner text-center wrapper for buttons - enable flexbox to stretch button container */
+.instructor-header-content .row .col-lg-3:last-child .text-center {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    align-items: stretch !important;
+    height: 100%;
+}
+
+/* Button flex container - push buttons to bottom with proper spacing */
+.instructor-header-content .row .col-lg-3:last-child .d-flex {
+    width: 100% !important;
+    justify-content: flex-end !important;
+    align-items: stretch !important;
+    flex-direction: column !important;
+}
+
+/* Buttons in column layout on large screens - fill width */
+.instructor-header-content .row .col-lg-3:last-child .d-flex .btn-instructor-primary,
+.instructor-header-content .row .col-lg-3:last-child .d-flex .btn-instructor-outline {
+    width: 100% !important;
+    display: flex !important;
+}
+
+/* ✨ PHASE 11.4: Responsive button alignment for medium screens */
+@media (max-width: 991px) {
+    /* Medium screen profile column */
+    .instructor-header-content .row .col-md-8 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    
+    /* On medium and down, button column should also align buttons to bottom */
+    .instructor-header-content .row .col-md-4:last-child {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+        align-items: stretch !important;
+        align-self: stretch !important;
+    }
+    
+    .instructor-header-content .row .col-md-4:last-child .text-center {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+        align-items: stretch !important;
+        height: 100%;
+    }
+    
+    /* On medium screens, buttons are in flex-md-row (horizontal) - don't override width */
+    .instructor-header-content .row .col-md-4:last-child .d-flex {
+        width: 100% !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
 }
 
 /* Profile Avatar Styles */
@@ -209,8 +297,8 @@
 .instructor-name {
     font-size: 2.5rem;
     font-weight: 700;
-    margin-bottom: 1rem;
-    text-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    margin-bottom: 0.5rem !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     line-height: 1.2;
     user-select: none;
     cursor: default;
@@ -219,7 +307,8 @@
 .instructor-bio {
     font-size: 1.1rem;
     opacity: 0.9;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem !important;
+    padding: 0rem !important;
     line-height: 1.5;
     user-select: none;
     cursor: default;
@@ -241,6 +330,11 @@
     user-select: none;
 }
 
+.instructor-location-meta {
+    justify-content: flex-end !important;
+    margin-bottom: 1rem !important;
+}
+
 /* Profile Info Card */
 .instructor-info-card {
     background: rgba(255, 255, 255, 0.1);
@@ -259,17 +353,16 @@
 }
 
 .instructor-detail-item {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    backdrop-filter: blur(12px);
-    position: relative;
-    overflow: hidden;
+    padding: 0.8rem 1.5rem;
+    margin-bottom: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
     user-select: none;
     cursor: default;
+    position: relative;
+    overflow: hidden;
 }
 
 .instructor-detail-item::before {
@@ -303,6 +396,13 @@
 .instructor-header-details-row {
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Remove column padding from details wrapper - details row should not have gutters */
+.instructor-header-details-row .col-md-12 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 .instructor-header-details-items-row {
@@ -320,27 +420,48 @@
 
 /* Role Indicator styling within header */
 .instructor-header-card .role-indicator.compact {
-    display: inline-block;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: auto !important;
+    width: auto !important;
+    vertical-align: middle !important;
     margin-bottom: 0.5rem;
     position: relative;
     z-index: 2001;
 }
 
+/* Active Indicator */
+.active-indicator {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 12px;
+    height: 12px;
+    background: #28a745;
+    border: 2px solid white;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
 .instructor-header-card .role-indicator.compact .role-badge-compact {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border-radius: 25px;
-    padding: 0.6rem 1.2rem;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    user-select: none;
-    cursor: default;
-    transition: all 0.3s ease;
-    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border-radius: 25px !important;
+    padding: 0.75rem 1.2rem !important;
+    font-weight: 500 !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    user-select: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    font-size: 1rem !important;
+    min-height: 46px !important;
+    height: auto !important;
+    vertical-align: middle !important;
 }
 
 .instructor-header-card .role-indicator.compact .role-badge-compact:hover:not(:disabled) {
@@ -370,13 +491,12 @@
 .instructor-header-card .role-indicator.compact .role-dropdown-header {
     padding: 0.75rem 1rem;
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     color: rgba(255, 255, 255, 0.95);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(41, 128, 185, 0.3);
-    font-weight: 700;
+    background: rgba(52, 152, 219, 0.3);
 }
 
 .instructor-header-card .role-indicator.compact .role-dropdown-divider {
@@ -451,20 +571,56 @@
     opacity: 0.6;
 }
 
+/* ✨ PHASE 11.2: Scoped badge styles for instructor header - match student header pattern */
+.instructor-header-card .badge-instructor {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border-radius: 25px !important;
+    padding: 0.75rem 1.2rem !important;
+    font-weight: 500 !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    user-select: none !important;
+    cursor: default !important;
+    min-height: 46px !important;
+    height: auto !important;
+    vertical-align: middle !important;
+}
+
+.instructor-header-card .badge-instructor i {
+    user-select: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    color: white !important;
+}
+
+.instructor-header-card .badge-instructor:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Global badge-instructor fallback - if used outside header */
 .badge-instructor {
     background: rgba(255, 255, 255, 0.2);
     color: white;
     border-radius: 25px;
-    padding: 0.6rem 1.2rem;
+    padding: 0.75rem 1.2rem;
     font-weight: 500;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
     user-select: none;
     cursor: default;
+    min-height: 46px;
+    height: auto;
+    vertical-align: middle;
+    justify-content: center;
 }
 
 /* Social Links */
@@ -496,38 +652,45 @@
 }
 
 /* Instructor Buttons */
-.btn-instructor-primary {
+/* ✨ PHASE 11.3: Clean button styles - single definition, scoped to prevent conflicts */
+
+/* Primary Button - Scoped */
+.instructor-header-card .btn-instructor-primary {
     background: var(--theme-gradient) !important;
     border: 2px solid rgba(255, 255, 255, 0.3) !important;
     color: white !important;
     font-weight: 600 !important;
     border-radius: 30px !important;
-    padding: 1rem 2.5rem !important;
+    padding: 0.9rem 1.5rem !important;
     transition: all 0.4s ease !important;
     backdrop-filter: blur(10px) !important;
     text-decoration: none !important;
     display: inline-flex !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: 0.5rem !important;
     position: relative !important;
     overflow: hidden !important;
     box-shadow: var(--theme-card-shadow) !important;
     user-select: none !important;
     cursor: pointer !important;
+    font-size: 0.9rem !important;
+    min-height: 48px !important;
+    width: auto !important;
 }
 
-.btn-instructor-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.6s ease;
+.instructor-header-card .btn-instructor-primary::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+    transition: left 0.6s ease !important;
 }
 
-.btn-instructor-primary:hover {
+.instructor-header-card .btn-instructor-primary:hover {
     background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-secondary) 100%) !important;
     border-color: rgba(255, 255, 255, 0.6) !important;
     color: white !important;
@@ -536,41 +699,46 @@
     text-decoration: none !important;
 }
 
-.btn-instructor-primary:hover::before {
-    left: 100%;
+.instructor-header-card .btn-instructor-primary:hover::before {
+    left: 100% !important;
 }
 
-.btn-instructor-outline {
+/* Outline Button - Scoped */
+.instructor-header-card .btn-instructor-outline {
     background: transparent !important;
     border: 2px solid rgba(255, 255, 255, 0.5) !important;
     color: white !important;
     font-weight: 600 !important;
     border-radius: 30px !important;
-    padding: 1rem 2.5rem !important;
+    padding: 0.9rem 1.5rem !important;
     transition: all 0.4s ease !important;
     text-decoration: none !important;
     display: inline-flex !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: 0.5rem !important;
     position: relative !important;
     overflow: hidden !important;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
     user-select: none !important;
     cursor: pointer !important;
+    font-size: 0.9rem !important;
+    min-height: 48px !important;
+    width: auto !important;
 }
 
-.btn-instructor-outline::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: left 0.6s ease;
+.instructor-header-card .btn-instructor-outline::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent) !important;
+    transition: left 0.6s ease !important;
 }
 
-.btn-instructor-outline:hover {
+.instructor-header-card .btn-instructor-outline:hover {
     background: rgba(255, 255, 255, 0.15) !important;
     border-color: rgba(255, 255, 255, 0.8) !important;
     color: white !important;
@@ -579,18 +747,11 @@
     text-decoration: none !important;
 }
 
-.btn-instructor-outline:hover::before {
-    left: 100%;
+.instructor-header-card .btn-instructor-outline:hover::before {
+    left: 100% !important;
 }
 
-/* ✨ PHASE 4.21: Unified active state for both button types - consistent styling across pages */
-.btn-instructor-primary.active,
-.btn-instructor-outline.active {
-    opacity: 1 !important;
-    transform: scale(1) !important;
-}
-
-/* ✨ PHASE 4.21: btn-instructor-primary inside header-main-row adopts outline style */
+/* ✨ PHASE 11.3: Active states for buttons inside header-main-row */
 .instructor-header-main-row .btn-instructor-primary {
     background: transparent !important;
     border: 2px solid rgba(255, 255, 255, 0.5) !important;
@@ -712,7 +873,7 @@
 .instructor-header-content {
     transform-origin: top;
     overflow: visible;
-    display: block;
+    display: flex !important;
     visibility: visible;
 }
 
@@ -817,6 +978,7 @@
 .instructor-header-collapsed {
     position: relative;
     z-index: 10;
+    padding: 0.8rem 1rem;
 }
 
 .instructor-header-collapsed .instructor-profile-avatar,
@@ -889,6 +1051,12 @@
     gap: 0.4rem;
     white-space: nowrap;
     min-height: 36px;
+}
+
+/* ✨ PHASE 4.30: Badges and Role Indicator Container - Align all items to top */
+.badges-container {
+    align-items: flex-start !important;
+    align-content: flex-start !important;
 }
 
 .instructor-header-collapsed .btn:hover {

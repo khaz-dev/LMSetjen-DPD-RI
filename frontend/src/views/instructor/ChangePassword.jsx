@@ -307,7 +307,7 @@ function ChangePassword() {
                 {field === 'confirm_new_password' && passwords[field] && passwords.new_password !== passwords[field] && (
                     <div className="instructor-password-mismatch-warning">
                         <i className="fas fa-exclamation-triangle"></i>
-                        <span>Passwords do not match</span>
+                        <span>Kata sandi tidak cocok</span>
                     </div>
                 )}
                 
@@ -326,16 +326,16 @@ function ChangePassword() {
         <div className="instructor-security-tips">
             <h6 className="instructor-security-tips-title">
                 <i className="instructor-security-tips-icon fas fa-lightbulb"></i>
-                Password Security Tips
+                Tips Keamanan Kata Sandi
             </h6>
             <div className="instructor-security-tips-grid">
                 <div className="instructor-security-tip-item">
                     <i className="instructor-security-tip-icon fas fa-check-circle"></i>
-                    <span>At least {PASSWORD_MIN_LENGTH} characters long</span>
+                    <span>Minimal {PASSWORD_MIN_LENGTH} karakter</span>
                 </div>
                 <div className="instructor-security-tip-item">
                     <i className="instructor-security-tip-icon fas fa-check-circle"></i>
-                    <span>Mix of letters and numbers</span>
+                    <span>Kombinasi huruf dan angka</span>
                 </div>
                 <div className="instructor-security-tip-item">
                     <i className="instructor-security-tip-icon fas fa-check-circle"></i>

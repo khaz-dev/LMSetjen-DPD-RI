@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/auth';
 import UserData from '../views/plugin/UserData';
 import Toast from '../views/plugin/Toast';
 import { useRoles } from '../utils/useRoles';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 /**
  * RoleRoute Component - Phase 6
@@ -203,4 +203,4 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
     return <>{children}</>;
 };
 
-export default RoleRoute;
+export default React.memo(RoleRoute);

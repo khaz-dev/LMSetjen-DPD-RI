@@ -115,8 +115,8 @@ function CertificateValidation() {
                                     <span className="detail-value">{certificate.student_name}</span>
                                 </div>
                                 <div className="detail-row">
-                                    <span className="detail-label">Email:</span>
-                                    <span className="detail-value">{certificate.student_email}</span>
+                                    <span className="detail-label">Posisi/Unit:</span>
+                                    <span className="detail-value">{certificate.student_info}</span>
                                 </div>
 
                                 <h3 className="section-title mt-4">
@@ -148,8 +148,8 @@ function CertificateValidation() {
                                     <span className="detail-value">{certificate.instructor_name}</span>
                                 </div>
                                 <div className="detail-row">
-                                    <span className="detail-label">Email:</span>
-                                    <span className="detail-value">{certificate.instructor_email}</span>
+                                    <span className="detail-label">Posisi/Unit:</span>
+                                    <span className="detail-value">{certificate.instructor_info}</span>
                                 </div>
 
                                 <h3 className="section-title mt-4">

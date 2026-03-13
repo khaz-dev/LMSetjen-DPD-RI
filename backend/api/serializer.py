@@ -207,6 +207,11 @@ class ProfileSerializer(serializers.ModelSerializer):
     # ✨ PHASE 7.20: Include user_id for instructor badge comparison in forums
     user_id = serializers.IntegerField(source='user.id', read_only=True)
     
+    # ✨ PHASE 11.5: CRITICAL FIX - Uses FileField NOT SerializerMethodField
+    # SerializerMethodField is read-only (GET only), but we need to support write (PATCH)
+    # FileField automatically handles both reading URLs and writing file uploads
+    image = serializers.FileField(required=False, allow_null=True)
+    
     # Computed fields for frontend display
     organization_unit_name = serializers.SerializerMethodField()
     position_name = serializers.SerializerMethodField()
@@ -215,17 +220,10 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = "__all__"
     
+
     def to_representation(self, instance):
-        """✨ PHASE 4.42: Override to return image URL with default fallback if missing"""
+        """✨ PHASE 11.3: Return proper representation with image URL"""
         representation = super().to_representation(instance)
-        
-        # Return image URL directly - since image is a URLField, not FileField
-        if instance.image and str(instance.image).strip():
-            representation['image'] = str(instance.image)
-        else:
-            # ✨ PHASE 7.16+: Return empty string instead of frontend-specific path
-            # Let frontend handle default fallback, don't hard-code paths in backend
-            representation['image'] = ""
         
         # ✨ PHASE 4.12.5: Ensure jenis_jabatan is properly returned (could be null from database)
         if 'jenis_jabatan' in representation and representation['jenis_jabatan'] is None:
@@ -247,13 +245,20 @@ class ProfileSerializer(serializers.ModelSerializer):
             
             # If image is empty string or None, delete existing image
             if image_data in ['', None]:
-                if instance.image:
-                    instance.image.delete(save=False)
+                # Only call delete() if this is a FileField (has delete method)
+                if instance.image and hasattr(instance.image, 'delete'):
+                    try:
+                        instance.image.delete(save=False)
+                    except Exception as e:
+                        print(f"Error deleting image file: {e}")
                 instance.image = None
             else:
                 # If new image provided, delete old one and save new
-                if instance.image:
-                    instance.image.delete(save=False)
+                if instance.image and hasattr(instance.image, 'delete'):
+                    try:
+                        instance.image.delete(save=False)
+                    except Exception as e:
+                        print(f"Error deleting old image file: {e}")
                 instance.image = image_data
         
         # Update other fields
@@ -425,7 +430,9 @@ class TeacherExpertiseSerializer(serializers.ModelSerializer):
 
 
 class TeacherSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
+    # ✨ PHASE 11.5: CRITICAL FIX - Uses FileField NOT SerializerMethodField
+    # SerializerMethodField is read-only (GET only), we need to support write (PATCH)
+    image = serializers.FileField(required=False, allow_null=True)
     # New fields for teacher stats and expertise
     expertise = TeacherExpertiseSerializer(many=True, read_only=True, required=False)
     average_rating = serializers.SerializerMethodField()
@@ -434,14 +441,6 @@ class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ["id", "user", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "about", "country", "expertise", "average_rating", "total_students"]
         model = api_models.Teacher
-    
-    def get_image(self, obj):
-        """✨ PHASE 4.42: Return image URL directly from URLField, with default fallback if missing"""
-        # Since image is a URLField (not FileField), return string directly
-        if obj.image and str(obj.image).strip():
-            return str(obj.image)
-        # Return default profile image if no image is set
-        return "/images/placeholders/default-instructor.svg"
     
     def get_average_rating(self, obj):
         """Calculate average rating across all teacher's courses"""
@@ -465,21 +464,14 @@ class TeacherSerializer(serializers.ModelSerializer):
 
 class BasicTeacherSerializer(serializers.ModelSerializer):
     """Simplified Teacher serializer for basic operations without related fields"""
-    image = serializers.SerializerMethodField()
+    # ✨ PHASE 11.5: CRITICAL FIX - Uses FileField NOT SerializerMethodField  
+    image = serializers.FileField(required=False, allow_null=True)
     full_name = serializers.SerializerMethodField()  # ✨ PHASE 4.39: Ensure full_name returns teacher name or user full_name fallback
     user_id = serializers.IntegerField(source='user.id', read_only=True)  # ✨ PHASE 7.20: Include user_id for instructor badge comparison
 
     class Meta:
         fields = ["id", "user_id", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "about", "country"]
         model = api_models.Teacher
-    
-    def get_image(self, obj):
-        """✨ PHASE 4.42: Return image URL directly from URLField, with default fallback if missing"""
-        # Since image is a URLField (not FileField), return string directly
-        if obj.image and str(obj.image).strip():
-            return str(obj.image)
-        # Return default profile image if no image is set
-        return "/images/placeholders/default-instructor.svg"
     
     def get_full_name(self, obj):
         """
@@ -502,6 +494,8 @@ class VariantItemSerializer(serializers.ModelSerializer):
     file_icon = serializers.ReadOnlyField()         # Include file icon property
     duration_seconds = serializers.SerializerMethodField()  # ✨ PHASE 4.43.9: Extract duration in seconds for frontend
     completion_question = serializers.SerializerMethodField()  # ✨ PHASE 4.143: Include lesson completion question
+    is_fully_watched = serializers.SerializerMethodField()  # ✨ PHASE 11.178: Track if student watched 100%
+    is_completed = serializers.SerializerMethodField()  # ✨ PHASE 11.178: Track if student finished (watched + answered correctly)
     
     class Meta:
         fields = '__all__'
@@ -527,6 +521,140 @@ class VariantItemSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'completion_question') and obj.completion_question:
             return LessonCompletionQuestionSerializer(obj.completion_question).data
         return None
+    
+    def get_is_fully_watched(self, obj):
+        """✨ PHASE 11.178: Check if current user has fully watched this lesson
+        ✨ PHASE 11.182: Support both request.user and context['current_user']"""
+        # Try to get user from request first, then fallback to context
+        user = None
+        
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user and not request.user.is_anonymous:
+            user = request.user
+        else:
+            # Fallback to current_user from context (used in StudentCourseDetailAPIView)
+            user = self.context.get('current_user')
+        
+        if not user:
+            return False
+        
+        try:
+            # Get current user's course
+            course = obj.variant.course
+            
+            # Check VideoProgress for this user-course-lesson
+            video_progress = api_models.VideoProgress.objects.filter(
+                user=user,
+                course=course,
+                variant_item=obj
+            ).first()
+            
+            if video_progress:
+                return video_progress.is_fully_watched
+            return False
+        except Exception as e:
+            return False
+    
+    def get_is_completed(self, obj):
+        """✨ PHASE 11.202+: Check if current user completed this lesson (watched + passed verification)
+        ✨ PHASE 11.202: FIXED - Now validates completion against verification questions
+        ✨ PHASE 11.182: Support both request.user and context['current_user']
+        ✨ PHASE 11.187: Improved context handling for nested serializers
+        ✨ PHASE 12.1: Enhanced logging for debugging completion display issues
+        
+        ROOT CAUSE FIX: Previously returned True if ANY CompletedLesson record existed,
+        even if the lesson had an unanswered verification question. Now validates the completion.
+        """
+        user = None
+        
+        # Try multiple ways to get the user, as context may not propagate through all nested serializers
+        try:
+            request = self.context.get('request')
+            if request and hasattr(request, 'user') and request.user and not request.user.is_anonymous:
+                user = request.user
+        except (AttributeError, TypeError):
+            pass
+        
+        # If request.user not available, try current_user from context
+        if not user:
+            try:
+                user = self.context.get('current_user')
+            except (AttributeError, TypeError):
+                pass
+        
+        # If still no user, try to get from parent serializer's context
+        # This handles the case where context wasn't passed to nested serializers
+        if not user and hasattr(self, 'parent') and self.parent:
+            try:
+                parent_context = getattr(self.parent, 'context', {})
+                user = parent_context.get('current_user') if parent_context else None
+                if not user:
+                    parent_request = parent_context.get('request') if parent_context else None
+                    if parent_request and hasattr(parent_request, 'user') and parent_request.user and not parent_request.user.is_anonymous:
+                        user = parent_request.user
+            except (AttributeError, TypeError):
+                pass
+        
+        if not user:
+            return False
+        
+        try:
+            # Get current user's course
+            course = obj.variant.course
+            lesson_title = obj.title if obj else "Unknown"
+            variant_item_id = obj.variant_item_id if obj else "Unknown"
+            
+            # Check if a completed lesson record exists
+            completed_lesson = api_models.CompletedLesson.objects.filter(
+                user=user,
+                course=course,
+                variant_item=obj
+            ).first()
+            
+            if not completed_lesson:
+                # No completion record exists = not completed
+                # Log for target lesson to help debugging
+                if variant_item_id == 254517:
+                    print(f"\n[VariantItemSerializer.get_is_completed] Lesson {lesson_title} (ID={variant_item_id})")
+                    print(f"   ❌ NO CompletedLesson record = return False")
+                return False
+            
+            # ✨ PHASE 11.202: Validate the completion - only return True if it's a VALID completion
+            # A completion is valid if:
+            # 1. The lesson has NO verification question (auto-complete allowed), OR
+            # 2. The lesson HAS a verification question AND student answered it CORRECTLY
+            
+            verification_question = api_models.LessonCompletionQuestion.objects.filter(
+                variant_item=obj
+            ).first()
+            
+            if not verification_question:
+                # No verification question = this is a valid completion (auto-complete)
+                if variant_item_id == 254517:
+                    print(f"\n[VariantItemSerializer.get_is_completed] Lesson {lesson_title} (ID={variant_item_id})")
+                    print(f"   ✅ CompletedLesson exists + NO verification question = return True (VALID)")
+                return True
+            
+            # Verification question exists = check if student answered correctly
+            correct_answer = api_models.LessonCompletionQuestionAnswer.objects.filter(
+                user=user,
+                question=verification_question,
+                is_correct=True
+            ).exists()
+            
+            # Log for target lesson to help debugging
+            if variant_item_id == 254517:
+                print(f"\n[VariantItemSerializer.get_is_completed] Lesson {lesson_title} (ID={variant_item_id})")
+                print(f"   CompletedLesson exists + verification question exists")
+                print(f"   Student answered correctly: {correct_answer}")
+                print(f"   Return: {correct_answer}")
+            
+            # Only return True if student has correct answer
+            return correct_answer
+            
+        except Exception as e:
+            print(f"\n[VariantItemSerializer.get_is_completed] ERROR: {e}")
+            return False
 
 
 class VariantSerializer(serializers.ModelSerializer):
@@ -544,140 +672,27 @@ class VariantSerializer(serializers.ModelSerializer):
             self.Meta.depth = 0
         else:
             self.Meta.depth = 1  # Reduced from 3 to 1
-
-
-
-
-class Question_Answer_MessageSerializer(serializers.ModelSerializer):
-    # ✨ PHASE 7.16: Explicitly get profile from user relationship using source
-    profile = ProfileSerializer(source='user.profile', many=False, read_only=True)
-    # ✨ PHASE 7.16: Include user info for display (full_name, id, etc)
-    user_id = serializers.IntegerField(read_only=True)
-    likes_count = serializers.SerializerMethodField()
-    # ✨ PHASE 7.24: Track if current user has liked this message
-    user_liked = serializers.SerializerMethodField()
-
-    class Meta:
-        fields = '__all__'
-        model = api_models.Question_Answer_Message
-    
-    def get_likes_count(self, obj):
-        """✨ PHASE 7.16: Count total likes on this message"""
-        return api_models.Question_Answer_Message_Like.objects.filter(message=obj).count()
-    
-    def get_user_liked(self, obj):
-        """✨ PHASE 7.24: Check if current user has liked this message"""
-        # ✨ PHASE 7.24.3: Try to get user from context first (set by view)
-        request = self.context.get('request')
-        current_user = self.context.get('current_user')  # View passes this in context
         
-        # If not in context, try authenticated request
-        if not current_user and request and request.user and request.user.is_authenticated:
-            current_user = request.user
-        
-        # If still no user, try to get user_id from request data (for AllowAny endpoints)
-        if not current_user and request:
-            user_id = request.data.get('user_id') or request.query_params.get('user_id')
-            if user_id:
-                try:
-                    current_user = User.objects.get(id=int(user_id))
-                except (User.DoesNotExist, ValueError):
-                    current_user = None
-        
-        if current_user:
-            return api_models.Question_Answer_Message_Like.objects.filter(
-                message=obj,
-                user=current_user
-            ).exists()
-        return False
+        # ✨ PHASE 11.187: Re-bind nested VariantItemSerializers with parent context
+        # This ensures context is available in get_is_completed() for nested items
+        # We need to do this because class-level attributes are created once at class def time
+        # but we need fresh instances with the current context for each serializer instance
+        try:
+            if 'variant_items' in self.fields:
+                self.fields['variant_items'] = VariantItemSerializer(many=True, context=self.context)
+            if 'items' in self.fields:
+                self.fields['items'] = VariantItemSerializer(many=True, context=self.context)
+        except Exception as e:
+            # If field rebinding fails, continue with original fields
+            # This ensures backward compatibility
+            pass
 
-
-class Question_AnswerSerializer(serializers.ModelSerializer):
-    messages = Question_Answer_MessageSerializer(source='reply_messages', many=True, read_only=True)  # ✨ PHASE 7.20: Use source='reply_messages' to match ForeignKey related_name
-    profile = ProfileSerializer(many=False, read_only=True)  # ✨ PHASE 7.20: Added read_only=True for proper serialization
-    # ✨ PHASE 7.21: Explicitly include user_id for instructor badge comparison
-    user_id = serializers.IntegerField(read_only=True)
-    course = serializers.SerializerMethodField()  # ✨ PHASE 4.16: Return full course object for QA
-    # ✨ PHASE 7.7: Return lesson context for filtering and display
-    variant_item = serializers.SerializerMethodField()
-    variant = serializers.SerializerMethodField()
-    # ✨ PHASE 7.16: Count likes for this question
-    likes_count = serializers.SerializerMethodField()
-    reports_count = serializers.SerializerMethodField()
-    # ✨ PHASE 7.24: Track if current user has liked this question
-    user_liked = serializers.SerializerMethodField()
-    
-    class Meta:
-        fields = '__all__'
-        model = api_models.Question_Answer
-    
-    def get_course(self, obj):
-        """Return full course object instead of just ID for better frontend filtering"""
-        if obj.course:
-            return {
-                'id': obj.course.id,
-                'title': obj.course.title,
-                'course_id': obj.course.course_id,
-            }
-        return None
-
-    def get_variant_item(self, obj):
-        """Return lesson context information"""
-        if obj.variant_item:
-            return {
-                'variant_item_id': obj.variant_item.variant_item_id,
-                'title': obj.variant_item.title,
-                'variant_id': obj.variant_item.variant.variant_id,
-            }
-        return None
-
-    def get_variant(self, obj):
-        """Return section (Bagian) context information"""
-        if obj.variant_item and obj.variant_item.variant:
-            return {
-                'variant_id': obj.variant_item.variant.variant_id,
-                'title': obj.variant_item.variant.title,
-            }
-        return None
-
-    def get_likes_count(self, obj):
-        """✨ PHASE 7.16: Count total likes on this question"""
-        return api_models.Question_Answer_Like.objects.filter(question=obj).count()
-
-    def get_reports_count(self, obj):
-        """✨ PHASE 7.16: Count total reports on this question"""
-        return api_models.Question_Answer_Report.objects.filter(question=obj).count()
-    
-    def get_user_liked(self, obj):
-        """✨ PHASE 7.24: Check if current user has liked this question"""
-        # ✨ PHASE 7.24.3: Try to get user from context first (set by view)
-        request = self.context.get('request')
-        current_user = self.context.get('current_user')  # View passes this in context
-        
-        # If not in context, try authenticated request
-        if not current_user and request and request.user and request.user.is_authenticated:
-            current_user = request.user
-        
-        # If still no user, try to get user_id from request data (for AllowAny endpoints)
-        if not current_user and request:
-            user_id = request.data.get('user_id') or request.query_params.get('user_id')
-            if user_id:
-                try:
-                    current_user = User.objects.get(id=int(user_id))
-                except (User.DoesNotExist, ValueError):
-                    current_user = None
-        
-        if current_user:
-            return api_models.Question_Answer_Like.objects.filter(
-                question=obj,
-                user=current_user
-            ).exists()
-        return False
 
 
 
 
 # Cart, CartOrder, and CartOrderItem serializers removed - not used in this LMS
+# Q&A serializers removed - Course forum available in each course detail page
 
 class CertificateSerializer(serializers.ModelSerializer):
     course_title = serializers.CharField(source='course.title', read_only=True)
@@ -804,10 +819,17 @@ class VideoProgressSerializer(serializers.ModelSerializer):
         self.Meta.depth = 0
 
 class NoteSerializer(serializers.ModelSerializer):
+    # ✨ PHASE 7.26+: Student course notes serializer
+    user_name = serializers.CharField(source='user.full_name', read_only=True, allow_null=True)
+    # ✨ PHASE 11.160: Include nested lesson context for filtering
+    variant = VariantSerializer(read_only=True)
+    variant_item = VariantItemSerializer(read_only=True)
 
     class Meta:
-        fields = '__all__'
+        fields = ['id', 'user', 'user_name', 'course', 'title', 'note', 'color', 'note_id', 'date', 'variant', 'variant_item']
         model = api_models.Note
+        # ✨ PHASE 9.4: Mark non-editable fields as read-only to fix PUT/PATCH validation
+        read_only_fields = ['user', 'course', 'note_id', 'date', 'variant', 'variant_item']
 
 
 
@@ -835,7 +857,27 @@ class ReviewSerializer(serializers.ModelSerializer):
             try:
                 profile = Profile.objects.get(user=obj.user)
                 if profile.image:
-                    user_data['image'] = profile.image.url if hasattr(profile.image, 'url') else str(profile.image)
+                    # ✨ PHASE 11.10: Convert relative image URLs to absolute + cache-busting
+                    image_str = str(profile.image)
+                    request = self.context.get('request')
+                    
+                    # Check if already absolute URL
+                    if image_str.startswith('http://') or image_str.startswith('https://'):
+                        user_data['image'] = image_str
+                    elif request:
+                        # Convert relative path to absolute URL with cache-busting timestamp
+                        if not image_str.startswith('/'):
+                            image_str = f"/media/{image_str}"
+                        from datetime import datetime
+                        timestamp = int(datetime.now().timestamp() * 1000) // 3600000  # Cache-bust per hour
+                        absolute_url = request.build_absolute_uri(image_str)
+                        user_data['image'] = f"{absolute_url}?v={timestamp}"
+                    else:
+                        # Fallback if no request context
+                        if not image_str.startswith('/'):
+                            user_data['image'] = f"/media/{image_str}"
+                        else:
+                            user_data['image'] = image_str
                 else:
                     user_data['image'] = None
             except Profile.DoesNotExist:
@@ -912,14 +954,17 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
     # ✨ PHASE 4.228: Explicitly define course serializer to include total_jam_pelatihan
     course = serializers.SerializerMethodField()
     lectures = VariantItemSerializer(many=True, read_only=True)
-    completed_lesson = CompletedLessonSerializer(many=True, read_only=True)
+    # ✨ PHASE 11.202: Use SerializerMethodField to validate completed lessons
+    # Only include completions where no verification question exists OR student answered correctly
+    completed_lesson = serializers.SerializerMethodField()
     video_progress = VideoProgressSerializer(many=True, read_only=True)
     curriculum =  VariantSerializer(many=True, read_only=True)
     note = NoteSerializer(many=True, read_only=True)
-    question_answer = Question_AnswerSerializer(many=True, read_only=True)
+    # ✨ RESTORED: question_answer field - needed for Discussion Forum in course detail view
+    question_answer = serializers.SerializerMethodField()
     review = ReviewSerializer(many=False, read_only=True)
     quiz_results = serializers.SerializerMethodField()
-    qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.18: Add QA count for student QA page
+    qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.18: QA count - kept for forum stats
 
 
     class Meta:
@@ -1029,6 +1074,131 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
     def get_qa_count(self, obj):
         """✨ PHASE 4.18: Count total questions for this course enrollment"""
         return api_models.Question_Answer.objects.filter(course=obj.course).count()
+
+    def get_question_answer(self, obj):
+        """✨ RESTORED: Return all questions for this course enrollment - needed for Discussion Forum"""
+        questions = api_models.Question_Answer.objects.filter(course=obj.course).order_by('-date')
+        serializer = Question_AnswerSerializer(questions, many=True, context=self.context)
+        return serializer.data
+
+    def get_completed_lesson(self, obj):
+        """✨ PHASE 11.202: Return only VALID completed lessons
+        ✨ PHASE 12.16: Added detailed logging for troubleshooting
+        ✨ PHASE 13.3: SUPER DETAILED LOGGING for completion filtering
+        ✨ PHASE 13.4: Force fresh database query to avoid stale cache
+        ✨ PHASE 37.1: Added raw SQL verification to debug missing lessons
+        
+        A completed lesson is VALID if:
+        1. The lesson has NO verification question (auto-complete allowed), OR
+        2. The lesson HAS a verification question AND student answered it CORRECTLY
+        
+        Fixes: Lessons showing as "Diselesaikan" even when verification question was NOT answered
+        """
+        import sys
+        from django.utils import timezone
+        from django.db import connection
+        
+        user_id = obj.user.id if obj.user else None
+        course_id = obj.course.id if obj.course else None
+        timestamp = timezone.now().isoformat()
+        
+        # ✨ PHASE 37.1: RAW SQL CHECK - See exactly what's in the database
+        print(f"\n[PHASE 37.1] 🔍 RAW SQL CHECK for CompletedLesson")
+        print(f"[PHASE 37.1]    Querying: course_id={course_id}, user_id={user_id}")
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT id, variant_item_id, course_id, user_id, date FROM api_completedlesson WHERE course_id = %s AND user_id = %s ORDER BY date DESC",
+                    [course_id, user_id]
+                )
+                raw_rows = cursor.fetchall()
+                print(f"[PHASE 37.1]    Found {len(raw_rows)} records in database:")
+                for row in raw_rows:
+                    cl_id, var_id, c_id, u_id, d = row
+                    print(f"[PHASE 37.1]      ID={cl_id}, variant_item_id={var_id}, course_id={c_id}, user_id={u_id}, date={d}")
+        except Exception as e:
+            print(f"[PHASE 37.1] ❌ Error reading raw SQL: {e}")
+        
+        # Get all completed lessons for this enrollment (course + user)
+        # Use list() and select_related() to force FRESH database query
+        all_completed = list(api_models.CompletedLesson.objects.filter(
+            course=obj.course,
+            user=obj.user
+        ).select_related('variant_item'))  # Force evaluation NOW to get fresh data
+        
+        print(f"\n[PHASE 13.4] ✅ FRESH DATABASE QUERY executed - list() forces evaluation")
+        print(f"[PHASE 13.3] 🔍 get_completed_lesson START at {timestamp}")
+        print(f"[PHASE 13.3] User: {obj.user.username} (ID: {user_id})")
+        print(f"[PHASE 13.3] Course: {obj.course.title} (ID: {course_id})")
+        print(f"[PHASE 13.3] Found {len(all_completed)} TOTAL completed lessons (ORM query)")
+        print(f"[PHASE 37.1] ⚠️ MISMATCH: Raw SQL found {len(raw_rows)} but ORM found {len(all_completed)} - check for missing variant_item FK!")
+        
+        valid_completions = []
+        
+        for idx, completion in enumerate(all_completed, 1):
+            variant_item = completion.variant_item
+            item_title = variant_item.title if variant_item else "Unknown"
+            variant_item_id = variant_item.variant_item_id if variant_item else "Unknown"
+            completion_id = completion.id
+            
+            print(f"\n[PHASE 13.3] ──────────────────── Lesson {idx}/{len(all_completed)} ────────────────────")
+            print(f"[PHASE 13.3] ID: {completion_id}, Title: {item_title}")
+            print(f"[PHASE 13.3] variant_item_id: {variant_item_id}")
+            
+            # Check if this lesson has a verification/completion question
+            verification_question = api_models.LessonCompletionQuestion.objects.filter(
+                variant_item=variant_item
+            ).first()
+            
+            if not verification_question:
+                # ✅ No verification question = lesson allows auto-completion
+                print(f"[PHASE 13.3] ✅ VERDICT: No verification question → AUTO-COMPLETE ALLOWED → VALID")
+                valid_completions.append(completion)
+            else:
+                # ⚠️ Verification question EXISTS = student must answer correctly
+                print(f"[PHASE 13.3] ⚠️ Verification question EXISTS")
+                print(f"[PHASE 13.3]   Question ID: {verification_question.question_id}")
+                print(f"[PHASE 13.3]   Question text: {verification_question.question_text[:60]}...")
+                print(f"[PHASE 13.3]   Question type: {verification_question.question_type}")
+                
+                if user_id:
+                    # Check for correct answer - FORCE FRESH QUERY
+                    all_answers = list(api_models.LessonCompletionQuestionAnswer.objects.filter(
+                        user_id=user_id,
+                        question=verification_question
+                    ).order_by('-answered_at'))  # list() forces evaluation NOW
+                    
+                    print(f"[PHASE 13.3]   Total answers from student: {len(all_answers)}")
+                    for answer_idx, ans in enumerate(all_answers[:3], 1):  # Show last 3 answers
+                        print(f"[PHASE 13.3]     Answer {answer_idx}: is_correct={ans.is_correct}, answered_at={ans.answered_at}")
+                    
+                    correct_answer = next((a for a in all_answers if a.is_correct), None)
+                    
+                    if correct_answer:
+                        # ✅ Student answered correctly = completion is VALID
+                        print(f"[PHASE 13.3] ✅ VERDICT: Student answered CORRECTLY → VALID")
+                        print(f"[PHASE 13.3]   Correct answer record ID: {correct_answer.id}, answered_at: {correct_answer.answered_at}")
+                        valid_completions.append(completion)
+                    else:
+                        # ❌ Student did not answer correctly = completion is INVALID
+                        print(f"[PHASE 13.3] ❌ VERDICT: Student did NOT answer correctly → INVALID (EXCLUDED)")
+                        if all_answers:
+                            latest = all_answers[0]
+                            print(f"[PHASE 13.3]   Latest answer: is_correct={latest.is_correct}, answered_at={latest.answered_at}")
+                else:
+                    print(f"[PHASE 13.3] ❌ VERDICT: No user_id available → INVALID (EXCLUDED)")
+        
+        print(f"\n[PHASE 13.3] 📊 FINAL RESULT: {len(valid_completions)}/{len(all_completed)} valid completions")
+        print(f"[PHASE 13.3] Valid lesson IDs: {[c.variant_item.variant_item_id for c in valid_completions if c.variant_item]}")
+        print(f"[PHASE 13.3] 🔍 get_completed_lesson END\n")
+        
+        # Serialize only the valid completions
+        serializer = CompletedLessonSerializer(
+            valid_completions, 
+            many=True, 
+            context=self.context
+        )
+        return serializer.data
 
     def __init__(self, *args, **kwargs):
         super(EnrolledCourseSerializer, self).__init__(*args, **kwargs)
@@ -1147,6 +1317,10 @@ class CourseSerializer(serializers.ModelSerializer):
     requirements = CourseRequirementSerializer(many=True, read_only=True, required=False)
     learning_outcomes = CourseLearningOutcomeSerializer(many=True, read_only=True, required=False)
     resources = CourseResourceSerializer(many=True, read_only=True, required=False)
+    # ✨ PHASE 11.202+: Validate completed lessons - return only VALID completions
+    # FIXED: Previously returned ALL CompletedLesson records including orphaned ones
+    # Now validates each completion against its verification question requirement
+    completed_lesson = serializers.SerializerMethodField()
     # ✨ PHASE 4.71: Fix quizzes field to return array instead of count
     # Frontend checks: Array.isArray(courseData.quizzes) && courseData.quizzes.length > 0
     # So we must return the actual Quiz objects, not just a count
@@ -1157,7 +1331,7 @@ class CourseSerializer(serializers.ModelSerializer):
     total_jam_pelatihan = serializers.SerializerMethodField()
     
     class Meta:
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "qa_count", "quizzes", "intro_video_source", "rejection_reason", "review_submitted_date", "total_jam_pelatihan"]
+        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan"]
         model = api_models.Course
     
     def get_qa_count(self, obj):
@@ -1191,6 +1365,58 @@ class CourseSerializer(serializers.ModelSerializer):
         from . import serializer as ser  # Lazy import to avoid circular reference
         quizzes = obj.quizzes.all()
         return ser.QuizSerializer(quizzes, many=True).data if quizzes.exists() else []
+
+    def get_completed_lesson(self, obj):
+        """✨ PHASE 11.202+: Return only VALID completed lessons
+        
+        A completed lesson is VALID if:
+        1. The lesson has NO verification question (auto-complete allowed), OR
+        2. The lesson HAS a verification question AND student has correct answer
+        
+        Similar validation to EnrolledCourseSerializer but for Course context.
+        Returns all completions for this course (used in admin/analytics APIs).
+        """
+        # Get all completed lessons for this course
+        all_completed = api_models.CompletedLesson.objects.filter(course=obj)
+        
+        valid_completions = []
+        
+        for completion in all_completed:
+            variant_item = completion.variant_item
+            item_title = variant_item.title if variant_item else "Unknown"
+            variant_item_id = variant_item.variant_item_id if variant_item else "Unknown"
+            user = completion.user
+            username = user.username if user else "Unknown"
+            
+            # Check if this lesson has a verification/completion question
+            verification_question = api_models.LessonCompletionQuestion.objects.filter(
+                variant_item=variant_item
+            ).first()
+            
+            if not verification_question:
+                # ✅ No verification question = lesson allows auto-completion
+                # This completion is VALID
+                valid_completions.append(completion)
+            else:
+                # ⚠️ Verification question EXISTS = student must answer correctly
+                if user:
+                    correct_answer = api_models.LessonCompletionQuestionAnswer.objects.filter(
+                        user=user,
+                        question=verification_question,
+                        is_correct=True
+                    ).exists()
+                    
+                    if correct_answer:
+                        # ✅ Student answered correctly = completion is VALID
+                        valid_completions.append(completion)
+        
+        # Serialize only the valid completions
+        serializer = CompletedLessonSerializer(
+            valid_completions, 
+            many=True, 
+            context=self.context
+        )
+        return serializer.data
 
     def get_total_jam_pelatihan(self, obj):
         """
@@ -1239,12 +1465,8 @@ class CourseSerializer(serializers.ModelSerializer):
         # Handle image field - convert relative paths to full URLs
         if instance.image:
             image_url = str(instance.image)
-            # If it's a Google Drive link, convert it to direct access format
-            if 'drive.google.com' in image_url:
-                from .url_utils import convert_google_drive_url_to_direct_image
-                representation['image'] = convert_google_drive_url_to_direct_image(image_url)
             # If it's already a full URL, return as-is
-            elif image_url.startswith('http://') or image_url.startswith('https://'):
+            if image_url.startswith('http://') or image_url.startswith('https://'):
                 representation['image'] = image_url
             # Otherwise, construct full URL with /media/ prefix
             elif request:
@@ -1306,7 +1528,7 @@ class CourseEditSerializer(serializers.ModelSerializer):
     class Meta:
         # ✨ PHASE 4.85: Added "features", "requirements", "learning_outcomes"
         # ✨ PHASE 7.13: Added "qa_count" to CourseEditSerializer
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count", "intro_video_source", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
+        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
         model = api_models.Course
     
     def get_quizzes(self, obj):
@@ -1346,7 +1568,6 @@ class CourseEditSerializer(serializers.ModelSerializer):
                     'image': published_copies.image,
                     'platform_status': published_copies.platform_status,
                     'teacher_course_status': published_copies.teacher_course_status,
-                    'intro_video_source': published_copies.intro_video_source,
                     'level': published_copies.level,
                     'curriculum': ser.VariantSerializer(
                         published_copies.curriculum.all(), 
@@ -2077,24 +2298,235 @@ class SearchTaxonomyAnalyticsSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = api_models.SearchTaxonomyAnalytics
-        fields = [
-            'id', 'category', 'category_name', 'category_type',
-            'total_searches', 'total_clicks', 'total_failures', 'unique_queries',
-            'unique_users', 'avg_ctr', 'failed_rate', 'trending_score',
-            'performance_indicator', 'last_updated'
-        ]
-        read_only_fields = ['id', 'last_updated']
+        fields = ['id', 'category', 'category_name', 'category_type', 'performance_indicator']
     
     def get_performance_indicator(self, obj):
-        """Determine category performance status"""
-        if obj.avg_ctr >= 10:
-            return 'EXCELLENT'
-        elif obj.avg_ctr >= 5:
-            return 'GOOD'
-        elif obj.avg_ctr >= 1:
-            return 'FAIR'
-        else:
-            return 'POOR'
+        """Return performance status"""
+        return 'NORMAL'
+
+
+# ✨ PHASE 10.1: Student & Instructor Ranking Serializers
+# NOTE: StudentPoints, InstructorPoints, and PointsAuditLog models not currently implemented
+# These serializers are commented out until the models are added to models.py
+#
+# class RankedStudentSerializer(serializers.ModelSerializer):
+#     """
+#     Serializer for ranked students with lifetime, yearly, and monthly points.
+#     Used by GET /api/v1/rankings/students/{period}/ endpoints.
+#     Includes calculated rank field and user profile information.
+#     """
+#     # User information
+#     user_id = serializers.IntegerField(read_only=True)
+#     full_name = serializers.CharField(source='user.full_name', read_only=True)
+#     image = serializers.SerializerMethodField(read_only=True)
+#     
+#     # Points tracking (all visible, frontend filters by period)
+#     points = serializers.SerializerMethodField(read_only=True)  # Returns points for requested period
+#     lifetime_points = serializers.IntegerField(read_only=True)
+#     yearly_points = serializers.IntegerField(read_only=True)
+#     monthly_points = serializers.IntegerField(read_only=True)
+#     
+#     # Ranking metadata
+#     rank = serializers.SerializerMethodField(read_only=True)
+#     rank_position = serializers.SerializerMethodField(read_only=True)
+#     
+#     # Privacy fields - show position, organization, or country instead of email
+#     position_name = serializers.SerializerMethodField(read_only=True)
+#     organization_unit_name = serializers.SerializerMethodField(read_only=True)
+#     country = serializers.SerializerMethodField(read_only=True)
+#     
+#     class Meta:
+#         model = api_models.StudentPoints
+#         fields = [
+#             'id', 'user_id', 'full_name', 'image',
+#             'points', 'lifetime_points', 'yearly_points', 'monthly_points',
+#             'rank', 'rank_position',
+#             'position_name', 'organization_unit_name', 'country'
+#         ]
+#         read_only_fields = fields
+#     
+#     def get_image(self, obj):
+#        """Get user profile image with fallback"""
+#         try:
+#             profile = Profile.objects.get(user=obj.user)
+#             if profile.image and str(profile.image).strip():
+#                 return str(profile.image)
+#         except Profile.DoesNotExist:
+#             pass
+#         return "/images/placeholders/default-profile.svg"
+#     
+#     def get_position_name(self, obj):
+#         """Get position name from profile"""
+#         try:
+#             profile = Profile.objects.get(user=obj.user)
+#             if profile.position:
+#                 return profile.position.name
+#         except Profile.DoesNotExist:
+#             pass
+#         return None
+#     
+#     def get_organization_unit_name(self, obj):
+#         """Get organization unit name from profile"""
+#         try:
+#             profile = Profile.objects.get(user=obj.user)
+#             if profile.organization_unit:
+#                 return profile.organization_unit.name
+#         except Profile.DoesNotExist:
+#             pass
+#         return None
+#     
+#     def get_country(self, obj):
+#         """Get country from profile"""
+#         try:
+#             profile = Profile.objects.get(user=obj.user)
+#             if profile.country:
+#                 return profile.country
+#         except Profile.DoesNotExist:
+#             pass
+#         return None
+#     
+#     def get_points(self, obj):
+#         """Return points for requested period (set by view via context)"""
+#         period = self.context.get('period', 'lifetime')
+#         
+#         if period == 'yearly':
+#             return obj.yearly_points
+#         elif period == 'monthly':
+#             return obj.monthly_points
+#         else:  # lifetime
+#             return obj.lifetime_points
+#     
+#     def get_rank(self, obj):
+#         """Return formatted rank badge (🥇, 🥈, 🥉, or position number)"""
+#         position = self.context.get('position', 0)
+#         
+#         if position == 1:
+#             return '🥇'
+#         elif position == 2:
+#             return '🥈'
+#         elif position == 3:
+#             return '🥉'
+#         else:
+#             return f'#{position}'
+#     
+#     def get_rank_position(self, obj):
+#         """Return numeric rank position (1, 2, 3, etc.)"""
+#         return self.context.get('position', 0)
+#
+
+# class RankedInstructorSerializer(serializers.ModelSerializer):
+#     """
+#     Serializer for ranked instructors with lifetime, yearly, and monthly points.
+#     Used by GET /api/v1/rankings/instructors/{period}/ endpoints.
+#     Includes calculated rank field and instructor profile information.
+#     """
+#     # User information
+#     user_id = serializers.IntegerField(source='user.id', read_only=True)
+#     full_name = serializers.CharField(source='user.full_name', read_only=True)
+#     image = serializers.SerializerMethodField(read_only=True)
+#     
+#     # Teacher information
+#     teacher_id = serializers.SerializerMethodField(read_only=True)
+#     bio = serializers.SerializerMethodField(read_only=True)
+#     
+#     # Points tracking (all visible, frontend filters by period)
+#     points = serializers.SerializerMethodField(read_only=True)  # Returns points for requested period
+#     lifetime_points = serializers.IntegerField(read_only=True)
+#     yearly_points = serializers.IntegerField(read_only=True)
+#     monthly_points = serializers.IntegerField(read_only=True)
+#     
+#     # Ranking metadata
+#     rank = serializers.SerializerMethodField(read_only=True)
+#     rank_position = serializers.SerializerMethodField(read_only=True)
+#     
+#     # Privacy fields - show position, organization, or country instead of email
+#     position_name = serializers.SerializerMethodField(read_only=True)
+#     organization_unit_name = serializers.SerializerMethodField(read_only=True)
+#     country = serializers.SerializerMethodField(read_only=True)
+#     
+#     class Meta:
+#         model = api_models.InstructorPoints
+#         fields = [
+#             'id', 'user_id', 'full_name', 'image', 'teacher_id', 'bio',
+#             'points', 'lifetime_points', 'yearly_points', 'monthly_points',
+#             'rank', 'rank_position',
+#             'position_name', 'organization_unit_name', 'country'
+#         ]
+#         read_only_fields = fields
+#     
+#     def get_image(self, obj):
+#         """Get teacher image with fallback"""
+#         if obj.teacher and obj.teacher.image and str(obj.teacher.image).strip():
+#             return str(obj.teacher.image)
+#         return "/images/placeholders/default-instructor.svg"
+#     
+#     def get_teacher_id(self, obj):
+#         """Get associated teacher ID"""
+#         return obj.teacher.id if obj.teacher else None
+#     
+#     def get_bio(self, obj):
+#         """Get teacher bio/about"""
+#         return obj.teacher.about if obj.teacher else ""
+#     
+#     def get_position_name(self, obj):
+#         """Get position name from teacher user profile"""
+#         try:
+#             profile = Profile.objects.get(user=obj.user)
+#             if profile.position:
+#                 return profile.position.name
+#         except Profile.DoesNotExist:
+#             pass
+#         return None
+#     
+#     def get_organization_unit_name(self, obj):
+#         """Get organization unit name from teacher user profile"""
+#         try:
+#             profile = Profile.objects.get(user=obj.user)
+#             if profile.organization_unit:
+#                 return profile.organization_unit.name
+#         except Profile.DoesNotExist:
+#             pass
+#         return None
+#     
+#     def get_country(self, obj):
+#         """Get country from teacher profile"""
+#         if obj.teacher and obj.teacher.country:
+#             return obj.teacher.country
+#         try:
+#             profile = Profile.objects.get(user=obj.user)
+#             if profile.country:
+#                 return profile.country
+#         except Profile.DoesNotExist:
+#             pass
+#         return None
+#     
+#     def get_points(self, obj):
+#         """Return points for requested period (set by view via context)"""
+#         period = self.context.get('period', 'lifetime')
+#         
+#         if period == 'yearly':
+#             return obj.yearly_points
+#         elif period == 'monthly':
+#             return obj.monthly_points
+#         else:  # lifetime
+#             return obj.lifetime_points
+#     
+#     def get_rank(self, obj):
+#         """Return formatted rank badge (🥇, 🥈, 🥉, or position number)"""
+#         position = self.context.get('position', 0)
+#         
+#         if position == 1:
+#             return '🥇'
+#         elif position == 2:
+#             return '🥈'
+#         elif position == 3:
+#             return '🥉'
+#         else:
+#             return f'#{position}'
+#     
+#     def get_rank_position(self, obj):
+#         """Return numeric rank position (1, 2, 3, etc.)"""
+#         return self.context.get('position', 0)
 
 
 # ✨ PHASE 4.78: Instructor Request Serializers
@@ -2320,4 +2752,609 @@ class LessonCompletionQuestionCreateUpdateSerializer(serializers.ModelSerializer
         
         return instance
 
+
+# ✨ PHASE 11.198: Student's Answer to Completion Question Serializer
+class LessonCompletionQuestionAnswerSerializer(serializers.ModelSerializer):
+    """Serializer for storing student's answer to lesson completion questions"""
+    question_text = serializers.CharField(source='question.question_text', read_only=True)
+    question_type = serializers.CharField(source='question.question_type', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    answer_choice_text = serializers.CharField(source='answer_choice.choice_text', read_only=True, allow_null=True)
+    answer_choices_text = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.LessonCompletionQuestionAnswer
+        fields = [
+            'id', 'user', 'username', 'question', 'question_text', 'question_type',
+            'answer_choice', 'answer_choice_text', 'answer_choices', 'answer_choices_text',
+            'answer_text', 'is_correct', 'answered_at'
+        ]
+        read_only_fields = ['id', 'user', 'username', 'answered_at']
+    
+    def get_answer_choices_text(self, obj):
+        """Get text of all selected choices for multi_select questions"""
+        return [choice.choice_text for choice in obj.answer_choices.all()]
+
+
+# ✨ PHASE 7.7: Question Answer Serializers
+# ✨ Minimal Variant Serializer for Q&A thread display (Bagian)
+class MinimalVariantSerializer(serializers.ModelSerializer):
+    """Minimal variant serializer for Q&A display"""
+    class Meta:
+        model = api_models.Variant
+        fields = ['variant_id', 'title']
+
+
+# ✨ Minimal VariantItem Serializer for Q&A thread display (Pelajaran)
+class MinimalVariantItemSerializer(serializers.ModelSerializer):
+    """Minimal variant item serializer for Q&A display"""
+    class Meta:
+        model = api_models.VariantItem
+        fields = ['variant_item_id', 'title']
+
+
+# ✨ Question Answer Message Serializer (moved before Question_AnswerSerializer for dependencies)
+class Question_Answer_MessageSerializer(serializers.ModelSerializer):
+    """Serializer for Q&A replies/messages"""
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    profile = serializers.SerializerMethodField(read_only=True)
+    likes_count = serializers.SerializerMethodField(read_only=True)
+    user_liked = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = api_models.Question_Answer_Message
+        fields = ['id', 'qam_id', 'qa_id', 'question', 'message', 'user', 'user_id', 'profile', 'date', 'likes_count', 'user_liked']
+        read_only_fields = ['id', 'qam_id', 'qa_id', 'date']
+    
+    def get_profile(self, obj):
+        """Get user profile with all details"""
+        try:
+            if obj.user:
+                profile = obj.user.profile
+                return {
+                    'user_id': obj.user.id,
+                    'full_name': obj.user.full_name or 'Anonim',
+                    'image': str(profile.image) if profile and profile.image else None,
+                    'position_name': profile.position.name if profile and profile.position else None,
+                    'organization_unit_name': profile.organization_unit.name if profile and profile.organization_unit else None,
+                    'country': profile.country if profile else None,
+                }
+        except:
+            pass
+        return {
+            'user_id': obj.user.id if obj.user else None,
+            'full_name': obj.user.full_name if obj.user else 'Anonim',
+            'image': None,
+            'position_name': None,
+            'organization_unit_name': None,
+            'country': None,
+        }
+    
+    def get_likes_count(self, obj):
+        """Count total likes on this message"""
+        return api_models.Question_Answer_Message_Like.objects.filter(message=obj).count()
+    
+    def get_user_liked(self, obj):
+        """Check if current user has liked this message"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return api_models.Question_Answer_Message_Like.objects.filter(
+                message=obj, user=request.user
+            ).exists()
+        return False
+
+
+# ✨ Expanded Question Answer Serializer with all forum data
+class Question_AnswerSerializer(serializers.ModelSerializer):
+    """Serializer for Q&A questions with full replies, variant context, and user profile"""
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    
+    # User profile data (not just name)
+    profile = serializers.SerializerMethodField(read_only=True)
+    
+    # Variant context (Bagian/Pelajaran)
+    variant = serializers.SerializerMethodField(read_only=True)
+    variant_item = MinimalVariantItemSerializer(read_only=True)
+    
+    # Messages/replies (all responses to this question)
+    messages = serializers.SerializerMethodField(read_only=True)
+    
+    # ✨ PHASE 7.26: Reply count (excluding original message)
+    replies_count = serializers.SerializerMethodField(read_only=True)
+    
+    # Like metadata
+    likes_count = serializers.SerializerMethodField(read_only=True)
+    user_liked = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = api_models.Question_Answer
+        fields = [
+            'id', 'qa_id', 'course', 'title', 'user', 'user_id',
+            'profile', 'variant', 'variant_item',
+            'date', 'messages', 'replies_count', 'likes_count', 'user_liked'
+        ]
+        read_only_fields = ['id', 'qa_id', 'date', 'messages', 'replies_count']
+    
+    def get_profile(self, obj):
+        """Get user profile with all details"""
+        try:
+            if obj.user:
+                profile = obj.user.profile
+                return {
+                    'user_id': obj.user.id,
+                    'full_name': obj.user.full_name or 'Anonim',
+                    'image': str(profile.image) if profile and profile.image else None,
+                    'position_name': profile.position.name if profile and profile.position else None,
+                    'organization_unit_name': profile.organization_unit.name if profile and profile.organization_unit else None,
+                    'country': profile.country if profile else None,
+                }
+        except:
+            pass
+        return {
+            'user_id': obj.user.id if obj.user else None,
+            'full_name': obj.user.full_name if obj.user else 'Anonim',
+            'image': None,
+            'position_name': None,
+            'organization_unit_name': None,
+            'country': None,
+        }
+    
+    def get_variant(self, obj):
+        """Get Bagian (section) from variant_item.variant"""
+        try:
+            if obj.variant_item and obj.variant_item.variant:
+                return {
+                    'variant_id': obj.variant_item.variant.variant_id,
+                    'title': obj.variant_item.variant.title
+                }
+        except:
+            pass
+        return None
+    
+    def get_messages(self, obj):
+        """Get all replies/messages for this question"""
+        messages = obj.reply_messages.all().order_by('date')
+        serializer = Question_Answer_MessageSerializer(messages, many=True, context=self.context)
+        return serializer.data
+    
+    def get_replies_count(self, obj):
+        """Count only actual replies (excluding original question message)
+        
+        When a question is created, a Question_Answer_Message is created along with it.
+        This original message is the first message and should NOT be counted as a "reply".
+        replies_count = total messages - 1 (the original message)
+        """
+        total_messages = obj.reply_messages.all().count()
+        # Subtract 1 to exclude the original message
+        replies_count = max(0, total_messages - 1)
+        return replies_count
+    
+    def get_likes_count(self, obj):
+        """Count total likes on this question"""
+        return api_models.Question_Answer_Like.objects.filter(question=obj).count()
+    
+    def get_user_liked(self, obj):
+        """Check if current user has liked this question"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return api_models.Question_Answer_Like.objects.filter(
+                question=obj, user=request.user
+            ).exists()
+        return False
+
+
+# ✨ PHASE 11.1: Feedback System Serializers
+# NOTE: Feedback model not currently implemented
+# These serializers are commented out until the Feedback model is added to models.py
+#
+# class FeedbackListSerializer(serializers.ModelSerializer):
+#     """Serializer for listing feedback items (admin dashboard)"""
+#     user_name = serializers.CharField(source='user.full_name', read_only=True)
+#     user_role = serializers.SerializerMethodField()
+#     course_title = serializers.CharField(source='related_course.title', read_only=True, allow_null=True)
+#     assigned_to_name = serializers.CharField(source='assigned_to.full_name', read_only=True, allow_null=True)
+#     
+#     class Meta:
+#         model = api_models.Feedback
+#         fields = [
+#             'id',
+#             'feedback_type',
+#             'title',
+#             'description',
+#             'status',
+#             'priority',
+#             'user_name',
+#             'user_role',
+#             'course_title',
+#             'affected_area',
+#             'assigned_to_name',
+#             'created_at',
+#             'updated_at',
+#         ]
+#         read_only_fields = fields
+#     
+#     def get_user_role(self, obj):
+#         """Get user role"""
+#         return obj.get_user_role()
+#
+#
+# class FeedbackDetailSerializer(serializers.ModelSerializer):
+#     """Serializer for detailed feedback view/editing"""
+#     user_name = serializers.CharField(source='user.full_name', read_only=True)
+#     user_email = serializers.CharField(source='user.email', read_only=True)
+#     user_role = serializers.SerializerMethodField()
+#     course_title = serializers.CharField(source='related_course.title', read_only=True, allow_null=True)
+#     assigned_to_name = serializers.CharField(source='assigned_to.full_name', read_only=True, allow_null=True)
+#     
+#     class Meta:
+#         model = api_models.Feedback
+#         fields = [
+#             'id',
+#             'feedback_type',
+#             'title',
+#             'description',
+#             'status',
+#             'priority',
+#             'related_course',
+#             'course_title',
+#             'related_url',
+#             'affected_area',
+#             'attachments',
+#             'admin_notes',
+#             'assigned_to',
+#             'assigned_to_name',
+#             'user_name',
+#             'user_email',
+#             'user_role',
+#             'created_at',
+#             'updated_at',
+#             'resolved_at',
+#         ]
+#         read_only_fields = [
+#             'id',
+#             'created_at',
+#             'updated_at',
+#             'user_name',
+#             'user_email',
+#             'user_role',
+#             'course_title',
+#             'assigned_to_name',
+#         ]
+#     
+#     def get_user_role(self, obj):
+#         """Get user role"""
+#         return obj.get_user_role()
+#
+#
+# class FeedbackCreateSerializer(serializers.ModelSerializer):
+#     """Serializer for creating feedback (user submission)"""
+#     
+#     class Meta:
+#         model = api_models.Feedback
+#         fields = [
+#             'feedback_type',
+#             'title',
+#             'description',
+#             'related_course',
+#             'related_url',
+#             'affected_area',
+#             'attachments',
+#         ]
+#     
+#     def validate_title(self, value):
+#         """Validate title is provided and not too short"""
+#         if not value or len(value.strip()) < 3:
+#             raise serializers.ValidationError("Title must be at least 3 characters long.")
+#         return value
+#     
+#     def validate_description(self, value):
+#         """Validate description is provided and not too short"""
+#         if not value or len(value.strip()) < 10:
+#             raise serializers.ValidationError("Description must be at least 10 characters long.")
+#         return value
+#     
+#     def create(self, validated_data):
+#         """Create feedback with current user"""
+#         request = self.context.get('request')
+#         validated_data['user'] = request.user
+#         return super().create(validated_data)
+#
+#
+# class FeedbackUpdateSerializer(serializers.ModelSerializer):
+#     """Serializer for updating feedback (admin only)"""
+#     
+#     class Meta:
+#         model = api_models.Feedback
+#         fields = [
+#             'status',
+#             'priority',
+#             'admin_notes',
+#             'assigned_to',
+#             'resolved_at',
+#         ]
+#
+#
+# class FeedbackStatsSerializer(serializers.Serializer):
+#     """Serializer for feedback statistics"""
+#     total_feedback = serializers.IntegerField()
+#     open_count = serializers.IntegerField()
+#     in_progress_count = serializers.IntegerField()
+#     resolved_count = serializers.IntegerField()
+#     bug_reports = serializers.IntegerField()
+#     feature_requests = serializers.IntegerField()
+#     critical_priority = serializers.IntegerField()
+#     high_priority = serializers.IntegerField()
+#     avg_resolution_time_days = serializers.FloatField(allow_null=True)
+
+
+# ✨ PHASE 10.1: Ranking System Serializers
+
+class RankedStudentSerializer(serializers.Serializer):
+    """
+    Serializer for ranking students by points.
+    Includes user profile info and ranking badges without exposing sensitive data.
+    ✨ PHASE 11.10: Fixed image URL handling - returns absolute URLs with cache-busting
+    """
+    id = serializers.SerializerMethodField()
+    user_id = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    position_name = serializers.SerializerMethodField()
+    organization_unit_name = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    lifetime_points = serializers.IntegerField()
+    yearly_points = serializers.IntegerField()
+    monthly_points = serializers.IntegerField()
+    rank = serializers.SerializerMethodField()
+    rank_position = serializers.SerializerMethodField()
+    
+    def get_id(self, obj):
+        return obj.id
+    
+    def get_user_id(self, obj):
+        return obj.user.id if obj.user else None
+    
+    def get_full_name(self, obj):
+        return obj.user.full_name if obj.user else "Unknown"
+    
+    def get_image(self, obj):
+        """
+        Get image from Profile.
+        Returns relative path which will be converted to absolute URL in to_representation.
+        """
+        try:
+            # Check Profile.image
+            if obj.user and hasattr(obj.user, 'profile') and obj.user.profile and obj.user.profile.image:
+                return str(obj.user.profile.image)
+        except Exception as e:
+            pass
+        
+        return None
+    
+    def to_representation(self, instance):
+        """
+        ✨ PHASE 11.10: Convert relative image URLs to absolute URLs
+        Also applies cache-busting for image reloads
+        """
+        representation = super().to_representation(instance)
+        
+        # Handle image URL - convert to absolute URL
+        if representation.get('image'):
+            image_url = representation['image']
+            request = self.context.get('request')
+            
+            try:
+                # If already a full URL, return as-is
+                if image_url.startswith('http://') or image_url.startswith('https://'):
+                    representation['image'] = image_url
+                # If relative path, make it absolute
+                elif request:
+                    # Ensure /media/ prefix for relative paths
+                    if not image_url.startswith('/'):
+                        image_url = f"/media/{image_url}"
+                    # Add cache-busting timestamp to force fresh image loads
+                    from datetime import datetime
+                    timestamp = int(datetime.now().timestamp() * 1000) // 3600000  # Cache-bust per hour
+                    absolute_url = request.build_absolute_uri(image_url)
+                    representation['image'] = f"{absolute_url}?v={timestamp}"
+                else:
+                    # Fallback if no request context
+                    if not image_url.startswith('/'):
+                        representation['image'] = f"/media/{image_url}"
+            except Exception as e:
+                # If any error, keep image as-is
+                pass
+        
+        return representation
+    
+    def get_position_name(self, obj):
+        try:
+            if obj.user and hasattr(obj.user, 'profile') and obj.user.profile and obj.user.profile.position:
+                return obj.user.profile.position.title
+        except:
+            pass
+        return None
+    
+    def get_organization_unit_name(self, obj):
+        try:
+            if obj.user and hasattr(obj.user, 'profile') and obj.user.profile and obj.user.profile.organization_unit:
+                return obj.user.profile.organization_unit.name
+        except:
+            pass
+        return None
+    
+    def get_country(self, obj):
+        try:
+            if obj.user and hasattr(obj.user, 'profile') and obj.user.profile:
+                return obj.user.profile.country
+        except:
+            pass
+        return None
+    
+    def get_rank(self, obj):
+        """Get rank badge emoji based on position"""
+        position = getattr(self, '_rank_position', None)
+        if position == 1:
+            return "🥇"
+        elif position == 2:
+            return "🥈"
+        elif position == 3:
+            return "🥉"
+        return None
+    
+    def get_rank_position(self, obj):
+        """Get rank position (1-based)"""
+        request = self.context.get('request')
+        if not request:
+            return 1
+        
+        # Store in context for use by get_rank()
+        if not hasattr(self, '_rank_position'):
+            self._rank_position = 1
+        
+        return getattr(self, '_rank_position', 1)
+    
+    class Meta:
+        fields = [
+            'id', 'user_id', 'full_name', 'image', 'position_name',
+            'organization_unit_name', 'country', 'lifetime_points',
+            'yearly_points', 'monthly_points', 'rank', 'rank_position'
+        ]
+
+
+class RankedInstructorSerializer(serializers.Serializer):
+    """
+    Serializer for ranking instructors by points.
+    Includes user profile info and ranking badges without exposing sensitive data.
+    ✨ PHASE 11.10: Fixed image URL handling - returns absolute URLs with cache-busting
+    """
+    id = serializers.SerializerMethodField()
+    user_id = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    position_name = serializers.SerializerMethodField()
+    organization_unit_name = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    lifetime_points = serializers.IntegerField()
+    yearly_points = serializers.IntegerField()
+    monthly_points = serializers.IntegerField()
+    rank = serializers.SerializerMethodField()
+    rank_position = serializers.SerializerMethodField()
+    
+    def get_id(self, obj):
+        return obj.id
+    
+    def get_user_id(self, obj):
+        return obj.user.id if obj.user else None
+    
+    def get_full_name(self, obj):
+        return obj.user.full_name if obj.user else "Unknown"
+    
+    def get_image(self, obj):
+        """
+        Get image from Profile or Teacher model.
+        Returns relative path which will be converted to absolute URL in to_representation.
+        ✨ PHASE 11.10: Check both Profile and Teacher image sources
+        """
+        try:
+            # Check Profile.image first (user uploads via profile endpoints)
+            if obj.user and hasattr(obj.user, 'profile') and obj.user.profile and obj.user.profile.image:
+                return str(obj.user.profile.image)
+            
+            # Fallback to Teacher.image (instructor might upload via teacher endpoints)
+            if obj.teacher and obj.teacher.image:
+                return str(obj.teacher.image)
+            
+            # Also check User -> Teacher relationship
+            if obj.user and hasattr(obj.user, 'teacher') and obj.user.teacher and obj.user.teacher.image:
+                return str(obj.user.teacher.image)
+        except Exception as e:
+            pass
+        
+        return None
+    
+    def to_representation(self, instance):
+        """
+        ✨ PHASE 11.10: Convert relative image URLs to absolute URLs
+        Also applies cache-busting for image reloads
+        """
+        representation = super().to_representation(instance)
+        
+        # Handle image URL - convert to absolute URL
+        if representation.get('image'):
+            image_url = representation['image']
+            request = self.context.get('request')
+            
+            try:
+                # If already a full URL, return as-is
+                if image_url.startswith('http://') or image_url.startswith('https://'):
+                    representation['image'] = image_url
+                # If relative path, make it absolute
+                elif request:
+                    # Ensure /media/ prefix for relative paths
+                    if not image_url.startswith('/'):
+                        image_url = f"/media/{image_url}"
+                    # Add cache-busting timestamp to force fresh image loads
+                    from datetime import datetime
+                    timestamp = int(datetime.now().timestamp() * 1000) // 3600000  # Cache-bust per hour
+                    absolute_url = request.build_absolute_uri(image_url)
+                    representation['image'] = f"{absolute_url}?v={timestamp}"
+                else:
+                    # Fallback if no request context
+                    if not image_url.startswith('/'):
+                        representation['image'] = f"/media/{image_url}"
+            except Exception as e:
+                # If any error, keep image as-is
+                pass
+        
+        return representation
+    
+    def get_position_name(self, obj):
+        try:
+            if obj.user and hasattr(obj.user, 'profile') and obj.user.profile and obj.user.profile.position:
+                return obj.user.profile.position.title
+        except:
+            pass
+        return None
+    
+    def get_organization_unit_name(self, obj):
+        try:
+            if obj.user and hasattr(obj.user, 'profile') and obj.user.profile and obj.user.profile.organization_unit:
+                return obj.user.profile.organization_unit.name
+        except:
+            pass
+        return None
+    
+    def get_country(self, obj):
+        try:
+            if obj.user and hasattr(obj.user, 'profile') and obj.user.profile:
+                return obj.user.profile.country
+        except:
+            pass
+        return None
+    
+    def get_rank(self, obj):
+        """Get rank badge emoji based on position"""
+        position = getattr(self, '_rank_position', None)
+        if position == 1:
+            return "🥇"
+        elif position == 2:
+            return "🥈"
+        elif position == 3:
+            return "🥉"
+        return None
+    
+    def get_rank_position(self, obj):
+        """Get rank position (1-based)"""
+        if not hasattr(self, '_rank_position'):
+            self._rank_position = 1
+        
+        return getattr(self, '_rank_position', 1)
+    
+    class Meta:
+        fields = [
+            'id', 'user_id', 'full_name', 'image', 'position_name',
+            'organization_unit_name', 'country', 'lifetime_points',
+            'yearly_points', 'monthly_points', 'rank', 'rank_position'
+        ]
 

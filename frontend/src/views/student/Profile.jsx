@@ -72,6 +72,22 @@ const formatUrl = (url) => {
     return url.startsWith("www.") || url.includes(".") ? `https://${url}` : url;
 };
 
+// ✨ PHASE 11.6: Generate unique filename based on user ID to prevent overwrites
+const generateUniqueFilename = (userId, originalFilename = "") => {
+    // Extract file extension from original filename or default to jpg
+    let extension = "jpg";
+    if (originalFilename && originalFilename.includes(".")) {
+        extension = originalFilename.split(".").pop().toLowerCase();
+        // Validate extension to prevent abuse
+        const validExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+        if (!validExtensions.includes(extension)) {
+            extension = "jpg";
+        }
+    }
+    // Generate unique filename: user_{id}.{extension}
+    return `user_${userId}.${extension}`;
+};
+
 const createFormData = (profileData, croppedImageBlob, fileName, originalImage) => {
     const formdata = new FormData();
     
@@ -131,10 +147,10 @@ const getCroppedImage = (image, crop, fileName) => {
         crop.height,
     );
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         canvas.toBlob((blob) => {
             if (!blob) {
-                console.error(VALIDATION_MESSAGES.CANVAS_EMPTY);
+                reject(new Error(VALIDATION_MESSAGES.CANVAS_EMPTY));
                 return;
             }
             blob.name = fileName;
@@ -183,6 +199,11 @@ function Profile() {
         fileName: ""
     });
     
+    // ✨ PHASE 11.7 CRITICAL FIX: Use useRef to preserve cropped blob across state render cycles
+    // The state closure issue caused croppedBlob to be lost during the 100ms setTimeout delay
+    // useRef survives re-renders and doesn't trigger re-renders when updated
+    const croppedBlobRef = useRef(null);
+    
     const [cropState, setCropState] = useState({
         crop: CROP_CONFIG.INITIAL,
         completedCrop: null
@@ -195,6 +216,7 @@ function Profile() {
         golongan: [],
         jenis_jabatan: []
     });
+    const [employeeOptionsLoading, setEmployeeOptionsLoading] = useState(true);  // ✨ Track loading state
     
     const imgRef = useRef(null);
     
@@ -223,11 +245,7 @@ function Profile() {
                 }
             });
             
-            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata, {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                }
-            });
+const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
             
             // Update local state with server response
             setProfileData(updateRes.data);
@@ -275,18 +293,6 @@ function Profile() {
         
         try {
             const profileRes = await useAxios.get(`user/profile/${UserData()?.user_id}/`);
-            console.log('📥 Profile API Response:', profileRes.data);
-            console.log('   - jenis_jabatan value:', profileRes.data.jenis_jabatan);
-            console.log('   - jenis_jabatan type:', typeof profileRes.data.jenis_jabatan);
-            console.log('   - jenis_jabatan is null?', profileRes.data.jenis_jabatan === null);
-            console.log('   - jenis_jabatan is undefined?', profileRes.data.jenis_jabatan === undefined);
-            console.log('   - jenis_jabatan is empty string?', profileRes.data.jenis_jabatan === "");
-            console.log('   - Full employee fields:', {
-                jenis_jabatan: profileRes.data.jenis_jabatan,
-                golongan: profileRes.data.golongan,
-                nip: profileRes.data.nip,
-                kelas_jabatan: profileRes.data.kelas_jabatan
-            });
             
             // ✨ PHASE 4.12.5: Ensure jenis_jabatan is string, not null/undefined
             const processedData = {
@@ -306,10 +312,88 @@ function Profile() {
                 fileName: extractFileName(profileRes.data.image)
             }));
         } catch (error) {
-            console.error("❌ Error fetching profile:", error);
             Toast().fire({
                 icon: "error",
                 title: VALIDATION_MESSAGES.PROFILE_LOAD_ERROR
+            });
+        } finally {
+            setUiState(prev => ({ ...prev, loading: false }));
+        }
+    };
+
+    // ✨ PHASE 11.4: Auto-submit image after crop completes
+    const submitImageOnly = async () => {
+        try {
+            setUiState(prev => ({ ...prev, loading: true }));
+            
+            const userId = UserData()?.user_id;
+            if (!userId) throw new Error("User ID not found");
+            
+            // Get current profile to pass existing image
+            const res = await useAxios.get(`user/profile/${userId}/`);
+            
+            // ✨ PHASE 11.6: Generate unique filename to prevent overwrites between users
+            const uniqueFilename = generateUniqueFilename(userId, imageState.fileName);
+            
+            // ✨ PHASE 11.7: Use REF instead of STATE to avoid closure issues
+            const blobToUse = croppedBlobRef.current || imageState.croppedBlob;
+            
+            // Create form data using the proven createFormData function with unique filename
+            const formdata = createFormData(
+                profileData,
+                blobToUse,  // ← Use REF-backed blob to survive closure
+                uniqueFilename,  // ✨ Use unique filename instead of original
+                res.data.image
+            );
+
+            // ✨ PHASE 11.5: FIX - Do NOT set Content-Type header for FormData!
+            // useAxios interceptor will handle it correctly by removing it and letting browser add boundary
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
+            
+            // ✨ PHASE 11.8: Cache-bust image URL to force browser reload (fixes BOTH navbar AND profile form avatars)
+            // Problem: Same filename means same URL, browser won't fetch new image from cache
+            // Solution: Add timestamp parameter to force fresh fetch
+            const cacheBustedImageUrl = updateRes.data.image 
+                ? `${updateRes.data.image}?v=${Date.now()}` 
+                : updateRes.data.image;
+            
+            // ✅ Update context immediately with cache-busted image URL
+            const dataToUpdateContext = { ...updateRes.data, image: cacheBustedImageUrl };
+            setProfile(dataToUpdateContext);
+            
+            // ✅ Update local state with fresh data
+            setProfileData(updateRes.data);
+            
+            // ✅ Update image preview with the CACHE-BUSTED image URL (fixes profile form avatar!)
+            const validImageUrl = getValidProfileImageUrl(cacheBustedImageUrl, "");
+            setUiState(prev => ({ ...prev, imagePreview: validImageUrl }));
+            
+            // ✅ Update filename and clear cropped blob
+            setImageState(prev => ({
+                ...prev,
+                fileName: extractFileName(updateRes.data.image),
+                croppedBlob: null,
+                selected: null  // ✨ Also clear selected to allow new file selection
+            }));
+            
+            Toast().fire({
+                icon: "success",
+                title: "Foto Profil Berhasil Disimpan",
+                text: "Avatar Anda telah diperbarui"
+            });
+            
+            // ✨ PHASE 11.6 FIX: Reset file input to allow re-selecting new avatar
+            // This fixes the issue where crop modal doesn't reappear after successful upload
+            const fileInput = document.getElementById("profileImage");
+            if (fileInput) {
+                fileInput.value = "";
+            }
+            
+        } catch (error) {
+            Toast().fire({
+                icon: "error",
+                title: "Gagal Menyimpan Foto",
+                text: error.response?.data?.message || "Terjadi kesalahan saat menyimpan foto profil"
             });
         } finally {
             setUiState(prev => ({ ...prev, loading: false }));
@@ -321,28 +405,54 @@ function Profile() {
         setUiState(prev => ({ ...prev, loading: true }));
 
         try {
-            const res = await useAxios.get(`user/profile/${UserData()?.user_id}/`);
+            const userId = UserData()?.user_id;
+            if (!userId) throw new Error("User ID not found");
+            
+            // ✨ PHASE 11.6 CRITICAL CHECK: Prevent submitting uncropped image
+            // If user selected a NEW image but hasn't clicked "Apply Crop", warn them
+            if (imageState.selected && !imageState.croppedBlob) {
+                console.warn('⚠️  User selected image but did not crop it!');
+                Toast().fire({
+                    icon: "warning",
+                    title: "Gambar Belum Dipotong",
+                    text: "Silakan klik 'Apply Crop' di modal pemotongan sebelum menyimpan"
+                });
+                setUiState(prev => ({ ...prev, loading: false }));
+                return;  // Prevent submission
+            }
+            
+            const res = await useAxios.get(`user/profile/${userId}/`);
+            
+            // ✨ PHASE 11.6 CRITICAL FIX: Generate unique filename in manual submission too!
+            // Without this, submitProfile would use the original filename when user clicks Simpan
+            const uniqueFilename = imageState.fileName ? generateUniqueFilename(userId, imageState.fileName) : imageState.fileName;
+            
             const formdata = createFormData(
                 profileData, 
                 imageState.croppedBlob, 
-                imageState.fileName, 
+                uniqueFilename,  // ✨ Use unique filename instead of original
                 res.data.image
             );
 
-            const updateRes = await useAxios.patch(`user/profile/${UserData()?.user_id}/`, formdata, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
             
-            // ✅ CRITICAL: Update context IMMEDIATELY with fresh data
-            setProfile(updateRes.data);
+            // ✨ PHASE 11.8: Cache-bust image URL to force browser reload (fixes BOTH navbar AND profile form avatars)
+            // Problem: Same filename means same URL, browser won't fetch new image from cache
+            // Solution: Add timestamp parameter to force fresh fetch
+            const cacheBustedImageUrl = updateRes.data.image 
+                ? `${updateRes.data.image}?v=${Date.now()}` 
+                : updateRes.data.image;
+            console.log('🔄 Cache-busting: Added timestamp to image URL:', cacheBustedImageUrl);
+            
+            // ✅ CRITICAL: Update context IMMEDIATELY with cache-busted image URL
+            const dataToUpdateContext = { ...updateRes.data, image: cacheBustedImageUrl };
+            setProfile(dataToUpdateContext);
             
             // ✅ Update local state with fresh data
             setProfileData(updateRes.data);
             
-            // ✅ Update image preview with the new image URL
-            const validImageUrl = getValidProfileImageUrl(updateRes.data.image, "");
+            // ✅ Update image preview with the CACHE-BUSTED image URL (fixes profile form avatar!)
+            const validImageUrl = getValidProfileImageUrl(cacheBustedImageUrl, "");
             setUiState(prev => ({ ...prev, imagePreview: validImageUrl }));
             
             // ✅ Update filename
@@ -442,23 +552,43 @@ function Profile() {
     };
 
     const handleCropComplete = async () => {
-        if (!cropState.completedCrop || !imgRef.current) return;
+        console.log('🎬 handleCropComplete CALLED');
+        console.log('   Current cropState:', cropState);
+        console.log('   imgRef.current exists?:', !!imgRef.current);
+        console.log('   imageState before crop:', { fileName: imageState.fileName, selected: !!imageState.selected, croppedBlob: !!imageState.croppedBlob });
+        
+        if (!cropState.completedCrop || !imgRef.current) {
+            console.warn('⚠️ Early return: completedCrop missing or no imgRef');
+            return;
+        }
 
         try {
+            console.log('🔄 Starting crop process...');
             const croppedBlob = await getCroppedImage(
                 imgRef.current,
                 cropState.completedCrop,
                 imageState.fileName
             );
             
+            console.log('✅ CROP COMPLETED! Blob received:', { size: croppedBlob.size, sizeKB: (croppedBlob.size / 1024).toFixed(2) });
+            
+            // ✨ STORE BLOB IN REF IMMEDIATELY - survives state closure issues
+            croppedBlobRef.current = croppedBlob;
+            console.log('🔗 croppedBlobRef.current SET to blob:', { size: croppedBlob.size, refHasData: !!croppedBlobRef.current });
+            
             setImageState(prev => ({
                 ...prev,
-                croppedBlob,
+                croppedBlob,  // ← THE CROPPED IMAGE IS NOW STORED HERE
             }));
+            console.log('✅ Updated imageState.croppedBlob - cropped image is now ready to be submitted!');
+            
+            console.log('🖼️ Creating preview from cropped blob...');
+            const previewUrl = URL.createObjectURL(croppedBlob);
+            console.log('✅ Preview URL created:', previewUrl);
             
             setUiState(prev => ({ 
                 ...prev, 
-                imagePreview: URL.createObjectURL(croppedBlob),
+                imagePreview: previewUrl,  // ← Shows the CROPPED preview
                 showCropModal: false 
             }));
             
@@ -467,12 +597,23 @@ function Profile() {
                 image: croppedBlob,
             }));
             
+            console.log('📢 Showing success toast...');
             Toast().fire({
                 icon: "success",
                 title: VALIDATION_MESSAGES.IMAGE_CROP_SUCCESS
             });
+            
+            // ✨ PHASE 11.4: Auto-save image immediately after successful crop
+            // Schedule the submit to run after state updates are complete
+            console.log('⏰ Setting setTimeout for submitImageOnly...');
+            setTimeout(async () => {
+                console.log('⏰ setTimeout fired! Calling submitImageOnly()...');
+                console.log('   imageState.croppedBlob before submit:', { exists: !!imageState.croppedBlob, size: imageState.croppedBlob ? imageState.croppedBlob.size : 'NOT SET' });
+                await submitImageOnly();
+            }, 100);
+            
         } catch (error) {
-            console.error("Error cropping image:", error);
+            console.error("❌ Error cropping image:", error);
             Toast().fire({
                 icon: "error",
                 title: VALIDATION_MESSAGES.IMAGE_CROP_ERROR
@@ -480,19 +621,53 @@ function Profile() {
         }
     };
 
-    const handleDeleteProfilePicture = () => {
-        setProfileData(prev => ({ ...prev, image: null }));
-        setUiState(prev => ({ ...prev, imagePreview: "" }));
-        setImageState({
-            selected: null,
-            croppedBlob: null,
-            fileName: ""
-        });
-        
-        Toast().fire({
-            icon: "success",
-            title: VALIDATION_MESSAGES.PICTURE_REMOVED
-        });
+    const handleDeleteProfilePicture = async () => {
+        try {
+            setUiState(prev => ({ ...prev, loading: true }));
+            
+            const userId = UserData()?.user_id;
+            if (!userId) throw new Error("User ID not found");
+            
+            console.log('🗑️ Deleting profile picture...');
+            
+            // ✨ PHASE 11.6 FIX: Submit image deletion to backend to clean up orphaned files
+            const formdata = new FormData();
+            formdata.append("image", "");  // Empty string signals deletion
+            formdata.append("full_name", profileData.full_name || "");
+            
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
+            console.log('✅ Image deleted from server');
+            
+            // Update frontend state with response from server
+            setProfile(updateRes.data);
+            setProfileData(updateRes.data);
+            setUiState(prev => ({ ...prev, imagePreview: "" }));
+            setImageState({
+                selected: null,
+                croppedBlob: null,
+                fileName: ""
+            });
+            
+            // Reset file input
+            const fileInput = document.getElementById("profileImage");
+            if (fileInput) {
+                fileInput.value = "";
+            }
+            
+            Toast().fire({
+                icon: "success",
+                title: VALIDATION_MESSAGES.PICTURE_REMOVED
+            });
+        } catch (error) {
+            console.error("❌ Error deleting image:", error);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal Menghapus Foto",
+                text: error.response?.data?.message || "Terjadi kesalahan saat menghapus foto profil"
+            });
+        } finally {
+            setUiState(prev => ({ ...prev, loading: false }));
+        }
     };
 
     const handleCropCancel = () => {
@@ -523,6 +698,7 @@ function Profile() {
     // ✨ PHASE 4.12.3: Fetch employee information options
     const fetchEmployeeOptions = async () => {
         try {
+            setEmployeeOptionsLoading(true);  // ✨ Set loading state
             console.log('🔄 Fetching employee options from /api/v1/employee/options/...');
             const res = await useAxios.get('employee/options/');
             console.log('✅ Employee options loaded successfully:', res.data);
@@ -556,6 +732,8 @@ function Profile() {
                 golongan: [],
                 jenis_jabatan: []
             });
+        } finally {
+            setEmployeeOptionsLoading(false);  // ✨ Loading complete
         }
     };
     
@@ -656,15 +834,6 @@ function Profile() {
                         <small className="file-help-text">PNG atau JPG, maks {IMAGE_CONFIG.MAX_SIZE}</small>
                     </div>
                     
-                    {(imageState.fileName || uiState.imagePreview) && (
-                        <div className="file-info">
-                            <p className="file-info-text">
-                                <i className="fas fa-image file-info-icon"></i>
-                                <strong>Foto Saat Ini:</strong> {imageState.fileName || "Foto profil yang ada"}
-                            </p>
-                        </div>
-                    )}
-                    
                     {uiState.imagePreview && (
                         <div className="profile-picture-actions">
                             <button 
@@ -687,7 +856,7 @@ function Profile() {
     );
 
     const renderFormField = (name, label, icon, type = "text", placeholder = "", rows = null, required = true, disabled = false) => (
-        <div className="col-12 mb-3">
+        <div className="col-12">
             <label className="form-label modern-label" htmlFor={name}>
                 <i className={`${icon} form-label-icon`}></i>
                 {label} {required && <span className="required-asterisk">*</span>}
@@ -816,6 +985,7 @@ function Profile() {
                         disabled={uiState.loading}
                         displayKey="name"
                         valueKey="id"
+                        isLoading={employeeOptionsLoading}
                     />
                 </div>
                 
@@ -851,6 +1021,7 @@ function Profile() {
                         disabled={uiState.loading || uiState.autoSaving}
                         displayKey="name"
                         valueKey="id"
+                        isLoading={employeeOptionsLoading}
                     />
                 </div>
                 
@@ -877,6 +1048,7 @@ function Profile() {
                         disabled={uiState.loading}
                         displayKey="name"
                         valueKey="name"
+                        isLoading={employeeOptionsLoading}
                     />
                 </div>
                 
@@ -903,6 +1075,7 @@ function Profile() {
                         disabled={uiState.loading}
                         displayKey="name"
                         valueKey="name"
+                        isLoading={employeeOptionsLoading}
                     />
                 </div>
             </div>
@@ -990,7 +1163,7 @@ function Profile() {
         return (
             <>
                 <BaseHeader />
-                <section className="pt-5 pb-5 student-profile-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
+                <section className="student-profile-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row mt-0 md-4">
@@ -1015,7 +1188,7 @@ function Profile() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5 student-profile-page modern-profile-page">
+            <section className="student-profile-page modern-profile-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 md-4">
@@ -1026,7 +1199,7 @@ function Profile() {
                                 background: "rgba(255, 255, 255, 0.95)",
                                 backdropFilter: "blur(10px)",
                                 borderRadius: "20px",
-                                padding: "30px",
+                                padding: "20px",
                                 border: "1px solid rgba(255, 255, 255, 0.2)",
                                 boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
                                 position: "relative",

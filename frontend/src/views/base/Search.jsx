@@ -66,7 +66,6 @@ function Search() {
             const uniqueCategories = [...new Set(coursesArray.map(course => course.category?.title).filter(Boolean))];
             setCategories(uniqueCategories);
         } catch (error) {
-            console.error("Error fetching courses:", error);
             // Set empty arrays on error to prevent .map() and .slice() errors
             setCourses([]);
             setAllCourses([]);
@@ -90,7 +89,6 @@ function Search() {
             const wishlistArray = Array.isArray(wishlistData) ? wishlistData : [];
             setWishlistItems(wishlistArray);
         } catch (error) {
-            console.error("Error fetching wishlist:", error);
         }
     };
 
@@ -141,7 +139,6 @@ function Search() {
             refreshWishlistCount();
             
         } catch (error) {
-            console.error("[Wishlist Error]", error);
             
             // Handle different error scenarios
             let errorMessage = "Kesalahan saat memperbarui daftar keinginan";

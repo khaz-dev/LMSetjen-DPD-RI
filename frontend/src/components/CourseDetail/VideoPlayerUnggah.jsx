@@ -1,6 +1,9 @@
-import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react";
 import { getMediaUrl } from "../../utils/constants";
 import { formatDurationStyle } from "../../utils/durationUtils";
+import useAxios from "../../utils/useAxios"; // ✨ PHASE 4.143: For fetching completion question
+import UserData from "../../views/plugin/UserData"; // ✨ PHASE 4.144+: Get studentId
+import LessonCompletionQuestionModal from "./LessonCompletionQuestionModal"; // ✨ PHASE 4.143
 import "./VideoPlayerUnggah.css";
 
 // ✨ PHASE 4.142: VideoPlayerUnggah - Standalone HTML5 uploaded video player
@@ -23,6 +26,7 @@ const VideoPlayerUnggah = forwardRef(({
     onPlayingChange,
     onProgress,
     seekPosition,
+    course,  // ✨ PHASE 36.1: Pass full course data to check actual completed_lesson array (source of truth)
 }, ref) => {
     const [loadError, setLoadError] = useState(false);
     const [isPlaying, setIsPlaying] = useState(autoplay);
@@ -31,12 +35,43 @@ const VideoPlayerUnggah = forwardRef(({
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [progressPercentage, setProgressPercentage] = useState(0);
+    const [completionQuestion, setCompletionQuestion] = useState(null); // ✨ PHASE 4.143: Question to answer before marking complete
+    const [showQuestionModal, setShowQuestionModal] = useState(false); // ✨ PHASE 4.143: Show question modal
+    // ✨ PHASE 39.4: CRITICAL FIX - Only use is_completed for LIMITED/FULL mode detection
+    // is_fully_watched is just progress state (watched 95%+), NOT completion state
+    // Completion = answered verification question or auto-completed (is_completed=true)
+    const [allowVideoAccess, setAllowVideoAccess] = useState(variantItem?.is_completed || false);
 
+    const API = useAxios; // ✨ PHASE 4.143: FIX - useAxios is an axios instance, not a hook function
     const videoRef = useRef(null);
+    const onProgressRef = useRef(onProgress);  // ✨ PHASE 4.156: Ref for stable onProgress
+    const progressStoppedRef = useRef(false);  // ✨ PHASE 13.2: Track if we've already stopped progress tracking at 95%+
+    
+    // ✨ PHASE 4.156: Keep ref in sync
+    useEffect(() => {
+        onProgressRef.current = onProgress;
+    }, [onProgress]);
+
+    // ✨ PHASE 13.2: Reset progress tracking flag when lesson changes
+    useEffect(() => {
+        progressStoppedRef.current = false;
+    }, [variantItem?.variant_item_id]);
+    
+    // ✨ PHASE 11.162: Reset modal state when video changes to prevent persistence
+    // ✨ PHASE 11.177: Also reset allowVideoAccess when lesson changes
+    // ✨ PHASE 40.1: CRITICAL FIX - Only use is_completed (NOT is_fully_watched) for LIMITED/FULL mode
+    // is_fully_watched is progress state (95%+), not completion state
+    useEffect(() => {
+        setShowQuestionModal(false);
+        setCompletionQuestion(null);
+        // ✨ PHASE 40.1: Only use is_completed - is_fully_watched causes FULL MODE prematurely at 95% progress
+        setAllowVideoAccess(variantItem?.is_completed || false);
+    }, [variantItem?.variant_item_id]);
+    
     const containerRef = useRef(null);
     const mouseInactiveTimer = useRef(null);
 
-    // Format video timer for display (MM:SS or HH:MM:SS)
+    // Format video timer for display - "00:00 | 00:00 | x%" format
     const formatVideoTimer = () => {
         const hours = Math.floor(currentTime / 3600);
         const minutes = Math.floor((currentTime % 3600) / 60);
@@ -46,31 +81,32 @@ const VideoPlayerUnggah = forwardRef(({
         const durationMinutes = Math.floor((duration % 3600) / 60);
         const durationSeconds = Math.floor(duration % 60);
         
+        const percentage = duration > 0 ? Math.round((currentTime / duration) * 100) : 0;
+        
+        // Format current time
+        let currentTimeStr;
         if (durationHours > 0) {
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} / ${String(durationHours).padStart(2, '0')}:${String(durationMinutes).padStart(2, '0')}:${String(durationSeconds).padStart(2, '0')}`;
+            currentTimeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         } else {
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} / ${String(durationMinutes).padStart(2, '0')}:${String(durationSeconds).padStart(2, '0')}`;
+            currentTimeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
+        
+        // Format duration
+        let durationStr;
+        if (durationHours > 0) {
+            durationStr = `${String(durationHours).padStart(2, '0')}:${String(durationMinutes).padStart(2, '0')}:${String(durationSeconds).padStart(2, '0')}`;
+        } else {
+            durationStr = `${String(durationMinutes).padStart(2, '0')}:${String(durationSeconds).padStart(2, '0')}`;
+        }
+        
+        return `${currentTimeStr} | ${durationStr} | ${percentage}%`;
     };
 
     if (!variantItem?.file) {
         return null;
     }
 
-    // ✨ PHASE 4.142: Expose play/pause toggle and seek methods via ref
-    useImperativeHandle(ref, () => ({
-        togglePlayPause: handlePlayPause,
-        seekToPosition: (position) => {
-            if (videoRef.current) {
-                videoRef.current.currentTime = position;
-            }
-        }
-    }), []);
-
-    const handleClose = () => {
-        if (onClose) onClose();
-    };
-
+    // ✨ PHASE 4.152: Define handlePlayPause BEFORE useImperativeHandle to avoid temporal dead zone
     const handlePlayPause = () => {
         if (!videoRef.current) {
             return;
@@ -112,6 +148,20 @@ const VideoPlayerUnggah = forwardRef(({
         }
     };
 
+    // ✨ PHASE 4.142: Expose play/pause toggle and seek methods via ref
+    useImperativeHandle(ref, () => ({
+        togglePlayPause: handlePlayPause,
+        seekToPosition: (position) => {
+            if (videoRef.current) {
+                videoRef.current.currentTime = position;
+            }
+        }
+    }), [handlePlayPause]);  // ✨ PHASE 4.152: Include handlePlayPause in dependencies to capture current state
+
+    const handleClose = () => {
+        if (onClose) onClose();
+    };
+
     const handleFullscreen = () => {
         const targetElement = containerRef.current;
         
@@ -151,39 +201,105 @@ const VideoPlayerUnggah = forwardRef(({
         setIsPlaying(false);
     };
 
-    const handleVideoKeyDown = (e) => {
+    // ✨ PHASE 11.180 FIX: Use useCallback to capture latest allowVideoAccess state
+    const handleVideoKeyDown = useCallback((e) => {
         if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-            e.preventDefault();
-            e.stopPropagation();
-            if (containerRef.current) {
-                containerRef.current.dispatchEvent(
-                    new CustomEvent('arrowKeyBlocked', { detail: { key: e.key }, bubbles: true })
-                );
+            // ✨ PHASE 11.180: Only block arrow keys in LIMITED mode (when allowVideoAccess = false)
+            // In FULL mode (allowVideoAccess = true), allow keyboard navigation
+            if (!allowVideoAccess) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
             }
-            return false;
+            // In FULL mode, allow the default browser behavior for navigation
         }
-    };
+    }, [allowVideoAccess]);
 
     // ✨ PHASE 4.142+: Callback when isPlaying state changes
     useEffect(() => {
         if (onPlayingChange) {
             onPlayingChange(isPlaying);
-        } else {
         }
     }, [isPlaying, onPlayingChange]);
 
     const handleVideoFocus = (e) => {
-        if (videoRef.current) {
+        // ✨ PHASE 11.180 FIX: Only blur in LIMITED mode - allow focus in FULL mode for keyboard events
+        if (!allowVideoAccess && videoRef.current) {
             videoRef.current.blur();
         }
     };
 
-    // ✨ PHASE 4.142: Notify parent when playing state changes
-    useEffect(() => {
-        if (onPlayingChange) {
-            onPlayingChange(isPlaying);
+    // ✨ PHASE 36.1: Check if lesson is actually completed based on course.completed_lesson array
+    // This is the source of truth - variantItem.is_completed might not be updated immediately
+    const isLessonActuallyCompleted = () => {
+        if (!course || !course.completed_lesson) return variantItem?.is_completed || false;
+        // Check if this variant_item_id exists in the course's completed_lesson array
+        return course.completed_lesson.some(cl => cl.variant_item_id === variantItem?.variant_item_id);
+    };
+
+    // ✨ PHASE 4.143: Fetch and show completion question
+    // ✨ PHASE 11.176: Auto-unlock video when modal appears (student watched 100%)
+    // ✨ PHASE 11.178: Don't show modal if lesson is already completed (is_completed = true)
+    // ✨ PHASE 13.4: Don't call handleMarkLessonAsCompleted if lesson already completed (prevents notification + toggle)
+    // ✨ PHASE 36.1: Check both variantItem.is_completed AND course.completed_lesson array
+    const fetchCompletionQuestion = async () => {
+        try {
+            // ✨ PHASE 36.1: Skip if lesson already completed (check actual completion status from course data)
+            if (variantItem?.is_completed || isLessonActuallyCompleted()) {
+                console.log('[VideoPlayerUnggah] Lesson already completed, skipping verification question and notification');
+                // ✨ PHASE 13.4: DON'T call handleMarkLessonAsCompleted here - lesson is already saved
+                // Calling would trigger the notification and toggle badge behavior
+                return;
+            }
+            
+            const response = await API.get(`/lesson-completion-question/?variant_item_id=${variantItem?.variant_item_id}`);
+            if (response.data.results && response.data.results.length > 0) {
+                setCompletionQuestion(response.data.results[0]);
+                setShowQuestionModal(true);
+                // ✨ PHASE 11.176: Allow free video access immediately since student completed watching
+                setAllowVideoAccess(true);
+            } else {
+                // ✨ PHASE 11.180: No question exists, unlock video controls since student completely watched
+                setAllowVideoAccess(true);
+                // ✨ PHASE 36.1: Only mark complete if not already completed (check both flags and course data)
+                if (!variantItem?.is_completed && !isLessonActuallyCompleted() && handleMarkLessonAsCompleted) {
+                    handleMarkLessonAsCompleted(variantItem?.variant_item_id, true);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching completion question:', error);
+            // ✨ PHASE 11.180: On error, allow video access and mark complete to avoid blocking student
+            setAllowVideoAccess(true);
+            // ✨ PHASE 36.1: Only mark complete if not already completed (check both flags and course data)
+            if (!variantItem?.is_completed && !isLessonActuallyCompleted() && handleMarkLessonAsCompleted) {
+                handleMarkLessonAsCompleted(variantItem?.variant_item_id, true);
+            }
         }
-    }, [isPlaying, onPlayingChange]);
+    };
+
+    // ✨ PHASE 4.143: Handle successful answer submission
+    const handleQuestionAnsweredCorrectly = () => {
+        setShowQuestionModal(false);
+        // ✨ PHASE 11.171: Hide overlay blocker after lesson is marked as complete
+        setAllowVideoAccess(true);
+        // ✨ PHASE 13.3: DO NOT call handleMarkLessonAsCompleted here!
+        // The backend already created CompletedLesson in LessonCompletionQuestionAnswerAPIView
+        // Calling handleMarkLessonAsCompleted would toggle (delete) the record we just created
+        // Instead, the 'lessonAnsweredCorrectly' event will trigger course data refresh
+    };
+
+    // ✨ PHASE 11.170: Handle incorrect answer - unlock video blocker to allow free video access
+    const handleAnswerWrong = () => {
+        setAllowVideoAccess(true);  // ✨ PHASE 11.170: Allow user to access video freely to rewatch
+    };
+
+    // ✨ PHASE 11.171: Handle closing modal to go back to video (when user clicks "Pelajaran Kembali")
+    const handleCloseModal = () => {
+        setShowQuestionModal(false);
+        setAllowVideoAccess(true);  // ✨ PHASE 11.171: Allow access to video when closing modal
+    };
+
+    // ✨ PHASE 11.158: Skip functionality removed - user MUST answer to complete lesson
 
     // ✨ PHASE 4.142: Auto-hide buttons after 1 second of mouse inactivity
     useEffect(() => {
@@ -333,7 +449,7 @@ const VideoPlayerUnggah = forwardRef(({
                                 variantItem?.title
                             )}
                         </div>
-                        <small>{formatVideoTimer()}</small>
+                        <small className="video-player-progress-info">{formatVideoTimer()}</small>
                     </div>
                 </div>
                 <button
@@ -364,28 +480,39 @@ const VideoPlayerUnggah = forwardRef(({
                         ref={containerRef}
                         className="video-player-video-container video-player-video-hover"
                         onKeyDown={handleVideoKeyDown}
-                        tabIndex="-1"
+                        tabIndex={allowVideoAccess ? 0 : -1}
                         onMouseMove={() => setMouseActive(true)}
                         onMouseEnter={() => setMouseActive(true)}
+                        onClick={(e) => {
+                            // ✨ PHASE 11.180 FIX: Ensure container can receive focus for keyboard events in FULL mode
+                            if (allowVideoAccess && e.target === containerRef.current) {
+                                containerRef.current?.focus();
+                            }
+                        }}
                     >
                         {/* ✨ PHASE 4.142: Overlay Blocker - Blocks native video controls */}
-                        <div
-                            className="video-player-overlay-blocker"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                            }}
-                            onDoubleClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                            }}
-                            onMouseMove={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                            }}
-                        />
+                        {/* ✨ PHASE 11.170: Hidden when allowVideoAccess is true (user answered wrong) */}
+                        {/* ✨ PHASE 11.177: Also hidden when lesson completion modal is showing (student watched 100%) */}
+                        {!allowVideoAccess && !showQuestionModal && (
+                            <div
+                                className="video-player-overlay-blocker"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                                onDoubleClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                                onMouseMove={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                            />
+                        )}
 
                         {/* Video Element */}
+                        {/* ✨ PHASE 11.179: Add full HTML5 controls when student has watched video (is_fully_watched || is_completed) */}
                         <video
                             ref={videoRef}
                             src={variantItem.file.startsWith("http") ? variantItem.file : getMediaUrl(variantItem.file)}
@@ -396,7 +523,8 @@ const VideoPlayerUnggah = forwardRef(({
                             onKeyDown={handleVideoKeyDown}
                             muted={false}
                             autoPlay={autoplay && (!seekPosition || seekPosition <= 0)}
-                            tabIndex="-1"
+                            tabIndex={allowVideoAccess ? 0 : -1}
+                            controls={allowVideoAccess}
                             onLoadedMetadata={() => {
                                 if (videoRef.current) {
                                     setDuration(videoRef.current.duration);
@@ -408,10 +536,24 @@ const VideoPlayerUnggah = forwardRef(({
                                     const percentage = (videoRef.current.currentTime / videoRef.current.duration) * 100;
                                     setProgressPercentage(Math.round(percentage));
                                     
-                                    if (onProgress) {
+                                    // ✨ PHASE 13.2: Auto-unlock Full Mode at 95%+ progress and stop tracking
+                                    if (percentage >= 95 && !progressStoppedRef.current) {
+                                        console.log('[VideoPlayerUnggah] 🎓 PHASE 13.2: Progress reached 95%+ - switching to FULL MODE and stopping progress tracking', {
+                                            percentage: percentage.toFixed(2),
+                                            currentTime: videoRef.current.currentTime.toFixed(2),
+                                            duration: videoRef.current.duration.toFixed(2)
+                                        });
+                                        progressStoppedRef.current = true;
+                                        setAllowVideoAccess(true);  // Unlock Full Mode
+                                        // Progress tracking will stop below since progressStoppedRef.current is now true
+                                    }
+                                    
+                                    // ✨ PHASE 13.2: Only send progress updates until 95% is reached
+                                    // Once at 95%+, stop wasting bandwidth and API calls on duplicate data
+                                    if (!progressStoppedRef.current && onProgressRef.current) {
                                         if (Math.random() < 0.1) {
                                         }
-                                        onProgress({
+                                        onProgressRef.current({
                                             played: videoRef.current.currentTime / videoRef.current.duration,
                                             loaded: 1,
                                             duration: videoRef.current.duration,
@@ -421,9 +563,8 @@ const VideoPlayerUnggah = forwardRef(({
                                 }
                             }}
                             onEnded={() => {
-                                if (handleMarkLessonAsCompleted) {
-                                    handleMarkLessonAsCompleted(variantItem?.variant_item_id, true);
-                                }
+                                // ✨ PHASE 4.157: FIX - First check for completion question before marking complete
+                                fetchCompletionQuestion();
                                 setIsPlaying(false);
                                 setProgressPercentage(100);
                             }}
@@ -432,8 +573,9 @@ const VideoPlayerUnggah = forwardRef(({
                             }}
                         />
                         
+                        {/* ✨ PHASE 11.180 FIX: Hide custom buttons when native controls visible (FULL mode) */}
                         {/* Control Buttons Container */}
-                        <div className="video-player-controls-container">
+                        <div className="video-player-controls-container" style={{ display: allowVideoAccess ? 'none' : 'flex' }}>
                             <button
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -450,7 +592,7 @@ const VideoPlayerUnggah = forwardRef(({
                             </button>
                         </div>
 
-                        {/* Backward 5 Seconds Button */}
+                        {/* ✨ PHASE 11.180: Backward 5 Seconds Button - Always available in both LIMITED and FULL modes */}
                         <button
                             onClick={(e) => {
                                 e.preventDefault();
@@ -460,7 +602,8 @@ const VideoPlayerUnggah = forwardRef(({
                             className="video-player-backward-btn"
                             title="Mundur 5 detik"
                             style={{
-                                opacity: mouseActive ? 1 : 0
+                                opacity: mouseActive ? 1 : 0,
+                                display: allowVideoAccess ? 'none' : 'block'  // ✨ PHASE 11.180 FIX: Hide when FULL mode
                             }}
                         >
                             <i className="fas fa-redo-alt video-player-backward-icon"></i>
@@ -477,17 +620,35 @@ const VideoPlayerUnggah = forwardRef(({
                             className="video-player-fullscreen-btn"
                             title="Layar Penuh"
                             style={{
-                                opacity: mouseActive ? 1 : 0
+                                opacity: mouseActive ? 1 : 0,
+                                display: allowVideoAccess ? 'none' : 'block'  // ✨ PHASE 11.180 FIX: Hide when FULL mode
                             }}
                         >
                             <i className={`fas ${isFullscreen ? "fa-compress" : "fa-expand"}`}></i>
                         </button>
                     </div>
                 )}
+
+                {/* ✨ PHASE 4.143: Lesson Completion Question Modal - INSIDE video-player-content for proper overlay */}
+                {showQuestionModal && completionQuestion && (
+                    <LessonCompletionQuestionModal
+                        question={completionQuestion}
+                        variantItemId={variantItem?.variant_item_id}
+                        onAnswerCorrect={handleQuestionAnsweredCorrectly}
+                        onAnswerWrong={handleAnswerWrong}  // ✨ PHASE 11.170: Callback to enable video access when answer is wrong
+                        onCloseModal={handleCloseModal}    // ✨ PHASE 11.171: Callback to close modal when user clicks "Pelajaran Kembali"
+                        studentId={UserData()?.user_id}  // ✨ PHASE 4.144+: Pass studentId to modal
+                    />
+                )}
             </div>
+
+            {/* Modal removed from here - now inside video-player-content */}
         </div>
     );
 });
 
 VideoPlayerUnggah.displayName = "VideoPlayerUnggah";
-export default VideoPlayerUnggah;
+
+// ✨ PHASE 17.12 FIX: Wrap in React.memo to prevent unnecessary unmount/remount
+// This prevents unmounting when parent re-renders but props are stable
+export default React.memo(VideoPlayerUnggah);

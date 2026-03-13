@@ -14,9 +14,9 @@ html, body, #root {
 .modern-student-course {
     min-height: 100vh;
     background: transparent;
-    padding: 3rem 0;
-    padding-top: calc(70px + 3rem) !important;
-    padding-bottom: 3rem !important;
+    padding: var(--page-top-spacing) 0;
+    padding-top: var(--page-top-spacing) !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
     margin-top: 0 !important;
     margin-bottom: 8rem;
 }
@@ -27,7 +27,7 @@ html, body, #root {
 }
 
 .modern-student-course.pb-5 {
-    padding-bottom: 50px !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
 }
 
 .course-progress-card {
@@ -100,12 +100,14 @@ html, body, #root {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     border: 1px solid #e9ecef;
     overflow: hidden;
+    margin-top: 1.5rem;
 }
 
 .nav-tabs-modern {
     background: #f8f9fa;
     border: none;
     padding: 1rem 0.75rem;
+    padding-bottom: 0.5rem;
     gap: 0.75rem;
     display: flex;
     flex-wrap: wrap;
@@ -197,7 +199,7 @@ html, body, #root {
 .lecture-card {
     background: white;
     border-radius: 15px;
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
     margin-bottom: 1rem;
     border: 2px solid #e9ecef;
     transition: all 0.3s ease;
@@ -327,7 +329,7 @@ html, body, #root {
     background: linear-gradient(135deg, var(--note-color-light, #fff3cd) 0%, var(--note-color-hover, #ffeaa7) 50%, #ffffff 100%);
     border-radius: 8px 20px 8px 20px;
     padding: 1.5rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
     border-left: 6px solid var(--note-color, #f39c12);
     border-top: 2px solid var(--note-color-light, rgba(243, 156, 18, 0.3));
     border-right: 1px solid var(--note-color-light, rgba(243, 156, 18, 0.2));
@@ -490,6 +492,22 @@ html, body, #root {
     text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
+/* ✨ PHASE 11.161: Bagian and Pelajaran context display on note card */
+.note-context {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.note-context i {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
 .note-date {
     color: #6c757d;
     font-size: 0.85rem;
@@ -620,6 +638,57 @@ html, body, #root {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px var(--theme-shadow-color) !important;
     color: white;
+}
+
+/* ✨ PHASE 11.167: Responsive Grid for Notes */
+.note-grid {
+    display: grid;
+}
+
+/* ✨ PHASE 11.167a: Empty state spans all columns in grid */
+.note-grid .empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    text-align: center;
+}
+
+@media (max-width: 1024px) {
+    .note-grid {
+        gridTemplateColumns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .note-grid {
+        gridTemplateColumns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .note-card {
+        margin-bottom: 0;
+        min-height: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .note-grid {
+        gridTemplateColumns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    .note-card {
+        padding: 1rem;
+    }
+    
+    .btn-note-action {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
 }
 
 /* ============================================
@@ -992,35 +1061,320 @@ html, body, #root {
 /* Duplicate .viewer-modal-modern rules removed - see enhanced version below around line 1935 */
 
 /* ============================================
+   STICKY NOTE VIEW STYLES - PHASE 9.2
+   ============================================ */
+
+/* ✨ PHASE 9.2: Sticky Note View - Draggable and Resizable */
+.sticky-note-view {
+    position: fixed;
+    width: 400px;
+    height: 500px;
+    border-radius: 12px;
+    border: 2px solid;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: white;
+    z-index: 1050;
+    font-family: 'Comic Sans MS', cursive, sans-serif !important;
+    box-sizing: border-box;
+}
+
+/* ✨ PHASE 9.2: Sticky Note Header - Draggable area */
+.sticky-note-header {
+    padding: 1rem 1.25rem;
+    border-radius: 10px 10px 0 0;
+    color: white;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    min-height: 60px;
+}
+
+.sticky-note-title-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.sticky-note-icon {
+    font-size: 1.5rem;
+    opacity: 0.9;
+}
+
+.sticky-note-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    line-height: 1.3;
+    word-break: break-word;
+    max-width: 280px;
+}
+
+.sticky-note-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.sticky-note-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.sticky-note-close:active {
+    transform: scale(0.95);
+}
+
+/* ✨ PHASE 9.2: Sticky Note Content - Main display area */
+.sticky-note-content {
+    flex: 1;
+    padding: 1.25rem;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: #ffffff !important;  /* ✨ PHASE 9.3: Opaque white background for clarity */
+}
+
+.sticky-note-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #2c3e50 !important;  /* ✨ PHASE 9.3: Darker color for better readability */
+    font-weight: 500;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.meta-item i {
+    width: 16px;
+    text-align: center;
+    opacity: 1;  /* ✨ PHASE 9.3: Full opacity for readability */
+    color: #3498db;
+}
+
+.sticky-note-text {
+    flex: 1;
+    color: #1a1a1a !important;  /* ✨ PHASE 9.3: Very dark text for maximum readability */
+    font-size: 1.05rem;  /* ✨ PHASE 9.3: Slightly larger font */
+    line-height: 1.7;  /* ✨ PHASE 9.3: Better line spacing */
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sticky-note-text:hover {
+    background: #f0f1f3;
+    border-color: #dee2e6;
+}
+
+/* ✨ PHASE 9.3: Inline editing textarea in sticky note */
+.sticky-note-text-edit {
+    flex: 1;
+    padding: 0.75rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #1a1a1a;
+    resize: vertical;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.sticky-note-text-edit:focus {
+    outline: none;
+    border-color: #2980b9;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* ✨ PHASE 9.2: Sticky Note Footer - Action buttons */
+.sticky-note-footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 2px solid #ecf0f1;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    background: #f8f9fa;
+    flex-wrap: wrap;
+}
+
+.btn-sticky-note-edit {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.btn-sticky-note-edit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.btn-sticky-note-edit:active {
+    transform: translateY(0);
+}
+
+/* ✨ PHASE 9.3: Inline edit action buttons */
+.btn-sticky-note-save {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.btn-sticky-note-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.btn-sticky-note-cancel {
+    background: #e8e9ea;
+    color: #2c3e50;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.btn-sticky-note-cancel:hover {
+    background: #d4d5d7;
+    transform: translateY(-2px);
+}
+
+/* ✨ PHASE 9.2: Resize handle for sticky note */
+.sticky-note-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 24px;
+    height: 24px;
+    cursor: se-resize;
+    background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, 0.15) 50%);
+    border-radius: 0 0 10px 0;
+}
+
+.sticky-note-resize-handle:hover {
+    background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, 0.25) 50%);
+}
+
+/* ============================================
    MODAL DIALOG STYLES
    ============================================ */
 
-/* Add Note Modal Styles */
+/* ✨ PHASE 7.26: Add Note Modal Styles - Draggable, Resizable Sticky Note */
+.add-note-modal {
+    --note-modal-x: 0px;
+    --note-modal-y: 50px;
+    --note-modal-width: 700px;
+    --note-modal-height: auto;
+}
+
 .add-note-modal .modal-content {
     border: none;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    overflow: visible;  /* ✨ PHASE 7.30: Allow resize handle to extend beyond edges */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
     margin: 0;
     padding: 0;
-    max-width: 600px;
     width: 100%;
-}
-
-.add-note-modal .modal-dialog {
-    max-width: 600px;
-    margin: 1.75rem auto;
-}
-
-.modal-header-note {
-    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-    color: white;
-    padding: 1.5rem 2rem;
-    border: none;
+    height: 100%;  /* ✨ PHASE 7.26: Match parent height exactly */
     position: relative;
-    overflow: hidden;
-    border-radius: 20px 20px 0 0;
+    display: flex;  /* Use flexbox for layout */
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+/* ✨ PHASE 7.26: Fixed positioning for draggable note modal */
+.add-note-modal .modal-dialog {
+    position: fixed;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 700px;
+    height: 500px;
+    left: 0;
+    top: 50px;
+    /* Position will be overridden by JavaScript for dragging/resizing */
+    /* NO !important to allow JavaScript inline styles to work */
+}
+
+/* ✨ PHASE 7.26: Modal header - draggable sticky note header */
+.modal-header-note {
+    /* ✨ PHASE 7.33: Removed hardcoded background to allow dynamic color change from inline style */
+    color: white !important;
+    padding: 1rem 1.5rem !important;
+    border: none !important;
+    position: absolute !important;     /* Stick to top of modal-dialog */
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 10 !important;            /* Above body content */
+    width: 100% !important;            /* Full width */
+    box-sizing: border-box !important;
+    cursor: move !important;           /* Show draggable cursor */
+    user-select: none !important;      /* Prevent text selection while dragging */
+    border-radius: 12px 12px 0 0 !important;
+    margin: 0 !important;
+    display: flex !important;          /* From generic */
+    flex-direction: row !important;    /* Ensure horizontal layout */
+    align-items: flex-start !important; /* ✨ PHASE 7.32: Align content to top to wrap height */
+    justify-content: space-between !important;
+    gap: 1rem !important;              /* From generic */
+    height: auto !important;           /* ✨ PHASE 11.161: Auto height to remove blank space */
+    overflow: visible !important;      /* ✨ PHASE 7.32: Show all content instead of hiding overflow */
 }
 
 .modal-header-note::before {
@@ -1034,10 +1388,437 @@ html, body, #root {
     pointer-events: none;
 }
 
+/* ✨ PHASE 7.26: Modal body - horizontally scrollable content */
+.add-note-modal .modal-body-modern {
+    position: absolute !important;     /* Positioned relative to modal-dialog */
+    top: 100px !important;             /* ✨ PHASE 7.32: Below header (min-height: 100px) */
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 70px !important;           /* Above footer */
+    z-index: 5 !important;
+    padding: 1rem 1.5rem !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;         /* Allow scrolling */
+    max-height: none !important;       /* No max height constraint */
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%) !important;
+}
+
+/* ✨ PHASE 7.31: Note form - two column layout with responsive stacking */
+.add-note-modal .note-form {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 1.5rem !important;
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+}
+
+/* ✨ PHASE 7.31: Left column - title and content (100% width, may wrap below) */
+.add-note-modal .note-form-column.note-form-left {
+    flex: 1 1 100% !important;         /* Full width by default */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    min-width: 100% !important;
+}
+
+/* ✨ PHASE 7.31: Right column - color picker and tips (grow on larger screens) */
+.add-note-modal .note-form-column.note-form-right {
+    flex: 1 1 100% !important;         /* Full width by default */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    min-width: 100% !important;
+}
+
+/* ✨ PHASE 7.31: Responsive breakpoint - two columns side-by-side at 1000px+ */
+@media (min-width: 1000px) {
+    .add-note-modal .note-form-column.note-form-left {
+        flex: 1 1 auto !important;      /* Grow to fill available space */
+        min-width: auto !important;     /* Remove full-width constraint */
+    }
+    
+    .add-note-modal .note-form-column.note-form-right {
+        flex: 1 1 auto !important;      /* Grow to fill available space */
+        min-width: auto !important;     /* Remove full-width constraint */
+        max-width: 45% !important;      /* Cap at ~45% to allow balanced layout */
+    }
+}
+
+/* ✨ PHASE 7.28: Force title and content to full width within left column (stack below each other) */
+.add-note-modal .note-form-column.note-form-left > .form-group-modern {
+    flex: 0 0 100% !important;         /* Title and content take full column width */
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* ✨ PHASE 7.31: Color picker and tips in right column */
+.add-note-modal .note-form-column.note-form-right > .form-group-modern {
+    flex: 0 0 100% !important;         /* Color picker takes full column width */
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* ✨ PHASE 7.26: Form groups - split into columns */
+.add-note-modal .form-group-modern {
+    flex: 1;
+    min-width: 250px;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* ✨ PHASE 7.26: Form labels for note modal */
+.add-note-modal .form-label-modern {
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+    margin-bottom: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+/* ✨ PHASE 7.26: Form input styling for note modal */
+.add-note-modal .form-input-modern,
+.add-note-modal .form-textarea-modern {
+    border: 1px solid #ddd !important;
+    border-radius: 6px !important;
+    padding: 0.75rem !important;
+    font-size: 0.9rem !important;
+    background: white !important;
+    transition: all 0.3s ease !important;
+}
+
+.add-note-modal .form-input-modern:focus,
+.add-note-modal .form-textarea-modern:focus {
+    border-color: #3498db !important;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1) !important;
+    outline: none !important;
+}
+
+/* ✨ PHASE 7.26: Textarea styling for note modal */
+.add-note-modal .textarea-wrapper-modern {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.add-note-modal .form-textarea-modern {
+    resize: vertical !important;
+    min-height: 100px !important;
+}
+
+/* ✨ PHASE 7.26: Character counter styling */
+.add-note-modal .character-counter {
+    font-size: 0.75rem !important;
+    color: #999 !important;
+    margin-top: 0.25rem !important;
+    text-align: right !important;
+}
+
+/* ✨ PHASE 7.26: Color picker styling for note modal */
+.add-note-modal .color-picker-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 0.5rem !important;
+}
+
+.add-note-modal .color-option {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: transform 0.2s ease !important;
+    border: 2px solid transparent !important;
+}
+
+.add-note-modal .color-option:hover {
+    transform: scale(1.1) !important;
+}
+
+.add-note-modal .color-option.selected {
+    border-color: #333 !important;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #333 !important;
+}
+
+/* ✨ PHASE 7.26: Tips section styling */
+.add-note-modal .tips-section {
+    flex: 1 !important;
+    min-width: 250px !important;
+    background: rgba(52, 152, 219, 0.05) !important;
+    border: 1px solid rgba(52, 152, 219, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+}
+
+/* ✨ PHASE 7.31: Tips section inside right column */
+.add-note-modal .note-form-column.note-form-right > .tips-section {
+    flex: 0 0 100% !important;         /* Tips takes full column width */
+    width: 100% !important;
+}
+
+.add-note-modal .tips-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+    margin-bottom: 0.75rem !important;
+}
+
+.add-note-modal .tips-icon {
+    color: #f39c12 !important;
+    font-size: 1rem !important;
+}
+
+.add-note-modal .tips-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+}
+
+.add-note-modal .tips-list li {
+    font-size: 0.85rem !important;
+    color: #666 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+}
+
+.add-note-modal .tips-list i {
+    color: #2ecc71 !important;
+    margin-top: 0.2rem !important;
+    flex-shrink: 0 !important;
+}
+
+/* ✨ PHASE 7.26: Modal footer with resize handle */
+.add-note-modal .modal-footer-modern {
+    position: absolute !important;     /* Stick to bottom */
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 5 !important;
+    padding: 1rem 1.5rem !important;
+    box-sizing: border-box !important;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(250, 251, 252, 0.9)) !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 0 0 12px 12px !important;  /* ✨ PHASE 11.161: Match header border-radius */
+    height: 70px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.add-note-modal .modal-footer-modern .footer-actions {
+    display: flex !important;
+    gap: 0.75rem !important;
+    align-items: center !important;
+    margin-left: auto !important;   /* ✨ PHASE 7.27: Push actions to the right */
+}
+
+/* ✨ PHASE 7.26: Button styling for note modal footer */
+.add-note-modal .btn-cancel-modern {
+    background: #e0e0e0 !important;
+    color: #333 !important;
+    border: none !important;
+    padding: 0.6rem 1.2rem !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.add-note-modal .btn-cancel-modern:hover {
+    background: #d0d0d0 !important;
+    transform: translateY(-1px) !important;
+}
+
+.add-note-modal .btn-submit-note {
+    color: white !important;
+    border: none !important;
+    padding: 0.6rem 1.2rem !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    font-weight: 600 !important;
+}
+
+.add-note-modal .btn-submit-note:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+}
+
+.add-note-modal .btn-submit-note:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+/* ✨ PHASE 9.1: Delete button styling in note modal footer */
+.add-note-modal .btn-delete-note {
+    background: #e74c3c !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.6rem 1.2rem !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    font-weight: 600 !important;
+    margin-right: auto !important;     /* Push to left side of footer */
+}
+
+.add-note-modal .btn-delete-note:hover {
+    background: #c0392b !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3) !important;
+}
+
+.add-note-modal .btn-delete-note:active {
+    transform: translateY(0) !important;
+}
+
+/* ✨ PHASE 7.30: Resize handle - positioned inside modal-content at bottom-right corner */
+.add-note-modal .note-modal-resize-handle {
+    position: absolute !important;
+    width: 30px !important;
+    height: 30px !important;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+    opacity: 0.85 !important;
+    border: none !important;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%) !important;  /* Diamond shape */
+    cursor: se-resize !important;
+    z-index: 1051 !important;
+    pointer-events: auto !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    bottom: -15px !important;          /* Center diamond at bottom edge (30/2 = 15px) */
+    right: -15px !important;           /* Center diamond at right edge (30/2 = 15px) */
+    /* Diamond center now at modal-content's bottom-right corner */
+    transition: all 0.2s ease !important;
+}
+
+.add-note-modal .note-modal-resize-handle:hover {
+    opacity: 1 !important;
+    box-shadow: -2px -2px 12px rgba(0, 0, 0, 0.25) !important;
+    background: linear-gradient(135deg, #2980b9 0%, #1f6391 100%) !important;
+    transform: scale(1.15) !important;  /* Subtle scale on hover without breaking position */
+}
+
+/* ✨ PHASE 8.7: Allow Bootstrap fade animation while keeping backdrop invisible */
+.add-note-modal.fade {
+    /* Bootstrap controls opacity during fade animation - don't override it! */
+}
+
+/* ✨ PHASE 8.7+: Modal backdrop removed - no longer needed since backdrop={false} */
+
 /* Create Question Modal Styles */
 /* Override Bootstrap's modal-lg to prevent interference */
 .create-question-modal.modal .modal-dialog.modal-lg {
     max-width: none !important;
+
+}
+
+/* ✨ PHASE 11.161: Note Detail Modal - Draggable and Resizable */
+.note-detail-modal {
+    --note-detail-modal-x: 0px;
+    --note-detail-modal-y: 50px;
+    --note-detail-modal-width: 700px;
+    --note-detail-modal-height: 500px;
+}
+
+.note-detail-modal .modal-dialog {
+    position: fixed !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 700px;
+    height: 500px;
+    left: 0;
+    top: 50px;
+    z-index: 1050 !important;
+}
+
+.note-detail-modal .modal-content {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.note-detail-modal .note-detail-modal-header {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 10 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    cursor: grab !important;
+    user-select: none !important;
+    border-radius: 12px 12px 0 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    padding: 1rem 1.5rem !important;
+    color: white !important;
+    border: none !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+
+.note-detail-modal .modal-body {
+    position: absolute !important;
+    top: 80px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 70px !important;
+    overflow-y: auto !important;
+    padding: 2rem !important;
+    margin: 0 !important;
+}
+
+.note-detail-modal .modal-footer {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 5 !important;
+    padding: 1rem 1.5rem !important;
+    box-sizing: border-box !important;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(250, 251, 252, 0.9)) !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 0 0 12px 12px !important;
+    height: 70px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
 }
 
 /* ✨ PHASE 6.4: Ensure CSS variables are available */
@@ -1597,8 +2378,6 @@ html, body, #root {
 .form-group-modern {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
 }
 
 .form-label-modern {
@@ -1866,7 +2645,7 @@ html, body, #root {
     font-size: 1rem;
     font-weight: 600;
     color: #2c3e50;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .color-picker-grid {
@@ -5271,7 +6050,7 @@ html, body, #root {
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    margin: 0 2rem;  /* ✨ PHASE 7.15: Add left/right margin */
+    margin: 0 0rem;  /* ✨ PHASE 7.15: Add left/right margin */
 }
 
 .forum-thread-meta {
@@ -6124,4 +6903,327 @@ html, body, #root {
   flex-grow: 1;
   max-width: 50%;
   word-break: break-word;
+}
+/* ✨ PHASE X.X: CSS Classes to replace inline styles */
+
+/* Inline styles for keyframes */
+@keyframes pulse-quiz-badge {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 3px 10px rgba(23, 162, 184, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(23, 162, 184, 0.5);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 3px 10px rgba(23, 162, 184, 0.3);
+    }
+}
+
+.resume-quiz-badge {
+    animation: pulse-quiz-badge 2s infinite;
+}
+
+/* Filter container styles */
+.filter-controls-container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+}
+
+/* Filter group wrapper */
+.filter-group {
+    flex: 1 1 auto;
+}
+
+/* Filter search input - 50% width */
+.filter-group.filter-search {
+    flex-basis: 50%;
+}
+
+/* Filter bagian dropdown - 25% width */
+.filter-group.filter-bagian {
+    flex-basis: 25%;
+}
+
+/* Filter pelajaran dropdown - 25% width */
+.filter-group.filter-pelajaran {
+    flex-basis: 25%;
+}
+
+/* Filter color dropdown - 20% width */
+.filter-group.filter-color {
+    flex-basis: 20%;
+}
+
+/* Note filter container - 5 equally-spaced items */
+.note-filter-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+}
+
+.note-filter-controls .filter-group {
+    flex: 1 1 20%;
+}
+
+/* Filter label style */
+.filter-label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.filter-label i {
+    margin-right: 0.5rem;
+}
+
+.filter-label.label-blue i {
+    color: #3498db;
+}
+
+.filter-label.label-purple i {
+    color: #9b59b6;
+}
+
+.filter-label.label-red i {
+    color: #e74c3c;
+}
+
+.filter-label.label-orange i {
+    color: #f39c12;
+}
+
+/* Filter input field base styles */
+.filter-input,
+.filter-select {
+    width: 100%;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    background-color: #ffffff;
+    color: #2c3e50;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.filter-select {
+    cursor: pointer;
+}
+
+/* Focus state for search input (blue) */
+.filter-input.filter-search:focus,
+.filter-input.filter-search:focus-within {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Focus state for bagian dropdown (purple) */
+.filter-select.filter-bagian:focus,
+.filter-select.filter-bagian:focus-within {
+    border-color: #9b59b6;
+    box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.1);
+}
+
+/* Focus state for pelajaran dropdown (red) */
+.filter-select.filter-pelajaran:focus,
+.filter-select.filter-pelajaran:focus-within {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+/* Focus state for color dropdown (orange) */
+.filter-select.filter-color:focus,
+.filter-select.filter-color:focus-within {
+    border-color: #f39c12;
+    box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+}
+
+/* Disabled state for pelajaran dropdown */
+.filter-select.filter-pelajaran:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Placeholder avatar styles */
+.avatar-placeholder-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #e8f4f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.avatar-placeholder-circle i {
+    color: #016b87;
+    font-size: 1.5rem;
+}
+
+/* Like and report button states */
+.forum-like-btn.liked,
+.forum-report-btn.reported {
+    opacity: 0.8;
+}
+
+.forum-like-btn.liked {
+    color: #ff4757;
+}
+
+.forum-report-btn.reported {
+    color: #d32f2f;
+}
+
+/* Question card context badges */
+.question-context-badge {
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid;
+    white-space: nowrap;
+}
+
+.question-context-badge.bagian {
+    background-color: #e8f4f8;
+    color: #016b87;
+    border-color: #a8d8dc;
+}
+
+.question-context-badge.pelajaran {
+    background-color: #f0e8f4;
+    color: #662d91;
+    border-color: #d4b5e0;
+}
+
+/* Question meta container with flex layout */
+.question-meta-container {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.question-meta-left {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.question-meta-right {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Forum thread header flexbox */
+.forum-thread-title-area {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+}
+
+.forum-thread-back-button {
+    min-width: 50px;
+    padding: 0.5rem 1rem;
+    flex-shrink: 0;
+}
+
+.forum-thread-title {
+    margin: 0;
+    flex-grow: 1;
+}
+
+/* Forum header footer layout */
+.forum-header-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.forum-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+.forum-breadcrumb i {
+    margin-right: 0.3rem;
+}
+
+.forum-thread-meta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Forum bottom area with badges and buttons */
+.forum-thread-bottom {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.forum-thread-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Show context badge styles when available */
+.question-card-header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.question-card-badges {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+/* Question meta item icon colors */
+.question-meta-item i.fas.fa-user {
+    color: #3498db;
+    margin-right: 0.5rem;
+}
+
+.question-meta-item i.fas.fa-clock {
+    color: #f39c12;
+    margin-right: 0.5rem;
+}
+
+.question-meta-item i.fas.fa-comments {
+    margin-right: 0.5rem;
+}
+
+/* Reported button checkmark styling */
+.forum-report-btn.reported span {
+    margin-left: 0.25rem;
+    font-size: 0.7rem;
+    display: inline-block;
 }

@@ -46,7 +46,6 @@ const AdvancedSearchForm = ({
                 setSuggestions(data.suggestions || []);
                 setShowSuggestions(true);
             } catch (error) {
-                console.error('Error fetching suggestions:', error);
             }
         } else {
             setSuggestions([]);
@@ -79,7 +78,7 @@ const AdvancedSearchForm = ({
         e.preventDefault();
         
         if (query.trim() === '') {
-            alert('Please enter a search query');
+            alert('Silakan masukkan kueri pencarian');
             return;
         }
 

@@ -737,9 +737,7 @@ function SortableLessonItem({
     getMediaSourceForPreview,  // ✨ PHASE 4.192: Get actual saved media for preview only
     switchLessonMediaSource,
     extractYoutubeIdLesson,  // ✨ PHASE 4.173: Extract YouTube ID for preview
-    extractGoogleDriveFileIdLesson,  // ✨ PHASE 4.173: Extract Google Drive ID for preview
     validateYoutubeLessonUrl,  // ✨ PHASE 4.190: Validate YouTube URLs
-    validateGoogleDriveLessonUrl,  // ✨ PHASE 4.190: Validate Google Drive URLs
     previewVisibility,  // ✨ PHASE 4.191: Preview visibility toggle state
     togglePreviewVisibility,  // ✨ PHASE 4.191: Toggle preview visibility
     course,
@@ -1061,7 +1059,7 @@ function SortableLessonItem({
                     {/* Right Column: File Upload and Preview */}
                     <div className="col-md-6">
                         {/* ✨ PHASE 4.173: Video Preview Section - Shows currently selected media */}
-                        {(item?.youtubeLink || item?.gdriveLink || item?.uploadedFile) && (
+                        {(item?.youtubeLink || item?.uploadedFile) && (
                             <div className="mb-4">
                                 <div className="card border-info shadow-sm">
                                     <div className="card-header bg-info text-white d-flex align-items-center justify-content-between" style={{ cursor: 'pointer' }} onClick={() => togglePreviewVisibility(variantIndex, itemIndex)}>
@@ -1086,18 +1084,6 @@ function SortableLessonItem({
                                             </div>
                                         )}
                                         
-                                        {/* Google Drive Preview */}
-                                        {item?.gdriveLink && getMediaSourceForPreview(item) === 'google_drive' && (
-                                            <div className="ratio ratio-16x9 mb-2">
-                                                <iframe
-                                                    src={`https://drive.google.com/file/d/${extractGoogleDriveFileIdLesson(item.gdriveLink) || ''}/preview`}
-                                                    title="Google Drive video preview"
-                                                    sandbox="allow-scripts allow-same-origin"
-                                                    style={{ width: '100%', height: '100%', border: 'none' }}
-                                                ></iframe>
-                                            </div>
-                                        )}
-                                        
                                         {/* Uploaded File Preview */}
                                         {item?.uploadedFile && getMediaSourceForPreview(item) === 'upload' && (
                                             <div>
@@ -1118,222 +1104,13 @@ function SortableLessonItem({
                             </div>
                         )}
 
-                        {/* ✨ PHASE 4.172: Enhanced Media Source Selector for Lessons - Matching VideoUpload.jsx Pattern */}
+                        {/* ✨ PHASE X.X: File Upload Section - Upload Only System */}
                         <div className="mb-3">
                             <label className="form-label fw-bold">
-                                <i className="fas fa-question-circle me-2 text-info"></i>
-                                {item?.gdriveLink || item?.youtubeLink || item?.uploadedFile ? "Ubah Sumber Media Pelajaran:" : "Pilih Sumber Media Pelajaran:"}
+                                <i className="fas fa-cloud-upload-alt me-2 text-success"></i>
+                                Unggah File Media Pelajaran
                             </label>
-                            <div className="btn-group w-100 mb-3" role="group">
-
-                                <input 
-                                    type="radio" 
-                                    className="btn-check" 
-                                    name={`media-source-${variantIndex}-${itemIndex}`} 
-                                    id={`media-youtube-${variantIndex}-${itemIndex}`}
-                                    checked={getSelectedMediaSource(variantIndex, itemIndex, item) === 'youtube'}
-                                    onChange={() => switchLessonMediaSource(variantIndex, itemIndex, 'youtube')}
-                                />
-                                <label className="btn btn-outline-danger" htmlFor={`media-youtube-${variantIndex}-${itemIndex}`}>
-                                    <i className="fab fa-youtube me-2"></i>
-                                    YouTube
-                                </label>
-
-                                <input 
-                                    type="radio" 
-                                    className="btn-check" 
-                                    name={`media-source-${variantIndex}-${itemIndex}`} 
-                                    id={`media-google-${variantIndex}-${itemIndex}`}
-                                    checked={getSelectedMediaSource(variantIndex, itemIndex, item) === 'google_drive'}
-                                    onChange={() => switchLessonMediaSource(variantIndex, itemIndex, 'google_drive')}
-                                />
-                                <label className="btn btn-outline-primary" htmlFor={`media-google-${variantIndex}-${itemIndex}`}>
-                                    <i className="fab fa-google me-2"></i>
-                                    GDrive
-                                </label>
-
-                                <input 
-                                    type="radio" 
-                                    className="btn-check" 
-                                    name={`media-source-${variantIndex}-${itemIndex}`} 
-                                    id={`media-upload-${variantIndex}-${itemIndex}`}
-                                    checked={getSelectedMediaSource(variantIndex, itemIndex, item) === 'upload'}
-                                    onChange={() => switchLessonMediaSource(variantIndex, itemIndex, 'upload')}
-                                />
-                                <label className="btn btn-outline-success" htmlFor={`media-upload-${variantIndex}-${itemIndex}`}>
-                                    <i className="fas fa-cloud-upload-alt me-2"></i>
-                                    Upload
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* ✨ PHASE 4.172: Google Drive Link Input with validation */}
-                        {getSelectedMediaSource(variantIndex, itemIndex, item) === 'google_drive' && (
-                            <div className="mb-3">
-                                <label className="form-label fw-bold">
-                                    <i className="fab fa-google me-2 text-primary"></i>
-                                    Masukkan URL Google Drive Pelajaran
-                                </label>
-                                <div className="input-group">
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        placeholder="https://drive.google.com/file/d/FILE_ID/view?usp=sharing"
-                                        value={lessonLinkInputs[`${variantIndex}_${itemIndex}_gdrive`] ?? (item?.gdriveLink || '')}
-                                        onChange={(e) => {
-                                            // ✨ PHASE 4.175: Use temporary state for GDrive input - don't auto-save yet
-                                            setLessonLinkInputs(prev => ({
-                                                ...prev,
-                                                [`${variantIndex}_${itemIndex}_gdrive`]: e.target.value
-                                            }));
-                                        }}
-
-                                    />
-                                    <button
-                                        className="btn btn-primary"
-                                        type="button"
-                                        onClick={() => {
-                                            // ✨ PHASE 4.175: Get link from temporary state and validate
-                                            const linkValue = lessonLinkInputs[`${variantIndex}_${itemIndex}_gdrive`] ?? '';
-                                            const validation = validateGoogleDriveLessonUrl(linkValue);
-                                            if (validation.isValid) {
-                                                // ✨ PHASE 4.193: Clear other media sources to prevent backend conflicts
-                                                // When saving GDrive link, clear YouTube and Upload to avoid conflicting data
-                                                handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
-                                                // ✨ PHASE 4.194: Delete uploaded file from server when switching to GDrive
-                                                // Use the item prop that's passed to this component
-                                                if (item?.uploadedFile) {
-                                                    handleDeleteLessonFile(variantIndex, itemIndex, item.uploadedFile);
-                                                }
-                                                handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
-                                                // Update actual item state and auto-save
-                                                handleLessonChange(variantIndex, itemIndex, "gdriveLink", linkValue);
-                                                // ✨ PHASE 4.189: Set media_source to 'google_drive' so it updates in admin panel
-                                                handleLessonChange(variantIndex, itemIndex, "media_source", "google_drive");
-                                                Toast().fire({
-                                                    icon: "success",
-                                                    title: "Link Google Drive Ditambahkan",
-                                                    text: "Link pelajaran dari Google Drive telah ditambahkan!",
-                                                    timer: 2000,
-                                                    showConfirmButton: false
-                                                });
-                                                autoSaveCurriculum();
-                                                // Clear temporary input
-                                                setLessonLinkInputs(prev => {
-                                                    const updated = { ...prev };
-                                                    delete updated[`${variantIndex}_${itemIndex}_gdrive`];
-                                                    return updated;
-                                                });
-                                            } else {
-                                                Toast().fire({
-                                                    icon: "warning",
-                                                    title: "URL Tidak Valid",
-                                                    text: validation.error,
-                                                });
-                                            }
-                                        }}
-                                        disabled={!(lessonLinkInputs[`${variantIndex}_${itemIndex}_gdrive`] ?? '').trim()}
-                                    >
-                                        <i className="fas fa-check me-2"></i>
-                                        Tambahkan
-                                    </button>
-                                </div>
-                                
-                                <small className="text-muted d-block mt-2">
-                                    <i className="fas fa-info-circle me-1"></i>
-                                    Format yang didukung: https://drive.google.com/file/d/FILE_ID/view (file harus dibagikan secara publik)
-                                </small>
-                            </div>
-                        )}
-
-                        {/* ✨ PHASE 4.172: YouTube Link Input with validation */}
-                        {getSelectedMediaSource(variantIndex, itemIndex, item) === 'youtube' && (
-                            <div className="mb-3">
-                                <label className="form-label fw-bold">
-                                    <i className="fab fa-youtube me-2 text-danger"></i>
-                                    Masukkan URL YouTube Pelajaran
-                                </label>
-                                <div className="input-group">
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        placeholder="https://www.youtube.com/watch?v=VIDEO_ID atau https://youtu.be/VIDEO_ID"
-                                        value={lessonLinkInputs[`${variantIndex}_${itemIndex}_youtube`] ?? (item?.youtubeLink || '')}
-                                        onChange={(e) => {
-                                            // ✨ PHASE 4.175: Use temporary state for YouTube input - don't auto-save yet
-                                            setLessonLinkInputs(prev => ({
-                                                ...prev,
-                                                [`${variantIndex}_${itemIndex}_youtube`]: e.target.value
-                                            }));
-                                        }}
-
-                                    />
-                                    <button
-                                        className="btn btn-danger"
-                                        type="button"
-                                        onClick={() => {
-                                            // ✨ PHASE 4.175: Get link from temporary state and validate
-                                            const linkValue = lessonLinkInputs[`${variantIndex}_${itemIndex}_youtube`] ?? '';
-                                            const validation = validateYoutubeLessonUrl(linkValue);
-                                            if (validation.isValid) {
-                                                // ✨ PHASE 4.193: Clear other media sources to prevent backend conflicts
-                                                // When saving YouTube link, clear GDrive and Upload to avoid conflicting data
-                                                handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
-                                                // ✨ PHASE 4.194: Delete uploaded file from server when switching to YouTube
-                                                // Use the item prop that's passed to this component
-                                                if (item?.uploadedFile) {
-                                                    handleDeleteLessonFile(variantIndex, itemIndex, item.uploadedFile);
-                                                }
-                                                handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
-                                                // Update actual item state and auto-save
-                                                handleLessonChange(variantIndex, itemIndex, "youtubeLink", linkValue);
-                                                // ✨ PHASE 4.189: Set media_source to 'youtube' so it updates in admin panel
-                                                handleLessonChange(variantIndex, itemIndex, "media_source", "youtube");
-                                                Toast().fire({
-                                                    icon: "success",
-                                                    title: "Link YouTube Ditambahkan",
-                                                    text: "Link pelajaran dari YouTube telah ditambahkan!",
-                                                    timer: 2000,
-                                                    showConfirmButton: false
-                                                });
-                                                autoSaveCurriculum();
-                                                // Clear temporary input
-                                                setLessonLinkInputs(prev => {
-                                                    const updated = { ...prev };
-                                                    delete updated[`${variantIndex}_${itemIndex}_youtube`];
-                                                    return updated;
-                                                });
-                                            } else {
-                                                Toast().fire({
-                                                    icon: "warning",
-                                                    title: "URL Tidak Valid",
-                                                    text: validation.error,
-                                                });
-                                            }
-                                        }}
-                                        disabled={!(lessonLinkInputs[`${variantIndex}_${itemIndex}_youtube`] ?? '').trim()}
-                                    >
-                                        <i className="fas fa-check me-2"></i>
-                                        Tambahkan
-                                    </button>
-                                </div>
-                                
-                                <small className="text-muted d-block mt-2">
-                                    <i className="fas fa-info-circle me-1"></i>
-                                    Format yang didukung: https://youtube.com/watch?v=VIDEO_ID atau https://youtu.be/VIDEO_ID
-                                </small>
-                            </div>
-                        )}
-
-
-                        {/* ✨ PHASE 4.172: File Upload Section - Enhanced with better docs matching VideoUpload */}
-                        {getSelectedMediaSource(variantIndex, itemIndex, item) === 'upload' && (
-                            <div className="mb-3">
-                                <label className="form-label fw-bold">
-                                    <i className="fas fa-cloud-upload-alt me-2 text-success"></i>
-                                    Unggah File Media Pelajaran
-                                </label>
-                                <div className="curriculum-file-upload-wrapper">
+                            <div className="curriculum-file-upload-wrapper">
                                     <div className="input-group mb-2">
                                         <input
                                             type="file"
@@ -1501,7 +1278,6 @@ function SortableLessonItem({
 
                                 </div>
                             </div>
-                        )}
 
                         {/* ✨ PHASE 4.108: Upload Progress Bar for Curriculum Media */}
                         {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.isUploading && (
@@ -1817,24 +1593,6 @@ function CourseEditCurriculum() {
         return null;
     };
 
-    // ✨ PHASE 4.172: Extract Google Drive file ID from URL (matching VideoUpload pattern)
-    const extractGoogleDriveFileIdLesson = (url) => {
-        if (!url) return null;
-        try {
-            // Format 1: https://drive.google.com/file/d/FILE_ID/view...
-            const match1 = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-            if (match1 && match1[1]) return match1[1];
-            
-            // Format 2: https://drive.google.com/uc?id=FILE_ID...
-            const match2 = url.match(/[?&]id=([a-zA-Z0-9-_]+)/);
-            if (match2 && match2[1]) return match2[1];
-            
-            return null;
-        } catch {
-            return null;
-        }
-    };
-
     // Helper functions for file handling
     const getFileIcon = (fileUrl) => {
         if (!fileUrl) return "fas fa-file";
@@ -1905,24 +1663,6 @@ function CourseEditCurriculum() {
         }
 
         return { isValid: true, videoId };
-    };
-
-    // ✨ PHASE 4.172: Validate Google Drive URL format
-    const validateGoogleDriveLessonUrl = (url) => {
-        if (!url.trim()) {
-            return { isValid: false, error: "URL Google Drive diperlukan" };
-        }
-
-        if (!url.includes("drive.google.com") && !url.includes("drive.usercontent.google.com")) {
-            return { isValid: false, error: "URL harus dari Google Drive. Gunakan: https://drive.google.com/file/d/FILE_ID/view" };
-        }
-
-        const fileId = extractGoogleDriveFileIdLesson(url);
-        if (!fileId) {
-            return { isValid: false, error: "Tidak dapat mengekstrak ID file dari URL Google Drive. Pastikan URL benar." };
-        }
-
-        return { isValid: true, fileId };
     };
 
     /**
@@ -2195,7 +1935,7 @@ function CourseEditCurriculum() {
                 {
                     title: "",
                     order: 0,
-                    items: [{ title: "", description: "", gdriveLink: "", youtubeLink: "", preview: false, order: 0, duration_seconds: null, duration_formatted: null, media_source: 'google_drive' }],
+                    items: [{ title: "", description: "", youtubeLink: "", preview: false, order: 0, duration_seconds: null, duration_formatted: null, media_source: 'upload' }],
                 }
             ];
             
@@ -2225,7 +1965,7 @@ function CourseEditCurriculum() {
             setVariants([
                 {
                     title: "",
-                    items: [{ title: "", description: "", gdriveLink: "", youtubeLink: "", preview: false }],
+                    items: [{ title: "", description: "", youtubeLink: "", preview: false }],
                 },
             ]);
             
@@ -2572,26 +2312,19 @@ function CourseEditCurriculum() {
         
         // ✨ PHASE 4.65: Extract video duration with smart fallback strategy
         // YouTube: Use yt-dlp (100% reliable)
-        // Google Drive: Also use yt-dlp (can extract from GD video links)
-        if ((propertyName === 'gdriveLink' || propertyName === 'youtubeLink') && value && value.trim()) {
+        if ((propertyName === 'youtubeLink') && value && value.trim()) {
             const linkStr = value.trim();
             const isYouTube = linkStr.includes('youtube.com') || linkStr.includes('youtu.be');
-            const isGoogleDrive = linkStr.includes('drive.google.com');
             
-            if (isYouTube || isGoogleDrive) {
-                // Attempt auto-extraction for both YouTube and Google Drive
-                // Both are supported by yt-dlp now
+            if (isYouTube) {
+                // Attempt auto-extraction for YouTube
                 
-                if (isGoogleDrive) {
-                    console.log('[Curriculum] Google Drive detected - attempting duration extraction: ' + linkStr);
+                if (isYouTube) {
+                    console.log(`[Curriculum] YouTube detected - attempting duration extraction: ${linkStr}`);
                 }
                 
-                // For YouTube or Google Drive, attempt extraction
-                if (isYouTube || isGoogleDrive) {
-                    if (isYouTube) {
-                        console.log(`[Curriculum] YouTube detected - attempting duration extraction: ${linkStr}`);
-                    }
-                    
+                // For YouTube, attempt extraction
+                if (isYouTube) {
                     try {
                         // ✨ PHASE 4.62: Fixed API path - use relative path without v1/ (already in baseURL)
                         const response = await useAxios.post('media/video-metadata/', {
@@ -2610,17 +2343,19 @@ function CourseEditCurriculum() {
                                 [key]: response.data.duration_seconds
                             }));
                             
-                            // If item duration is not yet set, also set it as a convenience (user can accept the extracted value)
-                            // But if duration is already set, don't override it
+                            // ✨ PHASE 4.254: ALWAYS update duration when extraction succeeds for current media source
+                            // When user adds/updates YouTube or GDrive link, the newly extracted duration should
+                            // automatically replace any previous duration from other media sources
+                            // This ensures the badge shows the current media's duration, not stale values
                             setVariants(prevVariants => {
                                 const updated = [...prevVariants];
                                 if (updated[variantIndex] && updated[variantIndex].items && updated[variantIndex].items[itemIndex]) {
                                     const item = updated[variantIndex].items[itemIndex];
-                                    // Only set duration if not already set by user
-                                    if (!item.duration_seconds || item.duration_seconds === 0) {
-                                        item.duration_seconds = response.data.duration_seconds;
-                                        item.duration_formatted = response.data.duration_formatted;
-                                    }
+                                    // ✨ PHASE 4.254: Always set extracted duration - this ensures the badge updates
+                                    // Don't check if duration was previously set. If we're successfully extracting,
+                                    // we want the new extracted value to be displayed in the badge
+                                    item.duration_seconds = response.data.duration_seconds;
+                                    item.duration_formatted = response.data.duration_formatted;
                                 }
                                 return updated;
                             });
@@ -2971,7 +2706,7 @@ function CourseEditCurriculum() {
             order: newOrder, // ✅ Assign order to new lesson
             duration_seconds: null,  // ✨ PHASE 4.43.9: Initialize duration_seconds for new items
             duration_formatted: null,  // ✨ PHASE 4.44: Initialize duration_formatted for new items
-            media_source: 'google_drive'  // ✨ PHASE 4.187: Default to Google Drive for new items
+            media_source: 'upload'  // Default to upload for new items
         });
 
         setVariants(updatedVariants);
@@ -3765,7 +3500,7 @@ function CourseEditCurriculum() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-course-edit-curriculum-page pt-5 pb-5" style={{ display: 'flex', alignItems: 'center' }}>
+                <section className="instructor-course-edit-curriculum-page" style={{ display: 'flex', alignItems: 'center' }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -3789,7 +3524,7 @@ function CourseEditCurriculum() {
     return (
         <>
             <BaseHeader />
-            <section className="instructor-course-edit-curriculum-page pt-5 pb-5">
+            <section className="instructor-course-edit-curriculum-page">
                 <div className="container">
                     <Header />
                     <div className="row">
@@ -3954,9 +3689,7 @@ function CourseEditCurriculum() {
                                                                                     getMediaSourceForPreview={getMediaSourceForPreview}  // ✨ PHASE 4.192: Get actual saved media for preview
                                                                                     switchLessonMediaSource={switchLessonMediaSource}
                                                                                     extractYoutubeIdLesson={extractYoutubeIdLesson}  // ✨ PHASE 4.173: Extract YouTube ID for preview
-                                                                                    extractGoogleDriveFileIdLesson={extractGoogleDriveFileIdLesson}  // ✨ PHASE 4.173: Extract Google Drive ID for preview
                                                                                     validateYoutubeLessonUrl={validateYoutubeLessonUrl}  // ✨ PHASE 4.190: Validate YouTube URLs
-                                                                                    validateGoogleDriveLessonUrl={validateGoogleDriveLessonUrl}  // ✨ PHASE 4.190: Validate Google Drive URLs
                                                                                     previewVisibility={previewVisibility}  // ✨ PHASE 4.191: Preview visibility toggle
                                                                                     togglePreviewVisibility={togglePreviewVisibility}  // ✨ PHASE 4.191: Toggle preview
                                                                                     course={course}

@@ -12,31 +12,36 @@ import { SkeletonPage } from "../../components/skeletons";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import { getImageUrl, getLevelText } from "../../utils/courseUtils";
 import { calculateTotalDuration, parseDurationToSeconds } from "../../utils/durationUtils";
+// ✨ PHASE 11.12: Import caching hook for seamless navigation
+import { usePageCache } from "../../utils/usePageCache";
 import "./Courses.css";
 
 function Courses() {
     const [courses, setCourses] = useState([]);
-    const [fetching, setFetching] = useState(true);
     const isCollapsed = useSidebarCollapse();
 
-    const fetchData = () => {
-        setFetching(true);
-        useAxios.get(`student/course-list/${UserData()?.user_id}/`)
-            .then((res) => {
-                // Handle both array and paginated response formats
-                const courseData = Array.isArray(res.data) ? res.data : (res.data?.results || []);
-                setCourses(courseData);
-                setFetching(false);
-            })
-            .catch((error) => {
-                console.error("Error fetching courses:", error);
-                setFetching(false);
-            });
+    const fetchData = async () => {
+        const res = await useAxios.get(`student/course-list/${UserData()?.user_id}/`);
+        // Handle both array and paginated response formats
+        const courseData = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+        return courseData;
     };
 
+    // ✨ PHASE 11.12: Use page cache to avoid reloading when navigating
+    const { data: cachedCourses, loading: fetching } = usePageCache(
+        'student-courses',
+        fetchData,
+        {
+            showLoadingOnStale: false
+        }
+    );
+
+    // Sync cached data to state
     useEffect(() => {
-        fetchData();
-    }, []);
+        if (cachedCourses) {
+            setCourses(cachedCourses);
+        }
+    }, [cachedCourses]);
 
     const handleSearch = (event) => {
         const query = event.target.value.toLowerCase();
@@ -91,7 +96,7 @@ function Courses() {
         return (
             <>
                 <BaseHeader />
-                <section className="pt-5 pb-5 modern-course-page" style={{ minHeight: "calc(100vh - 120px)" }}>
+                <section className="modern-course-page" style={{ minHeight: "calc(100vh - 120px)" }}>
                     <div className="container">
                         <Header />
                         <div className="row mt-0 md-4">
@@ -109,7 +114,7 @@ function Courses() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5 modern-course-page">
+            <section className="modern-course-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 md-4">
@@ -350,4 +355,4 @@ function Courses() {
     )
 }
 
-export default Courses
+export default React.memo(Courses)

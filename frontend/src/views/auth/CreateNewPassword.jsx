@@ -50,15 +50,15 @@ function CreateNewPassword() {
     const newErrors = {};
 
     if (!password.trim()) {
-      newErrors.password = "Password is required";
+      newErrors.password = "Kata sandi diperlukan";
     } else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long";
+      newErrors.password = "Kata sandi harus minimal 8 karakter";
     }
 
     if (!confirmPassword.trim()) {
-      newErrors.confirmPassword = "Please confirm your password";
+      newErrors.confirmPassword = "Silakan konfirmasi kata sandi Anda";
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = "Kata sandi tidak cocok";
     }
 
     setErrors(newErrors);
@@ -92,7 +92,7 @@ function CreateNewPassword() {
     if (!validateForm()) {
       Toast().fire({
         icon: "error",
-        title: "Please fix the errors in the form",
+        title: "Silakan perbaiki kesalahan dalam formulir",
       });
       return;
     }

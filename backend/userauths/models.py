@@ -241,7 +241,9 @@ class User(AbstractUser):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.URLField(max_length=500, null=True, blank=True)  # ✨ PHASE 3: Changed from FileField to URLField for external URLs
+    # ✨ PHASE 11.3: Changed back to FileField to support local avatar uploads
+    # Backend now supports both local file uploads (FileField) and external URLs
+    image = models.FileField(upload_to='user_profile_images/', null=True, blank=True)
     full_name = models.CharField(max_length=100)
     country = models.CharField(max_length=100, null=True, blank=True)
     about = models.TextField(null=True, blank=True)

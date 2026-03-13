@@ -2,31 +2,13 @@
    INSTRUCTOR PROFILE STYLES
    ======================================== */
 
-/* ================================
-   GAP BETWEEN HEADER AND DASHBOARD
-   ================================ */
-
-.instructor-header-card {
-    margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
-    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
-}
-
-/* Protect header card gap from parent overrides */
-.modern-dashboard .row > .col-12 > .instructor-header-card,
-.modern-dashboard .instructor-header-card {
-    margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
-    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
-}
-
 /* Main Page Layout */
 .instructor-profile-page.modern-profile-page {
     background: transparent;
     min-height: 100vh;
-    padding: 3rem 0;
-    padding-top: calc(70px + 3rem) !important;
-    padding-bottom: 3rem !important;
+    padding: var(--page-top-spacing) 0;
+    padding-top: var(--page-top-spacing) !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
     margin-bottom: 8rem;
     overflow-x: hidden;
     overflow-y: visible;

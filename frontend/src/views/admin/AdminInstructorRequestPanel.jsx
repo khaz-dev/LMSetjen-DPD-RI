@@ -42,7 +42,6 @@ function AdminInstructorRequestPanel() {
             console.log(`[AdminInstructorRequestPanel] Found ${data.length} requests`);
             setRequests(data);
         } catch (error) {
-            console.error("Error fetching instructor requests:", error);
             Toast().fire({
                 icon: "error",
                 title: "Gagal memuat permintaan",

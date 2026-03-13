@@ -25,7 +25,6 @@ export default function RecommendationMetricsWidget() {
       setStats(statsResponse.data);
       setRecommendations(recsResponse.data.results || recsResponse.data || []);
     } catch (error) {
-      console.error('Failed to fetch metrics:', error);
       Toast().fire({
         icon: 'error',
         title: 'Gagal mengambil metrik rekomendasi'

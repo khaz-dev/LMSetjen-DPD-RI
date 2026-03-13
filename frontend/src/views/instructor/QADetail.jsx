@@ -172,5 +172,5 @@ function QADetail() {
     );
 }
 
-export default QADetail;
+export default React.memo(QADetail);
 

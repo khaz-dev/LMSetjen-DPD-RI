@@ -158,7 +158,7 @@ function Sidebar() {
                                 </div>
                                 <span className="nav-text">Forum T&J</span>
                             </Link>
-                            
+
                             <Link 
                                 className={`instructor-nav-link ${isActive("/instructor/notifications") ? "active" : ""}`} 
                                 to="/instructor/notifications/"

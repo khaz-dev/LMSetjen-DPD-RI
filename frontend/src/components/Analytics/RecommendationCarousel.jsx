@@ -24,7 +24,6 @@ export default function RecommendationCarousel() {
       const response = await apiInstance.get('analytics/recommendations/?limit=6');
       setRecommendations(response.data.results || response.data || []);
     } catch (error) {
-      console.error('Failed to fetch recommendations:', error);
     }
     setLoading(false);
   };
@@ -39,7 +38,6 @@ export default function RecommendationCarousel() {
         )
       );
     } catch (error) {
-      console.error('Failed to track click:', error);
     }
   };
 
@@ -52,10 +50,7 @@ export default function RecommendationCarousel() {
           rec.id === recommendationId ? { ...rec, enrolled: true } : rec
         )
       );
-      // Optionally navigate to course or show success message
-      console.log('Enrolled in course:', courseId);
     } catch (error) {
-      console.error('Failed to track enrollment:', error);
     }
   };
 

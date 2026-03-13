@@ -6,9 +6,9 @@
 .student-profile-page.modern-profile-page {
     min-height: 100vh;
     background: transparent;
-    padding: 3rem 0;
-    padding-top: calc(70px + 3rem) !important;
-    padding-bottom: 3rem !important;
+    padding: var(--page-top-spacing) 0;
+    padding-top: var(--page-top-spacing) !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
     margin-top: 0 !important;
     margin-bottom: 8rem;
     overflow-x: hidden; /* ✨ PHASE 8b: Prevent horizontal scroll from row width calc */
@@ -20,7 +20,7 @@
 }
 
 .student-profile-page.modern-profile-page.pb-5 {
-    padding-bottom: 3rem !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
 }
 
 /* ========================================
@@ -85,7 +85,7 @@
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    padding: 30px;
+    padding: 25px;
     border: 1px solid rgba(102, 126, 234, 0.1);
     box-shadow: 0 8px 32px rgba(102, 126, 234, 0.12);
     position: relative; /* Create positioning context */
@@ -106,14 +106,15 @@
 
 .student-profile-page .modern-form-section .d-flex.align-items-center {
     gap: 6rem;
-    justify-content: left;
+    justify-content: center;
     align-items: center;
-    padding-left: 5rem;
+    flex-wrap: wrap;
 }
 
 .student-profile-page .form-section-title {
     color: #2c3e50;
     font-weight: 600;
+    margin-bottom: 1rem !important;
 }
 
 .student-profile-page .form-section-icon {
@@ -252,17 +253,17 @@
 }
 
 .student-profile-page .modern-file-input {
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    padding: 12px;
-    transition: all 0.3s ease;
-    font-size: 1rem;
+    border: 2px solid #e9ecef !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    transition: all 0.3s ease !important;
+    font-size: 1rem !important;
 }
 
 .student-profile-page .modern-file-input:focus {
-    border-color: var(--theme-primary);
+    border-color: var(--theme-primary) !important;
     box-shadow: 0 0 0 0.2rem var(--theme-shadow-color) !important;
-    outline: none;
+    outline: none !important;
 }
 
 .student-profile-page .file-help-text {
@@ -284,43 +285,43 @@
 }
 
 .student-profile-page .modern-input {
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    padding: 15px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background: #fafafa;
+    border: 2px solid #e9ecef !important;
+    border-radius: 12px !important;
+    padding: 15px !important;
+    font-size: 1rem !important;
+    transition: all 0.3s ease !important;
+    background: #fafafa !important;
 }
 
 .student-profile-page .modern-input:hover:not(:disabled):not(:focus) {
-    border-color: #adb5bd;
-    background-color: #f0f1f3;
+    border-color: #adb5bd !important;
+    background-color: #f0f1f3 !important;
 }
 
 .student-profile-page .modern-input:focus {
-    border-color: var(--theme-primary);
+    border-color: var(--theme-primary) !important;
     box-shadow: 0 0 0 0.2rem var(--theme-shadow-color) !important;
-    background: white;
-    outline: none;
+    background: white !important;
+    outline: none !important;
 }
 
 .student-profile-page .modern-input:disabled {
-    background-color: #f8f9fa;
-    border-color: #dee2e6;
-    color: #343a40;
-    cursor: default;
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #343a40 !important;
+    cursor: default !important;
 }
 
 .student-profile-page .modern-textarea {
-    resize: vertical;
-    min-height: 120px;
+    resize: vertical !important;
+    min-height: 120px !important;
 }
 
 .student-profile-page .modern-textarea:disabled {
-    background-color: #f8f9fa;
-    border-color: #dee2e6;
-    color: #343a40;
-    cursor: default;
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #343a40 !important;
+    cursor: default !important;
 }
 
 .student-profile-page .required-asterisk {

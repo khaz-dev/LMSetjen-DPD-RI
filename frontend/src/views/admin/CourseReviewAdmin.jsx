@@ -292,4 +292,4 @@ function CourseReviewAdmin() {
     );
 }
 
-export default CourseReviewAdmin;
+export default React.memo(CourseReviewAdmin);

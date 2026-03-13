@@ -379,4 +379,4 @@ function ReviewAbuseAdmin() {
     );
 }
 
-export default ReviewAbuseAdmin;
+export default React.memo(ReviewAbuseAdmin);

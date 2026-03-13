@@ -11,73 +11,95 @@ import UserData from "../plugin/UserData";
 import { calculateTotalDuration, parseDurationToSeconds, formatDurationWithJP, secondsToJP } from "../../utils/durationUtils";
 import { getImageUrl } from "../../utils/courseUtils";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
+// ✨ PHASE 11.12: Import caching hook for seamless navigation
+import { usePageCache } from "../../utils/usePageCache";
 import "./Dashboard.css";
 
 function Dashboard() {
     const [courses, setCourses] = useState([]);
     const [stats, setStats] = useState([]);
-    const [fetching, setFetching] = useState(true);
     const [recentActivity, setRecentActivity] = useState([]);
     const [progressData, setProgressData] = useState([]);
     const isCollapsed = useSidebarCollapse();
 
-    const fetchData = () => {
-        setFetching(true);
-        useAxios.get(`student/summary/${UserData()?.user_id}/`).then((res) => {
-            setStats(res.data[0]);
-        });
+    const fetchData = async () => {
+        const promises = await Promise.all([
+            useAxios.get(`student/summary/${UserData()?.user_id}/`).then((res) => res.data[0]),
+            useAxios.get(`student/course-list/${UserData()?.user_id}/`).then((res) => {
+                return Array.isArray(res.data) ? res.data : (res.data?.results || []);
+            })
+        ]);
 
-        useAxios.get(`student/course-list/${UserData()?.user_id}/`).then((res) => {
-            // Handle both array and paginated response formats
-            const courseData = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+        const statsData = promises[0];
+        const courseData = promises[1];
+        
+        // Synchronously compute progress before state updates to avoid race condition
+        const progressStats = courseData.map(course => {
+            // ===== Count Completed Items =====
+            const totalLessons = course.lectures?.length || 0;
+            const completedLessons = course.completed_lesson?.length || 0;
             
-            // Synchronously compute progress before state updates to avoid race condition
-            const progressStats = courseData.map(course => {
-                // ===== Count Completed Items =====
-                const totalLessons = course.lectures?.length || 0;
-                const completedLessons = course.completed_lesson?.length || 0;
-                
-                // ===== Count Quiz Completion =====
-                const quizResults = course.quiz_results || [];
-                const totalQuizzes = quizResults.length || 0;
-                const passedQuizzes = quizResults.filter(q => q.passed).length || 0;
-                
-                // ===== Combined Progress (all items treated equally) =====
-                // This matches CourseDetail.jsx calculation for consistency
-                const totalItems = totalLessons + totalQuizzes;
-                const completedItems = completedLessons + passedQuizzes;
-                
-                let progressPercentage = 0;
-                if (totalItems > 0) {
-                    progressPercentage = Math.round((completedItems / totalItems) * 100);
-                }
-                
-                // ===== Calculate Course Duration with JP =====
-                const totalDuration = calculateTotalDuration(course.lectures || []);
-                
-                return {
-                    ...course,
-                    progressPercentage,
-                    totalLessons,
-                    completedLessons,
-                    totalQuizzes,
-                    completedQuizzes: passedQuizzes,
-                    quizProgress: totalQuizzes > 0 ? Math.round((passedQuizzes / totalQuizzes) * 100) : 0,
-                    lessonProgress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
-                    courseDurationFormatted: totalDuration.formatted,
-                    courseDurationWithJP: totalDuration.withJP
-                };
-            });
-
-            // Batch all state updates together for better performance
-            setCourses(courseData);
-            setProgressData(progressStats);
-            generateRecentActivity(courseData);
-            setFetching(false);  // Set to false AFTER all data is prepared
+            // ===== Count Quiz Completion =====
+            const quizResults = course.quiz_results || [];
+            const totalQuizzes = quizResults.length || 0;
+            const passedQuizzes = quizResults.filter(q => q.passed).length || 0;
+            
+            // ===== Combined Progress (all items treated equally) =====
+            // This matches CourseDetail.jsx calculation for consistency
+            const totalItems = totalLessons + totalQuizzes;
+            const completedItems = completedLessons + passedQuizzes;
+            
+            let progressPercentage = 0;
+            if (totalItems > 0) {
+                progressPercentage = Math.round((completedItems / totalItems) * 100);
+            }
+            
+            // ===== Calculate Course Duration with JP =====
+            const totalDuration = calculateTotalDuration(course.lectures || []);
+            
+            return {
+                ...course,
+                progressPercentage,
+                totalLessons,
+                completedLessons,
+                totalQuizzes,
+                completedQuizzes: passedQuizzes,
+                quizProgress: totalQuizzes > 0 ? Math.round((passedQuizzes / totalQuizzes) * 100) : 0,
+                lessonProgress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
+                courseDurationFormatted: totalDuration.formatted,
+                courseDurationWithJP: totalDuration.withJP
+            };
         });
+
+        // Return data object for caching
+        return {
+            stats: statsData,
+            courses: courseData,
+            progressData: progressStats,
+            recentActivity: generateRecentActivityData(courseData)
+        };
     };
 
-    const generateRecentActivity = (coursesData) => {
+    // ✨ PHASE 11.12: Use page cache to avoid reloading when navigating
+    const { data: cachedData, loading: fetching } = usePageCache(
+        'student-dashboard',
+        fetchData,
+        {
+            showLoadingOnStale: false
+        }
+    );
+
+    // Sync cached data to state
+    useEffect(() => {
+        if (cachedData) {
+            setStats(cachedData.stats || []);
+            setCourses(cachedData.courses || []);
+            setProgressData(cachedData.progressData || []);
+            setRecentActivity(cachedData.recentActivity || []);
+        }
+    }, [cachedData]);
+
+    const generateRecentActivityData = (coursesData) => {
         const activities = [];
         
         coursesData.slice(0, 5).forEach(course => {
@@ -104,12 +126,8 @@ function Dashboard() {
         
         // Sort by date (most recent first)
         activities.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setRecentActivity(activities.slice(0, 6));
+        return activities.slice(0, 6);
     };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
 
     const handleSearch = useCallback((event) => {
         const query = event.target.value.toLowerCase();
@@ -222,7 +240,7 @@ function Dashboard() {
         return (
             <>
                 <BaseHeader />
-                <section className="pt-5 pb-5 dashboard-page" style={{ minHeight: "calc(100vh - 120px)" }}>
+                <section className="dashboard-page" style={{ minHeight: "calc(100vh - 120px)" }}>
                     <div className="container">
                         <Header />
                         <div className="row mt-0 md-4">
@@ -247,7 +265,7 @@ function Dashboard() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5 dashboard-page">
+            <section className="dashboard-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 md-4">
@@ -282,10 +300,10 @@ function Dashboard() {
                             {/* Enhanced Statistics Cards */}
                             <div className="row mb-2">
                                 <div className="col-lg-3 col-sm-6 mb-3">
-                                    <div className="dashboard-stat-card justify-content-end" style={{"--gradient-start": "#667eea", "--gradient-end": "#764ba2"}}>
+                                    <div className="dashboard-stat-card">
                                         <div className="d-flex flex-column h-100 justify-content-between">
                                             <div className="d-flex flex-row align-items-center">
-                                            <div className="stat-icon me-3">
+                                            <div className="stat-icon">
                                                 <i className="fas fa-graduation-cap"></i>
                                             </div>
                                             <div className="dashboard-stat-number">{stats.total_courses || 0}</div>
@@ -298,10 +316,10 @@ function Dashboard() {
                                 </div>
 
                                 <div className="col-lg-3 col-sm-6 mb-3">
-                                    <div className="dashboard-stat-card justify-content-end" style={{"--gradient-start": "#667eea", "--gradient-end": "#764ba2"}}>
+                                    <div className="dashboard-stat-card">
                                         <div className="d-flex flex-column h-100 justify-content-between">
                                             <div className="d-flex flex-row align-items-center">
-                                            <div className="stat-icon me-3">
+                                            <div className="stat-icon">
                                                 <i className="fas fa-play-circle"></i>
                                             </div>
                                             <div className="dashboard-stat-number">{getActiveCoursesCount()}</div>
@@ -314,10 +332,10 @@ function Dashboard() {
                                 </div>
 
                                 <div className="col-lg-3 col-sm-6 mb-3">
-                                    <div className="dashboard-stat-card justify-content-end" style={{"--gradient-start": "#667eea", "--gradient-end": "#764ba2"}}>
+                                    <div className="dashboard-stat-card">
                                         <div className="d-flex flex-column h-100 justify-content-between">
                                             <div className="d-flex flex-row align-items-center">
-                                            <div className="stat-icon me-3">
+                                            <div className="stat-icon">
                                                 <i className="fas fa-clipboard-check"></i>
                                             </div>
                                             <div className="dashboard-stat-number">{stats.completed_lessons || 0}</div>
@@ -330,10 +348,10 @@ function Dashboard() {
                                 </div>
 
                                 <div className="col-lg-3 col-sm-6 mb-3">
-                                    <div className="dashboard-stat-card justify-content-end" style={{"--gradient-start": "#667eea", "--gradient-end": "#764ba2"}}>
+                                    <div className="dashboard-stat-card">
                                         <div className="d-flex flex-column h-100 justify-content-between">
                                             <div className="d-flex flex-row align-items-center">
-                                            <div className="stat-icon me-3">
+                                            <div className="stat-icon">
                                                 <i className="fas fa-medal"></i>
                                             </div>
                                             <div className="dashboard-stat-number">{getCompletedCoursesCount()}</div>
@@ -351,13 +369,13 @@ function Dashboard() {
                             <div className="row mb-4">
                                 <div className="dashboard-card">
                                     <div className="card-body p-4">
-                                        <h5 className="mb-3 fw-bold">
+                                        <h5 className="fw-bold">
                                             <i className="fas fa-clock me-2"></i>
                                             Kemajuan Belajar
                                         </h5>
                                         <div className="row g-3">
                                             <div className="col-md-4">
-                                                <div className="d-flex align-items-center p-3 bg-light rounded">
+                                                <div className="d-flex align-items-center p-2 bg-light rounded">
                                                     <div className="me-3">
                                                         <i className="fas fa-hourglass-start text-primary" style={{fontSize: "2rem"}}></i>
                                                     </div>
@@ -368,7 +386,7 @@ function Dashboard() {
                                                 </div>
                                             </div>
                                             <div className="col-md-4">
-                                                <div className="d-flex align-items-center p-3 bg-light rounded">
+                                                <div className="d-flex align-items-center p-2 bg-light rounded">
                                                     <div className="me-3">
                                                         <i className="fas fa-check-circle text-success" style={{fontSize: "2rem"}}></i>
                                                     </div>
@@ -379,7 +397,7 @@ function Dashboard() {
                                                 </div>
                                             </div>
                                             <div className="col-md-4">
-                                                <div className="d-flex align-items-center p-3 bg-light rounded">
+                                                <div className="d-flex align-items-center p-2 bg-light rounded">
                                                     <div className="me-3">
                                                         <i className="fas fa-trophy text-warning" style={{fontSize: "2rem"}}></i>
                                                     </div>
@@ -610,4 +628,4 @@ function Dashboard() {
     );
 }
 
-export default Dashboard;
+export default React.memo(Dashboard);

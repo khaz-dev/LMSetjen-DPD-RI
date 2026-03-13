@@ -112,21 +112,13 @@
     display: block !important;
     min-height: 100vh;
     background: transparent;
-    padding: 3rem 0 3rem 0;
-    padding-top: 3rem !important;
-    padding-bottom: 3rem !important;
+    padding: var(--page-top-spacing) 0 var(--page-bottom-spacing) 0;
+    padding-top: var(--page-top-spacing) !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
     margin-bottom: 8rem;
     overflow-x: hidden;
     overflow-y: visible;
     /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
-}
-
-.course-quiz-page.pt-5 {
-    padding-top: 50px !important;
-}
-
-.course-quiz-page.pb-5 {
-    padding-bottom: 3rem !important;
 }
 
 /* ================================
@@ -143,18 +135,9 @@
     display: block !important;
     min-height: 100vh;
     background: transparent;
-    padding: 3rem 0 3rem 0;
-    padding-top: 3rem !important;
-    padding-bottom: 3rem !important;
+    padding-top: var(--page-top-spacing) !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
     margin-bottom: 8rem;
-}
-
-.course-quiz-container.pt-5 {
-    padding-top: 50px !important;
-}
-
-.course-quiz-container.pb-5 {
-    padding-bottom: 3rem !important;
 }
 
 /* Ensure proper scroll context for sticky sidebar */
@@ -315,16 +298,6 @@ button div,
 /* This ensures the sidebar sticks to the viewport when scrolling */
 /* Position: sticky is already set in Sidebar.css & performance.css */
 /* NO override or conflicting properties here */
-
-/* ================================
-   GAP BETWEEN HEADER AND CONTAINER
-   ================================ */
-
-.course-quiz-container .instructor-header-card {
-    margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
-    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
-}
 
 /* ================================
    QUIZ MANAGEMENT LAYOUT

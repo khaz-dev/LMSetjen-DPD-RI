@@ -19,6 +19,337 @@ import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE
 import "./CourseDetail.css";
 import apiInstance from "../../utils/axios";
 
+// ✨ PHASE 11.164: Extracted floating note card component - fixes React hooks violation
+const FloatingNoteCard = React.memo(({ item, idx, openNotes, setOpenNotes, param, enrollmentId, fetchCourseDetail }) => {
+    const noteColor = item.note.color || '#f39c12';
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+    const [position, setPosition] = useState(item.position);
+    
+    const handleMouseDown = (e) => {
+        if (e.target.closest('.note-detail-close-btn') || e.target.closest('.note-detail-edit-toggle')) {
+            return;
+        }
+        setIsDragging(true);
+        setDragOffset({
+            x: e.clientX - position.x,
+            y: e.clientY - position.y
+        });
+    };
+    
+    useEffect(() => {
+        if (!isDragging) return;
+        
+        const handleMouseMove = (e) => {
+            setPosition({
+                x: e.clientX - dragOffset.x,
+                y: e.clientY - dragOffset.y
+            });
+        };
+        
+        const handleMouseUp = () => {
+            setIsDragging(false);
+        };
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging, dragOffset]);
+    
+    const handleEditToggle = (e) => {
+        e.stopPropagation();
+        const newOpenNotes = [...openNotes];
+        newOpenNotes[idx].isEditing = !newOpenNotes[idx].isEditing;
+        
+        if (!newOpenNotes[idx].isEditing && item.note.id) {
+            // Save the note
+            const formdata = new FormData();
+            formdata.append("title", newOpenNotes[idx].editData.title);
+            formdata.append("note", newOpenNotes[idx].editData.note);
+            formdata.append("color", newOpenNotes[idx].editData.color);
+            if (newOpenNotes[idx].editData.variant_id) {
+                formdata.append("variant_id", newOpenNotes[idx].editData.variant_id);
+            }
+            if (newOpenNotes[idx].editData.variant_item_id) {
+                formdata.append("variant_item_id", newOpenNotes[idx].editData.variant_item_id);
+            }
+            useAxios.put(`student/course-note-detail/${UserData()?.user_id}/${enrollmentId}/${item.note.id}/`, formdata).then(() => {
+                fetchCourseDetail();
+                Toast().fire({ icon: "success", title: "Catatan berhasil diperbarui" });
+            }).catch(() => {
+                Toast().fire({ icon: "error", title: "Gagal memperbarui catatan" });
+            });
+        }
+        setOpenNotes(newOpenNotes);
+    };
+    
+    const handleClose = (e) => {
+        e.stopPropagation();
+        setOpenNotes(openNotes.filter((_, i) => i !== idx));
+    };
+    
+    const handleTitleChange = (e) => {
+        const newOpenNotes = [...openNotes];
+        newOpenNotes[idx].editData.title = e.target.value;
+        setOpenNotes(newOpenNotes);
+    };
+    
+    const handleNoteChange = (e) => {
+        const newOpenNotes = [...openNotes];
+        newOpenNotes[idx].editData.note = e.target.value;
+        setOpenNotes(newOpenNotes);
+    };
+    
+    // ✨ Resize state
+    const [size, setSize] = useState({ width: 380, height: 400 });
+    const [isResizing, setIsResizing] = useState(false);
+    const [resizeStart, setResizeStart] = useState({ x: 0, y: 0 });
+    
+    const handleResizeStart = (e) => {
+        e.preventDefault();
+        setIsResizing(true);
+        setResizeStart({ x: e.clientX, y: e.clientY });
+    };
+    
+    useEffect(() => {
+        if (!isResizing) return;
+        
+        const handleMouseMove = (e) => {
+            setSize(prev => ({
+                width: Math.max(300, prev.width + e.clientX - resizeStart.x),
+                height: Math.max(250, prev.height + e.clientY - resizeStart.y)
+            }));
+            setResizeStart({ x: e.clientX, y: e.clientY });
+        };
+        
+        const handleMouseUp = () => {
+            setIsResizing(false);
+        };
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isResizing, resizeStart]);
+    
+    return (
+        <div
+            key={item.note.id}
+            style={{
+                position: 'fixed',
+                left: `${position.x}px`,
+                top: `${position.y}px`,
+                width: `${size.width}px`,
+                height: `${size.height}px`,
+                backgroundColor: '#ffffff',
+                border: `2px solid ${noteColor}`,
+                borderRadius: '12px',
+                boxShadow: `0 10px 40px rgba(0, 0, 0, 0.2)`,
+                zIndex: 1040 + idx,
+                pointerEvents: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
+            }}
+        >
+            {/* Header - Draggable */}
+            <div
+                onMouseDown={handleMouseDown}
+                style={{
+                    background: `linear-gradient(135deg, ${noteColor} 0%, ${noteColor}dd 100%)`,
+                    color: 'white',
+                    padding: '1rem 1.5rem',
+                    cursor: isDragging ? 'grabbing' : 'grab',
+                    userSelect: 'none',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderRadius: '10px 10px 0 0'
+                }}
+            >
+                <div style={{ flex: 1 }}>
+                    {item.isEditing ? (
+                        <input
+                            type="text"
+                            value={item.editData.title}
+                            onChange={handleTitleChange}
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            style={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                border: '1px solid rgba(255, 255, 255, 0.4)',
+                                color: 'white',
+                                padding: '0.5rem 0.75rem',
+                                borderRadius: '4px',
+                                width: '100%',
+                                fontWeight: '600',
+                                fontSize: '1rem'
+                            }}
+                            placeholder="Judul Catatan"
+                        />
+                    ) : (
+                        <>
+                            <i className="fas fa-sticky-note me-2"></i>
+                            {item.note.title}
+                        </>
+                    )}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem' }}>
+                    <button
+                        className="note-detail-edit-toggle"
+                        onClick={handleEditToggle}
+                        style={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            border: 'none',
+                            color: 'white',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem'
+                        }}
+                        title={item.isEditing ? "Save" : "Edit"}
+                    >
+                        <i className={item.isEditing ? "fas fa-save" : "fas fa-edit"}></i>
+                    </button>
+                    <button
+                        className="note-detail-close-btn"
+                        onClick={handleClose}
+                        style={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            border: 'none',
+                            color: 'white',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}
+                        title="Close"
+                    >
+                        <i className="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            {/* Body - Scrollable */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', backgroundColor: '#f8f9fa' }}>
+                {/* Date and lesson context */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <small style={{ color: '#666' }}>
+                        <i className="fas fa-calendar-alt me-2"></i>
+                        {moment(item.note.date || item.note.created_at).format("dddd, MMMM DD, YYYY [at] HH:mm")}
+                    </small>
+                </div>
+                
+                {/* Lesson context badge */}
+                {item.note.variant && (
+                    <div style={{
+                        backgroundColor: '#e8f4f8',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        marginBottom: '1.5rem',
+                        borderLeft: `4px solid ${noteColor}`
+                    }}>
+                        <small style={{ color: '#2c3e50', fontWeight: 600 }}>
+                            <i className="fas fa-layer-group me-2" style={{ color: noteColor }}></i>
+                            <strong>{item.note.variant.title}</strong>
+                            {item.note.variant_item && (
+                                <>
+                                    {' > '}
+                                    <strong>{item.note.variant_item.title}</strong>
+                                </>
+                            )}
+                        </small>
+                    </div>
+                )}
+                
+                {/* Note content - inline editable */}
+                {item.isEditing ? (
+                    <textarea
+                        value={item.editData.note}
+                        onChange={handleNoteChange}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            width: '100%',
+                            height: '150px',
+                            padding: '1rem',
+                            border: `1px solid ${noteColor}`,
+                            borderRadius: '8px',
+                            fontFamily: 'inherit',
+                            fontSize: '1rem',
+                            resize: 'none'
+                        }}
+                    />
+                ) : (
+                    <div style={{
+                        backgroundColor: '#ffffff',
+                        padding: '1.5rem',
+                        borderRadius: '8px',
+                        lineHeight: '1.8',
+                        whiteSpace: 'pre-wrap',
+                        wordWrap: 'break-word',
+                        fontSize: '1rem',
+                        color: '#333',
+                        border: `1px solid ${noteColor}33`,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                    }}>
+                        {item.note.note}
+                    </div>
+                )}
+            </div>
+            
+            {/* ✨ PHASE 11.165: Resize Handle - bottom right corner (FIXED: moved outside scrollable body to main container) */}
+            <div
+                onMouseDown={handleResizeStart}
+                style={{
+                    position: 'absolute',
+                    bottom: '0px',
+                    right: '0px',
+                    width: '20px',
+                    height: '20px',
+                    cursor: 'nwse-resize',
+                    backgroundColor: 'rgba(0,0,0,0.1)',
+                    borderRadius: '0 0 8px 0',
+                    transition: 'background-color 0.2s',
+                    zIndex: 1050
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(0,0,0,0.2)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(0,0,0,0.1)'}
+                title="Drag to resize"
+            />
+        </div>
+    );
+});
+
+FloatingNoteCard.displayName = 'FloatingNoteCard';
+
+// ✨ PHASE 11.164: Container for multiple floating note cards
+const FloatingNoteCardsContainer = React.memo(({ openNotes, setOpenNotes, param, fetchCourseDetail }) => {
+    return (
+        <div style={{ position: 'fixed', pointerEvents: 'none', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1040 }}>
+            {openNotes.map((item, idx) => (
+                <FloatingNoteCard
+                    key={item.note.id}
+                    item={item}
+                    idx={idx}
+                    openNotes={openNotes}
+                    setOpenNotes={setOpenNotes}
+                    param={param}
+                    enrollmentId={param.enrollment_id}
+                    fetchCourseDetail={fetchCourseDetail}
+                />
+            ))}
+        </div>
+    );
+});
+
+FloatingNoteCardsContainer.displayName = 'FloatingNoteCardsContainer';
+
 function CourseDetail() {
     // Course data and progress
     const [course, setCourse] = useState(null);  // ✨ PHASE 4.144+: Initialize as null instead of [] to avoid accessing .course on array
@@ -40,6 +371,7 @@ function CourseDetail() {
     const [seekPosition, setSeekPosition] = useState(null);  // ✨ PHASE 4.117: Position to seek to when video loads
     const [isResuming, setIsResuming] = useState(false);  // ✨ PHASE 4.117: Flag to prevent progress saves during resume
     const videoPlayerRef = useRef(null);  // ✨ PHASE 4.105: Ref to VideoPlayer component
+    const videoPlayerContainerRef = useRef(null);  // ✨ PHASE X.X: Ref to video player container for auto-scroll
     const lecturesTabProgressRef = useRef(null);  // ✨ PHASE 4.115: Ref to external progress update callback
     const lecturesTabCompletionRef = useRef(null);  // ✨ PHASE 4.133: Ref to lesson completion callback
     
@@ -84,6 +416,46 @@ function CourseDetail() {
     const isDraggingRef = useRef(false);
     const isResizingRef = useRef(false);
     
+    // ✨ PHASE 11.159 FIX: Notes Modal Drag/Resize State - Separate from question modal
+    const getInitialNoteModalPosition = () => {
+        const width = 800;
+        const height = 600;
+        return {
+            x: Math.max(0, (window.innerWidth - width) / 2),
+            y: Math.max(50, (window.innerHeight - height) / 2)  // Center vertically and horizontally
+        };
+    };
+    
+    const [noteModalPosition, setNoteModalPosition] = useState(getInitialNoteModalPosition());
+    const [noteModalSize, setNoteModalSize] = useState({ width: 800, height: 600 });
+    const [isNoteDragging, setIsNoteDragging] = useState(false);
+    const [isNoteResizing, setIsNoteResizing] = useState(false);
+    const noteDragStartPos = useRef({ x: 0, y: 0, modalX: 0, modalY: 0, modalWidth: 800, modalHeight: 600 });
+    const noteModalPositionRef = useRef(getInitialNoteModalPosition());
+    const noteModalSizeRef = useRef({ width: 800, height: 600 });
+    const isNoteDraggingRef = useRef(false);
+    const isNoteResizingRef = useRef(false);
+    
+    // ✨ PHASE 11.161: Note Detail Modal Drag/Resize State
+    const getInitialNoteDetailModalPosition = () => {
+        const width = 700;
+        const height = 500;
+        return {
+            x: Math.max(0, (window.innerWidth - width) / 2),
+            y: Math.max(50, (window.innerHeight - height) / 2)
+        };
+    };
+    
+    const [noteDetailModalPosition, setNoteDetailModalPosition] = useState(getInitialNoteDetailModalPosition());
+    const [noteDetailModalSize, setNoteDetailModalSize] = useState({ width: 700, height: 500 });
+    const [isNoteDetailDragging, setIsNoteDetailDragging] = useState(false);
+    const [isNoteDetailResizing, setIsNoteDetailResizing] = useState(false);
+    const noteDetailDragStartPos = useRef({ x: 0, y: 0, modalX: 0, modalY: 0, modalWidth: 700, modalHeight: 500 });
+    const noteDetailModalPositionRef = useRef(getInitialNoteDetailModalPosition());
+    const noteDetailModalSizeRef = useRef({ width: 700, height: 500 });
+    const isNoteDetailDraggingRef = useRef(false);
+    const isNoteDetailResizingRef = useRef(false);
+    
     // ✨ PHASE 7.14: Textarea auto-resize ref
     const questionTextareaRef = useRef(null);
     
@@ -98,6 +470,14 @@ function CourseDetail() {
     const [filteredQuestions, setFilteredQuestions] = useState([]);
     // ✨ PHASE 7.10: Inline forum view - track opened question for inline display instead of modal
     const [openedQuestionId, setOpenedQuestionId] = useState(null);
+    
+    // ✨ PHASE 11.160: Notes filter state - same pattern as discussions
+    const [noteFilters, setNoteFilters] = useState({ search: '', bagian: null, pelajaran: null, color: null });
+    const [filteredNotes, setFilteredNotes] = useState([]);
+    const [currentNoteVariantContext, setCurrentNoteVariantContext] = useState(null);
+    // ✨ PHASE 11.163: Changed from single note to array to support multiple open notes
+    const [openNotes, setOpenNotes] = useState([]);  // Array of {note, position, isEditing}
+    const [selectedNoteForView, setSelectedNoteForView] = useState(null);  // ✨ PHASE 11.160 FIX: Track note selected for viewing (deprecated - kept for compat)
     
     // ✨ PHASE 7.16: Q&A Report Modal State - Modeled after ReviewAbuse report system
     const [showQAReportModal, setShowQAReportModal] = useState(false);
@@ -129,6 +509,42 @@ function CourseDetail() {
     
     // ✨ PHASE 7.23: Polling for live updates in forum
     const forumPollingIntervalRef = useRef(null);
+    
+    // ✨ PHASE 11.160 FIX: Filter notes by search term, bagian, pelajaran, and color
+    useEffect(() => {
+        let filtered = course?.note || [];
+        
+        // Filter by search term (title or content)
+        if (noteFilters.search?.trim()) {
+            const searchLower = noteFilters.search.toLowerCase();
+            filtered = filtered.filter(n => {
+                const titleMatch = n.title?.toLowerCase().includes(searchLower);
+                const contentMatch = n.note?.toLowerCase().includes(searchLower);
+                return titleMatch || contentMatch;
+            });
+        }
+        
+        // Filter by bagian (section)
+        if (noteFilters.bagian) {
+            filtered = filtered.filter(n => 
+                n.variant?.variant_id === noteFilters.bagian
+            );
+        }
+        
+        // Filter by pelajaran (lesson)
+        if (noteFilters.pelajaran) {
+            filtered = filtered.filter(n => 
+                n.variant_item?.variant_item_id === noteFilters.pelajaran
+            );
+        }
+        
+        // ✨ PHASE 11.160 FIX: Filter by color
+        if (noteFilters.color) {
+            filtered = filtered.filter(n => n.color === noteFilters.color);
+        }
+        
+        setFilteredNotes(filtered);
+    }, [course?.note, noteFilters]);
     
     // ✨ PHASE 7.8-7.9: Filter questions by search term, bagian, and pelajaran
     useEffect(() => {
@@ -170,13 +586,8 @@ function CourseDetail() {
         });
         setUserLikedQuestions(likedQuestionIds);
         
-        console.log("[CourseDetail] 📋 Populated user likes from question list:", {
-            totalQuestions: filtered.length,
-            likedCount: likedQuestionIds.size,
-            likedIds: Array.from(likedQuestionIds)
-        });
+        // Q&A forum population
     }, [questions, discussionFilters]);
-
     // ✨ PHASE 4.224: Set up Bootstrap tab change listeners
     useEffect(() => {
         const tabElements = document.querySelectorAll('[data-bs-toggle="tab"]');
@@ -198,6 +609,28 @@ function CourseDetail() {
             });
         };
     }, []);
+
+    // ✨ PHASE X.X: Auto-scroll to video player when lesson item is clicked
+    useEffect(() => {
+        if (variantItem && videoPlayerContainerRef.current) {
+            // Use setTimeout to ensure the DOM has updated
+            setTimeout(() => {
+                const element = videoPlayerContainerRef.current;
+                if (element) {
+                    const headerOffset = 120;  // Offset for fixed header
+                    const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+                    const offsetPosition = elementPosition - headerOffset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                    
+
+                }
+            }, 100);
+        }
+    }, [variantItem]);
 
     // ✨ PHASE 4.225+: Monitor mouse position for quiz integrity
     useEffect(() => {
@@ -309,16 +742,32 @@ function CourseDetail() {
         lecturesTabProgressRef.current = callback;
     }, []);  // Empty dependency array = stable reference
     
-    // ✨ PHASE 4.143+: Memoize lesson completion handler to prevent VideoPlayerGoogle effect re-runs
-    const handleMarkLessonAsCompletedCallback = useCallback((lessonId, isAutoComplete) => {
+    // ✨ PHASE 4.143+: Memoize lesson completion handler to prevent excessive effect re-runs
+    // ✨ PHASE 12.6: CRITICAL FIX - Pass courseId to callback to fix auto-completion
+    // The callback needs courseId because handleMarkLessonAsCompleted in LecturesTab
+    // may fail if course object is not yet loaded
+    const handleMarkLessonAsCompletedCallback = useCallback((lessonId, isAutoComplete, courseIdParam) => {
         if (lecturesTabCompletionRef.current) {
-            lecturesTabCompletionRef.current(lessonId, isAutoComplete);
+            // Extract courseId from course object OR use the one passed as parameter
+            const courseIdToUse = courseIdParam || course?.course?.id;
+            lecturesTabCompletionRef.current(lessonId, isAutoComplete, courseIdToUse);
         }
-    }, []);  // Empty deps - function never changes
+    }, [course]);  // Include course in deps so courseId updates are captured
     
     // ✨ PHASE 4.143+: Memoize lesson completion registration to prevent LecturesTab effect re-runs
     const handleLessonCompletionRegistration = useCallback((callback) => {
         lecturesTabCompletionRef.current = callback;
+    }, []);  // Empty deps - function never changes
+
+    // ✨ PHASE 17.12 FIX: Memoize onClose callback to prevent unnecessary VideoPlayer re-renders
+    // This was previously an inline arrow function recreated on every render
+    const handleVideoPlayerClose = useCallback(() => {
+        setVariantItem(null);
+        setAutoplayVideo(false);  // ✨ PHASE 4.103: Reset autoplay when closing video
+        setIsVideoPlaying(false);  // ✨ PHASE 4.105: Reset playing state
+        setSeekPosition(null);  // ✨ PHASE 4.117: Reset seek position
+        setIsResuming(false);  // ✨ PHASE 4.117: Reset resume flag
+        isResumingRef.current = false;  // ✨ PHASE 17.8: Clear ref too
     }, []);  // Empty deps - function never changes
     
     // ✨ PHASE 4.118: Log variantItem changes (for debugging lesson selection)
@@ -345,36 +794,40 @@ function CourseDetail() {
     // ✨ PHASE 4.115: Handle video progress updates from VideoPlayer
     const lastProgressSaveRef = useRef(0);  // ✨ PHASE 4.116+: Time-based throttling instead of random
     
+    // ✨ PHASE 17.7: Track resume timer to clear old ones when effect re-runs
+    // ✨ PHASE 17.8: Also track resume status in ref to avoid state closure issues
+    const resumeTimerRef = useRef(null);
+    const isResumingRef = useRef(false);  // Ref-based tracking for faster responses
+
     // ✨ PHASE 4.117: Reset throttle timer when variant changes
     useEffect(() => {
         lastProgressSaveRef.current = 0;  // Allow immediate save when switching lessons
     }, [variantItem?.variant_item_id]);
     
-    // ✨ PHASE 4.143+: Memoize handleVideoProgress to prevent effect re-runs in VideoPlayerGoogle
+    // ✨ PHASE 4.143+: Memoize handleVideoProgress to prevent excessive effect re-runs
     const handleVideoProgress = useCallback(async (progress) => {
-        // ✨ PHASE 4.117: Skip saving progress during resume to prevent overwrite with 0%
-        if (isResuming) {
+        // ✨ PHASE 17.8: CRITICAL - Check ONLY ref for timing-sensitive progress blocking
+        // State updates are async, so ref is the ONLY reliable source during timeout transitions
+        if (isResumingRef.current) {
+            console.log('[CourseDetail] ⏭️ STILL RESUMING: Skipping progress save', {
+                refValue: isResumingRef.current,
+                currentTime: progress.currentTime?.toFixed(2) + 's',
+                timestamp: Date.now()
+            });
             return;
-        }
-        
-        // ✨ PHASE 4.132: Add immediate debug log to verify callback is being called
-        if (Math.random() < 0.1) { // Log 10% of calls
         }
         
         if (!variantItem) {
-            if (Math.random() < 0.1) {
-            }
+            console.log('[CourseDetail] ⚠️ variantItem is null, cannot save progress');
             return;
         }
-        
+
         const itemId = variantItem.variant_item_id;
         const { played, duration, currentTime } = progress;
         
         if (!itemId) {
+            console.warn('[CourseDetail] ❌ itemId is empty/null:', { variantItem });
             return;
-        }
-        
-        if (Math.random() < 0.05) { // Log every ~20 frames (~once per second)
         }
         
         // Only save if we have valid progress
@@ -389,32 +842,83 @@ function CourseDetail() {
                 lastProgressSaveRef.current = now;
                 
                 try {
+                    // ✨ PHASE 17.5: COMPREHENSIVE ERROR LOGGING - Debug progress save failures
+                    const debugEnabled = window.DEV_DEBUG ? window.DEV_DEBUG : false;
+                    
+                    // ✨ PHASE 17.6: ALWAYS log progress attempts, not just sampled
+                    console.log('[CourseDetail] 💾 ATTEMPT #' + Math.floor(Date.now() / 1000), 'Progress save:', {
+                        itemId: itemId,
+                        currentTime: currentTime.toFixed(2) + 's',
+                        duration: duration.toFixed(2) + 's',
+                        percentage: progressPercentage.toFixed(1) + '%',
+                        isResuming,
+                        variantItemExists: !!variantItem,
+                        timestamp: new Date().toISOString()
+                    });
                     
                     // ✨ PHASE 4.134: Get courseId from course data OR from localStorage if course not loaded yet (hard refresh case)
                     let courseId = course?.course?.id;
                     
-                    // Fallback to localStorage courseId if course data not loaded yet (hard refresh on autoplay)
+                    // ✨ PHASE 17.5: Log courseId resolution for debugging
                     if (!courseId) {
+                        console.log('[CourseDetail] ⚠️ No courseId from course.course.id, checking localStorage...');
+                        
                         const savedData = localStorage.getItem("lms_current_lesson");
                         if (savedData) {
                             try {
                                 const parsed = JSON.parse(savedData);
                                 courseId = parsed.courseId;
                                 if (courseId) {
+                                    console.log('[CourseDetail] 📦 SUCCESS: courseId from localStorage:', courseId);
                                 }
                             } catch (e) {
-                                // Ignore parse errors
+                                console.error('[CourseDetail] ❌ Failed to parse localStorage:', e.message);
                             }
+                        } else {
+                            console.log('[CourseDetail] ℹ️ localStorage has no saved lesson data');
                         }
+                    } else {
+                        console.log('[CourseDetail] ✓ SUCCESS: courseId from course.course.id:', courseId);
                     }
                     
-                    // Still require courseId to save progress
+                    // ✨ PHASE 17.5: CRITICAL - Log if courseId missing (this causes silent skip!)
                     if (!courseId) {
+                        console.warn('[CourseDetail] ❌ CRITICAL: courseId is MISSING! Progress CANNOT be saved!', {
+                            itemId: itemId,
+                            percentage: progressPercentage.toFixed(1) + '%',
+                            course_structure: {
+                                course: typeof course,
+                                course_course: typeof course?.course,
+                                course_course_id: course?.course?.id,
+                                fullCourseObject: course
+                            },
+                            localStorageData: localStorage.getItem("lms_current_lesson")
+                        });
+                        return;  // Return early, but with proper logging now
+                    }
+                    
+                    // ✨ PHASE 17.5: Verify user data
+                    const userId = UserData()?.user_id;
+                    if (!userId) {
+                        console.error('[CourseDetail] ❌ CRITICAL: user_id is missing! Cannot save progress.', {
+                            itemId: itemId,
+                            userData: UserData()
+                        });
                         return;
                     }
                     
+                    console.log('[CourseDetail] 🔵 SENDING API REQUEST with:', {
+                        endpoint: '/api/v1/student/video-progress/',
+                        user_id: userId,
+                        course_id: courseId,
+                        variant_item_id: itemId,
+                        progress_percentage: progressPercentage.toFixed(1),
+                        last_watched_position: currentTime.toFixed(2),
+                        total_duration: duration.toFixed(2)
+                    });
+                    
                     const response = await apiInstance.post("/student/video-progress/", {
-                        user_id: UserData()?.user_id,  // ✨ PHASE 4.115: Use user_id instead of user
+                        user_id: userId,  // ✨ PHASE 4.115: Use user_id instead of user
                         course_id: courseId,    // ✨ PHASE 4.134: Use fallback courseId from localStorage if needed
                         variant_item_id: itemId,        // ✨ PHASE 4.115: Use variant_item_id instead of variant_item
                         progress_percentage: progressPercentage,
@@ -422,6 +926,15 @@ function CourseDetail() {
                         total_duration: duration
                     });
                     
+                    // ✨ PHASE 17.5: COMPREHENSIVE SUCCESS LOGGING
+                    console.log('[CourseDetail] ✅ API RESPONSE SUCCESS:', {
+                        itemId: itemId,
+                        percentage: progressPercentage.toFixed(1) + '%',
+                        lastWatchedPosition: currentTime.toFixed(2) + 's',
+                        responseStatus: response.status,
+                        responseData: response.data,
+                        timestamp: new Date().toISOString()
+                    });
                     
                     // ✨ PHASE 4.115: Update LecturesTab progress status in real-time
                     if (lecturesTabProgressRef.current) {
@@ -433,8 +946,34 @@ function CourseDetail() {
                             isInProgress: progressPercentage > 1 && progressPercentage < 99.8
                         });
                     } else {
+                        console.warn('[CourseDetail] ⚠️ lecturesTabProgressRef.current is not set');
                     }
                 } catch (error) {
+                    // ✨ PHASE 17.5: COMPREHENSIVE ERROR LOGGING - log ALL errors, not silently
+                    console.error('[CourseDetail] ❌ API REQUEST FAILED:', {
+                        errorMessage: error.message,
+                        errorStatus: error.response?.status,
+                        errorData: error.response?.data,
+                        itemId: itemId,
+                        percentage: played * 100,
+                        fullError: error,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    // ✨ PHASE 12.14: Handle 400 errors due to invalid variant_item_id
+                    if (error.response?.status === 400) {
+                        // Check if this is a "variant not found" error
+                        const errorMsg = error.response?.data?.detail || '';
+                        if (errorMsg.includes('not found') || errorMsg.includes('invalid')) {
+                            console.warn('[CourseDetail] ⚠️ Variant not found - skipping progress save:', {
+                                itemId: itemId,
+                                errorMsg: errorMsg
+                            });
+                            // Don't throw - just silently skip this iteration
+                            return;
+                        }
+                    }
+                    // Silently handle other errors but don't stop polling
                 }
             }
         }
@@ -442,24 +981,52 @@ function CourseDetail() {
     
     // ✨ PHASE 4.103: Helper function to set variant item with autoplay
     // ✨ PHASE 4.116: Save lesson to localStorage for hard refresh recovery
+    // ✨ PHASE 16: FIXED - Auto-play should be TRUE when user clicks a fresh lesson
     const handlePlayLessonWithAutoplay = (lesson) => {
         setVariantItem(lesson);
-        setAutoplayVideo(false);
+        // ✨ PHASE 16: FIX - Set autoplay to TRUE for fresh lesson loads
+        // This allows iframe to auto-play when page loads. Resume will override this to false.
+        setAutoplayVideo(true);
         localStorage.setItem("lms_current_lesson", JSON.stringify({
             courseId: course?.course?.id,
             lessonId: lesson.variant_item_id,
             lessonData: lesson,
             savedAt: new Date().toISOString()
         }));
-        // ✨ PHASE 4.103: DO NOT reset autoplay state - keep it true
     };
     
     // ✨ PHASE 4.116: Load saved progress when video changes and notify user if resuming
+    // ✨ PHASE 17.7: CRITICAL FIX - Move cleanup outside async function to properly reset isResuming flag
     useEffect(() => {
         // ✨ PHASE 4.118: Fixed - load progress as soon as variantItem is set (don't wait for course)
         if (!variantItem) {
             return;  // Wait for variantItem to be set
         }
+
+        // ✨ PHASE 17.8: Clear any OLD resume timer from previous effect run
+        // This prevents cascading timers that keep isResuming=true
+        if (resumeTimerRef.current) {
+            console.log('[CourseDetail] 🎬 EFFECT RUN - Clearing OLD timer from previous effect', {
+                variantItemId: variantItem?.variant_item_id,
+                timestamp: new Date().toISOString()
+            });
+            clearTimeout(resumeTimerRef.current);
+            resumeTimerRef.current = null;
+        } else {
+            console.log('[CourseDetail] 🎬 EFFECT RUN - First timer for lesson', {
+                variantItemId: variantItem?.variant_item_id,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // ✨ PHASE 39.2: FIX - Don't clear seekPosition immediately
+        // This caused double video loads (seekPosition null, then seekPosition actual)
+        // Instead, let seekPosition update only when API returns
+        // If API has no saved progress, seekPosition will be set to 0
+        console.log('[CourseDetail] 🎬 Fetching progress for new lesson: ' + variantItem?.variant_item_id);
+
+        // ✨ PHASE 17.7: Track timer outside async function so cleanup can properly clear it
+        let resumeTimer = null;
 
         const loadAndResumeProgress = async () => {
             try {
@@ -467,52 +1034,114 @@ function CourseDetail() {
                 const userId = UserData()?.user_id;
                 
                 if (!itemId || !userId) {
+                    console.warn('[CourseDetail] Missing itemId or userId:', { itemId, userId });
+                    // ✨ PHASE 39.2: Set to 0 if no data, not null (null causes seek effect to skip)
+                    setSeekPosition(0);
                     return;
                 }
                 
-                // ✨ PHASE 4.124: Enhanced lesson-specific debugging
-                
-                const response = await apiInstance.get(`/student/video-progress/${userId}/${itemId}/`);
-                const progressData = response.data.data || response.data;  // ✨ PHASE 4.117: Unwrap API response wrapper
-                
-                // ✨ PHASE 4.124: Log full progress response for this specific lesson
-                
-                if (progressData && progressData.progress_percentage > 0 && progressData.progress_percentage < 99.8) {
-                    const resumePosition = progressData.last_watched_position || 0;
-                    const resumePercentage = progressData.progress_percentage || 0;
+                try {
+                    const response = await apiInstance.get(`/student/video-progress/${userId}/${itemId}/`);
                     
-                    // ✨ PHASE 4.117: Set resume flag to prevent progress saves during seek
-                    setIsResuming(true);
+                    const progressData = response.data?.data || response.data;  // ✨ PHASE 4.117: Unwrap API response wrapper
                     
-                    // ✨ PHASE 4.117: Set seek position as state for VideoPlayer to use when ready
-                    setSeekPosition(resumePosition);
+                    // ✨ PHASE 11.185 + PHASE 17.1: FIXED - Parse Decimal strings and check if last_watched_position exists
+                    // DRF serializes Decimal fields as strings, so we must convert before numeric comparison
+                    // If student watched any portion of the video, restore from saved position
+                    const lastWatchedPos = progressData && parseFloat(progressData.last_watched_position);
+                    const progressPct = progressData && parseFloat(progressData.progress_percentage);
                     
-                    // ✨ PHASE 4.122: Autoplay disabled
-                    setAutoplayVideo(false);
+                    const hasValidPosition = lastWatchedPos && lastWatchedPos > 0;
                     
-                    // Clear resume flag after 1.5 seconds (gives time for seek to complete)
-                    const resumeTimer = setTimeout(() => {
+                    const hasValidProgress = progressPct !== undefined && 
+                                            progressPct !== null &&
+                                            progressPct > 0 && 
+                                            progressPct < 99.8;
+                    
+                    if (hasValidPosition && hasValidProgress) {
+                        // ✨ PHASE 17.1: Use parsed numeric value, not the string from API
+                        const resumePosition = lastWatchedPos;
+                        const resumePercentage = progressPct;
+                        
+                        console.log('[CourseDetail] 📍 RESUMING from:', { resumePosition, resumePercentage });
+                        
+                        // ✨ PHASE 14: Set resume flag to prevent progress saves during seek
+                        setIsResuming(true);
+                        // ✨ PHASE 17.8: Also set ref for immediate effect
+                        isResumingRef.current = true;
+                        
+                        // ✨ PHASE 14: Set seek position as state for VideoPlayer to use when ready
+                        setSeekPosition(resumePosition);
+                        
+                        // ✨ PHASE 16: Autoplay disabled on resume for safety
+                        // Better UX: Let user manually resume after seek completes
+                        // This prevents jarring auto-play when continuing a paused video
+                        // If auto-play on resume is desired, change to setAutoplayVideo(true)
+                        setAutoplayVideo(false);
+                        
+                        // ✨ PHASE 17.8: Create timer and store in BOTH local var and ref
+                        const timerStartTime = Date.now();
+                        resumeTimer = setTimeout(() => {
+                            const elapsed = Date.now() - timerStartTime;
+                            console.log('[CourseDetail] ✅ TIMEOUT FIRED - Resetting isResuming flag', {
+                                itemId: itemId,
+                                elapsedMs: elapsed,
+                                timestamp: new Date().toISOString()
+                            });
+                            setIsResuming(false);
+                            // ✨ PHASE 17.8: Also clear ref immediately
+                            isResumingRef.current = false;
+                        }, 1500);
+                        
+                        // ✨ PHASE 17.8: Store in ref so it can be cleared if effect runs again
+                        resumeTimerRef.current = resumeTimer;
+                        console.log('[CourseDetail] ⏱️ NEW TIMER scheduled for ' + itemId, {
+                            willFireAt: new Date(timerStartTime + 1500).toISOString(),
+                            timestamp: new Date().toISOString()
+                        });
+                    } else {
+                        // ✨ PHASE 4.128: Don't reset autoplay when no saved progress - keep it enabled so video can play on click
+                        console.log('[CourseDetail] ℹ️ No saved progress found, isResuming stays FALSE');
+                        setSeekPosition(0);  // ✨ PHASE 39.2: Start from beginning (0, not null)
                         setIsResuming(false);
-                    }, 1500);
-                    
-                    return () => clearTimeout(resumeTimer);
-                } else {
-                    // ✨ PHASE 4.128: Don't reset autoplay when no saved progress - keep it enabled so video can play on click
-                    setSeekPosition(null);  // No resume position needed
+                        // ✨ PHASE 17.8: Clear ref too
+                        isResumingRef.current = false;
+                        // Note: autoplayVideo remains true from handlePlayLessonWithAutoplay - we don't override it here
+                    }
+                } catch (apiError) {
+                    // ✨ PHASE 14: Improved error handling for progress API
+                    console.log('[CourseDetail] ❌ API Error loading progress:', apiError.message);
+                    setSeekPosition(0);  // ✨ PHASE 39.2: Start from beginning on error (0, not null)
                     setIsResuming(false);
-                    // Note: autoplayVideo remains true from handlePlayLessonWithAutoplay - we don't override it here
+                    // ✨ PHASE 17.8: Clear ref too
+                    isResumingRef.current = false;
                 }
             } catch (error) {
                 // ✨ PHASE 4.128: Don't reset autoplay on error - keep video playable even if progress load fails
-                setSeekPosition(null);
+                console.log('[CourseDetail] ❌ Error loading progress:', error.message);
+                setSeekPosition(0);  // ✨ PHASE 39.2: Start from beginning on error (0, not null)
                 setIsResuming(false);
+                // ✨ PHASE 17.8: Clear ref too
+                isResumingRef.current = false;
                 // Note: autoplayVideo remains true from handlePlayLessonWithAutoplay - we don't override it here
             }
         };
         
         // Load progress immediately without delay - useEffect handles timing
         loadAndResumeProgress();
-    }, [variantItem?.variant_item_id, course?.course?.id, variantItem]);
+
+        // ✨ PHASE 17.7: CRITICAL FIX - Return cleanup function from useEffect (not from async function)
+        // This ensures cleanup fires properly when effect re-runs or component unmounts
+        return () => {
+            if (resumeTimer) {
+                console.log('[CourseDetail] 🧹 CLEANUP: Effect cleaning up - clearing timer');
+                clearTimeout(resumeTimer);
+            }
+        };
+    }, [variantItem?.variant_item_id]);  // ✨ PHASE 14: FIX - Only depend on variant_item_id, not the object or course
+    // Removed: course?.course?.id (not used in effect), variantItem (redundant with variant_item_id)
+    // Having both variant_item_id AND variantItem caused effect to re-run when course data refreshed
+    // This created race conditions where seekPosition was set then cleared unpredictably
 
     // ✨ PHASE 4.116+: Restore lesson from localStorage on page load (hard refresh recovery)
     // ✨ PHASE 4.146: Don't restore lessons if certificate exists
@@ -551,7 +1180,7 @@ function CourseDetail() {
             const lessonData = parsed.lessonData;
             if (lessonData && lessonData.variant_item_id) {
                 setVariantItem(lessonData);
-                setAutoplayVideo(false);
+                setAutoplayVideo(true);  // ✨ PHASE 12.15: Enable autoplay on hard refresh restoration
             }
         } catch (error) {
             localStorage.removeItem("lms_current_lesson"); // Clear corrupted data
@@ -630,6 +1259,7 @@ function CourseDetail() {
         setSelectedNote(null);
         setCreateNote({ title: "", note: "", color: "#f39c12" });
         setSelectedNoteColor("#f39c12");
+        setCurrentNoteVariantContext(null);  // ✨ PHASE 11.160: Reset lesson context on close
     };
     
     const handleNoteShow = (note) => {
@@ -643,23 +1273,35 @@ function CourseDetail() {
                 color: note.color || "#f39c12"
             });
             setSelectedNoteColor(note.color || "#f39c12");
+            // ✨ PHASE 11.160: Load existing lesson context if available
+            if (note.variant_item) {
+                setCurrentNoteVariantContext({
+                    variant_item_id: note.variant_item?.variant_item_id,
+                    title: note.variant_item?.title,
+                    variant_id: note.variant?.variant_id,
+                    variant_title: note.variant?.title
+                });
+            } else {
+                setCurrentNoteVariantContext(null);
+            }
         } else {
             // Reset for new note
             setCreateNote({ title: "", note: "", color: "#f39c12" });
             setSelectedNoteColor("#f39c12");
+            setCurrentNoteVariantContext(null);
         }
     };
 
     // ✨ PHASE 7.25: Start polling for live updates when Diskusi tab is opened (not just detail view)
     useEffect(() => {
         if (activeTab === 'discussions') {
-            console.log("[CourseDetail] 🕐 Diskusi tab activated - starting live update polling for list view");
+
             // Start polling for the entire list view, not just individual conversations
             startForumPolling(null);  // null = polling for list view
         } else {
             // Stop polling when leaving Diskusi tab
             if (forumPollingIntervalRef.current) {
-                console.log("[CourseDetail] 🛑 Diskusi tab deactivated - stopping polling");
+
                 clearInterval(forumPollingIntervalRef.current);
                 forumPollingIntervalRef.current = null;
             }
@@ -818,6 +1460,22 @@ function CourseDetail() {
         isResizingRef.current = isResizing;
     }, [modalPosition, modalSize, isDragging, isResizing]);
     
+    // ✨ PHASE 11.159 FIX: Sync notes modal refs when state changes
+    useEffect(() => {
+        noteModalPositionRef.current = noteModalPosition;
+        noteModalSizeRef.current = noteModalSize;
+        isNoteDraggingRef.current = isNoteDragging;
+        isNoteResizingRef.current = isNoteResizing;
+    }, [noteModalPosition, noteModalSize, isNoteDragging, isNoteResizing]);
+    
+    // ✨ PHASE 11.161: Sync note detail modal refs when state changes
+    useEffect(() => {
+        noteDetailModalPositionRef.current = noteDetailModalPosition;
+        noteDetailModalSizeRef.current = noteDetailModalSize;
+        isNoteDetailDraggingRef.current = isNoteDetailDragging;
+        isNoteDetailResizingRef.current = isNoteDetailResizing;
+    }, [noteDetailModalPosition, noteDetailModalSize, isNoteDetailDragging, isNoteDetailResizing]);
+    
     // ✨ PHASE 7.12: Modal Drag and Resize Functionality with fixed positioning
     useEffect(() => {
         if (!addQuestionShow) return;
@@ -957,6 +1615,144 @@ function CourseDetail() {
         };
     }, [addQuestionShow]);
     
+    // ✨ PHASE 11.159 FIX: Notes Modal Drag and Resize Functionality - Same as question modal
+    useEffect(() => {
+        if (!noteShow) return;
+        
+        const noteModalDialog = document.querySelector('.add-note-modal .modal-dialog');
+        const noteHeader = noteModalDialog?.querySelector('.note-modal-header-draggable');
+        const resizeHandle = document.querySelector('.add-note-modal .modal-resize-handle');
+        
+        if (!noteModalDialog || !noteHeader) return;
+        
+        // Apply initial position
+        const applyNotePosition = (dialog, pos, size) => {
+            if (!dialog) return;
+            dialog.style.position = 'fixed';
+            dialog.style.left = `${pos.x}px`;
+            dialog.style.top = `${pos.y}px`;
+            dialog.style.width = `${size.width}px`;
+            dialog.style.height = `${size.height}px`;
+            dialog.style.zIndex = '1050';
+        };
+        
+        // ✨ PHASE 11.160+: Update resize handle position - use top/left for fixed positioning
+        const updateNoteResizeHandle = (handle, pos, size) => {
+            if (!handle) return;
+            handle.style.position = 'fixed';
+            // Position at bottom-right corner of modal (offset by 15px for diamond shape)
+            handle.style.top = `${pos.y + size.height - 15}px`;
+            handle.style.left = `${pos.x + size.width - 15}px`;
+            handle.style.zIndex = '1051';
+        };
+        
+        applyNotePosition(noteModalDialog, noteModalPositionRef.current, noteModalSizeRef.current);
+        updateNoteResizeHandle(resizeHandle, noteModalPositionRef.current, noteModalSizeRef.current);
+        
+        // Handle drag on header
+        const handleNoteHeaderMouseDown = (e) => {
+            if (e.target.closest('.btn-close-modern') || e.target.closest('button')) return;
+            e.preventDefault();
+            isNoteDraggingRef.current = true;
+            setIsNoteDragging(true);
+            noteDragStartPos.current = {
+                x: e.clientX,
+                y: e.clientY,
+                modalX: noteModalPositionRef.current.x,
+                modalY: noteModalPositionRef.current.y,
+                modalWidth: noteModalSizeRef.current.width,
+                modalHeight: noteModalSizeRef.current.height
+            };
+        };
+        
+        // Handle resize on resize handle
+        const handleNoteResizeMouseDown = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isNoteResizingRef.current = true;
+            setIsNoteResizing(true);
+            noteDragStartPos.current = {
+                x: e.clientX,
+                y: e.clientY,
+                modalX: noteModalPositionRef.current.x,
+                modalY: noteModalPositionRef.current.y,
+                modalWidth: noteModalSizeRef.current.width,
+                modalHeight: noteModalSizeRef.current.height
+            };
+        };
+        
+        const handleNoteMouseMove = (e) => {
+            if (isNoteDraggingRef.current) {
+                const deltaX = e.clientX - noteDragStartPos.current.x;
+                const deltaY = e.clientY - noteDragStartPos.current.y;
+                
+                const newX = noteDragStartPos.current.modalX + deltaX;
+                const newY = noteDragStartPos.current.modalY + deltaY;
+                
+                // Constrain to viewport
+                const constrainedX = Math.max(0, Math.min(newX, window.innerWidth - noteModalSizeRef.current.width));
+                const constrainedY = Math.max(0, newY);
+                
+                // Update state for React to track
+                setNoteModalPosition({
+                    x: constrainedX,
+                    y: constrainedY
+                });
+                
+                // Update DOM immediately without waiting for state
+                noteModalDialog.style.left = `${constrainedX}px`;
+                noteModalDialog.style.top = `${constrainedY}px`;
+                
+                // Update resize handle position
+                updateNoteResizeHandle(resizeHandle, 
+                    { x: constrainedX, y: constrainedY }, 
+                    noteModalSizeRef.current
+                );
+            } else if (isNoteResizingRef.current) {
+                const deltaX = e.clientX - noteDragStartPos.current.x;
+                const deltaY = e.clientY - noteDragStartPos.current.y;
+                
+                const newWidth = Math.max(400, noteDragStartPos.current.modalWidth + deltaX);
+                const newHeight = Math.max(300, noteDragStartPos.current.modalHeight + deltaY);
+                
+                // Update state for React to track
+                setNoteModalSize({
+                    width: newWidth,
+                    height: newHeight
+                });
+                
+                // Update DOM immediately without waiting for state
+                noteModalDialog.style.width = `${newWidth}px`;
+                noteModalDialog.style.height = `${newHeight}px`;
+                
+                // Update resize handle position
+                updateNoteResizeHandle(resizeHandle, 
+                    noteModalPositionRef.current,
+                    { width: newWidth, height: newHeight }
+                );
+            }
+        };
+        
+        const handleNoteMouseUp = () => {
+            isNoteDraggingRef.current = false;
+            isNoteResizingRef.current = false;
+            setIsNoteDragging(false);
+            setIsNoteResizing(false);
+        };
+        
+        noteHeader.addEventListener('mousedown', handleNoteHeaderMouseDown);
+        if (resizeHandle) resizeHandle.addEventListener('mousedown', handleNoteResizeMouseDown);
+        document.addEventListener('mousemove', handleNoteMouseMove);
+        document.addEventListener('mouseup', handleNoteMouseUp);
+        
+        return () => {
+            noteHeader.removeEventListener('mousedown', handleNoteHeaderMouseDown);
+            if (resizeHandle) resizeHandle.removeEventListener('mousedown', handleNoteResizeMouseDown);
+            document.removeEventListener('mousemove', handleNoteMouseMove);
+            document.removeEventListener('mouseup', handleNoteMouseUp);
+        };
+    }, [noteShow]);
+
 
     // Quiz handlers
     const handleQuizClose = () => {
@@ -1355,24 +2151,6 @@ function CourseDetail() {
         }
         
         useAxios.get(`student/course-detail/${UserData()?.user_id}/${param.enrollment_id}/`).then((res) => {
-            console.log("[CourseDetail] 📥 Course detail API response received");
-            console.log("[CourseDetail] - course.teacher:", res.data.course?.teacher);
-            console.log("[CourseDetail] - course.teacher.user_id:", res.data.course?.teacher?.user_id);
-            console.log("[CourseDetail] ✨ PHASE 7.22: Verifying teacher data structure:");
-            console.log("[CourseDetail]   Full course object structure:", res.data.course);
-            console.log("[CourseDetail]   Teacher object:", res.data.course?.teacher);
-            console.log("[CourseDetail]   Teacher user_id:", res.data.course?.teacher?.user_id);
-            console.log("[CourseDetail] - question_answer[0]:", res.data.question_answer?.[0]);
-            if (res.data.question_answer?.[0]) {
-                console.log("[CourseDetail] - question_answer[0].profile:", res.data.question_answer[0].profile);
-                console.log("[CourseDetail] - question_answer[0].user_id:", res.data.question_answer[0].user_id);
-                console.log("[CourseDetail] - question_answer[0].messages[0]:", res.data.question_answer[0].messages?.[0]);
-                if (res.data.question_answer[0].messages?.[0]) {
-                    console.log("[CourseDetail] - message[0].profile:", res.data.question_answer[0].messages[0].profile);
-                    console.log("[CourseDetail] - message[0].profile.user_id:", res.data.question_answer[0].messages[0].profile?.user_id);
-                    console.log("[CourseDetail] - message[0].user_id:", res.data.question_answer[0].messages[0].user_id);
-                }
-            }
             setCourse(res.data);
             setQuestions(res.data.question_answer);
             setStudentReview(res.data.review);
@@ -1381,10 +2159,6 @@ function CourseDetail() {
             if (openedQuestionId && res.data.question_answer) {
                 const updatedQuestion = res.data.question_answer.find(q => q.qa_id === openedQuestionId);
                 if (updatedQuestion) {
-                    console.log("[CourseDetail] ✨ LIVE SYNC: Updating selectedConversation with fresh data from polling");
-                    console.log("[CourseDetail] - New likes_count:", updatedQuestion.likes_count);
-                    console.log("[CourseDetail] - New messages count:", updatedQuestion.messages?.length);
-                    console.log("[CourseDetail] - user_liked:", updatedQuestion.user_liked);
                     setSelectedConversation(updatedQuestion);
                     
                     // ✨ PHASE 7.23+: Update user's liked status based on fresh API data (user_liked field)
@@ -1708,7 +2482,39 @@ function CourseDetail() {
                 calculateCompletionPercentage(totalLessons, completedLessons, 0, 0);
             }
         });
-    };    useEffect(() => {
+    };    
+    
+    // ✨ PHASE 11.202: Listen for lesson completion event from modal to refetch course data
+    useEffect(() => {
+        const handleLessonAnsweredCorrectly = async (event) => {
+            const { variantItemId } = event.detail;
+            console.log(`[CourseDetail] Event received: Lesson ${variantItemId} answered correctly - refetching course data`);
+            console.log(`[PHASE 12.16] 🎯 Event triggered for lesson ID: ${variantItemId}`);
+            
+            // Small delay to allow backend to finish processing
+            setTimeout(async () => {
+                try {
+                    console.log(`[PHASE 12.16] ⏳ Fetching course detail after 500ms delay...`);
+                    await fetchCourseDetail(true);  // true = prevent loading state
+                    console.log('[CourseDetail] ✅ Course data refreshed after correct answer');
+                    
+                    // NEW - Check what we got back
+                    console.log(`[PHASE 12.16] 📊 Course data updated. Checking completed_lesson array...`);
+                    
+                } catch (error) {
+                    console.error('[CourseDetail] Error refetching course data:', error);
+                }
+            }, 500);
+        };
+        
+        window.addEventListener('lessonAnsweredCorrectly', handleLessonAnsweredCorrectly);
+        
+        return () => {
+            window.removeEventListener('lessonAnsweredCorrectly', handleLessonAnsweredCorrectly);
+        };
+    }, []);
+    
+    useEffect(() => {
         fetchCourseDetail();
         fetchQAReports(); // ✨ PHASE 7.16: Load user's submitted Q&A reports
         
@@ -1749,7 +2555,6 @@ function CourseDetail() {
     // ✨ PHASE 7.16+: Refetch Q&A reports whenever questions load
     useEffect(() => {
         if (questions && questions.length > 0) {
-            console.log("[CourseDetail] Questions loaded, refetching Q&A reports...");
             // Small delay to ensure data is ready
             setTimeout(() => {
                 fetchQAReports();  // ✨ PHASE 7.24: fetchQAReports is now memoized
@@ -1760,8 +2565,6 @@ function CourseDetail() {
     // ✨ PHASE 7.16+: Set currentReportData when modal opens and reports are ready
     useEffect(() => {
         if (showQAReportModal && reportingQAId && qaReports) {
-            console.log("[CourseDetail] Modal opened, looking up report for:", reportingQAId);
-            
             let report = null;
             if (reportingQAType === 'question') {
                 report = qaReports?.question_reports?.find(r => r.question__qa_id === reportingQAId);
@@ -1769,7 +2572,6 @@ function CourseDetail() {
                 report = qaReports?.message_reports?.find(r => r.message__qa_id === reportingQAId);
             }
             
-            console.log("[CourseDetail] Found report:", report);
             if (report) {
                 setCurrentReportData(report);
             }
@@ -1779,7 +2581,6 @@ function CourseDetail() {
     // ✨ PHASE 7.16+: Refetch Q&A reports when courseId becomes available
     useEffect(() => {
         if (courseId) {
-            console.log("[CourseDetail] Course ID loaded, fetching Q&A reports...");
             fetchQAReports();
         }
     }, [courseId]);
@@ -1807,71 +2608,63 @@ function CourseDetail() {
     }, [isQuizActive]);
 
     // ✨ PHASE 4.103: Block LEFT/RIGHT arrow keys on the entire course page
-    const lastKeyNotificationTimeRef = useRef(0);
-    const NOTIFICATION_THROTTLE_MS = 3000; // Show notification only once every 3 seconds
-
-    useEffect(() => {
-        const showArrowKeyNotification = (arrowType) => {
-            // Show notification with throttle to avoid spam
-            const now = Date.now();
-            if (now - lastKeyNotificationTimeRef.current > NOTIFICATION_THROTTLE_MS) {
-                lastKeyNotificationTimeRef.current = now;
-                const titles = {
-                    'ArrowLeft': 'Tombol Panah Kiri Dinonaktifkan',
-                    'ArrowRight': 'Tombol Panah Kanan Dinonaktifkan'
-                };
-                Toast().fire({
-                    icon: "info",
-                    title: titles[arrowType] || "Tombol Panah Dinonaktifkan",
-                    text: "Navigasi tombol panah tidak tersedia di halaman ini.",
-                    timer: 2000,
-                    toast: true,
-                    position: "top-end"
-                });
-            }
-        };
-
-        // Handler for document-level keyboard events
-        const handleArrowKeyBlock = (e) => {
-            if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                e.stopPropagation();
-                showArrowKeyNotification('ArrowLeft');
-                return false;
-            }
-            
-            if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                e.stopPropagation();
-                showArrowKeyNotification('ArrowRight');
-                return false;
-            }
-        };
-
-        // Handler for custom events from video player
-        const handleVideoArrowKeyBlocked = (e) => {
-            if (e.detail && (e.detail.key === 'ArrowLeft' || e.detail.key === 'ArrowRight')) {
-                showArrowKeyNotification(e.detail.key);
-            }
-        };
-
-        // Attach listeners
-        // 1. Capture phase listener on document (highest priority)
-        document.addEventListener('keydown', handleArrowKeyBlock, true);
-        
-        // 2. Window level listener (for events that might not reach document)
-        window.addEventListener('keydown', handleArrowKeyBlock, true);
-
-        // 3. Listen for custom events from video player component
-        document.addEventListener('arrowKeyBlocked', handleVideoArrowKeyBlocked, true);
-        
-        // Cleanup on component unmount
-        return () => {
-            document.removeEventListener('keydown', handleArrowKeyBlock, true);
-            window.removeEventListener('keydown', handleArrowKeyBlock, true);
-            document.removeEventListener('arrowKeyBlocked', handleVideoArrowKeyBlocked, true);
-        };
-    }, []);
+    // ✨ PHASE 11.180 FIX: COMPLETELY DISABLED - Arrow key blocking now handled by video player components only
+    // Removing the global document-level listeners that were interfering with video player keyboard navigation
+    // 
+    // useEffect(() => {
+    //     const lastKeyNotificationTimeRef = useRef(0);
+    //     const NOTIFICATION_THROTTLE_MS = 3000;
+    //
+    //     const showArrowKeyNotification = (arrowType) => {
+    //         const now = Date.now();
+    //         if (now - lastKeyNotificationTimeRef.current > NOTIFICATION_THROTTLE_MS) {
+    //             lastKeyNotificationTimeRef.current = now;
+    //             const titles = {
+    //                 'ArrowLeft': 'Tombol Panah Kiri Dinonaktifkan',
+    //                 'ArrowRight': 'Tombol Panah Kanan Dinonaktifkan'
+    //             };
+    //             Toast().fire({
+    //                 icon: "info",
+    //                 title: titles[arrowType] || "Tombol Panah Dinonaktifkan",
+    //                 text: "Navigasi tombol panah tidak tersedia di halaman ini.",
+    //                 timer: 2000,
+    //                 toast: true,
+    //                 position: "top-end"
+    //             });
+    //         }
+    //     };
+    //
+    //     const handleArrowKeyBlock = (e) => {
+    //         if (e.key === 'ArrowLeft') {
+    //             e.preventDefault();
+    //             e.stopPropagation();
+    //             showArrowKeyNotification('ArrowLeft');
+    //             return false;
+    //         }
+    //         if (e.key === 'ArrowRight') {
+    //             e.preventDefault();
+    //             e.stopPropagation();
+    //             showArrowKeyNotification('ArrowRight');
+    //             return false;
+    //         }
+    //     };
+    //
+    //     const handleVideoArrowKeyBlocked = (e) => {
+    //         if (e.detail && (e.detail.key === 'ArrowLeft' || e.detail.key === 'ArrowRight')) {
+    //             showArrowKeyNotification(e.detail.key);
+    //         }
+    //     };
+    //
+    //     document.addEventListener('keydown', handleArrowKeyBlock, true);
+    //     window.addEventListener('keydown', handleArrowKeyBlock, true);
+    //     document.addEventListener('arrowKeyBlocked', handleVideoArrowKeyBlocked, true);
+    //
+    //     return () => {
+    //         document.removeEventListener('keydown', handleArrowKeyBlock, true);
+    //         window.removeEventListener('keydown', handleArrowKeyBlock, true);
+    //         document.removeEventListener('arrowKeyBlocked', handleVideoArrowKeyBlocked, true);
+    //     };
+    // }, []);
 
     const handleColorChange = (color) => {
         // Validate color format
@@ -1950,12 +2743,20 @@ function CourseDetail() {
         formdata.append("title", createNote.title.trim());
         formdata.append("note", createNote.note.trim());
         formdata.append("color", createNote.color || "#f39c12");
+        // ✨ PHASE 11.160: Include optional lesson context
+        if (currentNoteVariantContext?.variant_id) {
+            formdata.append("variant_id", currentNoteVariantContext.variant_id);
+        }
+        if (currentNoteVariantContext?.variant_item_id) {
+            formdata.append("variant_item_id", currentNoteVariantContext.variant_item_id);
+        }
 
         try {
             await useAxios.post(`student/course-note/${UserData()?.user_id}/${param.enrollment_id}/`, formdata).then((res) => {
                 fetchCourseDetail();
                 setCreateNote({ title: "", note: "", color: "#f39c12" });
                 setSelectedNoteColor("#f39c12");
+                setCurrentNoteVariantContext(null);  // ✨ PHASE 11.160: Reset lesson context
                 handleNoteClose(); // Close modal after successful creation
                 Toast().fire({
                     icon: "success",
@@ -1996,6 +2797,13 @@ function CourseDetail() {
         formdata.append("title", createNote.title.trim());
         formdata.append("note", createNote.note.trim());
         formdata.append("color", createNote.color || "#f39c12");
+        // ✨ PHASE 11.160: Include optional lesson context
+        if (currentNoteVariantContext?.variant_id) {
+            formdata.append("variant_id", currentNoteVariantContext.variant_id);
+        }
+        if (currentNoteVariantContext?.variant_item_id) {
+            formdata.append("variant_item_id", currentNoteVariantContext.variant_item_id);
+        }
 
         useAxios.patch(`student/course-note-detail/${UserData()?.user_id}/${param.enrollment_id}/${noteId}/`, formdata).then((res) => {
             fetchCourseDetail();
@@ -2121,12 +2929,9 @@ function CourseDetail() {
     // ✨ PHASE 7.16+PHASE 7.24: Fetch Q&A Reports - Regular function (not memoized, refs will hold latest)
     const fetchQAReports = async () => {
         try {
-            console.log("\n[fetchQAReports] ========== STARTING REPORT FETCH ==========");
             const userData = UserData();
-            console.log("[fetchQAReports] Current UserData:", userData);
             
             if (!userData?.id && !userData?.user_id) {
-                console.warn("[fetchQAReports] ❌ User ID not found, skipping report fetch");
                 return;
             }
 
@@ -2134,20 +2939,8 @@ function CourseDetail() {
             // ✨ Use courseId from state (populated by fetchCourseDetail), not URL params
             const crsId = courseId;
             
-            console.log(`[fetchQAReports] 📤 Fetching with userId=${userId} (type: ${typeof userId}), courseId=${crsId} (type: ${typeof crsId})`);
-            console.log(`[fetchQAReports] 📡 Endpoint: /api/v1/student/qa-reports/${crsId}/?user_id=${userId}`);
-            
             const res = await useAxios.get(`student/qa-reports/${crsId}/?user_id=${userId}`);
             const reports = res.data;
-            
-            console.log("[fetchQAReports] ✅ API Response received:");
-            console.log("[fetchQAReports]   Full Response:", res);
-            console.log("[fetchQAReports]   Response Status:", res.status);
-            console.log("[fetchQAReports]   Response Data:", reports);
-            console.log("[fetchQAReports]   Question reports count:", reports?.question_reports?.length || 0);
-            console.log("[fetchQAReports]   Question reports data:", reports?.question_reports);
-            console.log("[fetchQAReports]   Message reports count:", reports?.message_reports?.length || 0);
-            console.log("[fetchQAReports]   Message reports data:", reports?.message_reports);
             
             // Ensure data structure is correct
             const normalizedReports = {
@@ -2155,22 +2948,9 @@ function CourseDetail() {
                 message_reports: reports?.message_reports || []
             };
             
-            console.log("[fetchQAReports] 📊 Normalized reports state:", normalizedReports);
-            console.log("[fetchQAReports] ========== REPORT FETCH COMPLETE ==========\n");
             setQaReports(normalizedReports);
         } catch (error) {
-            console.error("\n[fetchQAReports] ❌ ========== ERROR FETCHING REPORTS ==========");
-            console.error("[fetchQAReports] Error object:", error);
-            console.error("[fetchQAReports] Error response:", error.response);
-            console.error("[fetchQAReports] Error message:", error.message);
-            console.error("[fetchQAReports] Error status:", error.response?.status);
-            if (error.response?.status === 401) {
-                console.error("[fetchQAReports] 🔐 AUTHENTICATION ERROR - user may not be logged in");
-            }
-            if (error.response?.status === 403) {
-                console.error("[fetchQAReports] 🛑 PERMISSION ERROR - user may not have access");
-            }
-            console.error("[fetchQAReports] ========== ERROR COMPLETE ==========\n");
+            // Q&A reports fetch error - silently fail
         }
     };  // ✨ PHASE 7.24: Regular function version - refs will hold latest implementation
 
@@ -2736,7 +3516,7 @@ function CourseDetail() {
                 </div>
             )}
 
-            <section className="pt-5 pb-5 modern-student-course">
+            <section className="modern-student-course">
                 <div className="container">
                     {/* Header Here */}
                     <Header />
@@ -3162,25 +3942,40 @@ function CourseDetail() {
                                 {/* ✨ PHASE 4.224: Hide video player when certificate is displayed */}
                                 {/* ✨ PHASE 4.225+: Hide video player only when quiz is active AND on quiz tab */}
                                 {/* ✨ PHASE 4.9+: Show video player on Pelajaran, Catatan, and Diskusi tabs even if quiz was active */}
-                                {variantItem && !(existingCertificate?.image_file_url && activeTab === 'certificate') && !(activeTab === 'quiz' && (quizShow || isQuizActive)) && (
+                                {/* ✨ PHASE X.X: Wrapped in container div with ref for auto-scroll functionality */}
+                                {/* ✨ PHASE 42.6 CRITICAL FIX: Always render VideoPlayer unconditionally, use CSS display to hide
+                                    ROOT CAUSE IDENTIFIED: The conditional rendering {variantItem && <VideoPlayer/>} causes unmount/remount on EVERY lesson switch.
+                                    This triggers cascading issues:
+                                    1. VideoPlayer unmounts when user switches lessons
+                                    2. YouTube player destroyed, container removed from DOM
+                                    3. YouTube API caches internal references to destroyed DOM nodes
+                                    4. VideoPlayer remounts with new lesson
+                                    5. New container created, YouTube API accumulates stale cached references
+                                    6. By 4th switch: Accumulated stale references cause insertBefore() to fail on stale cached container
+                                    
+                                    SOLUTION: Render VideoPlayer unconditionally (always mounted).
+                                    Use CSS display:none to hide instead of conditional rendering.
+                                    This ensures:
+                                    - Same VideoPlayer component instance always exists in React tree
+                                    - YouTube player ref survives lesson switches
+                                    - No unmount/remount cycles
+                                    - No stale reference accumulation in YouTube API
+                                    - Clean, stable switching between any lesson at any time
+                                   */}
+                                <div ref={videoPlayerContainerRef} style={{ display: variantItem && !(existingCertificate?.image_file_url && activeTab === 'certificate') && !(activeTab === 'quiz' && (quizShow || isQuizActive)) ? 'block' : 'none' }}>
                                     <VideoPlayer
                                         ref={videoPlayerRef}
                                         variantItem={variantItem}
                                         courseId={course?.course?.id}  // ✨ PHASE 4.144+: Pass courseId for completion endpoint
-                                        onClose={() => {
-                                            setVariantItem(null);
-                                            setAutoplayVideo(false);  // ✨ PHASE 4.103: Reset autoplay when closing video
-                                            setIsVideoPlaying(false);  // ✨ PHASE 4.105: Reset playing state
-                                            setSeekPosition(null);  // ✨ PHASE 4.117: Reset seek position
-                                            setIsResuming(false);  // ✨ PHASE 4.117: Reset resume flag
-                                        }}
+                                        course={course}  // ✨ PHASE 12.9: Pass full course data so VideoPlayerGoogle can check actual completed_lesson array
+                                        onClose={handleVideoPlayerClose}  // ✨ PHASE 17.12 FIX: Use memoized callback instead of inline function
                                         handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}  // ✨ PHASE 4.143+: Use memoized callback
-                                        autoplay={false}  // ✨ PHASE 4.103: Autoplay disabled
+                                        autoplay={autoplayVideo}  // ✨ PHASE 12.15: Enable autoplay when user clicks lesson or on hard refresh
                                         onPlayingChange={setIsVideoPlaying}  // ✨ PHASE 4.105: Track playing state
                                         onProgress={handleVideoProgress}  // ✨ PHASE 4.115: Pass progress callback
                                         seekPosition={seekPosition}  // ✨ PHASE 4.117: Pass seek position for resume
                                     />
-                                )}
+                                </div>
 
                                 <div className="modern-tabs">
                                     {/* Tab Navigation */}
@@ -3246,21 +4041,221 @@ function CourseDetail() {
                                                 </button>
                                             </div>
                                             
-                                            {course?.note?.length > 0 ? (
-                                                course.note.map((n, index) => {
-                                                    const noteColor = n.color || "#f39c12";
-                                                    const colorVariations = getColorVariations(noteColor);
+                                            {/* ✨ PHASE 11.160: Search and filter controls for notes - same pattern as discussions */}
+                                            <div className="mb-4" style={{ display: 'flex', gap: '1rem', flexWrap: 'nowrap', alignItems: 'flex-end' }}>
+                                                {/* ✨ PHASE 11.161: Search Input - 25% */}
+                                                <div style={{ flex: '1 1 25%' }}>
+                                                    <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
+                                                        <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#3498db' }}></i>
+                                                        Cari Catatan
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Cari berdasarkan judul atau isi..."
+                                                        value={noteFilters.search}
+                                                        onChange={(e) => setNoteFilters({ ...noteFilters, search: e.target.value })}
+                                                        style={{
+                                                            width: '100%',
+                                                            fontSize: '1rem',
+                                                            borderRadius: '12px',
+                                                            border: '2px solid #e9ecef',
+                                                            backgroundColor: '#ffffff',
+                                                            color: '#2c3e50',
+                                                            boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                                            padding: '0.75rem 1rem',
+                                                            transition: 'all 0.3s ease',
+                                                            outline: 'none'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.target.style.borderColor = '#3498db';
+                                                            e.target.style.boxShadow = '0 0 0 3px rgba(52, 152, 219, 0.1)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.target.style.borderColor = '#e9ecef';
+                                                            e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                                                        }}
+                                                    />
+                                                </div>
+                                                
+                                                {/* Bagian Filter Dropdown - 20% */}
+                                                <div style={{ flex: '1 1 20%' }}>
+                                                    <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
+                                                        <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#9b59b6' }}></i>
+                                                        Bagian
+                                                    </label>
+                                                    <select
+                                                        value={noteFilters.bagian || ''}
+                                                        onChange={(e) => setNoteFilters({ ...noteFilters, bagian: e.target.value || null, pelajaran: null })}
+                                                        style={{
+                                                            width: '100%',
+                                                            fontSize: '1rem',
+                                                            borderRadius: '12px',
+                                                            border: '2px solid #e9ecef',
+                                                            backgroundColor: '#ffffff',
+                                                            color: '#2c3e50',
+                                                            boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                                            padding: '0.75rem 1rem',
+                                                            transition: 'all 0.3s ease',
+                                                            outline: 'none',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.target.style.borderColor = '#9b59b6';
+                                                            e.target.style.boxShadow = '0 0 0 3px rgba(155, 89, 182, 0.1)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.target.style.borderColor = '#e9ecef';
+                                                            e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                                                        }}
+                                                    >
+                                                        <option value="">Semua Bagian</option>
+                                                        {course?.curriculum?.map((variant) => (
+                                                            <option key={variant.variant_id} value={variant.variant_id}>
+                                                                {variant.title}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                
+                                                {/* Pelajaran Filter Dropdown - 20% */}
+                                                <div style={{ flex: '1 1 20%' }}>
+                                                    <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
+                                                        <i className="fas fa-book" style={{ marginRight: '0.5rem', color: '#e74c3c' }}></i>
+                                                        Pelajaran
+                                                    </label>
+                                                    <select
+                                                        value={noteFilters.pelajaran || ''}
+                                                        onChange={(e) => setNoteFilters({ ...noteFilters, pelajaran: e.target.value || null })}
+                                                        disabled={!noteFilters.bagian}
+                                                        style={{
+                                                            width: '100%',
+                                                            fontSize: '1rem',
+                                                            borderRadius: '12px',
+                                                            border: '2px solid #e9ecef',
+                                                            backgroundColor: noteFilters.bagian ? '#ffffff' : '#f8f9fa',
+                                                            color: '#2c3e50',
+                                                            boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                                            padding: '0.75rem 1rem',
+                                                            transition: 'all 0.3s ease',
+                                                            outline: 'none',
+                                                            cursor: noteFilters.bagian ? 'pointer' : 'not-allowed',
+                                                            opacity: noteFilters.bagian ? 1 : 0.6
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            if (noteFilters.bagian) {
+                                                                e.target.style.borderColor = '#e74c3c';
+                                                                e.target.style.boxShadow = '0 0 0 3px rgba(231, 76, 60, 0.1)';
+                                                            }
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.target.style.borderColor = '#e9ecef';
+                                                            e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                                                        }}
+                                                    >
+                                                        <option value="">Semua Pelajaran</option>
+                                                        {noteFilters.bagian && course?.curriculum?.find(v => v.variant_id === noteFilters.bagian)?.variant_items?.map((item) => (
+                                                            <option key={item.variant_item_id} value={item.variant_item_id}>
+                                                                {item.title}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                
+                                                {/* ✨ PHASE 11.160 FIX: Color Filter Dropdown - 25% */}
+                                                <div style={{ flex: '1 1 25%' }}>
+                                                    <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
+                                                        <i className="fas fa-palette" style={{ marginRight: '0.5rem', color: '#f39c12' }}></i>
+                                                        Warna
+                                                    </label>
+                                                    <select
+                                                        value={noteFilters.color || ''}
+                                                        onChange={(e) => setNoteFilters({...noteFilters, color: e.target.value || null})}
+                                                        className="form-select"
+                                                        style={{
+                                                            width: '100%',
+                                                            fontSize: '0.95rem',
+                                                            borderRadius: '12px',
+                                                            border: '2px solid #e9ecef',
+                                                            backgroundColor: '#ffffff',
+                                                            color: '#2c3e50',
+                                                            boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                                            padding: '0.75rem 1rem',
+                                                            transition: 'all 0.3s ease',
+                                                            outline: 'none',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.target.style.borderColor = '#f39c12';
+                                                            e.target.style.boxShadow = '0 0 0 3px rgba(243, 156, 18, 0.1)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.target.style.borderColor = '#e9ecef';
+                                                            e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                                                        }}
+                                                    >
+                                                        <option value="">Semua Warna</option>
+                                                        <option value="#f39c12">🟠 Orange</option>
+                                                        <option value="#e74c3c">🔴 Red</option>
+                                                        <option value="#3498db">🔵 Blue</option>
+                                                        <option value="#2ecc71">🟢 Green</option>
+                                                        <option value="#9b59b6">🟣 Purple</option>
+                                                        <option value="#f1c40f">🟡 Yellow</option>
+                                                        <option value="#e67e22">🟠 Dark Orange</option>
+                                                        <option value="#95a5a6">⚪ Gray</option>
+                                                        <option value="#1abc9c">🔷 Teal</option>
+                                                        <option value="#34495e">🔹 Dark Blue</option>
+                                                        <option value="#e91e63">💗 Pink</option>
+                                                        <option value="#8e44ad">🟣 Violet</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                {/* Clear Filters Button - Fixed to include color */}
+                                                {(noteFilters.search || noteFilters.bagian || noteFilters.pelajaran || noteFilters.color) && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setNoteFilters({ search: '', bagian: null, pelajaran: null, color: null })}
+                                                        className="add-btn-modern"
+                                                        style={{ background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', padding: '0.75rem 1.5rem' }}
+                                                    >
+                                                        <i className="fas fa-times"></i>
+                                                    </button>
+                                                )}
+                                            </div>
+                                            
+                                            {/* ✨ PHASE 11.167: 2-Column Grid Layout for Notes (Responsive) */}
+                                            <div className="note-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', gridAutoRows: 'max-content' }}>
+                                                {filteredNotes?.length > 0 ? (
+                                                    filteredNotes.map((n, index) => {
+                                                        const noteColor = n.color || "#f39c12";
+                                                        const colorVariations = getColorVariations(noteColor);
                                                     
                                                     return (
                                                         <div 
                                                             key={n.id || index} 
                                                             className="note-card"
+                                                            onClick={() => {
+                                                                // ✨ PHASE 11.163: Add note to openNotes array instead of replacing
+                                                                // Check if note already open
+                                                                const isAlreadyOpen = openNotes.some(item => item.note.id === n.id);
+                                                                if (!isAlreadyOpen) {
+                                                                    setOpenNotes([...openNotes, {
+                                                                        note: n,
+                                                                        position: { x: openNotes.length * 30, y: 60 + openNotes.length * 30 },
+                                                                        isEditing: false,
+                                                                        editData: n
+                                                                    }]);
+                                                                }
+                                                            }}
                                                             style={{
                                                                 "--note-color": noteColor,
                                                                 "--note-color-light": colorVariations.light,
                                                                 "--note-color-hover": colorVariations.hover,
-                                                                borderColor: colorVariations.light
+                                                                borderColor: colorVariations.light,
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.3s ease'
                                                             }}
+                                                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                                                         >
                                                             <div className="note-header">
                                                                 <div className="note-header-content">
@@ -3275,6 +4270,15 @@ function CourseDetail() {
                                                                     </div>
                                                                     <div className="note-content-info">
                                                                         <h5 className="note-title">{n.title}</h5>
+                                                                        {/* ✨ PHASE 11.161: Show bagian and pelajaran context */}
+                                                                        {(n.variant || n.variant_item) && (
+                                                                            <div className="note-context">
+                                                                                <i className="fas fa-layer-group"></i>
+                                                                                {n.variant && <span>{n.variant.title}</span>}
+                                                                                {n.variant && n.variant_item && <span style={{ opacity: 0.6 }}>›</span>}
+                                                                                {n.variant_item && <span>{n.variant_item.title}</span>}
+                                                                            </div>
+                                                                        )}
                                                                         <div className="note-date">
                                                                             <i 
                                                                                 className="fas fa-calendar-alt"
@@ -3287,14 +4291,20 @@ function CourseDetail() {
                                                                 <div className="note-actions">
                                                                     <button 
                                                                         className="btn-note-action edit" 
-                                                                        onClick={() => handleNoteShow(n)}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleNoteShow(n);
+                                                                        }}
                                                                         title="Edit catatan"
                                                                     >
                                                                         <i className="fas fa-edit"></i>
                                                                     </button>
                                                                     <button 
                                                                         className="btn-note-action delete" 
-                                                                        onClick={() => handleDeleteNote(n.id)}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleDeleteNote(n.id);
+                                                                        }}
                                                                         title="Hapus catatan"
                                                                     >
                                                                         <i className="fas fa-trash"></i>
@@ -3320,6 +4330,7 @@ function CourseDetail() {
                                                     <p>Mulai membuat catatan untuk mengingat poin penting</p>
                                                 </div>
                                             )}
+                                            </div>
                                         </div>
 
                                         {/* Discussions Tab */}
@@ -4284,7 +5295,14 @@ function CourseDetail() {
                 </section>
 
             {/* Add Note Modal */}
-            <Modal show={noteShow} onHide={handleNoteClose} size="lg" centered className="add-note-modal">
+            <Modal 
+                show={noteShow} 
+                onHide={handleNoteClose} 
+                size="lg"
+                backdrop={false}
+                keyboard={true}
+                className="add-note-modal"
+            >
               <form onSubmit={(e) => {
                   if (selectedNote) {
                       handleSubmitEditNote(e, selectedNote.id);
@@ -4294,9 +5312,10 @@ function CourseDetail() {
               }}>
                 {/* Modal Header */}
                 <div  
-                    className="modal-header-note modal-header-dynamic"
+                    className="modal-header-note modal-header-dynamic note-modal-header-draggable"
                     style={{ 
-                        background: `linear-gradient(135deg, ${selectedNoteColor} 0%, ${selectedNoteColor}dd 100%)` 
+                        background: `linear-gradient(135deg, ${selectedNoteColor} 0%, ${selectedNoteColor}dd 100%)`,
+                        cursor: 'grab'
                     }}
                 >
                     <div className="modal-header-content">
@@ -4354,6 +5373,65 @@ function CourseDetail() {
                                     required
                                 />
                             </div>
+                        </div>
+
+                        {/* ✨ PHASE 11.160: Bagian/Section Context (Optional) */}
+                        <div className="form-group-modern">
+                            <label className="form-label-modern">
+                                <i className="fas fa-layer-group form-label-icon-note"></i>
+                                Bagian/Pelajaran (Opsional)
+                            </label>
+                            <div className="input-wrapper-modern">
+                                <select
+                                    className="form-input-modern"
+                                    value={currentNoteVariantContext?.variant_item_id || ''}
+                                    onChange={(e) => {
+                                        const selected = e.target.value;
+                                        if (selected) {
+                                            // Find the variant_item from curriculum
+                                            let foundVariantItem = null;
+                                            course?.curriculum?.forEach(variant => {
+                                                (variant.variant_items || variant.items || []).forEach(item => {
+                                                    if (item.variant_item_id === selected) {
+                                                        // ✨ PHASE 11.161 FIX: Ensure we're using variant_id, not id
+                                                        foundVariantItem = {
+                                                            variant_item_id: item.variant_item_id,
+                                                            title: item.title,
+                                                            variant_id: variant.variant_id || variant.id,  // Use variant_id first, fallback to id
+                                                            variant_title: variant.title
+                                                        };
+                                                    }
+                                                });
+                                            });
+                                            setCurrentNoteVariantContext(foundVariantItem);
+                                        } else {
+                                            setCurrentNoteVariantContext(null);
+                                        }
+                                    }}
+                                    style={{
+                                        backgroundColor: '#ffffff',
+                                        borderRadius: '8px',
+                                        padding: '0.75rem 1rem'
+                                    }}
+                                >
+                                    <option value="">-- Pilih Bagian/Pelajaran (Opsional) --</option>
+                                    {course?.curriculum?.map((variant) => (
+                                        <optgroup key={variant.variant_id} label={variant.title}>
+                                            {(variant.variant_items || variant.items || []).map((item) => (
+                                                <option key={item.variant_item_id} value={item.variant_item_id}>
+                                                    {item.title}
+                                                </option>
+                                            ))}
+                                        </optgroup>
+                                    ))}
+                                </select>
+                            </div>
+                            {currentNoteVariantContext && (
+                                <small style={{ color: '#666', marginTop: '0.5rem', display: 'block' }}>
+                                    <i className="fas fa-check-circle" style={{ color: '#27ae60', marginRight: '0.3rem' }}></i>
+                                    Catatan akan terhubung dengan: <strong>{currentNoteVariantContext.variant_title}</strong> &gt; <strong>{currentNoteVariantContext.title}</strong>
+                                </small>
+                            )}
                         </div>
 
                         {/* Note Content */}
@@ -4503,7 +5581,18 @@ function CourseDetail() {
                     </div>
                 </div>
                 </form>
+
+                {/* ✨ PHASE 11.160 FIX: Resize handle for note modal - same as question modal */}
+                <div className="modal-resize-handle" title="Drag to resize modal"></div>
             </Modal>
+
+            {/* ✨ PHASE 11.164 REFACTOR: Multiple floating note cards with extracted component - fixes React hooks violation */}
+            <FloatingNoteCardsContainer 
+                openNotes={openNotes}
+                setOpenNotes={setOpenNotes}
+                param={param}
+                fetchCourseDetail={fetchCourseDetail}
+            />
 
             {/* ✨ PHASE 7.12: Create Question Modal - Draggable & Resizable with transparent backdrop */}
             <Modal 

@@ -1,0 +1,7 @@
+/* Student Course Lecture Detail Page Styles */
+
+.student-lecture-detail-page {
+    padding-top: var(--page-top-spacing) !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
+    /* ✨ PHASE 42: Uses CSS variables for consistent spacing across all student pages */
+}

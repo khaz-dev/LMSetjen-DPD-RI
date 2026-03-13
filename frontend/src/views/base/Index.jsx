@@ -12,6 +12,8 @@ import { getImageUrl, getLevelText } from "../../utils/courseUtils";
 import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Calculate JP
 import SEO from "../../components/SEO";
 import TestimonialSection from "../../components/TestimonialSection";
+import RankedStudents from "../../components/Rankings/RankedStudents";  // ✨ PHASE 10.1: Ranking components
+import RankedInstructors from "../../components/Rankings/RankedInstructors";  // ✨ PHASE 10.1: Ranking components
 import "./Index.css";
 
 // Import frontend assets
@@ -1894,31 +1896,40 @@ function Index() {
                 </div>
             </section>
 
-            {/* CTA Section */}
+            {/* CTA Section with Rankings - ✨ PHASE 10.1 */}
             <section className="py-5 snap-section cta-section" style={{ 
                 background: "linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%)",
             }}>
                 <div className="container">
-                    <div className="row align-items-center">
-                        <div className="col-lg-8">
+                    <div className="row align-items-stretch gap-3 gap-lg-0">
+                        {/* Left Column: Ranked Students */}
+                        <div className="col-lg-4">
+                            <RankedStudents maxResults={5} />
+                        </div>
+
+                        {/* Right Column: Ranked Instructors */}
+                        <div className="col-lg-4">
+                            <RankedInstructors maxResults={5} />
+                        </div>
+
+                        {/* Center Column: CTA Content */}
+                        <div className="col-lg-4 d-flex flex-column justify-content-center">
                             <h2 className="display-6 fw-bold mb-3" style={{ color: "white" }}>
                                 Siap Memulai Perjalanan Pembelajaran Anda?
                             </h2>
-                            <p className="lead mb-0" style={{ color: "white" }}>
+                            <p className="lead mb-4" style={{ color: "white" }}>
                                 Bergabunglah dengan ribuan pegawai Setjen DPD RI yang telah meningkatkan kompetensi mereka 
                                 melalui platform LMSetjen DPD RI. Daftar sekarang dan akses seluruh kursus secara gratis!
                             </p>
-                        </div>
-                        <div className="col-lg-4 text-lg-end mt-4 mt-lg-0">
                             <button 
                                 onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
-                                className="btn btn-lg px-4 py-3 cta-register-btn"
+                                className="btn btn-lg px-4 py-3 cta-register-btn align-self-start"
                                 style={{
                                     background: "white",
                                     color: "#667eea",
                                     border: "none",
                                     borderRadius: "15px",
-                                    fontWeight: "600",
+                                    fontWeight: "700",
                                     boxShadow: "0 8px 25px rgba(255, 255, 255, 0.2)",
                                     cursor: "pointer",
                                     pointerEvents: "auto",
@@ -1933,6 +1944,7 @@ function Index() {
                                 Jelajahi Kursus Kami
                             </button>
                         </div>
+
                     </div>
                 </div>
             </section>

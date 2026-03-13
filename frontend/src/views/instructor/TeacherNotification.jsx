@@ -63,7 +63,7 @@ function TeacherNotification() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-notification-page pt-5 pb-5" style={{ display: 'flex', alignItems: 'center' }}>
+                <section className="instructor-notification-page" style={{ display: 'flex', alignItems: 'center' }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -88,7 +88,7 @@ function TeacherNotification() {
         <>
             <BaseHeader />
 
-            <section className="instructor-notification-page pt-5 pb-5" style={{ minHeight: '100vh' }}>
+            <section className="instructor-notification-page" style={{ minHeight: '100vh' }}>
                 <div className="container">
                     {/* Header Here */}
                     <Header />

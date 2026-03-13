@@ -131,17 +131,6 @@ function Sidebar() {
                             </Link>
                             
                             <Link 
-                                className={`modern-nav-link ${isActive("/student/question-answer") ? "active" : ""}`} 
-                                to="/student/question-answer/"
-                                data-tooltip="Forum T&J"
-                            >
-                                <div className="nav-icon">
-                                    <i className="fas fa-comments"></i>
-                                </div>
-                                <span className="nav-text">Forum T&J</span>
-                            </Link>
-
-                            <Link 
                                 className={`modern-nav-link ${isActive("/student/sertifikat") ? "active" : ""}`} 
                                 to="/student/sertifikat/"
                                 data-tooltip="Sertifikat Kursus"

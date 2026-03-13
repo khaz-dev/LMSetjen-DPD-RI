@@ -7,43 +7,46 @@ import TestimonialSubmitForm from "../../components/TestimonialSubmitForm";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
+// ✨ PHASE 11.12: Import caching hook for seamless navigation
+import { usePageCache } from "../../utils/usePageCache";
 import "./Testimonials.css";
 
 function Testimonials() {
     const [testimonials, setTestimonials] = useState([]);
-    const [fetching, setFetching] = useState(true);
     const isCollapsed = useSidebarCollapse();
 
-    const fetchTestimonials = () => {
-        setFetching(true);
-        useAxios
-            .get("student/testimonials/list/?role=student")  // ✨ PHASE 4.13: Fetch user's own testimonials with status
-            .then((res) => {
-                setTestimonials(res.data?.results || []);
-            })
-            .catch((err) => {
-                console.error("Error fetching testimonials:", err);
-                setTestimonials([]);
-            })
-            .finally(() => {
-                setFetching(false);
-            });
+    const fetchTestimonials = async () => {
+        const res = await useAxios
+            .get("student/testimonials/list/?role=student");  // ✨ PHASE 4.13: Fetch user's own testimonials with status
+        return res.data?.results || [];
     };
 
+    // ✨ PHASE 11.12: Use page cache to avoid reloading when navigating
+    const { data: cachedTestimonials, loading: fetching, refetch } = usePageCache(
+        'student-testimonials',
+        fetchTestimonials,
+        {
+            showLoadingOnStale: false
+        }
+    );
+
+    // Sync cached data to state
     useEffect(() => {
-        fetchTestimonials();
-    }, []);
+        if (cachedTestimonials) {
+            setTestimonials(cachedTestimonials);
+        }
+    }, [cachedTestimonials]);
 
     const handleTestimonialSubmitSuccess = () => {
         // Refresh testimonials after successful submission
-        fetchTestimonials();
+        refetch();
     };
 
     if (fetching) {
         return (
             <>
                 <BaseHeader />
-                <section className="pt-5 pb-5 student-testimonials-page" style={{ minHeight: "calc(100vh - 120px)" }}>
+                <section className="student-testimonials-page" style={{ minHeight: "calc(100vh - 120px)" }}>
                     <div className="container">
                         <Header />
                         <div className="row">
@@ -67,7 +70,7 @@ function Testimonials() {
     return (
         <>
             <BaseHeader />
-            <section className="pt-5 pb-5 student-testimonials-page">
+            <section className="student-testimonials-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 md-4">
@@ -78,7 +81,7 @@ function Testimonials() {
                                 background: "rgba(255, 255, 255, 0.95)",
                                 backdropFilter: "blur(10px)",
                                 borderRadius: "20px",
-                                padding: "30px",
+                                padding: "20px 20px",
                                 border: "1px solid rgba(255, 255, 255, 0.2)",
                                 boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
                                 position: "relative",
@@ -104,10 +107,10 @@ function Testimonials() {
                                             fontSize: "2.5rem",
                                             fontWeight: "bold"
                                         }}>
-                                            <i className="fas fa-quote-left me-3"></i>Testimoni Siswa
+                                            <i className="fas fa-quote-left me-3"></i>Testimoni Platform
                                         </h1>
                                         <p className="mb-0 text-muted" style={{ fontSize: "1.1rem" }}>
-                                            Bagikan dan lihat pengalaman belajar dari siswa lain
+                                            Bagikan pengalaman belajar anda dalam platform ini.
                                         </p>
                                     </div>
                                 </div>
@@ -122,7 +125,7 @@ function Testimonials() {
                                 <div className="card-body p-4">
                                     {/* ✨ PHASE 4.14: Show status of latest testimonial inside form card */}
                                     {testimonials && testimonials.length > 0 && (
-                                        <div style={{ marginBottom: "2rem", paddingBottom: "2rem", borderBottom: "1px solid #e9ecef" }}>
+                                        <div style={{ marginBottom: "1rem", paddingBottom: "1rem", borderBottom: "1px solid #e9ecef" }}>
                                             <h5 style={{
                                                 marginBottom: "1rem",
                                                 color: "#667eea",
@@ -202,7 +205,7 @@ function Testimonials() {
                                     }}>
                                         <i className="fas fa-pen-fancy me-2"></i>Bagikan Testimoni Anda
                                     </h4>
-                                    <p className="card-text text-muted mb-4">
+                                    <p className="card-text text-muted mb-3">
                                         Ceritakan pengalaman dan pembelajaran Anda sebagai siswa di platform kami
                                     </p>
                                     {/* ✨ PHASE 4.11: Pass role='student' to form */}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Toast from '../views/plugin/Toast';
 import './ComingSoonModal.css';
 
-export const useComingSoon = (featureName = 'Feature') => {
+export const useComingSoon = (featureName = 'Fitur') => {
   return (e) => {
     if (e) {
       e.preventDefault();
@@ -11,18 +11,18 @@ export const useComingSoon = (featureName = 'Feature') => {
     
     Toast().fire({
       icon: 'info',
-      title: 'Coming Soon!',
-      text: `${featureName} will be available soon.`,
+      title: 'Segera Hadir!',
+      text: `${featureName} akan tersedia segera.`,
     });
   };
 };
 
-const ComingSoonModal = ({ featureName = 'Feature', onClose }) => {
+const ComingSoonModal = ({ featureName = 'Fitur', onClose }) => {
   return (
     <div className="coming-soon-modal-overlay" onClick={onClose}>
       <div className="coming-soon-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="coming-soon-modal-header">
-          <h3>Coming Soon!</h3>
+          <h3>Segera Hadir!</h3>
           <button 
             className="coming-soon-modal-close" 
             onClick={onClose}
@@ -33,8 +33,8 @@ const ComingSoonModal = ({ featureName = 'Feature', onClose }) => {
         </div>
         <div className="coming-soon-modal-body">
           <i className="fas fa-hourglass-half coming-soon-icon"></i>
-          <p>{featureName} will be available soon.</p>
-          <p className="coming-soon-subtitle">We're working hard to bring you this feature!</p>
+          <p>{featureName} akan tersedia segera.</p>
+          <p className="coming-soon-subtitle">Kami bekerja keras untuk menghadirkan fitur ini!</p>
         </div>
         <div className="coming-soon-modal-footer">
           <button 

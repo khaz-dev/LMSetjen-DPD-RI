@@ -74,19 +74,51 @@ const formatUrl = (url) => {
     return url.startsWith('www.') || url.includes('.') ? `https://${url}` : url;
 };
 
+// ✨ PHASE 11.6: Generate unique filename based on user ID to prevent overwrites
+const generateUniqueFilename = (userId, originalFilename = "") => {
+    // Extract file extension from original filename or default to jpg
+    let extension = "jpg";
+    if (originalFilename && originalFilename.includes(".")) {
+        extension = originalFilename.split(".").pop().toLowerCase();
+        // Validate extension to prevent abuse
+        const validExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+        if (!validExtensions.includes(extension)) {
+            extension = "jpg";
+        }
+    }
+    // Generate unique filename: user_{id}.{extension}
+    return `user_${userId}.${extension}`;
+};
+
 const createFormData = (profileData, croppedImageBlob, fileName, originalImage) => {
     const formdata = new FormData();
+    
+    console.log('📝 createFormData CALLED with:', {
+        profileDataImageType: typeof profileData.image,
+        profileDataImageSize: profileData.image instanceof Blob ? (profileData.image.size / 1024).toFixed(2) + ' KB' : 'Not a Blob',
+        croppedImageBlobExists: !!croppedImageBlob,
+        croppedImageBlobSize: croppedImageBlob ? (croppedImageBlob.size / 1024).toFixed(2) + ' KB' : 'NULL',
+        fileName,
+        originalImageType: typeof originalImage
+    });
     
     // Handle image upload/deletion logic
     if (profileData.image === null) {
         // Image deletion - send empty string
+        console.log('🔀 createFormData: Branch 1 - profileData.image is NULL → appending empty string');
         formdata.append("image", "");
     } else if (croppedImageBlob) {
         // New cropped image
+        console.log('🔀 createFormData: Branch 2 - Using CROPPED blob');
+        console.log('   Appending croppedImageBlob, size:', (croppedImageBlob.size / 1024).toFixed(2) + ' KB');
         formdata.append("image", croppedImageBlob, fileName);
     } else if (profileData.image && profileData.image !== originalImage) {
         // New uncropped image (fallback)
+        console.log('🔀 createFormData: Branch 3 - Using profileData.image (UNCROPPED!)');
+        console.log('   profileData.image size:', profileData.image instanceof Blob ? (profileData.image.size / 1024).toFixed(2) + ' KB' : 'Not a Blob');
         formdata.append("image", profileData.image);
+    } else {
+        console.log('🔀 createFormData: No branch matched - NO IMAGE APPENDED!');
     }
 
     // Profile fields
@@ -103,12 +135,16 @@ const extractFileName = (imagePath) => {
 };
 
 const getCroppedImage = (image, crop, fileName) => {
+    console.log('🔍 getCroppedImage CALLED with:', { crop, fileName });
+    
     const canvas = document.createElement('canvas');
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
     canvas.width = crop.width;
     canvas.height = crop.height;
     const ctx = canvas.getContext('2d');
+
+    console.log('📐 Canvas prepared:', { width: canvas.width, height: canvas.height, scaleX, scaleY });
 
     ctx.drawImage(
         image,
@@ -121,14 +157,20 @@ const getCroppedImage = (image, crop, fileName) => {
         crop.width,
         crop.height,
     );
+    
+    console.log('🎨 Image drawn to canvas');
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         canvas.toBlob((blob) => {
+            console.log('📦 canvas.toBlob callback received, blob:', blob);
+            
             if (!blob) {
-                console.error(VALIDATION_MESSAGES.CANVAS_EMPTY);
+                console.error('❌ CRITICAL: Blob is null/undefined!', VALIDATION_MESSAGES.CANVAS_EMPTY);
+                reject(new Error(VALIDATION_MESSAGES.CANVAS_EMPTY));
                 return;
             }
             blob.name = fileName;
+            console.log('✅ Blob resolved:', { name: blob.name, size: blob.size, type: blob.type });
             resolve(blob);
         }, IMAGE_CONFIG.FORMAT, IMAGE_CONFIG.QUALITY);
     });
@@ -189,6 +231,7 @@ function Profile() {
     });
     
     const imgRef = useRef(null);
+    const croppedBlobRef = useRef(null);  // ✨ PHASE 11.7: Persistent ref for cropped blob (survives state closure)
     
     const [teacherData, setTeacherData] = useState(null);
 
@@ -239,35 +282,191 @@ function Profile() {
         }
     };
 
+    // ✨ PHASE 11.4: Auto-submit image after crop completes
+    const submitImageOnly = async () => {
+        console.log('📤 submitImageOnly CALLED - AUTO-SAVE STARTING');
+        console.log('💾 IMMEDIATE STATE CHECK (before any async operations):');
+        console.log('   imageState.croppedBlob:', {
+            exists: !!imageState.croppedBlob,
+            isBlob: imageState.croppedBlob instanceof Blob,
+            size: imageState.croppedBlob ? (imageState.croppedBlob.size / 1024).toFixed(2) + ' KB' : 'NULL',
+            type: imageState.croppedBlob ? imageState.croppedBlob.type : 'N/A'
+        });
+        console.log('   profileData.image:', {
+            exists: !!profileData.image,
+            isBlob: profileData.image instanceof Blob,
+            size: profileData.image instanceof Blob ? (profileData.image.size / 1024).toFixed(2) + ' KB' : 'Not a Blob',
+            type: typeof profileData.image
+        });
+        console.log('   imageState.selected:', {
+            exists: !!imageState.selected,
+            type: typeof imageState.selected
+        });
+        
+        try {
+            setUiState(prev => ({ ...prev, loading: true }));
+            
+            const userId = UserData()?.user_id;
+            console.log('👤 userId from UserData():', userId);
+            if (!userId) throw new Error("User ID not found");
+            
+            // Get current profile to pass existing image
+            console.log(`🔄 Fetching current profile from /user/profile/${userId}/`);
+            const res = await useAxios.get(`user/profile/${userId}/`);
+            console.log('✅ Profile fetched:', res.data);
+            
+            // ✨ PHASE 11.6: Generate unique filename to prevent overwrites between users
+            const uniqueFilename = generateUniqueFilename(userId, imageState.fileName);
+            console.log(`📝 Generated unique filename: ${uniqueFilename}`);
+            
+            // ✨ PHASE 11.6 CRITICAL CHECK: Verify we have the cropped blob!
+            console.log('🔍 ABOUT TO SUBMIT - Final check (STATE vs REF):');
+            console.log('   imageState.croppedBlob exists?:', !!imageState.croppedBlob);
+            console.log('   imageState.croppedBlob size:', imageState.croppedBlob ? (imageState.croppedBlob.size / 1024).toFixed(2) + ' KB' : 'NOT SET');
+            console.log('   croppedBlobRef.current exists?:', !!croppedBlobRef.current);
+            console.log('   croppedBlobRef.current size:', croppedBlobRef.current ? (croppedBlobRef.current.size / 1024).toFixed(2) + ' KB' : 'NOT SET');
+            console.log('   profileData.image type:', typeof profileData.image);
+            
+            // ✨ PHASE 11.7: Use REF instead of STATE to avoid closure issues
+            const blobToUse = croppedBlobRef.current || imageState.croppedBlob;
+            console.log('🔗 Using blob from:', croppedBlobRef.current ? 'REF (persistent)' : 'STATE (may be lost)');
+            console.log('   Final blob to submit - size:', blobToUse ? (blobToUse.size / 1024).toFixed(2) + ' KB' : 'NONE!');
+            
+            // Create form data using the proven createFormData function with unique filename
+            console.log('📝 Creating FormData with createFormData()...');
+            const formdata = createFormData(
+                profileData,
+                blobToUse,  // ← Use REF-backed blob to survive closure
+                uniqueFilename,  // ✨ Use unique filename instead of original
+                res.data.image
+            );
+            console.log('📝 FormData created with unique filename:', uniqueFilename);
+            console.log('✅ This FormData contains the cropped image (verify with logs above)');
+
+            console.log(`📡 Sending PATCH to /user/profile/${userId}/`);
+            // ✨ PHASE 11.5: FIX - Do NOT set Content-Type header for FormData!
+            // useAxios interceptor will handle it correctly by removing it and letting browser add boundary
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
+            console.log('✅ API Response received:', updateRes.data);
+            
+            // ✨ PHASE 11.8: Cache-bust image URL to force browser reload (fixes BOTH navbar AND profile form avatars)
+            // Problem: Same filename means same URL, browser won't fetch new image from cache
+            // Solution: Add timestamp parameter to force fresh fetch
+            const cacheBustedImageUrl = updateRes.data.image 
+                ? `${updateRes.data.image}?v=${Date.now()}` 
+                : updateRes.data.image;
+            console.log('🔄 Cache-busting: Added timestamp to image URL:', cacheBustedImageUrl);
+            
+            // ✅ Update context immediately with cache-busted image URL
+            const dataToUpdateContext = { ...updateRes.data, image: cacheBustedImageUrl };
+            setProfile(dataToUpdateContext);
+            console.log('✅ ProfileContext updated with cache-busted image URL');
+            
+            // ✅ Update local state with fresh data
+            setProfileData(updateRes.data);
+            console.log('✅ Local profileData updated');
+            
+            // ✅ Update image preview with the CACHE-BUSTED image URL (fixes profile form avatar!)
+            const validImageUrl = getValidProfileImageUrl(cacheBustedImageUrl, "");
+            console.log('✅ Image preview updated with cache-busted URL:', validImageUrl);
+            setUiState(prev => ({ ...prev, imagePreview: validImageUrl }));
+            
+            // ✅ Update filename and clear cropped blob
+            setImageState(prev => ({
+                ...prev,
+                fileName: extractFileName(updateRes.data.image),
+                croppedBlob: null,
+                selected: null  // ✨ Also clear selected to allow new file selection
+            }));
+            
+            console.log('📢 Showing success toast...');
+            Toast().fire({
+                icon: "success",
+                title: "Foto Profil Berhasil Disimpan",
+                text: "Avatar Anda telah diperbarui"
+            });
+            
+            // ✨ PHASE 11.6 FIX: Reset file input to allow re-selecting new avatar
+            // This fixes the issue where crop modal doesn't reappear after successful upload
+            console.log('🔄 Resetting file input for next upload...');
+            const fileInput = document.getElementById("profileImage");
+            if (fileInput) {
+                fileInput.value = "";
+            }
+            
+        } catch (error) {
+            console.error("❌ Error saving image:", error);
+            console.error("   Error details:", {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+            Toast().fire({
+                icon: "error",
+                title: "Gagal Menyimpan Foto",
+                text: error.response?.data?.message || "Terjadi kesalahan saat menyimpan foto profil"
+            });
+        } finally {
+            setUiState(prev => ({ ...prev, loading: false }));
+        }
+    };
+
     const submitProfile = async (e) => {
         e.preventDefault();
         setUiState(prev => ({ ...prev, loading: true }));
 
         try {
+            const userId = UserData()?.user_id;
+            if (!userId) throw new Error("User ID not found");
+            
+            // ✨ PHASE 11.6 CRITICAL CHECK: Prevent submitting uncropped image
+            // If user selected a NEW image but hasn't clicked "Apply Crop", warn them
+            if (imageState.selected && !imageState.croppedBlob) {
+                console.warn('⚠️  User selected image but did not crop it!');
+                Toast().fire({
+                    icon: "warning",
+                    title: "Gambar Belum Dipotong",
+                    text: "Silakan klik 'Apply Crop' di modal pemotongan sebelum menyimpan"
+                });
+                setUiState(prev => ({ ...prev, loading: false }));
+                return;  // Prevent submission
+            }
+            
             // Update Profile data
-            const res = await useAxios.get(`user/profile/${UserData()?.user_id}/`);
+            const res = await useAxios.get(`user/profile/${userId}/`);
+            
+            // ✨ PHASE 11.6 CRITICAL FIX: Generate unique filename in manual submission too!
+            // Without this, submitProfile would use the original filename when user clicks Simpan
+            const uniqueFilename = imageState.fileName ? generateUniqueFilename(userId, imageState.fileName) : imageState.fileName;
             
             const formdata = createFormData(
                 profileData, 
                 imageState.croppedBlob, 
-                imageState.fileName, 
+                uniqueFilename,  // ✨ Use unique filename instead of original
                 res.data.image
             );
 
             // Update profile
-            const updateRes = await useAxios.patch(`user/profile/${UserData()?.user_id}/`, formdata, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-            setProfile(updateRes.data);
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
+            
+            // ✨ PHASE 11.8: Cache-bust image URL to force browser reload (fixes BOTH navbar AND profile form avatars)
+            // Problem: Same filename means same URL, browser won't fetch new image from cache
+            // Solution: Add timestamp parameter to force fresh fetch
+            const cacheBustedImageUrl = updateRes.data.image 
+                ? `${updateRes.data.image}?v=${Date.now()}` 
+                : updateRes.data.image;
+            console.log('🔄 Cache-busting: Added timestamp to image URL:', cacheBustedImageUrl);
+            
+            // ✅ Update context with cache-busted image URL
+            const dataToUpdateContext = { ...updateRes.data, image: cacheBustedImageUrl };
+            setProfile(dataToUpdateContext);
 
             // Update or create Teacher data if teacher-specific fields are provided
             if (hasTeacherData(profileData)) {
                 try {
                     // First, try to create Teacher instance if it doesn't exist
                     await useAxios.post(`teacher/create-from-profile/`, {
-                        user_id: UserData()?.user_id
+                        user_id: userId
                     });
                 } catch (createError) {
                     // Teacher might already exist, that's fine
@@ -276,7 +475,7 @@ function Profile() {
                 // Update teacher data
                 try {
                     const teacherDataPayload = createTeacherData(profileData);
-                    await useAxios.patch(`teacher/profile-update/${UserData()?.user_id}/`, teacherDataPayload);
+                    await useAxios.patch(`teacher/profile-update/${userId}/`, teacherDataPayload);
                 } catch (teacherUpdateError) {
                     console.error("Error updating teacher data:", teacherUpdateError);
                     // Don't fail the entire operation if teacher update fails
@@ -359,14 +558,28 @@ function Profile() {
     };
 
     const handleCropComplete = async () => {
-        if (!cropState.completedCrop || !imgRef.current) return;
+        console.log('🎬 handleCropComplete CALLED');
+        console.log('   cropState:', cropState);
+        console.log('   imgRef.current exists?:', !!imgRef.current);
+        
+        if (!cropState.completedCrop || !imgRef.current) {
+            console.warn('⚠️ Early return: completedCrop missing or no imgRef');
+            return;
+        }
 
         try {
+            console.log('🔄 Starting crop process...');
             const croppedBlob = await getCroppedImage(
                 imgRef.current,
                 cropState.completedCrop,
                 imageState.fileName
             );
+            
+            console.log('✅ Crop completed, blob received:', croppedBlob);
+            
+            // ✨ STORE BLOB IN REF IMMEDIATELY - survives state closure issues
+            croppedBlobRef.current = croppedBlob;
+            console.log('🔗 croppedBlobRef.current SET to blob:', { size: croppedBlob.size, refHasData: !!croppedBlobRef.current });
             
             setImageState(prev => ({
                 ...prev,
@@ -375,6 +588,7 @@ function Profile() {
             
             const previewUrl = URL.createObjectURL(croppedBlob);
             
+            console.log('🖼️ Setting image preview...');
             setUiState(prev => ({ 
                 ...prev, 
                 imagePreview: previewUrl,
@@ -386,12 +600,22 @@ function Profile() {
                 image: croppedBlob,
             }));
             
+            console.log('📢 Showing success toast...');
             Toast().fire({
                 icon: "success",
                 title: VALIDATION_MESSAGES.IMAGE_CROP_SUCCESS
             });
+            
+            // ✨ PHASE 11.4: Auto-save image immediately after successful crop
+            // Schedule the submit to run after state updates are complete
+            console.log('⏰ Setting setTimeout for submitImageOnly...');
+            setTimeout(async () => {
+                console.log('⏰ setTimeout fired! Calling submitImageOnly()...');
+                await submitImageOnly();
+            }, 100);
+            
         } catch (error) {
-            console.error('[Profile] Error cropping image:', error);
+            console.error('❌ Error cropping image:', error);
             Toast().fire({
                 icon: "error",
                 title: VALIDATION_MESSAGES.IMAGE_CROP_ERROR
@@ -399,19 +623,53 @@ function Profile() {
         }
     };
 
-    const handleDeleteProfilePicture = () => {
-        setProfileData(prev => ({ ...prev, image: null }));
-        setUiState(prev => ({ ...prev, imagePreview: "" }));
-        setImageState({
-            selected: null,
-            croppedBlob: null,
-            fileName: ""
-        });
-        
-        Toast().fire({
-            icon: "success",
-            title: VALIDATION_MESSAGES.PICTURE_REMOVED
-        });
+    const handleDeleteProfilePicture = async () => {
+        try {
+            setUiState(prev => ({ ...prev, loading: true }));
+            
+            const userId = UserData()?.user_id;
+            if (!userId) throw new Error("User ID not found");
+            
+            console.log('🗑️ Deleting profile picture...');
+            
+            // ✨ PHASE 11.6 FIX: Submit image deletion to backend to clean up orphaned files
+            const formdata = new FormData();
+            formdata.append("image", "");  // Empty string signals deletion
+            formdata.append("full_name", profileData.full_name || "");
+            
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
+            console.log('✅ Image deleted from server');
+            
+            // Update frontend state with response from server
+            setProfile(updateRes.data);
+            setProfileData(updateRes.data);
+            setUiState(prev => ({ ...prev, imagePreview: "" }));
+            setImageState({
+                selected: null,
+                croppedBlob: null,
+                fileName: ""
+            });
+            
+            // Reset file input
+            const fileInput = document.getElementById("profileImage");
+            if (fileInput) {
+                fileInput.value = "";
+            }
+            
+            Toast().fire({
+                icon: "success",
+                title: VALIDATION_MESSAGES.PICTURE_REMOVED
+            });
+        } catch (error) {
+            console.error("❌ Error deleting image:", error);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal Menghapus Foto",
+                text: error.response?.data?.message || "Terjadi kesalahan saat menghapus foto profil"
+            });
+        } finally {
+            setUiState(prev => ({ ...prev, loading: false }));
+        }
     };
 
     const handleCropCancel = () => {
@@ -507,15 +765,6 @@ function Profile() {
                         />
                         <small className="file-help-text">PNG atau JPG, maksimal {IMAGE_CONFIG.MAX_SIZE}</small>
                     </div>
-                    
-                    {(imageState.fileName || uiState.imagePreview) && (
-                        <div className="file-info">
-                            <p className="file-info-text">
-                                <i className="fas fa-image file-info-icon"></i>
-                                <strong>Foto Saat Ini:</strong> {imageState.fileName || "Foto profil yang ada"}
-                            </p>
-                        </div>
-                    )}
                     
                     {uiState.imagePreview && (
                         <div className="profile-picture-actions">
@@ -684,7 +933,7 @@ function Profile() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-profile-page modern-profile-page pt-5 pb-5" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
+                <section className="instructor-profile-page modern-profile-page" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -709,7 +958,7 @@ function Profile() {
         <>
             <BaseHeader />
 
-            <section className="instructor-profile-page modern-profile-page pt-5 pb-5">
+            <section className="instructor-profile-page modern-profile-page">
                 <div className="container">
                     <Header />
                     <div className="row">

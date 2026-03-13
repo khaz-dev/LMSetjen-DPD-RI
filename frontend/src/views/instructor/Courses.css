@@ -1,23 +1,5 @@
 /* Modern Courses Styles - Instructor Page */
 
-/* ================================
-   GAP BETWEEN HEADER AND DASHBOARD
-   ================================ */
-
-.instructor-header-card {
-    margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
-    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
-}
-
-/* Protect header card gap from parent overrides */
-.modern-dashboard .row > .col-12 > .instructor-header-card,
-.modern-dashboard .instructor-header-card {
-    margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
-    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
-}
-
 /* Protect Header on Courses page (courses-container) from row CSS rules */
 .courses-container .row.instructor-header-row {
     margin-left: auto !important;
@@ -60,9 +42,9 @@
     margin-bottom: 8rem;
     min-height: 100vh;
     background: transparent;
-    padding: 3rem 0;
-    padding-top: calc(70px + 3rem) !important;
-    padding-bottom: 3rem !important;
+    padding: var(--page-top-spacing) 0;
+    padding-top: var(--page-top-spacing) !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
     overflow-x: hidden;
@@ -74,9 +56,6 @@
 
 /* Protect Header Card from aggressive CSS rules in .courses-container */
 .courses-container .instructor-header-card {
-    margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
-    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
     width: 100% !important;
     max-width: 100% !important;
 }

@@ -65,7 +65,7 @@ function Courses() {
         return (
             <>
                 <BaseHeader />
-                <section className="courses-container courses-loading-section pt-5 pb-5">
+                <section className="courses-container courses-loading-section">
                     <div className="courses-loading-container">
                         <div className="container">
                             <Header />
@@ -92,7 +92,7 @@ function Courses() {
         <>
             <BaseHeader />
 
-            <section className="courses-container courses-main-section pt-5 pb-5">
+            <section className="courses-container courses-main-section">
                 <div className="container">
                     <Header />
                     <div className="row courses-sidebar-content-row">

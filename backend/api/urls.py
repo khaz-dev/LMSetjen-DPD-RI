@@ -245,7 +245,12 @@ urlpatterns = [
     path("admin/instructor-request/<int:request_id>/reject/", api_views.AdminInstructorRequestRejectAPIView.as_view()),
 
     # ✨ PHASE 4.143: Lesson Completion Question endpoints
+    # ✨ PHASE 11.169: Specific /answer/ path MUST come BEFORE generic <question_id>/ to avoid URL matching issues
     path("lesson-completion-question/", api_views.LessonCompletionQuestionListCreateAPIView.as_view()),
+    path("lesson-completion-question/answer/", api_views.LessonCompletionQuestionAnswerAPIView.as_view()),  # ✨ PHASE 11.169: More specific pattern first
     path("lesson-completion-question/<question_id>/", api_views.LessonCompletionQuestionDetailAPIView.as_view()),
-    path("lesson-completion-question/answer/", api_views.LessonCompletionQuestionAnswerAPIView.as_view()),
+    
+    # ✨ PHASE 10.1: Ranking endpoints (placeholder for unimplemented ranking system)
+    path("rankings/students/<str:period>/", api_views.RankedStudentsAPIView.as_view()),
+    path("rankings/instructors/<str:period>/", api_views.RankedInstructorsAPIView.as_view()),
 ]

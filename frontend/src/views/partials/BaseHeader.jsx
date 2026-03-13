@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect, memo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { WishlistContext, RolesContext } from '../plugin/Context';
+import { WishlistContext, RolesContext, ProfileContext } from '../plugin/Context';
 import { useAuthStore } from "../../store/auth";
 import UserData from "../plugin/UserData";
 import apiInstance from "../../utils/axios";
@@ -15,6 +15,9 @@ function BaseHeader() {
     const [wishlistCount, setWishlistCount] = useContext(WishlistContext);
     // ✨ PHASE 4.20: Import RolesContext to track role changes for menu updates
     const { currentRole } = useContext(RolesContext) || {};
+    // ✨ PHASE 11.2: Use ProfileContext to get profile data (avatar updates from Profile page)
+    const [profile] = useContext(ProfileContext) || [null];
+    
     const [searchQuery, setSearchQuery] = useState("");
     const [typingComplete, setTypingComplete] = useState(false);
     const [animationSkipped, setAnimationSkipped] = useState(false);
@@ -105,7 +108,10 @@ function BaseHeader() {
         }
     }, [isSearchPage, location, trendingSearches]);
 
-    // ✨ PHASE 3: Save search to history when navigating to search results
+    // ✨ PHASE 11.2: Avatar is now managed via ProfileContext from App.jsx
+    // It updates automatically when user changes avatar on Profile page
+    // No separate fetch needed - just render from profile?.image
+
     const addToSearchHistory = (query) => {
         if (!query || query.trim().length < 2) return;
         
@@ -352,6 +358,75 @@ function BaseHeader() {
         return displayName || (hasTeacherId ? 'Pemateri' : 'Peserta');
     };
 
+    // ✨ PHASE 4.X: Render student profile avatar in navigation
+    // ✨ PHASE 11.2: Render profile avatar from ProfileContext (updated when user changes profile picture)
+    const renderProfileAvatarInNav = () => {
+        // Show avatar image from profile context if available
+        if (profile?.image) {
+            return (
+                <div className="nav-avatar-wrapper">
+                    <img
+                        src={profile.image}
+                        className="nav-avatar-image"
+                        alt={`${profile?.full_name || "Pengguna"} avatar`}
+                        title={profile?.full_name || "Profil Saya"}
+                    />
+                </div>
+            );
+        }
+
+        // Default avatar with initials or icon
+        const fullName = allUserData?.full_name || userData?.full_name || profile?.full_name || "U";
+        const initials = fullName
+            .split(' ')
+            .slice(0, 2)
+            .map(word => word[0])
+            .join('')
+            .toUpperCase();
+
+        return (
+            <div className="nav-avatar-wrapper default">
+                <div className="nav-avatar-default">
+                    <span>{initials}</span>
+                </div>
+            </div>
+        );
+    };
+
+    // ✨ PHASE 11.2: Render instructor avatar - same as student, from ProfileContext
+    const renderInstructorAvatarInNav = () => {
+        // Show avatar image from profile context if available
+        if (profile?.image) {
+            return (
+                <div className="nav-avatar-wrapper">
+                    <img
+                        src={profile.image}
+                        className="nav-avatar-image"
+                        alt={`${profile?.full_name || "Pengguna"} avatar`}
+                        title={profile?.full_name || "Profil Saya"}
+                    />
+                </div>
+            );
+        }
+
+        // Default avatar with initials or icon
+        const fullName = allUserData?.full_name || userData?.full_name || profile?.full_name || "I";
+        const initials = fullName
+            .split(' ')
+            .slice(0, 2)
+            .map(word => word[0])
+            .join('')
+            .toUpperCase();
+
+        return (
+            <div className="nav-avatar-wrapper default">
+                <div className="nav-avatar-default">
+                    <span>{initials}</span>
+                </div>
+            </div>
+        );
+    };
+
     const isActive = (path) => {
         if (path === "/logout/") return false;
         return location.pathname === path || location.pathname.startsWith(path);
@@ -373,7 +448,6 @@ function BaseHeader() {
         { to: "/student/dashboard/", icon: "bi bi-grid-fill", text: "Dashboard" },
         { to: "/student/courses/", icon: "fas fa-book", text: "Pembelajaran" },
         { to: "/student/wishlist/", icon: "fas fa-bookmark", text: "Materi Impian" },
-        { to: "/student/question-answer/", icon: "fas fa-envelope", text: "Tanya Jawab" },
         { to: "/student/profile/", icon: "fas fa-gear", text: "Pengaturan" },
         { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar" }
     ];
@@ -673,9 +747,9 @@ function BaseHeader() {
                                         onMouseEnter={handleMouseEnter}
                                         onMouseLeave={handleMouseLeave}
                                     >
-                                        <div className="nav-link admin-link">
-                                            <i className="fas fa-shield-alt me-2"></i>
+                                        <div className="nav-link admin-link nav-link-avatar">
                                             <span>{getDisplayName()}</span>
+                                            <i className="fas fa-shield-alt nav-admin-role-icon"></i>
                                         </div>
                                         <ul className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
                                             {renderDropdownItems(adminMenuItems)}
@@ -687,9 +761,9 @@ function BaseHeader() {
                                         onMouseEnter={handleMouseEnter}
                                         onMouseLeave={handleMouseLeave}
                                     >
-                                        <div className="nav-link instructor-link">
-                                            <i className="fas fa-chalkboard-user me-2"></i>
-                                            <span>{getDisplayName()}</span>
+                                        <div className="nav-link instructor-link nav-link-avatar">
+                                            {renderInstructorAvatarInNav()}
+                                            <i className="fas fa-chalkboard-user nav-instructor-role-icon"></i>
                                         </div>
                                         <ul className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
                                             {renderDropdownItems(instructorMenuItems)}
@@ -701,9 +775,9 @@ function BaseHeader() {
                                         onMouseEnter={handleMouseEnter}
                                         onMouseLeave={handleMouseLeave}
                                     >
-                                        <div className="nav-link student-link">
-                                            <i className="fas fa-graduation-cap me-2"></i>
-                                            <span>{getDisplayName()}</span>
+                                        <div className="nav-link student-link nav-link-avatar">
+                                            {renderProfileAvatarInNav()}
+                                            <i className="fas fa-graduation-cap nav-avatar-role-icon"></i>
                                         </div>
                                         <ul className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
                                             {renderDropdownItems(studentMenuItems)}

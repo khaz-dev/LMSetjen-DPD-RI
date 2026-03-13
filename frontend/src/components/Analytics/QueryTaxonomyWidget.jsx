@@ -35,7 +35,6 @@ export default function QueryTaxonomyWidget() {
         setReport(response.data);
       }
     } catch (error) {
-      console.error('Gagal mengambil laporan taksonomi:', error);
       Toast().fire({
         icon: 'error',
         title: 'Gagal mengambil laporan taksonomi'
@@ -55,7 +54,6 @@ export default function QueryTaxonomyWidget() {
         setTaxonomies(response.data.results);
       }
     } catch (error) {
-      console.error('Gagal mengambil taksonomi:', error);
       Toast().fire({
         icon: 'error',
         title: 'Gagal mengambil taksonomi kueri'
@@ -75,7 +73,6 @@ export default function QueryTaxonomyWidget() {
         setAnalytics(response.data.results);
       }
     } catch (error) {
-      console.error('Gagal mengambil analitik:', error);
       Toast().fire({
         icon: 'error',
         title: 'Gagal mengambil analitik kategori'
@@ -92,7 +89,6 @@ export default function QueryTaxonomyWidget() {
         setTimelineData(response.data);
       }
     } catch (error) {
-      console.error('Gagal mengambil garis waktu:', error);
       Toast().fire({
         icon: 'error',
         title: 'Gagal mengambil data garis waktu'
@@ -451,7 +447,7 @@ export default function QueryTaxonomyWidget() {
 
       <div className="card-footer bg-light text-end">
         <button
-          className="btn btn-sm btn-outline-primary"
+          className="btn btn-sm btn-primary"
           onClick={fetchTaxonomyReport}
           disabled={loading}
         >

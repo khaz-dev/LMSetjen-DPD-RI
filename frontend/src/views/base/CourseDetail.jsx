@@ -24,27 +24,9 @@ import Swal from "sweetalert2";
 import "./CourseDetail.css";
 
 // ✨ PHASE 4.75: Utility function to convert media URLs to preview/embed format
-// Handles Google Drive URLs and YouTube URLs for iframe embedding
+// Handles YouTube URLs for iframe embedding
 const convertGoogleDriveUrlToPreview = (url) => {
     if (!url || typeof url !== 'string') return url;
-    
-    // Check if it's a Google Drive URL
-    if (url.includes('drive.google.com')) {
-        // Extract file ID from various Google Drive URL formats
-        let fileId = null;
-        
-        // Format: https://drive.google.com/file/d/{FILE_ID}/view
-        // or: https://drive.google.com/file/d/{FILE_ID}/view?usp=sharing
-        const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
-        if (match) {
-            fileId = match[1];
-        }
-        
-        // If file ID found, convert to preview format
-        if (fileId) {
-            return `https://drive.google.com/file/d/${fileId}/preview`;
-        }
-    }
     
     // ✨ PHASE 4.75 FIX: Handle YouTube URLs
     // Convert youtube.com/watch?v=ID and youtu.be/ID to embed format
@@ -835,11 +817,10 @@ function CourseDetail() {
                                 <div style={{ width: "100%", maxWidth: "100%", position: "relative" }}>
                                     {(() => {
                                         const videoUrl = convertGoogleDriveUrlToPreview(course.file);
-                                        const isGoogleDrive = videoUrl && videoUrl.includes('drive.google.com/file') && videoUrl.includes('/preview');
                                         const isYouTubeEmbed = videoUrl && (videoUrl.includes('youtube.com/embed') || videoUrl.includes('youtube-nocookie.com/embed') || videoUrl.includes('youtu.be'));
                                         
-                                        return isGoogleDrive || isYouTubeEmbed ? (
-                                            // ✨ PHASE 4.74: Both Google Drive and YouTube require iframe
+                                        return isYouTubeEmbed ? (
+                                            // ✨ PHASE 4.74: YouTube requires iframe
                                             <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden" }}>
                                                 <iframe
                                                     key={videoUrl}
@@ -999,11 +980,10 @@ function CourseDetail() {
                                     {/* ✨ PHASE 4.74: Fixed YouTube embed handling - render as iframe not video tag */}
                                     {(() => {
                                         const videoUrl = convertGoogleDriveUrlToPreview(previewVideo.file || previewVideo.video_url);
-                                        const isGoogleDrive = videoUrl && videoUrl.includes('drive.google.com/file') && videoUrl.includes('/preview');
                                         const isYouTubeEmbed = videoUrl && (videoUrl.includes('youtube.com/embed') || videoUrl.includes('youtube-nocookie.com/embed') || videoUrl.includes('youtu.be'));
                                         
-                                        return isGoogleDrive || isYouTubeEmbed ? (
-                                            // ✨ PHASE 4.74: Both Google Drive and YouTube require iframe
+                                        return isYouTubeEmbed ? (
+                                            // ✨ PHASE 4.74: YouTube requires iframe
                                             <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden" }}>
                                                 <iframe
                                                     key={videoUrl}

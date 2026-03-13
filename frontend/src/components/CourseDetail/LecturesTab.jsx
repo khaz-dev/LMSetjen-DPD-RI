@@ -52,10 +52,23 @@ const LecturesTab = ({
         // ✨ PHASE 4.145: Guard against null course data (may not be loaded yet)
         if (!course || !course.completed_lesson || !variantItem) return false;
         
-        return course.completed_lesson.some(cl => {
+        // ✨ PHASE 12.2: Check each lesson  
+        const isCompleted = course.completed_lesson.some(cl => {
             // Use consistent variant_item_id field throughout
             return cl.variant_item?.variant_item_id === variantItem.variant_item_id;
         });
+        
+        // ✨ PHASE 12.16: Debug logging
+        if (variantItem.variant_item_id === '136922') {
+            console.log(`[PHASE 12.16] isLessonCompleted check for lesson 136922:`, {
+                itemId: variantItem.variant_item_id,
+                completedLessonsCount: course.completed_lesson?.length || 0,
+                completedLessonsIds: course.completed_lesson?.map(cl => cl.variant_item?.variant_item_id) || [],
+                isCompleted: isCompleted
+            });
+        }
+        
+        return isCompleted;
     };
 
     // Helper functions for file handling
@@ -169,9 +182,7 @@ const LecturesTab = ({
                     ? 1  // Show at least 1% for any in-progress content
                     : lessonProgress.percentage;
                 return { ...lessonProgress, percentage: displayPercentage };
-            } else {
             }
-        } else {
         }
         
         // For video files, show "Ready to watch" only if no progress exists
@@ -184,6 +195,13 @@ const LecturesTab = ({
 
     // ✨ PHASE 4.115: Define updateProgressStatus BEFORE useEffect that uses it
     const updateProgressStatus = (variantItemId, progressData) => {
+        // ✨ PHASE 13.7: CRITICAL FIX - Don't update progress for already-completed lessons
+        // Check if lesson is already marked as completed in the backend's completed_lesson array
+        const testVariantItem = { variant_item_id: variantItemId };
+        if (isLessonCompleted(testVariantItem)) {
+            return;  // Don't update local progress state if lesson is already marked as complete
+        }
+        
         const progressKey = `progress_${variantItemId}`;
         
         
@@ -198,15 +216,21 @@ const LecturesTab = ({
             return;
         }
 
-        // Determine status based on progress data
+        // ✨ PHASE 12.3: CRITICAL FIX - LOCAL PROGRESS STATE SHOULD NEVER BE "COMPLETED"
+        // Only the API's completed_lesson array determines true completion
+        // Local video progress can only be "in-progress" (0-99.8%) or "not-started"
+        // Setting it to "completed" causes the badge to show "Diselesaikan" even when verification questions are unanswered
+        
         let status = "not-started";
         const percentage = progressData.percentage || 0;
         
-        if (progressData.isCompleted || percentage >= 99.8) {
-            status = "completed";
-        } else if (progressData.isInProgress || percentage > 0) {
-            status = "in-progress";
+        // ✨ PHASE 12.3: CRITICAL - Never set local status to "completed"
+        // At 100% video progress, set status to "in-progress" instead of "completed"
+        // This allows the API's completion check (with verification questions) to take precedence
+        if (progressData.isInProgress || percentage > 0) {
+            status = "in-progress";  // Show 0-100% progress, but never claim "completed"
         }
+        // REMOVED: if (progressData.isCompleted || percentage >= 99.8) { status = "completed"; }
 
         // ✨ PHASE 4.117: Keep decimal precision instead of rounding to integer
         // This preserves small percentages like 0.05%, 0.45%, 1.25% instead of truncating to 0%
@@ -472,12 +496,14 @@ const LecturesTab = ({
         }
     };
 
-    const handleMarkLessonAsCompleted = async (variantItemId, isAutoComplete = false) => {
+    const handleMarkLessonAsCompleted = async (variantItemId, isAutoComplete = false, courseIdParam = null) => {
         // ✨ PHASE 4.145: Guard - if course data not loaded yet, wait for it
-        if (!course) {
-            if (Math.random() < 0.1) { // Log selectively
-            }
-            return; // Early return if course not yet loaded
+        // ✨ PHASE 12.6: FIX - Accept courseId as parameter so we don't depend on course object being loaded
+        const courseId = courseIdParam || course?.course?.id;
+        
+        if (!courseId) {
+            // Only return early if we cannot get courseId from either source
+            return; // Early return if courseId not available
         }
         
         // Use helper function to check completion status consistently
@@ -502,8 +528,9 @@ const LecturesTab = ({
         });
 
         try {
-            // ✨ PHASE 4.144+: Safely get course_id - handle missing or nested data
-            const courseId = course?.course?.id || course?.id;
+            // ✨ PHASE 12.6: courseId is now provided as parameter and defined at function start
+            // No need to extract from course object again
+            // Verify we have courseId before proceeding
             if (!courseId) {
                 Toast().fire({
                     icon: "error",
@@ -537,6 +564,10 @@ const LecturesTab = ({
                 });
             }
             
+            // ✨ PHASE 12.3: Check API response before setting local completion state
+            // The API may reject completion if verification questions are unanswered
+            const wasCompletionSuccessful = response?.status === 201 || response?.status === 200;
+            
             // ✨ PHASE 4.126: Clear video progress for ALL video types (YouTube, uploaded, Google Drive)
             // Changed from isVideoFile() to isVideoContent() to support YouTube links
             if (lessonItem && isVideoContent(lessonItem)) {
@@ -555,8 +586,10 @@ const LecturesTab = ({
                         });
                     } catch (progressError) {
                     }
-                } else if (!isAlreadyCompleted) {
+                } else if (!isAlreadyCompleted && wasCompletionSuccessful) {
+                    // ✨ PHASE 12.3: Only set local state if API was successful
                     // Case 2: Lesson was just marked as completed (manually or automatically)
+                    // ONLY proceed if API response indicates success
                     try {
                         // Clear video progress since lesson is now complete
                         await apiInstance.delete(`/student/video-progress-delete/${UserData()?.user_id}/${variantItemId}/`);
@@ -574,49 +607,60 @@ const LecturesTab = ({
                         }));
                     } catch (progressError) {
                     }
+                } else if (!isAlreadyCompleted && !wasCompletionSuccessful) {
+                    // ✨ PHASE 12.3: API rejected completion - don't set local state as completed
                 }
             }
             
             
-            // Refresh course data
-            if (fetchCourseDetail) {
-                if (isAutoComplete) {
-                    fetchCourseDetail(true); // Silent update - no loading state
-                } else {
-                    fetchCourseDetail(); // Show loading for manual completions
+            // ✨ PHASE 12.3: Only refresh and show success messages if completion was successful
+            // If API rejected (e.g., unanswered verification questions), don't show success
+            if (wasCompletionSuccessful) {
+                // ✨ PHASE 12.7: CRITICAL FIX - Await course data refresh before showing success notification
+                // This ensures the backend state is reflected in the UI before the success message appears
+                // Without this, the refresh might not complete before user closes the page, causing the completion to be lost
+                if (fetchCourseDetail) {
+                    try {
+                        if (isAutoComplete) {
+                            await fetchCourseDetail(true); // Silent update - no loading state
+                        } else {
+                            await fetchCourseDetail(); // Show loading for manual completions
+                        }
+                    } catch (refreshError) {
+                        // Continue to show success notification even if refresh fails
+                    }
                 }
-            }
-            
-            setMarkAsCompletedStatus({
-                ...markAsCompletedStatus,
-                [key]: "Updated",
-            });
-            
-            // Show appropriate notification based on the action performed
-            if (isAlreadyCompleted && !isAutoComplete) {
-                Toast().fire({
-                    icon: "info",
-                    title: "Pelajaran Tidak Ditandai!",
-                    text: "Pelajaran telah ditandai sebagai belum selesai. Kemajuan video telah disetel ulang.",
-                    timer: 2000
+
+                setMarkAsCompletedStatus({
+                    ...markAsCompletedStatus,
+                    [key]: "Updated",
                 });
-            } else if (!isAlreadyCompleted) {
-                // Show different notifications for auto vs manual completion
-                if (isAutoComplete) {
+                
+                // Show appropriate notification based on the action performed
+                if (isAlreadyCompleted && !isAutoComplete) {
                     Toast().fire({
-                        icon: "success",
-                        title: "🎉 Pelajaran Diselesaikan Secara Otomatis!",
-                        text: "Kerja bagus! Pelajaran telah ditandai sebagai selesai.",
-                        timer: 4000,
-                        showConfirmButton: false,
+                        icon: "info",
+                        title: "Pelajaran Tidak Ditandai!",
+                        text: "Pelajaran telah ditandai sebagai belum selesai. Kemajuan video telah disetel ulang.",
+                        timer: 2000
                     });
-                } else {
+                } else if (!isAlreadyCompleted && !isAutoComplete) {
+                    // ✨ PHASE 39.3: Only show notification for MANUAL completion, not auto-completion
                     Toast().fire({
                         icon: "success",
                         title: "Pelajaran Ditandai Selesai!",
                         timer: 2000
                     });
                 }
+                // ✨ PHASE 39.3: Removed auto-completion notification - no Toast shown for isAutoComplete
+            } else {
+                // ✨ PHASE 12.3: API rejected completion - show informative message
+                Toast().fire({
+                    icon: "info",
+                    title: "Pelajaran Belum Selesai",
+                    text: "Selesaikan semua pertanyaan verifikasi untuk menandai pelajaran sebagai selesai.",
+                    timer: 3000
+                });
             }
         } catch (error) {
             setMarkAsCompletedStatus({
@@ -790,7 +834,9 @@ const LecturesTab = ({
                 const isAlreadyCompleted = isLessonCompleted(variantItemForCheck);
                 
                 if (!isAlreadyCompleted) {
-                    handleMarkLessonAsCompleted(itemId, true).then(() => {
+                    // ✨ PHASE 12.6: Pass courseId to ensure completion works even if course object is not loaded
+                    const courseIdLocal = course?.course?.id;
+                    handleMarkLessonAsCompleted(itemId, true, courseIdLocal).then(() => {
                         // Close video after completion with delay to show message
                         setTimeout(() => {
                             handleCloseVideo();
@@ -934,6 +980,11 @@ const LecturesTab = ({
         const handleKeyPress = (e) => {
             // ✨ PHASE 4.86: Check variantItem instead of show flag
             if (!variantItem || !isVideoFile(variantItem?.file)) return;
+            
+            // ✨ PHASE 8.1: Skip keyboard shortcuts when typing in form inputs or textareas
+            const activeElement = document.activeElement;
+            const isFormField = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA' || activeElement?.tagName === 'SELECT';
+            if (isFormField) return;
             
             switch (e.code) {
                 case "Space":
@@ -1188,7 +1239,7 @@ const LecturesTab = ({
 
     return (
         <div className="tab-pane fade show active" id="lectures" role="tabpanel">
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex justify-content-between align-items-center mb-3">
                 <h4 className="mb-0">Kurikulum Kursus</h4>
                 {course?.curriculum?.length > 0 && (() => {
                     const totalLessons = course.curriculum.reduce((acc, c) => acc + (c.variant_items?.length || 0), 0);
@@ -1254,8 +1305,23 @@ const LecturesTab = ({
                                 const itemId = l.variant_item_id;
                                 
                                 return (
-                                    <div key={l.variant_item_id || lessonIndex} className="mb-3">{/* Use only variant_item_id for key */}
-                                        <div className={`lesson-item ${isCompleted ? "completed" : isInProgress ? "in-progress" : ""} ${variantItem?.variant_item_id === l.variant_item_id ? "active" : ""} p-3 rounded-3 position-relative`}>
+                                    <div key={l.variant_item_id || lessonIndex} className="mb-0">{/* Use only variant_item_id for key */}
+                                        <div 
+                                            className={`lesson-item ${isCompleted ? "completed" : isInProgress ? "in-progress" : ""} ${variantItem?.variant_item_id === l.variant_item_id ? "active" : ""} p-3 rounded-3 position-relative`}
+                                            onClick={(e) => {
+                                                // ✨ PHASE 6.4: Make entire lesson-item clickable (except buttons/inputs)
+                                                // Only trigger if click target is not an interactive element
+                                                if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.closest('button') === null) {
+                                                    if (isClickingLessonRef.current) {
+                                                        return;
+                                                    }
+                                                    handlePlayVideo(l);
+                                                }
+                                            }}
+                                            style={{
+                                                cursor: 'pointer'
+                                            }}
+                                        >
                                             {/* Enhanced Progress indicator */}
                                             <div className={`lesson-progress-indicator ${progressStatus.status}`}>
                                                 {isInProgress && (
@@ -1361,41 +1427,6 @@ const LecturesTab = ({
                                                                 </small>
                                                             )}
                                                         </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <div className="lesson-status-container position-relative">
-                                                        {(() => {
-                                                            const key = `lecture_${l.variant_item_id}`;
-                                                            const isUpdating = markAsCompletedStatus[key] === "Updating";
-                                                            
-                                                            return (
-                                                                <>
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        className="lesson-completion-checkbox"
-                                                                        id={`lesson-${l.variant_item_id}`}
-                                                                        onChange={() => handleMarkLessonAsCompleted(l.variant_item_id)}
-                                                                        checked={isCompleted}
-                                                                        disabled={isUpdating}
-                                                                    />
-                                                                    <label 
-                                                                        htmlFor={`lesson-${l.variant_item_id}`}
-                                                                        className={`lesson-completion-label ${isUpdating ? "updating" : ""}`}
-                                                                        title={isUpdating ? "Memperbarui..." : (isCompleted ? "Tandai sebagai belum selesai" : "Tandai sebagai selesai")}
-                                                                    >
-                                                                        {isUpdating ? (
-                                                                            <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                                                                <span className="visually-hidden">Memuat...</span>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <i className="fas fa-check"></i>
-                                                                        )}
-                                                                    </label>
-                                                                </>
-                                                            );
-                                                        })()}
                                                     </div>
                                                 </div>
                                             </div>

@@ -32,7 +32,6 @@ export default function SearchQualityWidget() {
         setReport(response.data);
       }
     } catch (error) {
-      console.error('Gagal mengambil laporan kualitas:', error);
       Toast().fire({
         icon: 'error',
         title: 'Gagal mengambil metrik kualitas pencarian'
@@ -54,7 +53,6 @@ export default function SearchQualityWidget() {
         setCourses(response.data.results);
       }
     } catch (error) {
-      console.error('Gagal mengambil kursus:', error);
       Toast().fire({
         icon: 'error',
         title: 'Gagal mengambil metrik kursus'
@@ -70,7 +68,7 @@ export default function SearchQualityWidget() {
         setCategories(response.data.categories);
       }
     } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      // Analytics widget error - silently ignore
     }
   };
 
@@ -355,7 +353,7 @@ export default function SearchQualityWidget() {
 
       <div className="card-footer bg-light text-end">
         <button
-          className="btn btn-sm btn-outline-primary"
+          className="btn btn-sm btn-primary"
           onClick={fetchQualityReport}
           disabled={loading}
         >

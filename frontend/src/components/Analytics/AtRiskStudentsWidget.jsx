@@ -244,7 +244,7 @@ export default function AtRiskStudentsWidget() {
                     {risk.last_assessed ? new Date(risk.last_assessed).toLocaleDateString() : 'N/A'}
                   </td>
                   <td>
-                    <button className="btn btn-sm btn-outline-primary">
+                    <button className="btn btn-sm btn-primary">
                       <i className="fas fa-envelope"></i> Pesan
                     </button>
                   </td>

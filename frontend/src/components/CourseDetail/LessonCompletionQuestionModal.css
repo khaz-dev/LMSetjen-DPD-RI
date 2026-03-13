@@ -1,19 +1,26 @@
 /* ✨ PHASE 4.143: Lesson Completion Question Modal Styling */
+/* ✨ PHASE 11.158: Bright mode, positioned absolutely within video player */
 
 .lesson-completion-modal-overlay {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(2px);
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.05) !important;  /* ✨ PHASE 11.168: Very subtle semi-transparent overlay - see video behind */
+    backdrop-filter: blur(5px);
     display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    z-index: 1000;  /* ✨ PHASE 11.166: Increased from 50 to appear above video controls (100-200) */
     animation: fadeInOverlay 0.3s ease-out;
-    padding: 1rem;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 @keyframes fadeInOverlay {
@@ -26,14 +33,19 @@
 }
 
 .lesson-completion-modal {
-    background: white;
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    max-width: 600px;
+    background: rgba(255, 255, 255, 0.85);  /* ✨ PHASE 11.168: Semi-transparent white - see video behind */
+    border-radius: 0;
+    box-shadow: none;
     width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    overflow: hidden;
     animation: slideUpModal 0.3s ease-out;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
 }
 
 @keyframes slideUpModal {
@@ -48,15 +60,31 @@
 }
 
 .lesson-completion-modal .modal-header {
-    border-radius: 0.75rem 0.75rem 0 0;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, #0d6efd 0%, #0a5bc9 100%);
+    border-radius: 0;
+    padding: 1rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.9) 0%, rgba(10, 88, 202, 0.9) 100%) !important;  /* ✨ PHASE 11.168: Semi-transparent blue gradient - see video behind */
+    color: white !important;  /* ✨ PHASE 11.162: Ensure white text */
 }
 
 .lesson-completion-modal .modal-header h5 {
     margin: 0;
     font-size: 1.25rem;
     font-weight: 600;
+    color: white !important;  /* ✨ PHASE 11.162: Ensure h5 text is bright white */
+}
+
+.lesson-completion-modal .modal-header h5 i {
+    color: white !important;  /* ✨ PHASE 11.163: Ensure icon is bright white */
+}
+
+.lesson-completion-modal .modal-header small {
+    display: block;
+    color: rgba(255, 255, 255, 0.8) !important;  /* ✨ PHASE 11.162: Dimmed white for subtitle */
 }
 
 .lesson-completion-modal .modal-header .btn-close {
@@ -69,18 +97,25 @@
 }
 
 .lesson-completion-modal .modal-body {
-    padding: 2rem;
-    background-color: #f8f9fa;
-    min-height: 200px;
+    padding: 1.5rem 1.5rem;
+    background-color: transparent !important;  /* ✨ PHASE 11.168: Fully transparent - see video behind */
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: #212529 !important;  /* ✨ PHASE 11.164: Ensure dark text on bright background */
+    border: none !important;  /* ✨ PHASE 11.164: No borders */
 }
 
 /* Question Section */
 .question-section {
-    background: white;
+    background: rgba(255, 255, 255, 0.9);  /* ✨ PHASE 11.168: Semi-transparent white - see video behind */
     padding: 1.5rem;
     border-radius: 0.5rem;
     border-left: 4px solid #0d6efd;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1rem;
 }
 
 .question-section .lead {
@@ -91,7 +126,7 @@
 
 /* Choices Section */
 .choices-section {
-    background: white;
+    background: rgba(255, 255, 255, 0.9);  /* ✨ PHASE 11.168: Semi-transparent white - see video behind */
     padding: 1.5rem;
     border-radius: 0.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -139,7 +174,7 @@
 
 /* Text Answer Section */
 .text-answer-section {
-    background: white;
+    background: rgba(255, 255, 255, 0.9);  /* ✨ PHASE 11.168: Semi-transparent white - see video behind */
     padding: 1.5rem;
     border-radius: 0.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -163,12 +198,15 @@
 
 /* Modal Footer */
 .lesson-completion-modal .modal-footer {
-    padding: 1.5rem;
-    background-color: #f8f9fa;
-    border-radius: 0 0 0.75rem 0.75rem;
+    padding: 1rem 1rem;
+    background-color: rgba(255, 255, 255, 0.85) !important;  /* ✨ PHASE 11.168: Semi-transparent white - see video behind */
+    border-radius: 0;
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
+    flex-shrink: 0;
+    border-top: 1px solid rgba(240, 240, 240, 0.5) !important;  /* ✨ PHASE 11.168: Very light subtle border */
+    color: #212529 !important;  /* ✨ PHASE 11.164: Ensure dark text colors */
 }
 
 .lesson-completion-modal .modal-footer .btn {
@@ -252,49 +290,6 @@
 
     .lesson-completion-modal .modal-footer .btn-lg {
         padding: 0.75rem;
-    }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .lesson-completion-modal {
-        background-color: #2d2d2d;
-        color: #e0e0e0;
-    }
-
-    .lesson-completion-modal .modal-body,
-    .lesson-completion-modal .modal-footer {
-        background-color: #1a1a1a;
-    }
-
-    .question-section,
-    .choices-section,
-    .text-answer-section {
-        background-color: #3a3a3a;
-        color: #e0e0e0;
-    }
-
-    .question-section {
-        border-left-color: #4a9eff;
-    }
-
-    .choice-text {
-        color: #e0e0e0;
-    }
-
-    .form-control {
-        background-color: #3a3a3a;
-        border-color: #555;
-        color: #e0e0e0;
-    }
-
-    .form-control:disabled {
-        background-color: #2a2a2a;
-        opacity: 0.5;
-    }
-
-    .text-muted {
-        color: #a0a0a0 !important;
     }
 }
 

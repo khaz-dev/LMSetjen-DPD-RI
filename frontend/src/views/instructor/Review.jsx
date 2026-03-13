@@ -347,7 +347,7 @@ function Review() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-review-page pt-5 pb-5" style={{ display: "flex", alignItems: "center" }}>
+                <section className="instructor-review-page" style={{ display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -372,7 +372,7 @@ function Review() {
         <>
             <BaseHeader />
 
-            <section className="instructor-review-page pt-5 pb-5">
+            <section className="instructor-review-page">
                 <div className="container">
                     {/* Header Here */}
                     <Header />

@@ -577,12 +577,20 @@ function CourseEdit() {
                 const response = await useAxios.post(`teacher/course-publish/${param?.course_id}/`);
                 
                 if (response.data.success) {
-                    // Update local course data
-                    setCourseData({
-                        ...courseData,
-                        teacher_course_status: "Published",
-                        platform_status: "Review"
-                    });
+                    // ✨ PHASE X.X: Refetch course data after submission
+                    // This ensures published_version and other fields are properly loaded from the backend
+                    // so buttons remain visible after status changes
+                    const updatedCourseResponse = await useAxios.get(`/teacher/course-detail/${param?.course_id}/`);
+                    if (updatedCourseResponse?.data) {
+                        setCourseData(updatedCourseResponse.data);
+                    } else {
+                        // Fallback: update locally if refetch fails
+                        setCourseData({
+                            ...courseData,
+                            teacher_course_status: "Published",
+                            platform_status: "Review"
+                        });
+                    }
                     
                     await Swal.fire({
                         title: isRepublication ? "Perubahan Kursus Diajukan!" : "Kursus Diajukan untuk Publikasi!",
@@ -638,10 +646,9 @@ function CourseEdit() {
                         confirmButtonColor: "#2196F3"
                     });
                     
-                    // ✨ PHASE 4.169: Don't refresh full course data to preserve published_version
-                    // Just update the status fields locally instead
-                    // The published_version will remain available if it existed before
-                    // This keeps the Pratinjau Publis and Restore buttons visible
+                    // ✨ PHASE 4.169 FIXED: Now we DO refresh full course data to load published_version
+                    // After submission, the backend response includes the updated course state
+                    // Refetching ensures buttons (Pratinjau Publis, Restore) remain visible
                 } else {
                     throw new Error(response.data.message || "Gagal mengajukan kursus untuk review");
                 }
@@ -838,7 +845,7 @@ function CourseEdit() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-course-edit-page pt-5 pb-5" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
+                <section className="instructor-course-edit-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -864,7 +871,7 @@ function CourseEdit() {
         return (
             <>
                 <BaseHeader />
-                <section className="instructor-course-edit-page pt-5 pb-5" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
+                <section className="instructor-course-edit-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -888,7 +895,7 @@ function CourseEdit() {
     return (
         <>
             <BaseHeader />         
-            <section className="instructor-course-edit-page pt-5 pb-5">
+            <section className="instructor-course-edit-page">
                 <div className="container">
                     <Header />
                     <div className="row">
@@ -1534,7 +1541,7 @@ function CourseEdit() {
                                                     <>
                                                         <i className={`fas ${canPublish ? "fa-paper-plane" : "fa-lock"} me-2`}></i>
                                                         <span>
-                                                            {courseData?.platform_status === "Rejected" ? "Ajukan Ulang Publikasi" : "Ajukan Publikasi"}
+                                                            {courseData?.platform_status === "Rejected" ? "Ajukan Ulang Publikasi" : courseData?.platform_status === "Published" ? "Ajukan Review Publikasi" : "Ajukan Publikasi"}
                                                         </span>
                                                     </>
                                                 )}

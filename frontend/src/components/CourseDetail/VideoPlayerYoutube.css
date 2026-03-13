@@ -5,10 +5,11 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 1rem;
     box-sizing: border-box;
     width: 100%;
     max-width: 100%;
+    border: 2.5px solid #667eea;
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.3), 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Header */
@@ -66,6 +67,29 @@
     word-break: break-word;
 }
 
+/* \u2728 PHASE 35: Enhanced progress info display with monospace font and improved readability */
+.video-player-progress-info {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Courier New', 'Monaco', monospace;  /* Monospace for precise time alignment */
+    letter-spacing: 0.4px;
+    margin-top: 0.3rem;
+    word-break: break-word;    white-space: nowrap;  /* ✨ PHASE 35.3: Prevent wrapping - keep progress info on single line */    font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);  /* Subtle shadow for better readability */
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 100%);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.video-player-progress-info:hover {
+    color: rgba(255, 255, 255, 1);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.15) 100%);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
 .video-player-close-btn {
     width: 20px !important;
     height: 20px !important;
@@ -84,66 +108,46 @@
     background-color: white !important;
 }
 
-/* Content Area */
-.video-player-content {
-    background: #1a1a1a;
-    position: relative;
-    box-sizing: border-box;
-}
-
-/* Error State Container */
-.video-player-error-container {
-    padding: 3rem;
-    text-align: center;
-    min-height: 300px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: #1a1a1a;
-    box-sizing: border-box;
-}
-
-.video-player-error-icon {
-    font-size: 3rem;
-    color: #ff9800;
-    margin-bottom: 1rem;
-}
-
-/* Aspect Ratio Container for Iframe */
+/* Aspect Ratio Container for YouTube API Player */
 .video-player-aspect-ratio-container {
     position: relative;
     padding-bottom: 56.25%;
     height: 0;
-    overflow: hidden;
+    overflow: visible;  /* ✨ PHASE 30: Show YouTube API player with native controls */
     box-sizing: border-box;
 }
 
-.video-player-iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
+
+
+/* ✨ PHASE 30: YouTube API Player Container - PRIMARY VISIBLE PLAYER */
+/* This div contains the YouTube API-created iframe for primary video display and control */
+[data-youtube-api-player] {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 150;
+    overflow: visible !important;
+}
+
+/* Ensure YouTube API iframe is visible */
+[data-youtube-api-player] iframe {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    border: none !important;
 }
 
 /* Control Buttons Container for Iframe */
-.video-player-controls-container-iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 150;
-}
-
-/* Play/Pause Button */
 .video-player-play-pause-btn {
     position: absolute;
     width: 80px;
@@ -167,6 +171,11 @@
     opacity: 0;
 }
 
+/* Show button on hover */
+.video-player-video-hover:hover .video-player-play-pause-btn {
+    opacity: 1;
+}
+
 .video-player-play-pause-btn:hover {
     background: rgba(0, 0, 0, 0.9);
     transform: translate(-50%, -50%) scale(1.15);
@@ -183,8 +192,6 @@
 /* Backward 5 Seconds Button */
 .video-player-backward-btn {
     position: absolute;
-    bottom: 16px;
-    left: 16px;
     width: 48px;
     height: 48px;
     border-radius: 4px;
@@ -196,8 +203,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-    z-index: 200;
+    transition: background 0.3s ease, transform 0.3s ease;
+    z-index: 100;
     pointer-events: auto;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
     opacity: 0;
@@ -209,6 +216,12 @@
 .video-player-backward-btn:hover {
     background: rgba(0, 0, 0, 0.95);
     transform: scale(1.15);
+}
+
+.video-player-backward-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
 .video-player-backward-icon {
@@ -239,10 +252,15 @@
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    z-index: 200;
+    z-index: 100;
     pointer-events: auto;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
     opacity: 0;
+}
+
+/* Show button on hover */
+.video-player-video-hover:hover .video-player-fullscreen-btn {
+    opacity: 1;
 }
 
 .video-player-fullscreen-btn:hover {
@@ -320,57 +338,201 @@
     }
 }
 
-/* ✨ PHASE 4.142: Overlay Container - Blocks iframe interaction */
-.overlay-container {
+/* ✨ PHASE 40.3: Blocking Overlay for YouTube Videos in LIMITED Mode */
+.video-player-overlay-blocker {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    z-index: 100;
-    pointer-events: none;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    z-index: 50;
+    pointer-events: auto;
+    cursor: not-allowed;
 }
 
-/* Overlay sections - different heights for structured blocking */
-.overlay {
-    width: 100%;
-    height: 100%;
+/* ✨ PHASE 39.2: Control Buttons Container - Now consistent with Upload player */
+.video-player-controls-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     pointer-events: none;
+    z-index: 100;
 }
 
-.overlay-h-1 {
-    flex: 0 0 10%;
-    background: transparent;
-    width: 100%;
-    height: auto;
-}
-
-.overlay-h-2 {
-    flex: 0 0 55%;
-    background: transparent;
-    transition: background-color 0.2s ease;
-    width: 100%;
-    height: auto;
-}
-
-.overlay-h-3 {
-    flex: 0 0 35%;
-    background: transparent;
-    width: 100%;
-    height: auto;
-}
-
-.overlay-h-4 {
+/* Play/Pause Button - Large centered circular button */
+.video-player-play-pause-btn {
     position: absolute;
-    right: 0;
-    top: 0;
-    width: 13%;
-    height: 100%;
-    background: transparent;
-    flex: none;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid white;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    z-index: 10;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+}
+
+/* Show button on hover */
+.video-player-aspect-ratio-container:hover .video-player-play-pause-btn {
+    opacity: 1;
+}
+
+.video-player-play-pause-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translate(-50%, -50%) scale(1.15);
+}
+
+.video-player-play-pause-icon {
+    margin-left: 4px;
+}
+
+.video-player-play-pause-icon.is-playing {
+    margin-left: 0;
+}
+
+/* Backward 5 Seconds Button */
+.video-player-backward-btn {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    border: none;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 100;
+    pointer-events: auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    opacity: 0;
+    gap: 2px;
+    flex-direction: column;
+    font-size: 14px;
+}
+
+/* Show button on hover */
+.video-player-aspect-ratio-container:hover .video-player-backward-btn {
+    opacity: 1;
+}
+
+.video-player-backward-btn:hover {
+    background: rgba(0, 0, 0, 0.95);
+    transform: scale(1.15);
+}
+
+.video-player-backward-icon {
+    transform: scaleX(-1);
+    font-size: 20px;
+}
+
+.backward-label {
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* Fullscreen Button */
+.video-player-fullscreen-btn {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    border: none;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 100;
+    pointer-events: auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    opacity: 0;
+}
+
+/* Show button on hover */
+.video-player-aspect-ratio-container:hover .video-player-fullscreen-btn {
+    opacity: 1;
+}
+
+.video-player-fullscreen-btn:hover {
+    background: rgba(0, 0, 0, 0.95);
+    transform: scale(1.15);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .video-player-play-pause-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .video-player-backward-btn,
+    .video-player-fullscreen-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        bottom: 12px;
+    }
+
+    .video-player-backward-btn {
+        left: 12px;
+    }
+
+    .video-player-fullscreen-btn {
+        right: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .video-player-play-pause-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .video-player-backward-btn,
+    .video-player-fullscreen-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+        bottom: 8px;
+    }
+
+    .video-player-backward-btn {
+        left: 8px;
+    }
+
+    .video-player-fullscreen-btn {
+        right: 8px;
+    }
 }

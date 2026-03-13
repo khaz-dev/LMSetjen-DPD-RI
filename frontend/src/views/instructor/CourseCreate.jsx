@@ -295,7 +295,7 @@ function CourseCreate() {
     return (
         <>
             <BaseHeader />
-            <section className="instructor-course-create-page pt-5 pb-5">
+            <section className="instructor-course-create-page">
                 <div className="container">
                     <Header />
                     <div className="row">

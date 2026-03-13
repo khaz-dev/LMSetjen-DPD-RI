@@ -1,20 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import dayjs, { moment } from "../../../utils/dayjs";
+import { Link, useLocation } from "react-router-dom";
+import { moment } from "../../../utils/dayjs";
 import { ProfileContext } from "../../plugin/Context";
 import UserData from "../../plugin/UserData";
-import useAxios from "../../../utils/useAxios";
-import { isValidImageUrl } from "../../../utils/imageUtils";
 import RoleIndicator from "../../../components/RoleIndicator";
 import "./Header.css";
 
 function Header() {
   const profileContext = useContext(ProfileContext);
-  const [profile, setProfile] = profileContext || [null, () => {}];
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [imageError, setImageError] = useState(false);
-  const [lastFetchTime, setLastFetchTime] = useState(null);
+  const [profile] = profileContext || [null, () => {}];
   const [isCollapsed, setIsCollapsed] = useState(() => {
     // Initialize from localStorage - SEPARATE key for header
     const saved = localStorage.getItem("studentHeaderCollapsed");
@@ -23,10 +17,11 @@ function Header() {
   const [isAnimating, setIsAnimating] = useState(false); // ✨ PHASE 4.19: Only animate on user interaction, not on re-render
   const userData = UserData();
   const location = useLocation();
-  const navigate = useNavigate();
 
-  // Cache duration in milliseconds (5 minutes)
-  const CACHE_DURATION = 5 * 60 * 1000;
+  // Function to check if current page is active
+  const isActivePage = (path) => {
+    return location.pathname === path;
+  };
 
   // Toggle collapse state and save to localStorage
   const toggleCollapse = () => {
@@ -41,82 +36,6 @@ function Header() {
     }, 600);
   };
 
-  // Function to check if current page is active
-  const isActivePage = (path) => {
-    return location.pathname === path;
-  };
-
-  const fetchProfile = async () => {
-    if (!userData?.user_id) {
-      setError("No user ID available");
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await useAxios.get(`user/profile/${userData.user_id}/`);
-      
-      if (response.status === 200 && response.data) {
-        setProfile(response.data);
-        setLastFetchTime(Date.now()); // Update cache timestamp
-        setError(null);
-      } else {
-        setError("Invalid response from server");
-      }
-    } catch (error) {
-      setError(error.message || "Failed to fetch profile");
-      
-      // Set fallback profile data from userData if available
-      if (userData) {
-        const fallbackProfile = {
-          full_name: userData.full_name || "",
-          about: "Selamat datang di dasbor Anda",
-          image: "",
-          country: "",
-        };
-        setProfile(fallbackProfile);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✨ PHASE 4.16 FIX: Only fetch profile on initial mount or when user_id changes
-  // This prevents unnecessary re-fetches when navigating between pages
-  useEffect(() => {
-    if (userData?.user_id && !profile) {
-      // Only fetch if we don't have profile data yet
-      fetchProfile();
-    } else if (userData?.user_id && !userData) {
-      setError("User not authenticated");
-    }
-  }, [userData?.user_id]); // Only depend on user_id, NOT location.pathname or profile
-
-  // Separate effect to handle profile page cache expiry and image error reset
-  useEffect(() => {
-    if (location.pathname === "/student/profile/" && userData?.user_id) {
-      // On profile page, check if cache expired and refetch if needed
-      if (lastFetchTime) {
-        const timeSinceLastFetch = Date.now() - lastFetchTime;
-        if (timeSinceLastFetch > CACHE_DURATION) {
-          fetchProfile();
-        }
-      }
-    }
-    
-    // Reset image error when navigating to new page
-    setImageError(false);
-  }, [location.pathname, userData?.user_id]); // Only depend on pathname and user_id
-
-  // Separate effect to reset image error when profile image URL changes
-  useEffect(() => {
-    if (profile?.image) {
-      setImageError(false); // Reset image error when new image is available
-    }
-  }, [profile?.image]); // React specifically to image URL changes
-
   // Calculate profile-related info
   const getMemberSince = () => {
     return profile?.date ? moment(profile.date).format("MMMM YYYY") : userData?.date_joined ? moment(userData.date_joined).format("MMMM YYYY") : "Baru-baru ini";
@@ -130,55 +49,6 @@ function Header() {
     if (days < 30) return `${days} hari yang lalu`;
     if (days < 365) return `${Math.floor(days/30)} bulan yang lalu`;
     return `${Math.floor(days/365)} tahun yang lalu`;
-  };
-
-  // Render profile avatar with proper error handling
-  const renderProfileAvatar = () => {
-    if (loading) {
-      return (
-        <div className="student-default-avatar loading-shimmer mx-auto">
-          <div 
-            className="spinner-border text-white spinner-loading-lg" 
-            role="status"
-          >
-            <span className="visually-hidden">Sedang memuat...</span>
-          </div>
-        </div>
-      );
-    }
-
-    if (profile?.image && !imageError) {
-      return (
-        <img
-          key={profile.image}
-          src={profile.image}
-          className="profile-avatar"
-          alt={`${profile?.full_name || "Pengguna"} avatar`}
-          onError={() => {
-            setImageError(true);
-          }}
-        />
-      );
-    }
-    
-    // No image URL available, show default avatar
-    return (
-      <div className="student-default-avatar mx-auto">
-        <svg width="120" height="120" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="userBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{stopColor:"#4f46e5", stopOpacity:1}} />
-              <stop offset="100%" style={{stopColor:"#7c3aed", stopOpacity:1}} />
-            </linearGradient>
-          </defs>
-          <circle cx="100" cy="100" r="100" fill="url(#userBg)"/>
-          <g fill="white" fillOpacity="0.9">
-            <circle cx="100" cy="75" r="25"/>
-            <path d="M100,115 C85,115 70,125 70,135 L70,160 Q70,170 80,170 L120,170 Q130,170 130,160 L130,135 C130,125 115,115 100,115 Z"/>
-          </g>
-        </svg>
-      </div>
-    );
   };
 
   return (
@@ -197,29 +67,9 @@ function Header() {
 
           {/* Collapsed Mini Header */}
           {isCollapsed && (
-            <div className="student-header-collapsed p-3">
+            <div className="student-header-collapsed">
               <div className="d-flex align-items-center justify-content-between">
-                <div className="student-avatar-wrapper d-flex align-items-center gap-2">
-                  <div className="avatar-container-mini">
-                    {loading ? (
-                      <div className="student-default-avatar loading-shimmer">
-                        <div className="spinner-border text-white spinner-loading-sm" role="status">
-                          <span className="visually-hidden">Sedang memuat...</span>
-                        </div>
-                      </div>
-                    ) : profile?.image && !imageError ? (
-                      <img
-                        src={profile.image}
-                        className="profile-avatar-mini"
-                        alt={`${profile?.full_name || "Pengguna"} avatar`}
-                        onError={() => setImageError(true)}
-                      />
-                    ) : (
-                      <div className="student-default-avatar">
-                        <i className="fas fa-user icon-user-mini"></i>
-                      </div>
-                    )}
-                  </div>
+                <div className="d-flex align-items-center gap-2">
                   <div className="d-flex align-items-center justify-content-between w-100 gap-2">
                     <h5 className="mb-0 text-white">
                       {profile?.full_name || userData?.full_name || "Dasbor Siswa"}
@@ -259,22 +109,10 @@ function Header() {
           )}
 
           {/* Full Header Content - Always rendered for animation */}
-          <div className={`student-header-content p-3 p-md-4 ${isAnimating ? (isCollapsed ? "collapsed-state" : "expanded-state") : (isCollapsed ? "collapsed-visual" : "expanded-visual")}`}>
+          <div className={`student-header-content p-4 ${isAnimating ? (isCollapsed ? "collapsed-state" : "expanded-state") : (isCollapsed ? "collapsed-visual" : "expanded-visual")}`}>
               <div className="row align-items-center">
-                {/* Profile Avatar Section */}
-                <div className="col-lg-3 col-md-4 mb-4 mb-lg-0">
-                  <div className="text-center position-relative">
-                    {renderProfileAvatar()}
-                    
-                    {/* Student Identity Badge */}
-                    <div className="student-badge">
-                      <i className="fas fa-graduation-cap"></i>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Profile Information Section */}
-                <div className="col-lg-6 col-md-5 mb-4 mb-lg-0 d-flex align-items-center">
+                <div className="col-lg-9 col-md-8 mb-4 mb-lg-0 d-flex align-items-center">
                   <div>
                     <h1 className="profile-name">
                       {profile?.full_name || userData?.full_name || "Selamat Datang!"}
@@ -282,8 +120,15 @@ function Header() {
                     <p className="profile-description">
                       {profile?.about || "Selamat datang di perjalanan belajar Anda! Jelajahi kursus dan perluas pengetahuan Anda."}
                     </p>
+
+                    {profile?.country && (
+                      <div className="profile-meta profile-location-meta">
+                        <i className="fas fa-map-marker-alt"></i>
+                        <span>Berlokasi di {profile.country}</span>
+                      </div>
+                    )}
                     
-                    <div className="d-flex flex-wrap gap-3 mb-3">
+                    <div className="d-flex flex-wrap gap-3 badges-container">
                       <div className="badge-modern">
                         <i className="fas fa-calendar-alt"></i>
                         Anggota sejak {getMemberSince()}
@@ -295,17 +140,12 @@ function Header() {
                       <RoleIndicator compact={true} />
                     </div>
 
-                    {profile?.country && (
-                      <div className="profile-meta mb-3">
-                        <i className="fas fa-map-marker-alt"></i>
-                        <span>Berlokasi di {profile.country}</span>
-                      </div>
-                    )}
+                    
                   </div>
                 </div>
 
                 {/* Action Buttons Section */}
-                <div className="col-lg-3 col-md-12">
+                <div className="col-lg-3 col-md-4">
                   <div className="text-center text-lg-end">
                     <div className="d-flex flex-column flex-md-row flex-lg-column gap-3 justify-content-center justify-content-lg-end">
                       <Link

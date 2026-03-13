@@ -5,7 +5,6 @@
     background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
     border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 1rem;
     box-sizing: border-box;
     width: 100%;
     max-width: 100%;
@@ -68,6 +67,31 @@
     word-break: break-word;
 }
 
+/* ✨ PHASE 35.1: Enhanced progress info display with monospace font and improved readability */
+.video-player-progress-info {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Courier New', 'Monaco', monospace;  /* Monospace for precise time alignment */
+    letter-spacing: 0.4px;
+    margin-top: 0.3rem;
+    word-break: break-word;
+    white-space: nowrap;  /* ✨ PHASE 35.3: Prevent wrapping - keep progress info on single line */
+    font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);  /* Subtle shadow for better readability */
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 100%);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.video-player-progress-info:hover {
+    color: rgba(255, 255, 255, 1);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.15) 100%);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
 .video-player-close-btn {
     width: 20px !important;
     height: 20px !important;
@@ -91,6 +115,10 @@
     background: #1a1a1a;
     position: relative;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 60vh;  /* Minimum height for video player area */
+    width: 100%;
 }
 
 /* Error State Container */

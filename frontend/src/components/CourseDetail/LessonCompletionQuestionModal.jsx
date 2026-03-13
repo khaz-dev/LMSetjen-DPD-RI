@@ -5,13 +5,17 @@ import Swal from 'sweetalert2';
 import './LessonCompletionQuestionModal.css';
 
 // ✨ PHASE 4.143: Lesson Completion Question Modal
+// ✨ PHASE 11.158: Bright mode, positioned in video player, no skip button
+// ✨ PHASE 11.170: When answer is wrong, unlock video access to let user rewatch
+// ✨ PHASE 11.171: Add "Pelajaran Kembali" button to close modal and access video
 // Displayed when student finishes watching a lesson (100%)
-// Student must answer correctly to mark lesson as complete
+// Student MUST answer correctly to mark lesson as complete - NO SKIP OPTION
 const LessonCompletionQuestionModal = ({ 
     question, 
     variantItemId,
     onAnswerCorrect,
-    onCancel,
+    onAnswerWrong,  // ✨ PHASE 11.170: Callback when answer is wrong - unlocks video blocker
+    onCloseModal,    // ✨ PHASE 11.171: Callback to close modal and access video
     studentId 
 }) => {
     const API = useAxios; // ✨ PHASE 4.143: FIX - useAxios is an axios instance, not a hook function
@@ -19,8 +23,12 @@ const LessonCompletionQuestionModal = ({
     const [selectedMultiAnswers, setSelectedMultiAnswers] = useState([]);
     const [shortAnswer, setShortAnswer] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hasAnsweredWrong, setHasAnsweredWrong] = useState(false); // ✨ PHASE 11.171: Track if user answered wrong to show back button
 
     if (!question) return null;
+
+    // ✨ PHASE 11.158: Remove onCancel from accepting as prop - user can only answer or rewatch video
+    // Note: onCancel and onSkip are no longer called
 
     const handleSubmitAnswer = async () => {
         if (!question) return;
@@ -77,25 +85,47 @@ const LessonCompletionQuestionModal = ({
 
             if (response.data.is_correct) {
                 // Answer is correct - show success and call callback
+                // ✨ PHASE 42.1: Fixed SweetAlert2 parameter - use customClass instead of confirmButtonClass
                 Swal.fire({
                     icon: 'success',
                     title: 'Jawaban Benar!',
                     text: 'Selamat! Anda berhasil menjawab pertanyaan. Pelajaran telah ditandai sebagai selesai.',
                     allowOutsideClick: false,
-                    confirmButtonClass: 'btn btn-success',
+                    customClass: {
+                        confirmButton: 'btn btn-success'
+                    },
+                    buttonsStyling: false,
                     confirmButtonText: 'Terima Kasih'
                 }).then(() => {
+                    // ✨ PHASE 11.202: Dispatch event to trigger course data refresh
+                    // This ensures the lesson completion status is updated in the UI
+                    window.dispatchEvent(new CustomEvent('lessonAnsweredCorrectly', { 
+                        detail: { variantItemId: variantItemId } 
+                    }));
+                    
                     if (onAnswerCorrect) {
                         onAnswerCorrect();
                     }
                 });
             } else {
-                // Answer is incorrect - allow retry
+                // Answer is incorrect - allow retry AND unlock video access
+                // ✨ PHASE 11.170: Call onAnswerWrong callback to disable overlay blocker
+                // ✨ PHASE 11.171: Mark that user answered wrong so "Pelajaran Kembali" button appears
+                setHasAnsweredWrong(true);
+                
+                if (onAnswerWrong) {
+                    onAnswerWrong();
+                }
+                
+                // ✨ PHASE 42.1: Fixed SweetAlert2 parameter - use customClass instead of confirmButtonClass
                 Swal.fire({
                     icon: 'error',
                     title: 'Jawaban Salah',
-                    text: 'Silakan coba lagi. Pikirkan dengan baik sebelum menjawab.',
-                    confirmButtonClass: 'btn btn-primary',
+                    text: 'Silakan coba lagi. Anda sekarang dapat mengakses video kembali untuk mempelajari ulang sebelum menjawab.',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    },
+                    buttonsStyling: false,
                     confirmButtonText: 'Coba Lagi'
                 });
                 
@@ -127,27 +157,22 @@ const LessonCompletionQuestionModal = ({
     return (
         <div className="lesson-completion-modal-overlay">
             <div className="lesson-completion-modal">
-                <div className="modal-header bg-primary text-white">
+                <div className="modal-header">
                     <div>
-                        <h5 className="mb-1">
+                        <h5>
                             <i className="fas fa-question-circle me-2"></i>
                             Verifikasi Penyelesaian Pelajaran
                         </h5>
-                        <small className="text-white-50">
+                        <small>
                             Jawab pertanyaan di bawah untuk menyelesaikan pelajaran ini
                         </small>
                     </div>
-                    <button
-                        type="button"
-                        className="btn-close btn-close-white"
-                        onClick={onCancel}
-                        disabled={isSubmitting}
-                    ></button>
+                    {/* ✨ PHASE 11.158: Close button removed - user must answer or go back to video */}
                 </div>
 
                 <div className="modal-body">
                     {/* Question */}
-                    <div className="question-section mb-4">
+                    <div className="question-section">
                         <h6 className="fw-bold text-dark mb-3">
                             <span className="badge bg-info me-2">Pertanyaan</span>
                         </h6>
@@ -265,21 +290,30 @@ const LessonCompletionQuestionModal = ({
                     )}
                 </div>
 
-                <div className="modal-footer border-top">
-                    <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={onCancel}
-                        disabled={isSubmitting}
-                    >
-                        <i className="fas fa-times me-1"></i>
-                        Lewati untuk Sekarang
-                    </button>
+                <div className="modal-footer">
+                    {/* ✨ PHASE 11.171: "Pelajaran Kembali" button appears when user answered wrong */}
+                    {hasAnsweredWrong && (
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={() => {
+                                if (onCloseModal) {
+                                    onCloseModal();
+                                }
+                            }}
+                            disabled={isSubmitting}
+                        >
+                            <i className="fas fa-arrow-left me-2"></i>
+                            Pelajari Kembali
+                        </button>
+                    )}
+                    {/* ✨ PHASE 11.158: Skip button removed - user MUST answer to complete lesson */}
                     <button
                         type="button"
                         className="btn btn-success btn-lg"
                         onClick={handleSubmitAnswer}
                         disabled={!isAnswered() || isSubmitting}
+                        style={{ marginLeft: 'auto' }}
                     >
                         <i className={`fas ${isSubmitting ? 'fa-spinner fa-spin' : 'fa-check'} me-1`}></i>
                         {isSubmitting ? 'Memproses...' : 'Kirim Jawaban'}

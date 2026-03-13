@@ -3,9 +3,9 @@
 .modern-certificates-page {
     min-height: 100vh;
     background: transparent;
-    padding: 3rem 0;
-    padding-top: calc(70px + 3rem) !important;
-    padding-bottom: 3rem !important;
+    padding: var(--page-top-spacing) 0;
+    padding-top: var(--page-top-spacing) !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
     margin-top: 0 !important;
     margin-bottom: 8rem;
     overflow-x: hidden;
@@ -16,7 +16,7 @@
 }
 
 .modern-certificates-page.pb-5 {
-    padding-bottom: 3rem !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
 }
 
 /* Page Header Card */
@@ -24,7 +24,7 @@
     background: var(--theme-gradient) !important;
     border-radius: 20px !important;
     color: white !important;
-    padding: 2.5rem !important;
+    padding: 1.5rem 1rem !important;
     margin-bottom: 1.5rem !important;
     position: relative !important;
     overflow: hidden !important;
@@ -713,8 +713,8 @@
 /* Responsive Design */
 @media (max-width: 768px) {
     .modern-certificates-page {
-        padding: 1.5rem 0;
-        padding-top: calc(70px + 1.5rem) !important;
+        padding: calc(var(--page-top-spacing) * 0.5) 0;
+        padding-top: calc(var(--navbar-height) + (var(--page-top-spacing) * 0.5)) !important; /* ✨ PHASE 42: Responsive spacing uses variable */
         margin-bottom: 4rem;
     }
 
@@ -791,8 +791,8 @@
 
 @media (max-width: 576px) {
     .modern-certificates-page {
-        padding: 1rem 0;
-        padding-top: calc(70px + 1rem) !important;
+        padding: calc(var(--page-top-spacing) * 0.33) 0;
+        padding-top: calc(var(--navbar-height) + (var(--page-top-spacing) * 0.33)) !important; /* ✨ PHASE 42: Responsive spacing uses variable */
     }
 
     .page-header-card {

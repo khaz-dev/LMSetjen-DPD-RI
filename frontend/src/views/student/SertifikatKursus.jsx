@@ -12,13 +12,14 @@ import Toast from "../plugin/Toast";
 import apiInstance from "../../utils/axios";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import { getMediaUrl } from "../../utils/constants";
+// ✨ PHASE 11.12: Import caching hook for seamless navigation
+import { usePageCache } from "../../utils/usePageCache";
 
 import "./SertifikatKursus.css";
 
 function SertifikatKursus() {
     const [certificates, setCertificates] = useState([]);
     const [filteredCertificates, setFilteredCertificates] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [downloadingId, setDownloadingId] = useState(null);
     const [previewingId, setPreviewingId] = useState(null);
@@ -32,18 +33,17 @@ function SertifikatKursus() {
     // Fetch all student certificates
     const fetchCertificates = async () => {
         try {
-            setLoading(true);
             setError(null);
             
             const response = await apiInstance.get(`student/certificates/${userData?.user_id}/`);
             const certificatesData = response.data?.results || response.data?.certificates || [];
             const certificatesArray = Array.isArray(certificatesData) ? certificatesData : [];
             
-            setCertificates(certificatesArray);
-            
             if (certificatesArray.length === 0) {
                 console.log('No certificates found for student');
             }
+            
+            return certificatesArray;
         } catch (err) {
             console.error("Error fetching certificates:", err);
             setError("Gagal memuat sertifikat");
@@ -52,10 +52,25 @@ function SertifikatKursus() {
                 title: "Gagal memuat sertifikat",
                 text: err.response?.data?.message || "Silakan coba lagi"
             });
-        } finally {
-            setLoading(false);
+            throw err;
         }
     };
+
+    // ✨ PHASE 11.12: Use page cache to avoid reloading when navigating
+    const { data: cachedCertificates, loading } = usePageCache(
+        'student-certificates',
+        fetchCertificates,
+        {
+            showLoadingOnStale: false
+        }
+    );
+
+    // Sync cached data to state
+    useEffect(() => {
+        if (cachedCertificates) {
+            setCertificates(cachedCertificates);
+        }
+    }, [cachedCertificates]);
 
     useEffect(() => {
         let filtered = [...certificates];
@@ -92,12 +107,6 @@ function SertifikatKursus() {
 
         setFilteredCertificates(filtered);
     }, [certificates, searchQuery, instructorFilter, startDate, endDate]);
-
-    useEffect(() => {
-        if (userData?.user_id) {
-            fetchCertificates();
-        }
-    }, [userData?.user_id]);
 
     // Download certificate image
     const downloadCertificate = async (certificate) => {
@@ -197,7 +206,7 @@ function SertifikatKursus() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5 modern-certificates-page">
+            <section className="modern-certificates-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 md-4">
@@ -489,4 +498,4 @@ function SertifikatKursus() {
     );
 }
 
-export default SertifikatKursus;
+export default React.memo(SertifikatKursus);

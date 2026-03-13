@@ -919,6 +919,22 @@ class TestimonialListAPIView(generics.GenericAPIView):
                 # ✨ PHASE 4.12.2: Determine if user is public (no NIP = not from Pegawai AWS Sync)
                 is_public_user = not (user and user.nip)
                 
+                # ✨ PHASE 11.10: Convert relative image URLs to absolute + cache-busting
+                image_url = None
+                if profile and profile.image:
+                    image_path = str(profile.image)
+                    # Check if already absolute URL
+                    if image_path.startswith('http://') or image_path.startswith('https://'):
+                        image_url = image_path
+                    else:
+                        # Convert relative path to absolute URL with cache-busting timestamp
+                        if not image_path.startswith('/'):
+                            image_path = f"/media/{image_path}"
+                        from datetime import datetime
+                        timestamp = int(datetime.now().timestamp() * 1000) // 3600000  # Cache-bust per hour
+                        absolute_url = request.build_absolute_uri(image_path)
+                        image_url = f"{absolute_url}?v={timestamp}"
+                
                 testimonials_data.append({
                     'id': review.id,
                     'full_name': user.full_name if user else 'Anonymous',
@@ -930,7 +946,7 @@ class TestimonialListAPIView(generics.GenericAPIView):
                     'review': review.review,
                     'rating': review.rating,
                     'role': review.role,  # [*] PHASE 4.11: Include role in response
-                    'image': profile.image.url if profile and profile.image else None,
+                    'image': image_url,  # ✨ PHASE 11.10: Now returns absolute URL with cache-busting
                     'date': review.date.isoformat()
                 })
             
@@ -2471,22 +2487,102 @@ class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
     authentication_classes = []
 
     def create(self, request, *args, **kwargs):
-        user_id = request.data['user_id']
-        course_id = request.data['course_id']
-        variant_item_id = request.data['variant_item_id']
+        try:
+            user_id = request.data['user_id']
+            course_id = request.data['course_id']
+            variant_item_id = request.data['variant_item_id']
 
-        user = User.objects.get(id=user_id)
-        course = api_models.Course.objects.get(id=course_id)
-        variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
+            print(f"\n[StudentCourseCompletedCreateAPIView] 📥 Received request")
+            print(f"   user_id: {user_id} (type: {type(user_id).__name__})")
+            print(f"   course_id: {course_id} (type: {type(course_id).__name__})")
+            print(f"   variant_item_id: {variant_item_id} (type: {type(variant_item_id).__name__})")
 
-        completed_lessons = api_models.CompletedLesson.objects.filter(user=user, course=course, variant_item=variant_item).first()
+            # Validate that course_id is actually a Course ID, not an enrollment ID
+            # Enrollment IDs are usually short strings (ShortUUIDField), Course IDs are integers
+            print(f"\n[StudentCourseCompletedCreateAPIView] 🔍 Validating IDs")
+            if not str(course_id).isdigit():
+                print(f"   ⚠️  WARNING: course_id '{course_id}' looks like an enrollment ID (not numeric)")
+                print(f"   This suggests frontend sent course?.id instead of course?.course?.id")
+            
+            user = User.objects.get(id=user_id)
+            print(f"   ✅ Found user: {user.username}")
+            
+            course = api_models.Course.objects.get(id=course_id)
+            print(f"   ✅ Found course: {course.title}")
+            
+            variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
+            print(f"   ✅ Found variant_item: {variant_item.title}")
 
-        if completed_lessons:
-            completed_lessons.delete()
-            return Response({"message": "Course marked as not completed"})
-        else:
-            api_models.CompletedLesson.objects.create(user=user, course=course, variant_item=variant_item)
-            return Response({"message": "Course marked as completed"})
+            # ✨ PHASE 11.201: CRITICAL - Check if a verification question exists
+            # If it does, ensure the student actually answered it correctly before marking complete
+            verification_question = api_models.LessonCompletionQuestion.objects.filter(
+                variant_item=variant_item
+            ).first()
+            
+            if verification_question:
+                print(f"\n[StudentCourseCompletedCreateAPIView] 📝 Verification question exists")
+                
+                # Check if there's a correct answer from this student for this question
+                correct_answer = api_models.LessonCompletionQuestionAnswer.objects.filter(
+                    user=user,
+                    question=verification_question,
+                    is_correct=True
+                ).first()
+                
+                if not correct_answer:
+                    print(f"   ❌ Student hasn't answered verification question correctly")
+                    return Response({
+                        "message": "Cannot mark lesson as completed - verification question must be answered correctly first",
+                        "requires_verification": True
+                    }, status=status.HTTP_403_FORBIDDEN)
+                else:
+                    print(f"   ✅ Student answered verification question correctly")
+            else:
+                print(f"\n[StudentCourseCompletedCreateAPIView] ✅ No verification question required")
+
+            completed_lessons = api_models.CompletedLesson.objects.filter(user=user, course=course, variant_item=variant_item).first()
+
+            if completed_lessons:
+                # ✨ PHASE 19.1 FIX: Different behavior based on verification question
+                if verification_question:
+                    # HAS verification question → allow toggle/delete for lesson retakes
+                    print(f"\n[StudentCourseCompletedCreateAPIView] 🔄 Lesson WITH verification question - TOGGLING (deleting) to allow retake")
+                    print(f"   Record ID: {completed_lessons.id}")
+                    completed_lessons.delete()
+                    print(f"   ✅ Deleted - student can retake and answer verification question again")
+                    return Response({"message": "Course marked as not completed - student can retake"}, status=status.HTTP_200_OK)
+                else:
+                    # NO verification question → once complete, stay complete (don't delete)
+                    print(f"\n[StudentCourseCompletedCreateAPIView] ✅ Lesson WITHOUT verification question - already complete, staying complete")
+                    print(f"   Record ID: {completed_lessons.id}")
+                    print(f"   Note: Replaying video should NOT delete this record - lesson is permanently marked complete")
+                    return Response({"message": "Course already marked as completed"}, status=status.HTTP_200_OK)
+            else:
+                print(f"\n[StudentCourseCompletedCreateAPIView] ✨ Creating new CompletedLesson record")
+                new_record = api_models.CompletedLesson.objects.create(user=user, course=course, variant_item=variant_item)
+                print(f"   ✅ Created with ID: {new_record.id}")
+                print(f"   User: {user.username}, Course: {course.title}, Lesson: {variant_item.title}")
+                return Response({"message": "Course marked as completed"}, status=status.HTTP_201_CREATED)
+        except KeyError as e:
+            print(f"\n[StudentCourseCompletedCreateAPIView] ❌ Missing required field: {str(e)}")
+            print(f"   Available fields: {list(request.data.keys())}")
+            return Response({"error": f"Missing required field: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            print(f"\n[StudentCourseCompletedCreateAPIView] ❌ User not found: {user_id}")
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.Course.DoesNotExist:
+            print(f"\n[StudentCourseCompletedCreateAPIView] ❌ Course not found: {course_id}")
+            print(f"   This likely means frontend sent 'course?.id' (enrollment ID) instead of 'course?.course?.id' (course ID)")
+            print(f"   Enrollment IDs are short strings, Course IDs are integers")
+            return Response({"error": f"Course not found (ID: {course_id})"}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.VariantItem.DoesNotExist:
+            print(f"\n[StudentCourseCompletedCreateAPIView] ❌ VariantItem not found: {variant_item_id}")
+            return Response({"error": "VariantItem not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"\n[StudentCourseCompletedCreateAPIView] ❌ Unexpected error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response({"error": f"Unexpected error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class VideoProgressAPIView(generics.CreateAPIView):
@@ -2508,7 +2604,11 @@ class VideoProgressAPIView(generics.CreateAPIView):
         course_id = request.GET.get('course_id')
         variant_item_id = request.GET.get('variant_item_id')
         
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
+        
         if not all([user_id, course_id, variant_item_id]):
+            print(f"[{timestamp}] 🎥 VideoProgress GET: Missing required parameters")
             return Response({
                 "error": "Missing required parameters: user_id, course_id, variant_item_id"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -2516,10 +2616,14 @@ class VideoProgressAPIView(generics.CreateAPIView):
         try:
             user_id = int(user_id)
             course_id = int(course_id)
-            variant_item_id = int(variant_item_id)
-        except ValueError:
+            # ✨ PHASE 16: FIX - variant_item_id is a ShortUUID string, NOT an integer!
+            # DO NOT convert to int - keep it as string for database lookup
+            # variant_item_id = int(variant_item_id)  # REMOVED - This breaks the query!
+            print(f"[{timestamp}] 🔍 VideoProgress GET: Looking up progress user_id={user_id}, course_id={course_id}, variant_item_id={variant_item_id}")
+        except ValueError as e:
+            print(f"[{timestamp}] ❌ VideoProgress GET: Parameter conversion error - {e}")
             return Response({
-                "error": "Invalid parameter format - must be integers"
+                "error": f"Invalid parameter format - user_id and course_id must be integers: {e}"
             }, status=status.HTTP_400_BAD_REQUEST)
         
         try:
@@ -2530,6 +2634,7 @@ class VideoProgressAPIView(generics.CreateAPIView):
                 variant_item__variant_item_id=variant_item_id
             )
             
+            print(f"[{timestamp}] ✅ VideoProgress GET: Found progress - {progress.progress_percentage}% complete")
             serializer = api_serializer.VideoProgressSerializer(progress)
             return Response({
                 "message": "Video progress retrieved successfully",
@@ -2538,6 +2643,7 @@ class VideoProgressAPIView(generics.CreateAPIView):
             
         except api_models.VideoProgress.DoesNotExist:
             # Return default progress structure
+            print(f"[{timestamp}] ℹ️ VideoProgress GET: No progress found (returning default)")
             return Response({
                 "message": "No progress found",
                 "data": {
@@ -2553,18 +2659,25 @@ class VideoProgressAPIView(generics.CreateAPIView):
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
-            print(f"[VideoProgress GET] Error: {str(e)}")
+            print(f"[{timestamp}] ❌ VideoProgress GET: Unexpected error - {str(e)}")
+            import traceback
+            traceback.print_exc()
             return Response({
                 "error": f"Failed to retrieve progress: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request, *args, **kwargs):
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
+        
         user_id = request.data.get('user_id')
         course_id = request.data.get('course_id')
         variant_item_id = request.data.get('variant_item_id')
         progress_percentage = request.data.get('progress_percentage', 0)
         last_watched_position = request.data.get('last_watched_position', 0)
         total_duration = request.data.get('total_duration', 0)
+
+        print(f"[{timestamp}] 🎥 VideoProgress CREATE: Received request for user_id={user_id}, variant_item_id={variant_item_id}")
 
         # Convert string values from FormData to proper numeric types
         try:
@@ -2575,47 +2688,49 @@ class VideoProgressAPIView(generics.CreateAPIView):
             user_id = int(user_id) if user_id else None
             course_id = int(course_id) if course_id else None
         except (TypeError, ValueError) as e:
-            print(f"[VideoProgress] Type conversion error: {e}")
+            print(f"[{timestamp}] ❌ VideoProgress CREATE: Type conversion error - {e}")
             return Response({
                 "error": f"Invalid numeric values provided: {e}"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        print(f"[VideoProgress] Received data: user_id={user_id}, course_id={course_id}, variant_item_id={variant_item_id}")
-        print(f"[VideoProgress] Progress: {progress_percentage}%, Position: {last_watched_position}, Duration: {total_duration}")
+        print(f"[{timestamp}] 📊 VideoProgress CREATE: Progress: {progress_percentage:.1f}%, Position: {last_watched_position:.1f}s, Duration: {total_duration:.1f}s")
 
         try:
             # Validate and fetch objects with better error messages
             try:
                 user = User.objects.get(id=user_id)
-                print(f"[VideoProgress] Found user: {user.username}")
+                print(f"[{timestamp}] ✅ VideoProgress CREATE: Found user '{user.username}' (ID: {user_id})")
             except User.DoesNotExist:
+                print(f"[{timestamp}] ❌ VideoProgress CREATE: User {user_id} not found")
                 return Response({
                     "error": f"User with id {user_id} not found"
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             try:
                 course = api_models.Course.objects.get(id=course_id)
-                print(f"[VideoProgress] Found course: {course.title}")
+                print(f"[{timestamp}] ✅ VideoProgress CREATE: Found course '{course.title}' (ID: {course_id})")
             except api_models.Course.DoesNotExist:
+                print(f"[{timestamp}] ❌ VideoProgress CREATE: Course {course_id} not found")
                 return Response({
                     "error": f"Course with id {course_id} not found"
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             try:
                 # ✨ PHASE 4.145: Better debugging for variant_item lookup
-                print(f"[VideoProgress] Looking up variant_item with variant_item_id={variant_item_id} (type: {type(variant_item_id).__name__})")
+                print(f"[{timestamp}] 🔍 VideoProgress CREATE: Looking up variant_item_id={variant_item_id}")
                 variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
-                print(f"[VideoProgress] Found variant item: {variant_item.title}")
+                print(f"[{timestamp}] ✅ VideoProgress CREATE: Found variant item '{variant_item.title}'")
             except api_models.VariantItem.DoesNotExist:
-                print(f"[VideoProgress] ERROR: VariantItem with id {variant_item_id} not found")
+                print(f"[{timestamp}] ❌ VideoProgress CREATE: VariantItem {variant_item_id} not found")
                 # List available variant items for debugging
                 available_items = list(api_models.VariantItem.objects.values_list('variant_item_id', flat=True)[:5])
-                print(f"[VideoProgress] Sample variant items in DB: {available_items}")
+                print(f"[{timestamp}] 📝 Sample variant items in DB: {available_items}")
                 return Response({
                     "error": f"VariantItem with id {variant_item_id} not found"
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             # Create or update video progress
+            print(f"[{timestamp}] 💾 VideoProgress CREATE: Saving progress to database...")
             video_progress, created = api_models.VideoProgress.objects.update_or_create(
                 user=user,
                 course=course,
@@ -2626,8 +2741,16 @@ class VideoProgressAPIView(generics.CreateAPIView):
                     'total_duration': total_duration
                 }
             )
+            
+            # ✨ PHASE 11.178: Set is_fully_watched when progress reaches 95%+ (video fully watched)
+            if progress_percentage >= 95.0 and not video_progress.is_fully_watched:
+                print(f"[{timestamp}] 🎯 VideoProgress CREATE: Video watched {progress_percentage}% - marking as FULLY_WATCHED")
+                video_progress.is_fully_watched = True
+                video_progress.fully_watched_at = timezone.now()
+                video_progress.save()
 
-            print(f"[VideoProgress] {'Created' if created else 'Updated'} progress for {user.username} - {variant_item.title}")
+            action = "Created" if created else "Updated"
+            print(f"[{timestamp}] ✅ VideoProgress CREATE: {action} progress for '{user.username}' - {progress_percentage:.1f}% complete")
             
             serializer = api_serializer.VideoProgressSerializer(video_progress)
             return Response({
@@ -2637,7 +2760,7 @@ class VideoProgressAPIView(generics.CreateAPIView):
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            print(f"[VideoProgress] Unexpected error: {str(e)}")
+            print(f"[{timestamp}] ❌ VideoProgress CREATE: Unexpected error - {str(e)}")
             import traceback
             traceback.print_exc()
             return Response({
@@ -2686,7 +2809,10 @@ class VideoProgressDetailAPIView(generics.RetrieveUpdateAPIView):
     
     def post(self, request, *args, **kwargs):
         """Handle POST requests for updating/creating progress"""
-        user_id = self.kwargs.get('user_id')
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
+        
+        user_id_str = self.kwargs.get('user_id')
         variant_item_id = self.kwargs.get('variant_item_id')
         
         # Extract progress data from request
@@ -2694,25 +2820,32 @@ class VideoProgressDetailAPIView(generics.RetrieveUpdateAPIView):
         last_watched_position = request.data.get('last_watched_position') or request.data.get('position', 0)
         total_duration = request.data.get('total_duration') or request.data.get('duration', 0)
         
+        print(f"[{timestamp}] 🎥 VideoProgressDetail POST: Received update for user_id={user_id_str}, variant_item_id={variant_item_id}")
+        
         try:
             # Convert to appropriate types
             progress_percentage = float(progress_percentage)
             last_watched_position = float(last_watched_position)
             total_duration = float(total_duration)
-            user_id = int(user_id)
-            variant_item_id = int(variant_item_id)
+            user_id = int(user_id_str)
+            # ✨ PHASE 16: FIX - variant_item_id is a ShortUUID string, NOT an integer!
+            # DO NOT convert to int - keep it as string for database lookup
+            # variant_item_id = int(variant_item_id)  # REMOVED - This breaks the query!
         except (ValueError, TypeError) as e:
+            print(f"[{timestamp}] ❌ VideoProgressDetail POST: Type conversion error - {e}")
             return Response({
                 "error": f"Invalid numeric values provided: {e}"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        print(f"[VideoProgressDetail] POST data: user_id={user_id}, variant_item_id={variant_item_id}")
-        print(f"[VideoProgressDetail] Progress: {progress_percentage}%, Position: {last_watched_position}, Duration: {total_duration}")
+        print(f"[{timestamp}] 📊 VideoProgressDetail POST: Progress: {progress_percentage:.1f}%, Position: {last_watched_position:.1f}s, Duration: {total_duration:.1f}s")
 
         try:
             # Get required objects
             user = User.objects.get(id=user_id)
+            print(f"[{timestamp}] ✅ VideoProgressDetail POST: Found user '{user.username}'")
+            
             variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
+            print(f"[{timestamp}] ✅ VideoProgressDetail POST: Found variant_item '{variant_item.title}'")
             
             # Get the course from request data or from variant_item
             course_id = request.data.get('course_id')
@@ -2720,8 +2853,10 @@ class VideoProgressDetailAPIView(generics.RetrieveUpdateAPIView):
                 course = api_models.Course.objects.get(id=course_id)
             else:
                 course = variant_item.variant.course
+            print(f"[{timestamp}] ✅ VideoProgressDetail POST: Found course '{course.title}'")
 
             # Create or update video progress
+            print(f"[{timestamp}] 💾 VideoProgressDetail POST: Saving progress...")
             video_progress, created = api_models.VideoProgress.objects.update_or_create(
                 user=user,
                 course=course,
@@ -2733,7 +2868,8 @@ class VideoProgressDetailAPIView(generics.RetrieveUpdateAPIView):
                 }
             )
 
-            print(f"[VideoProgressDetail] {'Created' if created else 'Updated'} progress for {user.username} - {variant_item.title}")
+            action = "Created" if created else "Updated"
+            print(f"[{timestamp}] ✅ VideoProgressDetail POST: {action} progress - {progress_percentage:.1f}% complete")
             
             # Return lightweight response to prevent broken pipe errors
             return Response({
@@ -2747,6 +2883,7 @@ class VideoProgressDetailAPIView(generics.RetrieveUpdateAPIView):
             }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
         except User.DoesNotExist:
+            print(f"[{timestamp}] ❌ VideoProgressDetail POST: User {user_id} not found")
             return Response({
                 "error": f"User with id {user_id} not found"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -2839,11 +2976,56 @@ class StudentNoteCreateAPIView(generics.ListCreateAPIView):
         title = request.data['title']
         note = request.data['note']
         color = request.data.get('color', '#f39c12')  # Default color if not provided
+        # ✨ PHASE 11.160: Optional lesson context for notes
+        variant_id = request.data.get('variant_id', None)
+        variant_item_id = request.data.get('variant_item_id', None)
 
         user = User.objects.get(id=user_id)
         enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
         
-        api_models.Note.objects.create(user=user, course=enrolled.course, note=note, title=title, color=color)
+        # ✨ PHASE 11.161 FIX: Validate variant_id exists before saving to prevent FK constraint violation
+        variant_obj = None
+        if variant_id:
+            try:
+                # Try first by variant_id (ShortUUID field)
+                variant_obj = api_models.Variant.objects.get(variant_id=variant_id, course=enrolled.course)
+            except api_models.Variant.DoesNotExist:
+                try:
+                    # Fallback: try by primary key ID (numeric) in case frontend sent the ID instead of variant_id
+                    variant_obj = api_models.Variant.objects.get(id=variant_id, course=enrolled.course)
+                except (api_models.Variant.DoesNotExist, ValueError, TypeError):
+                    # If not found by either method, silently ignore it (optional context)
+                    # This prevents FK violations while still allowing notes without context
+                    variant_obj = None
+                    variant_id = None
+                    variant_item_id = None
+        
+        # ✨ PHASE 11.161 FIX: Validate variant_item_id exists if variant_id is provided
+        variant_item_obj = None
+        if variant_item_id and variant_obj:
+            try:
+                # Try first by variant_item_id (ShortUUID field)
+                variant_item_obj = api_models.VariantItem.objects.get(variant_item_id=variant_item_id, variant=variant_obj)
+            except api_models.VariantItem.DoesNotExist:
+                try:
+                    # Fallback: try by primary key ID (numeric) in case frontend sent the ID instead of variant_item_id
+                    variant_item_obj = api_models.VariantItem.objects.get(id=variant_item_id, variant=variant_obj)
+                except (api_models.VariantItem.DoesNotExist, ValueError, TypeError):
+                    # If not found, silently ignore it (optional context)
+                    variant_item_obj = None
+                    variant_item_id = None
+        
+        # ✨ PHASE 11.161 FIX: Use variant object (not just ID) to prevent FK violations
+        # Create note with optional lesson context
+        note_obj = api_models.Note.objects.create(
+            user=user, 
+            course=enrolled.course, 
+            note=note, 
+            title=title, 
+            color=color,
+            variant=variant_obj,  # Pass the object (or None), not the ID
+            variant_item=variant_item_obj  # Pass the object (or None), not the ID
+        )
 
         return Response({"message": "Note created successfullly"}, status=status.HTTP_201_CREATED)
 
@@ -2875,7 +3057,77 @@ class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             return api_models.Note.objects.get(user=user, course=enrolled.course, id=note_id)
         except (User.DoesNotExist, api_models.EnrolledCourse.DoesNotExist, api_models.Note.DoesNotExist):
             raise Http404("Resource not found")
-        return note
+    
+    # ✨ PHASE 11.161 FIX: Override update to validate and set variant/variant_item before saving
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        # ✨ PHASE 11.161 FIX: Handle variant/variant_item separately since they're read_only in serializer
+        variant_obj = instance.variant
+        variant_item_obj = instance.variant_item
+        variant_was_updated = False
+        
+        # Check if variant_id is being updated
+        if 'variant_id' in request.data:
+            variant_was_updated = True
+            if request.data['variant_id']:
+                variant_id = request.data['variant_id']
+                enrollment_id = self.kwargs.get('enrollment_id')
+                try:
+                    enrolled = api_models.EnrolledCourse.objects.get(enrollment_id=enrollment_id)
+                    try:
+                        # Try first by variant_id (ShortUUID field)
+                        variant_obj = api_models.Variant.objects.get(variant_id=variant_id, course=enrolled.course)
+                    except api_models.Variant.DoesNotExist:
+                        # Fallback: try by primary key ID (numeric)
+                        try:
+                            variant_obj = api_models.Variant.objects.get(id=variant_id, course=enrolled.course)
+                        except (api_models.Variant.DoesNotExist, ValueError, TypeError):
+                            variant_obj = None
+                except api_models.EnrolledCourse.DoesNotExist:
+                    variant_obj = None
+            else:
+                # Explicitly clearing variant
+                variant_obj = None
+        
+        # Check if variant_item_id is being updated
+        if 'variant_item_id' in request.data:
+            if request.data['variant_item_id'] and variant_obj:
+                variant_item_id = request.data['variant_item_id']
+                try:
+                    # Try first by variant_item_id (ShortUUID field)
+                    variant_item_obj = api_models.VariantItem.objects.get(variant_item_id=variant_item_id, variant=variant_obj)
+                except api_models.VariantItem.DoesNotExist:
+                    # Fallback: try by primary key ID (numeric)
+                    try:
+                        variant_item_obj = api_models.VariantItem.objects.get(id=variant_item_id, variant=variant_obj)
+                    except (api_models.VariantItem.DoesNotExist, ValueError, TypeError):
+                        variant_item_obj = None
+            else:
+                # Explicitly clearing variant_item
+                variant_item_obj = None
+        
+        # Remove variant fields from request.data since they're read_only in serializer
+        # ✨ PHASE 11.164 FIX: Create mutable copy before popping (FormData creates immutable QueryDict)
+        mutable_data = request.data.dict() if hasattr(request.data, 'dict') else dict(request.data)
+        mutable_data.pop('variant_id', None)
+        mutable_data.pop('variant_item_id', None)
+        
+        # Serialize and validate the rest of the data
+        serializer = self.get_serializer(instance, data=mutable_data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        
+        # Update the instance with the serializer data
+        instance = serializer.save()
+        
+        # Now set the variant and variant_item directly if they were updated
+        if variant_was_updated:
+            instance.variant = variant_obj
+            instance.variant_item = variant_item_obj
+            instance.save()
+        
+        return Response(serializer.data)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentRateCourseCreateAPIView(generics.CreateAPIView):
@@ -3076,25 +3328,33 @@ class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
         user_id = request.data['user_id']
         title = request.data['title']
         message = request.data['message']
-        # ✨ PHASE 7.7: Extract variant_item_id to store lesson context
+        # ✨ PHASE 7.25: Require variant_item_id for proper lesson organization
         variant_item_id = request.data.get('variant_item_id', None)
+        
+        # Validate that variant_item_id is provided
+        if not variant_item_id:
+            return Response(
+                {"error": "variant_item_id is required. Please select a lesson context for your question."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         user = User.objects.get(id=user_id)
         course = api_models.Course.objects.get(id=course_id)
         
-        # Get variant_item if provided
-        variant_item = None
-        if variant_item_id:
-            try:
-                variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
-            except api_models.VariantItem.DoesNotExist:
-                variant_item = None
+        # Get variant_item - should always exist since validation passed
+        try:
+            variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
+        except api_models.VariantItem.DoesNotExist:
+            return Response(
+                {"error": "Invalid variant_item_id. The selected lesson no longer exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         question = api_models.Question_Answer.objects.create(
             course=course,
             user=user,
             title=title,
-            variant_item=variant_item  # Save the lesson context
+            variant_item=variant_item  # Now guaranteed to have lesson context
         )
 
         api_models.Question_Answer_Message.objects.create(
@@ -3630,15 +3890,10 @@ class StudentQAReportsAPIView(generics.ListAPIView):
             user_id_str = request.query_params.get('user_id')
             course_id_str = self.kwargs.get('course_id')
 
-            print(f"\n[StudentQAReportsAPIView] Request received")
-            print(f"  user_id param: {user_id_str} (type: {type(user_id_str).__name__})")
-            print(f"  course_id param: {course_id_str} (type: {type(course_id_str).__name__})")
-
             # ✨ Validate user_id
             try:
                 user_id = int(user_id_str) if user_id_str else None
             except (ValueError, TypeError) as e:
-                print(f"[StudentQAReportsAPIView] ❌ Invalid user_id type: {e}")
                 return Response(
                     {"error": f"Invalid user_id: {e}"}, 
                     status=status.HTTP_400_BAD_REQUEST
@@ -3646,17 +3901,13 @@ class StudentQAReportsAPIView(generics.ListAPIView):
 
             # ✨ PHASE 7.17+: Make course_id optional - get all user reports or filtered by course
             if not user_id:
-                print(f"[StudentQAReportsAPIView] ❌ Missing required user_id parameter")
                 return Response(
                     {"error": "Missing user_id parameter"}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            print(f"[StudentQAReportsAPIView] ✅ Converted user_id={user_id} (int)")
-
             # ✨ PHASE 7.16+: Enhanced endpoint to include admin review feedback
             # Get Q&A reports for this user (all courses, or filtered by course if provided)
-            print(f"[StudentQAReportsAPIView] Querying Question_Answer_Report...")
             
             # Build filter dynamically
             # ✨ PHASE 7.17+: FIX - course_id from frontend is ShortUUID, need to find actual course database id
@@ -3664,38 +3915,13 @@ class StudentQAReportsAPIView(generics.ListAPIView):
             actual_course_db_id = None
             
             if course_id_str:
-                print(f"  Frontend provided course_id={course_id_str} (ShortUUID)")
                 try:
                     # course_id_str is the Course.course_id field (ShortUUID), need to find Course database id
                     course_obj = api_models.Course.objects.get(course_id=course_id_str)
                     actual_course_db_id = course_obj.id
                     qa_filter['question__course_id'] = actual_course_db_id
-                    print(f"  ✅ Resolved ShortUUID {course_id_str} → Course database id={actual_course_db_id}")
-                    print(f"  Filters: reported_by={user_id}, question__course_id={actual_course_db_id}")
                 except api_models.Course.DoesNotExist:
-                    print(f"  ❌ Course with course_id (ShortUUID)={course_id_str} not found, will return all user reports")
-            else:
-                print(f"  No course_id provided, fetching all user reports")
-            
-            # ✨ DIAGNOSTIC: Show what records exist before/after filtering
-            print(f"\n[StudentQAReportsAPIView] 🔍 DIAGNOSTIC CHECK")
-            all_reports = api_models.Question_Answer_Report.objects.all()
-            print(f"  Total reports in database: {all_reports.count()}")
-            
-            user_reports = api_models.Question_Answer_Report.objects.filter(reported_by=user_id)
-            print(f"  Reports by user_id={user_id}: {user_reports.count()}")
-            if user_reports.exists():
-                for r in user_reports[:3]:
-                    print(f"    - ID {r.id}: Q{r.question.qa_id}, Course DB id {r.question.course_id}, Status {r.status}")
-            
-            if actual_course_db_id:
-                course_reports = api_models.Question_Answer_Report.objects.filter(question__course_id=actual_course_db_id)
-                print(f"  Reports for course DB id={actual_course_db_id}: {course_reports.count()}")
-                if course_reports.exists():
-                    for r in course_reports[:3]:
-                        print(f"    - ID {r.id}: Q{r.question.qa_id}, User {r.reported_by_id}, Status {r.status}")
-            
-            print(f"  Applying filter...")
+                    pass
             
             question_reports = list(
                 api_models.Question_Answer_Report.objects.filter(
@@ -3715,12 +3941,7 @@ class StudentQAReportsAPIView(generics.ListAPIView):
                 )
             )
             
-            print(f"[StudentQAReportsAPIView] Question reports found: {len(question_reports)}")
-            if question_reports:
-                for r in question_reports:
-                    print(f"  ✅ Found: Q{r['question__qa_id']}, Course DB id {r['question__course_id']}, Status {r['status']}")
-            
-            print(f"[StudentQAReportsAPIView] Querying Question_Answer_Message_Report...")
+
             
             # Build message filter dynamically
             msg_filter = {'reported_by': user_id}
@@ -3746,15 +3967,12 @@ class StudentQAReportsAPIView(generics.ListAPIView):
                 )
             )
             
-            print(f"[StudentQAReportsAPIView] Message reports found: {len(message_reports)}")
-
             # Format response
             reports = {
                 'question_reports': question_reports,
                 'message_reports': message_reports
             }
 
-            print(f"[StudentQAReportsAPIView] Returning response with {len(question_reports)} question reports and {len(message_reports)} message reports")
             return Response(reports, status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -5067,7 +5285,6 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                 item_description = item_data.get("description", "")
                 item_file = item_data.get("file", "")
                 item_youtube_link = item_data.get("youtube_link", "")  # [*] PHASE 4.73: Handle YouTube link separately
-                media_source = item_data.get("media_source", "")  # ✨ PHASE 4.191: Get media source from request
                 preview_value = item_data.get("preview", "false")
                 variant_item_id = item_data.get("variant_item_id")
                 duration_seconds = item_data.get("duration_seconds")  # Get duration from file upload
@@ -5103,8 +5320,8 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                     file = None
                     print(f"[Curriculum Update - DEBUG] No file/link provided for item: {item_title}")
                 
-                # [*] PHASE 4.43.10: Extract duration from Google Drive/YouTube links if not provided
-                if not duration_seconds and file and ('drive.google.com' in file or 'youtube.com' in file or 'youtu.be' in file):
+                # [*] PHASE 4.43.10: Extract duration from YouTube links if not provided
+                if not duration_seconds and file and ('youtube.com' in file or 'youtu.be' in file):
                     print(f"[Curriculum Update] Extracting duration from URL: {file}")
                     try:
                         from .url_utils import extract_video_duration_from_url
@@ -5139,10 +5356,6 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                         # PHASE 4.167: Always set file field (None if empty) to allow clearing files
                         # This ensures deleted files are properly removed from the database
                         variant_item.file = file
-                        # PHASE 4.191: Save media_source to remember which source was used
-                        if media_source and media_source in ['upload', 'google_drive', 'youtube']:
-                            variant_item.media_source = media_source
-                            print(f"[Curriculum Update] Setting media_source to '{media_source}' for item {variant_item_id}")
                         if duration is not None:
                             variant_item.duration = duration
                         variant_item.save()
@@ -5156,8 +5369,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                             file=file,
                             duration=duration,
                             preview=preview,
-                            order=int(item_order) if item_order else 0,
-                            media_source=media_source if media_source and media_source in ['upload', 'google_drive', 'youtube'] else 'google_drive'  # PHASE 4.191
+                            order=int(item_order) if item_order else 0
                         )
                         updated_item_ids.add(variant_item.variant_item_id)
                 else:
@@ -5169,8 +5381,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                         file=file,
                         duration=duration,
                         preview=preview,
-                        order=int(item_order) if item_order else 0,
-                        media_source=media_source if media_source and media_source in ['upload', 'google_drive', 'youtube'] else 'google_drive'  # PHASE 4.191
+                        order=int(item_order) if item_order else 0
                     )
                     updated_item_ids.add(variant_item.variant_item_id)
         
@@ -9373,7 +9584,6 @@ class SelectRoleAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
-# [*] PHASE 4.12: Admin Testimonial Management Views
 class AdminPendingTestimonialsListAPIView(generics.ListAPIView):
     """
     Admin - List all pending (unapproved) testimonials for review
@@ -9409,6 +9619,22 @@ class AdminPendingTestimonialsListAPIView(generics.ListAPIView):
             user = review.user
             profile = user.profile if user else None
             
+            # ✨ PHASE 11.10: Convert relative image URLs to absolute + cache-busting
+            image_url = None
+            if profile and profile.image:
+                image_path = str(profile.image)
+                # Check if already absolute URL
+                if image_path.startswith('http://') or image_path.startswith('https://'):
+                    image_url = image_path
+                else:
+                    # Convert relative path to absolute URL with cache-busting timestamp
+                    if not image_path.startswith('/'):
+                        image_path = f"/media/{image_path}"
+                    from datetime import datetime
+                    timestamp = int(datetime.now().timestamp() * 1000) // 3600000  # Cache-bust per hour
+                    absolute_url = request.build_absolute_uri(image_path)
+                    image_url = f"{absolute_url}?v={timestamp}"
+            
             testimonials_data.append({
                 'id': review.id,
                 'user_id': user.id if user else None,
@@ -9421,7 +9647,7 @@ class AdminPendingTestimonialsListAPIView(generics.ListAPIView):
                 'rating': review.rating,
                 'role': review.role,
                 'active': review.active,
-                'image': profile.image.url if profile and profile.image else None,
+                'image': image_url,  # ✨ PHASE 11.10: Now returns absolute URL with cache-busting
                 'date': review.date.isoformat()
             })
         
@@ -9551,6 +9777,22 @@ class AdminApprovedTestimonialsListAPIView(generics.ListAPIView):
             user = review.user
             profile = user.profile if user else None
             
+            # ✨ PHASE 11.10: Convert relative image URLs to absolute + cache-busting
+            image_url = None
+            if profile and profile.image:
+                image_path = str(profile.image)
+                # Check if already absolute URL
+                if image_path.startswith('http://') or image_path.startswith('https://'):
+                    image_url = image_path
+                else:
+                    # Convert relative path to absolute URL with cache-busting timestamp
+                    if not image_path.startswith('/'):
+                        image_path = f"/media/{image_path}"
+                    from datetime import datetime
+                    timestamp = int(datetime.now().timestamp() * 1000) // 3600000  # Cache-bust per hour
+                    absolute_url = request.build_absolute_uri(image_path)
+                    image_url = f"{absolute_url}?v={timestamp}"
+            
             testimonials_data.append({
                 'id': review.id,
                 'user_id': user.id if user else None,
@@ -9563,7 +9805,7 @@ class AdminApprovedTestimonialsListAPIView(generics.ListAPIView):
                 'rating': review.rating,
                 'role': review.role,
                 'active': review.active,
-                'image': profile.image.url if profile and profile.image else None,
+                'image': image_url,  # ✨ PHASE 11.10: Now returns absolute URL with cache-busting
                 'date': review.date.isoformat()
             })
         
@@ -10223,7 +10465,11 @@ class LessonCompletionQuestionAnswerAPIView(APIView):
         """
         try:
             question_id = request.data.get('question_id')
+            print(f"[PHASE 12.16] 🎯 LessonCompletion ANSWER: Received question_id={question_id}, user={request.user.username}")
+            
             question = api_models.LessonCompletionQuestion.objects.get(question_id=question_id)
+            print(f"[PHASE 12.16] ✅ Question found: {question.question_text}, variant_item_id={question.variant_item.variant_item_id if question.variant_item else 'None'}")
+            print(f"[PHASE 12.16] Question type: {question.question_type}")
             
             is_correct = False
             message = ''
@@ -10231,31 +10477,202 @@ class LessonCompletionQuestionAnswerAPIView(APIView):
             if question.question_type == 'multiple_choice':
                 # Single select - check if the provided choice is correct
                 answer_choice_id = request.data.get('answer_choice_id')
-                answer_choice = question.choices.get(choice_id=answer_choice_id)
-                is_correct = answer_choice.is_correct
+                print(f"[PHASE 12.16] 🔍 Multiple choice - answer_choice_id={answer_choice_id}")
+                
+                try:
+                    answer_choice = question.choices.get(choice_id=answer_choice_id)
+                    is_correct = answer_choice.is_correct
+                    print(f"[PHASE 12.16] ✅ Choice found: {answer_choice.choice_text}, is_correct={is_correct}")
+                except Exception as choice_error:
+                    print(f"[PHASE 12.16] ❌ ERROR finding choice: {choice_error}")
+                    is_correct = False
+                
                 message = 'Jawaban benar!' if is_correct else 'Jawaban salah, silakan coba lagi'
             
             elif question.question_type == 'multi_select':
                 # Multi-select - check if all selected choices match correct answers
                 answer_choice_ids = request.data.get('answer_choice_ids', [])
+                print(f"[PHASE 12.16] 🔍 Multi-select - answer_choice_ids={answer_choice_ids}")
+                
                 correct_choices = set(
                     question.choices.filter(is_correct=True).values_list('choice_id', flat=True)
                 )
                 selected_choices = set(answer_choice_ids)
                 is_correct = correct_choices == selected_choices
+                print(f"[PHASE 12.16] Expected choices: {correct_choices}, Selected: {selected_choices}, is_correct={is_correct}")
                 message = 'Jawaban benar!' if is_correct else 'Jawaban salah, silakan coba lagi'
             
             elif question.question_type in ['short_answer', 'fill_in_blank']:
                 # Text-based answer - use the check_answer method
                 student_answer = request.data.get('answer', '').strip()
+                print(f"[PHASE 12.16] 🔍 Short answer - student_answer='{student_answer}'")
+                print(f"[PHASE 12.16] Expected answer: '{question.correct_answer_text}', case_sensitive={question.case_sensitive}")
+                
                 is_correct = question.check_answer(student_answer)
+                print(f"[PHASE 12.16] check_answer result: is_correct={is_correct}")
                 message = 'Jawaban benar!' if is_correct else 'Jawaban salah, silakan coba lagi'
+            
+            print(f"[PHASE 12.16] 🎯 ANSWER VALIDATION RESULT: is_correct={is_correct}")
+            
+            # ✨ PHASE 11.198: Save the answer to LessonCompletionQuestionAnswer model
+            try:
+                answer_record = api_models.LessonCompletionQuestionAnswer.objects.create(
+                    user=request.user,
+                    question=question,
+                    is_correct=is_correct
+                )
+                print(f"[PHASE 12.16] ✅ LessonCompletionQuestionAnswer created with is_correct={is_correct}")
+                
+                # Save answer based on question type
+                if question.question_type == 'multiple_choice':
+                    answer_choice_id = request.data.get('answer_choice_id')
+                    answer_choice = question.choices.get(choice_id=answer_choice_id)
+                    answer_record.answer_choice = answer_choice
+                    answer_record.save()
+                
+                elif question.question_type == 'multi_select':
+                    answer_choice_ids = request.data.get('answer_choice_ids', [])
+                    answer_choices = question.choices.filter(choice_id__in=answer_choice_ids)
+                    answer_record.answer_choices.set(answer_choices)
+                
+                elif question.question_type in ['short_answer', 'fill_in_blank']:
+                    student_answer = request.data.get('answer', '').strip()
+                    answer_record.answer_text = student_answer
+                    answer_record.save()
+                
+                print(f"[PHASE 12.16] ✅ Answer details saved. User: {request.user.username}, Q: {question.question_id}, Correct: {is_correct}")
+            except Exception as e:
+                print(f"[PHASE 12.16] ❌ ERROR saving answer: {str(e)}")
+                print(f"[PHASE 12.16] Error type: {type(e).__name__}")
+                import traceback
+                traceback.print_exc()
+                # Don't fail the response if answer recording fails
+            
+            # ✨ PHASE 12.16: When answer is correct, mark lesson as completed
+            completion_error = None
+            completion_created = False
+            completion_variant_item_id = None
+            
+            if is_correct:
+                print(f"[PHASE 12.16] 🎓 Answer is CORRECT - Attempting to mark lesson as completed...")
+                try:
+                    variant_item = question.variant_item
+                    if not variant_item:
+                        completion_error = "variant_item is None"
+                        print(f"[PHASE 12.16] ❌ ERROR: {completion_error}")
+                        raise Exception(completion_error)
+                    
+                    completion_variant_item_id = variant_item.variant_item_id
+                    print(f"[PHASE 12.16] ✅ variant_item: {variant_item.title} (ID: {variant_item.variant_item_id})")
+                    
+                    user = request.user
+                    print(f"[PHASE 12.16] ✅ user: {user.username} (ID: {user.id})")
+                    
+                    course_obj = variant_item.variant
+                    if not course_obj:
+                        completion_error = "variant is None"
+                        print(f"[PHASE 12.16] ❌ ERROR: {completion_error}")
+                        raise Exception(completion_error)
+                    
+                    course = course_obj.course
+                    if not course:
+                        completion_error = "course is None"
+                        print(f"[PHASE 12.16] ❌ ERROR: {completion_error}")
+                        raise Exception(completion_error)
+                    
+                    print(f"[PHASE 12.16] ✅ course: {course.title} (ID: {course.id})")
+                    
+                    # ✨ PHASE 38.1: CRITICAL FIX - Use explicit commit to ensure persistence
+                    # Previous code relied on Django middleware autocommit, but tests show commits were being rolled back
+                    from django.db import transaction
+                    
+                    try:
+                        with transaction.atomic():
+                            completed_lesson, created = api_models.CompletedLesson.objects.get_or_create(
+                                user_id=user.id,
+                                course_id=course.id,
+                                variant_item_id=variant_item.id
+                            )
+                            print(f"[PHASE 38.1] 🔒 CompletedLesson within atomic transaction: ID={completed_lesson.id}, created={created}")
+                        
+                        # After atomic block exits, transaction is committed
+                        print(f"[PHASE 38.1] ✅ Transaction.atomic() COMMITTED successfully")
+                        completion_created = created
+                    except Exception as tx_error:
+                        print(f"[PHASE 38.1] ❌ Transaction.atomic() FAILED: {tx_error}")
+                        completion_created = False
+                        raise
+                    
+                    action = "CREATED" if created else "ALREADY_EXISTS"
+                    print(f"[PHASE 12.16] ✅ CompletedLesson {action}: {user.username} → {variant_item.title}")
+                    print(f"[PHASE 12.16] CompletedLesson ID: {completed_lesson.id}")
+                    print(f"[PHASE 12.16] CompletedLesson variant_item_id: {completed_lesson.variant_item_id}")
+                    print(f"[PHASE 12.16] CompletedLesson course_id: {completed_lesson.course_id}")
+                    print(f"[PHASE 12.16] CompletedLesson user_id: {completed_lesson.user_id}")
+                    print(f"[PHASE 12.16] ✅ Transaction committed - record is now persisted in database")
+                    
+                    # ✨ PHASE 37.1: CRITICAL FIX - Verify the record was actually saved
+                    # This catches database integrity issues where variant_item might be missing
+                    from django.db import connection, transaction
+                    
+                    # Explicitly flush pending database operations
+                    from django.db import reset_queries
+                    
+                    print(f"[PHASE 37.1] Pre-verification: Checking if CompletedLesson {completed_lesson.id} persists...")
+                    
+                    # Method 1: Use Django's reload from DB
+                    try:
+                        reloaded = api_models.CompletedLesson.objects.get(id=completed_lesson.id)
+                        print(f"[PHASE 37.1] ✅ Django ORM reload SUCCESS: ID={reloaded.id}, variant_item_id={reloaded.variant_item_id}")
+                    except api_models.CompletedLesson.DoesNotExist:
+                        print(f"[PHASE 37.1] ❌ Django ORM reload FAILED - record not found!")
+                    
+                    # Method 2: Use raw SQL
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            "SELECT id, variant_item_id, course_id, user_id FROM api_completedlesson WHERE id = %s",
+                            [completed_lesson.id]
+                        )
+                        row = cursor.fetchone()
+                        if row:
+                            db_id, db_variant, db_course, db_user = row
+                            print(f"[PHASE 37.1] ✅ RAW SQL VERIFIED: ID={db_id}, variant_item_id={db_variant}, course_id={db_course}, user_id={db_user}")
+                            if db_variant is None:
+                                print(f"[PHASE 37.1] 🚨 CRITICAL: variant_item_id is NULL in database!")
+                        else:
+                            print(f"[PHASE 37.1] 🚨 CRITICAL: Record not found in raw SQL either!")
+                            
+                            # Try to find ANY record with these keys
+                            cursor.execute(
+                                "SELECT id, variant_item_id FROM api_completedlesson WHERE user_id = %s AND course_id = %s AND variant_item_id = %s",
+                                [user.id, course.id, variant_item.id]
+                            )
+                            alt_row = cursor.fetchone()
+                            if alt_row:
+                                print(f"[PHASE 37.1] ⚠️ Found existing record with same keys: ID={alt_row[0]} (get_or_create returned existing record)")
+                            else:
+                                print(f"[PHASE 37.1] 🚨 No record at ALL with these keys exists!")
+                    
+                except Exception as e:
+                    completion_error = str(e)
+                    print(f"[PHASE 12.16] ❌ ERROR marking lesson as completed: {completion_error}")
+                    print(f"[PHASE 12.16] Error type: {type(e).__name__}")
+                    import traceback
+                    traceback.print_exc()
+                    # Don't fail the response if CompletedLesson creation fails
+            else:
+                print(f"[PHASE 12.16] ⚠️ Answer is INCORRECT - NOT marking as completed")
             
             return Response({
                 'success': True,
                 'is_correct': is_correct,
                 'message': message,
-                'question_type': question.question_type
+                'question_type': question.question_type,
+                'debug': {
+                    'completion_created': completion_created,
+                    'completion_error': completion_error,
+                    'completion_variant_item_id': completion_variant_item_id
+                }
             }, status=status.HTTP_200_OK)
         
         except api_models.LessonCompletionQuestion.DoesNotExist:
@@ -10277,6 +10694,109 @@ class LessonCompletionQuestionAnswerAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
+# ✨ PHASE 10.1: Ranking API Views
+# Retrieve top ranked students and instructors by points
+
+class RankedStudentsAPIView(generics.ListAPIView):
+    """
+    API endpoint to retrieve ranked students by points.
+    Supports filtering by period: lifetime, yearly, monthly
+    ✨ PHASE 10.1: Ranking component integration
+    """
+    serializer_class = api_serializer.RankedStudentSerializer
+    permission_classes = [AllowAny]
+    pagination_class = None
+    
+    def get_queryset(self):
+        """Get top ranked students sorted by points"""
+        period = self.kwargs.get('period', 'lifetime')
+        
+        if period == 'yearly':
+            queryset = api_models.StudentPoints.objects.filter(
+                yearly_points__gt=0
+            ).order_by('-yearly_points')[:10]
+        elif period == 'monthly':
+            queryset = api_models.StudentPoints.objects.filter(
+                monthly_points__gt=0
+            ).order_by('-monthly_points')[:10]
+        else:  # lifetime
+            queryset = api_models.StudentPoints.objects.filter(
+                lifetime_points__gt=0
+            ).order_by('-lifetime_points')[:10]
+        
+        return queryset
+    
+    def list(self, request, *args, **kwargs):
+        """Get ranked students with rank position"""
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        
+        # Add rank position to each result
+        data = serializer.data
+        for idx, item in enumerate(data, start=1):
+            item['rank_position'] = idx
+            # Determine rank badge
+            if idx == 1:
+                item['rank'] = "🥇"
+            elif idx == 2:
+                item['rank'] = "🥈"
+            elif idx == 3:
+                item['rank'] = "🥉"
+            else:
+                item['rank'] = f"#{idx}"
+        
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class RankedInstructorsAPIView(generics.ListAPIView):
+    """
+    API endpoint to retrieve ranked instructors by points.
+    Supports filtering by period: lifetime, yearly, monthly
+    ✨ PHASE 10.1: Ranking component integration
+    """
+    serializer_class = api_serializer.RankedInstructorSerializer
+    permission_classes = [AllowAny]
+    pagination_class = None
+    
+    def get_queryset(self):
+        """Get top ranked instructors sorted by points"""
+        period = self.kwargs.get('period', 'lifetime')
+        
+        if period == 'yearly':
+            queryset = api_models.InstructorPoints.objects.filter(
+                yearly_points__gt=0
+            ).order_by('-yearly_points')[:10]
+        elif period == 'monthly':
+            queryset = api_models.InstructorPoints.objects.filter(
+                monthly_points__gt=0
+            ).order_by('-monthly_points')[:10]
+        else:  # lifetime
+            queryset = api_models.InstructorPoints.objects.filter(
+                lifetime_points__gt=0
+            ).order_by('-lifetime_points')[:10]
+        
+        return queryset
+    
+    def list(self, request, *args, **kwargs):
+        """Get ranked instructors with rank position"""
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        
+        # Add rank position to each result
+        data = serializer.data
+        for idx, item in enumerate(data, start=1):
+            item['rank_position'] = idx
+            # Determine rank badge
+            if idx == 1:
+                item['rank'] = "🥇"
+            elif idx == 2:
+                item['rank'] = "🥈"
+            elif idx == 3:
+                item['rank'] = "🥉"
+            else:
+                item['rank'] = f"#{idx}"
+        
+        return Response(data, status=status.HTTP_200_OK)
 
 
 

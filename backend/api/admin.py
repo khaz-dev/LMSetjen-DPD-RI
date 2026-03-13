@@ -25,7 +25,7 @@ class CourseAdmin(admin.ModelAdmin):
             'fields': ('title', 'description', 'course_id', 'slug', 'teacher', 'category', 'level')
         }),
         ('Media', {
-            'fields': ('image', 'file', 'intro_video_source')
+            'fields': ('image', 'file')  # ✨ PHASE X.X: Removed intro_video_source (upload-only system)
         }),
         ('✨ Versioning & Status', {
             'fields': ('is_published_version', 'parent_course', 'platform_status', 'teacher_course_status'),
@@ -81,7 +81,7 @@ class VariantAdmin(admin.ModelAdmin):
 
 class VariantItemAdmin(admin.ModelAdmin):
     """Admin interface for Pelajaran (Lessons/Variant Items)"""
-    list_display = ('title', 'variant', 'media_source', 'duration', 'preview', 'order', 'date')  # ✨ PHASE 4.187: Show media_source in list
+    list_display = ('title', 'variant', 'duration', 'preview', 'order', 'date')  # ✨ PHASE X.X: Removed media_source (upload-only system)
     search_fields = ('title', 'variant__title', 'variant__course__title')
     list_filter = ('variant__course', 'preview', 'date')
     ordering = ('-date',)
@@ -91,8 +91,8 @@ class VariantItemAdmin(admin.ModelAdmin):
             'fields': ('variant', 'title', 'description', 'preview', 'order'),
         }),
         ('File Media', {
-            'fields': ('file', 'media_source'),  # ✨ PHASE 4.187: Add media_source field to track which source was used
-            'description': '✨ Masukkan URL file (video, PDF, atau dokumen lainnya). Durasi akan otomatis dihitung ketika file diunggah. Media Source menunjukkan sumber media yang digunakan (YouTube, Google Drive, atau Upload).',
+            'fields': ('file',),  # ✨ PHASE X.X: Removed media_source (upload-only system)
+            'description': '✨ Masukkan URL file (video, PDF, atau dokumen lainnya). Durasi akan otomatis dihitung ketika file diunggah.',
         }),
         ('Durasi Video', {
             'fields': ('duration',),
@@ -242,6 +242,8 @@ admin.site.register(models.QuizMetrics)
 # ✨ PHASE 4.143: Lesson Completion Question System
 admin.site.register(models.LessonCompletionQuestion)
 admin.site.register(models.LessonCompletionQuestionChoice)
+# ✨ PHASE 11.198: Student answers to completion questions
+admin.site.register(models.LessonCompletionQuestionAnswer)
 
 # ✨ PHASE 4.210: Review Abuse Reporting System
 class ReviewAbuseAdmin(admin.ModelAdmin):
@@ -272,4 +274,147 @@ class ReviewAbuseAdmin(admin.ModelAdmin):
         return obj.reported_by.get_full_name() if obj.reported_by else '-'
     reported_by_name.short_description = 'Reported By'
 
+# ✨ PHASE 10.1: Ranking System Admin
+# NOTE: StudentPoints, InstructorPoints, and PointsAuditLog models not currently implemented
+# These admin classes are kept for future implementation when the models are added to models.py
+# 
+class StudentPointsAdmin(admin.ModelAdmin):
+    """
+    Admin interface for StudentPoints ranking system.
+    
+    Points are automatically awarded via Django signals when:
+    - Course completion: 100 points
+    - Quiz passed: 0-100 points (based on score %)
+    - Course rating given: 50 points
+    
+    NOTE: Removed 'Role' column (it was just current_role, misleading since users
+    can have multiple roles). View PointsAuditLog to see which activities earned points.
+    """
+    list_display = (
+        'get_full_name', 
+        'lifetime_points', 'yearly_points', 'monthly_points',
+        'yearly_year', 'monthly_month',
+        'created_at'
+    )
+    list_filter = ('lifetime_points', 'yearly_year', 'monthly_month', 'created_at')
+    search_fields = ('user__full_name', 'user__email', 'user__username')
+    readonly_fields = ('created_at', 'lifetime_updated', 'yearly_updated', 'monthly_updated')
+    
+    fieldsets = (
+        ('Student Information', {
+            'fields': ('user',)
+        }),
+        ('Lifetime Points', {
+            'fields': ('lifetime_points', 'lifetime_updated')
+        }),
+        ('Yearly Points', {
+            'fields': ('yearly_points', 'yearly_year', 'yearly_updated')
+        }),
+        ('Monthly Points', {
+            'fields': ('monthly_points', 'monthly_year', 'monthly_month', 'monthly_updated')
+        }),
+        ('Meta', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        })
+    )
+    
+    ordering = ('-lifetime_points',)
+    
+    def get_full_name(self, obj):
+        return obj.user.full_name if obj.user else '-'
+    get_full_name.short_description = 'Student Name'
+
+
+class InstructorPointsAdmin(admin.ModelAdmin):
+    """
+    Admin interface for InstructorPoints ranking system.
+    
+    Points are automatically awarded via Django signals when:
+    - Course published: 50 points
+    - Student enrollment: 10 points per student
+    - Rating received: 10-50 points per rating
+    
+    NOTE: Removed 'Role' column (it was just current_role, misleading). 
+    View PointsAuditLog to see which activities earned points.
+    """
+    list_display = (
+        'get_full_name',
+        'lifetime_points', 'yearly_points', 'monthly_points',
+        'yearly_year', 'monthly_month',
+        'created_at'
+    )
+    list_filter = ('lifetime_points', 'yearly_year', 'monthly_month', 'created_at')
+    search_fields = ('user__full_name', 'user__email', 'user__username')
+    readonly_fields = ('created_at', 'lifetime_updated', 'yearly_updated', 'monthly_updated')
+    
+    fieldsets = (
+        ('Instructor Information', {
+            'fields': ('user',)
+        }),
+        ('Lifetime Points', {
+            'fields': ('lifetime_points', 'lifetime_updated')
+        }),
+        ('Yearly Points', {
+            'fields': ('yearly_points', 'yearly_year', 'yearly_updated')
+        }),
+        ('Monthly Points', {
+            'fields': ('monthly_points', 'monthly_year', 'monthly_month', 'monthly_updated')
+        }),
+        ('Meta', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        })
+    )
+    
+    ordering = ('-lifetime_points',)
+    
+    def get_full_name(self, obj):
+        return obj.user.full_name if obj.user else '-'
+    get_full_name.short_description = 'Instructor Name'
+
+
+class PointsAuditLogAdmin(admin.ModelAdmin):
+    """
+    ✨ PHASE 10.4: Audit log for all point awards.
+    
+    Complete transparency - see exactly where each point came from and verify calculations.
+    Use this to:
+    - Audit point awards
+    - Find which activities earned which points
+    - Detect duplicates or errors
+    - Supervise ranking point validity
+    """
+    list_display = (
+        'get_user_name', 'points', 'category', 'role', 'created_at'
+    )
+    list_filter = ('category', 'role', 'created_at')
+    search_fields = ('user__full_name', 'user__email')
+    readonly_fields = ('user', 'points', 'category', 'role', 'metadata', 'created_at')
+    
+    fieldsets = (
+        ('Audit Information', {
+            'fields': ('user', 'points', 'category', 'role')
+        }),
+        ('Metadata', {
+            'fields': ('metadata',),
+            'classes': ('wide',)
+        }),
+        ('Timestamp', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        })
+    )
+    
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+    
+    def get_user_name(self, obj):
+        return obj.user.full_name if obj.user else '-'
+    get_user_name.short_description = 'User'
+
+
+admin.site.register(models.StudentPoints, StudentPointsAdmin)
+admin.site.register(models.InstructorPoints, InstructorPointsAdmin)
+admin.site.register(models.PointsAuditLog, PointsAuditLogAdmin)
 admin.site.register(models.ReviewAbuse, ReviewAbuseAdmin)

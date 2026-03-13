@@ -1,0 +1,119 @@
+/* ✨ PHASE 11.1: Floating Feedback Button Styles */
+
+.feedback-floating-button {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
+    z-index: 1040;
+    font-weight: bold;
+}
+
+.feedback-floating-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+}
+
+.feedback-floating-button:active {
+    transform: scale(0.95);
+}
+
+.feedback-floating-button.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(100px);
+}
+
+.feedback-button-icon {
+    display: inline-block;
+}
+
+.feedback-button-tooltip {
+    display: none;
+}
+
+/* Show tooltip on hover */
+.feedback-floating-button::after {
+    content: attr(title);
+    position: absolute;
+    right: 72px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    bottom: 50%;
+    transform: translateY(50%);
+}
+
+.feedback-floating-button:hover::after {
+    opacity: 1;
+}
+
+/* Pulse animation on first load */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(0, 123, 255, 0.5);
+    }
+    100% {
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+}
+
+.feedback-floating-button {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.feedback-floating-button:hover {
+    animation: none;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .feedback-floating-button {
+        bottom: 16px;
+        right: 16px;
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .feedback-floating-button::after {
+        right: 60px;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+    .feedback-floating-button {
+        bottom: 12px;
+        right: 12px;
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+    }
+
+    .feedback-floating-button::after {
+        right: 56px;
+        font-size: 12px;
+    }
+}

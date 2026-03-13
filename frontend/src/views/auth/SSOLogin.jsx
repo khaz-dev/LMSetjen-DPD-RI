@@ -72,19 +72,10 @@ function SSOLogin() {
       setLoading(true);
       setError(null);
 
-      console.log("🔐 SSO Login Started");
-      console.log("SSO Token:", sso_token ? `${sso_token.substring(0, 20)}...` : "MISSING");
-      console.log("API Base URL:", apiInstance.defaults.baseURL);
-      console.log("Full endpoint URL:", `${apiInstance.defaults.baseURL}sso/verify/`);
-
       // Call backend SSO verify endpoint
-      console.log("📤 Sending SSO token to backend...");
       const response = await apiInstance.post('sso/verify/', {
         sso_token: sso_token,
       });
-
-      console.log("✅ Backend response received:", response.status);
-      console.log("Response data:", response.data);
 
       const { access, refresh, user, created, message } = response.data;
 
@@ -92,8 +83,6 @@ function SSOLogin() {
       if (!access || !refresh) {
         throw new Error("Invalid response from backend: missing tokens");
       }
-
-      console.log("💾 Storing tokens in cookies...");
 
       // Store tokens in cookies immediately
       Cookie.set('access_token', access, {
@@ -107,12 +96,7 @@ function SSOLogin() {
         sameSite: 'Lax',
       });
 
-      console.log("🍪 Tokens stored successfully");
-      console.log("Access token cookie:", Cookie.get('access_token') ? `${Cookie.get('access_token').substring(0, 20)}...` : "NOT FOUND");
-      console.log("Refresh token cookie:", Cookie.get('refresh_token') ? `${Cookie.get('refresh_token').substring(0, 20)}...` : "NOT FOUND");
-
       // CRITICAL: Update auth store with user data
-      console.log("📝 Updating auth store with user data...");
       useAuthStore.getState().setUser({
         user_id: user?.id,
         username: user?.email,
@@ -122,7 +106,6 @@ function SSOLogin() {
         nip: user?.nip,
         is_active: user?.is_active,
       });
-      console.log("✅ Auth store updated successfully");
 
       // CRITICAL: Also call setAuthUser to decode and store tokens properly
       setAuthUser(access, refresh);
@@ -134,8 +117,6 @@ function SSOLogin() {
 
       // Check if user has multiple roles
       if (user?.available_roles && user.available_roles.length > 1) {
-        console.log("👥 Multi-role user detected:", user.available_roles);
-        
         // Store user data and roles for role selection modal
         setCurrentUser({
           full_name: user.full_name,
@@ -152,31 +133,20 @@ function SSOLogin() {
         });
       } else {
         // Single role user - redirect directly
-        console.log("👤 Single-role user:", user?.role);
-        
         Toast().fire({
           icon: "success",
           title: statusMessage,
         });
 
         // Redirect based on user role
-        console.log("👤 User data:", user);
-        console.log("User role:", user?.role);
-        console.log("User NIP:", user?.nip);
-
-        // Determine redirect path immediately
         let redirectPath = '/student/dashboard/';
         const userRole = user?.role;
-        
-        console.log("Final user role for redirect:", userRole);
         
         if (userRole === 'admin') {
           redirectPath = '/admin/dashboard/';
         } else if (userRole === 'teacher') {
           redirectPath = '/instructor/dashboard/';
         }
-
-        console.log("Redirecting to:", redirectPath);
         
         // Perform redirect with minimal delay
         setTimeout(() => {
@@ -185,11 +155,6 @@ function SSOLogin() {
       }
 
     } catch (err) {
-      console.error("❌ SSO login error:", err);
-      console.error("Error response:", err.response?.data);
-      console.error("Error status:", err.response?.status);
-      console.error("Error config:", err.config);
-      
       let errorMessage = "SSO login failed. Please try again.";
 
       if (err.response?.data?.error) {
@@ -210,8 +175,6 @@ function SSOLogin() {
         title: errorMessage,
       });
 
-      console.error("Error message displayed:", errorMessage);
-
       // Redirect to login after showing error
       setTimeout(() => {
         navigate("/login/");
@@ -225,7 +188,6 @@ function SSOLogin() {
    * Handle role selection from modal
    */
   const handleRoleSelected = (selectedRole) => {
-    console.log("✅ Role selected:", selectedRole);
     setShowRoleModal(false);
     
     // Redirect based on selected role
@@ -236,7 +198,6 @@ function SSOLogin() {
    * Handle role selection modal cancel
    */
   const handleRoleModalCancel = () => {
-    console.log("❌ Role selection cancelled");
     setShowRoleModal(false);
     
     // Logout user since they cancelled role selection

@@ -249,6 +249,18 @@ const CountrySelector = ({
         if (!isOpen) return;
 
         const handleKeyDown = (e) => {
+            // Skip keyboard shortcuts when specific form fields are focused (like country search input)
+            const activeElement = document.activeElement;
+            const isCountrySelectorInput = activeElement?.className?.includes('country-selector-input');
+            
+            // Allow arrow keys and escape in the selector, but still check if it's the input field
+            if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Escape") {
+                // These are OK to handle globally for the selector
+            } else if (isCountrySelectorInput) {
+                // For other keys, skip if in the search input (let the input handle them)
+                return;
+            }
+            
             switch (e.key) {
                 case "ArrowDown":
                     e.preventDefault();

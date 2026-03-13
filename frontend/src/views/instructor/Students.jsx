@@ -140,7 +140,7 @@ function Students() {
         return (
             <>
                 <BaseHeader />
-                <section className="modern-students pt-5 pb-5" style={{ display: "flex", alignItems: "center" }}>
+                <section className="modern-students" style={{ display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -165,7 +165,7 @@ function Students() {
         <>
             <BaseHeader />
 
-            <section className="modern-students pt-5 pb-5">
+            <section className="modern-students">
                 <div className="container">
                     <Header />
                     <div className="row">

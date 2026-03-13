@@ -1,0 +1,646 @@
+/**
+ * ✨ PHASE 11.13: Pelajaran (Lectures) Tab CSS
+ * 
+ * All styles related to:
+ * - Lesson/lecture cards and headers
+ * - Progress tracking and completion
+ * - Video player wrapper and controls
+ * - Curriculum progress indicators
+ */
+
+/* ============================================
+   COURSE PROGRESS CARD - Pelajaran Overview
+   ============================================ */
+.course-progress-card {
+    background: linear-gradient(135deg, var(--theme-surface) 0%, var(--theme-surface-light) 100%);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 .25rem .5rem rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border: 1px solid var(--theme-border);
+}
+
+.course-progress-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--theme-primary), var(--theme-primary-light));
+    border-radius: 12px 12px 0 0;
+}
+
+.progress-content {
+    flex: 1;
+    display: flex;
+    gap: 30px;
+}
+
+.progress-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+    background: conic-gradient(from 0deg, var(--theme-primary) 0deg, var(--theme-primary-dark) calc(var(--progress, 0) * 3.6deg), #e9ecef 0deg);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
+}
+
+.progress-circle::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: var(--theme-surface);
+    z-index: 1;
+}
+
+/* ============================================
+   PROGRESS CIRCLE & CARD STYLES
+   ============================================ */
+.progress-inner {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.progress-inner .h3 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--theme-primary);
+}
+
+.progress-inner .small {
+    color: var(--theme-text-secondary);
+    font-size: 12px;
+}
+
+/* ============================================
+   LECTURE CARD STYLES
+   ============================================ */
+.lecture-card {
+    background: var(--theme-surface);
+    border: 1px solid var(--theme-border);
+    border-radius: 10px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.lecture-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    border-color: var(--theme-primary);
+    transform: translateY(-2px);
+}
+
+.lecture-header {
+    padding: 16px;
+    background: var(--theme-surface);
+    border-bottom: 1px solid var(--theme-border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+    position: relative;
+}
+
+.lecture-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--theme-primary), var(--theme-primary-light));
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.lecture-header:hover {
+    background: var(--theme-surface-light);
+}
+
+.lecture-header:hover::before {
+    opacity: 1;
+}
+
+.lecture-header-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ✨ Expand/Collapse Button - Centered Chevron with Rotation */
+.lecture-header .btn-link {
+    padding: 0;
+    color: var(--theme-text-primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+}
+
+.lecture-header .btn-link:hover {
+    background: var(--theme-primary-light-opacity);
+    color: var(--theme-primary);
+}
+
+.lecture-header .btn-link:active {
+    transform: scale(0.95);
+}
+
+/* Chevron Icon - Centered and Smooth Rotation */
+.lecture-header .btn-link i {
+    font-size: 18px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
+}
+
+/* Chevron Rotation on Collapsed State */
+.lecture-header .btn-link[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.lecture-header .btn-link[aria-expanded="false"] i {
+    transform: rotate(0deg);
+}
+
+.play-btn-modern {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--theme-primary);
+    color: white;
+    font-size: 14px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    border: none;
+    cursor: pointer;
+}
+
+.play-btn-modern:hover {
+    background: var(--theme-primary-dark);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.completion-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--theme-primary);
+    flex-shrink: 0;
+    border-radius: 4px;
+}
+
+.completion-checkbox:checked {
+    background-color: var(--theme-primary);
+    border-color: var(--theme-primary);
+}
+
+/* ============================================
+   LESSON PROGRESS INDICATORS
+   ============================================ */
+
+/* Video completion status styles */
+.completion-status-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    z-index: 10;
+}
+
+/* Progress indicator */
+.lesson-progress {
+    display: inline-block;
+    padding: 4px 8px;
+    background: var(--theme-primary-light);
+    color: var(--theme-primary);
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.lesson-progress::after {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-left: 6px;
+    background: currentColor;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.lesson-progress.completed::after {
+    background: var(--theme-success);
+    animation: none;
+}
+
+.lesson-progress.in-progress::after {
+    background: var(--theme-warning);
+    animation: pulse 2s infinite;
+}
+
+/* ============================================
+   CURRICULUM PROGRESS CONTAINER
+   ============================================ */
+
+/* Course Progress Indicator */
+.course-progress-container {
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--theme-surface-light);
+    border-radius: 10px;
+    border: 1px solid var(--theme-border);
+}
+
+.course-progress-stats {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.progress-text {
+    font-size: 14px;
+    color: var(--theme-text-secondary);
+    white-space: nowrap;
+}
+
+.progress-percentage {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--theme-primary);
+    min-width: 50px;
+}
+
+/* ✨ PHASE 4.11: Ensure progress text is white inside curriculum progress container - with maximum specificity */
+.curriculum-progress-container .course-progress-stats {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.curriculum-progress-container .course-progress-stats .progress-text,
+.curriculum-progress-container .course-progress-stats .progress-text.text-white {
+    color: white;
+    font-size: 14px;
+}
+
+.curriculum-progress-container .course-progress-stats .progress-percentage,
+.curriculum-progress-container .course-progress-stats .progress-percentage.text-white {
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.course-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.course-progress-fill {
+    height: 100%;
+    width: var(--progress, 0%);
+    background: linear-gradient(90deg, var(--theme-primary), var(--theme-primary-light));
+    border-radius: 4px;
+    transition: width 0.6s ease-out;
+    position: relative;
+}
+
+.course-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progressShimmer 2s infinite;
+}
+
+@keyframes progressShimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* ============================================
+   LESSON ITEM STYLES
+   ============================================ */
+
+/* Lesson Item Enhanced Styles */
+.lesson-item {
+    padding: 12px 16px;
+    background: var(--theme-surface);
+    border-left: 3px solid var(--theme-border);
+    margin-bottom: 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lesson-item:hover {
+    background: var(--theme-surface-light);
+    border-left-color: var(--theme-primary);
+}
+
+.lesson-item.completed {
+    background: rgba(40, 167, 69, 0.05);
+    border-left-color: var(--theme-success);
+}
+
+.lesson-item.completed:hover {
+    background: rgba(40, 167, 69, 0.1);
+}
+
+/* Progress Indicator */
+.lesson-progress-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--theme-warning);
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+}
+
+.lesson-progress-indicator.completed {
+    background: var(--theme-success);
+    animation: none;
+}
+
+/* Lesson Play Button */
+.lesson-play-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 50%;
+    background: var(--theme-primary);
+    color: white;
+    font-size: 12px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    border: none;
+    cursor: pointer;
+}
+
+.lesson-play-btn::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: var(--theme-primary);
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: -1;
+}
+
+.lesson-play-btn:hover {
+    background: var(--theme-primary-dark);
+}
+
+.lesson-play-btn:hover::before {
+    opacity: 0.15;
+}
+
+/* ============================================
+   VIDEO PLAYER WRAPPER
+   ============================================ */
+
+.video-player-wrapper {
+    background: var(--theme-surface);
+    border: 1px solid var(--theme-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes completionPulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+.completion-notification {
+    animation: completionPulse 0.6s ease-in-out;
+}
+
+/* Loading states for lesson completion */
+.lesson-completion-label.updating {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.lesson-completion-label.updating:hover {
+    opacity: 0.7;
+}
+
+/* Video completion loading overlay */
+.video-completion-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    z-index: 100;
+}
+
+.video-completion-overlay .spinner-border {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+    color: white;
+}
+
+/* Enhanced spinner for video completion */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner-border {
+    animation: spin 0.75s linear infinite;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+    .course-progress-card {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .progress-content {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .progress-circle {
+        width: 100px;
+        height: 100px;
+    }
+
+    .lecture-card {
+        font-size: 14px;
+    }
+
+    .lecture-header {
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .play-btn-modern {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .course-progress-stats {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Progress indicator */
+.lesson-item .badge {
+    font-size: 11px;
+    padding: 3px 6px;
+    border-radius: 12px;
+}
+
+.lesson-item .badge.bg-success {
+    background-color: var(--theme-success) !important;
+    color: white;
+}
+
+.lesson-item .badge.bg-info {
+    background-color: var(--theme-info) !important;
+    color: white;
+}
+
+.lesson-item .badge.bg-warning {
+    background-color: var(--theme-warning) !important;
+    color: white;
+}
+
+/* Lesson file type indicators */
+.lesson-file-type {
+    display: inline-block;
+    height: 24px;
+    width: 24px;
+    line-height: 24px;
+}
+
+.lesson-file-type i {
+    font-size: 14px;
+    color: var(--theme-text-secondary);
+}
+
+/* Curriculum file status styling */
+.curriculum-file-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.curriculum-file-status.uploading {
+    background: var(--theme-warning-light);
+    color: var(--theme-warning);
+}
+
+.curriculum-file-status.success {
+    background: var(--theme-success-light);
+    color: var(--theme-success);
+}
+
+.curriculum-file-status.error {
+    background: var(--theme-danger-light);
+    color: var(--theme-danger);
+}
+
+/* File upload status styling */
+.upload-progress {
+    position: relative;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.upload-progress-bar {
+    height: 100%;
+    background: var(--theme-primary);
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}

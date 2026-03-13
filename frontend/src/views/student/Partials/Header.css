@@ -31,9 +31,9 @@
     min-height: 160px;
     user-select: none; /* Prevent text selection */
     z-index: 101;
-    margin-bottom: 1.5rem !important;
+    margin-bottom: var(--header-card-gap) !important;
     /* ✨ PHASE 7.2: Changed overflow from hidden to visible to allow dropdown menu to display */
-    /* ✨ PHASE 40.1: Added margin-bottom to match other header cards (page-header-card, qa-header-card, course-progress-card) */
+    /* ✨ PHASE 42: margin-bottom now uses CSS variable for uniform spacing across all student pages */
 }
 
 .student-header-card::before {
@@ -209,20 +209,21 @@
 .profile-name {
     font-size: 2.5rem;
     font-weight: 700;
-    margin-bottom: 1rem;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     line-height: 1.2;
     user-select: none; /* Prevent text selection */
     cursor: default; /* Default cursor */
+    margin-bottom: 0.5rem !important;
 }
 
 .profile-description {
     font-size: 1.1rem;
     opacity: 0.9;
-    margin-bottom: 1.5rem;
     line-height: 1.5;
     user-select: none; /* Prevent text selection */
     cursor: default; /* Default cursor */
+    padding: 0rem !important;
+    margin-bottom: 0.5rem !important;
 }
 
 .profile-meta {
@@ -233,6 +234,17 @@
     gap: 0.5rem;
     user-select: none; /* Prevent text selection */
     cursor: default; /* Default cursor */
+}
+
+.profile-location-meta {
+    justify-content: flex-end !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Badges and Role Indicator Container - Align all items to top */
+.badges-container {
+    align-items: flex-start !important;
+    align-content: flex-start !important;
 }
 
 .profile-meta i {
@@ -261,8 +273,7 @@
 .profile-detail-item {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1rem;
+    padding: 0.8rem 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
     user-select: none; /* Prevent text selection */
@@ -285,18 +296,22 @@
     color: white !important;
     font-weight: 600 !important;
     border-radius: 30px !important;
-    padding: 1rem 2.5rem !important;
+    padding: 0.9rem 1.5rem !important;
+    font-size: 0.9rem !important;
     transition: all 0.4s ease !important;
     backdrop-filter: blur(10px) !important;
     text-decoration: none !important;
     display: inline-flex !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: 0.5rem !important;
     position: relative !important;
     overflow: hidden !important;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
     user-select: none !important;
     cursor: pointer !important;
+    width: auto !important;
+    min-height: 48px !important;
 }
 
 .btn-modern-white::before {
@@ -341,17 +356,21 @@
     color: white !important;
     font-weight: 600 !important;
     border-radius: 30px !important;
-    padding: 1rem 2.5rem !important;
+    padding: 0.9rem 1.5rem !important;
+    font-size: 0.9rem !important;
     transition: all 0.4s ease !important;
     text-decoration: none !important;
     display: inline-flex !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: 0.5rem !important;
     position: relative !important;
     overflow: hidden !important;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
     user-select: none !important;
     cursor: pointer !important;
+    width: auto !important;
+    min-height: 48px !important;
 }
 
 .btn-outline-white::before {
@@ -410,18 +429,22 @@
     background: rgba(255, 255, 255, 0.2) !important;
     color: white !important;
     border-radius: 25px !important;
-    padding: 0.6rem 1.2rem !important;
+    padding: 0.75rem 1.2rem !important;
     font-weight: 500 !important;
     font-size: 0.875rem !important;
+    line-height: 1.4 !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     display: inline-flex !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
+    min-height: 46px !important;
+    height: auto !important;
     user-select: none !important;
     cursor: default !important;
     box-shadow: none !important;
+    vertical-align: middle !important;
 }
 
 .student-header-card .badge-modern i {
@@ -442,6 +465,9 @@
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    height: auto !important;
+    width: auto !important;
+    vertical-align: middle !important;
 }
 
 .student-header-card .role-indicator.compact .role-badge-compact {
@@ -450,17 +476,22 @@
     background: rgba(255, 255, 255, 0.2) !important;
     color: white !important;
     border-radius: 25px !important;
-    padding: 0.6rem 1.2rem !important;
+    padding: 0.75rem 1.2rem !important;
     font-weight: 500 !important;
     font-size: 0.875rem !important;
+    line-height: 1.4 !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     display: inline-flex !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: 0.5rem !important;
+    min-height: 46px !important;
+    height: auto !important;
     user-select: none !important;
     cursor: pointer !important;
     box-shadow: none !important;
+    vertical-align: middle !important;
 }
 
 .student-header-card .role-indicator.compact .role-badge-compact i {
@@ -764,6 +795,7 @@
 .student-header-collapsed {
   position: relative;
   z-index: 10;
+  padding: 0.8rem 1rem;
 }
 
 .student-header-collapsed .profile-avatar,
@@ -1033,6 +1065,20 @@
 /* Details Row Separator */
 .student-details-separator {
   border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin-left: -1rem;
+  margin-right: -1rem;
+}
+
+/* Remove column padding from details wrapper - details row should not have gutters */
+.student-details-separator .col-md-12 {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* ✨ PHASE 8.9: Fix nested row overflow - remove Bootstrap's negative margins on row inside col-md-12 */
+.student-details-separator .col-md-12 .row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 @media (max-width: 576px) {

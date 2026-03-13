@@ -14,11 +14,12 @@ import { WishlistContext } from "../plugin/Context";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import { getImageUrl, getLevelText } from "../../utils/courseUtils";
 import { calculateTotalDuration, parseDurationToSeconds } from "../../utils/durationUtils";
+// ✨ PHASE 11.12: Import caching hook for seamless navigation
+import { usePageCache } from "../../utils/usePageCache";
 import "./Wishlist.css";
 
 function Wishlist() {
     const [wishlist, setWishlist] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [wishlistCount, setWishlistCount, refreshWishlistCount] = useContext(WishlistContext);
     const isCollapsed = useSidebarCollapse();
@@ -39,7 +40,6 @@ function Wishlist() {
 
     const fetchWishlist = async () => {
         try {
-            setLoading(true);
             setError(null);
             
             const response = await useAxios.get(`student/wishlist/${UserData()?.user_id}/`);
@@ -47,22 +47,32 @@ function Wishlist() {
             // API returns { results: [...], count: N, ... } due to DRF pagination
             const wishlistData = response.data?.results || response.data || [];
             const wishlistArray = Array.isArray(wishlistData) ? wishlistData : [];
-            setWishlist(wishlistArray);
+            return wishlistArray;
         } catch (err) {
-            console.error("Error fetching wishlist:", err);
             setError("Gagal memuat wishlist");
             Toast().fire({
                 icon: "error",
                 title: "Gagal memuat wishlist"
             });
-        } finally {
-            setLoading(false);
+            throw err;
         }
     };
 
+    // ✨ PHASE 11.12: Use page cache to avoid reloading when navigating
+    const { data: cachedWishlist, loading } = usePageCache(
+        'student-wishlist',
+        fetchWishlist,
+        {
+            showLoadingOnStale: false
+        }
+    );
+
+    // Sync cached data to state
     useEffect(() => {
-        fetchWishlist();
-    }, []);
+        if (cachedWishlist) {
+            setWishlist(cachedWishlist);
+        }
+    }, [cachedWishlist]);
 
     // Check if course is already in wishlist
     const isCourseInWishlist = (courseId) => {
@@ -94,10 +104,9 @@ function Wishlist() {
             fetchWishlist();
             refreshWishlistCount();
         } catch (error) {
-            console.error("Error toggling wishlist:", error);
             Toast().fire({
                 icon: "error",
-                title: "Something went wrong"
+                title: "Terjadi kesalahan"
             });
         }
     };
@@ -106,7 +115,7 @@ function Wishlist() {
         return (
             <>
                 <BaseHeader />
-                <section className="pt-5 pb-5 modern-wishlist-page" style={{ minHeight: 'calc(100vh - 120px)' }}>
+                <section className="modern-wishlist-page" style={{ minHeight: 'calc(100vh - 120px)' }}>
                     <div className="container">
                         <Header />
                         <div className="row mt-0 md-4">
@@ -131,7 +140,7 @@ function Wishlist() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5 modern-wishlist-page">
+            <section className="modern-wishlist-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 md-4">

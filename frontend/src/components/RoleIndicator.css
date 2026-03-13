@@ -16,6 +16,9 @@
 
 .role-indicator.compact {
   z-index: 100;
+  height: auto !important;
+  width: auto !important;
+  vertical-align: middle !important;
 }
 
 .role-badge-compact {
@@ -34,6 +37,7 @@
   outline: none;
   background-color: inherit;
   color: inherit;
+  vertical-align: middle !important;
 
   /* Badge colors */
   &.badge-primary {

@@ -43,7 +43,7 @@ function Testimonials() {
         return (
             <>
                 <BaseHeader />
-                <section className="pt-5 pb-5 instructor-testimonials-page" style={{ minHeight: "calc(100vh - 120px)" }}>
+                <section className="instructor-testimonials-page" style={{ minHeight: "calc(100vh - 120px)" }}>
                     <div className="container">
                         <Header />
                         <div className="row">
@@ -67,7 +67,7 @@ function Testimonials() {
     return (
         <>
             <BaseHeader />
-            <section className="pt-5 pb-5 instructor-testimonials-page">
+            <section className="instructor-testimonials-page">
                 <div className="container">
                     <Header />
                     <div className="row mt-0 md-4">

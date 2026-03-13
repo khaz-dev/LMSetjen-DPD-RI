@@ -183,6 +183,14 @@ body::-webkit-scrollbar-thumb:hover {
   --theme-card-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
   --theme-text-on-primary: #ffffff;
   --theme-border-color: rgba(102, 126, 234, 0.2);
+
+  /* ✨ PHASE 42: Student Page Spacing Variables - CHANGE THESE TO CONTROL ALL STUDENT PAGES */
+  /* WARNING: These variables control the gap between navbar and content across ALL student pages */
+  /* Modifying these will automatically update spacing on: Dashboard, Courses, Profile, Wishlist, Certificates, Testimonials */
+  --navbar-height: 70px;
+  --page-top-spacing: 1.5rem; /* Padding-top: navbar height + this value */
+  --page-bottom-spacing: 3rem; /* Padding-bottom for all student pages */
+  --header-card-gap: 1.5rem; /* Gap between header card and page content */
 }
 
 /* Instructor Theme (Blue) */
@@ -947,5 +955,19 @@ section[style*="minHeight:calc(100vh - 120px)"] .row {
 
 /* ========================================
    END GLOBAL BADGE-LEVEL STYLING
+   ======================================== */
+
+/* ========================================
+   GLOBAL BADGES CONTAINER ALIGNMENT
+   Ensures all badges/role-indicators align to top when wrapped
+   ======================================== */
+
+.badges-container {
+    align-items: flex-start !important;
+    align-content: flex-start !important;
+}
+
+/* ========================================
+   END GLOBAL BADGES CONTAINER ALIGNMENT
    ======================================== */
 

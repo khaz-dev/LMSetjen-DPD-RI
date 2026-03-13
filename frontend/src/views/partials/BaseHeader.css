@@ -896,6 +896,117 @@
     cursor: pointer;
 }
 
+/* ✨ PHASE 4.X: Student Avatar in Navigation */
+.nav-link-avatar {
+    background: none !important;
+    box-shadow: none !important;
+    padding: 0rem 0rem !important;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-link-avatar .nav-avatar-role-icon,
+.nav-link-avatar .nav-instructor-role-icon,
+.nav-link-avatar .nav-admin-role-icon {
+    position: absolute;
+    color: #667eea;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    top: -7px;
+    right: -7px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.nav-link-avatar .nav-instructor-role-icon {
+    color: #10b981;
+}
+
+.nav-link-avatar .nav-admin-role-icon {
+    color: #dc2626;
+}
+
+.nav-link-avatar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.nav-link-avatar:hover .nav-avatar-role-icon {
+    transform: scale(1.15);
+}
+
+.nav-link-avatar:hover .nav-instructor-role-icon {
+    color: #059669;
+    transform: scale(1.15);
+    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3);
+}
+
+.nav-link-avatar:hover .nav-admin-role-icon {
+    color: #b91c1c;
+    transform: scale(1.15);
+    box-shadow: 0 3px 12px rgba(220, 38, 38, 0.3);
+}
+
+.nav-avatar-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.nav-avatar-wrapper.loading {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.nav-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+.nav-avatar-wrapper.default {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.nav-avatar-default {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.spinner-nav-sm {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    border-width: 2px !important;
+    color: #667eea !important;
+}
+
 .admin-link {
     background: var(--theme-gradient) !important;
     border-radius: 8px;

@@ -43,30 +43,6 @@ const convertEmbedUrlToViewable = (fileUrl, videoSource) => {
     return fileUrl;
 };
 
-const convertGoogleDriveToEmbed = (fileUrl) => {
-    if (!fileUrl) return null;
-    
-    // Extract file ID from various Google Drive URL formats
-    let fileId = null;
-    
-    // Format: https://drive.google.com/file/d/{FILE_ID}/view
-    if (fileUrl.includes('/d/')) {
-        const match = fileUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-        fileId = match?.[1];
-    }
-    // Format: https://drive.google.com/open?id={FILE_ID}
-    else if (fileUrl.includes('id=')) {
-        const match = fileUrl.match(/id=([a-zA-Z0-9-_]+)/);
-        fileId = match?.[1];
-    }
-    
-    if (fileId) {
-        return `https://drive.google.com/file/d/${fileId}/preview`;
-    }
-    
-    return fileUrl;
-};
-
 function InstructorCoursePreview() {
     const { course_id } = useParams();
     const navigate = useNavigate();
@@ -259,7 +235,7 @@ function InstructorCoursePreview() {
                         </div>
 
                         {/* Video Pengantar Kursus */}
-                        {course.intro_video_source && course.file && (
+                        {course.file && (
                             <div className="icp-card mb-4">
                                 <h3 className="icp-section-title">
                                     <i className="fas fa-video me-2"></i>
@@ -268,25 +244,9 @@ function InstructorCoursePreview() {
                                 <div className="icp-intro-video">
                                     <div className="d-flex align-items-center justify-content-between mb-3">
                                         <div className="icp-video-source">
-                                            {course.intro_video_source === "youtube" ? (
-                                                <>
-                                                    <i className="fab fa-youtube text-danger me-2"></i>
-                                                    <strong>Sumber:</strong>
-                                                    <span className="ms-2">YouTube</span>
-                                                </>
-                                            ) : course.intro_video_source === "google_drive" ? (
-                                                <>
-                                                    <i className="fab fa-google text-info me-2"></i>
-                                                    <strong>Sumber:</strong>
-                                                    <span className="ms-2">Google Drive</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <i className="fas fa-upload text-primary me-2"></i>
-                                                    <strong>Sumber:</strong>
-                                                    <span className="ms-2">Upload</span>
-                                                </>
-                                            )}
+                                            <i className="fas fa-upload text-primary me-2"></i>
+                                            <strong>Sumber:</strong>
+                                            <span className="ms-2">Upload</span>
                                         </div>
                                         <button
                                             className="btn btn-sm btn-primary"
@@ -298,29 +258,8 @@ function InstructorCoursePreview() {
                                     </div>
                                     {showIntroVideoPreview && (
                                         <div className="icp-video-preview mt-3">
-                                            {course.intro_video_source === "youtube" ? (
-                                                <iframe
-                                                    width="100%"
-                                                    height="400"
-                                                    src={course.file}
-                                                    title="Video Pengantar Kursus"
-                                                    frameBorder="0"
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                    allowFullScreen
-                                                    style={{ borderRadius: '8px' }}
-                                                ></iframe>
-                                            ) : course.intro_video_source === "google_drive" ? (
-                                                <iframe
-                                                    src={convertGoogleDriveToEmbed(course.file)}
-                                                    width="100%"
-                                                    height="400"
-                                                    title="Video Pengantar Kursus"
-                                                    style={{ borderRadius: '8px' }}
-                                                    allow="fullscreen"
-                                                ></iframe>
-                                            ) : (
-                                                <video
-                                                    width="100%"
+                                            <video
+                                                width="100%"
                                                     height="400"
                                                     controls
                                                     style={{ borderRadius: '8px' }}
@@ -492,15 +431,6 @@ function InstructorCoursePreview() {
                                                                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                                                                     allowFullScreen
                                                                                                     style={{ borderRadius: '8px' }}
-                                                                                                ></iframe>
-                                                                                            ) : lecture.file && (lecture.file.includes('drive.google') || lecture.file.includes('/d/')) ? (
-                                                                                                <iframe
-                                                                                                    src={convertGoogleDriveToEmbed(lecture.file)}
-                                                                                                    width="100%"
-                                                                                                    height="300"
-                                                                                                    title={lecture.title}
-                                                                                                    style={{ borderRadius: '8px' }}
-                                                                                                    allow="fullscreen"
                                                                                                 ></iframe>
                                                                                             ) : (
                                                                                                 <video

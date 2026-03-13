@@ -74,9 +74,10 @@ div.curriculum-progress-container .progress-percentage {
     background: #2a2a2a;
     border: 1px solid #404040;
     border-radius: 12px;
-    margin-bottom: 1.5rem;
     overflow: hidden;
     transition: all 0.3s ease;
+    padding: 1rem !important;
+    padding-bottom: 0rem !important;
 }
 
 .lecture-card:hover {
@@ -118,7 +119,7 @@ div.curriculum-progress-container .progress-percentage {
     background: #333;
     border: 1px solid #444;
     transition: all 0.3s ease;
-    margin: 0 1rem 0.75rem 1rem;
+    margin: 0 0rem 1rem 1rem;
     position: relative;
     overflow: hidden;
 }
@@ -231,46 +232,6 @@ div.curriculum-progress-container .progress-percentage {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.lesson-completion-checkbox {
-    display: none;
-}
-
-.lesson-completion-label {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 2px solid #555;
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: transparent;
-    font-size: 0.9rem;
-}
-
-.lesson-completion-label:hover {
-    border-color: #667eea;
-    background: rgba(102, 126, 234, 0.1);
-}
-
-.lesson-completion-checkbox:checked + .lesson-completion-label {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    border-color: #28a745;
-    color: white;
-}
-
-.lesson-completion-label.updating {
-    border-color: #667eea;
-    background: rgba(102, 126, 234, 0.1);
-}
-
-.lesson-completion-label .spinner-border-sm {
-    width: 14px;
-    height: 14px;
 }
 
 /* Empty State */

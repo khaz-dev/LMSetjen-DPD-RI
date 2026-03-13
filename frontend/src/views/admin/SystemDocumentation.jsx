@@ -1348,4 +1348,4 @@ function SystemDocumentation() {
     );
 }
 
-export default SystemDocumentation;
+export default React.memo(SystemDocumentation);

@@ -19,9 +19,9 @@ function ForgotPassword() {
     const newErrors = {};
 
     if (!email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = "Email diperlukan";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = "Silakan masukkan alamat email yang valid";
     }
 
     setErrors(newErrors);
@@ -44,7 +44,7 @@ function ForgotPassword() {
     if (!validateForm()) {
       Toast().fire({
         icon: "error",
-        title: "Please fix the errors in the form",
+        title: "Silakan perbaiki kesalahan dalam formulir",
       });
       return;
     }

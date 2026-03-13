@@ -65,16 +65,12 @@ NOTI_TYPE = (
 )
 
 # ✨ PHASE 4.18: Video source types for course intro videos
-# ✨ PHASE 4.52: Added google_drive option for Google Drive video support
-INTRO_VIDEO_SOURCE = (
-    ("upload", "Upload File"),
-    ("youtube", "YouTube Link"),
-    ("google_drive", "Google Drive"),
-)
+# REMOVED: YouTube video support (Upload only system now)
+# Original choices: ("upload", "Upload File"), ("youtube", "YouTube Link")
 
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.URLField(max_length=500, default="", null=True, blank=True)
+    image = models.FileField(upload_to='teacher_profile_images/', null=True, blank=True)
     full_name = models.CharField(max_length=100)
     bio = models.CharField(max_length=100, null=True, blank=True)
     facebook = models.URLField(null=True, blank=True)
@@ -172,8 +168,9 @@ class Course(models.Model):
     slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
     date = models.DateTimeField(default=timezone.now)
     
-    # ✨ PHASE 4.18: Intro video source type (upload or YouTube)
-    intro_video_source = models.CharField(choices=INTRO_VIDEO_SOURCE, default="upload", max_length=20, blank=True, null=True)
+    # ✨ PHASE 4.18: Intro video source type
+    # REMOVED: YouTube video support - only uploaded videos
+    # OLD FIELD: intro_video_source (removed)
     
     # ✨ PHASE 4: PostgreSQL Full-Text Search field
     search_vector = SearchVectorField(null=True, blank=True)
@@ -281,7 +278,6 @@ class Course(models.Model):
                 title=self.title,
                 description=self.description,
                 level=self.level,
-                intro_video_source=self.intro_video_source,
                 course_id=unique_course_id,  # Unique ID for published copy
                 
                 # Status fields
@@ -322,7 +318,6 @@ class Course(models.Model):
                 title=self.title,
                 description=self.description,
                 level=self.level,
-                intro_video_source=self.intro_video_source,
                 
                 # Status fields
                 platform_status="Review",
@@ -356,7 +351,6 @@ class Course(models.Model):
             "image": self.image,
             "file": self.file,
             "featured": self.featured,
-            "intro_video_source": self.intro_video_source,
             "category_id": self.category.id if self.category else None,
         }
         self.save()
@@ -380,7 +374,6 @@ class Course(models.Model):
         self.image = snapshot.get("image", self.image)
         self.file = snapshot.get("file", self.file)
         self.featured = snapshot.get("featured", self.featured)
-        self.intro_video_source = snapshot.get("intro_video_source", self.intro_video_source)
         
         # Restore category
         category_id = snapshot.get("category_id")
@@ -422,7 +415,6 @@ class Course(models.Model):
             target_course.level = self.level
             target_course.image = self.image
             target_course.file = self.file
-            target_course.intro_video_source = self.intro_video_source
             target_course.featured = self.featured
             target_course.save()
             print(f"[Content Copy] [OK] Course metadata synced")
@@ -460,7 +452,6 @@ class Course(models.Model):
                             duration=item.duration,
                             preview=item.preview,
                             order=item.order,
-                            media_source=item.media_source,  # ✨ Also copy media_source
                         )
                         
                         # ✨ NEW FIX: Copy lesson completion questions (Pertanyaan Penyelesaian Pelajaran)
@@ -668,7 +659,6 @@ class Course(models.Model):
                 self.image = published.image
                 self.file = published.file
                 self.featured = published.featured
-                self.intro_video_source = published.intro_video_source
                 if published.category:
                     self.category = published.category
                 self.platform_status = "Published"
@@ -715,8 +705,9 @@ class VariantItem(models.Model):
     variant_item_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     order = models.IntegerField(default=0, db_index=True)  # For consistent ordering
     date = models.DateTimeField(default=timezone.now)
-    # ✨ PHASE 4.187: Store lesson media source to remember which source was used (youtube, google_drive, or upload)
-    media_source = models.CharField(choices=INTRO_VIDEO_SOURCE, default="google_drive", max_length=20, blank=True, null=True)
+    # ✨ PHASE 4.187: Store lesson media source
+    # REMOVED: YouTube video support - only uploaded videos
+    # OLD FIELD: media_source (removed)
 
     class Meta:
         ordering = ['order', 'date']  # Ensure consistent retrieval order
@@ -885,6 +876,49 @@ class LessonCompletionQuestionChoice(models.Model):
                 is_correct=True
             ).exclude(pk=self.pk).update(is_correct=False)
         super().save(*args, **kwargs)
+
+
+# ✨ PHASE 11.198: Store student answers to lesson completion questions for tracking and reporting
+class LessonCompletionQuestionAnswer(models.Model):
+    """
+    Stores student answers to lesson completion verification questions
+    This allows tracking which students answered correctly/incorrectly
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lesson_completion_answers')
+    question = models.ForeignKey(LessonCompletionQuestion, on_delete=models.CASCADE, related_name='student_answers')
+    
+    # For multiple choice or multi-select - the selected choice(s)
+    answer_choice = models.ForeignKey(
+        LessonCompletionQuestionChoice, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="For single-select questions"
+    )
+    answer_choices = models.ManyToManyField(
+        LessonCompletionQuestionChoice,
+        blank=True,
+        related_name='student_multi_select_answers',
+        help_text="For multi-select questions"
+    )
+    
+    # For short answer or fill in blank
+    answer_text = models.TextField(blank=True, null=True, help_text="For text-based answers")
+    
+    # Result tracking
+    is_correct = models.BooleanField(default=False)
+    answered_at = models.DateTimeField(auto_now_add=True)
+    
+    # Unique constraint to track latest answer per user per question
+    class Meta:
+        ordering = ['-answered_at']
+        indexes = [
+            models.Index(fields=['user', 'question', '-answered_at']),
+        ]
+    
+    def __str__(self):
+        status = "✓ Benar" if self.is_correct else "✗ Salah"
+        return f"{self.user.username} - {self.question.variant_item.title} [{status}]"
 
 
 class Question_Answer(models.Model):
@@ -1088,6 +1122,8 @@ class VideoProgress(models.Model):
     progress_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  # 0.00 to 100.00
     last_watched_position = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Time in seconds
     total_duration = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Total video duration in seconds
+    is_fully_watched = models.BooleanField(default=False)  # ✨ PHASE 11.178: Track when student watched 100% of video
+    fully_watched_at = models.DateTimeField(null=True, blank=True)  # ✨ PHASE 11.178: Timestamp when video was fully watched
     last_updated = models.DateTimeField(auto_now=True)
     date_created = models.DateTimeField(default=timezone.now)
     
@@ -1238,6 +1274,9 @@ class Note(models.Model):
     note = models.TextField()
     color = models.CharField(max_length=10, default="#f39c12", help_text="Hex color code for the note")
     note_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    # ✨ PHASE 11.160: Optional lesson/section context for notes
+    variant = models.ForeignKey('Variant', on_delete=models.SET_NULL, null=True, blank=True, help_text="Course section (bagian) this note relates to")
+    variant_item = models.ForeignKey('VariantItem', on_delete=models.SET_NULL, null=True, blank=True, help_text="Lesson (pelajaran) this note relates to")
     date = models.DateTimeField(default=timezone.now)   
 
     def __str__(self):
@@ -3157,6 +3196,234 @@ def update_search_taxonomy(sender, instance, created, **kwargs):
         except Exception as e:
             # Silently fail - taxonomy updates should not break search
             pass
+
+
+# ✨ PHASE 10.1: Student and Instructor Points Ranking System
+
+class StudentPoints(models.Model):
+    """
+    Tracks student ranking points across lifetime, yearly, and monthly periods.
+    
+    ✨ PHASE 10.1: Ranking system integration
+    Points awarded for:
+    - Course completion: 100 points
+    - Quiz passed: 0-100 points (based on score %)
+    - Course rating: 50 points
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_points')
+    
+    # Lifetime points (never resets)
+    lifetime_points = models.IntegerField(default=0, db_index=True)
+    lifetime_updated = models.DateTimeField(auto_now=True)
+    
+    # Yearly points (resets on Jan 1)
+    yearly_points = models.IntegerField(default=0)
+    yearly_year = models.IntegerField(default=0, help_text="Year for yearly ranking")
+    yearly_updated = models.DateTimeField(auto_now=True)
+    
+    # Monthly points (resets on 1st of month)
+    monthly_points = models.IntegerField(default=0)
+    monthly_year = models.IntegerField(default=0, help_text="Year for monthly ranking")
+    monthly_month = models.IntegerField(default=0, help_text="Month (1-12) for monthly ranking")
+    monthly_updated = models.DateTimeField(auto_now=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Student Points"
+        verbose_name_plural = "Student Points"
+        ordering = ["-lifetime_points"]
+        indexes = [
+            models.Index(fields=["-lifetime_points"]),
+            models.Index(fields=["-yearly_points"]),
+            models.Index(fields=["-monthly_points"]),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.full_name or self.user.username} - {self.lifetime_points} points"
+    
+    @classmethod
+    def add_points(cls, user, points, category, **kwargs):
+        """
+        Add points to a student with automatic period bucketing.
+        
+        Args:
+            user: User instance
+            points: Number of points to add
+            category: Type of point award (course_completion, quiz_score, rating_given, etc.)
+            **kwargs: Additional metadata (course_id, quiz_id, review_id, description)
+        """
+        now = timezone.now()
+        current_year = now.year
+        current_month = now.month
+        
+        obj, created = cls.objects.get_or_create(user=user)
+        
+        # Add to all buckets
+        obj.lifetime_points += points
+        obj.yearly_points += points
+        obj.monthly_points += points
+        
+        # Reset yearly if year has changed
+        if obj.yearly_year != current_year:
+            obj.yearly_year = current_year
+            obj.yearly_points = points
+        
+        # Reset monthly if month has changed
+        if obj.monthly_year != current_year or obj.monthly_month != current_month:
+            obj.monthly_year = current_year
+            obj.monthly_month = current_month
+            obj.monthly_points = points
+        
+        obj.save()
+        
+        # Create audit log if needed
+        try:
+            PointsAuditLog.objects.create(
+                user=user,
+                points=points,
+                category=category,
+                role='student',
+                metadata=kwargs
+            )
+        except:
+            pass  # Audit logging is optional
+        
+        return obj
+
+
+class InstructorPoints(models.Model):
+    """
+    Tracks instructor ranking points across lifetime, yearly, and monthly periods.
+    
+    ✨ PHASE 10.1: Ranking system integration
+    Points awarded for:
+    - Course published: 100 points
+    - Student enrollment: 10 points per student
+    - Rating received: Variable (from course reviews)
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor_points')
+    teacher = models.OneToOneField(Teacher, on_delete=models.CASCADE, related_name='points', null=True, blank=True)
+    
+    # Lifetime points (never resets)
+    lifetime_points = models.IntegerField(default=0, db_index=True)
+    lifetime_updated = models.DateTimeField(auto_now=True)
+    
+    # Yearly points (resets on Jan 1)
+    yearly_points = models.IntegerField(default=0)
+    yearly_year = models.IntegerField(default=0, help_text="Year for yearly ranking")
+    yearly_updated = models.DateTimeField(auto_now=True)
+    
+    # Monthly points (resets on 1st of month)
+    monthly_points = models.IntegerField(default=0)
+    monthly_year = models.IntegerField(default=0, help_text="Year for monthly ranking")
+    monthly_month = models.IntegerField(default=0, help_text="Month (1-12) for monthly ranking")
+    monthly_updated = models.DateTimeField(auto_now=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Instructor Points"
+        verbose_name_plural = "Instructor Points"
+        ordering = ["-lifetime_points"]
+        indexes = [
+            models.Index(fields=["-lifetime_points"]),
+            models.Index(fields=["-yearly_points"]),
+            models.Index(fields=["-monthly_points"]),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.full_name or self.user.username} - {self.lifetime_points} points"
+    
+    @classmethod
+    def add_points(cls, user, points, category, **kwargs):
+        """
+        Add points to an instructor with automatic period bucketing.
+        
+        Args:
+            user: User instance
+            points: Number of points to add
+            category: Type of point award (course_published, student_enrollment, rating_received, etc.)
+            **kwargs: Additional metadata (course_id, description)
+        """
+        now = timezone.now()
+        current_year = now.year
+        current_month = now.month
+        
+        obj, created = cls.objects.get_or_create(user=user)
+        
+        # Add to all buckets
+        obj.lifetime_points += points
+        obj.yearly_points += points
+        obj.monthly_points += points
+        
+        # Reset yearly if year has changed
+        if obj.yearly_year != current_year:
+            obj.yearly_year = current_year
+            obj.yearly_points = points
+        
+        # Reset monthly if month has changed
+        if obj.monthly_year != current_year or obj.monthly_month != current_month:
+            obj.monthly_year = current_year
+            obj.monthly_month = current_month
+            obj.monthly_points = points
+        
+        obj.save()
+        
+        # Create audit log if needed
+        try:
+            PointsAuditLog.objects.create(
+                user=user,
+                points=points,
+                category=category,
+                role='instructor',
+                metadata=kwargs
+            )
+        except:
+            pass  # Audit logging is optional
+        
+        return obj
+
+
+class PointsAuditLog(models.Model):
+    """
+    Audit trail for all point awards to track and verify ranking calculations.
+    
+    ✨ PHASE 10.1: Ranking system integration
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='points_audit_logs')
+    points = models.IntegerField()
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('course_completion', 'Course Completion'),
+            ('quiz_score', 'Quiz Score'),
+            ('rating_given', 'Rating Given'),
+            ('course_published', 'Course Published'),
+            ('student_enrollment', 'Student Enrollment'),
+            ('testimonial_given', 'Testimonial Given'),
+            ('manual_adjustment', 'Manual Adjustment'),
+        ],
+        default='manual_adjustment'
+    )
+    role = models.CharField(
+        max_length=20,
+        choices=[('student', 'Student'), ('instructor', 'Instructor')]
+    )
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'api_pointsauditlog'
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['category', '-created_at']),
+            models.Index(fields=['role']),
+        ]
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.points} points ({self.get_category_display()})"
 
 
 # Connect the signals

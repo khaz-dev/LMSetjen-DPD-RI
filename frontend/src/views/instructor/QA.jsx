@@ -431,12 +431,10 @@ function QA() {
             const courseId = courseToFetch?.id || courseToFetch?.course_id;
             
             if (!userData?.id && !userData?.user_id) {
-                console.warn("[fetchQAReports] User ID not found");
                 return;
             }
             
             if (!courseId) {
-                console.warn("[fetchQAReports] Course ID not found");
                 return;
             }
             
@@ -448,10 +446,9 @@ function QA() {
                 message_reports: res.data?.message_reports || []
             };
             
-            console.log("[fetchQAReports] Reports fetched:", normalizedReports);
             setQaReports(normalizedReports);
         } catch (error) {
-            console.error("[fetchQAReports] Error fetching reports:", error);
+            // Q&A reports fetch error - silently handle
         }
     };
     
@@ -1452,7 +1449,7 @@ function QA() {
                                                                     <span className="question-meta-item">
                                                                         <span className="replies-badge">
                                                                             <i className="fas fa-comments" style={{ marginRight: '0.5rem' }}></i>
-                                                                            {q.messages?.length || 0} Balasan
+                                                                            {q.replies_count || 0} Balasan
                                                                         </span>
                                                                     </span>
                                                                 </div>
@@ -1523,6 +1520,16 @@ function QA() {
                                         </div>
                                         {/* Meta Info Footer */}
                                         <div className="forum-header-footer">
+                                            <div className="forum-thread-meta">
+                                                <span className="forum-meta-badge">
+                                                    <i className="fas fa-comments"></i>
+                                                    {selectedConversation?.replies_count || 0} Balasan
+                                                </span>
+                                                <span className="forum-meta-badge">
+                                                    <i className="fas fa-clock"></i>
+                                                    {moment(selectedConversation?.date).fromNow()}
+                                                </span>
+                                            </div>
                                             <div className="forum-breadcrumb">
                                                 {selectedConversation?.variant && (
                                                     <>
@@ -1537,16 +1544,6 @@ function QA() {
                                                         <span>{selectedConversation.variant_item.title}</span>
                                                     </>
                                                 )}
-                                            </div>
-                                            <div className="forum-thread-meta">
-                                                <span className="forum-meta-badge">
-                                                    <i className="fas fa-comments"></i>
-                                                    {selectedConversation?.messages?.length || 0} Balasan
-                                                </span>
-                                                <span className="forum-meta-badge">
-                                                    <i className="fas fa-clock"></i>
-                                                    {moment(selectedConversation?.date).fromNow()}
-                                                </span>
                                             </div>
                                         </div>
                                     </div>

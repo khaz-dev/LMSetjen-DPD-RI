@@ -47,34 +47,6 @@ const convertEmbedUrlToViewable = (fileUrl, videoSource) => {
     return fileUrl;
 };
 
-/**
- * ✨ NEW: Convert Google Drive share/view URLs to embed URLs for iframe preview
- * Allows displaying video previews directly in the admin review page
- */
-const convertGoogleDriveToEmbed = (fileUrl) => {
-    if (!fileUrl) return null;
-    
-    // Extract file ID from various Google Drive URL formats
-    let fileId = null;
-    
-    // Format: https://drive.google.com/file/d/{FILE_ID}/view
-    if (fileUrl.includes('/d/')) {
-        const match = fileUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-        fileId = match?.[1];
-    }
-    // Format: https://drive.google.com/open?id={FILE_ID}
-    else if (fileUrl.includes('id=')) {
-        const match = fileUrl.match(/id=([a-zA-Z0-9-_]+)/);
-        fileId = match?.[1];
-    }
-    
-    if (fileId) {
-        return `https://drive.google.com/file/d/${fileId}/preview`;
-    }
-    
-    return fileUrl;
-};
-
 function AdminCourseReviewDetail() {
     const { course_id } = useParams();
     const navigate = useNavigate();
@@ -99,7 +71,6 @@ function AdminCourseReviewDetail() {
             console.log("[AdminCourseReviewDetail] Course data:", response.data);
             setCourse(response.data);
         } catch (error) {
-            console.error("Error fetching course detail:", error);
             Toast().fire({
                 icon: "error",
                 title: "Gagal memuat detail kursus",
@@ -418,15 +389,6 @@ function AdminCourseReviewDetail() {
                                                     allowFullScreen
                                                     style={{ borderRadius: '8px' }}
                                                 ></iframe>
-                                            ) : course.intro_video_source === "google_drive" ? (
-                                                <iframe
-                                                    src={convertGoogleDriveToEmbed(course.file)}
-                                                    width="100%"
-                                                    height="400"
-                                                    title="Video Pengantar Kursus"
-                                                    style={{ borderRadius: '8px' }}
-                                                    allow="fullscreen"
-                                                ></iframe>
                                             ) : (
                                                 <video
                                                     width="100%"
@@ -644,15 +606,6 @@ function AdminCourseReviewDetail() {
                                                                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                                                                     allowFullScreen
                                                                                                     style={{ borderRadius: '8px' }}
-                                                                                                ></iframe>
-                                                                                            ) : lecture.file && (lecture.file.includes('drive.google') || lecture.file.includes('/d/')) ? (
-                                                                                                <iframe
-                                                                                                    src={convertGoogleDriveToEmbed(lecture.file)}
-                                                                                                    width="100%"
-                                                                                                    height="300"
-                                                                                                    title={lecture.title}
-                                                                                                    style={{ borderRadius: '8px' }}
-                                                                                                    allow="fullscreen"
                                                                                                 ></iframe>
                                                                                             ) : (
                                                                                                 <video
