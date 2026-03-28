@@ -13,6 +13,7 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { ProfileContext } from "../plugin/Context";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
+import { getValidProfileImageUrl } from "../../utils/imageUtils"; // ✨ PHASE 62: Import missing image utility
 import "./Profile.css";
 
 // Constants
@@ -216,7 +217,9 @@ function Profile() {
     const [uiState, setUiState] = useState({
         loading: false,
         imagePreview: "",
-        showCropModal: false
+        showCropModal: false,
+        autoSaving: false,  // ✨ PHASE 62.2: Track auto-save status
+        autoSaveStatus: "idle"  // ✨ PHASE 62.2: 'saving' | 'saved' | 'error' | 'idle'
     });
     
     const [imageState, setImageState] = useState({
@@ -230,12 +233,80 @@ function Profile() {
         completedCrop: null
     });
     
+    const [fileInputKey, setFileInputKey] = useState(0); // ✨ PHASE 62: Track file input key for reset
+    
     const imgRef = useRef(null);
     const croppedBlobRef = useRef(null);  // ✨ PHASE 11.7: Persistent ref for cropped blob (survives state closure)
+    
+    // ✨ PHASE 62.2: Auto-save debounce timer and previous data tracking
+    const autoSaveTimeoutRef = useRef(null);
+    const previousDataRef = useRef(profileData);
     
     const [teacherData, setTeacherData] = useState(null);
 
     // API Functions
+    
+    // ✨ PHASE 62.2: Auto-save profile with debounce (without image upload)
+    const autoSaveProfile = async (dataToSave) => {
+        try {
+            setUiState(prev => ({ ...prev, autoSaving: true, autoSaveStatus: "saving" }));
+            
+            const userId = UserData()?.user_id;
+            if (!userId) throw new Error("User ID not found");
+            
+            // Create a simple form data with only changed fields (no images)
+            const formdata = new FormData();
+            Object.keys(dataToSave).forEach(key => {
+                if (dataToSave[key] !== null && dataToSave[key] !== undefined) {
+                    // Skip image files in auto-save (only button click with manual image cropping does images)
+                    if (key !== 'image' && !(dataToSave[key] instanceof File || dataToSave[key] instanceof Blob)) {
+                        formdata.append(key, dataToSave[key]);
+                    }
+                }
+            });
+            
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
+            
+            // Update local state with server response
+            setProfileData(updateRes.data);
+            previousDataRef.current = updateRes.data;
+            
+            setUiState(prev => ({ ...prev, autoSaving: false, autoSaveStatus: "saved" }));
+            
+            // ✨ PHASE 62.2: Show Toast notification on top-right
+            Toast().fire({
+                icon: "success",
+                title: "Perubahan Tersimpan",
+                text: "Profil Anda telah diperbarui",
+                timer: 3000,
+                showConfirmButton: false
+            });
+            
+            // Clear "saved" status after 2 seconds
+            setTimeout(() => {
+                setUiState(prev => ({ ...prev, autoSaveStatus: "idle" }));
+            }, 2000);
+            
+        } catch (error) {
+            console.error("❌ Error auto-saving profile:", error);
+            setUiState(prev => ({ ...prev, autoSaving: false, autoSaveStatus: "error" }));
+            
+            // ✨ PHASE 62.2: Show Toast error notification on top-right
+            Toast().fire({
+                icon: "error",
+                title: "Gagal Menyimpan",
+                text: error.response?.data?.detail || "Terjadi kesalahan saat menyimpan profil",
+                timer: 4000,
+                showConfirmButton: false
+            });
+            
+            // Clear "error" status after 3 seconds
+            setTimeout(() => {
+                setUiState(prev => ({ ...prev, autoSaveStatus: "idle" }));
+            }, 3000);
+        }
+    };
+    
     const fetchProfile = async () => {
         setUiState(prev => ({ ...prev, loading: true }));
         
@@ -389,11 +460,7 @@ function Profile() {
             // ✨ PHASE 11.6 FIX: Reset file input to allow re-selecting new avatar
             // This fixes the issue where crop modal doesn't reappear after successful upload
             console.log('🔄 Resetting file input for next upload...');
-            const fileInput = document.getElementById("profileImage");
-            if (fileInput) {
-                fileInput.value = "";
-            }
-            
+            setFileInputKey(prev => prev + 1); // ✨ PHASE 62: Use key-based reset for reliable re-mount
         } catch (error) {
             console.error("❌ Error saving image:", error);
             console.error("   Error details:", {
@@ -411,101 +478,9 @@ function Profile() {
         }
     };
 
-    const submitProfile = async (e) => {
-        e.preventDefault();
-        setUiState(prev => ({ ...prev, loading: true }));
 
-        try {
-            const userId = UserData()?.user_id;
-            if (!userId) throw new Error("User ID not found");
-            
-            // ✨ PHASE 11.6 CRITICAL CHECK: Prevent submitting uncropped image
-            // If user selected a NEW image but hasn't clicked "Apply Crop", warn them
-            if (imageState.selected && !imageState.croppedBlob) {
-                console.warn('⚠️  User selected image but did not crop it!');
-                Toast().fire({
-                    icon: "warning",
-                    title: "Gambar Belum Dipotong",
-                    text: "Silakan klik 'Apply Crop' di modal pemotongan sebelum menyimpan"
-                });
-                setUiState(prev => ({ ...prev, loading: false }));
-                return;  // Prevent submission
-            }
-            
-            // Update Profile data
-            const res = await useAxios.get(`user/profile/${userId}/`);
-            
-            // ✨ PHASE 11.6 CRITICAL FIX: Generate unique filename in manual submission too!
-            // Without this, submitProfile would use the original filename when user clicks Simpan
-            const uniqueFilename = imageState.fileName ? generateUniqueFilename(userId, imageState.fileName) : imageState.fileName;
-            
-            const formdata = createFormData(
-                profileData, 
-                imageState.croppedBlob, 
-                uniqueFilename,  // ✨ Use unique filename instead of original
-                res.data.image
-            );
-
-            // Update profile
-            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
-            
-            // ✨ PHASE 11.8: Cache-bust image URL to force browser reload (fixes BOTH navbar AND profile form avatars)
-            // Problem: Same filename means same URL, browser won't fetch new image from cache
-            // Solution: Add timestamp parameter to force fresh fetch
-            const cacheBustedImageUrl = updateRes.data.image 
-                ? `${updateRes.data.image}?v=${Date.now()}` 
-                : updateRes.data.image;
-            console.log('🔄 Cache-busting: Added timestamp to image URL:', cacheBustedImageUrl);
-            
-            // ✅ Update context with cache-busted image URL
-            const dataToUpdateContext = { ...updateRes.data, image: cacheBustedImageUrl };
-            setProfile(dataToUpdateContext);
-
-            // Update or create Teacher data if teacher-specific fields are provided
-            if (hasTeacherData(profileData)) {
-                try {
-                    // First, try to create Teacher instance if it doesn't exist
-                    await useAxios.post(`teacher/create-from-profile/`, {
-                        user_id: userId
-                    });
-                } catch (createError) {
-                    // Teacher might already exist, that's fine
-                }
-
-                // Update teacher data
-                try {
-                    const teacherDataPayload = createTeacherData(profileData);
-                    await useAxios.patch(`teacher/profile-update/${userId}/`, teacherDataPayload);
-                } catch (teacherUpdateError) {
-                    console.error("Error updating teacher data:", teacherUpdateError);
-                    // Don't fail the entire operation if teacher update fails
-                    Toast().fire({
-                        icon: "warning",
-                        title: VALIDATION_MESSAGES.TEACHER_UPDATE_WARNING
-                    });
-                }
-            }
-            
-            Toast().fire({
-                icon: "success",
-                title: VALIDATION_MESSAGES.PROFILE_UPDATE_SUCCESS
-            });
-
-            // Refresh data
-            fetchProfile();
-            
-        } catch (error) {
-            console.error("[Profile] Error updating profile:", error);
-            console.error("[Profile] Error response:", error.response?.data);
-            Toast().fire({
-                icon: "error",
-                title: error.response?.data?.message || VALIDATION_MESSAGES.PROFILE_UPDATE_ERROR
-            });
-        } finally {
-            setUiState(prev => ({ ...prev, loading: false }));
-        }
-    };
-
+    // ✨ PHASE 62.3: submitProfile removed - auto-save handles all updates
+    
     // Event Handlers
     const handleProfileChange = (event) => {
         const { name, value } = event.target;
@@ -517,6 +492,16 @@ function Profile() {
                 ...prev,
                 [name]: formattedValue,
             }));
+            
+            // ✨ PHASE 62.2: Trigger auto-save with debounce
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
+            autoSaveTimeoutRef.current = setTimeout(() => {
+                autoSaveProfile({
+                    [name]: formattedValue
+                });
+            }, 1000); // 1 second debounce
             return;
         }
 
@@ -524,6 +509,16 @@ function Profile() {
             ...prev,
             [name]: value,
         }));
+        
+        // ✨ PHASE 62.2: Trigger auto-save with debounce for regular fields
+        if (autoSaveTimeoutRef.current) {
+            clearTimeout(autoSaveTimeoutRef.current);
+        }
+        autoSaveTimeoutRef.current = setTimeout(() => {
+            autoSaveProfile({
+                [name]: value
+            });
+        }, 1000); // 1 second debounce
     };
 
     const handleFileChange = (event) => {
@@ -690,11 +685,8 @@ function Profile() {
             completedCrop: null
         });
         
-        // Reset file input to allow selecting the same file again
-        const fileInput = document.getElementById('profileImage');
-        if (fileInput) {
-            fileInput.value = '';
-        }
+        // ✨ PHASE 62: Reset file input by incrementing key - forces React to re-mount the input
+        setFileInputKey(prev => prev + 1);
     };
 
     // Effects
@@ -755,6 +747,7 @@ function Profile() {
                     </p>
                     <div className="modern-file-upload">
                         <input 
+                            key={fileInputKey} // ✨ PHASE 62: Key changes to force re-mount and reset file input
                             type="file" 
                             className="form-control modern-file-input" 
                             name="image" 
@@ -900,31 +893,47 @@ function Profile() {
 
     const renderSubmitButton = () => (
         <div className="form-actions">
-            <button 
-                className="btn modern-submit-btn" 
-                type="submit"
-                disabled={uiState.loading}
-            >
-                {uiState.loading ? (
+            {/* ✨ PHASE 62.2: Auto-save status indicator - shows save state */}
+            <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                minHeight: "36px",
+                borderRadius: "8px",
+                backgroundColor: uiState.autoSaveStatus === "saved" ? "#d4edda" : 
+                                 uiState.autoSaveStatus === "error" ? "#f8d7da" : "#f8f9fa",
+                border: uiState.autoSaveStatus === "saved" ? "1px solid #28a745" :
+                        uiState.autoSaveStatus === "error" ? "1px solid #dc3545" : "1px solid #dee2e6",
+                transition: "all 0.3s ease",
+                fontSize: "0.9rem",
+                marginBottom: "1rem"
+            }}>
+                {uiState.autoSaveStatus === "saving" || uiState.autoSaving ? (
                     <>
-                        <span 
-                            className="spinner-border spinner-border-sm loading-spinner-sm" 
-                            role="status" 
-                            aria-hidden="true"
-                            style={{
-                                flexShrink: 0,
-                                aspectRatio: "1 / 1"
-                            }}
-                        ></span>
-                        Memperbarui Profil...
+                        <span className="spinner-border spinner-border-sm" role="status" style={{ width: "14px", height: "14px", borderWidth: "2px" }}></span>
+                        <span style={{ color: "#667eea", fontWeight: "500" }}>Menyimpan...</span>
+                    </>
+                ) : uiState.autoSaveStatus === "saved" ? (
+                    <>
+                        <i className="fas fa-check-circle" style={{ color: "#28a745", fontSize: "1rem" }}></i>
+                        <span style={{ color: "#28a745", fontWeight: "500" }}>Tersimpan</span>
+                    </>
+                ) : uiState.autoSaveStatus === "error" ? (
+                    <>
+                        <i className="fas fa-exclamation-circle" style={{ color: "#dc3545", fontSize: "1rem" }}></i>
+                        <span style={{ color: "#dc3545", fontWeight: "500" }}>Gagal</span>
                     </>
                 ) : (
                     <>
-                        <i className="fas fa-save submit-icon"></i>
-                        Perbarui Profil
+                        <i className="fas fa-check" style={{ color: "#6c757d", fontSize: "0.9rem" }}></i>
+                        <span style={{ color: "#6c757d", fontWeight: "500" }}>Otomatis tersimpan</span>
                     </>
                 )}
-            </button>
+            </div>
+            
+
         </div>
     );
 
@@ -979,7 +988,7 @@ function Profile() {
                             </div>
 
                             {/* Modern Profile Form */}
-                            <form onSubmit={submitProfile}>
+                            <form>
                                 {/* Avatar Section */}
                                 {renderAvatarSection()}
 

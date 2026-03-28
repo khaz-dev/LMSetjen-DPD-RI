@@ -15,20 +15,125 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Calculate JP
+import { usePageCache } from "../../utils/usePageCache"; // ✨ PHASE 11.12+: Fix page reload issue
 
 function Dashboard() {
     const isCollapsed = useInstructorSidebarCollapse();
-    const [stats, setStats] = useState([]);
-    const [courses, setCourses] = useState([]);
-    const [students, setStudents] = useState([]);
-    const [reviews, setReviews] = useState([]);
-    const [notifications, setNotifications] = useState([]);
-    const [orders, setOrders] = useState([]);
-    const [questions, setQuestions] = useState([]);
-    const [bestCourses, setBestCourses] = useState([]);
-    const [originalCourses, setOriginalCourses] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [recentActivity, setRecentActivity] = useState([]);
+    
+    // ✨ PHASE 11.12+: Wrap fetch logic for usePageCache
+    const fetchDashboardData = useCallback(async () => {
+        const teacherId = UserData()?.teacher_id;
+        
+        const [
+            statsResponse, 
+            coursesResponse, 
+            studentsResponse, 
+            reviewsResponse, 
+            notificationsResponse, 
+            ordersResponse, 
+            questionsResponse,
+            bestCoursesResponse
+        ] = await Promise.all([
+            useAxios.get(`teacher/summary/${teacherId}/`),
+            useAxios.get(`teacher/course-lists/${teacherId}/`),
+            useAxios.get(`teacher/student-lists/${teacherId}/`),
+            useAxios.get(`teacher/review-lists/${teacherId}/`),
+            useAxios.get(`teacher/noti-list/${teacherId}/`),
+            useAxios.get(`teacher/course-order-list/${teacherId}/`),
+            useAxios.get(`teacher/question-answer-list/${teacherId}/`),
+            useAxios.get(`teacher/best-course-earning/${teacherId}/`)
+        ]);
+        
+        // Normalize responses to arrays (handle both array and paginated responses)
+        const coursesData = Array.isArray(coursesResponse.data) ? coursesResponse.data : (coursesResponse.data?.results || []);
+        const reviewsData = Array.isArray(reviewsResponse.data) ? reviewsResponse.data : (reviewsResponse.data?.results || []);
+        const notificationsData = Array.isArray(notificationsResponse.data) ? notificationsResponse.data : (notificationsResponse.data?.results || []);
+        const ordersData = Array.isArray(ordersResponse.data) ? ordersResponse.data : (ordersResponse.data?.results || []);
+        const questionsData = Array.isArray(questionsResponse.data) ? questionsResponse.data : (questionsResponse.data?.results || []);
+        const bestCoursesData = Array.isArray(bestCoursesResponse.data) ? bestCoursesResponse.data : (bestCoursesResponse.data?.results || []);
+        const studentsData = Array.isArray(studentsResponse.data) ? studentsResponse.data : (studentsResponse.data?.results || []);
+        
+        // Generate recent activity
+        const activities = [];
+        const students = Array.isArray(studentsData) ? studentsData : (studentsData?.results || []);
+        const reviews = Array.isArray(reviewsData) ? reviewsData : (reviewsData?.results || []);
+        const questions = Array.isArray(questionsData) ? questionsData : (questionsData?.results || []);
+        
+        // Add recent student enrollments
+        students.slice(0, 3).forEach(student => {
+            if (student?.full_name && student?.date) {
+                activities.push({
+                    type: "enrollment",
+                    title: `${student.full_name} terdaftar dalam kursus`,
+                    time: moment(student.date).fromNow(),
+                    timestamp: moment(student.date).unix(),
+                    icon: "fas fa-user-plus",
+                    color: "#10b981"
+                });
+            }
+        });
+        
+        // Add recent reviews
+        reviews.slice(0, 3).forEach(review => {
+            if (review?.rating && review?.date) {
+                activities.push({
+                    type: "review",
+                    title: `Ulasan baru ${review.rating}★ diterima`,
+                    time: moment(review.date).fromNow(),
+                    timestamp: moment(review.date).unix(),
+                    icon: "fas fa-star",
+                    color: "#f59e0b"
+                });
+            }
+        });
+        
+        // Add recent questions
+        questions.slice(0, 3).forEach(question => {
+            if (question?.title && question?.date) {
+                activities.push({
+                    type: "question",
+                    title: `Pertanyaan baru: ${question.title}`,
+                    time: moment(question.date).fromNow(),
+                    timestamp: moment(question.date).unix(),
+                    icon: "fas fa-question-circle",
+                    color: "#3b82f6"
+                });
+            }
+        });
+        
+        // Sort by timestamp (most recent first) and take top 6
+        activities.sort((a, b) => b.timestamp - a.timestamp);
+        
+        return {
+            stats: statsResponse.data[0] || {},
+            courses: coursesData,
+            students: studentsData,
+            reviews: reviewsData,
+            notifications: notificationsData,
+            orders: ordersData,
+            questions: questionsData,
+            bestCourses: bestCoursesData,
+            recentActivity: activities.slice(0, 6)
+        };
+    }, []);
+
+    // ✨ PHASE 11.12+: Use page cache to prevent reloads on navigation
+    const { data: dashboardData, loading } = usePageCache(
+        'instructor-dashboard',
+        fetchDashboardData,
+        { showLoadingOnStale: false }
+    );
+    
+    // Destructure data with fallbacks - use nullish coalescing to handle null values
+    const stats = dashboardData?.stats || {};
+    const courses = dashboardData?.courses || [];
+    const students = dashboardData?.students || [];
+    const reviews = dashboardData?.reviews || [];
+    const notifications = dashboardData?.notifications || [];
+    const orders = dashboardData?.orders || [];
+    const questions = dashboardData?.questions || [];
+    const bestCourses = dashboardData?.bestCourses || [];
+    const recentActivity = dashboardData?.recentActivity || [];
 
     // Helper function to clean and format image URLs
     const getImageUrl = (imageUrl) => {
@@ -91,124 +196,6 @@ function Dashboard() {
         return Math.ceil(totalSeconds / 2700);
     };
 
-    const fetchCourseData = async () => {
-        try {
-            setLoading(true);
-            const teacherId = UserData()?.teacher_id;
-            
-            const [
-                statsResponse, 
-                coursesResponse, 
-                studentsResponse, 
-                reviewsResponse, 
-                notificationsResponse, 
-                ordersResponse, 
-                questionsResponse,
-                bestCoursesResponse
-            ] = await Promise.all([
-                useAxios.get(`teacher/summary/${teacherId}/`),
-                useAxios.get(`teacher/course-lists/${teacherId}/`),
-                useAxios.get(`teacher/student-lists/${teacherId}/`),
-                useAxios.get(`teacher/review-lists/${teacherId}/`),
-                useAxios.get(`teacher/noti-list/${teacherId}/`),
-                useAxios.get(`teacher/course-order-list/${teacherId}/`),
-                useAxios.get(`teacher/question-answer-list/${teacherId}/`),
-                useAxios.get(`teacher/best-course-earning/${teacherId}/`)
-            ]);
-            
-            // Normalize responses to arrays (handle both array and paginated responses)
-            const coursesData = Array.isArray(coursesResponse.data) ? coursesResponse.data : (coursesResponse.data?.results || []);
-            const reviewsData = Array.isArray(reviewsResponse.data) ? reviewsResponse.data : (reviewsResponse.data?.results || []);
-            const notificationsData = Array.isArray(notificationsResponse.data) ? notificationsResponse.data : (notificationsResponse.data?.results || []);
-            const ordersData = Array.isArray(ordersResponse.data) ? ordersResponse.data : (ordersResponse.data?.results || []);
-            const questionsData = Array.isArray(questionsResponse.data) ? questionsResponse.data : (questionsResponse.data?.results || []);
-            const bestCoursesData = Array.isArray(bestCoursesResponse.data) ? bestCoursesResponse.data : (bestCoursesResponse.data?.results || []);
-            const studentsData = Array.isArray(studentsResponse.data) ? studentsResponse.data : (studentsResponse.data?.results || []);
-            
-            setStats(statsResponse.data[0] || {});
-            setCourses(coursesData);
-            setOriginalCourses(coursesData);
-            setStudents(studentsData);
-            setReviews(reviewsData);
-            setNotifications(notificationsData);
-            setOrders(ordersData);
-            setQuestions(questionsData);
-            setBestCourses(bestCoursesData);
-            
-            // Generate recent activity
-            generateRecentActivity(
-                studentsData, 
-                reviewsData, 
-                questionsData,
-                notificationsData
-            );
-            
-        } catch (error) {
-            console.error("Kesalahan mengambil data dasbor:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const generateRecentActivity = (studentsData, reviewsData, questionsData, notificationsData) => {
-        const activities = [];
-        
-        // Ensure data is array (handle both array and object with results property)
-        const students = Array.isArray(studentsData) ? studentsData : (studentsData?.results || []);
-        const reviews = Array.isArray(reviewsData) ? reviewsData : (reviewsData?.results || []);
-        const questions = Array.isArray(questionsData) ? questionsData : (questionsData?.results || []);
-        
-        // Add recent student enrollments
-        students.slice(0, 3).forEach(student => {
-            if (student?.full_name && student?.date) {
-                activities.push({
-                    type: "enrollment",
-                    title: `${student.full_name} terdaftar dalam kursus`,
-                    time: moment(student.date).fromNow(),
-                    timestamp: moment(student.date).unix(),
-                    icon: "fas fa-user-plus",
-                    color: "#10b981"
-                });
-            }
-        });
-        
-        // Add recent reviews
-        reviews.slice(0, 3).forEach(review => {
-            if (review?.rating && review?.date) {
-                activities.push({
-                    type: "review",
-                    title: `Ulasan baru ${review.rating}★ diterima`,
-                    time: moment(review.date).fromNow(),
-                    timestamp: moment(review.date).unix(),
-                    icon: "fas fa-star",
-                    color: "#f59e0b"
-                });
-            }
-        });
-        
-        // Add recent questions
-        questions.slice(0, 3).forEach(question => {
-            if (question?.title && question?.date) {
-                activities.push({
-                    type: "question",
-                    title: `Pertanyaan baru: ${question.title}`,
-                    time: moment(question.date).fromNow(),
-                    timestamp: moment(question.date).unix(),
-                    icon: "fas fa-question-circle",
-                    color: "#3b82f6"
-                });
-            }
-        });
-        
-        // Sort by timestamp (most recent first) and take top 6
-        activities.sort((a, b) => b.timestamp - a.timestamp);
-        setRecentActivity(activities.slice(0, 6));
-    };
-
-    useEffect(() => {
-        fetchCourseData();
-    }, []);
-
     // Memoize enhanced statistics calculation
     const enhancedStats = useMemo(() => {
         // Ensure arrays
@@ -244,25 +231,12 @@ function Dashboard() {
         return getDurationStats(allLectures);
     }, [courses]);
 
-    // Memoize search handler
-    const handleSearch = useCallback((event) => {
-        const query = event.target.value.toLowerCase();
-        if (query === "") {
-            setCourses(originalCourses); // Reset to original courses
-        } else {
-            const filtered = originalCourses.filter((c) => {
-                return c.title?.toLowerCase().includes(query);
-            });
-            setCourses(filtered);
-        }
-    }, [originalCourses]);
-
     // Show full-page loading spinner on initial load
     if (loading) {
         return (
             <>
                 <BaseHeader />
-                <section className="pt-5 pb-5 modern-dashboard instructor-dashboard" style={{ display: "flex", alignItems: "center" }}>
+                <section className="pt-2 pb-5 modern-dashboard instructor-dashboard" style={{ display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -287,7 +261,7 @@ function Dashboard() {
         <>
             <BaseHeader />
 
-            <section className="pt-5 pb-5 modern-dashboard instructor-dashboard">
+            <section className="pt-2 pb-5 modern-dashboard instructor-dashboard">
                 <div className="container">
                     <Header />
                     <div className="row">

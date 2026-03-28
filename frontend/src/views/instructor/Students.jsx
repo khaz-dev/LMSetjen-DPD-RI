@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import dayjs, { moment } from "../../utils/dayjs";
 
 import Sidebar from "./Partials/Sidebar";
@@ -12,68 +12,61 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import { getMediaUrl } from "../../utils/constants";
+import { usePageCache } from "../../utils/usePageCache"; // ✨ PHASE 11.12+: Fix page reload issue
 
 // Import Students specific styles
 import "./Students.css";
 
 function Students() {
-    const [students, setStudents] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
     const isCollapsed = useInstructorSidebarCollapse();
+    const [error, setError] = useState(null);
 
-    useEffect(() => {
-        fetchStudents();
+    // ✨ PHASE 11.12+: Wrap fetch logic for usePageCache
+    const fetchStudentsData = useCallback(async () => {
+        const teacherId = UserData()?.teacher_id;
+        
+        if (!teacherId) {
+            throw new Error("Teacher ID not found");
+        }
+
+        const response = await useAxios.get(`teacher/student-lists/${teacherId}/`);
+        
+        // Validate and sanitize the response data
+        const studentsData = Array.isArray(response.data) ? response.data : [];
+        
+        // Log detailed debugging information
+        console.log("=== STUDENT LIST API RESPONSE ===");
+        console.log("Total students:", studentsData.length);
+        studentsData.slice(0, 3).forEach((student, index) => {
+            console.log(`Student ${index}:`, {
+                user_id: student.user_id,
+                full_name: student.full_name,
+                image: student.image,
+                image_type: typeof student.image,
+                image_exists: !!student.image,
+                country: student.country,
+            });
+        });
+        
+        // Log any students with missing data for debugging
+        studentsData.forEach((student, index) => {
+            if (!student.full_name) {
+                console.warn(`Student at index ${index} missing full_name:`, student);
+            }
+            if (!student.image) {
+                console.warn(`Student at index ${index} missing image:`, student.full_name);
+            }
+        });
+        
+        return studentsData;
     }, []);
 
-    const fetchStudents = async () => {
-        try {
-            setIsLoading(true);
-            setError(null);
-            const teacherId = UserData()?.teacher_id;
-            
-            if (!teacherId) {
-                throw new Error("Teacher ID not found");
-            }
-
-            const response = await useAxios.get(`teacher/student-lists/${teacherId}/`);
-            
-            // Validate and sanitize the response data
-            const studentsData = Array.isArray(response.data) ? response.data : [];
-            
-            // Log detailed debugging information
-            console.log("=== STUDENT LIST API RESPONSE ===");
-            console.log("Total students:", studentsData.length);
-            studentsData.slice(0, 3).forEach((student, index) => {
-                console.log(`Student ${index}:`, {
-                    user_id: student.user_id,
-                    full_name: student.full_name,
-                    image: student.image,
-                    image_type: typeof student.image,
-                    image_exists: !!student.image,
-                    country: student.country,
-                });
-            });
-            
-            // Log any students with missing data for debugging
-            studentsData.forEach((student, index) => {
-                if (!student.full_name) {
-                    console.warn(`Student at index ${index} missing full_name:`, student);
-                }
-                if (!student.image) {
-                    console.warn(`Student at index ${index} missing image:`, student.full_name);
-                }
-            });
-            
-            setStudents(studentsData);
-        } catch (err) {
-            console.error("Error fetching students:", err);
-            setError("Failed to load students. Please try again.");
-            setStudents([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    // ✨ PHASE 11.12+: Use page cache to prevent reloads on navigation
+    const { data: students = [], isLoading } = usePageCache(
+        'instructor-students',
+        fetchStudentsData,
+        { showLoadingOnStale: false }
+    );
 
     const getStudentImage = (student) => {
         // Log the input
@@ -186,7 +179,7 @@ function Students() {
                                         <div className="d-flex align-items-center gap-3">
                                         <div className="students-stat-badge">
                                             <i className="fas fa-user-graduate me-2"></i>
-                                            {students.length} Total Siswa
+                                            {students?.length || 0} Total Siswa
                                         </div>
                                     </div>
                                     </div>
@@ -208,7 +201,7 @@ function Students() {
                             {/* Students Grid */}
                             {!error && (
                                 <div className="row">
-                                    {students.length > 0 ? (
+                                    {(students?.length ?? 0) > 0 ? (
                                         students.map((student, index) => (
                                             <div key={student.id || student.user_id || index} className="col-lg-4 col-md-6 col-12 mb-4">
                                                 <div className="student-card">

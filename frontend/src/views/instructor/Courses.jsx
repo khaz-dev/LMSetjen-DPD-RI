@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 
 import Sidebar from "./Partials/Sidebar";
@@ -14,49 +14,47 @@ import SearchSection from "../../components/SearchSection";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
+import { usePageCache } from "../../utils/usePageCache"; // ✨ PHASE 11.12+: Fix page reload issue
 import "./Courses.css";
 
 function Courses() {
-    const [courses, setCourses] = useState([]);
-    const [originalCourses, setOriginalCourses] = useState([]);
-    const [loading, setLoading] = useState(true);
     const isCollapsed = useInstructorSidebarCollapse();
+    const [displayedCourses, setDisplayedCourses] = useState([]);
 
-    const fetchCourseData = async () => {
-        try {
-            setLoading(true);
-            const response = await useAxios.get(`teacher/course-lists/${UserData()?.teacher_id}/`);
-            
-            // Handle both array and paginated response formats
-            const coursesData = Array.isArray(response.data) 
-                ? response.data 
-                : (response.data?.results || []);
-            
-            setCourses(coursesData);
-            setOriginalCourses(coursesData);
-        } catch (error) {
-            console.error("Kesalahan mengambil kursus:", error);
-            setCourses([]);
-            setOriginalCourses([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchCourseData();
+    // ✨ PHASE 11.12+: Wrap fetch logic for usePageCache
+    const fetchCoursesData = useCallback(async () => {
+        const response = await useAxios.get(`teacher/course-lists/${UserData()?.teacher_id}/`);
+        
+        // Handle both array and paginated response formats
+        const coursesData = Array.isArray(response.data) 
+            ? response.data 
+            : (response.data?.results || []);
+        
+        return coursesData;
     }, []);
+
+    // ✨ PHASE 11.12+: Use page cache to prevent reloads on navigation
+    const { data: courses = [], loading } = usePageCache(
+        'instructor-courses',
+        fetchCoursesData,
+        { showLoadingOnStale: false }
+    );
+
+    // Update displayedCourses when courses data changes
+    useEffect(() => {
+        setDisplayedCourses(courses);
+    }, [courses]);
 
     const handleSearch = (event) => {
         const query = event.target.value.toLowerCase();
 
         if (query === "") {
-            setCourses(originalCourses);
+            setDisplayedCourses(courses);
         } else {
-            const filtered = originalCourses.filter((course) => {
+            const filtered = courses.filter((course) => {
                 return course.title?.toLowerCase().includes(query);
             });
-            setCourses(filtered);
+            setDisplayedCourses(filtered);
         }
     };
 
@@ -131,9 +129,9 @@ function Courses() {
 
                             {/* Courses Grid */}
                             <div className="modern-courses-container">
-                                {courses?.length > 0 ? (
+                                {displayedCourses?.length > 0 ? (
                                     <div className="row g-3 courses-grid-row">
-                                        {courses.map((course, index) => (
+                                        {displayedCourses.map((course, index) => (
                                             <CourseCard 
                                                 key={course.course_id || course.id || index} 
                                                 course={course} 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import dayjs, { moment } from "../../utils/dayjs";
 
 import Modal from "react-bootstrap/Modal";
@@ -15,32 +15,28 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
+import { usePageCache } from "../../utils/usePageCache"; // ✨ PHASE 11.12+: Fix page reload issue
 import "./TeacherNotification.css";
 
 function TeacherNotification() {
-    const [noti, setNoti] = useState([]);
-    const [loading, setLoading] = useState(true);
     const isCollapsed = useInstructorSidebarCollapse();
 
-    const fetchNoti = async () => {
-        try {
-            setLoading(true);
-            const res = await useAxios.get(`teacher/noti-list/${UserData()?.teacher_id}/`);
-            // Normalize response: handle both array and paginated responses
-            const notificationData = Array.isArray(res.data) 
-                ? res.data 
-                : (res.data?.results || []);
-            setNoti(notificationData);
-        } catch (error) {
-            console.error("Error fetching notifications:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchNoti();
+    // ✨ PHASE 11.12+: Wrap fetch logic for usePageCache
+    const fetchNotiData = useCallback(async () => {
+        const res = await useAxios.get(`teacher/noti-list/${UserData()?.teacher_id}/`);
+        // Normalize response: handle both array and paginated responses
+        const notificationData = Array.isArray(res.data) 
+            ? res.data 
+            : (res.data?.results || []);
+        return notificationData;
     }, []);
+
+    // ✨ PHASE 11.12+: Use page cache to prevent reloads on navigation
+    const { data: noti = [], loading, refetch: refetchNoti } = usePageCache(
+        'instructor-notifications',
+        fetchNotiData,
+        { showLoadingOnStale: false }
+    );
 
     const handleMarkAsSeen = (notiId) => {
         const formdata = new FormData();
@@ -50,7 +46,7 @@ function TeacherNotification() {
         formdata.append("seen", true);
 
         useAxios.patch(`teacher/noti-detail/${UserData()?.teacher_id}/${notiId}`, formdata).then((res) => {
-            fetchNoti();
+            refetchNoti();
             Toast().fire({
                 icon: "success",
                 title: "Notifikasi Dibaca",

@@ -236,7 +236,6 @@
     padding: 25px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    margin-bottom: 1.5rem;
 }
 
 .instructor-review-page .modern-search-container {
@@ -306,7 +305,7 @@
     padding: 1.5rem;
     border-radius: 15px;
     border: 1px solid #e9ecef;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 

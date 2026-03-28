@@ -164,7 +164,7 @@
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    padding: 30px;
+    padding: 20px 20px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     position: relative;
@@ -219,7 +219,7 @@
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    padding: 30px;
+    padding: 20px 20px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     margin-bottom: 1.5rem;
@@ -239,10 +239,9 @@
 }
 
 .instructor-profile-page .modern-form-section .d-flex.align-items-center {
-    gap: 6rem;
-    justify-content: left;
+    gap: 2rem;
+    justify-content: center;
     align-items: center;
-    padding-left: 5rem;
     flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
@@ -254,7 +253,7 @@
 .instructor-profile-page .form-section-title {
     color: #2c3e50;
     font-weight: 600;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .instructor-profile-page .form-section-icon {
@@ -413,9 +412,8 @@
 }
 
 .instructor-profile-page .avatar-content-section {
-    flex: 1;
+    flex: 0 1 auto;
     max-width: 450px;
-    min-width: 300px;
 }
 
 .instructor-profile-page .modern-file-upload {
@@ -452,10 +450,6 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.instructor-profile-page .form-field-container {
-    margin-bottom: 0.75rem !important;
 }
 
 .instructor-profile-page .form-field-container:last-child {
@@ -507,7 +501,7 @@
 .instructor-profile-page .field-help-text {
     color: #6c757d;
     font-size: 0.875rem;
-    margin-top: -0.5rem;
+    margin-top: 0.5rem;
     margin-bottom: 0;
     text-align: right;
     display: block;
@@ -724,10 +718,6 @@
         margin-bottom: 1.25rem;
     }
     
-    .instructor-profile-page .form-field-container {
-        margin-bottom: 0.75rem !important;
-    }
-    
     .instructor-profile-page .modern-avatar,
     .instructor-profile-page .default-avatar-modern,
     .instructor-profile-page .loading-avatar {
@@ -798,10 +788,6 @@
 @media (max-width: 576px) {
     .instructor-profile-page .page-header-title {
         font-size: 1.75rem;
-    }
-    
-    .instructor-profile-page .form-field-container {
-        margin-bottom: 0.5rem !important;
     }
     
     .instructor-profile-page .modern-form-section {

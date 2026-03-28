@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
@@ -7,36 +7,28 @@ import TestimonialSubmitForm from "../../components/TestimonialSubmitForm";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
+import { usePageCache } from "../../utils/usePageCache"; // ✨ PHASE 11.12+: Fix page reload issue
 import "./Testimonials.css";
 
 function Testimonials() {
-    const [testimonials, setTestimonials] = useState([]);
-    const [fetching, setFetching] = useState(true);
     const isCollapsed = useInstructorSidebarCollapse();
 
-    const fetchTestimonials = () => {
-        setFetching(true);
-        useAxios
-            .get("student/testimonials/list/?role=instructor")  // ✨ PHASE 4.13: Fetch user's own testimonials with status
-            .then((res) => {
-                setTestimonials(res.data?.results || []);
-            })
-            .catch((err) => {
-                console.error("Error fetching testimonials:", err);
-                setTestimonials([]);
-            })
-            .finally(() => {
-                setFetching(false);
-            });
-    };
-
-    useEffect(() => {
-        fetchTestimonials();
+    // ✨ PHASE 11.12+: Wrap fetch logic for usePageCache
+    const fetchTestimonialsData = useCallback(async () => {
+        const response = await useAxios.get("student/testimonials/list/?role=instructor");  // ✨ PHASE 4.13: Fetch user's own testimonials with status
+        return response.data?.results || [];
     }, []);
+
+    // ✨ PHASE 11.12+: Use page cache to prevent reloads on navigation
+    const { data: testimonials = [], loading: fetching, refetch: refetchTestimonials } = usePageCache(
+        'instructor-testimonials',
+        fetchTestimonialsData,
+        { showLoadingOnStale: false }
+    );
 
     const handleTestimonialSubmitSuccess = () => {
         // Refresh testimonials after successful submission
-        fetchTestimonials();
+        refetchTestimonials();
     };
 
     if (fetching) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import dayjs, { moment } from "../../utils/dayjs";
 import { Rating } from "react-simple-star-rating";
 
@@ -13,14 +13,13 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
+import { usePageCache } from "../../utils/usePageCache"; // ✨ PHASE 11.12+: Fix page reload issue
 import "./Review.css";
 
 function Review() {
-    const [reviews, setReviews] = useState([]);
+    const [displayedReviews, setDisplayedReviews] = useState([]);
     const [replies, setReplies] = useState({});
-    const [filteredReviews, setFilteredReview] = useState([]);
     const [loadingReply, setLoadingReply] = useState({});
-    const [loading, setLoading] = useState(true);
     const [reportingAbuseReviewId, setReportingAbuseReviewId] = useState(null);
     const [showAbuseModal, setShowAbuseModal] = useState(false);
     const [abuseReason, setAbuseReason] = useState('');
@@ -37,24 +36,29 @@ function Review() {
     const [closingReport, setClosingReport] = useState(false);  // ✨ PHASE 4.210: Loading state for closing
     const isCollapsed = useInstructorSidebarCollapse();
 
-    const fetchReviewsData = async () => {
-        try {
-            setLoading(true);
-            const userData = UserData();
-            if (!userData?.teacher_id) {
-                throw new Error("Teacher ID not found");
-            }
-            const res = await useAxios.get(`teacher/review-lists/${userData.teacher_id}/`);
-            // Extract results from paginated response
-            const reviewsData = res.data.results || res.data;
-            setReviews(reviewsData);
-            setFilteredReview(reviewsData);
-        } catch (error) {
-            console.error("Error fetching reviews:", error);
-        } finally {
-            setLoading(false);
+    // ✨ PHASE 11.12+: Wrap fetch logic for usePageCache
+    const fetchReviewsData = useCallback(async () => {
+        const userData = UserData();
+        if (!userData?.teacher_id) {
+            throw new Error("Teacher ID not found");
         }
-    };
+        const res = await useAxios.get(`teacher/review-lists/${userData.teacher_id}/`);
+        // Extract results from paginated response
+        const reviewsData = res.data.results || res.data;
+        return reviewsData;
+    }, []);
+
+    // ✨ PHASE 11.12+: Use page cache to prevent reloads on navigation
+    const { data: reviews = [], loading, refetch: refetchReviews } = usePageCache(
+        'instructor-reviews',
+        fetchReviewsData,
+        { showLoadingOnStale: false }
+    );
+
+    // Update displayed reviews when data changes
+    useEffect(() => {
+        setDisplayedReviews(reviews);
+    }, [reviews]);
 
     // ✨ PHASE 4.210: Fetch abuse reports submitted by this teacher
     const fetchAbuseReports = async () => {
@@ -74,8 +78,8 @@ function Review() {
         }
     };
 
+    // Fetch abuse reports on mount
     useEffect(() => {
-        fetchReviewsData();
         fetchAbuseReports();
     }, []);
 
@@ -94,7 +98,7 @@ function Review() {
                 reply: replyText,
             });
             
-            fetchReviewsData();
+            refetchReviews();
             Toast().fire({
                 icon: "success",
                 title: "Balasan terkirim berhasil!",
@@ -123,35 +127,35 @@ function Review() {
 
     const handleSortByDate = (e) => {
         const sortValue = e.target.value;
-        const sortedReview = [...filteredReviews];
+        const sortedReview = [...displayedReviews];
         if (sortValue === "Newest") {
             sortedReview.sort((a, b) => new Date(b.date) - new Date(a.date));
         } else {
             sortedReview.sort((a, b) => new Date(a.date) - new Date(b.date));
         }
 
-        setFilteredReview(sortedReview);
+        setDisplayedReviews(sortedReview);
     };
 
     const handleSortByRatingChange = (e) => {
         const rating = parseInt(e.target.value);
         if (rating === 0) {
-            fetchReviewsData();
+            setDisplayedReviews(reviews);
         } else {
             const filtered = reviews.filter((review) => review.rating === rating);
-            setFilteredReview(filtered);
+            setDisplayedReviews(filtered);
         }
     };
 
     const handleFilterByCourse = (e) => {
         const query = e.target.value.toLowerCase();
         if (query === "") {
-            fetchReviewsData();
+            setDisplayedReviews(reviews);
         } else {
             const filtered = reviews.filter((review) => {
                 return review.course.title.toLowerCase().includes(query);
             });
-            setFilteredReview(filtered);
+            setDisplayedReviews(filtered);
         }
     };
 
@@ -396,7 +400,7 @@ function Review() {
                                         <div className="d-flex align-items-center gap-3">
                                             <div className="stat-badge">
                                                 <i className="fas fa-comments stat-badge-icon"></i>
-                                                {filteredReviews?.length || 0} Ulasan
+                                                {displayedReviews?.length || 0} Ulasan
                                             </div>
                                         </div>
                                     </div>
@@ -444,9 +448,9 @@ function Review() {
                             </div>
                             {/* Modern Reviews List */}
                             <div className="modern-reviews-container">
-                                {filteredReviews?.length > 0 ? (
+                                {displayedReviews?.length > 0 ? (
                                     <div className="row g-4">
-                                        {filteredReviews.map((r, index) => (
+                                        {displayedReviews.map((r, index) => (
                                             <div key={r.id || index} className="col-12">
                                                 <div className="modern-review-card">
                                                     <div className="row g-3">

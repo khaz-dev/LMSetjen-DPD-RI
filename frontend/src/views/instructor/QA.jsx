@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef,  useCallback } from "react";
 import { Link } from "react-router-dom";
 import dayjs, { moment } from "../../utils/dayjs";
 
@@ -16,6 +16,7 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
+import { usePageCache } from "../../utils/usePageCache"; // ✨ PHASE 11.12+: Fix page reload issue
 import "./QA.css";
 
 // Constants
@@ -82,33 +83,41 @@ function QA() {
     // API FUNCTIONS
     // ============================
     
-    // Fetch teacher's courses with Q&A count
-    const fetchTeacherCourses = async () => {
-        setLoading(true);
-        try {
-            const teacherId = UserData()?.teacher_id;
-            
-            if (!teacherId) {
-                throw new Error("Teacher ID not found. Please make sure you are logged in as a teacher.");
-            }
-            
-            const response = await useAxios.get(`teacher/course-lists/${teacherId}/`);
-            
-            // Handle both array and paginated response formats
-            const courseData = Array.isArray(response.data) ? response.data : (response.data?.results || []);
-            
-            // ✨ PHASE 4.16: Backend now includes qa_count directly in course data
-            // No need for additional API calls per course
-            setTeacherCourses(courseData);
-            setFilteredCourses(courseData);
-        } catch (error) {
-            console.error("Error fetching teacher courses:", error);
-            setError(error.message || "Failed to load courses");
-        } finally {
-            setLoading(false);
+    // ✨ PHASE 11 12+: Wrap fetch for usePageCache
+    const fetchCoursesData = useCallback(async () => {
+        const teacherId = UserData()?.teacher_id;
+        
+        if (!teacherId) {
+            throw new Error("Teacher ID not found. Please make sure you are logged in as a teacher.");
         }
-    };
+        
+        const response = await useAxios.get(`teacher/course-lists/${teacherId}/`);
+        
+        // Handle both array and paginated response formats
+        const courseData = Array.isArray(response.data) ? response.data : (response.data?.results || []);
+        return courseData;
+    }, []);
 
+    // ✨ PHASE 11.12+: Use page cache to prevent reloads on navigation
+    const { data: cachedCourses = [], loading: coursesLoading } = usePageCache(
+        'instructor-qa-courses',
+        fetchCoursesData,
+        { showLoadingOnStale: false }
+    );
+
+    // Update state with cached courses
+    useEffect(() => {
+        if (cachedCourses && Array.isArray(cachedCourses)) {
+            setTeacherCourses(cachedCourses);
+            setFilteredCourses(cachedCourses);
+        }
+    }, [cachedCourses]);
+
+    // Set loading state from cache
+    useEffect(() => {
+        setLoading(coursesLoading);
+    }, [coursesLoading]);
+    
     // Fetch questions for selected course
     const fetchCourseQuestions = async (course) => {
         setLoading(true);
@@ -877,11 +886,6 @@ function QA() {
         }
     };
 
-    // Fetch courses and their reports when component mounts
-    useEffect(() => {
-        fetchTeacherCourses();
-    }, []);
-
     // ✨ PHASE 7.18: Fetch Q&A reports when selecting a course
     useEffect(() => {
         if (selectedCourse?.id) {
@@ -966,7 +970,7 @@ function QA() {
         return (
             <>
                 <BaseHeader />
-                <section className="qa-bg-section pt-5 pb-5" style={{ display: "flex", alignItems: "center" }}>
+                <section className="qa-bg-section pt-4 pb-5" style={{ display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -990,7 +994,7 @@ function QA() {
     return (
         <>
             <BaseHeader />
-            <section className="qa-bg-section pt-5 pb-5">
+            <section className="qa-bg-section pt-4 pb-5">
                 <div className="container">
                     <Header />
                     <div className="row">
