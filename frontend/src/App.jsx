@@ -64,7 +64,7 @@ const Courses = lazy(() => import("./views/instructor/Courses"));
 const InstructorTestimonials = lazy(() => import("./views/instructor/Testimonials"));
 const Review = lazy(() => import("./views/instructor/Review"));
 const Students = lazy(() => import("./views/instructor/Students"));
-const TeacherNotification = lazy(() => import("./views/instructor/TeacherNotification"));
+const InstructorNotifications = lazy(() => import("./views/instructor/InstructorNotifications")); // ✨ PHASE 64: Instructor notifications page
 const QA = lazy(() => import("./views/instructor/QA"));
 const Profile = lazy(() => import("./views/instructor/Profile"));
 const CourseCreate = lazy(() => import("./views/instructor/CourseCreate"));
@@ -381,7 +381,7 @@ function App() {
                                 element={
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["teacher", "instructor"]}>
-                                            <TeacherNotification />
+                                            <InstructorNotifications />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }

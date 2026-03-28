@@ -740,6 +740,7 @@
     .instructor-courses-page > .container > .row > .col-lg-9,
     .instructor-profile-page > .container > .row > .col-lg-9,
     .instructor-password-page > .container > .row > .col-lg-9,
+    .instructor-notifications-page > .container > .row > .col-lg-9,
     .instructor-testimonials-page > .container > .row > .col-lg-9 {
         flex: 1 1 auto !important; /* Flex-grow fills available space */
         max-width: 100% !important; /* Remove Bootstrap's max-width constraint */
@@ -756,6 +757,7 @@
     .instructor-courses-page > .container > .row > .col-md-8,
     .instructor-profile-page > .container > .row > .col-md-8,
     .instructor-password-page > .container > .row > .col-md-8,
+    .instructor-notifications-page > .container > .row > .col-md-8,
     .instructor-testimonials-page > .container > .row > .col-md-8 {
         flex: 1 1 auto !important; /* Flex-grow fills available space */
         max-width: 100% !important; /* Remove Bootstrap's max-width constraint */

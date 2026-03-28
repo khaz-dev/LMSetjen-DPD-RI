@@ -792,3 +792,79 @@ def log_instructor_quiz_activities(sender, instance, created, **kwargs):
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error logging instructor quiz activities: {str(e)}")
+
+
+# ✨ PHASE 64: Additional instructor activity signals for complete tracking
+
+
+@receiver(post_delete, sender=api_models.EnrolledCourse)
+def log_student_unenrolled(sender, instance, **kwargs):
+    """
+    Log instructor activity when student is unenrolled from a course.
+    
+    Activity type logged:
+    - 'student_unenrolled': When an enrollment is deleted/cancelled
+    
+    Note: This captures when an EnrolledCourse record is deleted,
+    which could be from manual removal or course deletion.
+    """
+    try:
+        if not instance.course or not instance.course.teacher:
+            return
+        
+        course = instance.course
+        teacher = instance.course.teacher
+        instructor = teacher.user if teacher else None
+        
+        if not instructor:
+            return
+        
+        # Get student info (may be limited if student was already deleted)
+        student_name = instance.user.full_name if instance.user else "Unknown Student"
+        student_id = instance.user.id if instance.user else None
+        
+        api_models.ActivityLog.objects.create(
+            user=instructor,
+            activity_type='student_unenrolled',
+            role_at_time='instructor',
+            course=course,
+            title=f"Siswa Dihapus: {student_name}",
+            description=f"Menghapus siswa '{student_name}' dari kursus '{course.title}'",
+            success=True,
+            metadata={
+                'enrollment_id': str(instance.enrollment_id) if hasattr(instance, 'enrollment_id') else str(instance.id),
+                'student_id': student_id,
+                'student_name': student_name,
+                'course_id': str(course.id),
+                'course_title': course.title
+            }
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging student unenrollment: {str(e)}")
+
+
+@receiver(post_save, sender=api_models.EnrolledCourse)
+def log_student_enrolled_manual(sender, instance, created, **kwargs):
+    """
+    Log instructor activity when instructor manually enrolls a student.
+    
+    ✨ PHASE 64 NOTE: This signal currently cannot distinguish between:
+    - Automatic enrollment (student self-enrolls): Should log as 'enrollment' (already handled)
+    - Manual enrollment (instructor enrolls): Should log as 'student_enrolled_manual'
+    
+    To properly distinguish, we would need:
+    1. Add is_manual_enrollment BooleanField to EnrolledCourse model
+    2. Or add manual_enrolled_by ForeignKey to track who enrolled the student
+    3. Or check request context in view to set a flag
+    
+    For now, this signal is a placeholder for the manual enrollment logging.
+    The actual manual enrollment should be logged in the view when the API endpoint
+    is called by an instructor.
+    
+    FUTURE: Implement this properly after adding the necessary model fields.
+    """
+    # Currently, we rely on view-level logging for manual enrollment
+    # until the model is updated to track this distinction.
+    pass

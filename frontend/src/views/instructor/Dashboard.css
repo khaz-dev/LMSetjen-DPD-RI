@@ -37,6 +37,28 @@
   position: relative;
 }
 
+/* ✨ PHASE 65: Protect Header on Dashboard from row CSS rules - CRITICAL FIX */
+/* Header row must maintain full width and NOT be affected by negative margin rules */
+.instructor-dashboard .row.instructor-header-row {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure Header card maintains full width and removes right gap */
+.instructor-dashboard .row.instructor-header-row > .col-xl-12,
+.instructor-dashboard .row.instructor-header-row > .col-lg-12,
+.instructor-dashboard .row.instructor-header-row > .col-md-12,
+.instructor-dashboard .row.instructor-header-row > .col-12 {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
 /* Consistent vertical spacing for dashboard sections */
 /* CRITICAL FIX: Scope to .instructor-dashboard to prevent cascade to admin dashboard */
 .instructor-dashboard .row {

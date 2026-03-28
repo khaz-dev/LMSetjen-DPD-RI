@@ -222,6 +222,27 @@ button div,
   width: calc(100% + var(--bs-gutter-x, 24px)); /* Extend to compensate for negative margins */
 }
 
+/* ✨ PHASE 65: Protect Header on quiz page from row CSS rules */
+.course-quiz-container .row.instructor-header-row {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Ensure Header card maintains full width and removes right gap */
+.course-quiz-container .row.instructor-header-row > .col-xl-12,
+.course-quiz-container .row.instructor-header-row > .col-lg-12,
+.course-quiz-container .row.instructor-header-row > .col-md-12,
+.course-quiz-container .row.instructor-header-row > .col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
 /* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
 .course-quiz-container .row:has(.instructor-sidebar-column) {
   flex-wrap: nowrap;
