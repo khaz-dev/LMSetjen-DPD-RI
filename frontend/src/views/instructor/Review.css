@@ -586,7 +586,6 @@
     color: #3498db;
     font-size: 0.85rem;
     word-break: break-word;
-    margin-bottom: 0.5rem; /* Consistent with scoped context */
 }
 
 /* ========================================
