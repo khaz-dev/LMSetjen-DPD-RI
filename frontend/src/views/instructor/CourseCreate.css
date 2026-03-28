@@ -205,7 +205,7 @@
 /* Modern Header Design */
 .create-header-modern {
     background: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
-    padding: 2rem;
+    padding: 1rem;
     margin-bottom: 1.5rem;
     border-radius: 15px;
     position: relative;
@@ -269,7 +269,7 @@
 .form-section {
     background: rgba(255, 255, 255, 0.7);
     border-radius: 15px;
-    padding: 2rem;
+    padding: 1rem;
     margin-bottom: 1.5rem;
     border: 1px solid rgba(52, 152, 219, 0.1);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
