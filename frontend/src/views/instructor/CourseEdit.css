@@ -1246,7 +1246,7 @@ button div,
 .form-section {
     background: rgba(255, 255, 255, 0.7);
     border-radius: 15px;
-    padding: 2rem;
+    padding: 1.5rem !important;
     margin-bottom: 1.5rem;
     border: 1px solid rgba(52, 152, 219, 0.1);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
@@ -1900,7 +1900,7 @@ button div,
     }
 
     .form-section {
-        padding: 1rem;
+        padding: 1.5rem;
     }
 }
 

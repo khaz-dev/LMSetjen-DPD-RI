@@ -491,7 +491,8 @@
     transform: translateY(-4px);
 }
 
-.course-image-container {
+/* PHASE 73+: Scope to .student-qa-course-card to prevent style pollution on Courses page */
+.student-qa-course-card .course-image-container {
     width: 160px;
     min-width: 160px;
     height: 140px;
@@ -504,7 +505,8 @@
     border-radius: 15px;
 }
 
-.course-image {
+/* PHASE 73+: Scope to .student-qa-course-card to prevent style pollution on Courses page */
+.student-qa-course-card .course-image {
     width: 160px;
     height: 140px;
     object-fit: cover;
@@ -542,7 +544,8 @@
     z-index: 1;
 }
 
-.course-image-placeholder {
+/* PHASE 73+: Scope to .student-qa-course-card to prevent style pollution on Courses page */
+.student-qa-course-card .course-image-placeholder {
     display: flex;
 }
 
@@ -2412,13 +2415,14 @@
     min-height: auto;
   }
 
-  .course-image-container {
+  /* PHASE 73+: Scope to .student-qa-course-card to prevent style pollution on Courses page */
+  .student-qa-course-card .course-image-container {
     width: 100%;
     height: 140px;
     border-radius: 15px 15px 0 0;
   }
 
-  .course-image {
+  .student-qa-course-card .course-image {
     width: 100%;
   }
 

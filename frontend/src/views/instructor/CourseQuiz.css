@@ -527,7 +527,7 @@ button div,
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-lg);
+    padding: 1rem;
     background: linear-gradient(135deg, var(--neutral-50) 0%, white 100%);
     border-bottom: 1px solid var(--neutral-200);
     position: relative;
@@ -608,7 +608,7 @@ button div,
 
 .quiz-card-body {
     background-color: var(--instructor-gradient);
-    padding: var(--space-xl);
+    padding: 1rem;
 }
 
 .quiz-title {
@@ -642,7 +642,7 @@ button div,
 }
 
 .quiz-card-footer {
-    padding: var(--space-lg);
+    padding: 1rem;
     border-top: 1px solid var(--neutral-200);
     background: var(--neutral-50);
     /* ✅ FIX: Right-align the button in footer */
@@ -658,7 +658,7 @@ button div,
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-xl);
+    padding: 1rem 0rem;
 }
 
 .quiz-info .quiz-title {
@@ -1537,7 +1537,7 @@ button div,
     border-radius: 12px;
     border: 1px solid #e0e0e0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 1.5rem;
+    padding: 1rem;
     margin-bottom: 1.5rem;
 }
 
