@@ -84,7 +84,10 @@
     overflow: hidden;
 }
 
-.instructor-testimonials-page .modern-header-section,
+.instructor-testimonials-page .modern-header-section{
+    padding: 1rem !important;
+}
+
 .instructor-testimonials-page .card {
     max-width: 100%;
     overflow: hidden;
