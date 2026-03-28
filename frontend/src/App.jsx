@@ -56,6 +56,7 @@ const StudentTestimonials = lazy(() => import("./views/student/Testimonials"));
 const Wishlist = lazy(() => import("./views/student/Wishlist"));
 const StudentProfile = lazy(() => import("./views/student/Profile"));
 const SertifikatKursus = lazy(() => import("./views/student/SertifikatKursus"));  // ✨ PHASE 4.228: Student certificate page
+const Activities = lazy(() => import("./views/student/Activities"));  // ✨ PHASE 53: Student activities history page
 
 // Instructor Routes
 const Dashboard = lazy(() => import("./views/instructor/Dashboard"));
@@ -317,6 +318,16 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["student"]}>
                                             <SertifikatKursus />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/student/activities/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["student"]}>
+                                            <Activities />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }

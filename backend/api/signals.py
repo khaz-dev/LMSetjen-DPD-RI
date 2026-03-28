@@ -16,6 +16,272 @@ from decimal import Decimal
 from . import models as api_models
 
 
+# ✨ PHASE 53.1: CREATE ACTIVITY LOG ENTRIES - THE CULPRIT!
+# These signal handlers actually create ActivityLog entries when activities happen
+
+
+@receiver(post_save, sender=api_models.EnrolledCourse)
+def log_course_enrollment(sender, instance, created, **kwargs):
+    """Log when student enrolls in a course"""
+    if not created:
+        return
+    
+    try:
+        api_models.ActivityLog.objects.create(
+            user=instance.user,
+            activity_type='enrollment',
+            role_at_time='student',
+            course=instance.course,
+            title=f"Pendaftaran Kursus: {instance.course.title}",
+            description=f"Berhasil mendaftar untuk kursus {instance.course.title}",
+            success=True,
+            metadata={
+                'enrollment_id': instance.id,
+                'course_id': instance.course.id,
+                'course_title': instance.course.title
+            }
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging course enrollment: {str(e)}")
+
+
+@receiver(post_save, sender=api_models.CompletedLesson)
+def log_lesson_completion(sender, instance, created, **kwargs):
+    """Log when student completes a lesson"""
+    if not created:
+        return
+    
+    try:
+        api_models.ActivityLog.objects.create(
+            user=instance.user,
+            activity_type='lesson_completed',
+            role_at_time='student',
+            course=instance.course,
+            lesson=instance.variant_item,
+            title=f"Selesaikan Pelajaran: {instance.variant_item.title}",
+            description=f"Menyelesaikan pelajaran '{instance.variant_item.title}' dari kursus {instance.course.title}",
+            success=True,
+            metadata={
+                'completed_lesson_id': instance.id,
+                'variant_item_id': instance.variant_item.variant_item_id,
+                'lesson_title': instance.variant_item.title,
+                'course_id': instance.course.id,
+                'course_title': instance.course.title
+            }
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging lesson completion: {str(e)}")
+
+
+@receiver(post_save, sender=api_models.VideoProgress)
+def log_video_completion(sender, instance, created, **kwargs):
+    """Log when student watches video and reaches 95% completion"""
+    # Only log if just updated (not created) and reached 95%
+    if created:
+        return
+    
+    try:
+        # Check if this is the first time reaching 95%
+        # Use a flag to ensure we only log once per video per user
+        progress_percent = float(instance.progress_percentage or 0)
+        
+        if progress_percent >= 95.0:
+            # Check if we already logged video completion for this video
+            existing_log = api_models.ActivityLog.objects.filter(
+                user=instance.user,
+                activity_type='video_completed',
+                lesson=instance.variant_item,
+                course=instance.course
+            ).exists()
+            
+            if existing_log:
+                return  # Already logged
+            
+            # Log video completion
+            api_models.ActivityLog.objects.create(
+                user=instance.user,
+                activity_type='video_completed',
+                role_at_time='student',
+                course=instance.course,
+                lesson=instance.variant_item,
+                title=f"Video Selesai: {instance.variant_item.title}",
+                description=f"Menonton video '{instance.variant_item.title}' hingga {int(progress_percent)}%",
+                duration_seconds=instance.duration_seconds,
+                success=True,
+                metadata={
+                    'video_progress_id': instance.id,
+                    'progress_percentage': progress_percent,
+                    'variant_item_id': instance.variant_item.variant_item_id,
+                    'lesson_title': instance.variant_item.title,
+                    'course_id': instance.course.id,
+                    'course_title': instance.course.title
+                }
+            )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging video completion: {str(e)}")
+
+
+@receiver(post_save, sender=api_models.QuizAttempt)
+def log_quiz_activity(sender, instance, created, **kwargs):
+    """Log when student attempts or completes a quiz"""
+    try:
+        if created:
+            # Log quiz attempt
+            api_models.ActivityLog.objects.create(
+                user=instance.user,
+                activity_type='quiz_attempted',
+                role_at_time='student',
+                course=instance.quiz.course if instance.quiz.course else None,
+                quiz=instance.quiz,
+                title=f"Kerjakan Kuis: {instance.quiz.title}",
+                description=f"Mengerjakan kuis '{instance.quiz.title}' dengan skor {instance.score}%",
+                points_awarded=int(instance.score) if instance.score else 0,
+                success=instance.is_passed,
+                metadata={
+                    'quiz_attempt_id': instance.id,
+                    'quiz_id': instance.quiz.id,
+                    'quiz_title': instance.quiz.title,
+                    'score': instance.score,
+                    'is_passed': instance.is_passed,
+                    'course_id': instance.quiz.course.id if instance.quiz.course else None
+                }
+            )
+        else:
+            # Log quiz result change if status changed
+            # Check if we need to create a quiz_passed or quiz_failed log
+            activity_type = 'quiz_passed' if instance.is_passed else 'quiz_failed'
+            
+            # Check if already logged
+            existing_log = api_models.ActivityLog.objects.filter(
+                user=instance.user,
+                activity_type=activity_type,
+                quiz=instance.quiz,
+                metadata__quiz_attempt_id=instance.id
+            ).exists()
+            
+            if not existing_log:
+                api_models.ActivityLog.objects.create(
+                    user=instance.user,
+                    activity_type=activity_type,
+                    role_at_time='student',
+                    course=instance.quiz.course if instance.quiz.course else None,
+                    quiz=instance.quiz,
+                    title=f"{'Lulus' if instance.is_passed else 'Gagal'} Kuis: {instance.quiz.title}",
+                    description=f"{'Lulus' if instance.is_passed else 'Gagal'} kuis '{instance.quiz.title}' dengan skor {instance.score}%",
+                    points_awarded=int(instance.score) if instance.is_passed and instance.score else 0,
+                    success=instance.is_passed,
+                    metadata={
+                        'quiz_attempt_id': instance.id,
+                        'quiz_id': instance.quiz.id,
+                        'quiz_title': instance.quiz.title,
+                        'score': instance.score,
+                        'is_passed': instance.is_passed,
+                        'course_id': instance.quiz.course.id if instance.quiz.course else None
+                    }
+                )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging quiz activity: {str(e)}")
+
+
+@receiver(post_save, sender=api_models.Certificate)
+def log_certificate_earned(sender, instance, created, **kwargs):
+    """Log when student earns a certificate"""
+    if not created:
+        return
+    
+    try:
+        api_models.ActivityLog.objects.create(
+            user=instance.user,
+            activity_type='certificate_earned',
+            role_at_time='student',
+            course=instance.course,
+            title=f"Raih Sertifikat: {instance.course.title}",
+            description=f"Berhasil meraih sertifikat untuk kursus {instance.course.title}",
+            success=True,
+            points_awarded=100,
+            metadata={
+                'certificate_id': instance.id,
+                'certificate_number': instance.certificate_number,
+                'course_id': instance.course.id,
+                'course_title': instance.course.title,
+                'issue_date': str(instance.issue_date)
+            }
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging certificate: {str(e)}")
+
+
+@receiver(post_save, sender=api_models.Review)
+def log_review_posted(sender, instance, created, **kwargs):
+    """Log when student posts a review (already has review posting in signals)"""
+    if not created:
+        return
+    
+    # Only log approved reviews
+    if not instance.active:
+        return
+    
+    try:
+        api_models.ActivityLog.objects.create(
+            user=instance.user,
+            activity_type='review_posted' if instance.course else 'discussion_participated',
+            role_at_time='student',
+            course=instance.course,
+            title=f"Posting Review: {instance.course.title if instance.course else 'Testimoni'}",
+            description=f"Meninggalkan review dari {instance.rating}★ untuk {instance.course.title if instance.course else 'platform'}",
+            success=True,
+            points_awarded=50,
+            metadata={
+                'review_id': instance.id,
+                'rating': instance.rating,
+                'course_id': instance.course.id if instance.course else None,
+                'review_text': instance.review[:100] if instance.review else ""
+            }
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging review: {str(e)}")
+
+
+@receiver(post_save, sender=api_models.Question_Answer)
+def log_question_asked(sender, instance, created, **kwargs):
+    """Log when student asks a question"""
+    if not created:
+        return
+    
+    try:
+        api_models.ActivityLog.objects.create(
+            user=instance.user,
+            activity_type='question_asked',
+            role_at_time='student',
+            course=instance.course,
+            title=f"Buat Pertanyaan: {instance.title[:50]}",
+            description=f"Mengajukan pertanyaan di {instance.course.title}",
+            success=True,
+            metadata={
+                'question_id': instance.qa_id,
+                'question_title': instance.title,
+                'course_id': instance.course.id,
+                'course_title': instance.course.title
+            }
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging question asked: {str(e)}")
+
+
 @receiver(post_save, sender=api_models.CompletedLesson)
 def award_points_on_course_completion(sender, instance, created, **kwargs):
     """

@@ -1,10 +1,19 @@
-import { createContext, useState, useRef, useCallback } from "react";
+import { createContext, useState, useRef, useCallback, useMemo } from "react";
 
 /**
  * PageCacheContext - Maintains a global cache of page data that persists across component unmounts
  * This prevents unnecessary data re-fetching when navigating between pages and returning
  * 
  * PHASE 11.12: Seamless page navigation without reloading
+ * 
+ * ✨ PHASE 53.6 FIX: Use useMemo to memoize context value
+ * Previously, a new value object was created on every render, causing:
+ * - usePageCache's dependency array to see "pageCache" as changed
+ * - Effect re-running immediately
+ * - API calls repeating every 1-2 seconds (infinite polling)
+ * 
+ * SOLUTION: Wrap value object in useMemo so it only changes when methods change
+ * (which they don't, thanks to useCallback)
  */
 export const PageCacheContext = createContext();
 
@@ -76,13 +85,15 @@ export function PageCacheProvider({ children }) {
         setUpdateTrigger(prev => prev + 1);
     }, []);
 
-    const value = {
+    // ✨ PHASE 53.6 FIX: Memoize value object
+    // So that usePageCache's dependency array doesn't see it as "changed" every render
+    const value = useMemo(() => ({
         getCache,
         setCache,
         isCacheStale,
         clearCache,
         clearAllCache
-    };
+    }), [getCache, setCache, isCacheStale, clearCache, clearAllCache]);
 
     return (
         <PageCacheContext.Provider value={value}>

@@ -252,5 +252,12 @@ urlpatterns = [
     
     # ✨ PHASE 10.1: Ranking endpoints (placeholder for unimplemented ranking system)
     path("rankings/students/<str:period>/", api_views.RankedStudentsAPIView.as_view()),
-    path("rankings/instructors/<str:period>/", api_views.RankedInstructorsAPIView.as_view()),
-]
+    path("rankings/instructors/<str:period>/", api_views.RankedInstructorsAPIView.as_view()),    
+    # PHASE 53: Activity Log API endpoints
+    path("student/activities/", api_views.StudentActivityListAPIView.as_view()),
+    path("student/activities/<int:pk>/", api_views.StudentActivityDetailAPIView.as_view()),
+    path("student/activities/stats/", api_views.StudentActivityStatsAPIView.as_view()),
+    path("student/activity-filter/", api_views.ActivityFilterPreferencesAPIView.as_view()),
+    path("instructor/course/<int:course_id>/activities/", api_views.InstructorCourseActivitiesAPIView.as_view()),
+    path("instructor/activities/analytics/", api_views.InstructorActivityAnalyticsAPIView.as_view()),
+    path("admin/activities/analytics/", api_views.AdminActivityAnalyticsAPIView.as_view()),]

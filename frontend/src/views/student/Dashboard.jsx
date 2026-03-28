@@ -13,19 +13,26 @@ import { getImageUrl } from "../../utils/courseUtils";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 // ✨ PHASE 11.12: Import caching hook for seamless navigation
 import { usePageCache } from "../../utils/usePageCache";
+// ✨ PHASE 53: Import ActivityDisplay component with API integration
+import ActivityDisplay from "../../components/StudentDashboard/ActivityDisplay";
 import "./Dashboard.css";
 
 function Dashboard() {
     const [courses, setCourses] = useState([]);
     const [stats, setStats] = useState([]);
-    const [recentActivity, setRecentActivity] = useState([]);
     const [progressData, setProgressData] = useState([]);
     const isCollapsed = useSidebarCollapse();
 
-    const fetchData = async () => {
+    // ✨ PHASE 53.5 CRITICAL: Wrap fetchData in useCallback to prevent infinite polling
+    // PROBLEM: fetchData was creating a new function reference on EVERY render
+    // This caused usePageCache's useEffect to see it as "changed" and refetch endlessly
+    // SOLUTION: useCallback memoizes the function so it only changes when dependencies change
+    const fetchData = useCallback(async () => {
+        const userId = UserData()?.user_id;
+        
         const promises = await Promise.all([
-            useAxios.get(`student/summary/${UserData()?.user_id}/`).then((res) => res.data[0]),
-            useAxios.get(`student/course-list/${UserData()?.user_id}/`).then((res) => {
+            useAxios.get(`student/summary/${userId}/`).then((res) => res.data[0]),
+            useAxios.get(`student/course-list/${userId}/`).then((res) => {
                 return Array.isArray(res.data) ? res.data : (res.data?.results || []);
             })
         ]);
@@ -75,10 +82,10 @@ function Dashboard() {
         return {
             stats: statsData,
             courses: courseData,
-            progressData: progressStats,
-            recentActivity: generateRecentActivityData(courseData)
+            progressData: progressStats
+            // ✨ PHASE 53: Removed recentActivity - now fetched dynamically by ActivityDisplay component
         };
-    };
+    }, []);  // Empty dependency array: fetchData only changes if UserData() changes, but UserData is expensive to add as dep
 
     // ✨ PHASE 11.12: Use page cache to avoid reloading when navigating
     const { data: cachedData, loading: fetching } = usePageCache(
@@ -95,39 +102,13 @@ function Dashboard() {
             setStats(cachedData.stats || []);
             setCourses(cachedData.courses || []);
             setProgressData(cachedData.progressData || []);
-            setRecentActivity(cachedData.recentActivity || []);
+            // ✨ PHASE 53: Removed recentActivity state - now using ActivityDisplay with API
         }
     }, [cachedData]);
 
-    const generateRecentActivityData = (coursesData) => {
-        const activities = [];
-        
-        coursesData.slice(0, 5).forEach(course => {
-            activities.push({
-                id: course.enrollment_id,
-                type: "enrollment",
-                title: `Terdaftar di ${course.course.title}`,
-                date: course.date,
-                icon: "fas fa-user-graduate",
-                color: "success"
-            });
-            
-            if (course.completed_lesson?.length > 0) {
-                activities.push({
-                    id: `${course.enrollment_id}-progress`,
-                    type: "progress",
-                    title: `Menyelesaikan ${course.completed_lesson.length} pelajaran di ${course.course.title}`,
-                    date: course.date,
-                    icon: "fas fa-check-circle",
-                    color: "primary"
-                });
-            }
-        });
-        
-        // Sort by date (most recent first)
-        activities.sort((a, b) => new Date(b.date) - new Date(a.date));
-        return activities.slice(0, 6);
-    };
+    // ✨ PHASE 53: Removed generateRecentActivityData function
+    // Recent activities are now fetched dynamically by the ActivityDisplay component
+    // using the API endpoint /api/v1/student/activities/
 
     const handleSearch = useCallback((event) => {
         const query = event.target.value.toLowerCase();
@@ -413,7 +394,7 @@ function Dashboard() {
                             </div>
 
                             <div className="row dashboard-activity-row">
-                                {/* Recent Activity */}
+                                {/* Recent Activity - ✨ PHASE 53: Using new ActivityDisplay component */}
                                 <div className="col-lg-4 mb-4">
                                     <div className="dashboard-card">
                                         <div className="card-header bg-transparent border-0">
@@ -422,29 +403,7 @@ function Dashboard() {
                                                 Aktivitas Terbaru
                                             </h5>
                                         </div>
-                                            {recentActivity.length > 0 ? (
-                                                recentActivity.map((activity, index) => (
-                                                    <div key={index} className="activity-item">
-                                                        <div className="d-flex align-items-start">
-                                                            <div className={`activity-icon text-${activity.color}`}>
-                                                                <i className={`${activity.icon} text-white`}></i>
-                                                            </div>
-                                                            <div className="flex-grow-1">
-                                                                <p className="mb-1 fw-semibold">{activity.title}</p>
-                                                                <small className="text-muted">
-                                                                    {moment(activity.date).fromNow()}
-                                                                </small>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="text-center py-4">
-                                                    <i className="fas fa-clock text-muted mb-3" style={{fontSize: "2rem", opacity: 0.3}}></i>
-                                                    <p className="text-muted mb-0">Tidak ada aktivitas terbaru</p>
-                                                    <small className="text-muted">Aktivitas pembelajaran Anda akan muncul di sini</small>
-                                                </div>
-                                            )}
+                                        <ActivityDisplay maxDisplay={6} showViewAll={true} variant="compact" />
                                     </div>
                                 </div>
 

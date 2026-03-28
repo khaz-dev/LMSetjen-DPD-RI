@@ -3427,7 +3427,391 @@ class PointsAuditLog(models.Model):
         return f"{self.user.username} - {self.points} points ({self.get_category_display()})"
 
 
+# ==================== ACTIVITY LOG MODELS (PHASE 53) ====================
+
+class ActivityLog(models.Model):
+    """✨ PHASE 53: Centralized Activity Logging System
+    
+    Unified activity tracking for all student/instructor/admin actions.
+    Consolidates: VideoProgress, CompletedLesson, QuizAttempt, Certificate,
+    SearchLog, QuestionAnswer, ReviewPosted, PointsAwarded, etc.
+    
+    Benefits:
+    - Single dashboard query instead of N model queries
+    - Unified filtering, sorting, pagination
+    - Better analytics and reporting
+    - Easier to add new activity types
+    - Cleaner API response structure
+    """
+    
+    ACTIVITY_TYPE_CHOICES = [
+        ('enrollment', 'Pendaftaran Kursus'),
+        ('lesson_started', 'Mulai Pelajaran'),
+        ('lesson_completed', 'Selesaikan Pelajaran'),
+        ('video_watched', 'Tonton Video'),
+        ('video_completed', 'Video Selesai (95%+)'),
+        ('quiz_attempted', 'Kerjakan Kuis'),
+        ('quiz_passed', 'Lulus Kuis'),
+        ('quiz_failed', 'Tidak Lulus Kuis'),
+        ('certificate_earned', 'Raih Sertifikat'),
+        ('course_completed', 'Selesaikan Kursus'),
+        ('question_asked', 'Buat Pertanyaan'),
+        ('question_answered', 'Jawab Pertanyaan'),
+        ('review_posted', 'Posting Review'),
+        ('points_earned', 'Dapatkan Poin'),
+        ('search_query', 'Cari Kursus'),
+        ('content_liked', 'Sukai Konten'),
+        ('wishlist_added', 'Tambah Wishlist'),
+        ('discussion_participated', 'Ikut Diskusi'),
+    ]
+    
+    ROLE_CHOICES = [
+        ('student', 'Siswa'),
+        ('instructor', 'Pengajar'),
+        ('admin', 'Admin'),
+        ('system', 'Sistem'),
+    ]
+    
+    # Primary Fields
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    activity_type = models.CharField(max_length=30, choices=ACTIVITY_TYPE_CHOICES, db_index=True)
+    role_at_time = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
+    
+    # Content Context
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='activity_logs')
+    lesson = models.ForeignKey(VariantItem, on_delete=models.SET_NULL, null=True, blank=True, help_text="Lesson involved in activity")
+    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Activity Data
+    title = models.CharField(max_length=255, help_text="Human-readable activity title")
+    description = models.TextField(blank=True, help_text="Full description of activity")
+    
+    # Structured Data (JSON for flexibility)
+    metadata = models.JSONField(default=dict, blank=True, help_text="Activity-specific data")
+    
+    # Engagement Metrics
+    duration_seconds = models.IntegerField(null=True, blank=True, help_text="How long activity took")
+    points_awarded = models.IntegerField(default=0, help_text="Points awarded for this activity")
+    
+    # Status
+    success = models.BooleanField(default=True, help_text="Did activity succeed or fail")
+    is_verified = models.BooleanField(default=False, help_text="Has activity been verified")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    activity_date = models.DateTimeField(default=timezone.now, db_index=True, help_text="When activity occurred")
+    
+    # Relations
+    related_content_id = models.CharField(max_length=100, blank=True, help_text="ID of related content")
+    
+    class Meta:
+        db_table = 'api_activitylog'
+        indexes = [
+            models.Index(fields=['user', '-activity_date']),
+            models.Index(fields=['user', 'activity_type']),
+            models.Index(fields=['course', '-activity_date']),
+            models.Index(fields=['activity_type', '-activity_date']),
+            models.Index(fields=['-activity_date']),
+        ]
+        ordering = ['-activity_date']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.get_activity_type_display()} - {self.activity_date.strftime('%Y-%m-%d %H:%M')}"
+    
+    @property
+    def is_recent(self):
+        """Activity from today"""
+        return self.activity_date.date() == timezone.now().date()
+    
+    @property
+    def is_this_week(self):
+        """Activity from this week"""
+        return (timezone.now() - self.activity_date).days < 7
+    
+    @property
+    def activity_score(self):
+        """Engagement score (0-100) based on activity type"""
+        score_map = {
+            'course_completed': 100,
+            'quiz_passed': 80,
+            'lesson_completed': 70,
+            'video_completed': 60,
+            'question_answered': 50,
+            'quiz_attempted': 30,
+            'lesson_started': 20,
+            'search_query': 5,
+        }
+        return score_map.get(self.activity_type, 10)
+
+
+class ActivityFilter(models.Model):
+    """✨ PHASE 53: User preferences for activity filtering on Dashboard"""
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='activity_filter')
+    activity_types = models.JSONField(
+        default=list,
+        help_text="List of activity types to display"
+    )
+    include_system_activities = models.BooleanField(default=True)
+    include_failed_activities = models.BooleanField(default=False)
+    max_activities_display = models.IntegerField(default=10)
+    sort_by = models.CharField(
+        max_length=20,
+        choices=[('date', 'Terbaru'), ('engagement', 'Paling Engaging')],
+        default='date'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'api_activityfilter'
+    
+    def __str__(self):
+        return f"{self.user.username} - Activity Preferences"
+
+
+class ActivityAggregate(models.Model):
+    """✨ PHASE 53: Daily/monthly aggregates for analytics"""
+    
+    PERIOD_CHOICES = [
+        ('daily', 'Daily'),
+        ('monthly', 'Monthly'),
+    ]
+    
+    date = models.DateField(db_index=True)
+    period = models.CharField(max_length=10, choices=PERIOD_CHOICES, db_index=True)
+    
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    activity_type = models.CharField(max_length=30, choices=ActivityLog.ACTIVITY_TYPE_CHOICES)
+    
+    count = models.IntegerField(default=0)
+    total_points = models.IntegerField(default=0)
+    total_duration_seconds = models.IntegerField(default=0)
+    success_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'api_activityaggregate'
+        indexes = [
+            models.Index(fields=['date', 'period']),
+            models.Index(fields=['user', 'date']),
+            models.Index(fields=['course', 'date']),
+        ]
+        unique_together = ['date', 'period', 'user', 'course', 'activity_type']
+    
+    def __str__(self):
+        return f"{self.get_period_display()} {self.date} - {self.activity_type}"
+
+
 # Connect the signals
 post_save.connect(sync_teacher_with_profile, sender=Teacher)
 post_save.connect(track_course_click, sender=SearchLog)
 post_save.connect(update_search_taxonomy, sender=SearchLog)
+
+
+# ==================== ACTIVITY LOG SIGNAL HANDLERS ====================
+
+def log_course_enrollment(sender, instance, created, **kwargs):
+    """
+    ✨ PHASE 53: Auto-create ActivityLog when student enrolls in a course.
+    Called when EnrolledCourse is created.
+    """
+    if created and instance.user and instance.course:
+        try:
+            ActivityLog.objects.create(
+                user=instance.user,
+                activity_type='enrollment',
+                role_at_time='student',
+                course=instance.course,
+                title=f"Mendaftar di {instance.course.title}",
+                description=f"Siswa {instance.user.full_name} mendaftar di kursus {instance.course.title}",
+                activity_date=instance.date,
+                success=True,
+                metadata={
+                    'course_title': instance.course.title,
+                    'teacher': instance.course.teacher.full_name if instance.course.teacher else 'Unknown',
+                    'enrollment_id': instance.enrollment_id,
+                }
+            )
+            print(f"[ActivityLog] Created enrollment log for {instance.user.username} on {instance.course.title}")
+        except Exception as e:
+            print(f"[ActivityLog] FAILED to create enrollment log: {str(e)}")
+
+
+def log_lesson_completion(sender, instance, created, **kwargs):
+    """
+    ✨ PHASE 53: Auto-create ActivityLog when student completes a lesson.
+    Called when CompletedLesson is created.
+    """
+    if created and instance.user and instance.variant_item:
+        try:
+            # Check if ActivityLog already exists for this completion to avoid duplicates
+            existing = ActivityLog.objects.filter(
+                user=instance.user,
+                activity_type='lesson_completed',
+                lesson=instance.variant_item,
+                activity_date__date=instance.date.date()
+            ).exists()
+            
+            if existing:
+                print(f"[ActivityLog] Duplicate detected, skipping for {instance.user.username} on {instance.variant_item.title}")
+                return
+            
+            ActivityLog.objects.create(
+                user=instance.user,
+                activity_type='lesson_completed',
+                role_at_time='student',
+                course=instance.course,
+                lesson=instance.variant_item,
+                title=f"Selesaikan Pelajaran: {instance.variant_item.title}",
+                description=f"Siswa {instance.user.full_name} menyelesaikan pelajaran {instance.variant_item.title} dalam kursus {instance.course.title}",
+                activity_date=instance.date,
+                success=True,
+                points_awarded=10,  # 10 points for lesson completion
+                metadata={
+                    'course_title': instance.course.title,
+                    'lesson_title': instance.variant_item.title,
+                    'lesson_duration': str(instance.variant_item.duration) if instance.variant_item.duration else 'Unknown',
+                }
+            )
+            print(f"[ActivityLog] Created lesson_completed log for {instance.user.username} on {instance.variant_item.title}")
+        except Exception as e:
+            print(f"[ActivityLog] FAILED to create lesson_completed log: {str(e)}")
+
+
+def log_quiz_attempt(sender, instance, created, **kwargs):
+    """
+    ✨ PHASE 53: Auto-create ActivityLog when student completes a quiz.
+    Called when QuizAttempt is created.
+    """
+    if created and instance.user and instance.quiz:
+        try:
+            # Determine activity type based on whether quiz was passed
+            activity_type = 'quiz_passed' if instance.is_passed else 'quiz_failed'
+            points = int(instance.score) if instance.is_passed else 0  # Award points only if passed
+            
+            ActivityLog.objects.create(
+                user=instance.user,
+                activity_type=activity_type,
+                role_at_time='student',
+                course=instance.quiz.course,
+                quiz=instance.quiz,
+                title=f"{'Lulus' if instance.is_passed else 'Tidak Lulus'} Kuis: {instance.quiz.title}",
+                description=f"Siswa {instance.user.full_name} mengerjakan kuis {instance.quiz.title} dengan skor {instance.score}% - {'LULUS' if instance.is_passed else 'TIDAK LULUS'}",
+                activity_date=instance.date_attempted,
+                success=instance.is_passed,
+                points_awarded=points,
+                duration_seconds=int(instance.time_taken.total_seconds()) if instance.time_taken else 0,
+                metadata={
+                    'quiz_title': instance.quiz.title,
+                    'course_title': instance.quiz.course.title,
+                    'score': instance.score,
+                    'correct_answers': instance.correct_answers,
+                    'total_questions': instance.total_questions,
+                    'is_passed': instance.is_passed,
+                }
+            )
+            print(f"[ActivityLog] Created {activity_type} log for {instance.user.username} on {instance.quiz.title} (Score: {instance.score}%)")
+        except Exception as e:
+            print(f"[ActivityLog] FAILED to create quiz_attempt log: {str(e)}")
+
+
+def log_certificate_earned(sender, instance, created, **kwargs):
+    """
+    ✨ PHASE 53: Auto-create ActivityLog when student earns a certificate.
+    Called when Certificate is created.
+    """
+    if created and instance.user and instance.course:
+        try:
+            ActivityLog.objects.create(
+                user=instance.user,
+                activity_type='certificate_earned',
+                role_at_time='student',
+                course=instance.course,
+                title=f"Raih Sertifikat: {instance.course.title}",
+                description=f"Siswa {instance.user.full_name} meraih sertifikat untuk kursus {instance.course.title}",
+                activity_date=instance.date,
+                success=True,
+                points_awarded=100,  # 100 points for certificate
+                metadata={
+                    'course_title': instance.course.title,
+                    'certificate_id': instance.certificate_id,
+                    'certificate_code': instance.get_formatted_certificate_id(),
+                }
+            )
+            print(f"[ActivityLog] Created certificate_earned log for {instance.user.username} on {instance.course.title}")
+        except Exception as e:
+            print(f"[ActivityLog] FAILED to create certificate_earned log: {str(e)}")
+
+
+def log_question_asked(sender, instance, created, **kwargs):
+    """
+    ✨ PHASE 53: Auto-create ActivityLog when student posts a Q&A question.
+    Called when Question_Answer is created.
+    """
+    if created and instance.user and instance.course:
+        try:
+            ActivityLog.objects.create(
+                user=instance.user,
+                activity_type='question_asked',
+                role_at_time='student',
+                course=instance.course,
+                lesson=instance.variant_item,
+                title=f"Membuat Pertanyaan: {instance.title[:50]}",
+                description=f"Siswa {instance.user.full_name} membuat pertanyaan di kursus {instance.course.title}",
+                activity_date=instance.date,
+                success=True,
+                metadata={
+                    'course_title': instance.course.title,
+                    'question_title': instance.title,
+                    'qa_id': instance.qa_id,
+                    'lesson_title': instance.variant_item.title if instance.variant_item else 'Tidak ada',
+                }
+            )
+            print(f"[ActivityLog] Created question_asked log for {instance.user.username}")
+        except Exception as e:
+            print(f"[ActivityLog] FAILED to create question_asked log: {str(e)}")
+
+
+def log_review_posted(sender, instance, created, **kwargs):
+    """
+    ✨ PHASE 53: Auto-create ActivityLog when user posts a review/rating.
+    Called when Review is created.
+    """
+    if created and instance.user:
+        try:
+            course_title = instance.course.title if instance.course else 'Rekomendasi Umum'
+            activity_type = 'review_posted'
+            
+            ActivityLog.objects.create(
+                user=instance.user,
+                activity_type=activity_type,
+                role_at_time=instance.role if hasattr(instance, 'role') else 'student',
+                course=instance.course,
+                title=f"Posting Review: {course_title}",
+                description=f"{instance.user.full_name} memberi rating {instance.rating}/5 untuk {course_title}",
+                activity_date=instance.date,
+                success=True,
+                metadata={
+                    'course_title': course_title,
+                    'rating': instance.rating,
+                    'role': instance.role if hasattr(instance, 'role') else 'student',
+                    'review_excerpt': instance.review[:100] if instance.review else '',
+                }
+            )
+            print(f"[ActivityLog] Created review_posted log for {instance.user.username}")
+        except Exception as e:
+            print(f"[ActivityLog] FAILED to create review_posted log: {str(e)}")
+
+
+# Register signal handlers for ActivityLog auto-creation
+post_save.connect(log_course_enrollment, sender=EnrolledCourse)
+post_save.connect(log_lesson_completion, sender=CompletedLesson)
+post_save.connect(log_quiz_attempt, sender=QuizAttempt)
+post_save.connect(log_certificate_earned, sender=Certificate)
+post_save.connect(log_question_asked, sender=Question_Answer)
+post_save.connect(log_review_posted, sender=Review)

@@ -1,0 +1,141 @@
+/* ✨ PHASE 53: Activity Display Styles */
+
+.activity-display {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ✨ PHASE 54: Compact variant for dashboard card */
+.activity-display.compact {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Custom scrollbar for compact variant */
+.activity-display.compact::-webkit-scrollbar {
+    width: 6px;
+}
+
+.activity-display.compact::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.activity-display.compact::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.activity-display.compact::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+/* Truncate text to single line with ellipsis */
+.activity-truncate-line {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}
+
+.activity-filter-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.activity-filters {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.activities-list {
+    min-height: 200px;
+}
+
+.activity-item {
+    animation: fadeIn 0.3s ease;
+    transition: all 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.activity-item:hover {
+    transform: translateX(2px);
+}
+
+/* Row 1 styling - Icon | Type | Badge */
+.activity-item > div:first-child {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Row 2 styling - Content with full width */
+.activity-item > div:last-child {
+    padding-top: 0.5rem;
+}
+
+.activity-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.activity-display.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+    color: #6c757d;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .activity-display {
+        padding: 1rem;
+    }
+
+    .activity-filters {
+        flex-direction: column;
+    }
+
+    .activity-filters > div {
+        width: 100% !important;
+    }
+
+    .activity-pagination {
+        flex-direction: column;
+    }
+
+    .activity-pagination > div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

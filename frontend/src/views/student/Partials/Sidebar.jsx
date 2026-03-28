@@ -140,6 +140,17 @@ function Sidebar() {
                                 </div>
                                 <span className="nav-text">Sertifikat Kursus</span>
                             </Link>
+                            
+                            <Link 
+                                className={`modern-nav-link ${isActive("/student/activities") ? "active" : ""}`} 
+                                to="/student/activities/"
+                                data-tooltip="Riwayat Aktivitas"
+                            >
+                                <div className="nav-icon">
+                                    <i className="fas fa-history"></i>
+                                </div>
+                                <span className="nav-text">Riwayat Aktivitas</span>
+                            </Link>
                         </div>
 
                         <div className="sidebar-divider"></div>

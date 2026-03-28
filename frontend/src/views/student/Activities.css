@@ -1,0 +1,587 @@
+/* ✨ PHASE 53: Activities Page Styling */
+
+.activities-page {
+    min-height: 100vh;
+    background: transparent;
+    padding: var(--page-top-spacing) 0;
+    padding-top: var(--page-top-spacing) !important;
+    padding-bottom: var(--page-bottom-spacing) !important;
+    margin-top: 0 !important;
+    margin-bottom: 8rem;
+    overflow-x: hidden;
+}
+
+/* Page Header - Matches SertifikatKursus Card Design */
+.page-header {
+    background: var(--theme-gradient) !important;
+    border-radius: 20px !important;
+    color: white !important;
+    padding: 1.5rem 1rem !important;
+    margin-bottom: 1.5rem !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 15px 35px var(--theme-shadow-color) !important;
+}
+
+.page-header::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    right: -20% !important;
+    width: 40% !important;
+    height: 200% !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: rotate(15deg) !important;
+    z-index: 1 !important;
+}
+
+.page-header h2 {
+    color: white !important;
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.page-header p {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9) !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* Filter Card - Standardized with Dashboard card styling */
+.filter-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    border: none;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+.filter-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.filter-header {
+    background: var(--theme-gradient);
+    color: white;
+    padding: 1rem 1.5rem;
+}
+
+.filter-header h5 {
+    color: white;
+    margin: 0;
+}
+
+.filter-controls {
+    animation: slideDown 0.3s ease;
+}
+
+.filter-card .form-label {
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.filter-card .form-select {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.filter-card .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.filter-card .btn-outline-danger {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.filter-card .btn-outline-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+}
+
+/* Page Size Selector */
+.page-size-selector {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+    border: none;
+}
+
+.page-size-selector .form-select-sm {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 0.35rem 2.5rem 0.35rem 0.75rem;
+    /* ✨ PHASE 54: Increased right padding to prevent text overlap with chevron icon */
+    background-position: right 0.5rem center;
+}
+
+/* Activities Container - Standardized with Dashboard card styling */
+.activities-container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    border: none;
+    padding: 1.5rem;
+    min-height: 200px;
+    transition: all 0.3s ease;
+}
+
+.activities-container:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.activities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Activity Card - Standardized padding and proportions */
+.activity-card {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: none;
+    border-radius: 12px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.3s ease;
+}
+
+.activity-card:hover {
+    background: #f0f2f5;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    transform: translateX(4px);
+}
+
+.activity-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    animation: slideDown 0.3s ease;
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.activity-type {
+    color: #2c3e50;
+    margin: 0;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.activity-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.activity-meta .badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+    white-space: nowrap;
+}
+
+.activity-title {
+    color: #495057;
+    margin: 0.25rem 0 0.75rem;
+    font-weight: 500;
+}
+
+.activity-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 0 0 0.75rem;
+    word-break: break-word;
+}
+
+.activity-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.85rem;
+}
+
+.detail-item {
+    color: #6c757d;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+.detail-item i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Pagination */
+.pagination-controls {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    border: none;
+    margin-top: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.pagination-controls:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.pagination-controls .btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.pagination-controls .btn:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.pagination-controls .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Loading State */
+.spinner-border {
+    border-width: 3px;
+}
+
+.spinner-border-sm {
+    border-width: 2px;
+}
+
+/* Empty State */
+.text-center .fa-inbox {
+    display: block;
+    margin-bottom: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .page-header {
+        padding: 1.5rem;
+    }
+
+    .page-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .filter-controls {
+        grid-template-columns: 1fr !important;
+        padding: 1rem;
+    }
+
+    .activity-card {
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .activity-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .activity-type {
+        font-size: 0.95rem;
+    }
+
+    .activity-details {
+        gap: 0.75rem;
+    }
+
+    .detail-item {
+        font-size: 0.8rem;
+    }
+
+    .pagination-controls {
+        gap: 0.25rem !important;
+    }
+
+    .pagination-controls .btn {
+        padding: 0.375rem 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    .page-size-selector {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .page-size-selector > div {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .activities-page {
+        padding: 1rem 0;
+    }
+
+    .page-header {
+        padding: 1rem;
+    }
+
+    .page-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .activity-card {
+        padding: 0.75rem;
+        flex-direction: column;
+    }
+
+    .activity-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+    }
+
+    .activity-details {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .pagination-controls .btn {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .filter-card {
+        border-radius: 6px;
+    }
+
+    .activities-container {
+        padding: 1rem;
+    }
+}
+
+/* ✨ ROW/COLUMN CONTAINER STYLING - CRITICAL FOR CONSISTENT LAYOUT */
+/* Matches pattern from Dashboard, Courses, SertifikatKursus, Profile, Wishlist pages */
+
+/* Main layout row - flexbox container for sidebar + content */
+.activities-page > .container > .row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    gap: 0 !important;
+}
+
+/* Main layout columns - sidebar and content areas */
+.activities-page > .container > .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header row with Sidebar and Header component */
+.activities-page > .container > .row.mt-0 {
+    width: 100% !important;
+}
+
+/* Exception: Allow student-header-row to use its own negative margins for edge-to-edge expansion */
+.activities-page .row.student-header-row {
+    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+}
+
+/* Responsive: Large screens (lg) */
+@media (min-width: 992px) {
+    .activities-page .row:has(.student-sidebar-column) > .col-lg-9 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Inner rows inside col-lg-9: Add negative margins for edge-to-edge content if needed */
+    .activities-page .row:has(.student-sidebar-column) > .col-lg-9 > .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* Responsive: Medium screens (md) */
+@media (max-width: 991.98px) {
+    .activities-page .col-md-8 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+
+/* Responsive: Small screens (sm) */
+@media (max-width: 767.98px) {
+    .activities-page .col-12 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        /* ✨ PHASE 54: Remove column padding to align content with sidebar on small screens */
+    }
+}
+@media (max-width: 767.98px) {
+    .activities-page {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .activities-page > .container > .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .page-header {
+        padding: 1.25rem 0.75rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .page-header h2 {
+        font-size: 1.5rem !important;
+    }
+
+    .filter-card {
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .page-size-selector {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .activities-container {
+        border-radius: 12px;
+    }
+}
+
+/* Sidebar Collapse Adaptation */
+.sidebar-collapsed-adapted {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+}
+
+/* Responsive adjustments for sidebar collapsed */
+@media (max-width: 991px) {
+    .activities-page .col-md-8.sidebar-collapsed-adapted {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .activities-page .col-12.sidebar-collapsed-adapted {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+}
+
+/* Badge Styles */
+.badge-success {
+    background-color: #28a745;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+.text-info {
+    color: #17a2b8 !important;
+}
+
+/* Button Enhancements */
+.btn-primary:hover {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.btn-outline-primary {
+    color: #667eea;
+    border-color: #667eea;
+}
+
+.btn-outline-primary:hover {
+    background-color: #667eea;
+    border-color: #667eea;
+    color: white;
+}
+
+/* Tab-like appearance for pagination */
+.pagination-controls .btn.btn-primary {
+    background-color: #667eea;
+    border-color: #667eea;
+}

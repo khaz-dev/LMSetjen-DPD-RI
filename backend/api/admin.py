@@ -418,3 +418,129 @@ admin.site.register(models.StudentPoints, StudentPointsAdmin)
 admin.site.register(models.InstructorPoints, InstructorPointsAdmin)
 admin.site.register(models.PointsAuditLog, PointsAuditLogAdmin)
 admin.site.register(models.ReviewAbuse, ReviewAbuseAdmin)
+
+
+# ==================== PHASE 53: ACTIVITY LOG ADMIN ====================
+
+class ActivityLogAdmin(admin.ModelAdmin):
+    """Admin interface for ActivityLog - centralized activity tracking"""
+    list_display = (
+        'user_name', 'activity_type_display', 'course_title', 
+        'points_awarded', 'success', 'activity_date'
+    )
+    list_filter = ('activity_type', 'role_at_time', 'success', 'activity_date', 'course')
+    search_fields = ('user__full_name', 'user__email', 'course__title', 'title')
+    readonly_fields = ('id', 'user', 'created_at', 'updated_at', 'activity_score')
+    
+    fieldsets = (
+        ('Activity Information', {
+            'fields': ('user', 'activity_type', 'role_at_time', 'title', 'description')
+        }),
+        ('Related Content', {
+            'fields': ('course', 'lesson', 'quiz', 'related_content_id')
+        }),
+        ('Metrics', {
+            'fields': ('duration_seconds', 'points_awarded', 'activity_score')
+        }),
+        ('Status', {
+            'fields': ('success', 'is_verified', 'metadata')
+        }),
+        ('Timestamps', {
+            'fields': ('activity_date', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    ordering = ('-activity_date',)
+    date_hierarchy = 'activity_date'
+    
+    def user_name(self, obj):
+        return obj.user.full_name if obj.user else '-'
+    user_name.short_description = 'User'
+    
+    def activity_type_display(self, obj):
+        return obj.get_activity_type_display()
+    activity_type_display.short_description = 'Activity Type'
+    
+    def course_title(self, obj):
+        return obj.course.title if obj.course else '-'
+    course_title.short_description = 'Course'
+
+
+class ActivityFilterAdmin(admin.ModelAdmin):
+    """Admin interface for ActivityFilter - user activity preferences"""
+    list_display = ('user_full_name', 'sort_by', 'max_activities_display', 'updated_at')
+    list_filter = ('sort_by', 'include_system_activities', 'include_failed_activities', 'updated_at')
+    search_fields = ('user__full_name', 'user__email')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        ('User', {
+            'fields': ('user',)
+        }),
+        ('Activity Type Preferences', {
+            'fields': ('activity_types', 'include_system_activities', 'include_failed_activities')
+        }),
+        ('Display Preferences', {
+            'fields': ('max_activities_display', 'sort_by')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    ordering = ('-updated_at',)
+    
+    def user_full_name(self, obj):
+        return obj.user.full_name if obj.user else '-'
+    user_full_name.short_description = 'User'
+
+
+class ActivityAggregateAdmin(admin.ModelAdmin):
+    """Admin interface for ActivityAggregate - daily/monthly analytics"""
+    list_display = (
+        'date', 'period', 'user_name', 'course_title', 
+        'activity_type_display', 'count', 'total_points',
+        'success_rate'
+    )
+    list_filter = ('period', 'activity_type', 'date', 'course')
+    search_fields = ('user__full_name', 'course__title')
+    readonly_fields = ('updated_at',)
+    
+    fieldsets = (
+        ('Period Information', {
+            'fields': ('date', 'period')
+        }),
+        ('Scope', {
+            'fields': ('user', 'course')
+        }),
+        ('Activity Data', {
+            'fields': ('activity_type', 'count', 'total_points', 'total_duration_seconds', 'success_rate')
+        }),
+        ('Metadata', {
+            'fields': ('updated_at',),
+            'classes': ('collapse',)
+        })
+    )
+    
+    ordering = ('-date',)
+    date_hierarchy = 'date'
+    
+    def user_name(self, obj):
+        return obj.user.full_name if obj.user else 'All Users'
+    user_name.short_description = 'User'
+    
+    def course_title(self, obj):
+        return obj.course.title if obj.course else 'All Courses'
+    course_title.short_description = 'Course'
+    
+    def activity_type_display(self, obj):
+        return obj.get_activity_type_display()
+    activity_type_display.short_description = 'Activity Type'
+
+
+admin.site.register(models.ActivityLog, ActivityLogAdmin)
+admin.site.register(models.ActivityFilter, ActivityFilterAdmin)
+admin.site.register(models.ActivityAggregate, ActivityAggregateAdmin)
+

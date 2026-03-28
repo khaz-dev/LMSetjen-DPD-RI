@@ -794,6 +794,8 @@ class VideoProgressSerializer(serializers.ModelSerializer):
     is_in_progress = serializers.ReadOnlyField()
     formatted_position = serializers.ReadOnlyField()
     formatted_duration = serializers.ReadOnlyField()
+    # ✨ PHASE 52: Include variant_item details for activity tracking (show video title)
+    variant_item = VariantItemSerializer(read_only=True)
     
     class Meta:
         fields = '__all__'
@@ -965,6 +967,8 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
     review = ReviewSerializer(many=False, read_only=True)
     quiz_results = serializers.SerializerMethodField()
     qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.18: QA count - kept for forum stats
+    # ✨ PHASE 52: Add certificate data for activity tracking (Quiz, Video, Certificate activities)
+    certificate = serializers.SerializerMethodField()
 
 
     class Meta:
@@ -1199,6 +1203,32 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
             context=self.context
         )
         return serializer.data
+
+    def get_certificate(self, obj):
+        """✨ PHASE 52: Return certificate data for activity tracking (Quiz, Video, Certificate activities)
+        
+        Retrieves the certificate for this enrollment if it exists.
+        Used by Dashboard to show "Certificate Earned" activity.
+        """
+        try:
+            certificate = api_models.Certificate.objects.filter(
+                course=obj.course,
+                user=obj.user
+            ).first()
+            
+            if certificate:
+                return {
+                    'id': certificate.id,
+                    'certificate_id': certificate.certificate_id,
+                    'created_at': certificate.created_at,
+                    'date': certificate.date,
+                    'is_valid': certificate.is_valid
+                }
+            return None
+        except api_models.Certificate.DoesNotExist:
+            return None
+        except Exception as e:
+            return None
 
     def __init__(self, *args, **kwargs):
         super(EnrolledCourseSerializer, self).__init__(*args, **kwargs)
@@ -3358,3 +3388,106 @@ class RankedInstructorSerializer(serializers.Serializer):
             'yearly_points', 'monthly_points', 'rank', 'rank_position'
         ]
 
+
+# ==================== PHASE 53: ACTIVITY LOG SERIALIZERS ====================
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    """✨ PHASE 53: Serializer for ActivityLog with related object details"""
+    activity_type_display = serializers.CharField(source='get_activity_type_display', read_only=True)
+    role_display = serializers.CharField(source='get_role_at_time_display', read_only=True)
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    course_title = serializers.CharField(source='course.title', read_only=True, allow_null=True)
+    lesson_title = serializers.CharField(source='lesson.title', read_only=True, allow_null=True)
+    quiz_title = serializers.CharField(source='quiz.title', read_only=True, allow_null=True)
+    
+    class Meta:
+        model = api_models.ActivityLog
+        fields = [
+            'id', 'user', 'user_name', 'activity_type', 'activity_type_display',
+            'role_at_time', 'role_display', 'course', 'course_title',
+            'lesson', 'lesson_title', 'quiz', 'quiz_title',
+            'title', 'description', 'metadata', 'duration_seconds',
+            'points_awarded', 'success', 'is_verified', 'activity_score',
+            'created_at', 'updated_at', 'activity_date', 'related_content_id'
+        ]
+        read_only_fields = [
+            'id', 'user_name', 'course_title', 'lesson_title', 'quiz_title',
+            'activity_type_display', 'role_display', 'activity_score',
+            'created_at', 'updated_at'
+        ]
+
+
+class ActivityLogListSerializer(serializers.ModelSerializer):
+    """✨ PHASE 53: Lightweight serializer for activity list views (Dashboard)"""
+    activity_type_display = serializers.CharField(source='get_activity_type_display', read_only=True)
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    course_title = serializers.CharField(source='course.title', read_only=True, allow_null=True)
+    
+    class Meta:
+        model = api_models.ActivityLog
+        fields = [
+            'id', 'user', 'user_name', 'activity_type', 'activity_type_display',
+            'title', 'description', 'course', 'course_title',
+            'points_awarded', 'success', 'activity_score',
+            'activity_date', 'created_at'
+        ]
+
+
+class ActivityFilterSerializer(serializers.ModelSerializer):
+    """✨ PHASE 53: Serializer for ActivityFilter user preferences"""
+    
+    class Meta:
+        model = api_models.ActivityFilter
+        fields = [
+            'id', 'user', 'activity_types', 'include_system_activities',
+            'include_failed_activities', 'max_activities_display',
+            'sort_by', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+
+
+class ActivityAggregateSerializer(serializers.ModelSerializer):
+    """✨ PHASE 53: Serializer for ActivityAggregate analytics data"""
+    activity_type_display = serializers.CharField(source='get_activity_type_display', read_only=True)
+    
+    class Meta:
+        model = api_models.ActivityAggregate
+        fields = [
+            'id', 'date', 'period', 'user', 'course',
+            'activity_type', 'activity_type_display', 'count', 'total_points',
+            'total_duration_seconds', 'success_rate', 'updated_at'
+        ]
+        read_only_fields = ['id', 'updated_at']
+
+
+class ActivityStatsSerializer(serializers.Serializer):
+    """✨ PHASE 53: Serializer for user activity statistics"""
+    total_activities = serializers.IntegerField()
+    activities_this_week = serializers.IntegerField()
+    activities_this_month = serializers.IntegerField()
+    points_earned = serializers.IntegerField()
+    most_active_course = serializers.SerializerMethodField()
+    top_activity_types = serializers.ListField(child=serializers.DictField())
+    recent_activities = ActivityLogListSerializer(many=True, read_only=True)
+    
+    def get_most_active_course(self, obj):
+        """Get the course with most activity"""
+        if obj.get('most_active_course'):
+            course = obj['most_active_course']
+            return {
+                'id': course.id,
+                'title': course.title,
+                'activity_count': obj.get('course_activity_count', 0)
+            }
+        return None
+
+
+class InstructorActivityStatsSerializer(serializers.Serializer):
+    """✨ PHASE 53: Serializer for instructor dashboard activity metrics"""
+    total_student_activities = serializers.IntegerField()
+    activities_this_week = serializers.IntegerField()
+    avg_engagement_score = serializers.FloatField()
+    students_active_today = serializers.IntegerField()
+    completion_rate = serializers.FloatField()
+    course_activity_breakdown = serializers.ListField(child=serializers.DictField())
+    recent_student_activities = ActivityLogListSerializer(many=True, read_only=True)
