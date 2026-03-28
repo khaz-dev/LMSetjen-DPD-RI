@@ -2,18 +2,18 @@ import React, { useState, useEffect } from 'react';
 import useAxios from '../../utils/useAxios';
 import UserData from '../../views/plugin/UserData';
 import { moment } from '../../utils/dayjs';
-import './ActivityDisplay.css';
+import './InstructorActivityDisplay.css';
 
 /**
- * ✨ PHASE 53: ActivityDisplay Component
- * Shows user's recent activities from API with filtering and pagination
- * Replaces manual activity aggregation on Dashboard
+ * ✨ PHASE 63: InstructorActivityDisplay Component (Refactored)
+ * Shows student and instructor activities from API with filtering and pagination
+ * All inline styles moved to CSS for better maintainability
  * 
  * @param {number} maxDisplay - Maximum number of activities to display per page (default: 6)
  * @param {boolean} showViewAll - Whether to show "View All" button (default: true)
  * @param {string} variant - Display variant: "compact" for dashboard (truncated), "full" for full page (default: "compact")
  */
-function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compact" }) {
+function InstructorActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compact" }) {
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState({
@@ -25,24 +25,38 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
     const [showFilters, setShowFilters] = useState(false);
 
     // Activity type options with icons and colors
+    // ✨ PHASE 53+: Now includes both student activities (18 types) and instructor teaching activities (10 types)
     const activityTypes = [
-        { value: 'enrollment', label: 'Pendaftaran', icon: 'fa-user-graduate', color: 'success' },
-        { value: 'lesson_started', label: 'Mulai Pelajaran', icon: 'fa-book-open', color: 'info' },
-        { value: 'lesson_completed', label: 'Selesaikan Pelajaran', icon: 'fa-check-circle', color: 'primary' },
-        { value: 'video_watched', label: 'Tonton Video', icon: 'fa-play-circle', color: 'warning' },
-        { value: 'video_completed', label: 'Video Selesai', icon: 'fa-video', color: 'info' },
-        { value: 'quiz_attempted', label: 'Kerjakan Kuis', icon: 'fa-clipboard-list', color: 'secondary' },
-        { value: 'quiz_passed', label: 'Lulus Kuis', icon: 'fa-star', color: 'success' },
-        { value: 'quiz_failed', label: 'Gagal Kuis', icon: 'fa-times-circle', color: 'danger' },
-        { value: 'certificate_earned', label: 'Raih Sertifikat', icon: 'fa-award', color: 'danger' },
-        { value: 'course_completed', label: 'Selesaikan Kursus', icon: 'fa-trophy', color: 'warning' },
-        { value: 'question_asked', label: 'Buat Pertanyaan', icon: 'fa-question-circle', color: 'secondary' },
-        { value: 'question_answered', label: 'Jawab Pertanyaan', icon: 'fa-comments', color: 'info' },
-        { value: 'review_posted', label: 'Posting Review', icon: 'fa-comment-dots', color: 'primary' },
-        { value: 'points_earned', label: 'Dapatkan Poin', icon: 'fa-coins', color: 'warning' },
-        { value: 'search_query', label: 'Cari Kursus', icon: 'fa-search', color: 'secondary' },
-        { value: 'content_liked', label: 'Sukai Konten', icon: 'fa-heart', color: 'danger' },
-        { value: 'wishlist_added', label: 'Tambah Wishlist', icon: 'fa-bookmark', color: 'primary' },
+        // ✨ PHASE 53+: Student Learning Activities
+        { value: 'enrollment', label: 'Pendaftaran', icon: 'fa-user-graduate', color: 'success', category: 'siswa' },
+        { value: 'lesson_started', label: 'Mulai Pelajaran', icon: 'fa-book-open', color: 'info', category: 'siswa' },
+        { value: 'lesson_completed', label: 'Selesaikan Pelajaran', icon: 'fa-check-circle', color: 'primary', category: 'siswa' },
+        { value: 'video_watched', label: 'Tonton Video', icon: 'fa-play-circle', color: 'warning', category: 'siswa' },
+        { value: 'video_completed', label: 'Video Selesai', icon: 'fa-video', color: 'info', category: 'siswa' },
+        { value: 'quiz_attempted', label: 'Kerjakan Kuis', icon: 'fa-clipboard-list', color: 'secondary', category: 'siswa' },
+        { value: 'quiz_passed', label: 'Lulus Kuis', icon: 'fa-star', color: 'success', category: 'siswa' },
+        { value: 'quiz_failed', label: 'Gagal Kuis', icon: 'fa-times-circle', color: 'danger', category: 'siswa' },
+        { value: 'certificate_earned', label: 'Raih Sertifikat', icon: 'fa-award', color: 'danger', category: 'siswa' },
+        { value: 'course_completed', label: 'Selesaikan Kursus', icon: 'fa-trophy', color: 'warning', category: 'siswa' },
+        { value: 'question_asked', label: 'Buat Pertanyaan', icon: 'fa-question-circle', color: 'secondary', category: 'siswa' },
+        { value: 'question_answered', label: 'Jawab Pertanyaan', icon: 'fa-comments', color: 'info', category: 'siswa' },
+        { value: 'review_posted', label: 'Posting Review', icon: 'fa-comment-dots', color: 'primary', category: 'siswa' },
+        { value: 'points_earned', label: 'Dapatkan Poin', icon: 'fa-coins', color: 'warning', category: 'siswa' },
+        { value: 'search_query', label: 'Cari Kursus', icon: 'fa-search', color: 'secondary', category: 'siswa' },
+        { value: 'content_liked', label: 'Sukai Konten', icon: 'fa-heart', color: 'danger', category: 'siswa' },
+        { value: 'wishlist_added', label: 'Tambah Wishlist', icon: 'fa-bookmark', color: 'primary', category: 'siswa' },
+        { value: 'discussion_participated', label: 'Ikut Diskusi', icon: 'fa-comments-dollar', color: 'secondary', category: 'siswa' },
+        // ✨ PHASE 53+: Instructor Teaching Activities (NEW!)
+        { value: 'course_created', label: 'Buat Kursus', icon: 'fa-plus-circle', color: 'success', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'course_updated', label: 'Update Kursus', icon: 'fa-edit', color: 'info', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'course_published', label: 'Publikasikan Kursus', icon: 'fa-rocket', color: 'primary', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'lesson_created', label: 'Tambah Pelajaran', icon: 'fa-file-plus', color: 'success', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'lesson_updated', label: 'Update Pelajaran', icon: 'fa-pen-square', color: 'info', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'quiz_created', label: 'Buat Kuis', icon: 'fa-question', color: 'success', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'student_enrolled_manual', label: 'Daftar Siswa', icon: 'fa-user-plus', color: 'success', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'student_unenrolled', label: 'Hapus Siswa', icon: 'fa-user-minus', color: 'danger', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'announcement_posted', label: 'Posting Pengumuman', icon: 'fa-bullhorn', color: 'warning', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'grade_recorded', label: 'Berikan Nilai', icon: 'fa-check-double', color: 'primary', category: 'pengajar', badge: 'Mengajar' },
     ];
 
     // Fetch activities from API
@@ -62,7 +76,7 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
                 params.append('offset', (page - 1) * maxDisplay);
                 
                 const response = await useAxios.get(
-                    `student/activities/?${params.toString()}`
+                    `instructor/activities/?${params.toString()}`
                 );
                 
                 if (response.data) {
@@ -71,6 +85,7 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
                 }
             } catch (error) {
                 // Silently handle fetch errors
+                console.error('Error fetching instructor activities:', error);
             } finally {
                 setLoading(false);
             }
@@ -89,7 +104,7 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
             ...prev,
             [field]: value
         }));
-        setPage(1); // Reset to first page when filtering
+        setPage(1);
     };
 
     const clearFilters = () => {
@@ -105,7 +120,7 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
                 <div className="spinner-border spinner-sm text-primary" role="status">
                     <span className="visually-hidden">Memuat...</span>
                 </div>
-                <span className="ms-2">Memuat aktivitas Anda...</span>
+                <span className="ms-2">Memuat aktivitas siswa Anda...</span>
             </div>
         );
     }
@@ -123,17 +138,11 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
                 </button>
             </div>
 
+            {/* Filter Inputs */}
             {showFilters && (
-                <div className="activity-filters mb-3" style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    flexWrap: 'wrap',
-                    padding: '1rem',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '8px'
-                }}>
+                <div className="activity-filters">
                     {/* Activity Type Filter */}
-                    <div style={{ flex: '1 1 250px' }}>
+                    <div className="activity-filter-input">
                         <label className="form-label small fw-bold">Tipe Aktivitas</label>
                         <select
                             className="form-select form-select-sm"
@@ -150,7 +159,7 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
                     </div>
 
                     {/* Success Filter */}
-                    <div style={{ flex: '1 1 150px' }}>
+                    <div className="activity-filter-status">
                         <label className="form-label small fw-bold">Status</label>
                         <select
                             className="form-select form-select-sm"
@@ -165,7 +174,7 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
 
                     {/* Clear Filters */}
                     {hasActiveFilters && (
-                        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'flex-end' }}>
+                        <div className="activity-filter-clear">
                             <button
                                 className="btn btn-sm btn-danger"
                                 onClick={clearFilters}
@@ -184,61 +193,39 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
                     activities.map((activity) => {
                         const actType = getActivityIcon(activity.activity_type);
                         return (
-                            <div key={activity.id} className="activity-item" style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                padding: '1rem',
-                                borderLeft: `4px solid var(--bs-${actType.color})`,
-                                backgroundColor: '#f8f9fa',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#ffffff';
-                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.boxShadow = 'none';
-                            }}>
+                            <div 
+                                key={activity.id} 
+                                className="activity-item"
+                                style={{
+                                    borderLeftColor: `var(--bs-${actType.color})`
+                                }}
+                            >
                                 {/* Row 1: Icon | Activity Type | Success Badge */}
-                                <div style={{
-                                    display: 'flex',
-                                    gap: '1rem',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between'
-                                }}>
+                                <div className="activity-item-row1">
                                     {/* Icon - Column 1 */}
-                                    <div style={{
-                                        flex: '0 0 48px',
-                                        width: '48px',
-                                        height: '48px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        backgroundColor: `var(--bs-${actType.color})`,
-                                        borderRadius: '50%',
-                                        color: 'white',
-                                        fontSize: '1.25rem'
-                                    }}>
+                                    <div 
+                                        className="activity-item-icon"
+                                        style={{
+                                            backgroundColor: `var(--bs-${actType.color})`
+                                        }}
+                                    >
                                         <i className={`fas ${actType.icon}`}></i>
                                     </div>
 
                                     {/* Activity Type Display - Column 2 */}
-                                    <h6 style={{ 
-                                        margin: 0, 
-                                        fontSize: '0.95rem', 
-                                        fontWeight: 600, 
-                                        color: '#2c3e50',
-                                        flex: '1',
-                                        minWidth: 0
-                                    }}>
+                                    <h6 className="activity-item-type">
                                         {activity.activity_type_display}
                                     </h6>
 
                                     {/* Success Badge - Column 3 */}
-                                    <div style={{ flex: '0 0 auto' }}>
+                                    <div className="activity-item-badges">
+                                        {/* ✨ PHASE 53+: Instructor Badge for teaching activities */}
+                                        {actType.badge && (
+                                            <span className="badge activity-badge-instructor">
+                                                <i className="fas fa-chalkboard-user me-1"></i>
+                                                {actType.badge}
+                                            </span>
+                                        )}
                                         {activity.success ? (
                                             <span className="badge bg-success">Berhasil</span>
                                         ) : (
@@ -248,34 +235,36 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
                                 </div>
 
                                 {/* Row 2: Content (Full Width) */}
-                                <div style={{ paddingLeft: '0' }}>
+                                <div className="activity-item-row2">
                                     {/* Title */}
-                                    <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#555', fontWeight: 500 }} className={variant === 'compact' ? 'activity-truncate-line' : ''}>
+                                    <p className={`activity-item-title ${variant === 'compact' ? 'activity-truncate-line' : ''}`}>
                                         {activity.title}
                                     </p>
 
+                                    {/* User Name (Student) */}
+                                    {activity.user_name && (
+                                        <small className={`activity-item-meta ${variant === 'compact' ? 'activity-truncate-line' : ''}`}>
+                                            <i className="fas fa-user me-1"></i>
+                                            {activity.user_name}
+                                        </small>
+                                    )}
+
                                     {/* Course Title */}
                                     {activity.course_title && (
-                                        <small style={{ color: '#999', display: 'block', marginBottom: '0.5rem' }} className={variant === 'compact' ? 'activity-truncate-line' : ''}>
+                                        <small className={`activity-item-course ${variant === 'compact' ? 'activity-truncate-line' : ''}`}>
                                             <i className="fas fa-folder me-1"></i>
                                             {activity.course_title}
                                         </small>
                                     )}
 
                                     {/* Activity Details */}
-                                    <div style={{
-                                        display: 'flex',
-                                        gap: '1rem',
-                                        fontSize: '0.85rem',
-                                        color: '#999',
-                                        flexWrap: 'wrap'
-                                    }}>
+                                    <div className="activity-item-details">
                                         <span>
                                             <i className="fas fa-calendar me-1"></i>
                                             {moment(activity.activity_date).fromNow()}
                                         </span>
                                         {activity.points_awarded > 0 && (
-                                            <span style={{ color: '#ffc107' }}>
+                                            <span className="activity-item-details-points">
                                                 <i className="fas fa-coins me-1"></i>
                                                 Poin: {activity.points_awarded}
                                             </span>
@@ -286,28 +275,23 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
                         );
                     })
                 ) : (
-                    <div className="text-center py-5" style={{ color: '#999' }}>
-                        <i className="fas fa-inbox" style={{ fontSize: '2.5rem', marginBottom: '1rem', opacity: 0.4 }}></i>
-                        <p>Tidak ada aktivitas</p>
-                        <small>Mulai belajar untuk mencatat aktivitas Anda</small>
+                    <div className="activity-item-empty">
+                        <i className="fas fa-inbox activity-item-empty-icon"></i>
+                        <p className="activity-item-empty-text">Tidak ada aktivitas</p>
+                        <small className="activity-item-empty-subtext">
+                            ✨ PHASE 53+: Aktivitas siswa dan pengajaran Anda akan tampil di sini
+                        </small>
                     </div>
                 )}
             </div>
 
             {/* Pagination */}
             {totalCount > maxDisplay && (
-                <div className="activity-pagination" style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: '1.5rem',
-                    paddingTop: '1rem',
-                    borderTop: '1px solid #e9ecef'
-                }}>
-                    <small style={{ color: '#999' }}>
+                <div className="activity-pagination">
+                    <small className="activity-pagination-info">
                         Menampilkan {(page - 1) * maxDisplay + 1} hingga {Math.min(page * maxDisplay, totalCount)} dari {totalCount} aktivitas
                     </small>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div className="activity-pagination-buttons">
                         <button
                             className="btn btn-sm btn-outline-primary"
                             disabled={page === 1}
@@ -315,7 +299,7 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
                         >
                             <i className="fas fa-chevron-left"></i> Sebelumnya
                         </button>
-                        <span style={{ padding: '0.375rem 0.75rem', border: '1px solid #dee2e6', borderRadius: '4px' }}>
+                        <span className="activity-pagination-page">
                             Halaman {page}
                         </span>
                         <button
@@ -331,8 +315,8 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
 
             {/* View All Button */}
             {showViewAll && totalCount > maxDisplay && (
-                <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-                    <a href="/student/activities/" className="btn btn-primary btn-sm">
+                <div className="activity-view-all-wrapper">
+                    <a href="/instructor/activities/" className="btn btn-primary btn-sm">
                         <i className="fas fa-arrow-right me-2"></i>
                         Lihat Semua Aktivitas ({totalCount})
                     </a>
@@ -342,4 +326,4 @@ function ActivityDisplay({ maxDisplay = 6, showViewAll = true, variant = "compac
     );
 }
 
-export default ActivityDisplay;
+export default InstructorActivityDisplay;

@@ -8,6 +8,7 @@ import LoadingSpinner from "./Partials/LoadingSpinner";
 import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
+import InstructorActivityDisplay from "../../components/InstructorDashboard/InstructorActivityDisplay";  // ✨ PHASE 53: Import activity display
 import { calculateTotalDuration, getDurationStats } from "../../utils/durationUtils";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 
@@ -53,56 +54,9 @@ function Dashboard() {
         const bestCoursesData = Array.isArray(bestCoursesResponse.data) ? bestCoursesResponse.data : (bestCoursesResponse.data?.results || []);
         const studentsData = Array.isArray(studentsResponse.data) ? studentsResponse.data : (studentsResponse.data?.results || []);
         
-        // Generate recent activity
-        const activities = [];
-        const students = Array.isArray(studentsData) ? studentsData : (studentsData?.results || []);
-        const reviews = Array.isArray(reviewsData) ? reviewsData : (reviewsData?.results || []);
-        const questions = Array.isArray(questionsData) ? questionsData : (questionsData?.results || []);
-        
-        // Add recent student enrollments
-        students.slice(0, 3).forEach(student => {
-            if (student?.full_name && student?.date) {
-                activities.push({
-                    type: "enrollment",
-                    title: `${student.full_name} terdaftar dalam kursus`,
-                    time: moment(student.date).fromNow(),
-                    timestamp: moment(student.date).unix(),
-                    icon: "fas fa-user-plus",
-                    color: "#10b981"
-                });
-            }
-        });
-        
-        // Add recent reviews
-        reviews.slice(0, 3).forEach(review => {
-            if (review?.rating && review?.date) {
-                activities.push({
-                    type: "review",
-                    title: `Ulasan baru ${review.rating}★ diterima`,
-                    time: moment(review.date).fromNow(),
-                    timestamp: moment(review.date).unix(),
-                    icon: "fas fa-star",
-                    color: "#f59e0b"
-                });
-            }
-        });
-        
-        // Add recent questions
-        questions.slice(0, 3).forEach(question => {
-            if (question?.title && question?.date) {
-                activities.push({
-                    type: "question",
-                    title: `Pertanyaan baru: ${question.title}`,
-                    time: moment(question.date).fromNow(),
-                    timestamp: moment(question.date).unix(),
-                    icon: "fas fa-question-circle",
-                    color: "#3b82f6"
-                });
-            }
-        });
-        
-        // Sort by timestamp (most recent first) and take top 6
-        activities.sort((a, b) => b.timestamp - a.timestamp);
+        // ✨ PHASE 53 EXTENDED: Removed manual activity generation
+        // Activities are now fetched dynamically by InstructorActivityDisplay component
+        // This keeps the dashboard lightweight and activities always up-to-date
         
         return {
             stats: statsResponse.data[0] || {},
@@ -112,8 +66,7 @@ function Dashboard() {
             notifications: notificationsData,
             orders: ordersData,
             questions: questionsData,
-            bestCourses: bestCoursesData,
-            recentActivity: activities.slice(0, 6)
+            bestCourses: bestCoursesData
         };
     }, []);
 
@@ -133,7 +86,6 @@ function Dashboard() {
     const orders = dashboardData?.orders || [];
     const questions = dashboardData?.questions || [];
     const bestCourses = dashboardData?.bestCourses || [];
-    const recentActivity = dashboardData?.recentActivity || [];
 
     // Helper function to clean and format image URLs
     const getImageUrl = (imageUrl) => {
@@ -424,29 +376,10 @@ function Dashboard() {
                                                 <i className="fas fa-clock me-2"></i>
                                                 Aktivitas Terbaru
                                             </h5>
-                                            <a href="/instructor/notifications/" className="view-all-link">Lihat Semua</a>
+                                            <a href="/instructor/activities/" className="view-all-link">Lihat Semua</a>
                                         </div>
-                                        <div className="activity-list">
-                                            {recentActivity.length > 0 ? (
-                                                recentActivity.map((activity, index) => (
-                                                    <div key={index} className="activity-item">
-                                                        <div className="activity-icon" style={{"--color": activity.color}}>
-                                                            <i className={activity.icon}></i>
-                                                        </div>
-                                                        <div className="activity-content">
-                                                            <div className="activity-title">{activity.title}</div>
-                                                            <div className="activity-time">{activity.time}</div>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="empty-activity">
-                                                    <i className="fas fa-history"></i>
-                                                    <p>Tidak ada aktivitas terbaru</p>
-                                                    <small className="text-muted">Aktivitas akan tampil ketika siswa mendaftar, memberikan ulasan, atau mengajukan pertanyaan</small>
-                                                </div>
-                                            )}
-                                        </div>
+                                        {/* ✨ PHASE 53: Use InstructorActivityDisplay component for comprehensive activity tracking */}
+                                        <InstructorActivityDisplay maxDisplay={6} showViewAll={false} variant="compact" />
                                     </div>
                                 </div>
 

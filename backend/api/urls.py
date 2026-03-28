@@ -258,6 +258,9 @@ urlpatterns = [
     path("student/activities/<int:pk>/", api_views.StudentActivityDetailAPIView.as_view()),
     path("student/activities/stats/", api_views.StudentActivityStatsAPIView.as_view()),
     path("student/activity-filter/", api_views.ActivityFilterPreferencesAPIView.as_view()),
-    path("instructor/course/<int:course_id>/activities/", api_views.InstructorCourseActivitiesAPIView.as_view()),
-    path("instructor/activities/analytics/", api_views.InstructorActivityAnalyticsAPIView.as_view()),
+    
+    # ✨ PHASE 53: Instructor Activity endpoints
+    path("instructor/activities/", api_views.InstructorActivitiesAPIView.as_view()),  # Dashboard activities
+    path("instructor/course/<int:course_id>/activities/", api_views.InstructorCourseActivitiesAPIView.as_view()),  # Course-specific activities
+    path("instructor/activities/analytics/", api_views.InstructorActivityAnalyticsAPIView.as_view()),  # Activity analytics
     path("admin/activities/analytics/", api_views.AdminActivityAnalyticsAPIView.as_view()),]

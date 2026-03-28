@@ -132,7 +132,7 @@
 }
 
 .modern-dashboard .card-body.p-3 {
-  padding: 1rem !important; /* Override p-3 to consistent 1rem */
+  padding: 1rem 0.5rem !important; /* Override p-3 to consistent 1rem */
 }
 
 /* Dashboard Card */
@@ -148,7 +148,7 @@
 .dashboard-header-modern {
   background: white;
   border-radius: 20px;
-  padding: 2rem;
+  padding: 1rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   border: 1px solid #e9ecef;
 }
@@ -177,12 +177,12 @@
 .stat-card-enhanced {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 20px;
-  padding: 2rem;
+  padding: 1rem;
   border: none;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   position: relative;
   overflow: hidden;
-  height: 180px;
+  height: 140px;
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -216,8 +216,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
+  width: 42px;
+  height: 42px;
   background: var(--icon-bg, var(--theme-primary));
   color: white;
   border-radius: 16px;
@@ -231,8 +231,8 @@
 }
 
 .stat-number-enhanced {
-  font-size: 2.75rem;
-  font-weight: 800;
+  font-size: 2rem;
+  font-weight: 700;
   color: #1f2937;
   line-height: 1;
   margin-bottom: 0.5rem;
@@ -326,7 +326,7 @@
 }
 
 .panel-header {
-  padding: 1.5rem 2rem;
+  padding: 1rem 2rem;
   border-bottom: 1px solid #e9ecef;
   display: flex;
   justify-content: space-between;
@@ -786,7 +786,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
+  padding: 1rem 1rem;
   border-bottom: 1px solid #e9ecef;
   background: linear-gradient(135deg, rgba(52, 152, 219, 0.05) 0%, rgba(41, 128, 185, 0.05) 100%);
 }
@@ -822,7 +822,7 @@
 }
 
 .analytics-content {
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .analytics-content .row {
@@ -916,7 +916,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
+  padding: 1rem 1rem;
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -928,7 +928,7 @@
 }
 
 .performance-content {
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .performance-course-card {

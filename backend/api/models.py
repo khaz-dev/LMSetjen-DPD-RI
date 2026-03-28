@@ -3445,6 +3445,7 @@ class ActivityLog(models.Model):
     """
     
     ACTIVITY_TYPE_CHOICES = [
+        # ✨ PHASE 53+: Student Learning Activities (18 types)
         ('enrollment', 'Pendaftaran Kursus'),
         ('lesson_started', 'Mulai Pelajaran'),
         ('lesson_completed', 'Selesaikan Pelajaran'),
@@ -3463,6 +3464,17 @@ class ActivityLog(models.Model):
         ('content_liked', 'Sukai Konten'),
         ('wishlist_added', 'Tambah Wishlist'),
         ('discussion_participated', 'Ikut Diskusi'),
+        # ✨ PHASE 53+: Instructor Teaching Activities (10 types)
+        ('course_created', 'Buat Kursus'),
+        ('course_updated', 'Update Kursus'),
+        ('course_published', 'Publikasikan Kursus'),
+        ('lesson_created', 'Tambah Pelajaran'),
+        ('lesson_updated', 'Update Pelajaran'),
+        ('quiz_created', 'Buat Kuis'),
+        ('student_enrolled_manual', 'Daftar Siswa Secara Manual'),
+        ('student_unenrolled', 'Hapus Siswa'),
+        ('announcement_posted', 'Posting Pengumuman'),
+        ('grade_recorded', 'Berikan Nilai'),
     ]
     
     ROLE_CHOICES = [

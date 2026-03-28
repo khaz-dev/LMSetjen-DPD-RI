@@ -10946,34 +10946,122 @@ class StudentActivityStatsAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class InstructorCourseActivitiesAPIView(generics.ListAPIView):
+# ✨ PHASE 53 EXTENDED: Instructor Activities for Dashboard
+class InstructorActivitiesAPIView(generics.ListAPIView):
     """
-    PHASE 53: List all student activities in a course (instructor only)
+    PHASE 53+: Hybrid Aktivitas Terbaru - Student + Instructor Activities
     
-    GET /api/v1/instructor/course/<course_id>/activities/
+    GET /api/v1/instructor/activities/
+    Dashboard endpoint showing BOTH instructor teaching activities AND student learning activities
+    from all instructor's courses in chronological order
+    
+    Permissions:
+    - Requires instructor/teacher role
+    - Only shows activities from their own courses
+    
+    ✨ PHASE 53+ HYBRID UPDATE:
+    - Shows student activities (role_at_time='student') - what students do
+    - Shows instructor teaching activities (role_at_time='instructor') - what instructor creates/manages
+    - Merged chronologically and visually distinguished in frontend
     """
     serializer_class = api_serializer.ActivityLogListSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
     
     def get_queryset(self):
-        """Get activities for students in instructor's course"""
-        course_id = self.kwargs.get('course_id')
+        """Filter activities for instructor's courses - BOTH student and instructor activities"""
+        user = self.request.user
         
-        # Get only activities for this course
-        queryset = api_models.ActivityLog.objects.filter(course_id=course_id)
+        # Get all courses taught by this instructor
+        courses = api_models.Course.objects.filter(teacher__user=user)
+        
+        # Get ALL activities in instructor's courses (REMOVED .exclude(user=user))
+        # ✨ PHASE 53+ FIX: Show both:
+        #   1. Student activities in these courses
+        #   2. Instructor's own teaching activities for these courses
+        # The role_at_time field distinguishes them at database level
+        queryset = api_models.ActivityLog.objects.filter(
+            course__in=courses
+        )
         
         # Filter by activity type
         activity_type = self.request.query_params.get('activity_type')
         if activity_type:
             queryset = queryset.filter(activity_type=activity_type)
         
-        # Filter by specific student
+        # Filter by specific course
+        course_id = self.request.query_params.get('course_id')
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+        
+        # Filter by specific user (for finding specific student or instructor activities)
         user_id = self.request.query_params.get('user_id')
         if user_id:
             queryset = queryset.filter(user_id=user_id)
         
+        # Filter by success status
+        success = self.request.query_params.get('success')
+        if success:
+            queryset = queryset.filter(success=success.lower() == 'true')
+        
+        # Filter by role (optional - can show only student or only instructor activities)
+        role_filter = self.request.query_params.get('role')
+        if role_filter and role_filter in ['student', 'instructor', 'admin', 'system']:
+            queryset = queryset.filter(role_at_time=role_filter)
+        
         return queryset.order_by('-activity_date')
+
+
+
+class InstructorCourseActivitiesAPIView(generics.ListAPIView):
+    """
+    PHASE 53+: Hybrid course activities - Student + Instructor activities for specific course
+    
+    GET /api/v1/instructor/course/<course_id>/activities/
+    Shows BOTH student and instructor activities for a specific course
+    """
+    serializer_class = api_serializer.ActivityLogListSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    
+    def get_queryset(self):
+        """Get both student and instructor activities for instructor's course"""
+        course_id = self.kwargs.get('course_id')
+        user = self.request.user
+        
+        try:
+            # Get the course and verify instructor owns it
+            course = api_models.Course.objects.get(id=course_id)
+            # Verify current user is the teacher of this course
+            if course.teacher and course.teacher.user != user:
+                # Instructor doesn't own this course, return empty
+                return api_models.ActivityLog.objects.none()
+        except api_models.Course.DoesNotExist:
+            return api_models.ActivityLog.objects.none()
+        
+        # Get ALL activities for this course (REMOVED .exclude(user=user))
+        # ✨ PHASE 53+ FIX: Show both student and instructor teaching activities
+        queryset = api_models.ActivityLog.objects.filter(
+            course_id=course_id
+        )
+        
+        # Filter by activity type
+        activity_type = self.request.query_params.get('activity_type')
+        if activity_type:
+            queryset = queryset.filter(activity_type=activity_type)
+        
+        # Filter by specific user (student or instructor)
+        user_id = self.request.query_params.get('user_id')
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+        
+        # Filter by role (optional)
+        role_filter = self.request.query_params.get('role')
+        if role_filter and role_filter in ['student', 'instructor', 'admin', 'system']:
+            queryset = queryset.filter(role_at_time=role_filter)
+        
+        return queryset.order_by('-activity_date')
+
 
 
 class InstructorActivityAnalyticsAPIView(APIView):

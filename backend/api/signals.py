@@ -583,3 +583,212 @@ def award_points_on_student_enrollment(sender, instance, created, **kwargs):
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error awarding enrollment points: {str(e)}")
+
+
+# ✨ PHASE 53+: LOG INSTRUCTOR ACTIVITIES
+# Track all teaching-related actions in ActivityLog with role_at_time='instructor'
+
+
+@receiver(post_save, sender=api_models.Course)
+def log_instructor_course_activities(sender, instance, created, **kwargs):
+    """
+    Log instructor activities when course is created, updated, or published.
+    
+    Activity types logged:
+    - 'course_created': When a new course is first saved
+    - 'course_updated': When course metadata is updated  
+    - 'course_published': When course.platform_status changes to 'Published'
+    """
+    try:
+        if not instance.teacher or not instance.teacher.user:
+            return
+        
+        instructor = instance.teacher.user
+        
+        # Log when course is first created
+        if created:
+            api_models.ActivityLog.objects.create(
+                user=instructor,
+                activity_type='course_created',
+                role_at_time='instructor',
+                course=instance,
+                title=f"Membuat Kursus: {instance.title}",
+                description=f"Membuat kursus baru '{instance.title}' dalam kategori {instance.category.title if instance.category else 'Tidak ditentukan'}",
+                success=True,
+                metadata={
+                    'course_id': instance.course_id if hasattr(instance, 'course_id') else str(instance.id),
+                    'course_title': instance.title,
+                    'category_id': instance.category.id if instance.category else None,
+                    'category_title': instance.category.title if instance.category else None,
+                    'level': instance.level
+                }
+            )
+            return  # Don't process further on creation
+        
+        # Log when course is published for the first time or republished
+        # Check if platform_status changed to Published
+        # Get the previous instance from database to compare
+        try:
+            previous = api_models.Course.objects.get(pk=instance.pk)
+            # If status changed to Published, log it
+            if previous.platform_status != 'Published' and instance.platform_status == 'Published':
+                api_models.ActivityLog.objects.create(
+                    user=instructor,
+                    activity_type='course_published',
+                    role_at_time='instructor',
+                    course=instance,
+                    title=f"Publikasikan Kursus: {instance.title}",
+                    description=f"Mempublikasikan kursus '{instance.title}' untuk siswa",
+                    success=True,
+                    metadata={
+                        'course_id': instance.course_id if hasattr(instance, 'course_id') else str(instance.id),
+                        'course_title': instance.title,
+                        'published_at': str(timezone.now()),
+                        'is_published_version': instance.is_published_version
+                    }
+                )
+            # Log general course updates (but not publish events, which are logged above)
+            elif previous.platform_status == instance.platform_status and previous != instance:
+                # Only log if significant fields changed
+                significant_fields = {'title', 'description', 'level', 'category_id'}
+                changed = False
+                for field in significant_fields:
+                    if getattr(previous, field, None) != getattr(instance, field, None):
+                        changed = True
+                        break
+                
+                if changed:
+                    api_models.ActivityLog.objects.create(
+                        user=instructor,
+                        activity_type='course_updated',
+                        role_at_time='instructor',
+                        course=instance,
+                        title=f"Update Kursus: {instance.title}",
+                        description=f"Memperbarui detail kursus '{instance.title}'",
+                        success=True,
+                        metadata={
+                            'course_id': instance.course_id if hasattr(instance, 'course_id') else str(instance.id),
+                            'course_title': instance.title,
+                            'updated_at': str(timezone.now())
+                        }
+                    )
+        except api_models.Course.DoesNotExist:
+            pass  # Course was deleted, don't log
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging instructor course activities: {str(e)}")
+
+
+@receiver(post_save, sender=api_models.VariantItem)
+def log_instructor_lesson_activities(sender, instance, created, **kwargs):
+    """
+    Log instructor activities when lessons (variant items) are created or updated.
+    
+    Activity types logged:
+    - 'lesson_created': When a new lesson is added to a course
+    - 'lesson_updated': When lesson content is updated
+    """
+    try:
+        if not instance.variant or not instance.variant.course or not instance.variant.course.teacher:
+            return
+        
+        course = instance.variant.course
+        instructor = course.teacher.user
+        
+        if created:
+            api_models.ActivityLog.objects.create(
+                user=instructor,
+                activity_type='lesson_created',
+                role_at_time='instructor',
+                course=course,
+                lesson=instance,
+                title=f"Tambah Pelajaran: {instance.title}",
+                description=f"Menambahkan pelajaran baru '{instance.title}' ke kursus '{course.title}'",
+                success=True,
+                metadata={
+                    'variant_item_id': str(instance.variant_item_id) if hasattr(instance, 'variant_item_id') else str(instance.id),
+                    'lesson_title': instance.title,
+                    'course_id': str(course.id),
+                    'course_title': course.title,
+                    'variant_id': str(instance.variant_id) if hasattr(instance.variant_id) else str(instance.variant.id),
+                    'variant_title': instance.variant.title if hasattr(instance.variant, 'title') else 'Variant'
+                }
+            )
+        else:
+            # Log updates (but not every save, only significant changes)
+            # To avoid logging after every tiny update, check if content changed
+            try:
+                previous = api_models.VariantItem.objects.get(pk=instance.pk)
+                # Check if significant fields changed
+                significant_changes = (
+                    previous.title != instance.title or 
+                    previous.description != instance.description or
+                    previous.file != instance.file or
+                    previous.preview != instance.preview
+                )
+                
+                if significant_changes:
+                    api_models.ActivityLog.objects.create(
+                        user=instructor,
+                        activity_type='lesson_updated',
+                        role_at_time='instructor',
+                        course=course,
+                        lesson=instance,
+                        title=f"Update Pelajaran: {instance.title}",
+                        description=f"Memperbarui pelajaran '{instance.title}' di kursus '{course.title}'",
+                        success=True,
+                        metadata={
+                            'variant_item_id': str(instance.variant_item_id) if hasattr(instance, 'variant_item_id') else str(instance.id),
+                            'lesson_title': instance.title,
+                            'course_id': str(course.id),
+                            'course_title': course.title
+                        }
+                    )
+            except api_models.VariantItem.DoesNotExist:
+                pass
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging instructor lesson activities: {str(e)}")
+
+
+@receiver(post_save, sender=api_models.Quiz)
+def log_instructor_quiz_activities(sender, instance, created, **kwargs):
+    """
+    Log instructor activities when quizzes are created.
+    
+    Activity types logged:
+    - 'quiz_created': When a new quiz is created
+    """
+    try:
+        if not instance.course or not instance.course.teacher:
+            return
+        
+        course = instance.course
+        instructor = course.teacher.user
+        
+        if created:
+            api_models.ActivityLog.objects.create(
+                user=instructor,
+                activity_type='quiz_created',
+                role_at_time='instructor',
+                course=course,
+                title=f"Buat Kuis: {instance.title}",
+                description=f"Membuat kuis baru '{instance.title}' untuk kursus '{course.title}'",
+                success=True,
+                metadata={
+                    'quiz_id': str(instance.id),
+                    'quiz_title': instance.title,
+                    'course_id': str(course.id),
+                    'course_title': course.title,
+                    'question_count': instance.question_set.count() if hasattr(instance, 'question_set') else 0
+                }
+            )
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error logging instructor quiz activities: {str(e)}")
