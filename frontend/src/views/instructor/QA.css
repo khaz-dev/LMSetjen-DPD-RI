@@ -554,7 +554,8 @@
 }
 
 /* Course Info Section */
-.course-info {
+/* ✨ PHASE 73: SCOPED to .qa-bg-section to prevent CSS leaks to other pages (e.g., Review page) */
+.qa-bg-section .course-info {
     padding: 1rem;
     flex: 1;
     display: flex;
@@ -2426,7 +2427,8 @@
     width: 100%;
   }
 
-  .course-info {
+  /* ✨ PHASE 73: SCOPED to .qa-bg-section.course-info to prevent CSS leaks to other pages */
+  .qa-bg-section .course-info {
     min-height: auto;
     padding: 1rem;
   }
