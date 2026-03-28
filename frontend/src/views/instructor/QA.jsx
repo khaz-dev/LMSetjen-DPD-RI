@@ -122,6 +122,10 @@ function QA() {
     const fetchCourseQuestions = async (course) => {
         setLoading(true);
         try {
+            console.log("[Fetch Questions] Starting - course:", course);
+            console.log("[Fetch Questions] course.course_id:", course?.course_id, "| course.id:", course?.id);
+            console.log("[Fetch Questions] course.published_version?.course_id:", course?.published_version?.course_id);
+            
             const teacherId = UserData()?.teacher_id;
             const userId = UserData()?.user_id;  // ✨ PHASE 7.25: Get current user_id for like status
             
@@ -132,6 +136,8 @@ function QA() {
             
             // Extract all questions
             const allQA = response.data?.results || response.data || [];
+            console.log("[Fetch Questions] Total questions from API:", allQA.length);
+            console.log("[Fetch Questions] First few questions:", allQA.slice(0, 3).map(q => ({ qa_id: q.qa_id, course: q.course, title: q.title })));
             
             // ✨ PHASE 7.12: CRITICAL FIX - Use published course_id for filtering
             // Questions are stored with PUBLISHED course_id, not draft's course_id
@@ -140,14 +146,25 @@ function QA() {
             const publishedCourseId = course?.published_version?.course_id || course?.course_id;
             const draftCourseId = course?.course_id;
             
-            // Filter questions by comparing course_ids
-            // Try published_version course_id first (most likely match)
-            // Then fall back to draft course_id if no published version
-            const courseQuestions = allQA.filter(q => 
-                q.course?.course_id === publishedCourseId || 
-                q.course?.course_id === draftCourseId
-            );
+            console.log("[Fetch Questions] publishedCourseId:", publishedCourseId, "(type:", typeof publishedCourseId, ")");
+            console.log("[Fetch Questions] draftCourseId:", draftCourseId, "(type:", typeof draftCourseId, ")");
             
+            // Filter questions by comparing course_ids
+            // ✨ PHASE N.X FIX: Backend returns q.course as integer ID only (not an object with course_id property)
+            // So we compare q.course directly instead of q.course?.course_id
+            // Convert to string for safe comparison (handles both string and number IDs from backend)
+            const courseQuestions = allQA.filter(q => {
+                const courseIdMatch = String(q.course) === String(publishedCourseId) || String(q.course) === String(draftCourseId);
+                if (!courseIdMatch) {
+                    console.log("[Fetch Questions] Question", q.qa_id, "FILTERED OUT: q.course=", q.course, "doesn't match", publishedCourseId, "or", draftCourseId);
+                }
+                return courseIdMatch;
+            });
+            
+            console.log("[Fetch Questions] After filtering: ", courseQuestions.length, "questions matched");
+            console.log("[Fetch Questions] Matched questions:", courseQuestions.map(q => ({ qa_id: q.qa_id, course: q.course })));
+            
+            console.log("[Fetch Questions] Calling setQuestions with", courseQuestions.length, "questions");
             setQuestions(courseQuestions);
             setQuestionSearchQuery(""); // Reset search when fetching new questions
             // ✨ PHASE 7.9-7.10: Reset filters when fetching new course questions
@@ -249,9 +266,17 @@ function QA() {
     // ✨ PHASE 7.14: Ensure curriculum with full variant_items is loaded
     const handleCourseSelect = async (course) => {
         try {
+            console.log("[Course Select Handler] Called with course:", course);
+            console.log("[Course Select Handler] course.course_id:", course?.course_id, "| course.id:", course?.id);
+            
             // Fetch full course details including published version data and correct qa_count
             const response = await useAxios.get(`teacher/course-detail/${course.course_id}/`);
             const enrichedCourse = response.data;
+            
+            console.log("[Course Select Handler] Enriched course received from API");
+            console.log("[Course Select Handler] enrichedCourse.course_id:", enrichedCourse?.course_id);
+            console.log("[Course Select Handler] enrichedCourse.published_version?.course_id:", enrichedCourse?.published_version?.course_id);
+            console.log("[Course Select Handler] enrichedCourse.qa_count:", enrichedCourse?.qa_count);
             
             // ✨ PHASE 7.12: CRITICAL - Use published version's course_id for filtering
             // Draft and published versions have DIFFERENT course_ids:
@@ -296,8 +321,19 @@ function QA() {
         return levelMap[level.toLowerCase()] || level;
     };
 
+    // ✨ DEBUG: Log when questions state changes
+    useEffect(() => {
+        console.log("[Questions State] Updated - questions.length:", questions?.length, "first few questions:", questions?.slice(0, 3).map(q => ({ qa_id: q.qa_id, title: q.title })));
+    }, [questions]);
+
+    // ✨ DEBUG: Log when selectedCourse changes
+    useEffect(() => {
+        console.log("[Selected Course State] Updated - course_id:", selectedCourse?.course_id, "qa_count:", selectedCourse?.qa_count, "title:", selectedCourse?.title);
+    }, [selectedCourse]);
+
     // ✨ PHASE 7.8-7.9: Filter questions by search term, bagian, and pelajaran
     useEffect(() => {
+        console.log("[Filter Effect] Running - questions:", questions?.length, "discussionFilters:", discussionFilters);
         let filtered = questions;
         
         // Filter by search term (title or message)
@@ -338,6 +374,7 @@ function QA() {
             console.log(`[Filter Debug] Pelajaran filter: ${beforeFilterCount} → ${filtered.length} questions`);
         }
         
+        console.log("[Filter Effect] Final result - calling setFilteredQuestions with", filtered.length, "questions");
         setFilteredQuestions(filtered);
     }, [questions, discussionFilters]);
 
@@ -604,9 +641,11 @@ function QA() {
                 const publishedCourseId = courseToPolled?.published_version?.course_id || courseToPolled?.course_id;
                 const draftCourseId = courseToPolled?.course_id;
                 
+                // ✨ PHASE N.X FIX: Backend returns q.course as integer ID only (not an object with course_id property)
+                // Convert to string for safe comparison (handles both string and number IDs from backend)
                 const courseQuestions = allQA.filter(q => 
-                    q.course?.course_id === publishedCourseId || 
-                    q.course?.course_id === draftCourseId
+                    String(q.course) === String(publishedCourseId) || 
+                    String(q.course) === String(draftCourseId)
                 );
                 
                 // Update questions list with fresh data

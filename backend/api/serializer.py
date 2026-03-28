@@ -2879,6 +2879,10 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
     """Serializer for Q&A questions with full replies, variant context, and user profile"""
     user_id = serializers.IntegerField(source='user.id', read_only=True)
     
+    # ✨ PHASE N.X FIX: Return course_id (ShortUUID string) instead of integer PK
+    # Frontend filters questions by matching course_id, not the Django PK
+    course = serializers.CharField(source='course.course_id', read_only=True)
+    
     # User profile data (not just name)
     profile = serializers.SerializerMethodField(read_only=True)
     
