@@ -909,7 +909,7 @@ button div,
     margin-bottom: var(--space-lg);
 }
 
-.form-label {
+.course-quiz-container .form-label {
     display: block;
     font-weight: 600;
     color: var(--neutral-700);

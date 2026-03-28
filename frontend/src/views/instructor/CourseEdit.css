@@ -363,7 +363,7 @@ button div,
 /* ================================
    FORM ELEMENTS
    ================================ */
-.form-label {
+.instructor-course-edit-page .form-label {
     font-weight: 600;
     color: var(--neutral-700);
     margin-bottom: var(--space-sm);

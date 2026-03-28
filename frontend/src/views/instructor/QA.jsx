@@ -1314,7 +1314,7 @@ function QA() {
                                         </div>
 
                                     {/* Modern Questions Container - ✨ PHASE 7.18: Moved INSIDE qa-search-section */}
-                                    <div className="modern-questions-container" style={{ marginTop: '2rem' }}>
+                                    <div className="modern-questions-container">
                                         {loading ? (
                                             <div className="qa-empty-state">
                                                 <div className="qa-empty-state-icon mb-4">

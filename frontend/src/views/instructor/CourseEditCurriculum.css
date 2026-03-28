@@ -985,7 +985,7 @@
    IMPROVED SPACING & VISUAL HIERARCHY
    ============================================ */
 
-.form-label.fw-bold {
+.instructor-course-edit-curriculum-page .form-label.fw-bold {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -993,7 +993,7 @@
     margin-bottom: 8px;
 }
 
-.form-label.fw-bold i {
+.instructor-course-edit-curriculum-page .form-label.fw-bold i {
     font-size: 0.9rem;
 }
 
