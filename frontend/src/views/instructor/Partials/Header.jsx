@@ -176,7 +176,7 @@ function Header() {
           <div className={`instructor-header-content p-4 ${isAnimating ? (isCollapsed ? "collapsed-state" : "expanded-state") : (isCollapsed ? "collapsed-visual" : "expanded-visual")}`}>
               <div className="row align-items-center instructor-header-main-row">
                 {/* Profile Information Section */}
-                <div className="col-lg-8 col-md-7 mb-4 mb-lg-0 d-flex align-items-center">
+                <div className="col-lg-9 col-md-8 mb-4 mb-lg-0 d-flex align-items-center">
                   <div>
                     <h1 className="instructor-name">
                       {teacher?.full_name || profile?.full_name || userData?.full_name || "Selamat Datang Instruktur!"}

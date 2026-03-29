@@ -44,8 +44,21 @@
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
 
-/* Consistent vertical spacing for dashboard sections */
-.instructor-profile-page .row {
+/* ✨ PHASE X: Main layout row (direct child of container) - matches Testimonials pattern */
+/* Keep container rows at 100% width to prevent overflow of sidebar + content */
+.instructor-profile-page > .container > .row {
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0 !important;
+    overflow: visible;
+}
+
+/* Consistent vertical spacing for INNER form/dashboard sections */
+.instructor-profile-page .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(.sidebar-content-row):not(.sidebar-content-row-loading):not(:has(.instructor-sidebar-column)) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -53,14 +66,6 @@
     flex-wrap: wrap;
     gap: 0;
     width: calc(100% + var(--bs-gutter-x, 24px));
-}
-
-/* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
-.instructor-profile-page .row:has(.instructor-sidebar-column) {
-    flex-wrap: nowrap;
-    width: 100%;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
 }
 
 .instructor-profile-page .row > [class*="col-"] {

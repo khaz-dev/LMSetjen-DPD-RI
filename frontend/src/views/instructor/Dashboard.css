@@ -59,9 +59,21 @@
   max-width: 100% !important;
 }
 
-/* Consistent vertical spacing for dashboard sections */
+/* ✨ Main layout row (direct child of container) - matches Testimonials pattern */
+.instructor-dashboard > .container > .row {
+  flex-wrap: nowrap;
+  width: 100%;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 0 !important;
+  overflow: visible;
+}
+
+/* Consistent vertical spacing for INNER dashboard sections */
 /* CRITICAL FIX: Scope to .instructor-dashboard to prevent cascade to admin dashboard */
-.instructor-dashboard .row {
+.instructor-dashboard .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(:has(.instructor-sidebar-column)) {
   margin-bottom: 0; /* Remove gap below instructor-header-card */
   margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Neutralize column padding-left */
   margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Neutralize column padding-right */
@@ -69,14 +81,6 @@
   flex-wrap: wrap; /* Allow wrapping if needed */
   gap: 0; /* Remove Bootstrap gap */
   width: calc(100% + var(--bs-gutter-x, 24px)); /* Extend to compensate for negative margins */
-}
-
-/* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
-.instructor-dashboard .row:has(.instructor-sidebar-column) {
-  flex-wrap: nowrap;
-  width: 100%; /* Keep outer row normal width */
-  margin-left: 0 !important; /* No negative margin for outer row */
-  margin-right: 0 !important; /* No negative margin for outer row */
 }
 
 .instructor-dashboard .row > [class*="col-"] {

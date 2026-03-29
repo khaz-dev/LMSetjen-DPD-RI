@@ -82,25 +82,26 @@
     height: 100%;
 }
 
-/* ✨ PHASE 11.5: Ensure row displays flex for 2-column layout */
-.instructor-header-content .row {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    width: 100% !important;
-    margin: 0 !important;
-    align-items: stretch !important;
-    flex: 1;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-}
+/* ✨ PHASE 11.5: Use Bootstrap's default row behavior (matching student header) */
+/* Removed explicit flex/margin rules that broke width - Bootstrap defaults handle layout correctly */
 
 /* Profile Avatar Container */
 .instructor-header-content .col-lg-9 {
     transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
+/* ✨ PHASE X: Make inner div fill parent width in flexbox column */
+.instructor-header-content .col-lg-9 > div {
+    width: 100% !important;
+}
+
 .instructor-header-content .col-lg-8 {
     transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ✨ PHASE X: Make inner div fill parent width in flexbox column (medium screens) */
+.instructor-header-content .col-lg-8 > div {
+    width: 100% !important;
 }
 
 /* Action Buttons Container */
@@ -178,6 +179,11 @@
     .instructor-header-content .row .col-md-8 {
         padding-left: 0 !important;
         padding-right: 0 !important;
+    }
+
+    /* ✨ Medium screen: Make inner div fill parent width */
+    .instructor-header-content .col-md-8 > div {
+        width: 100% !important;
     }
     
     /* On medium and down, button column should also align buttons to bottom */
@@ -393,20 +399,33 @@
 }
 
 /* ✨ PHASE 4.22: Instructor Header Details Row - Remove unnecessary gaps */
+/* ✨ PHASE 11.X: Add margin compensation matching student-details-separator */
+/* ✨ PHASE 11.Y: Fixed margin values from -3rem to -1rem to match student version */
 .instructor-header-details-row {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-left: -1rem;
+    margin-right: -1rem;
 }
 
 /* Remove column padding from details wrapper - details row should not have gutters */
 .instructor-header-details-row .col-md-12 {
     padding-left: 0 !important;
     padding-right: 0 !important;
+    overflow: hidden !important;
+}
+
+/* ✨ PHASE 8.9: Fix nested row overflow - remove Bootstrap's negative margins on row inside col-md-12 */
+/* ✨ PHASE X: Exclude instructor-header-details-items-row as it needs negative margins to expand properly */
+.instructor-header-details-row .col-md-12 .row:not(.instructor-header-details-items-row) {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
 .instructor-header-details-items-row {
     margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
 }
 
 /* Remove bottom margin from last column in details row */
@@ -448,8 +467,8 @@
     background: rgba(255, 255, 255, 0.2) !important;
     color: white !important;
     border-radius: 25px !important;
-    padding: 0.75rem 1.2rem !important;
-    font-weight: 500 !important;
+    padding: 0.5rem 1rem !important;
+    font-weight: 600 !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     display: inline-flex !important;
@@ -458,8 +477,8 @@
     user-select: none !important;
     cursor: pointer !important;
     transition: all 0.3s ease !important;
-    font-size: 1rem !important;
-    min-height: 46px !important;
+    font-size: 0.875rem !important;
+    min-height: 32px !important;
     height: auto !important;
     vertical-align: middle !important;
 }
@@ -576,8 +595,8 @@
     background: rgba(255, 255, 255, 0.2) !important;
     color: white !important;
     border-radius: 25px !important;
-    padding: 0.75rem 1.2rem !important;
-    font-weight: 500 !important;
+    padding: 0.5rem 1rem !important;
+    font-weight: 600 !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     display: inline-flex !important;
@@ -586,9 +605,10 @@
     gap: 0.5rem !important;
     user-select: none !important;
     cursor: default !important;
-    min-height: 46px !important;
+    min-height: 32px !important;
     height: auto !important;
     vertical-align: middle !important;
+    font-size: 0.875rem !important;
 }
 
 .instructor-header-card .badge-instructor i {

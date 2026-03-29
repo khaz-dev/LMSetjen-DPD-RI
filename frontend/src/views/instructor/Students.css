@@ -19,8 +19,20 @@
     position: relative;
 }
 
-/* Consistent vertical spacing for dashboard sections */
-.modern-students .row {
+/* ✨ Main layout row (direct child of container) - matches Testimonials pattern */
+.modern-students > .container > .row {
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0 !important;
+    overflow: visible;
+}
+
+/* Consistent vertical spacing for INNER dashboard sections (form rows, etc.) */
+.modern-students .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(:has(.instructor-sidebar-column)) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -49,14 +61,6 @@
     padding-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-}
-
-/* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
-.modern-students .row:has(.instructor-sidebar-column) {
-    flex-wrap: nowrap;
-    width: 100%;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
 }
 
 .modern-students .row > [class*="col-"] {

@@ -49,8 +49,15 @@
     width: 100%;
 }
 
-/* Consistent vertical spacing for dashboard sections */
-.instructor-notifications-page .row {
+/* ✨ PHASE 10: Main layout row with sidebar - set to 100% width to match other instructor pages */
+.instructor-notifications-page > .container > .row {
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Consistent vertical spacing for dashboard sections - exclude header and sidebar rows */
+.instructor-notifications-page .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(:has(.instructor-sidebar-column)) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;

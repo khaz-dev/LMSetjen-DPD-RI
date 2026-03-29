@@ -37,8 +37,20 @@
     position: relative;
 }
 
-/* Consistent vertical spacing for dashboard sections */
-.instructor-course-edit-page .row {
+/* ✨ Main layout row (direct child of container) - matches Testimonials pattern */
+.instructor-course-edit-page > .container > .row {
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0 !important;
+    overflow: visible;
+}
+
+/* Consistent vertical spacing for INNER dashboard sections (form rows, etc.) */
+.instructor-course-edit-page .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(:has(.instructor-sidebar-column)) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -67,14 +79,6 @@
     padding-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-}
-
-/* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
-.instructor-course-edit-page .row:has(.instructor-sidebar-column) {
-    flex-wrap: nowrap;
-    width: 100%;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
 }
 
 .instructor-course-edit-page .row > [class*="col-"] {
