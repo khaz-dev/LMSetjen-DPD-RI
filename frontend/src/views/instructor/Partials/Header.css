@@ -337,7 +337,7 @@
 }
 
 .instructor-location-meta {
-    justify-content: flex-end !important;
+    justify-content: flex-start;
     margin-bottom: 1rem !important;
 }
 

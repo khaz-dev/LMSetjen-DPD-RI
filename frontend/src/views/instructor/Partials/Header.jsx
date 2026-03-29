@@ -186,8 +186,8 @@ function Header() {
                     </p>
 
                     {(teacher?.country || profile?.country) ? (
-                      <div className="instructor-meta instructor-location-meta d-flex justify-content-between align-items-center mt-3">
-                        <div className="d-flex align-items-center gap-2">
+                      <div className="instructor-meta instructor-location-meta d-flex align-items-center gap-2 mt-3">
+                        <div>
                           <i className="fas fa-map-marker-alt"></i>
                           <span>Berbasis di {teacher?.country || profile?.country}</span>
                         </div>

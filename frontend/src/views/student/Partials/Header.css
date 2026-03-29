@@ -226,6 +226,10 @@
     margin-bottom: 0.5rem !important;
 }
 
+.profile-info-container {
+    width: 100%;
+}
+
 .profile-meta {
     font-size: 0.95rem;
     opacity: 0.8;
@@ -237,7 +241,7 @@
 }
 
 .profile-location-meta {
-    justify-content: flex-end !important;
+    justify-content: flex-start;
     margin-bottom: 1rem !important;
 }
 

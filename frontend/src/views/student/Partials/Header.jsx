@@ -113,7 +113,7 @@ function Header() {
               <div className="row align-items-center">
                 {/* Profile Information Section */}
                 <div className="col-lg-9 col-md-8 mb-4 mb-lg-0 d-flex align-items-center">
-                  <div>
+                  <div className="profile-info-container">
                     <h1 className="profile-name">
                       {profile?.full_name || userData?.full_name || "Selamat Datang!"}
                     </h1>
