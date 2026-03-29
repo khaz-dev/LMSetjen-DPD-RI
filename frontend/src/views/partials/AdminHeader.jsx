@@ -84,7 +84,6 @@ function AdminHeader() {
         // ✨ PHASE 4.210: Unified reports page (includes abuse reports and other system reports)
         { to: "/admin/reports/", icon: "fas fa-file-alt", text: "Laporan Sistem", requiresSuperAdmin: false },
         { to: "/admin/documentation/", icon: "fas fa-book", text: "Dokumentasi Sistem", requiresSuperAdmin: false },
-        { to: "/admin/analytics/", icon: "fas fa-chart-line", text: "Analitik", requiresSuperAdmin: false },
         // ✨ PHASE 11.1: User Feedback Management
         { to: "/admin/feedback/", icon: "fas fa-comments", text: "Manajemen Masukan", requiresSuperAdmin: false },
         { to: "/admin/system/", icon: "fas fa-cogs", text: "Pengaturan Sistem", requiresSuperAdmin: true },
