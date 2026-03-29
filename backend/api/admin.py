@@ -12,18 +12,19 @@ class CourseAdmin(admin.ModelAdmin):
         'title_with_status',  # Custom method to show title + status
         'get_course_type',    # Shows "PUBLISHED" or "DRAFT"
         'teacher',
+        'get_tags',           # ✨ PHASE 7.5: Display tags
         'platform_status',
         'get_parent_course',  # Shows if this is a revision of another course
         'is_published_version',
         'date'
     )
-    list_filter = ('is_published_version', 'platform_status', 'teacher', 'category', 'date')
+    list_filter = ('is_published_version', 'platform_status', 'teacher', 'category', 'tags', 'date')
     search_fields = ('title', 'teacher__user__first_name', 'course_id')
     readonly_fields = ('course_id', 'slug', 'search_vector', 'is_published_version', 'parent_course', 'published_snapshot')
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('title', 'description', 'course_id', 'slug', 'teacher', 'category', 'level')
+            'fields': ('title', 'description', 'course_id', 'slug', 'teacher', 'category', 'level', 'tags')
         }),
         ('Media', {
             'fields': ('image', 'file')  # ✨ PHASE X.X: Removed intro_video_source (upload-only system)
@@ -70,6 +71,14 @@ class CourseAdmin(admin.ModelAdmin):
             return f"{obj.parent_course.title} (ID: {obj.parent_course.id})"
         return "—"
     get_parent_course.short_description = "Parent Course (Revision of)"
+    
+    def get_tags(self, obj):
+        """✨ PHASE 7.5: Display tags assigned to this course"""
+        if obj.tags.exists():
+            tags_list = ', '.join([tag.title for tag in obj.tags.all()])
+            return tags_list
+        return "—"
+    get_tags.short_description = "Tags"
 
 admin.site.register(models.Course, CourseAdmin)
 # ==================== CURRICULUM MANAGEMENT ====================

@@ -864,7 +864,8 @@
     font-weight: 600;
 }
 
-.instructor-name {
+/* ✨ SCOPED: Certificate-specific instructor name styling */
+.certificate-document .instructor-name {
     font-size: 0.9rem !important;
     color: #1a5f3d;
     font-weight: 600 !important;

@@ -116,7 +116,7 @@ function InstructorActivityDisplay({ maxDisplay = 6, showViewAll = true, variant
 
     if (loading && activities.length === 0) {
         return (
-            <div className="activity-display loading">
+            <div className="instructor-activity-display loading">
                 <div className="spinner-border spinner-sm text-primary" role="status">
                     <span className="visually-hidden">Memuat...</span>
                 </div>
@@ -126,7 +126,7 @@ function InstructorActivityDisplay({ maxDisplay = 6, showViewAll = true, variant
     }
 
     return (
-        <div className={`activity-display ${variant === 'compact' ? 'compact' : ''}`}>
+        <div className={`instructor-activity-display ${variant === 'compact' ? 'compact' : ''}`}>
             {/* Filter Controls */}
             <div className="activity-filter-section">
                 <button

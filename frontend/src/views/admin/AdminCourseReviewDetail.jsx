@@ -280,6 +280,18 @@ function AdminCourseReviewDetail() {
                                     <div className="acrd-course-info">
                                         <h2 className="acrd-course-title">{course.title}</h2>
                                         
+                                        {/* ✨ PHASE 7.5 FIX: Display course tags as badges below title */}
+                                        {course.tags && Array.isArray(course.tags) && course.tags.length > 0 && (
+                                            <div className="acrd-tags mb-3">
+                                                {course.tags.map((tag) => (
+                                                    <span key={tag.id} className="badge bg-info me-2 mb-2">
+                                                        <i className="fas fa-bookmark me-1"></i>
+                                                        {tag.title}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        
                                         <div className="acrd-meta-row mb-3">
                                             <div className="acrd-meta-item">
                                                 <i className="fas fa-user me-2 text-primary"></i>

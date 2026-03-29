@@ -300,7 +300,8 @@
 }
 
 /* Profile Information */
-.instructor-name {
+/* ✨ SCOPED: Instructor profile header name styling - only apply within instructor profile context */
+.instructor-profile-header .instructor-name {
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 0.5rem !important;
@@ -1174,7 +1175,8 @@
         height: 120px;
     }
     
-    .instructor-name {
+    /* ✨ SCOPED: Responsive instructor name styling */
+    .instructor-profile-header .instructor-name {
         font-size: 2rem;
     }
     
@@ -1195,7 +1197,8 @@
         height: 100px;
     }
     
-    .instructor-name {
+    /* ✨ SCOPED: Responsive instructor name styling for small screens */
+    .instructor-profile-header .instructor-name {
         font-size: 1.75rem;
     }
     

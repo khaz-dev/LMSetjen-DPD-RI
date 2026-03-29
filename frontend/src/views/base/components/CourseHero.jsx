@@ -116,6 +116,32 @@ const CourseHero = ({ course }) => {
                             >
                                 {course.title}
                             </h3>
+
+                            {/* ✨ PHASE 7.5g FIX: Display course tags as badges below title */}
+                            {course.tags && Array.isArray(course.tags) && course.tags.length > 0 && (
+                                <div className="course-hero-tags mb-2">
+                                    {course.tags.map((tag) => (
+                                        <span 
+                                            key={tag.id} 
+                                            className="badge me-2 mb-2"
+                                            style={{
+                                                background: 'rgba(255, 255, 255, 0.2)',
+                                                color: 'white',
+                                                border: '1px solid rgba(255, 255, 255, 0.4)',
+                                                padding: '0.5rem 0.8rem',
+                                                borderRadius: '15px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: '500',
+                                                backdropFilter: 'blur(10px)',
+                                                display: 'inline-block'
+                                            }}
+                                        >
+                                            <i className="fas fa-bookmark me-1"></i>
+                                            {tag.title}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                             
                             {/* Modern Course Stats Cards - Centered & Compact */}
                             <div className="d-flex gap-2 justify-content-center flex-wrap" style={{ maxWidth: '500px', margin: '0 auto' }}>

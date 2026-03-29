@@ -254,7 +254,8 @@
   margin-bottom: 0.5rem;
 }
 
-.instructor-name {
+/* ✨ SCOPED: Instructor header name styling - only apply within instructor header context */
+.instructor-header-main-row .instructor-name {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
@@ -406,7 +407,8 @@
     height: 120px;
   }
   
-  .instructor-name {
+  /* ✨ SCOPED: Responsive instructor header name styling */
+  .instructor-header-main-row .instructor-name {
     font-size: 2rem;
   }
   
@@ -427,7 +429,8 @@
     height: 100px;
   }
   
-  .instructor-name {
+  /* ✨ SCOPED: Responsive instructor header name styling for small screens */
+  .instructor-header-main-row .instructor-name {
     font-size: 1.75rem;
   }
   

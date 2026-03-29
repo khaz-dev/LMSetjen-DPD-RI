@@ -5165,7 +5165,49 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                 # Replace request.data with mutable version
                 request._full_data = mutable_data
                 # Note: We use request._full_data to update the underlying data
+                
+            # ✨ PHASE 7.5 FIX: SIMPLIFIED TAG HANDLING - Let serializer handle tags during update
+            print(f"[Course Update] Request data keys: {list(request.data.keys())}")
+            print(f"[Course Update] Tags in request: {request.data.get('tags', 'NOT PRESENT')}")
+            
             self.perform_update(serializer)
+            
+            # ✨ PHASE 7.5 FIX: CRITICAL - Manually handle M2M tags AFTER serializer.save() to ensure persistence
+            # DRF's PrimaryKeyRelatedField(many=True) should handle this, but M2M relationships
+            # sometimes need explicit save. Do this AFTER perform_update but BEFORE any refresh.
+            if 'tags' in request.data:
+                try:
+                    tag_ids = request.data['tags']
+                    print(f"[Course Update] 📝 Processing tags from request: {tag_ids}")
+                    
+                    # Handle JSON string format
+                    if isinstance(tag_ids, str):
+                        import json
+                        tag_ids = json.loads(tag_ids) if tag_ids else []
+                    
+                    # Ensure it's a list
+                    if not isinstance(tag_ids, (list, tuple)):
+                        tag_ids = [tag_ids] if tag_ids else []
+                    
+                    # Convert to integers
+                    tag_ids = [int(tid) for tid in tag_ids if tid and str(tid).isdigit()]
+                    print(f"[Course Update] 🔍 Tags converted to IDs: {tag_ids}")
+                    
+                    # ✨ CRITICAL: For empty tags, clear them
+                    if not tag_ids:
+                        print(f"[Course Update] ⚠️  Empty tags list - clearing all tags")
+                        course.tags.clear()
+                    else:
+                        # Set tags using M2M relationship
+                        course.tags.set(tag_ids)
+                        print(f"[Course Update] ✅ Tags saved to database: {list(course.tags.values_list('id', flat=True))}")
+                    
+                except Exception as e:
+                    import traceback
+                    print(f"[Course Update] ❌ ERROR handling tags: {e}")
+                    traceback.print_exc()
+            else:
+                print(f"[Course Update] ⏭️  No 'tags' field in request - skipping tag update")
             
             # [*] PHASE 4.72: Status automatically set above if published course was edited
             # Published -> Review (set above before serializer.update)
@@ -5578,6 +5620,15 @@ class CourseRestoreAPIView(APIView):
             if success:
                 print(f"[Restore API] [DONE] Course restored successfully: {course.title}")
                 
+                # ✨ PHASE 7.5k FIX: Include tags in the restore response so frontend can display them
+                tags_data = []
+                try:
+                    from . import serializer as ser
+                    if course.tags.exists():
+                        tags_data = ser.TagSerializer(course.tags.all(), many=True).data
+                except Exception as e:
+                    print(f"[Restore API] Error serializing tags: {str(e)}")
+                
                 return Response({
                     "success": True,
                     "message": message,
@@ -5596,6 +5647,7 @@ class CourseRestoreAPIView(APIView):
                         "featured": course.featured,
                         "platform_status": course.platform_status,
                         "teacher_course_status": course.teacher_course_status,
+                        "tags": tags_data,  # ✨ PHASE 7.5k FIX: Include restored tags in response
                         "curriculum_count": course.curriculum.count(),
                         "lessons_count": api_models.VariantItem.objects.filter(
                             variant__course=course
@@ -5803,9 +5855,13 @@ class CourseApprovalAPIView(APIView):
                     # This is a re-submission: instructor submitted -> admin rejected -> instructor re-submitted
                     # Copy latest draft content to published version
                     print(f"[Admin Approval] Re-publication detected. Syncing draft content to published version...")
-                    # Use clear_target=True to avoid duplicates if this method is called multiple times
-                    course._copy_content_to(published, clear_target=True)
-                    print(f"[Admin Approval] [OK] Draft content synced to published version")
+                    # ✨ PHASE 7.5i CRITICAL FIX: Use clear_target=False to preserve student progress!
+                    # If we use clear_target=True, it deletes all Variants → cascades to delete all VariantItems
+                    # → cascades to delete CompletedLesson and VideoProgress (ON_DELETE CASCADE)
+                    # → ERASES all student progress, certificates, and video resume points!
+                    # Using clear_target=False preserves existing VariantItem IDs and student progress records
+                    course._copy_content_to(published, clear_target=False)
+                    print(f"[Admin Approval] [OK] Draft content synced to published version WITHOUT deleting student progress")
                 else:
                     print(f"[Admin Approval] [OK] Published copy just created, content already in place")
                 

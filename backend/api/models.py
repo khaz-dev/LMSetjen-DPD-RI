@@ -371,6 +371,8 @@ class Course(models.Model):
     def save_published_snapshot(self):
         """
         ✨ PHASE 4.72: Save a JSON snapshot of the course's current state
+        ✨ PHASE 7.5k FIX: Include tags in snapshot for restoration
+        
         Called when course is first published or when published changes are approved
         
         Used for restore functionality - allows instructors to undo changes
@@ -384,12 +386,14 @@ class Course(models.Model):
             "file": self.file,
             "featured": self.featured,
             "category_id": self.category.id if self.category else None,
+            "tag_ids": list(self.tags.values_list('id', flat=True)),
         }
         self.save()
     
     def restore_from_published_snapshot(self):
         """
         ✨ PHASE 4.72: Restore course to its last published state from snapshot
+        ✨ PHASE 7.5k FIX: Include tags restoration from snapshot
         
         Used when instructor clicks "Restore Kursus" button
         Returns True if restore was successful, False if no snapshot available
@@ -413,7 +417,19 @@ class Course(models.Model):
             try:
                 self.category = Category.objects.get(id=category_id)
             except Category.DoesNotExist:
-                pass  # Keep existing category if not found
+                pass
+        
+        # ✨ PHASE 7.5k FIX: Restore tags from snapshot
+        tag_ids = snapshot.get("tag_ids", [])
+        if tag_ids:
+            try:
+                tags = Tag.objects.filter(id__in=tag_ids)
+                self.tags.set(tags)
+                print(f"[Restore Snapshot] Restored {len(tag_ids)} tags")
+            except Exception as e:
+                print(f"[Restore Snapshot] Error restoring tags: {str(e)}")
+        else:
+            self.tags.clear()
         
         # Reset status back to Published (it was changed to Review during edit)
         self.platform_status = "Published"
@@ -425,6 +441,7 @@ class Course(models.Model):
         """
         ✨ PHASE 4.74: Enhanced method to copy ALL course-related content to target course.
         ✨ PHASE 4.77 FIXED: Now also copies course metadata (image, title, description, level, etc.)
+        ✨ PHASE 7.5i CRITICAL: Understand implications of clear_target parameter!
         
         Copies: course metadata + curriculum, features, requirements, learning outcomes, AND quizzes with questions/choices
         Used by: submit_for_publication, admin approval, restore operations
@@ -433,7 +450,15 @@ class Course(models.Model):
         
         Args:
             target_course: The course to copy content to
-            clear_target: If True, delete all existing content in target before copying (prevents duplicates)
+            clear_target: 
+                - TRUE: Delete ALL existing content before copying (creates fresh copy, ERASES student progress!)
+                  Use for: Fresh published copies, restoring from published (confirm no active enrollments)
+                - FALSE: Keep existing content, only add/update new items (PRESERVES student progress!)
+                  Use for: Re-publishing with active student enrollments (prevents data loss)
+        
+        ⚠️ CRITICAL: If target_course has student enrollments:
+           - clear_target=True WILL cascade-delete all CompletedLesson and VideoProgress records!
+           - Always use clear_target=False when target_course is PUBLISHED version with active enrollments!
         """
         from django.db import transaction
         
@@ -448,6 +473,8 @@ class Course(models.Model):
             target_course.image = self.image
             target_course.file = self.file
             target_course.featured = self.featured
+            # ✨ PHASE 7.5g FIX: Copy category (was missing, causing N/A on published preview)
+            target_course.category = self.category
             target_course.save()
             print(f"[Content Copy] [OK] Course metadata synced")
             
@@ -583,6 +610,11 @@ class Course(models.Model):
                     )
                 print(f"[Content Copy] [OK] Copied {self.learning_outcomes.count()} learning outcomes")
                 
+                # ✨ PHASE 7.5 FIX: Copy tags (course categorization metadata)
+                print("[Content Copy] Copying course tags...")
+                target_course.tags.set(self.tags.all())
+                print(f"[Content Copy] [OK] Copied {self.tags.count()} tags")
+                
                 print("[Content Copy] [DONE] ALL CONTENT COPIED SUCCESSFULLY")
                 
             except Exception as e:
@@ -693,6 +725,8 @@ class Course(models.Model):
                 self.featured = published.featured
                 if published.category:
                     self.category = published.category
+                # ✨ PHASE 7.5k FIX: Also restore tags when no snapshot available
+                self.tags.set(published.tags.all())
                 self.platform_status = "Published"
                 self.save()
             

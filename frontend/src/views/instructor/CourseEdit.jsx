@@ -20,6 +20,7 @@ import FormField from "./components/FormField";
 import CourseFeaturesForm from "./components/CourseFeaturesForm";
 import CourseRequirementsForm from "./components/CourseRequirementsForm";
 import CourseLearningOutcomesForm from "./components/CourseLearningOutcomesForm";
+import TagSelector from "./components/TagSelector";  // ✨ PHASE X.2: Searchable tag selector
 
 // Lazy load CKEditor component (1.24 MB)
 const RichTextEditor = lazy(() => import("./components/RichTextEditor"));
@@ -121,6 +122,18 @@ function CourseEdit() {
         }
     }, [courseData, loading, initialCourseData]);
 
+    // ✨ Log courseData changes after auto-save completes
+    useEffect(() => {
+        console.log('[CourseEdit.courseDataMonitor] Current courseData state updated:', {
+            id: courseData?.id,
+            has_published_version: !!courseData?.published_version,
+            platform_status: courseData?.platform_status,
+            tags: courseData?.tags?.map(t => ({id: t?.id, title: t?.title})),
+            isDirty,
+            autoSaveStatus
+        });
+    }, [courseData, isDirty, autoSaveStatus]);
+
     // Check if course can be published - must have curriculum, lessons, AND quizzes
     useEffect(() => {
         if (!courseData) {
@@ -154,13 +167,40 @@ function CourseEdit() {
 
     // ✨ PHASE 4.51: Track form changes for dirty state using useEffect instead of setTimeout
     // This fixes the stale closure bug where courseData wasn't updated in time
+    // ✨ PHASE X.2.2: FIX - Improved comparison to handle tags properly
+    // Tags are objects with different references even if they have same IDs, so JSON.stringify fails
     useEffect(() => {
         if (!initialCourseData) {
             return;
         }
 
-        // Compare current data with initial data to detect real changes
-        const hasRealChanges = JSON.stringify(courseData) !== JSON.stringify(initialCourseData);
+        // ✨ PHASE X.2.2: Smart comparison for complex fields like tags
+        // Normalize tags arrays to IDs for comparison to avoid false positives from object references
+        const normalizeData = (data) => {
+            if (!data) return data;
+            const normalized = { ...data };
+            
+            // If tags exist, convert to IDs array for comparison
+            if (normalized.tags && Array.isArray(normalized.tags)) {
+                normalized.tags = normalized.tags
+                    .map(tag => tag?.id || tag)
+                    .sort((a, b) => a - b);  // Sort for consistent comparison
+            }
+            
+            return normalized;
+        };
+
+        const normalizedCurrent = normalizeData(courseData);
+        const normalizedInitial = normalizeData(initialCourseData);
+
+        // Compare using normalized data
+        const hasRealChanges = JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedInitial);
+        
+        console.log('[CourseEdit.isDirty] Checking dirty state:', {
+            hasRealChanges,
+            currentTags: courseData?.tags?.map(t => t?.id || t),
+            initialTags: initialCourseData?.tags?.map(t => t?.id || t)
+        });
         
         setIsDirty(hasRealChanges);
     }, [courseData, initialCourseData]);
@@ -174,11 +214,13 @@ function CourseEdit() {
         // - Course data is not loaded
         // - Still loading course data
         if (!isDirty || submitStatus === "submitting" || !courseData?.id || !initialCourseData) {
+            console.log('[CourseEdit.debouncedAutoSave] Skipping auto-save:', {isDirty, submitting: submitStatus === "submitting", hasId: !!courseData?.id, hasInitial: !!initialCourseData});
             return;
         }
 
         try {
-            console.log('[CourseEdit.debouncedAutoSave] Auto-saving course...');
+            console.log('[CourseEdit.debouncedAutoSave] 🚀 Auto-saving course...');
+            console.log('[CourseEdit.debouncedAutoSave] Tags being saved:', courseData?.tags?.map(t => ({id: t?.id, title: t?.title})));
             setAutoSaveStatus("saving");
             
             // Use existing submit logic but silently
@@ -188,6 +230,7 @@ function CourseEdit() {
                 (data) => {
                     // Success
                     console.log('[CourseEdit.debouncedAutoSave] ✅ Auto-save successful');
+                    console.log('[CourseEdit.debouncedAutoSave] Response tags:', data?.tags?.map(t => ({id: t?.id, title: t?.title})));
                     setCourseData(data);
                     setInitialCourseData(JSON.parse(JSON.stringify(data)));
                     setIsDirty(false);
@@ -746,11 +789,20 @@ function CourseEdit() {
             
             if (response.data.success) {
                 // Update local course data with restored content
+                console.log('[CourseEdit.handleRestoreCourse] 📥 API Response received:', {
+                    success: response.data.success,
+                    restored_tags: response.data.course?.tags,
+                    restored_title: response.data.course?.title,
+                    restored_category: response.data.course?.category
+                });
+                
                 setCourseData({
                     ...courseData,
                     ...response.data.course,
                     platform_status: response.data.course.platform_status || "Published"
                 });
+
+                console.log('[CourseEdit.handleRestoreCourse] ✅ Course data updated with restored content including tags');
 
                 await Swal.fire({
                     title: "Kursus Berhasil Dikembalikan!",
@@ -1050,30 +1102,19 @@ function CourseEdit() {
                                                         Kursus Tag
                                                         <small className="text-muted ms-2">(Opsional)</small>
                                                     </label>
-                                                    <select
-                                                        id="tags-field"
-                                                        name="tags"
-                                                        multiple
-                                                        className={`form-control form-select ${getFieldValidationClass('tags')}`}
-                                                        value={Array.isArray(courseData?.tags) ? courseData.tags.map(tag => tag.id || tag) : []}
-                                                        onChange={(e) => {
-                                                            const selectedTagIds = Array.from(e.target.selectedOptions, option => parseInt(option.value));
-                                                            // Map tag IDs back to tag objects
-                                                            const selectedTags = tags.filter(tag => selectedTagIds.includes(tag.id));
-                                                            updateCourseData('tags', selectedTags);
+                                                    {/* ✨ PHASE X.2: NEW - Searchable tag selector with visual improvements */}
+                                                    <TagSelector
+                                                        tags={Array.isArray(tags) ? tags : []}
+                                                        selectedTags={Array.isArray(courseData?.tags) ? courseData.tags : []}
+                                                        onChange={(selectedTags) => {
+                                                            // ✨ PHASE X.1 FIX: Use correct syntax with object
+                                                            console.log('[CourseEdit.TagSelector] onChange called with tags:', selectedTags?.map(t => ({id: t.id, title: t.title})));
+                                                            updateCourseData({ tags: selectedTags });
+                                                            console.log('[CourseEdit.TagSelector] After updateCourseData, isDirty should trigger');
                                                         }}
-                                                        style={{ minHeight: '120px' }}
-                                                    >
-                                                        <option value="">-- Pilih tag kursus --</option>
-                                                        {Array.isArray(tags) && tags.map(tag => (
-                                                            <option key={tag.id} value={tag.id}>
-                                                                {tag.title}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    <small className="form-text text-muted d-block mt-2">
-                                                        Tahan Ctrl (Windows) atau Cmd (Mac) untuk memilih multiple tags. Tag membantu siswa menemukan kursus dengan lebih mudah.
-                                                    </small>
+                                                        placeholder="Cari atau pilih tag kursus..."
+                                                        helpText="Tag membantu siswa menemukan kursus dengan lebih mudah. Pilih 1 atau lebih tag yang relevan dengan konten kursus."
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -1402,7 +1443,23 @@ function CourseEdit() {
 
                                 {/* ✨ PHASE 4.71 UPDATED: Buttons aligned horizontally when published_version exists */}
                                 {/* ✨ PHASE 11.169a: Don't show buttons if course is in Review status (waiting for admin) */}
-                                {courseData?.published_version && courseData?.platform_status !== "Review" ? (
+                                {(() => {
+                                    const hasPublishedVersion = !!courseData?.published_version;
+                                    const platformStatus = courseData?.platform_status;
+                                    const isReview = platformStatus === "Review";
+                                    // ✨ PHASE 7.5f FIX: Show buttons if:
+                                    // 1. Course has published_version (was published before) OR platform_status is Published
+                                    // 2. AND course is not awaiting admin review
+                                    const shouldShowBothButtons = (hasPublishedVersion || platformStatus === "Published") && !isReview;
+                                    console.log('[CourseEdit.ButtonRender] Button visibility check:', {
+                                        hasPublishedVersion,
+                                        platformStatus,
+                                        isReview,
+                                        shouldShowBothButtons,
+                                        course_id: courseData?.id
+                                    });
+                                    return shouldShowBothButtons;
+                                })() ? (
                                     // Show both buttons in a horizontal line for published courses
                                     <div className="d-flex justify-content-center gap-3 mt-3 w-100 flex-wrap">
                                         {/* Restore Button */}
@@ -1525,7 +1582,18 @@ function CourseEdit() {
                                             )}
                                         </div>
                                     </div>
-                                ) : (courseData?.platform_status === "Draft" || courseData?.platform_status === "Rejected") && (
+                                ) : (() => {
+                                    const isDraft = courseData?.platform_status === "Draft";
+                                    const isRejected = courseData?.platform_status === "Rejected";
+                                    const shouldShowSingleButton = (isDraft || isRejected);
+                                    console.log('[CourseEdit.ButtonRender] Draft/Rejected button check:', {
+                                        isDraft,
+                                        isRejected,
+                                        shouldShowSingleButton,
+                                        platformStatus: courseData?.platform_status
+                                    });
+                                    return shouldShowSingleButton;
+                                })() && (
                                     // ✨ PHASE 11.169a: Show only submit button for Draft and Rejected courses (not Review/in-progress)
                                     <div className="d-flex justify-content-center mt-3 w-100">
                                         <div className="position-relative d-flex flex-column align-items-center">

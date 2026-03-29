@@ -3613,7 +3613,23 @@ function CourseDetail() {
                                         <div className="progress-content">
                                             <div className="row align-items-center">
                                                 <div className="col-md-9 pe-2">
-                                                    <h2 className="fw-bold mb-3 course-title-animated">{course?.course?.title}</h2>
+                                                    <h2 className="fw-bold mb-2 course-title-animated">{course?.course?.title}</h2>
+
+                                                    {/* ✨ PHASE 7.5j FIX: Display course tags below title */}
+                                                    {course?.course?.tags && Array.isArray(course.course.tags) && course.course.tags.length > 0 && (
+                                                        <div className="mb-1" data-testid="course-tags-section">
+                                                            {course.course.tags.map((tag) => (
+                                                                <span 
+                                                                    key={tag.id} 
+                                                                    className="course-detail-tag-badge"
+                                                                >
+                                                                    <i className="fas fa-bookmark"></i>
+                                                                    {tag.title}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
                                                     <p className="opacity-90 mb-3 course-subtitle-animated">
                                                         Lanjutkan perjalanan pembelajaran Anda dan lacak kemajuan Anda
                                                     </p>

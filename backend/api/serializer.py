@@ -1064,6 +1064,16 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
             # If category serialization fails, continue without category
             pass
         
+        # ✨ PHASE 7.5h FIX: Serialize tags for course card display
+        tags = None
+        try:
+            from . import serializer as ser
+            if course.tags.exists():
+                tags = ser.TagSerializer(course.tags.all(), many=True).data
+        except Exception as e:
+            # If tag serialization fails, continue without tags
+            pass
+        
         # Safe conversion function for JSON serialization
         def safe_value(val):
             """Convert any value to JSON-serializable type"""
@@ -1091,6 +1101,8 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
                 'featured': bool(course.featured) if hasattr(course, 'featured') else False,
                 'platform_status': safe_value(course.platform_status) if hasattr(course, 'platform_status') else None,
                 'category': category,  # ✨ PHASE 4.231: Include category for progress card display
+                # ✨ PHASE 7.5h FIX: Include tags for course card display
+                'tags': tags or [],
                 'total_jam_pelatihan': int(total_jp),  # ✨ PHASE 4.228: Include calculated JP
                 'quizzes': quizzes,  # ✨ PHASE 4.229: Include quizzes for student quiz tab
                 'teacher': teacher,  # ✨ PHASE 4.230: Include teacher for instructor info display
@@ -1101,6 +1113,7 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
                 'id': safe_value(course.id),
                 'title': safe_value(course.title) if course.title else 'Course',
                 'category': category,  # ✨ PHASE 4.231: Include category in fallback
+                'tags': tags or [],  # ✨ PHASE 7.5h FIX: Include tags in fallback
                 'total_jam_pelatihan': int(total_jp),
                 'quizzes': quizzes,
                 'teacher': teacher,
@@ -1383,7 +1396,15 @@ class CourseSerializer(serializers.ModelSerializer):
     learning_outcomes = CourseLearningOutcomeSerializer(many=True, read_only=True, required=False)
     resources = CourseResourceSerializer(many=True, read_only=True, required=False)
     # ✨ PHASE X: Tags for course categorization
-    tags = TagSerializer(many=True, read_only=True, required=False)
+    # ✨ PHASE X.1 FIX: Changed from read_only=True to writable PrimaryKeyRelatedField
+    # This allows instructors to assign/update tags when editing courses
+    # to_representation() converts IDs to full tag objects for display
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=api_models.Tag.objects.all(), 
+        many=True, 
+        required=False
+    )
+    
     # ✨ PHASE 11.202+: Validate completed lessons - return only VALID completions
     # FIXED: Previously returned ALL CompletedLesson records including orphaned ones
     # Now validates each completion against its verification question requirement
@@ -1525,7 +1546,7 @@ class CourseSerializer(serializers.ModelSerializer):
             self.Meta.depth = 1  # Reduced from 3 to 1 to avoid circular references
     
     def to_representation(self, instance):
-        """Override to return full URL for image and file fields"""
+        """Override to return full URL for image and file fields + tags as full objects"""
         representation = super().to_representation(instance)
         request = self.context.get('request')
         
@@ -1563,6 +1584,11 @@ class CourseSerializer(serializers.ModelSerializer):
                 else:
                     representation['file'] = file_url
         
+        # ✨ PHASE X.1: Convert tag IDs to full tag objects for API responses
+        # PrimaryKeyRelatedField returns IDs by default, but we want full objects
+        if 'tags' in representation and isinstance(representation['tags'], list):
+            representation['tags'] = TagSerializer(instance.tags.all(), many=True).data
+        
         return representation
 
 class CourseEditSerializer(serializers.ModelSerializer):
@@ -1591,11 +1617,18 @@ class CourseEditSerializer(serializers.ModelSerializer):
     approved_by_name = serializers.CharField(source='approved_by.get_full_name', read_only=True, allow_null=True)
     published_version = serializers.SerializerMethodField()  # ✨ PHASE 4.75: Include published version data
     qa_count = serializers.SerializerMethodField()  # ✨ PHASE 7.13: Add QA count for course detail pages
+    # ✨ PHASE 7.5 FIX: Add tags field - convert to full objects in to_representation()
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=api_models.Tag.objects.all(),
+        many=True,
+        required=False
+    )
     
     class Meta:
         # ✨ PHASE 4.85: Added "features", "requirements", "learning_outcomes"
         # ✨ PHASE 7.13: Added "qa_count" to CourseEditSerializer
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
+        # ✨ PHASE 7.5 FIX: Added "tags" to return saved tags in edit form
+        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
         model = api_models.Course
     
     def get_quizzes(self, obj):
@@ -1636,6 +1669,8 @@ class CourseEditSerializer(serializers.ModelSerializer):
                     'platform_status': published_copies.platform_status,
                     'teacher_course_status': published_copies.teacher_course_status,
                     'level': published_copies.level,
+                    # ✨ PHASE 7.5g FIX: Include category (was missing, causing N/A display)
+                    'category': CategorySerializer(published_copies.category).data if published_copies.category else None,
                     'curriculum': ser.VariantSerializer(
                         published_copies.curriculum.all(), 
                         many=True, 
@@ -1653,7 +1688,14 @@ class CourseEditSerializer(serializers.ModelSerializer):
                     ).data,
                     # ✨ PHASE 7.13: Add qa_count for published version
                     # Frontend needs correct question count from published course, not draft
-                    'qa_count': api_models.Question_Answer.objects.filter(course=published_copies).count()
+                    'qa_count': api_models.Question_Answer.objects.filter(course=published_copies).count(),
+                    # ✨ PHASE 7.5g FIX: Include tags from published version (not draft)
+                    # When viewing published version, show what's CURRENTLY published to students
+                    # Tags are copied to published_copies during publication, so use those
+                    'tags': TagSerializer(
+                        published_copies.tags.all(),
+                        many=True
+                    ).data if published_copies.tags.exists() else []
                 }
         return None
     
@@ -1674,7 +1716,7 @@ class CourseEditSerializer(serializers.ModelSerializer):
         return api_models.Question_Answer.objects.filter(course=obj).count()
     
     def to_representation(self, instance):
-        """Override to return full URL for image and file fields"""
+        """Override to return full URL for image and file fields + tags as full objects"""
         representation = super().to_representation(instance)
         request = self.context.get('request')
         
@@ -1707,6 +1749,11 @@ class CourseEditSerializer(serializers.ModelSerializer):
                     representation['file'] = f"/media/{file_url}"
                 else:
                     representation['file'] = file_url
+        
+        # ✨ PHASE 7.5 FIX: Convert tag IDs to full tag objects for frontend display
+        # PrimaryKeyRelatedField returns IDs by default, but we need full objects
+        if 'tags' in representation and isinstance(representation['tags'], list):
+            representation['tags'] = TagSerializer(instance.tags.all(), many=True).data
         
         return representation
 

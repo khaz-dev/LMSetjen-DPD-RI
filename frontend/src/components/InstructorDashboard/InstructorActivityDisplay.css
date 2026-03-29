@@ -1,6 +1,7 @@
 /* ✨ PHASE 63: Instructor Activity Display Styles - Comprehensive CSS Refactor */
+/* ✨ FIX: Scope all selectors to .instructor-activity-display to prevent global CSS conflicts */
 
-.activity-display {
+.instructor-activity-display {
     background: #ffffff;
     border-radius: 8px;
     padding: 0.5rem 1rem;
@@ -8,39 +9,39 @@
 }
 
 /* ✨ PHASE 54: Compact variant for dashboard card */
-.activity-display.compact {
+.instructor-activity-display.compact {
     max-height: 600px;
     overflow-y: auto;
 }
 
 /* Custom scrollbar for compact variant */
-.activity-display.compact::-webkit-scrollbar {
+.instructor-activity-display.compact::-webkit-scrollbar {
     width: 6px;
 }
 
-.activity-display.compact::-webkit-scrollbar-track {
+.instructor-activity-display.compact::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 10px;
 }
 
-.activity-display.compact::-webkit-scrollbar-thumb {
+.instructor-activity-display.compact::-webkit-scrollbar-thumb {
     background: #c1c1c1;
     border-radius: 10px;
 }
 
-.activity-display.compact::-webkit-scrollbar-thumb:hover {
+.instructor-activity-display.compact::-webkit-scrollbar-thumb:hover {
     background: #888;
 }
 
 /* Truncate text to single line with ellipsis */
-.activity-truncate-line {
+.instructor-activity-display .activity-truncate-line {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     display: block;
 }
 
-.activity-filter-section {
+.instructor-activity-display .activity-filter-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -48,7 +49,7 @@
 }
 
 /* ✨ PHASE 63: Filters wrapper with flexbox */
-.activity-filters {
+.instructor-activity-display .activity-filters {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
@@ -59,22 +60,22 @@
     margin-bottom: 1rem;
 }
 
-.activity-filters > div {
+.instructor-activity-display .activity-filters > div {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
 /* Filter input group - for equal sizing */
-.activity-filter-input {
+.instructor-activity-display .activity-filter-input {
     flex: 1 1 250px;
 }
 
-.activity-filter-status {
+.instructor-activity-display .activity-filter-status {
     flex: 1 1 150px;
 }
 
-.activity-filter-clear {
+.instructor-activity-display .activity-filter-clear {
     flex: 0 0 auto;
     display: flex;
     align-items: flex-end;
@@ -91,7 +92,7 @@
     }
 }
 
-.activities-list {
+.instructor-activity-display .activities-list {
     min-height: 200px;
     gap: 0.5rem;
     display: flex;
@@ -99,7 +100,7 @@
 }
 
 /* ✨ PHASE 63: Activity item main container */
-.activity-item {
+.instructor-activity-display .activity-item {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -116,14 +117,14 @@
     gap: 0rem;
 }
 
-.activity-item:hover {
+.instructor-activity-display .activity-item:hover {
     transform: translateX(2px);
     background-color: #ffffff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* ✨ PHASE 63: Row 1 - Icon, Type, Badge layout */
-.activity-item-row1 {
+.instructor-activity-display .activity-item-row1 {
     display: flex;
     gap: 1rem;
     align-items: center;
@@ -136,7 +137,7 @@
 }
 
 /* ✨ PHASE 63: Activity icon circular badge */
-.activity-item-icon {
+.instructor-activity-display .activity-item-icon {
     flex: 0 0 48px;
     width: 48px;
     height: 48px;
@@ -150,7 +151,7 @@
 }
 
 /* ✨ PHASE 63: Activity type heading */
-.activity-item-type {
+.instructor-activity-display .activity-item-type {
     margin: 0;
     font-size: 0.95rem;
     font-weight: 600;
@@ -160,7 +161,7 @@
 }
 
 /* ✨ PHASE 63: Badge container */
-.activity-item-badges {
+.instructor-activity-display .activity-item-badges {
     flex: 0 0 auto;
     display: flex;
     gap: 0.5rem;
@@ -171,13 +172,13 @@
 }
 
 /* ✨ PHASE 63: Instructor badge style */
-.activity-badge-instructor {
+.instructor-activity-display .activity-badge-instructor {
     background-color: #6610f2;
     color: white;
 }
 
 /* ✨ PHASE 63: Row 2 - Content section - CRITICAL: width and box-sizing prevent overflow */
-.activity-item-row2 {
+.instructor-activity-display .activity-item-row2 {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -186,7 +187,7 @@
 }
 
 /* ✨ PHASE 63: Activity title paragraph */
-.activity-item-title {
+.instructor-activity-display .activity-item-title {
     margin: 0.25rem 0;
     font-size: 0.9rem;
     color: #555;
@@ -197,7 +198,7 @@
 }
 
 /* ✨ PHASE 63: User name or context */
-.activity-item-meta {
+.instructor-activity-display .activity-item-meta {
     color: #666;
     display: block;
     margin-bottom: 0.25rem;
@@ -210,7 +211,7 @@
 }
 
 /* ✨ PHASE 63: Course or category info */
-.activity-item-course {
+.instructor-activity-display .activity-item-course {
     color: #999;
     display: block;
     margin-bottom: 0.5rem;
@@ -222,7 +223,7 @@
 }
 
 /* ✨ PHASE 63: Activity details (date, points, etc) */
-.activity-item-details {
+.instructor-activity-display .activity-item-details {
     display: flex;
     gap: 1rem;
     font-size: 0.85rem;
@@ -233,7 +234,7 @@
     min-width: 0;
 }
 
-.activity-item-details-points {
+.instructor-activity-display .activity-item-details-points {
     color: #ffc107;
 }
 
@@ -249,28 +250,28 @@
 }
 
 /* ✨ PHASE 63: Empty state */
-.activity-item-empty {
+.instructor-activity-display .activity-item-empty {
     text-align: center;
     padding: 2rem 0;
     color: #999;
 }
 
-.activity-item-empty-icon {
+.instructor-activity-display .activity-item-empty-icon {
     font-size: 2.5rem;
     margin-bottom: 1rem;
     opacity: 0.4;
 }
 
-.activity-item-empty-text {
+.instructor-activity-display .activity-item-empty-text {
     font-size: 0.95rem;
 }
 
-.activity-item-empty-subtext {
+.instructor-activity-display .activity-item-empty-subtext {
     font-size: 0.85rem;
     margin-top: 0.5rem;
 }
 
-.activity-pagination {
+.instructor-activity-display .activity-pagination {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -282,20 +283,20 @@
 }
 
 /* ✨ PHASE 63: Pagination info text */
-.activity-pagination-info {
+.instructor-activity-display .activity-pagination-info {
     color: #999;
     font-size: 0.95rem;
 }
 
 /* ✨ PHASE 63: Pagination buttons container */
-.activity-pagination-buttons {
+.instructor-activity-display .activity-pagination-buttons {
     display: flex;
     gap: 0.5rem;
     align-items: center;
 }
 
 /* ✨ PHASE 63: Pagination page indicator */
-.activity-pagination-page {
+.instructor-activity-display .activity-pagination-page {
     padding: 0.375rem 0.75rem;
     border: 1px solid #dee2e6;
     border-radius: 4px;
@@ -304,12 +305,12 @@
 }
 
 /* ✨ PHASE 63: View all button wrapper */
-.activity-view-all-wrapper {
+.instructor-activity-display .activity-view-all-wrapper {
     text-align: center;
     margin-top: 1.5rem;
 }
 
-.activity-display.loading {
+.instructor-activity-display.loading {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -319,33 +320,33 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .activity-display {
+    .instructor-activity-display {
         padding: 1rem;
     }
 
-    .activity-filters {
+    .instructor-activity-display .activity-filters {
         flex-direction: column;
     }
 
-    .activity-filters > div {
+    .instructor-activity-display .activity-filters > div {
         width: 100%;
     }
 
-    .activity-filter-input,
-    .activity-filter-status {
+    .instructor-activity-display .activity-filter-input,
+    .instructor-activity-display .activity-filter-status {
         flex: 1 0 100%;
     }
 
-    .activity-pagination {
+    .instructor-activity-display .activity-pagination {
         flex-direction: column;
     }
 
-    .activity-pagination-buttons {
+    .instructor-activity-display .activity-pagination-buttons {
         width: 100%;
         justify-content: space-between;
     }
 
-    .activity-item-row2 {
+    .instructor-activity-display .activity-item-row2 {
         padding-left: 1rem;
     }
 }

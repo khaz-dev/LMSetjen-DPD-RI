@@ -219,10 +219,11 @@ export const useCourseSubmit = () => {
             // The CourseSerializer has many read-only fields (students, curriculum, lectures, reviews, etc.)
             // Sending these causes validation errors. We must filter to only writable fields.
             // Writable fields: category, file, image, title, description, level, platform_status, 
-            //                  teacher_course_status, featured, intro_video_source
+            //                  teacher_course_status, featured, intro_video_source, tags
+            // ✨ PHASE X.1 FIX: Added 'tags' to enable tag assignment
             const writableFields = [
                 'category', 'file', 'image', 'title', 'description', 'level',
-                'platform_status', 'teacher_course_status', 'featured', 'intro_video_source'
+                'platform_status', 'teacher_course_status', 'featured', 'intro_video_source', 'tags'
             ];
             
             const formattedData = {};
@@ -254,6 +255,18 @@ export const useCourseSubmit = () => {
                     ? formattedData.teacher_course_status.value
                     : formattedData.teacher_course_status;
             }
+            
+            // ✨ PHASE X.1 FIX: Extract tag IDs from tag objects
+            // Frontend stores tags as [{id: 1, title: "Python"}, ...] 
+            // Backend PrimaryKeyRelatedField expects [1, 2, 3...]
+            if (formattedData.tags && Array.isArray(formattedData.tags)) {
+                formattedData.tags = formattedData.tags.map(tag => 
+                    typeof tag === 'object' && tag?.id ? tag.id : tag
+                );
+                console.log('[useCourse.submitCourse] ✅ Tags in formattedData - Converted objects to IDs:', formattedData.tags);
+            } else {
+                console.log('[useCourse.submitCourse] ⚠️ No tags found in formattedData:', formattedData.tags);
+            }
 
             // ✨ PHASE 4.56: Pass flag to backend indicating if features/requirements/learning_outcomes were updated
             if (hasRelatedChanges) {
@@ -269,6 +282,11 @@ export const useCourseSubmit = () => {
             console.log('[useCourse.submitCourse] ===== FULL REQUEST DATA BEING SENT =====');
             console.log('[useCourse.submitCourse] teacher_course_status:', formattedData.teacher_course_status);
             console.log('[useCourse.submitCourse] has_related_changes:', formattedData.has_related_changes);
+            console.log('[useCourse.submitCourse] 🏷️ TAGS FIELD:', {
+                tagCount: formattedData.tags?.length,
+                tagIds: formattedData.tags,
+                tagField: 'tags' in formattedData
+            });
             console.log('[useCourse.submitCourse] All fields:', formattedData);
             console.log('[useCourse.submitCourse] ===== END REQUEST DATA =====');
 
@@ -278,6 +296,10 @@ export const useCourseSubmit = () => {
             );
 
             if (response?.data) {
+                console.log('[useCourse.submitCourse] ✅ PATCH Response received');
+                console.log('[useCourse.submitCourse] 🏷️ Response Tags:', response.data?.tags?.map(t => ({id: t?.id, title: t?.title})));
+                console.log('[useCourse.submitCourse] Full response:', response.data);
+                
                 Toast().fire({
                     icon: "success",
                     title: "Berhasil",
@@ -285,6 +307,7 @@ export const useCourseSubmit = () => {
                 });
                 
                 if (onSuccess) {
+                    console.log('[useCourse.submitCourse] Calling onSuccess with response data');
                     onSuccess(response.data);
                 }
                 

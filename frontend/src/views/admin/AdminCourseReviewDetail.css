@@ -128,8 +128,28 @@
     font-size: 1.75rem;
     font-weight: 800;
     color: #2c3e50;
-    margin-bottom: 20px;
+    margin-bottom: 0.5rem;
     line-height: 1.4;
+}
+
+/* ✨ PHASE 7.5 FIX: Course tags styling */
+.acrd-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e8eef5;
+}
+
+.acrd-tags .badge {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
 .acrd-meta-row {
