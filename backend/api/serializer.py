@@ -2656,16 +2656,49 @@ class InstructorRequestDetailSerializer(serializers.ModelSerializer):
     """
     ✨ PHASE 4.78: Detailed serializer for instructor requests
     Used for student to view their request status and admin to review
+    ✨ PHASE X+6: Fixed user_image to return absolute URLs with cache busting
     """
     user_id = serializers.IntegerField(source='user.id', read_only=True)
     user_name = serializers.CharField(source='user.full_name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
-    user_image = serializers.CharField(source='user.profile.image', read_only=True, allow_null=True)
+    user_image = serializers.SerializerMethodField(read_only=True)  # ✨ PHASE X+6: Convert relative paths to absolute URLs
     reviewed_by_name = serializers.CharField(
         source='reviewed_by.full_name', 
         read_only=True, 
         allow_null=True
     )
+    
+    def get_user_image(self, obj):
+        """✨ PHASE X+6: Convert user profile image to absolute URL with cache busting"""
+        if not obj.user:
+            return None
+        
+        try:
+            profile = Profile.objects.get(user=obj.user)
+            if profile.image:
+                image_str = str(profile.image)
+                request = self.context.get('request')
+                
+                # Check if already absolute URL
+                if image_str.startswith('http://') or image_str.startswith('https://'):
+                    return image_str
+                elif request:
+                    # Convert relative path to absolute URL with cache-busting
+                    if not image_str.startswith('/'):
+                        image_str = f"/media/{image_str}"
+                    from datetime import datetime
+                    timestamp = int(datetime.now().timestamp() * 1000) // 3600000  # Cache-bust per hour
+                    absolute_url = request.build_absolute_uri(image_str)
+                    return f"{absolute_url}?v={timestamp}"
+                else:
+                    # Fallback if no request context
+                    if not image_str.startswith('/'):
+                        return f"/media/{image_str}"
+                    return image_str
+        except Profile.DoesNotExist:
+            pass
+        
+        return None
     
     class Meta:
         model = api_models.InstructorRequest
@@ -2687,13 +2720,46 @@ class AdminInstructorRequestListSerializer(serializers.ModelSerializer):
     """
     ✨ PHASE 4.78: Admin serializer for listing pending requests
     Includes all details needed for admin review
+    ✨ PHASE X+6: Fixed user_image to return absolute URLs with cache busting
     """
     user_id = serializers.IntegerField(source='user.id', read_only=True)
     user_name = serializers.CharField(source='user.full_name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
-    user_image = serializers.CharField(source='user.profile.image', read_only=True, allow_null=True)
+    user_image = serializers.SerializerMethodField(read_only=True)  # ✨ PHASE X+6: Convert relative paths to absolute URLs
     user_nip = serializers.CharField(source='user.nip', read_only=True, allow_null=True)
     reviewed_by_name = serializers.CharField(source='reviewed_by.full_name', read_only=True, allow_null=True)
+    
+    def get_user_image(self, obj):
+        """✨ PHASE X+6: Convert user profile image to absolute URL with cache busting"""
+        if not obj.user:
+            return None
+        
+        try:
+            profile = Profile.objects.get(user=obj.user)
+            if profile.image:
+                image_str = str(profile.image)
+                request = self.context.get('request')
+                
+                # Check if already absolute URL
+                if image_str.startswith('http://') or image_str.startswith('https://'):
+                    return image_str
+                elif request:
+                    # Convert relative path to absolute URL with cache-busting
+                    if not image_str.startswith('/'):
+                        image_str = f"/media/{image_str}"
+                    from datetime import datetime
+                    timestamp = int(datetime.now().timestamp() * 1000) // 3600000  # Cache-bust per hour
+                    absolute_url = request.build_absolute_uri(image_str)
+                    return f"{absolute_url}?v={timestamp}"
+                else:
+                    # Fallback if no request context
+                    if not image_str.startswith('/'):
+                        return f"/media/{image_str}"
+                    return image_str
+        except Profile.DoesNotExist:
+            pass
+        
+        return None
     
     class Meta:
         model = api_models.InstructorRequest

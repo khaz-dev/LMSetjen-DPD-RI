@@ -864,7 +864,7 @@ function SystemDocumentation() {
         <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <AdminHeader />
             
-            <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
+            <section className="pt-4 pb-5 modern-dashboard" style={{ flex: 1 }}>
                 <div className="container">
                     {/* Header with Controls */}
                     <div className="documentation-header no-print">

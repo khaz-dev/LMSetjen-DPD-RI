@@ -52,7 +52,7 @@ function ReportsAdmin() {
                     
                     <div className="reports-container">
                         {/* Page Header */}
-                        <div className="reports-page-header mb-4">
+                        <div className="reports-page-header mb-3">
                             <div className="reports-header-content">
                                 <h1 className="reports-page-title">
                                     <i className="fas fa-file-alt me-3"></i>

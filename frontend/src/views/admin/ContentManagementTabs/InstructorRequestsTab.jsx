@@ -230,23 +230,36 @@ function InstructorRequestsTab() {
                                 <div className="card-header bg-light">
                                     <div className="d-flex align-items-start gap-3">
                                         {/* Profile Image */}
-                                        <div className="flex-shrink-0">
-                                            {request.user_image ? (
-                                                <img 
-                                                    src={request.user_image} 
-                                                    alt={request.user_name}
-                                                    className="rounded-circle"
-                                                    style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                                                />
-                                            ) : (
-                                                <div 
-                                                    className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
-                                                    style={{ width: '50px', height: '50px', fontSize: '20px' }}
-                                                >
-                                                    <i className="fas fa-user"></i>
-                                                </div>
-                                            )}
-                                        </div>
+                                <div className="flex-shrink-0 position-relative" style={{ width: '50px', height: '50px' }}>
+                                    {/* Fallback avatar - shown by default, hidden if image loads */}
+                                    <div 
+                                        className="fallback-avatar rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
+                                        style={{ width: '50px', height: '50px', fontSize: '20px' }}
+                                    >
+                                        <i className="fas fa-user"></i>
+                                    </div>
+                                    
+                                    {/* Profile image - shown if available and loads successfully */}
+                                    {request.user_image && (
+                                        <img 
+                                            src={request.user_image}
+                                            alt={request.user_name}
+                                            className="rounded-circle"
+                                            style={{ 
+                                                width: '50px', 
+                                                height: '50px', 
+                                                objectFit: 'cover',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0
+                                            }}
+                                            onError={(e) => {
+                                                // Hide image on error, fallback will be visible
+                                                e.target.style.display = 'none';
+                                            }}
+                                        />
+                                    )}
+                                </div>
                                         
                                         {/* User Info & Status */}
                                         <div className="flex-grow-1">

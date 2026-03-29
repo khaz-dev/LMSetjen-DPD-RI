@@ -66,13 +66,13 @@ function ContentManagementAdmin() {
     return (
         <>
             <BaseHeader />
-            <section className="admin-dashboard pt-5 pb-5">
+            <section className="admin-dashboard pt-4 pb-5">
                 <div className="container">
                     <AdminHeader />
                     
                     <div className="content-management-container">
                         {/* Page Header */}
-                        <div className="cm-page-header mb-5">
+                        <div className="cm-page-header mb-3">
                             <div className="cm-header-content">
                                 <h1 className="cm-page-title">
                                     <i className="fas fa-cogs me-3"></i>
