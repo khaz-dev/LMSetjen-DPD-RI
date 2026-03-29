@@ -111,6 +111,38 @@
 }
 
 /* ========================================
+   Bootstrap Nav-Tabs Override
+   Prevent excessive border-radius from BaseHeader.css
+   ======================================== */
+
+/* Override global nav-link styles for Bootstrap nav-tabs in MaterialsTab */
+.cm-materials-tab .nav-tabs {
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.cm-materials-tab .nav-tabs .nav-link {
+    border-radius: 6px;
+    padding: 10px 16px;
+    color: #666;
+    font-weight: 500;
+    border: 1px solid transparent;
+    margin-bottom: -2px;
+}
+
+.cm-materials-tab .nav-tabs .nav-link:hover {
+    border-radius: 6px;
+    background: rgba(102, 126, 234, 0.05);
+    color: #667eea;
+}
+
+.cm-materials-tab .nav-tabs .nav-link.active {
+    color: #667eea;
+    background: transparent;
+    border-bottom: 2px solid #667eea;
+    border-radius: 0;
+}
+
+/* ========================================
    Tab Description & Content
    ======================================== */
 
@@ -841,6 +873,63 @@
     margin-bottom: 20px;
 }
 
+.cm-empty-state .btn {
+    display: inline-block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ========================================
+   Tags Table Styles (Kursus Tag)
+   ======================================== */
+
+.cm-tags-table-responsive {
+    overflow-x: auto;
+}
+
+.cm-tags-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cm-tags-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.cm-tags-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.cm-tags-table td {
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.cm-tags-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.cm-tag-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cm-tag-row h6 {
+    color: #1a1a1a;
+    font-weight: 600;
+    margin: 0;
+}
+
+.cm-tag-row small {
+    color: #999;
+    font-size: 0.8rem;
+}
+
 /* ========================================
    Modal Styles
    ======================================== */
@@ -1176,4 +1265,59 @@
 .modern-form-check .form-check-label i {
     color: #667eea;
     margin-right: 8px;
+}
+
+/* ========================================
+   Modal Form-Check Fix
+   Override accessibility-fixes.css excessive padding
+   ======================================== */
+
+/* Fix form-check overflow in modals */
+.cm-modal-body .form-check {
+    min-height: auto;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cm-modal-body .form-check input[type="checkbox"],
+.cm-modal-body .form-check input[type="radio"] {
+    min-width: 18px;
+    min-height: 18px;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.cm-modal-body .form-check-input {
+    margin-top: 0;
+    margin-left: 0;
+}
+
+.cm-modal-body .form-check-label {
+    padding-left: 0;
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+/* ========================================
+   Modal Alert Close Button Fix
+   Override accessibility-fixes.css excessive sizing
+   ======================================== */
+
+/* Fix btn-close in modal alerts (too large from accessibility-fixes) */
+.cm-modal-body .alert .btn-close {
+    min-width: auto;
+    min-height: auto;
+    padding: 0;
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1rem;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.cm-modal-body .alert .btn-close:hover {
+    opacity: 1;
 }

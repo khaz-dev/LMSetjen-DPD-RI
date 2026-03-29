@@ -9,7 +9,7 @@ import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 
 // Custom hooks
-import { useCourseData, useCourseForm, useCourseSubmit, useCategories } from "./hooks/useCourse";
+import { useCourseData, useCourseForm, useCourseSubmit, useCategories, useTags } from "./hooks/useCourse";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import { useDebouncedCallback } from "../../utils/useOptimization";  // ✨ PHASE 4.168: Auto-save utility
 
@@ -70,6 +70,7 @@ function CourseEdit() {
     // Custom hooks
     const { courseData, setCourseData, updateCourseData, fetchCourseData, loading, error } = useCourseData(param?.course_id);
     const { categories } = useCategories();
+    const { tags } = useTags();
     const { 
         errors, 
         warnings, 
@@ -1039,6 +1040,41 @@ function CourseEdit() {
                                                     required
                                                     helpText="Tentukan tingkat kesulitan"
                                                 />
+                                            </div>
+                                        </div>
+
+                                        <div className="row">
+                                            <div className="col-md-12">
+                                                <div className="form-group mb-3">
+                                                    <label htmlFor="tags-field" className="form-label">
+                                                        Kursus Tag
+                                                        <small className="text-muted ms-2">(Opsional)</small>
+                                                    </label>
+                                                    <select
+                                                        id="tags-field"
+                                                        name="tags"
+                                                        multiple
+                                                        className={`form-control form-select ${getFieldValidationClass('tags')}`}
+                                                        value={Array.isArray(courseData?.tags) ? courseData.tags.map(tag => tag.id || tag) : []}
+                                                        onChange={(e) => {
+                                                            const selectedTagIds = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                                                            // Map tag IDs back to tag objects
+                                                            const selectedTags = tags.filter(tag => selectedTagIds.includes(tag.id));
+                                                            updateCourseData('tags', selectedTags);
+                                                        }}
+                                                        style={{ minHeight: '120px' }}
+                                                    >
+                                                        <option value="">-- Pilih tag kursus --</option>
+                                                        {Array.isArray(tags) && tags.map(tag => (
+                                                            <option key={tag.id} value={tag.id}>
+                                                                {tag.title}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <small className="form-text text-muted d-block mt-2">
+                                                        Tahan Ctrl (Windows) atau Cmd (Mac) untuk memilih multiple tags. Tag membantu siswa menemukan kursus dengan lebih mudah.
+                                                    </small>
+                                                </div>
                                             </div>
                                         </div>
 

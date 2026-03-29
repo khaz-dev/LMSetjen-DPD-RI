@@ -8098,6 +8098,128 @@ class AdminCategoryDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class TagListAPIView(generics.ListAPIView):
+    """
+    ✨ PHASE X: Public endpoint to list all active tags
+    - Returns all active tags with course counts
+    - Used by students to browse tags
+    """
+    queryset = api_models.Tag.objects.filter(active=True)  
+    serializer_class = api_serializer.TagSerializer
+    permission_classes = [AllowAny]
+
+
+class AdminTagListCreateAPIView(generics.ListCreateAPIView):
+    """
+    ✨ PHASE X: Admin endpoint to list and create course tags
+    - Requires admin authentication
+    - Supports full CRUD operations for course tags
+    """
+    queryset = api_models.Tag.objects.all()
+    serializer_class = api_serializer.TagManagementSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def get_queryset(self):
+        """Get all tags for admin management"""
+        # Verify admin access
+        if not (hasattr(self.request.user, 'role') and self.request.user.is_admin):
+            return api_models.Tag.objects.none()
+        return api_models.Tag.objects.all().order_by('-id')
+    
+    def create(self, request, *args, **kwargs):
+        """Create new course tag - Admin only"""
+        try:
+            # Verify admin access
+            if not (hasattr(request.user, 'role') and request.user.is_admin):
+                return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+            
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                tag = serializer.save()
+                return Response(
+                    {
+                        'message': 'Tag created successfully',
+                        'tag': serializer.data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminTagDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    ✨ PHASE X: Admin endpoint for tag details, updates, and deletion
+    - GET: Retrieve tag details with course count
+    - PUT/PATCH: Update tag information
+    - DELETE: Remove tag (only if no courses tagged with it)
+    """
+    queryset = api_models.Tag.objects.all()
+    serializer_class = api_serializer.TagManagementSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    lookup_field = 'id'
+    
+    def update(self, request, *args, **kwargs):
+        """Update tag details"""
+        try:
+            # Verify admin access
+            if not (hasattr(request.user, 'role') and request.user.is_admin):
+                return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+            
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            
+            if serializer.is_valid():
+                tag = serializer.save()
+                return Response(
+                    {
+                        'message': 'Tag updated successfully',
+                        'tag': serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Delete tag - only if no courses tagged with it"""
+        try:
+            # Verify admin access
+            if not (hasattr(request.user, 'role') and request.user.is_admin):
+                return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+            
+            instance = self.get_object()
+            
+            # Check if tag has courses
+            course_count = instance.courses.count()
+            if course_count > 0:
+                return Response(
+                    {
+                        'error': f'Cannot delete tag with {course_count} course(s). Remove tag from courses first.',
+                        'course_count': course_count
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            tag_name = instance.title
+            instance.delete()
+            
+            # Return 200 OK with message instead of 204 for better frontend handling
+            return Response(
+                {
+                    'message': f'Tag "{tag_name}" deleted successfully',
+                    'success': True
+                },
+                status=status.HTTP_200_OK
+            )
+        except api_models.Tag.DoesNotExist:
+            return Response({'error': 'Tag not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 def compare_users_data(external_user, existing_user):
     """
     Compare external user data with existing user to determine if changed.

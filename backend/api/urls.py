@@ -187,6 +187,11 @@ urlpatterns = [
     path("admin/category/", api_views.AdminCategoryListCreateAPIView.as_view()),
     path("admin/category/<int:id>/", api_views.AdminCategoryDetailAPIView.as_view()),
 
+    # ✨ PHASE X: Admin Tag Management URLs
+    path("course/tag/", api_views.TagListAPIView.as_view()),
+    path("admin/tag/", api_views.AdminTagListCreateAPIView.as_view()),
+    path("admin/tag/<int:id>/", api_views.AdminTagDetailAPIView.as_view()),
+
     # ✨ PHASE 4.12: Admin Testimonial Management URLs (Curation)
     path("admin/testimonials/pending/", api_views.AdminPendingTestimonialsListAPIView.as_view()),
     path("admin/testimonials/approved/", api_views.AdminApprovedTestimonialsListAPIView.as_view()),

@@ -3,6 +3,7 @@ from api import models
 
 admin.site.register(models.Teacher)
 admin.site.register(models.Category)
+admin.site.register(models.Tag)
 
 # ✨ PHASE 4.76: Custom Course Admin to distinguish draft vs published versions
 class CourseAdmin(admin.ModelAdmin):

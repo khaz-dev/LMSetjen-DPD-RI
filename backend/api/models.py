@@ -152,9 +152,41 @@ class Category(models.Model):
         if self.slug == "" or self.slug == None:
             self.slug = slugify(self.title) 
         super(Category, self).save(*args, **kwargs)
+
+class Tag(models.Model):
+    """
+    ✨ PHASE X: Course Tags for fine-grained content categorization
+    - Allows instructors to tag courses with multiple labels
+    - Separate from Category for flexible organization
+    - Can be empty (null=True, blank=True for courses)
+    """
+    title = models.CharField(max_length=100)
+    active = models.BooleanField(default=True)
+    slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name_plural = "Tags"
+        ordering = ['title']
+
+    def __str__(self):
+        return self.title
+    
+    def course_count(self):
+        """Count published courses tagged with this tag"""
+        return self.courses.filter(
+            platform_status="Published",
+            is_published_version=True
+        ).count()
+    
+    def save(self, *args, **kwargs):
+        if self.slug == "" or self.slug == None:
+            self.slug = slugify(self.title) 
+        super(Tag, self).save(*args, **kwargs)
             
 class Course(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    tags = models.ManyToManyField(Tag, blank=True, related_name='courses')
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, blank=True, null=True)
     file = models.URLField(max_length=500, blank=True, null=True)  # Changed to URLField for file-upload API
     image = models.URLField(max_length=500, blank=True, null=True)  # Changed to URLField for file-upload API

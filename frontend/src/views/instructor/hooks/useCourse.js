@@ -367,3 +367,55 @@ export const useCategories = () => {
         error
     };
 };
+
+export const useTags = () => {
+    const [tags, setTags] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    // ✨ PHASE X: Fetch guard to prevent duplicate tag loads
+    const hasFetchedRef = useRef(false);
+
+    useEffect(() => {
+        // ✨ PHASE X: Skip if tags already loaded (prevents duplicates in React Strict Mode)
+        if (tags && tags.length > 0) return;
+        
+        // Guard against multiple fetches in React Strict Mode
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
+        
+        const fetchTags = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                
+                const response = await useAxios.get("/course/tag/");
+                
+                if (response?.data) {
+                    // Handle both paginated and direct array responses
+                    const data = Array.isArray(response.data) 
+                        ? response.data 
+                        : (response.data.results || []);
+                    
+                    setTags(Array.isArray(data) ? data : []);
+                } else {
+                    setError("Failed to load tags");
+                    setTags([]);
+                }
+            } catch (error) {
+                console.error("Error fetching tags:", error);
+                setError("Failed to load tags");
+                setTags([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTags();
+    }, [tags?.length]);
+
+    return {
+        tags: Array.isArray(tags) ? tags : [],
+        loading,
+        error
+    };
+};

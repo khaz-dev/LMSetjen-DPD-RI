@@ -108,19 +108,19 @@
 .admin-nav-tabs {
     border: none;
     background: white;
-    border-radius: 15px;
+    border-radius: 12px;
     padding: 10px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .admin-nav-tabs .nav-link {
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     margin-right: 5px;
     color: #64748b;
     font-weight: 600;
     padding: 12px 24px;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease;
     position: relative;
     overflow: hidden;
 }

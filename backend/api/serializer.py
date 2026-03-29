@@ -392,30 +392,65 @@ class CategoryManagementSerializer(serializers.ModelSerializer):
             platform_status="Published",
             is_published_version=True  # [*] PHASE 4.77: Count only published copies, not drafts
         ).count()
+
+
+class TagSerializer(serializers.ModelSerializer):
+    """✨ PHASE X: Serializer for course tags"""
+    course_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        fields = ['id', 'title', 'slug', 'course_count']
+        model = api_models.Tag
+    
+    def get_course_count(self, obj):
+        """Get count of published courses with this tag"""
+        return api_models.Course.objects.filter(
+            tags=obj,
+            platform_status="Published",
+            is_published_version=True
+        ).count()
+
+
+class TagManagementSerializer(serializers.ModelSerializer):
+    """✨ PHASE X: Serializer for admin tag management with full CRUD support"""
+    course_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        fields = ['id', 'title', 'slug', 'active', 'course_count']
+        model = api_models.Tag
+        read_only_fields = ['id', 'slug', 'course_count']
+    
+    def get_course_count(self, obj):
+        """Get count of published courses with this tag"""
+        return api_models.Course.objects.filter(
+            tags=obj,
+            platform_status="Published",
+            is_published_version=True
+        ).count()
     
     def validate_title(self, value):
-        """Ensure category title is not empty and unique"""
+        """Ensure tag title is not empty and unique"""
         if not value or not value.strip():
-            raise serializers.ValidationError("Category title cannot be empty.")
+            raise serializers.ValidationError("Tag title cannot be empty.")
         
         # Check for uniqueness excluding current instance
         instance = self.instance
-        duplicate = api_models.Category.objects.filter(title__iexact=value.strip())
+        duplicate = api_models.Tag.objects.filter(title__iexact=value.strip())
         if instance:
             duplicate = duplicate.exclude(id=instance.id)
         
         if duplicate.exists():
-            raise serializers.ValidationError(f"Category with title '{value}' already exists.")
+            raise serializers.ValidationError(f"Tag with title '{value}' already exists.")
         
         return value.strip()
     
     def create(self, validated_data):
-        """Create new category with slug auto-generation"""
-        category = api_models.Category.objects.create(**validated_data)
-        return category
+        """Create new tag with slug auto-generation"""
+        tag = api_models.Tag.objects.create(**validated_data)
+        return tag
     
     def update(self, instance, validated_data):
-        """Update category details"""
+        """Update tag details"""
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
@@ -1347,6 +1382,8 @@ class CourseSerializer(serializers.ModelSerializer):
     requirements = CourseRequirementSerializer(many=True, read_only=True, required=False)
     learning_outcomes = CourseLearningOutcomeSerializer(many=True, read_only=True, required=False)
     resources = CourseResourceSerializer(many=True, read_only=True, required=False)
+    # ✨ PHASE X: Tags for course categorization
+    tags = TagSerializer(many=True, read_only=True, required=False)
     # ✨ PHASE 11.202+: Validate completed lessons - return only VALID completions
     # FIXED: Previously returned ALL CompletedLesson records including orphaned ones
     # Now validates each completion against its verification question requirement
@@ -1361,7 +1398,7 @@ class CourseSerializer(serializers.ModelSerializer):
     total_jam_pelatihan = serializers.SerializerMethodField()
     
     class Meta:
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan"]
+        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan"]
         model = api_models.Course
     
     def get_qa_count(self, obj):

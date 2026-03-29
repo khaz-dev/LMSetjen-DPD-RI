@@ -181,6 +181,7 @@ input[type="radio"] {
   display: flex;
   align-items: center;
   padding: 12px 0;
+  padding-left: 1rem !important;
 }
 
 .form-check-input {
@@ -188,9 +189,9 @@ input[type="radio"] {
 }
 
 .form-check-label {
-  padding-left: 8px;
   cursor: pointer;
   flex: 1;
+  padding: 0.5rem;
 }
 
 /* Pagination */
