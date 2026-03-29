@@ -661,7 +661,7 @@ function UsersAdmin() {
         <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <AdminHeader />
             
-            <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
+            <section className="pt-4 pb-5 modern-dashboard" style={{ flex: 1 }}>
                 <div className='container'>
                     {/* Modern Header Section */}
                     <div className="dashboard-header-modern">
@@ -729,7 +729,7 @@ function UsersAdmin() {
 
                     {/* Enhanced Statistics Cards */}
                     <div className="row">
-                        <div className="col-lg-3 col-md-6 mb-4">
+                        <div className="col-lg-3 col-md-6 mb-3">
                             <div className="stat-card-enhanced total-users">
                                 <FaUsers className="stat-icon-enhanced" />
                                 <div className="stat-content">
@@ -741,7 +741,7 @@ function UsersAdmin() {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-lg-3 col-md-6 mb-4">
+                        <div className="col-lg-3 col-md-6 mb-3">
                             <div className="stat-card-enhanced active-users">
                                 <FaUserCheck className="stat-icon-enhanced" />
                                 <div className="stat-content">
@@ -753,7 +753,7 @@ function UsersAdmin() {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-lg-2 col-md-4 mb-4">
+                        <div className="col-lg-2 col-md-4 mb-3">
                             <div className="mini-stat-card-modern students">
                                 <FaUserGraduate className="mini-stat-icon" />
                                 <div className="mini-stat-content">
@@ -762,7 +762,7 @@ function UsersAdmin() {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-lg-2 col-md-4 mb-4">
+                        <div className="col-lg-2 col-md-4 mb-3">
                             <div className="mini-stat-card-modern teachers">
                                 <FaUserTie className="mini-stat-icon" />
                                 <div className="mini-stat-content">
@@ -771,7 +771,7 @@ function UsersAdmin() {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-lg-2 col-md-4 mb-4">
+                        <div className="col-lg-2 col-md-4 mb-3">
                             <div className="mini-stat-card-modern admins">
                                 <FaUserCog className="mini-stat-icon" />
                                 <div className="mini-stat-content">

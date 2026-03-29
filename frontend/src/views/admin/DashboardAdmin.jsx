@@ -258,7 +258,7 @@ function DashboardAdmin() {
                     </div>
 
                     {/* Tab Navigation */}
-                    <ul className="nav nav-tabs admin-nav-tabs mb-4">
+                    <ul className="nav nav-tabs admin-nav-tabs mb-3">
                         <li className="nav-item">
                             <button 
                                 className={`nav-link ${activeTab === "overview" ? "active" : ""}`}
@@ -340,7 +340,7 @@ function DashboardAdmin() {
                             <div className="tab-pane fade show active">
                                 {/* Statistics Cards */}
                                 <div className="row">
-                                    <div className="col-xl-3 col-md-6 mb-4">
+                                    <div className="col-xl-3 col-md-6 mb-3">
                                         <div className="stat-card stat-card-primary">
                                             <div className="stat-card-body">
                                                 <div className="stat-icon">
@@ -357,7 +357,7 @@ function DashboardAdmin() {
                                         </div>
                                     </div>
 
-                                    <div className="col-xl-3 col-md-6 mb-4">
+                                    <div className="col-xl-3 col-md-6 mb-3">
                                         <div className="stat-card stat-card-success">
                                             <div className="stat-card-body">
                                                 <div className="stat-icon">
@@ -374,7 +374,7 @@ function DashboardAdmin() {
                                         </div>
                                     </div>
 
-                                    <div className="col-xl-3 col-md-6 mb-4">
+                                    <div className="col-xl-3 col-md-6 mb-3">
                                         <div className="stat-card stat-card-warning">
                                             <div className="stat-card-body">
                                                 <div className="stat-icon">
@@ -391,7 +391,7 @@ function DashboardAdmin() {
                                         </div>
                                     </div>
 
-                                    <div className="col-xl-3 col-md-6 mb-4">
+                                    <div className="col-xl-3 col-md-6 mb-3">
                                         <div className="stat-card stat-card-info">
                                             <div className="stat-card-body">
                                                 <div className="stat-icon">
@@ -411,7 +411,7 @@ function DashboardAdmin() {
 
                                 {/* Additional Stats Row */}
                                 <div className="row">
-                                    <div className="col-xl-3 col-md-6 mb-4">
+                                    <div className="col-xl-3 col-md-6 mb-3">
                                         <div className="mini-stat-card">
                                             <div className="mini-stat-icon">
                                                 <i className="fas fa-certificate text-success"></i>
@@ -423,7 +423,7 @@ function DashboardAdmin() {
                                         </div>
                                     </div>
 
-                                    <div className="col-xl-3 col-md-6 mb-4">
+                                    <div className="col-xl-3 col-md-6 mb-3">
                                         <div className="mini-stat-card">
                                             <div className="mini-stat-icon">
                                                 <i className="fas fa-star text-warning"></i>
@@ -435,7 +435,7 @@ function DashboardAdmin() {
                                         </div>
                                     </div>
 
-                                    <div className="col-xl-3 col-md-6 mb-4">
+                                    <div className="col-xl-3 col-md-6 mb-3">
                                         <div className="mini-stat-card">
                                             <div className="mini-stat-icon">
                                                 <i className="fas fa-question-circle text-info"></i>
@@ -447,7 +447,7 @@ function DashboardAdmin() {
                                         </div>
                                     </div>
 
-                                    <div className="col-xl-3 col-md-6 mb-4">
+                                    <div className="col-xl-3 col-md-6 mb-3">
                                         <div className="mini-stat-card">
                                             <div className="mini-stat-icon">
                                                 <i className="fas fa-percentage text-primary"></i>
@@ -462,7 +462,7 @@ function DashboardAdmin() {
 
                                 {/* Quick Lists */}
                                 <div className="row">
-                                    <div className="col-lg-6 mb-4">
+                                    <div className="col-lg-6 mb-3">
                                         <div className="activity-panel">
                                             <div className="panel-header">
                                                 <h5 className="panel-title">

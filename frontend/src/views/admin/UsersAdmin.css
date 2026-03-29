@@ -47,7 +47,7 @@
     padding: 30px;
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
+    margin-bottom: 1rem;
     border: 1px solid #e3f2fd;
 }
 
@@ -321,7 +321,7 @@
     background: white;
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    margin-bottom: 30px;
+    margin-bottom: 1rem;
     border: 1px solid #f1f5f9;
     overflow: hidden;
 }
@@ -2891,7 +2891,7 @@
     justify-content: center;
     align-items: center;
     gap: 8px;
-    margin-top: 25px;
+    margin-top: 1rem;
     padding: 12px 20px;
     background: white;
     border-radius: 12px;
