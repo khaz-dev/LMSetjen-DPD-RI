@@ -88,7 +88,6 @@ function AdminHeader() {
         // ✨ PHASE 11.1: User Feedback Management
         { to: "/admin/feedback/", icon: "fas fa-comments", text: "Manajemen Masukan", requiresSuperAdmin: false },
         { to: "/admin/system/", icon: "fas fa-cogs", text: "Pengaturan Sistem", requiresSuperAdmin: true },
-        { to: "/admin/profile/", icon: "fas fa-user-cog", text: "Profil Admin", requiresSuperAdmin: false },
         { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar", requiresSuperAdmin: false }
     ];
 
