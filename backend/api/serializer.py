@@ -3018,144 +3018,160 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
 # NOTE: Feedback model not currently implemented
 # These serializers are commented out until the Feedback model is added to models.py
 #
-# class FeedbackListSerializer(serializers.ModelSerializer):
-#     """Serializer for listing feedback items (admin dashboard)"""
-#     user_name = serializers.CharField(source='user.full_name', read_only=True)
-#     user_role = serializers.SerializerMethodField()
-#     course_title = serializers.CharField(source='related_course.title', read_only=True, allow_null=True)
-#     assigned_to_name = serializers.CharField(source='assigned_to.full_name', read_only=True, allow_null=True)
-#     
-#     class Meta:
-#         model = api_models.Feedback
-#         fields = [
-#             'id',
-#             'feedback_type',
-#             'title',
-#             'description',
-#             'status',
-#             'priority',
-#             'user_name',
-#             'user_role',
-#             'course_title',
-#             'affected_area',
-#             'assigned_to_name',
-#             'created_at',
-#             'updated_at',
-#         ]
-#         read_only_fields = fields
-#     
-#     def get_user_role(self, obj):
-#         """Get user role"""
-#         return obj.get_user_role()
-#
-#
-# class FeedbackDetailSerializer(serializers.ModelSerializer):
-#     """Serializer for detailed feedback view/editing"""
-#     user_name = serializers.CharField(source='user.full_name', read_only=True)
-#     user_email = serializers.CharField(source='user.email', read_only=True)
-#     user_role = serializers.SerializerMethodField()
-#     course_title = serializers.CharField(source='related_course.title', read_only=True, allow_null=True)
-#     assigned_to_name = serializers.CharField(source='assigned_to.full_name', read_only=True, allow_null=True)
-#     
-#     class Meta:
-#         model = api_models.Feedback
-#         fields = [
-#             'id',
-#             'feedback_type',
-#             'title',
-#             'description',
-#             'status',
-#             'priority',
-#             'related_course',
-#             'course_title',
-#             'related_url',
-#             'affected_area',
-#             'attachments',
-#             'admin_notes',
-#             'assigned_to',
-#             'assigned_to_name',
-#             'user_name',
-#             'user_email',
-#             'user_role',
-#             'created_at',
-#             'updated_at',
-#             'resolved_at',
-#         ]
-#         read_only_fields = [
-#             'id',
-#             'created_at',
-#             'updated_at',
-#             'user_name',
-#             'user_email',
-#             'user_role',
-#             'course_title',
-#             'assigned_to_name',
-#         ]
-#     
-#     def get_user_role(self, obj):
-#         """Get user role"""
-#         return obj.get_user_role()
-#
-#
-# class FeedbackCreateSerializer(serializers.ModelSerializer):
-#     """Serializer for creating feedback (user submission)"""
-#     
-#     class Meta:
-#         model = api_models.Feedback
-#         fields = [
-#             'feedback_type',
-#             'title',
-#             'description',
-#             'related_course',
-#             'related_url',
-#             'affected_area',
-#             'attachments',
-#         ]
-#     
-#     def validate_title(self, value):
-#         """Validate title is provided and not too short"""
-#         if not value or len(value.strip()) < 3:
-#             raise serializers.ValidationError("Title must be at least 3 characters long.")
-#         return value
-#     
-#     def validate_description(self, value):
-#         """Validate description is provided and not too short"""
-#         if not value or len(value.strip()) < 10:
-#             raise serializers.ValidationError("Description must be at least 10 characters long.")
-#         return value
-#     
-#     def create(self, validated_data):
-#         """Create feedback with current user"""
-#         request = self.context.get('request')
-#         validated_data['user'] = request.user
-#         return super().create(validated_data)
-#
-#
-# class FeedbackUpdateSerializer(serializers.ModelSerializer):
-#     """Serializer for updating feedback (admin only)"""
-#     
-#     class Meta:
-#         model = api_models.Feedback
-#         fields = [
-#             'status',
-#             'priority',
-#             'admin_notes',
-#             'assigned_to',
-#             'resolved_at',
-#         ]
-#
-#
-# class FeedbackStatsSerializer(serializers.Serializer):
-#     """Serializer for feedback statistics"""
-#     total_feedback = serializers.IntegerField()
-#     open_count = serializers.IntegerField()
-#     in_progress_count = serializers.IntegerField()
-#     resolved_count = serializers.IntegerField()
-#     bug_reports = serializers.IntegerField()
-#     feature_requests = serializers.IntegerField()
-#     critical_priority = serializers.IntegerField()
-#     high_priority = serializers.IntegerField()
-#     avg_resolution_time_days = serializers.FloatField(allow_null=True)
+
+# ✨ PHASE 11.1: Feedback System Serializers
+class FeedbackListSerializer(serializers.ModelSerializer):
+    """Serializer for listing feedback items (admin dashboard)"""
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    user_role = serializers.SerializerMethodField()
+    course_title = serializers.CharField(source='related_course.title', read_only=True, allow_null=True)
+    assigned_to_name = serializers.CharField(source='assigned_to.full_name', read_only=True, allow_null=True)
+    
+    class Meta:
+        model = api_models.Feedback
+        fields = [
+            'id',
+            'feedback_type',
+            'title',
+            'description',
+            'status',
+            'priority',
+            'user_name',
+            'user_role',
+            'course_title',
+            'affected_area',
+            'assigned_to_name',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = fields
+    
+    def get_user_role(self, obj):
+        """Get user role"""
+        return obj.get_user_role()
+
+
+class FeedbackDetailSerializer(serializers.ModelSerializer):
+    """Serializer for detailed feedback view/editing"""
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_role = serializers.SerializerMethodField()
+    course_title = serializers.CharField(source='related_course.title', read_only=True, allow_null=True)
+    assigned_to_name = serializers.CharField(source='assigned_to.full_name', read_only=True, allow_null=True)
+    
+    class Meta:
+        model = api_models.Feedback
+        fields = [
+            'id',
+            'feedback_type',
+            'title',
+            'description',
+            'status',
+            'priority',
+            'related_course',
+            'course_title',
+            'related_url',
+            'affected_area',
+            'attachments',
+            'admin_notes',
+            'assigned_to',
+            'assigned_to_name',
+            'user_name',
+            'user_email',
+            'user_role',
+            'created_at',
+            'updated_at',
+            'resolved_at',
+        ]
+        read_only_fields = [
+            'id',
+            'created_at',
+            'updated_at',
+            'user_name',
+            'user_email',
+            'user_role',
+            'course_title',
+            'assigned_to_name',
+        ]
+    
+    def get_user_role(self, obj):
+        """Get user role"""
+        return obj.get_user_role()
+
+
+class FeedbackCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating feedback (user submission)"""
+    
+    class Meta:
+        model = api_models.Feedback
+        fields = [
+            'feedback_type',
+            'title',
+            'description',
+            'related_course',
+            'related_url',
+            'affected_area',
+            'attachments',
+        ]
+    
+    def validate_title(self, value):
+        """Validate title is provided and not too short"""
+        if not value or len(value.strip()) < 3:
+            raise serializers.ValidationError("Title must be at least 3 characters long.")
+        return value
+    
+    def validate_description(self, value):
+        """Validate description is provided and not too short"""
+        if not value or len(value.strip()) < 10:
+            raise serializers.ValidationError("Description must be at least 10 characters long.")
+        return value
+    
+    def create(self, validated_data):
+        """Create feedback with current user and capture role at submission time
+        ✨ PHASE 11.2: Store user role at submission to prevent changes from affecting past feedback
+        """
+        request = self.context.get('request')
+        validated_data['user'] = request.user
+        
+        # ✨ PHASE 11.2: Capture the user's current role at submission time (immutable)
+        if request.user:
+            # Prefer current_role (active session role at submission time)
+            if hasattr(request.user, 'current_role') and request.user.current_role:
+                validated_data['user_role_at_submission'] = request.user.current_role
+            # Fallback to role field
+            elif hasattr(request.user, 'role') and request.user.role:
+                validated_data['user_role_at_submission'] = request.user.role
+            else:
+                validated_data['user_role_at_submission'] = 'student'  # Default
+        
+        return super().create(validated_data)
+
+
+class FeedbackUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating feedback (admin only)"""
+    
+    class Meta:
+        model = api_models.Feedback
+        fields = [
+            'status',
+            'priority',
+            'admin_notes',
+            'assigned_to',
+            'resolved_at',
+        ]
+
+
+class FeedbackStatsSerializer(serializers.Serializer):
+    """Serializer for feedback statistics"""
+    total_feedback = serializers.IntegerField()
+    open_count = serializers.IntegerField()
+    in_progress_count = serializers.IntegerField()
+    resolved_count = serializers.IntegerField()
+    bug_reports = serializers.IntegerField()
+    feature_requests = serializers.IntegerField()
+    critical_priority = serializers.IntegerField()
+    high_priority = serializers.IntegerField()
+    avg_resolution_time_days = serializers.FloatField(allow_null=True)
 
 
 # ✨ PHASE 10.1: Ranking System Serializers

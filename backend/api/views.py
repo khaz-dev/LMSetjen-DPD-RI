@@ -11410,4 +11410,215 @@ class ActivityFilterPreferencesAPIView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+
+
+# ==================== FEEDBACK API VIEWS ====================
+# ✨ PHASE 11.1: User Feedback System Views
+
+class FeedbackCreateAPIView(generics.CreateAPIView):
+    """
+    ✨ PHASE 11.1: Create feedback (user submission)
+    POST /api/v1/feedback/create/ - Create new feedback
+    """
+    serializer_class = api_serializer.FeedbackCreateSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def perform_create(self, serializer):
+        """Automatically set the current user as the feedback author"""
+        serializer.save(user=self.request.user)
+
+
+class FeedbackListAPIView(generics.ListAPIView):
+    """
+    ✨ PHASE 11.1: List feedback (admin dashboard)
+    GET /api/v1/feedback/list/ - List all feedback with optional filtering
+    """
+    serializer_class = api_serializer.FeedbackListSerializer
+    permission_classes = [IsAdminUser]
+    pagination_class = None  # No pagination for admin dashboard
+    
+    def get_queryset(self):
+        """Filter feedback by status, type, priority, affected_area, and search"""
+        queryset = api_models.Feedback.objects.all().order_by('-created_at')
+        
+        # Filter by status
+        status_param = self.request.query_params.get('status', None)
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+        
+        # Filter by feedback type
+        feedback_type = self.request.query_params.get('type', None)
+        if feedback_type:
+            queryset = queryset.filter(feedback_type=feedback_type)
+        
+        # Filter by priority
+        priority = self.request.query_params.get('priority', None)
+        if priority:
+            queryset = queryset.filter(priority=priority)
+        
+        # Filter by affected area
+        affected_area = self.request.query_params.get('affected_area', None)
+        if affected_area:
+            queryset = queryset.filter(affected_area=affected_area)
+        
+        # Search in title and description
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) | Q(description__icontains=search)
+            )
+        
+        return queryset
+
+
+class FeedbackDetailAPIView(generics.RetrieveUpdateAPIView):
+    """
+    ✨ PHASE 11.1: Feedback detail view/editing (admin only)
+    GET /api/v1/feedback/detail/<id>/ - Get feedback detail
+    PUT /api/v1/feedback/detail/<id>/ - Update feedback status/priority/notes
+    """
+    queryset = api_models.Feedback.objects.all()
+    serializer_class = api_serializer.FeedbackDetailSerializer
+    permission_classes = [IsAdminUser]
+    lookup_field = 'pk'
+    
+    def get_serializer_class(self):
+        """Use different serializers for GET vs PUT"""
+        if self.request.method in ['PUT', 'PATCH']:
+            return api_serializer.FeedbackUpdateSerializer
+        return api_serializer.FeedbackDetailSerializer
+
+
+class FeedbackStatsAPIView(APIView):
+    """
+    ✨ PHASE 11.1: Get feedback statistics (admin dashboard)
+    GET /api/v1/feedback/stats/ - Get feedback statistics
+    """
+    permission_classes = [IsAdminUser]
+    
+    def get(self, request, *args, **kwargs):
+        """Get feedback statistics"""
+        try:
+            # Count total feedback
+            total_feedback = api_models.Feedback.objects.count()
+            
+            # Count by status
+            open_count = api_models.Feedback.objects.filter(status='open').count()
+            in_progress_count = api_models.Feedback.objects.filter(status='in_progress').count()
+            resolved_count = api_models.Feedback.objects.filter(status='resolved').count()
+            
+            # Count by type
+            bug_reports = api_models.Feedback.objects.filter(feedback_type='bug').count()
+            feature_requests = api_models.Feedback.objects.filter(feedback_type='feature').count()
+            
+            # Count by priority
+            critical_priority = api_models.Feedback.objects.filter(priority='critical').count()
+            high_priority = api_models.Feedback.objects.filter(priority='high').count()
+            
+            # Calculate average resolution time (days)
+            resolved_feedbacks = api_models.Feedback.objects.filter(
+                status='resolved',
+                resolved_at__isnull=False
+            )
+            
+            avg_resolution_time_days = None
+            if resolved_feedbacks.exists():
+                total_days = sum([
+                    (f.resolved_at - f.created_at).days 
+                    for f in resolved_feedbacks
+                ])
+                avg_resolution_time_days = total_days / resolved_feedbacks.count()
+            
+            stats_data = {
+                'total_feedback': total_feedback,
+                'open_count': open_count,
+                'in_progress_count': in_progress_count,
+                'resolved_count': resolved_count,
+                'bug_reports': bug_reports,
+                'feature_requests': feature_requests,
+                'critical_priority': critical_priority,
+                'high_priority': high_priority,
+                'avg_resolution_time_days': avg_resolution_time_days,
+            }
+            
+            serializer = api_serializer.FeedbackStatsSerializer(stats_data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class FeedbackMarkResolvedAPIView(generics.UpdateAPIView):
+    """
+    ✨ PHASE 11.1: Mark feedback as resolved
+    POST /api/v1/feedback/mark-resolved/<id>/ - Mark feedback as resolved
+    """
+    queryset = api_models.Feedback.objects.all()
+    serializer_class = api_serializer.FeedbackUpdateSerializer
+    permission_classes = [IsAdminUser]
+    lookup_field = 'pk'
+    
+    def update(self, request, *args, **kwargs):
+        """Mark feedback as resolved with optional notes"""
+        feedback = self.get_object()
+        
+        # Update status to resolved
+        feedback.status = 'resolved'
+        feedback.resolved_at = timezone.now()
+        
+        # Update admin notes if provided
+        if 'admin_notes' in request.data:
+            feedback.admin_notes = request.data['admin_notes']
+        
+        feedback.save()
+        
+        serializer = self.get_serializer(feedback)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class FeedbackMarkInProgressAPIView(generics.UpdateAPIView):
+    """
+    ✨ PHASE 11.1: Mark feedback as in progress
+    POST /api/v1/feedback/mark-in-progress/<id>/ - Mark feedback as in progress
+    """
+    queryset = api_models.Feedback.objects.all()
+    serializer_class = api_serializer.FeedbackUpdateSerializer
+    permission_classes = [IsAdminUser]
+    lookup_field = 'pk'
+    
+    def update(self, request, *args, **kwargs):
+        """Mark feedback as in progress"""
+        feedback = self.get_object()
+        
+        # Update status to in_progress
+        feedback.status = 'in_progress'
+        
+        # Update admin notes if provided
+        if 'admin_notes' in request.data:
+            feedback.admin_notes = request.data['admin_notes']
+        
+        # Assign to admin if provided
+        if 'assigned_to' in request.data:
+            feedback.assigned_to_id = request.data['assigned_to']
+        
+        feedback.save()
+        
+        serializer = self.get_serializer(feedback)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class FeedbackMyFeedbackAPIView(generics.ListAPIView):
+    """
+    ✨ PHASE 11.1: Get user's own feedback submissions
+    GET /api/v1/feedback/my-feedback/ - List feedback submitted by current user
+    """
+    serializer_class = api_serializer.FeedbackDetailSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
+    
+    def get_queryset(self):
+        """Return only feedback submitted by current user"""
+        return api_models.Feedback.objects.filter(user=self.request.user).order_by('-created_at')

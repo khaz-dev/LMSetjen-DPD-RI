@@ -74,12 +74,30 @@ const FeedbackAdminDashboard = () => {
         setFilters(prev => ({ ...prev, search: value }));
     };
 
-    const openFeedbackDetail = (feedback) => {
-        setSelectedFeedback(feedback);
-        setAdminNotes(feedback.admin_notes || '');
-        setSelectedStatus(feedback.status);
-        setSelectedPriority(feedback.priority);
-        setShowModal(true);
+    /**
+     * ✨ PHASE 11.2: Fixed - Now fetches full detail data when opening modal
+     * FeedbackListSerializer has partial data, but we need all fields for the modal
+     */
+    const openFeedbackDetail = async (feedback) => {
+        try {
+            setIsLoading(true);
+            // Fetch full detail data from the backend
+            const response = await useAxios.get(`/feedback/detail/${feedback.id}/`);
+            setSelectedFeedback(response.data);
+            setAdminNotes(response.data.admin_notes || '');
+            setSelectedStatus(response.data.status);
+            setSelectedPriority(response.data.priority);
+        } catch (error) {
+            console.error('Error loading feedback detail:', error);
+            // Fallback to list data if detail fetch fails
+            setSelectedFeedback(feedback);
+            setAdminNotes(feedback.admin_notes || '');
+            setSelectedStatus(feedback.status);
+            setSelectedPriority(feedback.priority);
+        } finally {
+            setIsLoading(false);
+            setShowModal(true);
+        }
     };
 
     const closeFeedbackModal = () => {
@@ -381,12 +399,51 @@ const FeedbackAdminDashboard = () => {
                         </div>
 
                         <div className="modal-body">
-                            {/* User Info */}
+                            {/* ✨ PHASE 11.2: User Info and Submission Date - Inline Layout */}
+                            <div className="info-row-with-date">
+                                <div className="info-section flex-grow">
+                                    <h4>Diajukan Oleh</h4>
+                                    <p>
+                                        <strong>{selectedFeedback.user_name}</strong> ({getUserRoleLabel(selectedFeedback.user_role)})<br/>
+                                        <small>{selectedFeedback.user_email}</small>
+                                    </p>
+                                </div>
+
+                                {/* ✨ PHASE 11.2: Submission Date - Right Aligned Inline */}
+                                <div className="info-section date-section">
+                                    <h4>Tanggal Pengajuan</h4>
+                                    <p>
+                                        <small>
+                                            {new Date(selectedFeedback.created_at).toLocaleString('id-ID', {
+                                                weekday: 'long',
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </small>
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* ✨ PHASE 11.2: Related Course */}
+                            {selectedFeedback.course_title && (
+                                <div className="info-section">
+                                    <h4>Kursus Terkait</h4>
+                                    <p>{selectedFeedback.course_title}</p>
+                                </div>
+                            )}
+
+                            {/* ✨ PHASE 11.2: Assigned To */}
                             <div className="info-section">
-                                <h4>Diajukan Oleh</h4>
+                                <h4>Ditugaskan Ke</h4>
                                 <p>
-                                    <strong>{selectedFeedback.user_name}</strong> ({getUserRoleLabel(selectedFeedback.user_role)})<br/>
-                                    <small>{selectedFeedback.user_email}</small>
+                                    {selectedFeedback.assigned_to_name ? (
+                                        <strong>{selectedFeedback.assigned_to_name}</strong>
+                                    ) : (
+                                        <span className="text-muted">Belum Ditugaskan</span>
+                                    )}
                                 </p>
                             </div>
 
@@ -415,6 +472,25 @@ const FeedbackAdminDashboard = () => {
                                 <div className="info-section">
                                     <h4>Lampiran</h4>
                                     <p><a href={selectedFeedback.attachments} target="_blank" rel="noopener noreferrer">Lihat Tangkapan Layar</a></p>
+                                </div>
+                            )}
+
+                            {/* ✨ PHASE 11.2: Resolution Info */}
+                            {selectedFeedback.resolved_at && (
+                                <div className="info-section">
+                                    <h4>Tanggal Penyelesaian</h4>
+                                    <p>
+                                        <small>
+                                            {new Date(selectedFeedback.resolved_at).toLocaleString('id-ID', {
+                                                weekday: 'long',
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </small>
+                                    </p>
                                 </div>
                             )}
 

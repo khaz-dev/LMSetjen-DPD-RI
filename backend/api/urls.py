@@ -268,4 +268,14 @@ urlpatterns = [
     path("instructor/activities/", api_views.InstructorActivitiesAPIView.as_view()),  # Dashboard activities
     path("instructor/course/<int:course_id>/activities/", api_views.InstructorCourseActivitiesAPIView.as_view()),  # Course-specific activities
     path("instructor/activities/analytics/", api_views.InstructorActivityAnalyticsAPIView.as_view()),  # Activity analytics
-    path("admin/activities/analytics/", api_views.AdminActivityAnalyticsAPIView.as_view()),]
+    path("admin/activities/analytics/", api_views.AdminActivityAnalyticsAPIView.as_view()),
+    
+    # ✨ PHASE 11.1: Feedback System endpoints
+    path("feedback/create/", api_views.FeedbackCreateAPIView.as_view()),          # POST - Create new feedback
+    path("feedback/list/", api_views.FeedbackListAPIView.as_view()),              # GET - List all feedback (admin)
+    path("feedback/detail/<int:pk>/", api_views.FeedbackDetailAPIView.as_view()),  # GET/PUT - Feedback detail
+    path("feedback/stats/", api_views.FeedbackStatsAPIView.as_view()),             # GET - Feedback statistics
+    path("feedback/mark-resolved/<int:pk>/", api_views.FeedbackMarkResolvedAPIView.as_view()),  # POST - Mark as resolved
+    path("feedback/mark-in-progress/<int:pk>/", api_views.FeedbackMarkInProgressAPIView.as_view()),  # POST - Mark as in progress
+    path("feedback/my-feedback/", api_views.FeedbackMyFeedbackAPIView.as_view()),  # GET - User's feedback submissions
+]

@@ -387,28 +387,28 @@ class PointsAuditLogAdmin(admin.ModelAdmin):
     - Supervise ranking point validity
     """
     list_display = (
-        'get_user_name', 'points', 'category', 'role', 'created_at'
+        'get_user_name', 'points_awarded', 'activity_type', 'points_type', 'awarded_at'
     )
-    list_filter = ('category', 'role', 'created_at')
-    search_fields = ('user__full_name', 'user__email')
-    readonly_fields = ('user', 'points', 'category', 'role', 'metadata', 'created_at')
+    list_filter = ('activity_type', 'points_type', 'awarded_at')
+    search_fields = ('user__full_name', 'user__email', 'description')
+    readonly_fields = ('user', 'points_awarded', 'activity_type', 'points_type', 'awarded_at', 'course_id', 'quiz_id', 'review_id')
     
     fieldsets = (
         ('Audit Information', {
-            'fields': ('user', 'points', 'category', 'role')
+            'fields': ('user', 'points_awarded', 'activity_type', 'points_type', 'description')
         }),
-        ('Metadata', {
-            'fields': ('metadata',),
+        ('Related Items', {
+            'fields': ('course_id', 'quiz_id', 'review_id'),
             'classes': ('wide',)
         }),
         ('Timestamp', {
-            'fields': ('created_at',),
+            'fields': ('awarded_at',),
             'classes': ('collapse',)
         })
     )
     
-    ordering = ('-created_at',)
-    date_hierarchy = 'created_at'
+    ordering = ('-awarded_at',)
+    date_hierarchy = 'awarded_at'
     
     def get_user_name(self, obj):
         return obj.user.full_name if obj.user else '-'

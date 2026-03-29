@@ -5,7 +5,7 @@ from django.db.models.signals import post_save
 from django.contrib.postgres.search import SearchVectorField
 from django.contrib.postgres.indexes import GinIndex
 
-from userauths.models import User, Profile
+from userauths.models import User, Profile, USER_ROLE_CHOICES
 from shortuuid.django_fields import ShortUUIDField
 try:
     from moviepy.editor import VideoFileClip
@@ -3424,39 +3424,69 @@ class PointsAuditLog(models.Model):
     
     ✨ PHASE 10.1: Ranking system integration
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='points_audit_logs')
-    points = models.IntegerField()
-    category = models.CharField(
-        max_length=50,
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='points_audit_log')
+    
+    points_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('student', 'Student Points'),
+            ('instructor', 'Instructor Points'),
+        ],
+        help_text='Whether this is StudentPoints or InstructorPoints'
+    )
+    
+    activity_type = models.CharField(
+        max_length=30,
         choices=[
             ('course_completion', 'Course Completion'),
             ('quiz_score', 'Quiz Score'),
-            ('rating_given', 'Rating Given'),
+            ('rating_given', 'Rating Given by Student'),
+            ('student_rating', 'Rating Received by Instructor'),
             ('course_published', 'Course Published'),
             ('student_enrollment', 'Student Enrollment'),
-            ('testimonial_given', 'Testimonial Given'),
-            ('manual_adjustment', 'Manual Adjustment'),
-        ],
-        default='manual_adjustment'
+        ]
     )
-    role = models.CharField(
-        max_length=20,
-        choices=[('student', 'Student'), ('instructor', 'Instructor')]
+    
+    points_awarded = models.IntegerField()
+    
+    course_id = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text='Course ID if related to course activity'
     )
-    metadata = models.JSONField(default=dict)
-    created_at = models.DateTimeField(auto_now_add=True)
+    
+    quiz_id = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text='Quiz ID if related to quiz'
+    )
+    
+    review_id = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text='Review ID if related to review'
+    )
+    
+    description = models.CharField(
+        max_length=500,
+        help_text='Human readable explanation of what earned these points'
+    )
+    
+    awarded_at = models.DateTimeField(auto_now_add=True, db_index=True)
     
     class Meta:
         db_table = 'api_pointsauditlog'
+        verbose_name = 'Points Audit Log'
+        verbose_name_plural = 'Points Audit Logs'
+        ordering = ['-awarded_at']
         indexes = [
-            models.Index(fields=['user', '-created_at']),
-            models.Index(fields=['category', '-created_at']),
-            models.Index(fields=['role']),
+            models.Index(fields=['user', '-awarded_at'], name='api_pointsa_user_id_f3b453_idx'),
+            models.Index(fields=['activity_type', '-awarded_at'], name='api_pointsa_activit_c05845_idx'),
+            models.Index(fields=['points_type', '-awarded_at'], name='api_pointsa_points__544663_idx'),
         ]
-        ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.user.username} - {self.points} points ({self.get_category_display()})"
+        return f"{self.user.username} - {self.points_awarded} points ({self.get_activity_type_display()})"
 
 
 # ==================== ACTIVITY LOG MODELS (PHASE 53) ====================
@@ -3649,6 +3679,172 @@ class ActivityAggregate(models.Model):
     
     def __str__(self):
         return f"{self.get_period_display()} {self.date} - {self.activity_type}"
+
+
+# ==================== FEEDBACK MODEL ====================
+# ✨ PHASE 11.1: User Feedback System - Allows users to report bugs and request features
+
+FEEDBACK_TYPE_CHOICES = (
+    ('bug', 'Bug Report'),
+    ('feature', 'Feature Request'),
+)
+
+FEEDBACK_STATUS_CHOICES = (
+    ('open', 'Terbuka'),
+    ('under_review', 'Dalam Tinjauan'),
+    ('in_progress', 'Sedang Dikerjakan'),
+    ('resolved', 'Diselesaikan'),
+    ('wont_fix', 'Tidak Akan Diperbaiki'),
+    ('closed', 'Ditutup'),
+)
+
+FEEDBACK_PRIORITY_CHOICES = (
+    ('low', 'Rendah'),
+    ('medium', 'Sedang'),
+    ('high', 'Tinggi'),
+    ('critical', 'Kritis'),
+)
+
+AFFECTED_AREA_CHOICES = (
+    ('course', 'Kursus'),
+    ('video', 'Video'),
+    ('quiz', 'Kuis'),
+    ('forum', 'Forum'),
+    ('ui', 'Antarmuka Pengguna'),
+    ('account', 'Akun'),
+    ('other', 'Lainnya'),
+)
+
+
+class Feedback(models.Model):
+    """
+    ✨ PHASE 11.1: User Feedback Model
+    Stores feedback from users (bug reports and feature requests)
+    """
+    # Requester information
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks')
+    
+    # Feedback type and content
+    feedback_type = models.CharField(
+        max_length=20,
+        choices=FEEDBACK_TYPE_CHOICES,
+        help_text='Type of feedback: bug report or feature request',
+        db_index=True
+    )
+    title = models.CharField(
+        max_length=200,
+        help_text='Brief summary of the feedback'
+    )
+    description = models.TextField(
+        max_length=5000,
+        help_text='Detailed description of the issue or feature request'
+    )
+    
+    # Context
+    related_course = models.ForeignKey(
+        Course,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='feedback_items',
+        help_text='Related course if applicable'
+    )
+    related_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text='URL where the issue occurred'
+    )
+    affected_area = models.CharField(
+        max_length=20,
+        choices=AFFECTED_AREA_CHOICES,
+        default='other',
+        help_text='Component or area affected',
+        db_index=True
+    )
+    
+    # Feedback attachment
+    attachments = models.URLField(
+        blank=True,
+        null=True,
+        help_text='Screenshot or document URL'
+    )
+    
+    # Status and priority
+    status = models.CharField(
+        max_length=20,
+        choices=FEEDBACK_STATUS_CHOICES,
+        default='open',
+        db_index=True,
+        help_text='Current status of the feedback'
+    )
+    priority = models.CharField(
+        max_length=20,
+        choices=FEEDBACK_PRIORITY_CHOICES,
+        default='medium',
+        db_index=True,
+        help_text='Priority level for resolution'
+    )
+    
+    # ✨ PHASE 11.2: User role at submission time (capture role when feedback is created)
+    # This prevents role change from affecting previous feedback submissions
+    user_role_at_submission = models.CharField(
+        max_length=20,
+        choices=USER_ROLE_CHOICES,
+        default='student',
+        help_text='User role captured at the time feedback was submitted (immutable)',
+        editable=False  # Prevent manual editing after creation
+    )
+    
+    # Admin management
+    admin_notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Internal notes from admins'
+    )
+    assigned_to = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_feedbacks',
+        help_text='Admin assigned to handle this feedback'
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'api_feedback'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['status']),
+            models.Index(fields=['feedback_type']),
+            models.Index(fields=['priority']),
+            models.Index(fields=['user']),
+        ]
+    
+    def __str__(self):
+        return f"[{self.get_feedback_type_display()}] {self.title} - {self.get_status_display()}"
+    
+    def get_user_role(self):
+        """
+        Get the role of the user who submitted feedback
+        ✨ PHASE 11.2: Returns the role captured at submission time (immutable)
+        This prevents role changes from affecting past feedback submissions
+        """
+        # Return the stored role from submission time (never changes after creation)
+        if self.user_role_at_submission:
+            return self.user_role_at_submission
+        # Fallback for old records (before migration)
+        if self.user:
+            if hasattr(self.user, 'current_role') and self.user.current_role:
+                return self.user.current_role
+            if hasattr(self.user, 'role') and self.user.role:
+                return self.user.role
+        return 'unknown'
 
 
 # Connect the signals

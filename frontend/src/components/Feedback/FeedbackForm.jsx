@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import './FeedbackForm.css';
 import useAxios from '../../utils/useAxios';
 import Toast from '../../views/plugin/Toast';
+import FeedbackVerificationModal from './FeedbackVerificationModal';
 
 /**
  * ✨ PHASE 11.1: Bug Report & Feature Request Form Component
  * Allows users to submit feedback to improve the platform
+ * 
+ * ✨ PHASE 11.3: Integrated verification modal to prevent spam
+ * Shows verification step before final submission
  * 
  * Props:
  *   - onSuccess: Callback function when feedback is submitted successfully
@@ -25,24 +29,34 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
+    
+    // ✨ PHASE 11.3: Verification modal state
+    const [showVerification, setShowVerification] = useState(false);
+    const [pendingFeedbackData, setPendingFeedbackData] = useState(null);
 
     const feedbackTypes = [
         { value: 'bug', label: '🐛 Laporkan Bug', description: 'Laporkan masalah yang tidak berfungsi sebagaimana mestinya' },
         { value: 'feature', label: '✨ Ajukan Fitur Baru', description: 'Sarankan fitur baru atau perbaikan' },
     ];
 
+    /**
+     * ✨ PHASE 11.2: Fixed affected_area mapping - maps display names to backend enum codes
+     * 
+     * Backend Feedback model expects: ('course', 'video', 'quiz', 'forum', 'ui', 'account', 'other')
+     * Frontend displays Indonesian names but must send backend codes
+     */
     const affectedAreas = [
-        'Pencarian',
-        'Pendaftaran Kursus',
-        'Pemutaran Pelajaran',
-        'Sistem Kuis',
-        'Dasbor',
-        'Profil',
-        'Notifikasi',
-        'Pembayaran',
-        'Sertifikat',
-        'Forum Tanya Jawab',
-        'Lainnya',
+        { value: 'ui', label: 'Pencarian' },
+        { value: 'course', label: 'Pendaftaran Kursus' },
+        { value: 'video', label: 'Pemutaran Pelajaran' },
+        { value: 'quiz', label: 'Sistem Kuis' },
+        { value: 'ui', label: 'Dasbor' },
+        { value: 'account', label: 'Profil' },
+        { value: 'ui', label: 'Notifikasi' },
+        { value: 'other', label: 'Pembayaran' },
+        { value: 'other', label: 'Sertifikat' },
+        { value: 'forum', label: 'Forum Tanya Jawab' },
+        { value: 'other', label: 'Lainnya' },
     ];
 
     const handleChange = (e) => {
@@ -100,60 +114,58 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
             return;
         }
 
-        setIsSubmitting(true);
-
-        try {
-            // Build the request data, exclude empty fields
-            const submitData = {};
-            Object.keys(formData).forEach(key => {
-                if (formData[key]) {
+        // ✨ PHASE 11.3: Build feedback data to send to verification modal
+        const submitData = {};
+        Object.keys(formData).forEach(key => {
+            if (formData[key]) {
+                // ✨ PHASE 11.2: Convert related_course to integer (if provided)
+                // related_course is a ForeignKey, must be sent as integer
+                if (key === 'related_course') {
+                    const courseId = parseInt(formData[key], 10);
+                    if (!isNaN(courseId)) {
+                        submitData[key] = courseId;
+                    }
+                } else {
                     submitData[key] = formData[key];
                 }
-            });
-
-            const response = await useAxios.post('/feedback/create/', submitData);
-
-            Toast().fire({
-                icon: 'success',
-                title: 'Terima Kasih!',
-                text: response.data.message || 'Masukan Anda telah berhasil dikirim',
-            });
-
-            // Reset form
-            setFormData({
-                feedback_type: 'bug',
-                title: '',
-                description: '',
-                related_course: relatedCourse || '',
-                related_url: '',
-                affected_area: '',
-                attachments: '',
-            });
-
-            // Call onSuccess callback
-            if (onSuccess) {
-                onSuccess(response.data);
             }
+        });
 
-            // Close modal/form
-            if (onClose) {
-                onClose();
-            }
-        } catch (error) {
-            console.error('Feedback submission error:', error);
-            const errorMsg = error.response?.data?.error ||
-                error.response?.data?.message ||
-                error.response?.data?.detail ||
-                'Failed to submit feedback. Please try again.';
+        // Store pending data and show verification modal
+        setPendingFeedbackData(submitData);
+        setShowVerification(true);
+    };
 
-            Toast().fire({
-                icon: 'error',
-                title: 'Pengiriman Gagal',
-                text: errorMsg,
-            });
-        } finally {
-            setIsSubmitting(false);
+    // ✨ PHASE 11.3: Handle successful verification submission
+    const handleVerificationSuccess = (response) => {
+        // Reset form
+        setFormData({
+            feedback_type: 'bug',
+            title: '',
+            description: '',
+            related_course: relatedCourse || '',
+            related_url: '',
+            affected_area: '',
+            attachments: '',
+        });
+
+        // Call onSuccess callback
+        if (onSuccess) {
+            onSuccess(response);
         }
+
+        // Close verification modal and form
+        setShowVerification(false);
+        setPendingFeedbackData(null);
+        if (onClose) {
+            onClose();
+        }
+    };
+
+    // ✨ PHASE 11.3: Handle verification modal close
+    const handleVerificationClose = () => {
+        setShowVerification(false);
+        setPendingFeedbackData(null);
     };
 
     return (
@@ -259,7 +271,7 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
                         >
                             <option value="">-- Pilih area --</option>
                             {affectedAreas.map(area => (
-                                <option key={area} value={area}>{area}</option>
+                                <option key={area.value + '-' + area.label} value={area.value}>{area.label}</option>
                             ))}
                         </select>
                     </div>
@@ -348,6 +360,14 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
                     </button>
                 </div>
             </form>
+
+            {/* ✨ PHASE 11.3: Verification Modal */}
+            <FeedbackVerificationModal
+                isOpen={showVerification}
+                onClose={handleVerificationClose}
+                feedbackData={pendingFeedbackData}
+                onSuccess={handleVerificationSuccess}
+            />
         </div>
     );
 };
