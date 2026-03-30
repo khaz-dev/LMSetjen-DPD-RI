@@ -65,7 +65,7 @@
 .acrd-title i {
     font-size: 1rem;
     margin-right: 8px;
-    color: #667eea;
+    color: #0d9488;
 }
 
 /* ========================================
@@ -174,7 +174,7 @@
 }
 
 .acrd-meta-item span {
-    color: #667eea;
+    color: #0d9488;
     font-weight: 500;
 }
 
@@ -197,7 +197,7 @@
 .acrd-stat-number {
     font-size: 1.75rem;
     font-weight: 800;
-    color: #667eea;
+    color: #0d9488;
     line-height: 1;
 }
 
@@ -225,11 +225,11 @@
     color: #2c3e50;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid #0d9488;
 }
 
 .acrd-section-title i {
-    color: #667eea;
+    color: #0d9488;
     margin-right: 8px;
 }
 
@@ -240,7 +240,7 @@
     margin: 0;
     padding: 15px;
     background: rgba(0, 0, 0, 0.02);
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #0d9488;
     border-radius: 4px;
     word-break: break-word;
 }
@@ -304,7 +304,7 @@
 .acrd-description blockquote {
     margin: 1.5rem 0;
     padding-left: 1rem;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #0d9488;
     color: #666;
     font-style: italic;
 }
@@ -362,13 +362,13 @@
 }
 
 .acrd-description a {
-    color: #667eea;
+    color: #0d9488;
     text-decoration: none;
     transition: all 0.2s ease;
 }
 
 .acrd-description a:hover {
-    color: #764ba2;
+    color: #0f766e;
     text-decoration: underline;
 }
 
@@ -398,7 +398,7 @@
 }
 
 .acrd-section:hover {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
 }
 
@@ -419,11 +419,11 @@
 
 .acrd-section-header:hover {
     background: linear-gradient(135deg, #eef2f8 0%, #f3f8fc 100%);
-    color: #667eea;
+    color: #0d9488;
 }
 
 .acrd-section-num {
-    background: #667eea;
+    background: #0d9488;
     color: white;
     padding: 4px 10px;
     border-radius: 4px;
@@ -444,7 +444,7 @@
 
 .transition-icon.expanded {
     transform: rotate(180deg);
-    color: #667eea;
+    color: #0d9488;
 }
 
 .acrd-section-content {
@@ -478,7 +478,7 @@
 }
 
 .acrd-lecture-item:hover {
-    border-color: #667eea;
+    border-color: #0d9488;
     background: #f9fbfd;
 }
 
@@ -511,7 +511,7 @@
     background: rgba(102, 126, 234, 0.1);
     border-radius: 4px;
     font-size: 0.8rem;
-    color: #667eea;
+    color: #0d9488;
     font-weight: 600;
 }
 
@@ -534,7 +534,7 @@
     margin: 8px 0;
     padding: 8px;
     background: rgba(0, 0, 0, 0.02);
-    border-left: 3px solid #667eea;
+    border-left: 3px solid #0d9488;
     border-radius: 2px;
 }
 
@@ -550,7 +550,7 @@
     display: inline-flex;
     align-items: center;
     padding: 6px 12px;
-    background: #667eea;
+    background: #0d9488;
     color: white;
     border-radius: 4px;
     text-decoration: none;
@@ -560,7 +560,7 @@
 }
 
 .acrd-video-link:hover {
-    background: #764ba2;
+    background: #0f766e;
     color: white;
     transform: translateX(2px);
 }
@@ -616,7 +616,7 @@
 }
 
 .acrd-quiz-item:hover {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
 }
 
@@ -638,11 +638,11 @@
 
 .acrd-quiz-header-btn:hover {
     background: linear-gradient(135deg, #eef2f8 0%, #f3f8fc 100%);
-    color: #667eea;
+    color: #0d9488;
 }
 
 .acrd-quiz-num {
-    background: #667eea;
+    background: #0d9488;
     color: white;
     padding: 4px 10px;
     border-radius: 4px;
@@ -696,7 +696,7 @@
 }
 
 .acrd-question-item:hover {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
 }
 
@@ -711,7 +711,7 @@
 
 .acrd-question-num {
     display: inline-block;
-    background: #667eea;
+    background: #0d9488;
     color: white;
     padding: 4px 10px;
     border-radius: 4px;
@@ -751,7 +751,7 @@
 
 .acrd-choice-item:hover {
     background: #f3f8fc;
-    border-color: #667eea;
+    border-color: #0d9488;
 }
 
 .acrd-choice-item.correct {
@@ -775,7 +775,7 @@
 
 .acrd-choice-letter {
     font-weight: 700;
-    color: #667eea;
+    color: #0d9488;
     min-width: 24px;
 }
 
@@ -792,7 +792,7 @@
 .acrd-intro-video {
     padding: 20px;
     background: #f9fbfd;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #0d9488;
     border-radius: 8px;
 }
 
@@ -821,7 +821,7 @@
 }
 
 .acrd-video-container span {
-    color: #667eea;
+    color: #0d9488;
     font-weight: 500;
 }
 
@@ -1129,7 +1129,7 @@
     padding: 12px 16px;
     background: #f8fbff;
     border-radius: 8px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #0d9488;
     transition: all 0.3s ease;
 }
 

@@ -265,7 +265,7 @@ function Courses() {
                                                                             role="progressbar"
                                                                             style={{ 
                                                                                 width: `${calculateProgress(c)}%`,
-                                                                                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                                                                 borderRadius: "10px"
                                                                             }}
                                                                         ></div>

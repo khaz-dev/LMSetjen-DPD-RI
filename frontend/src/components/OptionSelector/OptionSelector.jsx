@@ -215,7 +215,7 @@ const OptionSelector = ({
                             top: "50%",
                             transform: "translateY(-50%)",
                             pointerEvents: "none",
-                            color: "#667eea",
+                            color: "#0d9488",
                             transition: "transform 0.2s"
                         }}
                     ></i>
@@ -275,7 +275,7 @@ const OptionSelector = ({
                                             padding: "12px 16px",
                                             cursor: "pointer",
                                             background: isSelected ? "#f0f0f0" : "transparent",
-                                            borderLeft: isSelected ? "4px solid #667eea" : "4px solid transparent",
+                                            borderLeft: isSelected ? "4px solid #0d9488" : "4px solid transparent",
                                             transition: "all 0.2s",
                                             fontSize: "0.95rem"
                                         }}
@@ -290,7 +290,7 @@ const OptionSelector = ({
                                             <i
                                                 className="fas fa-check"
                                                 style={{
-                                                    color: "#667eea",
+                                                    color: "#0d9488",
                                                     marginRight: "10px",
                                                     fontWeight: "bold"
                                                 }}

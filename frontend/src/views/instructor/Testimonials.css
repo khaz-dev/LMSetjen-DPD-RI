@@ -139,7 +139,7 @@
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 1rem;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #0d9488, #0f766e);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -147,8 +147,8 @@
 
 .instructor-testimonials-page .card-title i {
     margin-right: 0.5rem;
-    color: #667eea;
-    -webkit-text-fill-color: #667eea;
+    color: #0d9488;
+    -webkit-text-fill-color: #0d9488;
 }
 
 .instructor-testimonials-page .card-text {
@@ -174,7 +174,7 @@
     height: 60px;
     border-radius: 50%;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #0d9488, #0f766e);
     padding: 2px;
     display: flex;
     align-items: center;
@@ -253,7 +253,7 @@
     padding: 8px 12px;
     border-radius: 8px;
     font-size: 0.85rem;
-    color: #667eea;
+    color: #0d9488;
     margin: 15px 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -301,7 +301,7 @@
 .instructor-testimonials-page .testimonial-submit-form .form-title {
     font-size: 1.5rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #0d9488, #0f766e);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -325,7 +325,7 @@
 }
 
 .instructor-testimonials-page .testimonial-submit-form .form-control-lg:focus {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
@@ -337,7 +337,7 @@
 }
 
 .instructor-testimonials-page .testimonial-submit-form .btn-primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #0d9488, #0f766e);
     border: none;
     color: white;
 }

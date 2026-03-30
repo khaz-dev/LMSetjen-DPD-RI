@@ -238,7 +238,7 @@ function Dashboard() {
                             <div className="row">
                                 {/* Primary Stats */}
                                 <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
-                                    <div className="stat-card-enhanced" style={{"--card-accent": "#3498db", "--icon-bg": "#3498db"}}>
+                                    <div className="stat-card-enhanced" style={{"--card-accent": "#0f766e", "--icon-bg": "#0f766e"}}>
                                         <div className="stat-icon-enhanced">
                                             <i className="fas fa-book-open"></i>
                                         </div>
@@ -268,7 +268,7 @@ function Dashboard() {
                                 </div>
 
                                 <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
-                                    <div className="stat-card-enhanced" style={{"--card-accent": "#2980b9", "--icon-bg": "#2980b9"}}>
+                                    <div className="stat-card-enhanced" style={{"--card-accent": "#115e59", "--icon-bg": "#115e59"}}>
                                         <div className="stat-icon-enhanced">
                                             <i className="fas fa-star"></i>
                                         </div>
@@ -425,7 +425,7 @@ function Dashboard() {
                                                         <div className="metric-value">{courses.filter(c => c.platform_status === "Review").length}</div>
                                                         <div className="metric-label">Sedang Ditinjau</div>
                                                         <div className="metric-chart">
-                                                            <div className="chart-bar" style={{width: "25%", backgroundColor: "#3498db"}}></div>
+                                                            <div className="chart-bar" style={{width: "25%", backgroundColor: "#0f766e"}}></div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -434,7 +434,7 @@ function Dashboard() {
                                                         <div className="metric-value">{courses.reduce((sum, c) => sum + (c.students?.length || 0), 0)}</div>
                                                         <div className="metric-label">Total Pendaftaran</div>
                                                         <div className="metric-chart">
-                                                            <div className="chart-bar" style={{width: "100%", backgroundColor: "#2980b9"}}></div>
+                                                            <div className="chart-bar" style={{width: "100%", backgroundColor: "#115e59"}}></div>
                                                         </div>
                                                     </div>
                                                 </div>

@@ -12,7 +12,7 @@
 
 .overview-card {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-left: 4px solid #2196F3;
+  border-left: 4px solid #0f766e;
   border-radius: 8px;
   padding: 1.5rem;
   transition: all 0.2s ease;
@@ -191,7 +191,7 @@
   padding: 1rem;
   background: #f9f9f9;
   border-radius: 8px;
-  border-left: 3px solid #2196F3;
+  border-left: 3px solid #0f766e;
 }
 
 .metric-header {
@@ -209,7 +209,7 @@
 
 .metric-badge {
   background: #E3F2FD;
-  color: #2196F3;
+  color: #0f766e;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.8rem;
@@ -290,7 +290,7 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
   color: white;
   border-radius: 50%;
   font-weight: 700;
@@ -327,12 +327,12 @@
 
 .count-badge {
   background: #E3F2FD;
-  color: #2196F3;
+  color: #0f766e;
 }
 
 .trend-badge {
   background: #F3E5F5;
-  color: #764ba2;
+  color: #0f766e;
 }
 
 .trend-badge.trend-up {

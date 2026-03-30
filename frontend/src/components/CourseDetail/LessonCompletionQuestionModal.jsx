@@ -196,7 +196,7 @@ const LessonCompletionQuestionModal = ({
                                         }`}
                                         style={{
                                             backgroundColor: selectedAnswer === choice.choice_id ? '#e7f3ff' : 'white',
-                                            border: selectedAnswer === choice.choice_id ? '2px solid #0d6efd' : '1px solid #dee2e6',
+                                            border: selectedAnswer === choice.choice_id ? '2px solid #0f766e' : '1px solid #dee2e6',
                                             cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                             opacity: isSubmitting ? 0.6 : 1,
                                             transition: 'all 0.2s ease'

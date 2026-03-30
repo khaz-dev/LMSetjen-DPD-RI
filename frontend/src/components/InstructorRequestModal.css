@@ -48,7 +48,7 @@
 /* Modal Header */
 .instructor-modal-content .modal-header {
   padding: 25px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
   border-radius: 12px 12px 0 0;
 }
 
@@ -93,7 +93,7 @@
 
 .instructor-modal-content .form-control:focus,
 .instructor-modal-content .form-select:focus {
-  border-color: #667eea;
+  border-color: #0d9488;
   box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
 }
 
@@ -171,7 +171,7 @@
 }
 
 .instructor-modal-content .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
   border: none;
   color: white;
 }

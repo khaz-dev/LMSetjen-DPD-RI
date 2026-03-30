@@ -382,7 +382,7 @@ function CourseCreate() {
                                 {/* Draft Status Information */}
                                 <div className="alert alert-info d-flex align-items-start mb-4 border-0 shadow-sm" style={{ 
                                     background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
-                                    borderLeft: "4px solid #2196f3"
+                                    borderLeft: "4px solid #0f766e"
                                 }}>
                                     <div className="me-3">
                                         <i className="fas fa-info-circle fa-2x text-primary"></i>

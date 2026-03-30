@@ -272,7 +272,7 @@ function InstructorProfilePage() {
                                         className="expertise-badge"
                                         style={{
                                             backgroundColor: skill.color_gradient || 'rgba(102, 126, 234, 0.1)',
-                                            color: skill.text_color || '#667eea',
+                                            color: skill.text_color || '#0d9488',
                                             borderColor: skill.border_color || 'rgba(102, 126, 234, 0.2)'
                                         }}
                                     >

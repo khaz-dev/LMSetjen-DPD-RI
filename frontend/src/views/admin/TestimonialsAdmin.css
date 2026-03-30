@@ -41,7 +41,7 @@
 }
 
 .header-content h1 i {
-    color: #667eea;
+    color: #0d9488;
     font-size: 2.5rem;
 }
 
@@ -61,14 +61,14 @@
     padding: 1rem;
     background: rgba(102, 126, 234, 0.1);
     border-radius: 10px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #0d9488;
 }
 
 .stat-number {
     display: block;
     font-size: 2rem;
     font-weight: bold;
-    color: #667eea;
+    color: #0d9488;
 }
 
 /* ✨ SCOPED: Testimonials Admin stat label - only apply on testimonials admin page */
@@ -133,7 +133,7 @@
 }
 
 .tab-button.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
     color: white !important;
 }
 
@@ -192,7 +192,7 @@
 .testimonial-card:hover {
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15) !important;
     transform: translateY(-2px) !important;
-    border-color: #667eea !important;
+    border-color: #0d9488 !important;
 }
 
 /* Testimonial Header */
@@ -213,13 +213,13 @@
     height: 50px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #667eea;
+    border: 2px solid #0d9488;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
     color: white;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
 }
 
 .testimonial-info {
@@ -256,7 +256,7 @@
 }
 
 .badge-primary {
-    background-color: #667eea;
+    background-color: #0d9488;
 }
 
 .badge-info {
@@ -447,7 +447,7 @@
 }
 
 .modal-body .form-control:focus {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 

@@ -28,7 +28,7 @@
 
 /* Hover state for course cards */
 .course-card:hover .course-title {
-    color: var(--theme-primary, #667eea) !important;
+    color: var(--theme-primary, #0d9488) !important;
 }
 
 .course-title:hover {

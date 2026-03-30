@@ -104,7 +104,7 @@ function LogoutConfirmation() {
             </div>
         `,
         icon: 'question',
-        iconColor: '#667eea',
+        iconColor: '#0d9488',
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-sign-out-alt me-2"></i>Ya, Keluar',
         cancelButtonText: '<i class="fas fa-times me-2"></i>Batal',
@@ -114,7 +114,7 @@ function LogoutConfirmation() {
         allowOutsideClick: false,
         allowEscapeKey: true,
         buttonsStyling: true,
-        confirmButtonColor: '#667eea',
+        confirmButtonColor: '#0d9488',
         cancelButtonColor: '#e53e3e'
     });
 }
@@ -135,7 +135,7 @@ function DeleteConfirmation({ title = "Konfirmasi Penghapusan", text = "Apakah A
         reverseButtons: true,
         focusCancel: true,
         confirmButtonColor: '#e53e3e',
-        cancelButtonColor: '#667eea',
+        cancelButtonColor: '#0d9488',
         buttonsStyling: true,
         allowEscapeKey: true,
         allowOutsideClick: false,

@@ -1,4 +1,4 @@
-﻿/* Certificate Tab Styles */
+/* Certificate Tab Styles */
 
 .certificate-container {
     padding: 0rem 0;
@@ -87,7 +87,7 @@
     text-align: center;
 }
 
-/* ✨ PHASE 49: Center Buat Sertifikat button with flexbox */
+/* ? PHASE 49: Center Buat Sertifikat button with flexbox */
 .generate-section {
     display: flex;
     justify-content: center;
@@ -99,7 +99,7 @@
 
 .congratulations-card {
     width: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     border-radius: 16px;
     padding: 2.5rem 2rem 1.5rem 2rem;
     color: white;
@@ -377,7 +377,7 @@
     line-height: 1.1;
 }
 
-/* ✨ PHASE 8c: Scoped course-title for certificate display - very specific styling for certificates */
+/* ? PHASE 8c: Scoped course-title for certificate display - very specific styling for certificates */
 .certificate-body .course-title,
 .certificate-content .course-title {
     font-size: 1rem !important;
@@ -420,7 +420,7 @@
     font-size: 0.75rem;
 }
 
-/* âœ¨ SCOPED: Certificate Tab specific styling - must be scoped to prevent affecting other pages */
+/* ✨ SCOPED: Certificate Tab specific styling - must be scoped to prevent affecting other pages */
 .certificate-tab .course-instructor,
 .certificate-container .course-instructor {
     font-size: 0.85rem !important;
@@ -768,7 +768,7 @@
     display: block;
 }
 
-/* âœ¨ PHASE 4.227: Professional Certificate Styling */
+/* ✨ PHASE 4.227: Professional Certificate Styling */
 
 /* Certificate Number Section */
 .certificate-number-section {
@@ -864,7 +864,7 @@
     font-weight: 600;
 }
 
-/* ✨ SCOPED: Certificate-specific instructor name styling */
+/* ? SCOPED: Certificate-specific instructor name styling */
 .certificate-document .instructor-name {
     font-size: 0.9rem !important;
     color: #1a5f3d;
@@ -885,9 +885,9 @@
     text-align: right;
     margin-top: 1.4rem !important;
     margin-bottom: 0.15rem;
-    width: 75%;                    /* ✨ PHASE 51: Reduced from 90% to move more to the right */
-    margin-left: auto;             /* ✨ PHASE 51: Push section to the right */
-    margin-right: 0;               /* ✨ PHASE 51: Align to right edge */
+    width: 75%;                    /* ? PHASE 51: Reduced from 90% to move more to the right */
+    margin-left: auto;             /* ? PHASE 51: Push section to the right */
+    margin-right: 0;               /* ? PHASE 51: Align to right edge */
 }
 
 .date-label {
@@ -904,7 +904,7 @@
     margin: 0;
 }
 
-/* âœ¨ PHASE 4.227: Improved QR Code */
+/* ✨ PHASE 4.227: Improved QR Code */
 .certificate-qr-code {
     display: flex;
     flex-direction: column;
@@ -919,7 +919,7 @@
 .certificate-qr-code canvas {
     width: 250px;
     height: 250px;
-    border: 1px solid #2c3e50 !important;           /* ✨ PHASE 51: Reduced from 3px to 1px for thinner border */
+    border: 1px solid #2c3e50 !important;           /* ? PHASE 51: Reduced from 3px to 1px for thinner border */
     padding: 8px !important;
     margin: 0rem !important;
     background: white;

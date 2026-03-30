@@ -73,7 +73,7 @@ const TopCoursesPerformance = ({ courses = [], loading = false }) => {
                     className="bar-fill"
                     style={{
                       width: `${impressionPercent}%`,
-                      backgroundColor: '#2196F3'
+                      backgroundColor: '#0f766e'
                     }}
                   />
                 </div>

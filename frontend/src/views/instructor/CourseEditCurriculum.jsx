@@ -898,7 +898,7 @@ function SortableLessonItem({
                         {/* ✨ PHASE 4.110.1: Also show duration section for uploaded files */}
                         {(item?.gdriveLink || item?.youtubeLink || item?.uploadedFile) && (
                             <div className="mb-3 mt-3">
-                                <div className="duration-display-section p-3 bg-light border rounded" style={{borderLeft: '4px solid #0d6efd'}}>
+                                <div className="duration-display-section p-3 bg-light border rounded" style={{borderLeft: '4px solid #0f766e'}}>
                                     <div className="d-flex justify-content-between align-items-center">
                                         <div>
                                             <label className="form-label mb-0 fw-bold">

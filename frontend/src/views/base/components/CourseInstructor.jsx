@@ -13,7 +13,7 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
             icon: "info",
             title: "Fitur Mengirim Pesan",
             text: "Fitur pengiriman pesan masih dalam pengembangan. Hubungi instruktur melalui halaman profil mereka.",
-            confirmButtonColor: "#667eea"
+            confirmButtonColor: "#0d9488"
         });
     };
 
@@ -26,7 +26,7 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
                 icon: "warning",
                 title: "Informasi Tidak Tersedia",
                 text: "ID instruktur tidak ditemukan.",
-                confirmButtonColor: "#667eea"
+                confirmButtonColor: "#0d9488"
             });
         }
     };

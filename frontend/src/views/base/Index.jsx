@@ -723,7 +723,7 @@ function Index() {
                                             style={{
                                                 width: "50px",
                                                 height: "50px",
-                                                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                                 borderRadius: "12px",
                                                 color: "white",
                                                 fontSize: "1.3rem"
@@ -1313,7 +1313,7 @@ function Index() {
                         <div 
                             className="badge mb-3"
                             style={{
-                                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                 color: "white",
                                 padding: "0.5rem 1rem",
                                 borderRadius: "50px",
@@ -1416,7 +1416,7 @@ function Index() {
                                                         width: "50px",
                                                         height: "50px",
                                                         background: `linear-gradient(135deg, ${
-                                                            ["#667eea, #764ba2", "#28a745, #20c997", "#ffc107, #ff8800", "#dc3545, #e83e8c", "#17a2b8, #138496", "#6f42c1, #e83e8c", "#fd7e14, #dc3545", "#20c997, #28a745"][index % 8]
+                                                            ["#0d9488, #0f766e", "#28a745, #20c997", "#ffc107, #ff8800", "#dc3545, #e83e8c", "#17a2b8, #138496", "#6f42c1, #e83e8c", "#fd7e14, #dc3545", "#20c997, #28a745"][index % 8]
                                                         })`,
                                                         borderRadius: "12px",
                                                         display: "flex",
@@ -1447,7 +1447,7 @@ function Index() {
                                                 <div 
                                                     className="btn btn-sm"
                                                     style={{
-                                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                                         color: "white",
                                                         border: "none",
                                                         borderRadius: "8px",
@@ -1482,7 +1482,7 @@ function Index() {
                                 to="/search/"
                                 className="btn btn-lg px-4"
                                 style={{
-                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                     color: "white",
                                     border: "none",
                                     borderRadius: "15px",
@@ -1503,7 +1503,7 @@ function Index() {
                         <div 
                             className="badge mb-3"
                             style={{
-                                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                 color: "white",
                                 padding: "0.5rem 1rem",
                                 borderRadius: "50px",
@@ -1708,7 +1708,7 @@ function Index() {
                                                 <span 
                                                     className="badge"
                                                     style={{
-                                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                                         color: "white",
                                                         padding: "0.35rem 0.75rem",
                                                         borderRadius: "8px",
@@ -1730,7 +1730,7 @@ function Index() {
                                                     className="badge"
                                                     style={{
                                                         background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
-                                                        color: "#667eea",
+                                                        color: "#0d9488",
                                                         border: "1px solid rgba(102, 126, 234, 0.2)",
                                                         borderRadius: "8px",
                                                         fontSize: "0.65rem",
@@ -1764,20 +1764,21 @@ function Index() {
 
                                             {/* Instructor */}
                                             <div className="mb-2 d-flex align-items-center">
-                                                <div 
+                                                <img 
+                                                    src={getImageUrl(course.teacher?.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(course.teacher?.full_name || 'Instruktur')}&background=0d9488&color=ffffff&bold=true&size=28`}
+                                                    alt={course.teacher?.full_name || "Instruktur"}
                                                     style={{
                                                         width: "28px",
                                                         height: "28px",
                                                         borderRadius: "50%",
-                                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        marginRight: "8px"
+                                                        marginRight: "8px",
+                                                        objectFit: "cover",
+                                                        border: "1px solid rgba(255, 255, 255, 0.3)"
                                                     }}
-                                                >
-                                                    <i className="fas fa-user-tie" style={{ color: "white", fontSize: "0.7rem" }}></i>
-                                                </div>
+                                                    onError={(e) => {
+                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(course.teacher?.full_name || 'Instruktur')}&background=0d9488&color=ffffff&bold=true&size=28`;
+                                                    }}
+                                                />
                                                 <small className="text-muted" style={{ fontSize: "0.8rem", fontWeight: "500" }}>
                                                     {course.teacher?.full_name || "Instruktur"}
                                                 </small>
@@ -1836,7 +1837,7 @@ function Index() {
                                                     border: "1px solid rgba(102, 126, 234, 0.2)"
                                                 }}
                                             >
-                                                <small className="fw-medium" style={{ fontSize: "0.8rem", color: "#667eea" }}>
+                                                <small className="fw-medium" style={{ fontSize: "0.8rem", color: "#0d9488" }}>
                                                     <i className="fas fa-clock me-1"></i>
                                                     Total: <strong>{calculateTotalJP(course.lectures)}</strong> JP (Jam Pelajaran)
                                                 </small>
@@ -1849,7 +1850,7 @@ function Index() {
                                                 to={`/course-detail/${course.slug}/`} 
                                                 className="btn w-100 fw-semibold course-detail-btn"
                                                 style={{
-                                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                                     border: "none",
                                                     borderRadius: "10px",
                                                     color: "white",
@@ -1882,7 +1883,7 @@ function Index() {
                                 to="/search/"
                                 className="btn btn-lg px-4"
                                 style={{
-                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                     color: "white",
                                     border: "none",
                                     borderRadius: "15px",
@@ -1898,7 +1899,7 @@ function Index() {
 
             {/* CTA Section with Rankings - ✨ PHASE 10.1 */}
             <section className="py-5 snap-section cta-section" style={{ 
-                background: "linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%)",
+                background: "linear-gradient(135deg, rgba(13, 148, 136, 0.85) 0%, rgba(15, 118, 110, 0.85) 100%)",
             }}>
                 <div className="container">
                     <div className="row align-items-stretch gap-3 gap-lg-0">
@@ -1926,7 +1927,7 @@ function Index() {
                                 className="btn btn-lg px-4 py-3 cta-register-btn align-self-start"
                                 style={{
                                     background: "white",
-                                    color: "#667eea",
+                                    color: "#0d9488",
                                     border: "none",
                                     borderRadius: "15px",
                                     fontWeight: "700",

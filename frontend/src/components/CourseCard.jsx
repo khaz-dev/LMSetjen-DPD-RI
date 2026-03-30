@@ -133,7 +133,7 @@ const CourseCard = ({ course, index }) => {
                 label: 'Tambah Pelajaran',
                 icon: 'fa-video',
                 link: `/instructor/edit-course/${course.course_id}/curriculum/`,
-                color: '#2196F3'
+                color: '#0f766e'
             };
         }
         if (!hasQuiz) {

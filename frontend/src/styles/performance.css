@@ -59,7 +59,7 @@
   width: 20px;
   height: 20px;
   border: 2px solid #e0e0e0;
-  border-top-color: #2196F3;
+  border-top-color: #0f766e;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -127,7 +127,7 @@
   width: 24px;
   height: 24px;
   border: 3px solid #e0e0e0;
-  border-top-color: #2196F3;
+  border-top-color: #0f766e;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -203,7 +203,7 @@
 
 .image-batch-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #4CAF50 0%, #2196F3 100%);
+  background: linear-gradient(90deg, #4CAF50 0%, #0f766e 100%);
   transition: width 0.3s ease;
   border-radius: 3px;
 }
@@ -232,7 +232,7 @@
   width: 20px;
   height: 20px;
   border: 2px solid #e0e0e0;
-  border-top-color: #2196F3;
+  border-top-color: #0f766e;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -522,7 +522,7 @@
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  color: #3498db;
+  color: #0f766e;
   padding: 0.5rem;
   border-radius: 8px;
   transition: all 0.3s ease;
@@ -589,13 +589,13 @@
 
 .instructor-sidebar-link:hover {
   background: rgba(52, 152, 219, 0.08);
-  color: #3498db;
+  color: #0f766e;
   transform: translateX(4px);
 }
 
 .instructor-sidebar-link.active {
   background: rgba(52, 152, 219, 0.15);
-  color: #3498db;
+  color: #0f766e;
   font-weight: 600;
 }
 
@@ -606,7 +606,7 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #3498db;
+  background: #0f766e;
   border-radius: 0 3px 3px 0;
 }
 
@@ -643,7 +643,7 @@
   padding: 0.75rem;
   border: 1px solid rgba(52, 152, 219, 0.2);
   background: rgba(52, 152, 219, 0.05);
-  color: #3498db;
+  color: #0f766e;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.9rem;
@@ -659,13 +659,13 @@
 }
 
 .instructor-sidebar-button.primary {
-  background: #3498db;
+  background: #0f766e;
   color: white;
   border: none;
 }
 
 .instructor-sidebar-button.primary:hover {
-  background: #2980b9;
+  background: #115e59;
   box-shadow: 0 4px 16px rgba(52, 152, 219, 0.3);
 }
 

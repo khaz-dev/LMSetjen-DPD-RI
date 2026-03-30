@@ -5,15 +5,15 @@
 
 /* CSS Variables for Theming */
 .crop-modal-student {
-    --theme-primary: #667eea;
-    --theme-secondary: #764ba2;
+    --theme-primary: #0d9488;
+    --theme-secondary: #0f766e;
     --theme-light: #f8f9ff;
     --theme-lighter: #f0ebff;
 }
 
 .crop-modal-instructor {
-    --theme-primary: #3498db;
-    --theme-secondary: #2980b9;
+    --theme-primary: #0f766e;
+    --theme-secondary: #115e59;
     --theme-light: #f0f8ff;
     --theme-lighter: #e6f3ff;
 }
@@ -74,7 +74,7 @@
 
 /* Modal Header - Uses theme variables */
 .crop-container > h4.crop-title {
-    background: linear-gradient(135deg, var(--theme-primary, #667eea) 0%, var(--theme-secondary, #764ba2) 100%);
+    background: linear-gradient(135deg, var(--theme-primary, #0d9488) 0%, var(--theme-secondary, #0f766e) 100%);
     color: white;
     margin: 0;
     padding: 1.5rem 2rem;
@@ -209,7 +209,7 @@
 }
 
 .crop-info-text i {
-    color: var(--theme-primary, #667eea);
+    color: var(--theme-primary, #0d9488);
     margin-right: 0.25rem;
 }
 
@@ -260,7 +260,7 @@
 
 /* Apply Button - Uses theme variables */
 .btn-modern {
-    background: linear-gradient(135deg, var(--theme-primary, #667eea), var(--theme-secondary, #764ba2));
+    background: linear-gradient(135deg, var(--theme-primary, #0d9488), var(--theme-secondary, #0f766e));
     border: none;
     border-radius: 14px;
     padding: 1rem 2.5rem;

@@ -65,7 +65,7 @@
 
 .stepper-step.active .step-circle {
     background: white;
-    color: #667eea;
+    color: #0d9488;
     border-color: white;
     box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
     transform: scale(1.1);

@@ -16,7 +16,7 @@
   justify-content: center;
   gap: 10px;
   padding: 30px;
-  color: #667eea;
+  color: #0d9488;
   font-size: 14px;
 }
 
@@ -42,7 +42,7 @@
 .status-card .card-header {
   padding: 20px;
   background: linear-gradient(135deg, #f5f7ff 0%, #f0f4ff 100%);
-  border-left: 5px solid #667eea;
+  border-left: 5px solid #0d9488;
   display: flex;
   align-items: flex-start;
   gap: 15px;
@@ -58,7 +58,7 @@
   color: white;
   font-size: 24px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
 }
 
 .status-card .header-content h3 {
@@ -90,7 +90,7 @@
   padding: 15px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 3px solid #667eea;
+  border-left: 3px solid #0d9488;
 }
 
 .status-card .detail-item label {
@@ -114,7 +114,7 @@
   padding: 15px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 3px solid #667eea;
+  border-left: 3px solid #0d9488;
   margin-bottom: 20px;
 }
 
@@ -191,7 +191,7 @@
 
 .status-card .review-info i {
   margin-right: 6px;
-  color: #667eea;
+  color: #0d9488;
 }
 
 /* Card Footer */
@@ -216,7 +216,7 @@
 }
 
 .status-card .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
   border: none;
   color: white;
 }
@@ -234,7 +234,7 @@
 
 .status-card.no-request .card-icon {
   font-size: 48px;
-  color: #667eea;
+  color: #0d9488;
   margin-bottom: 15px;
 }
 
@@ -295,15 +295,15 @@
 /* CTA State (no request) */
 .instructor-status-compact .status-cta {
   padding: 20px;
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-  border: 2px dashed #667eea;
+  background: linear-gradient(135deg, #0d948815 0%, #0f766e15 100%);
+  border: 2px dashed #0d9488;
   border-radius: 8px;
   text-align: center;
 }
 
 .instructor-status-compact .status-cta i {
   font-size: 32px;
-  color: #667eea;
+  color: #0d9488;
   margin-bottom: 10px;
 }
 

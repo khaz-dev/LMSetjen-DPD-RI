@@ -113,7 +113,7 @@
     background: rgba(255, 255, 255, 0.9);  /* ✨ PHASE 11.168: Semi-transparent white - see video behind */
     padding: 1.5rem;
     border-radius: 0.5rem;
-    border-left: 4px solid #0d6efd;
+    border-left: 4px solid #0f766e;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     margin-bottom: 1rem;
 }
@@ -169,7 +169,7 @@
 .choice-radio.selected .choice-text,
 .choice-checkbox.selected .choice-text {
     font-weight: 600;
-    color: #0d6efd;
+    color: #0f766e;
 }
 
 /* Text Answer Section */
@@ -187,7 +187,7 @@
 }
 
 .text-answer-section textarea:focus {
-    border-color: #0d6efd;
+    border-color: #0f766e;
     box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 

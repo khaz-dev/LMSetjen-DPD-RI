@@ -73,22 +73,24 @@ export const getImageUrl = (imageUrl) => {
 };
 
 export const getStatusBadgeStyle = (status) => {
+    // ✨ PHASE 11.X: Updated to Teal color palette (Tailwind v3.0.7)
     const styles = {
-        Published: 'linear-gradient(135deg, #28a745, #20c997)',
-        Draft: 'linear-gradient(135deg, #ffc107, #fd7e14)',
-        Review: 'linear-gradient(135deg, #17a2b8, #138496)',
-        Disabled: 'linear-gradient(135deg, #dc3545, #c82333)',
-        default: 'linear-gradient(135deg, #6c757d, #545b62)'
+        Published: 'linear-gradient(135deg, #0d9488, #0f766e)',      // Teal-600 to Teal-700
+        Draft: 'linear-gradient(135deg, #2dd4bf, #0d9488)',          // Teal-400 to Teal-600
+        Review: 'linear-gradient(135deg, #14b8a6, #0d9488)',         // Teal-500 to Teal-600
+        Disabled: 'linear-gradient(135deg, #115e59, #134e4a)',       // Teal-800 to Teal-900
+        default: 'linear-gradient(135deg, #0d9488, #0f766e)'         // Teal default
     };
     return styles[status] || styles.default;
 };
 
 export const getLevelBadgeStyle = (level) => {
+    // ✨ PHASE 11.X: Updated to Teal color palette with varying brightness
     const styles = {
-        Beginner: 'linear-gradient(135deg, #28a745, #20c997)',
-        Intermediate: 'linear-gradient(135deg, #ffc107, #fd7e14)', 
-        Advanced: 'linear-gradient(135deg, #dc3545, #c82333)',
-        default: 'linear-gradient(135deg, #6c757d, #545b62)'
+        Beginner: 'linear-gradient(135deg, #2dd4bf, #14b8a6)',       // Teal-400 to Teal-500 (lightest)
+        Intermediate: 'linear-gradient(135deg, #0d9488, #0f766e)',   // Teal-600 to Teal-700 (mid)
+        Advanced: 'linear-gradient(135deg, #115e59, #134e4a)',       // Teal-800 to Teal-900 (darkest)
+        default: 'linear-gradient(135deg, #0d9488, #0f766e)'         // Teal default
     };
     return styles[level] || styles.default;
 };
@@ -115,13 +117,14 @@ export const getStatusText = (status) => {
 };
 
 /**
- * ✨ PHASE 4.40: Determine actual course status based on platform_status and rejection_reason
+ * ✨ PHASE 11.X: Updated - Determine actual course status based on platform_status and rejection_reason
+ * Color scheme updated to Teal palette (Tailwind v3.0.7)
  * Priority:
- * 1. If rejection_reason exists or platform_status === 'Rejected' → Ditolak (Rejected)
- * 2. If platform_status === 'Review' or teacher_course_status === 'Review' → Ditinjau (Review)
- * 3. If teacher_course_status === 'Draft' → Draf (Draft)
- * 4. If platform_status === 'Published' → Dipublikasikan (Published)
- * 5. Default to Tidak Tersedia
+ * 1. If rejection_reason exists or platform_status === 'Rejected' → Ditolak (Rejected) - Teal-800
+ * 2. If platform_status === 'Review' or teacher_course_status === 'Review' → Ditinjau (Review) - Teal-500
+ * 3. If teacher_course_status === 'Draft' → Draf (Draft) - Teal-400
+ * 4. If platform_status === 'Published' → Dipublikasikan (Published) - Teal-600
+ * 5. Default to Tidak Tersedia - Gray
  */
 export const getActualCourseStatus = (course) => {
     // Check if course has been rejected
@@ -130,7 +133,7 @@ export const getActualCourseStatus = (course) => {
             status: 'Rejected',
             text: 'Ditolak',
             icon: 'fa-times-circle',
-            color: '#dc3545'
+            color: '#115e59'  // Teal-800 for error
         };
     }
 
@@ -140,7 +143,7 @@ export const getActualCourseStatus = (course) => {
             status: 'Review',
             text: 'Menunggu Review',
             icon: 'fa-hourglass-half',
-            color: '#17a2b8'
+            color: '#14b8a6'  // Teal-500 for pending
         };
     }
 
@@ -150,7 +153,7 @@ export const getActualCourseStatus = (course) => {
             status: 'Draft',
             text: 'Draf',
             icon: 'fa-clock',
-            color: '#FF9800'
+            color: '#2dd4bf'  // Teal-400 for draft
         };
     }
 
@@ -160,7 +163,7 @@ export const getActualCourseStatus = (course) => {
             status: 'Published',
             text: 'Dipublikasikan',
             icon: 'fa-check-circle',
-            color: '#4CAF50'
+            color: '#0d9488'  // Teal-600 for published
         };
     }
 
@@ -169,7 +172,7 @@ export const getActualCourseStatus = (course) => {
         status: 'Unknown',
         text: 'Tidak Tersedia',
         icon: 'fa-question-circle',
-        color: '#6c757d'
+        color: '#6c757d'  // Gray for unknown
     };
 };
 

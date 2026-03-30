@@ -33,7 +33,7 @@
 .instructor-header__icon {
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     border-radius: 15px;
     display: flex;
     align-items: center;
@@ -65,7 +65,7 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     padding: 3px;
     margin: 0 auto;
 }
@@ -141,7 +141,7 @@
 }
 
 .instructor-card .instructor-stat-item--courses .instructor-stat-value {
-    color: #667eea;
+    color: #0d9488;
     font-weight: 700;
     font-size: 1.25rem;
 }
@@ -207,7 +207,7 @@
     align-items: center;
     padding: 0.5rem 1rem;
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    color: #667eea;
+    color: #0d9488;
     border: 1px solid rgba(102, 126, 234, 0.2);
     border-radius: 20px;
     font-weight: 500;
@@ -249,7 +249,7 @@
 }
 
 .instructor-contact-btn--primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
@@ -267,14 +267,14 @@
 
 .instructor-contact-btn--secondary {
     background: transparent;
-    color: #667eea;
-    border: 1.5px solid #667eea;
+    color: #0d9488;
+    border: 1.5px solid #0d9488;
 }
 
 .instructor-contact-btn--secondary:hover {
     background: rgba(102, 126, 234, 0.05);
-    border-color: #667eea;
-    color: #667eea;
+    border-color: #0d9488;
+    color: #0d9488;
     text-decoration: none;
     transform: translateY(-2px);
 }

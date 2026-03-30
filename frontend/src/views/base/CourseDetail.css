@@ -46,13 +46,13 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
     border: none;
     box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    background: linear-gradient(135deg, #115e59 0%, #004085 100%);
     box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
 }
 
@@ -345,14 +345,14 @@
 }
 
 .nav-pills .nav-link.active {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
     color: white;
     box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
 .nav-pills .nav-link:not(.active):hover {
     background-color: rgba(0, 123, 255, 0.1);
-    color: #007bff;
+    color: #0f766e;
 }
 
 /* Course Description Styling */
@@ -400,7 +400,7 @@
 
 .accordion-button:not(.collapsed) {
     background: linear-gradient(135deg, rgba(0, 123, 255, 0.1) 0%, rgba(0, 123, 255, 0.05) 100%);
-    color: #007bff;
+    color: #0f766e;
 }
 
 .accordion-button:focus {

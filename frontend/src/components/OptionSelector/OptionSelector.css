@@ -17,7 +17,7 @@
 }
 
 .option-selector-input.active input {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -28,7 +28,7 @@
 }
 
 .option-selector-input input:focus {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     outline: none;
 }
@@ -38,7 +38,7 @@
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #667eea;
+    color: #0d9488;
     pointer-events: none;
     transition: transform 0.2s ease;
     font-size: 0.75rem;
@@ -105,18 +105,18 @@
 
 .option-selector-item:hover {
     background-color: #f8f9ff;
-    border-left-color: #667eea;
+    border-left-color: #0d9488;
 }
 
 .option-selector-item.selected {
     background-color: #f0f0f0;
-    border-left-color: #667eea;
-    color: #667eea;
+    border-left-color: #0d9488;
+    color: #0d9488;
     font-weight: 500;
 }
 
 .option-selector-item i {
-    color: #667eea;
+    color: #0d9488;
     margin-right: 10px;
     font-weight: bold;
     font-size: 0.85rem;
@@ -142,7 +142,7 @@
 
 /* Accessibility */
 .option-selector-input input:focus-visible {
-    outline: 2px solid #667eea;
+    outline: 2px solid #0d9488;
     outline-offset: 2px;
 }
 

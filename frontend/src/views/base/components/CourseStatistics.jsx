@@ -95,7 +95,7 @@ const CourseStatistics = ({ course }) => {
                         style={{
                             width: '40px',
                             height: '40px',
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                             borderRadius: '12px',
                             display: 'flex',
                             alignItems: 'center',
@@ -192,7 +192,7 @@ const CourseStatistics = ({ course }) => {
                                         <XAxis dataKey="month" />
                                         <YAxis />
                                         <Tooltip />
-                                        <Bar dataKey="students" fill="#007bff" radius={[4, 4, 0, 0]} />
+                                        <Bar dataKey="students" fill="#0f766e" radius={[4, 4, 0, 0]} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>

@@ -60,7 +60,7 @@
     align-items: center;
     padding: 24px 24px 16px;
     border-bottom: 2px solid #f0f0f0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
 }
 
@@ -116,7 +116,7 @@
 /* Feedback Card */
 .verification-feedback-card {
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #0d9488;
     border-radius: 8px;
     padding: 16px;
     margin-bottom: 12px;
@@ -136,7 +136,7 @@
 
 .feedback-type-badge {
     display: inline-block;
-    background: #667eea;
+    background: #0d9488;
     color: white;
     padding: 4px 12px;
     border-radius: 20px;
@@ -280,8 +280,8 @@
 
 /* Next to Click - Highlight */
 .verification-dot.next-to-click {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #0d9488;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     animation: pulseNext 1.5s infinite;
@@ -353,7 +353,7 @@
 .progress-text {
     margin: 0;
     font-size: 14px;
-    color: #667eea;
+    color: #0d9488;
     font-weight: 600;
     animation: fadeInText 0.4s ease-out;
 }
@@ -409,7 +409,7 @@
 }
 
 .verification-button-submit {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
     opacity: 0.5;
 }

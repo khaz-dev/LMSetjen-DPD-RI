@@ -78,7 +78,7 @@ const QualityMetricsCard = ({ metrics = {}, loading = false }) => {
               className="metric-bar-fill"
               style={{
                 width: `${Math.min(avg_ctr * 100, 100)}%`,
-                backgroundColor: avg_ctr > 0.3 ? '#4CAF50' : '#2196F3'
+                backgroundColor: avg_ctr > 0.3 ? '#4CAF50' : '#0f766e'
               }}
             />
           </div>

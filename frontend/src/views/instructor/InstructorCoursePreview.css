@@ -54,7 +54,7 @@
 }
 
 .icp-title i {
-    color: #3498db;
+    color: #0f766e;
     font-size: 1.1rem;
 }
 
@@ -173,7 +173,7 @@
 .icp-stat-number {
     font-size: 2rem;
     font-weight: 700;
-    color: #3498db;
+    color: #0f766e;
     line-height: 1;
     margin-bottom: 0.5rem;
 }
@@ -202,7 +202,7 @@
 }
 
 .icp-section-title i {
-    color: #3498db;
+    color: #0f766e;
     font-size: 1.1rem;
 }
 
@@ -258,7 +258,7 @@
     padding: 1rem;
     background: #f9f9f9;
     border-radius: 6px;
-    border-left: 3px solid #3498db;
+    border-left: 3px solid #0f766e;
     transition: all 0.2s ease;
 }
 
@@ -266,7 +266,7 @@
 .icp-requirement-item:hover,
 .icp-outcome-item:hover {
     background: #f5f7fa;
-    border-left-color: #2980b9;
+    border-left-color: #115e59;
 }
 
 .icp-feature-item i,
@@ -283,7 +283,7 @@
     justify-content: center;
     width: 30px;
     height: 30px;
-    background: #3498db;
+    background: #0f766e;
     color: white;
     border-radius: 50%;
     font-weight: 700;
@@ -330,7 +330,7 @@
 
 .icp-section-header:hover {
     background: #eef2f7;
-    border-left: 3px solid #3498db;
+    border-left: 3px solid #0f766e;
     padding-left: calc(1.25rem - 3px);
 }
 
@@ -338,7 +338,7 @@
     display: inline-block;
     min-width: 70px;
     font-weight: 600;
-    color: #3498db;
+    color: #0f766e;
     font-size: 0.85rem;
     text-transform: uppercase;
 }
@@ -510,7 +510,7 @@
 
 .icp-quiz-header-btn:hover {
     background: #eef2f7;
-    border-left: 3px solid #9b59b6;
+    border-left: 3px solid #0d9488;
     padding-left: calc(1.25rem - 3px);
 }
 
@@ -518,7 +518,7 @@
     display: inline-block;
     min-width: 70px;
     font-weight: 600;
-    color: #9b59b6;
+    color: #0d9488;
     font-size: 0.85rem;
     text-transform: uppercase;
 }
@@ -578,7 +578,7 @@
     background: #f9f9f9;
     padding: 1.25rem;
     border-radius: 8px;
-    border-left: 3px solid #9b59b6;
+    border-left: 3px solid #0d9488;
 }
 
 .icp-question-header {
@@ -588,7 +588,7 @@
 .icp-question-num {
     display: inline-block;
     font-weight: 600;
-    color: #9b59b6;
+    color: #0d9488;
     font-size: 0.85rem;
     text-transform: uppercase;
     margin-bottom: 0.5rem;
@@ -626,7 +626,7 @@
 }
 
 .icp-choice-item:hover {
-    border-color: #3498db;
+    border-color: #0f766e;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 

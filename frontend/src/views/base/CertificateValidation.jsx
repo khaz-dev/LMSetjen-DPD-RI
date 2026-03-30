@@ -182,7 +182,7 @@ function CertificateValidation() {
                                     href={`/course-detail/${certificate.course_slug}/`}
                                     className="btn btn-lg btn-course-link"
                                     style={{
-                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                                         border: 'none',
                                         borderRadius: '12px',
                                         color: 'white',

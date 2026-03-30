@@ -47,7 +47,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+  background: linear-gradient(90deg, #0d9488 0%, #0f766e 50%, #0d9488 100%);
   border-radius: 1.2rem 1.2rem 0 0;
   z-index: 1;
 }
@@ -67,7 +67,7 @@
 /* ============= HEADER STYLING ============= */
 
 .ranked-students-widget .card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
   border: none !important;
   padding: 1.5rem !important;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
@@ -124,7 +124,7 @@
 
 .ranked-students-widget .card-header .badge {
   background: rgba(255, 255, 255, 0.95) !important;
-  color: #667eea !important;
+  color: #0d9488 !important;
 }
 
 .ranked-students-widget .card-header .badge:hover {
@@ -192,14 +192,14 @@
 }
 
 .ranking-filters .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  border-color: #0d9488;
   color: white;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
 }
 
 .ranking-filters .btn-primary:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
   box-shadow: 0 6px 18px rgba(102, 126, 234, 0.45);
   color: white;
 }
@@ -225,8 +225,8 @@
 
 .ranking-filters .btn-outline-secondary:hover {
   background: white;
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #0d9488;
+  color: #0d9488;
   box-shadow: 0 4px 14px rgba(102, 126, 234, 0.25);
 }
 
@@ -360,7 +360,7 @@
 }
 
 .badge-rank.rank-default {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
   color: #000000 !important;
   font-size: 1.5rem;
 }
@@ -403,7 +403,7 @@
 
 /* Student Avatar - Purple/Blue Accent */
 .avatar-placeholder.student-accent {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
 }
 
 .avatar-placeholder.student-accent .placeholder-image {
@@ -472,7 +472,7 @@
 }
 
 .ranked-students-widget .points-value {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

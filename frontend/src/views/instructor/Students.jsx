@@ -109,7 +109,7 @@ function Students() {
             .join("");
         
         // Use initials in placeholder
-        const initialsUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=667eea&color=ffffff&bold=true`;
+        const initialsUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=0d9488&color=ffffff&bold=true`;
         console.log(`  → Returning initials URL: ${initialsUrl}`);
         return initialsUrl;
     };
@@ -215,7 +215,7 @@ function Students() {
                                                                 console.error(`   Attempted URL: ${e.target.src}`);
                                                                 console.error("   Student data:", student);
                                                                 const name = getStudentName(student);
-                                                                const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=667eea&color=ffffff&bold=true`;
+                                                                const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=0d9488&color=ffffff&bold=true`;
                                                                 console.log(`   Fallback to initials: ${fallbackUrl}`);
                                                                 e.target.src = fallbackUrl;
                                                             }}

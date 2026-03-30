@@ -11,7 +11,7 @@ const CourseHero = ({ course }) => {
         <section 
             className="position-relative overflow-hidden"
             style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                 paddingTop: '2rem',
                 paddingBottom: '1.5rem'
             }}

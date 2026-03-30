@@ -291,7 +291,7 @@ button[role="radio"] {
 
 /* Enhanced focus styles for better visibility */
 *:focus-visible {
-  outline: 3px solid #0066cc;
+  outline: 3px solid #0f766e;
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -305,22 +305,22 @@ button[role="radio"] {
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 3px solid #0066cc;
+  outline: 3px solid #0f766e;
   outline-offset: 2px;
-  border-color: #0066cc;
+  border-color: #0f766e;
   box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
 }
 
 /* Button focus styles */
 .btn:focus-visible {
-  outline: 3px solid #0066cc;
+  outline: 3px solid #0f766e;
   outline-offset: 2px;
   box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.2);
 }
 
 /* Link focus styles */
 a:focus-visible {
-  outline: 3px solid #0066cc;
+  outline: 3px solid #0f766e;
   outline-offset: 2px;
   background-color: rgba(0, 102, 204, 0.1);
   border-radius: 2px;

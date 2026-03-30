@@ -183,7 +183,7 @@
     right: -20%;
     width: 300px;
     height: 300px;
-    background: linear-gradient(45deg, #3498db20, #2980b920);
+    background: linear-gradient(45deg, #0f766e20, #115e5920);
     border-radius: 50%;
     z-index: 1;
 }
@@ -194,7 +194,7 @@
 }
 
 .instructor-profile-page .page-header-title {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -205,7 +205,7 @@
 
 .instructor-profile-page .page-header-title-icon {
     margin-right: 1rem;
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -262,7 +262,7 @@
 }
 
 .instructor-profile-page .form-section-icon {
-    color: #3498db;
+    color: #0f766e;
     margin-right: 0.5rem;
 }
 
@@ -296,7 +296,7 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -364,7 +364,7 @@
     max-width: 48px;
     max-height: 48px;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
+    border-top: 4px solid #0f766e;
     border-radius: 50%;
     animation: custom-spin 1s linear infinite;
     position: absolute;
@@ -434,7 +434,7 @@
 }
 
 .instructor-profile-page .modern-file-input:focus {
-    border-color: #3498db;
+    border-color: #0f766e;
     box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
     outline: none;
 }
@@ -462,7 +462,7 @@
 }
 
 .instructor-profile-page .form-label-icon {
-    color: #3498db;
+    color: #0f766e;
     margin-right: 0.25rem;
 }
 
@@ -481,7 +481,7 @@
 }
 
 .instructor-profile-page .modern-input:focus {
-    border-color: #3498db;
+    border-color: #0f766e;
     box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
     background: white;
     outline: none;
@@ -547,7 +547,7 @@
    SUBMIT BUTTON
    ======================================== */
 .instructor-profile-page .modern-submit-btn {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
     border: none;
     color: white;
     border-radius: 12px;
@@ -573,7 +573,7 @@
 }
 
 .instructor-profile-page .btn-modern {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
     border: none;
     border-radius: 12px;
     padding: 0.875rem 2rem;
@@ -619,7 +619,7 @@
     border-radius: 8px;
     padding: 0.75rem 1rem;
     margin-top: 0.5rem;
-    border-left: 4px solid #3498db;
+    border-left: 4px solid #0f766e;
 }
 
 .instructor-profile-page .file-info-text {
@@ -630,7 +630,7 @@
 
 .instructor-profile-page .file-info-icon {
     margin-right: 0.5rem;
-    color: #3498db;
+    color: #0f766e;
 }
 
 .instructor-profile-page .profile-picture-actions {
@@ -687,19 +687,19 @@
    UTILITY CLASSES
    ======================================== */
 .instructor-profile-page .text-instructor-primary {
-    color: #3498db;
+    color: #0f766e;
 }
 
 .instructor-profile-page .text-instructor-secondary {
-    color: #2980b9;
+    color: #115e59;
 }
 
 .instructor-profile-page .bg-instructor-gradient {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
 }
 
 .instructor-profile-page .border-instructor-primary {
-    border-color: #3498db;
+    border-color: #0f766e;
 }
 
 /* ========================================
@@ -758,7 +758,7 @@
         max-width: 40px;
         max-height: 40px;
         border: 3px solid #f3f3f3;
-        border-top: 3px solid #3498db;
+        border-top: 3px solid #0f766e;
     }
     
     .instructor-profile-page .default-avatar-icon {

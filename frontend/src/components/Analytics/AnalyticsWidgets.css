@@ -54,7 +54,7 @@
 }
 
 .control-group .form-control:focus {
-  border-color: #3498db;
+  border-color: #0f766e;
   outline: none;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
@@ -97,12 +97,12 @@
 
 .kpi-card.kpi-primary .kpi-icon {
   background: rgba(52, 152, 219, 0.1);
-  color: #3498db;
+  color: #0f766e;
 }
 
 .kpi-card.kpi-info .kpi-icon {
   background: rgba(52, 152, 219, 0.1);
-  color: #3498db;
+  color: #0f766e;
 }
 
 .kpi-card.kpi-success .kpi-icon {
@@ -132,7 +132,7 @@
 
 .kpi-card.kpi-avg .kpi-icon {
   background: rgba(155, 89, 182, 0.1);
-  color: #9b59b6;
+  color: #0d9488;
 }
 
 .kpi-content {
@@ -176,7 +176,7 @@
   width: 50px;
   height: 50px;
   border: 4px solid #f0f0f0;
-  border-top-color: #3498db;
+  border-top-color: #0f766e;
   margin-bottom: 16px;
 }
 
@@ -375,7 +375,7 @@
 
 .indicator-tag i {
   margin-right: 3px;
-  color: #3498db;
+  color: #0f766e;
 }
 
 .risk-HIGH {
@@ -460,7 +460,7 @@
 }
 
 .bar-segment.clicks {
-  background: linear-gradient(90deg, #3498db, #2980b9);
+  background: linear-gradient(90deg, #0f766e, #115e59);
 }
 
 .bar-segment.enrollments {
@@ -548,7 +548,7 @@
 .analytics-widgets .stat-value {
   font-size: 20px;
   font-weight: 700;
-  color: #3498db;
+  color: #0f766e;
 }
 
 /* Widget Footer */
@@ -580,23 +580,23 @@
 }
 
 .btn-primary {
-  background: #3498db;
+  background: #0f766e;
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2980b9;
+  background: #115e59;
   box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
 }
 
 .btn-outline-primary {
-  border: 1px solid #3498db;
-  color: #3498db;
+  border: 1px solid #0f766e;
+  color: #0f766e;
   background: transparent;
 }
 
 .btn-outline-primary:hover {
-  background: #3498db;
+  background: #0f766e;
   color: white;
 }
 

@@ -626,13 +626,13 @@ function CourseQuiz() {
                                                         </div>
                                                     </div>
                                                     <div className="quiz-card-body mb-0">
-                                                        <h4 className="quiz-title text-primary">{quiz.title}</h4>
+                                                        <h4 className="quiz-title">{quiz.title}</h4>
                                                         {quiz.description && (
                                                             <p className="quiz-description text-secondary">{quiz.description}</p>
                                                         )}
                                                         <div className="quiz-stats">
                                                             <div className="stat-item">
-                                                                <i className="fas fa-question text-primary"></i>
+                                                                <i className="fas fa-question" style={{ color: '#0f766e' }}></i>
                                                                 <span>{quiz.total_questions || 0} Pertanyaan</span>
                                                             </div>
                                                             <div className="stat-item">

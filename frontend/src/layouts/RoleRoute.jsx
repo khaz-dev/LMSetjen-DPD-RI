@@ -124,7 +124,7 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
                         width: '40px',
                         height: '40px',
                         border: '3px solid #e2e8f0',
-                        borderTop: '3px solid #667eea',
+                        borderTop: '3px solid #0d9488',
                         borderRadius: '50%',
                         animation: 'spin 1s linear infinite',
                         margin: '0 auto 1rem'
@@ -171,7 +171,7 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
                         width: '40px',
                         height: '40px',
                         border: '3px solid #e2e8f0',
-                        borderTop: '3px solid #667eea',
+                        borderTop: '3px solid #0d9488',
                         borderRadius: '50%',
                         animation: 'spin 1s linear infinite',
                         margin: '0 auto 1rem'

@@ -607,7 +607,7 @@ function CourseEdit() {
             `,
             icon: "question",
             showCancelButton: true,
-            confirmButtonColor: "#2196F3",
+            confirmButtonColor: "#0f766e",
             cancelButtonColor: "#6c757d",
             confirmButtonText: isRepublication ? "Ya, Ajukan Perubahan untuk Publikasi" : "Ya, Ajukan Publikasi Kursus",
             cancelButtonText: "Belum",
@@ -687,7 +687,7 @@ function CourseEdit() {
                         `,
                         icon: "success",
                         confirmButtonText: "OK",
-                        confirmButtonColor: "#2196F3"
+                        confirmButtonColor: "#0f766e"
                     });
                     
                     // ✨ PHASE 4.169 FIXED: Now we DO refresh full course data to load published_version
@@ -826,7 +826,7 @@ function CourseEdit() {
                     `,
                     icon: "success",
                     confirmButtonText: "OK",
-                    confirmButtonColor: "#2196F3"
+                    confirmButtonColor: "#0f766e"
                 });
 
                 // ✨ PHASE 4.169: Don't refresh full course data to preserve published_version
@@ -1372,7 +1372,7 @@ function CourseEdit() {
                                             <Link 
                                                 to={`/instructor/edit-course/${param?.course_id}/curriculum/`} 
                                                 className="btn btn-update-course"
-                                                style={{ background: "linear-gradient(135deg, #3498db 0%, #2980b9 100%)" }}
+                                                style={{ background: "linear-gradient(135deg, #0f766e 0%, #115e59 100%)" }}
                                             >
                                                 <i className="fas fa-list me-2"></i>
                                                 Kelola Kurikulum
@@ -1524,7 +1524,7 @@ function CourseEdit() {
                                                 disabled={isPublishing || submitStatus === "submitting" || !canPublish}
                                                 style={{
                                                     background: canPublish 
-                                                        ? "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)" 
+                                                        ? "linear-gradient(135deg, #0f766e 0%, #115e59 100%)" 
                                                         : "linear-gradient(135deg, #9e9e9e 0%, #757575 100%)",
                                                     color: "white",
                                                     border: "none",
@@ -1604,7 +1604,7 @@ function CourseEdit() {
                                                 disabled={isPublishing || submitStatus === "submitting" || !canPublish}
                                                 style={{
                                                     background: canPublish 
-                                                        ? "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)" 
+                                                        ? "linear-gradient(135deg, #0f766e 0%, #115e59 100%)" 
                                                         : "linear-gradient(135deg, #9e9e9e 0%, #757575 100%)",
                                                     color: "white",
                                                     border: "none",

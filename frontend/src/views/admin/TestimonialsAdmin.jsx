@@ -149,7 +149,7 @@ function TestimonialsAdmin() {
                             src={testimonial.image} 
                             alt={testimonial.full_name}
                             onError={(e) => {
-                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(testimonial.full_name || 'User')}&background=667eea&color=ffffff`;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(testimonial.full_name || 'User')}&background=0d9488&color=ffffff`;
                             }}
                         />
                     ) : (

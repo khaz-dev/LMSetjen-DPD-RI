@@ -188,7 +188,7 @@
     right: -20%;
     width: 300px;
     height: 300px;
-    background: linear-gradient(45deg, #3498db20, #2980b920);
+    background: linear-gradient(45deg, #0f766e20, #115e5920);
     border-radius: 50%;
     z-index: 1;
 }
@@ -199,7 +199,7 @@
 }
 
 .instructor-review-page .page-title {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -210,7 +210,7 @@
 
 .instructor-review-page .page-title-icon {
     margin-right: 1rem;
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -259,7 +259,7 @@
     left: 15px;
     top: 50%;
     transform: translateY(-50%);
-    color: #3498db;
+    color: #0f766e;
     z-index: 2;
 }
 
@@ -273,7 +273,7 @@
 }
 
 .instructor-review-page .modern-input:focus {
-    border-color: #3498db;
+    border-color: #0f766e;
     box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
     outline: none;
 }
@@ -294,7 +294,7 @@
 }
 
 .instructor-review-page .modern-select:focus {
-    border-color: #3498db;
+    border-color: #0f766e;
     box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
     background-repeat: no-repeat !important;
@@ -321,7 +321,7 @@
 }
 
 .instructor-review-page .modern-select option:hover {
-    background: #3498db;
+    background: #0f766e;
     color: white;
 }
 
@@ -372,7 +372,7 @@
 .instructor-review-page .modern-avatar-container {
     position: relative;
     padding: 4px;
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
     border-radius: 50%;
     flex-shrink: 0;
 }
@@ -388,7 +388,7 @@
 .instructor-review-page .default-avatar {
     width: 70px;
     height: 70px;
-    background: #3498db;
+    background: #0f766e;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -484,8 +484,8 @@
 
 .instructor-review-page .report-status-badge.reviewed {
     background: rgba(13, 110, 253, 0.15);
-    color: #0d6efd;
-    border-left: 3px solid #0d6efd;
+    color: #0f766e;
+    border-left: 3px solid #0f766e;
 }
 
 .instructor-review-page .report-status-badge.dismissed {
@@ -529,8 +529,8 @@
 
 .instructor-review-page .report-status-badge-btn.reviewed {
     background: rgba(13, 110, 253, 0.15);
-    color: #0d6efd;
-    border-left: 3px solid #0d6efd;
+    color: #0f766e;
+    border-left: 3px solid #0f766e;
 }
 
 .instructor-review-page .report-status-badge-btn.reviewed:hover {
@@ -595,7 +595,7 @@
 */
 .instructor-review-page .course-title {
     font-weight: bold;
-    color: #3498db;
+    color: #0f766e;
     font-size: 0.85rem;
     word-break: break-word;
 }
@@ -618,7 +618,7 @@
 }
 
 .instructor-review-page .review-quote-icon {
-    color: #667eea;
+    color: #0d9488;
     font-size: 0.8rem;
     margin-right: 6px;
     margin-top: 0px;
@@ -689,7 +689,7 @@
    REPLY BUTTON
    ======================================== */
 .instructor-review-page .modern-reply-btn {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
     border: none;
     color: white;
     border-radius: 6px;
@@ -736,7 +736,7 @@
 }
 
 .instructor-review-page .form-label-icon {
-    color: #3498db;
+    color: #0f766e;
 }
 
 .instructor-review-page .modern-textarea {
@@ -751,7 +751,7 @@
 }
 
 .instructor-review-page .modern-textarea:focus {
-    border-color: #3498db;
+    border-color: #0f766e;
     box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
     outline: none;
 }
@@ -848,7 +848,7 @@
 .instructor-review-page .empty-state-icon {
     width: 100px;
     height: 100px;
-    background: linear-gradient(135deg, #667eea20, #764ba220);
+    background: linear-gradient(135deg, #0d948820, #0f766e20);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -858,7 +858,7 @@
 
 .instructor-review-page .empty-state-icon-inner {
     font-size: 2.5rem;
-    color: #667eea;
+    color: #0d9488;
 }
 
 .instructor-review-page .empty-state-title {

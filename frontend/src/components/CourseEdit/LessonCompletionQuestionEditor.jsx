@@ -256,7 +256,7 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
                                     type="button"
                                     className={`btn btn-secondary btn-sm`}
                                     style={{
-                                        backgroundColor: questionType === type.value ? '#0d6efd' : '#86c7da',
+                                        backgroundColor: questionType === type.value ? '#0f766e' : '#86c7da',
                                         color: questionType === type.value ? 'white' : 'inherit',
                                         flex: 1
                                     }}

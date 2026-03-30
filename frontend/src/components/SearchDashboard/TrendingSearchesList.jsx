@@ -100,7 +100,7 @@ const getTrendColor = (trend) => {
     case 'down':
       return '#FF9800'; // Orange
     default:
-      return '#2196F3'; // Blue
+      return '#0f766e'; // Blue
   }
 };
 

@@ -82,7 +82,7 @@ function Testimonials() {
                                     right: "-15%",
                                     width: "300px",
                                     height: "300px",
-                                    background: "linear-gradient(45deg, #667eea20, #764ba220)",
+                                    background: "linear-gradient(45deg, #0d948820, #0f766e20)",
                                     borderRadius: "50%",
                                     zIndex: 1,
                                     pointerEvents: "none"
@@ -90,7 +90,7 @@ function Testimonials() {
                                 <div className="d-flex align-items-center justify-content-between position-relative" style={{ zIndex: 2 }}>
                                     <div>
                                         <h1 className="mb-2" style={{
-                                            background: "linear-gradient(135deg, #667eea, #764ba2)",
+                                            background: "linear-gradient(135deg, #0d9488, #0f766e)",
                                             WebkitBackgroundClip: "text",
                                             WebkitTextFillColor: "transparent",
                                             fontSize: "2.5rem",
@@ -117,7 +117,7 @@ function Testimonials() {
                                         <div style={{ marginBottom: "2rem", paddingBottom: "2rem", borderBottom: "1px solid #e9ecef" }}>
                                             <h5 style={{
                                                 marginBottom: "1rem",
-                                                color: "#667eea",
+                                                color: "#0d9488",
                                                 fontSize: "1rem",
                                                 fontWeight: "600"
                                             }}>
@@ -188,7 +188,7 @@ function Testimonials() {
                                     )}
 
                                     <h4 className="card-title mb-3" style={{
-                                        background: "linear-gradient(135deg, #667eea, #764ba2)",
+                                        background: "linear-gradient(135deg, #0d9488, #0f766e)",
                                         WebkitBackgroundClip: "text",
                                         WebkitTextFillColor: "transparent"
                                     }}>

@@ -173,7 +173,7 @@
 }
 
 .admin-dashboard .stat-card-primary::before {
-    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(90deg, #0f766e 0%, #115e59 100%);
 }
 
 .admin-dashboard .stat-card-success::before {
@@ -211,7 +211,7 @@
 }
 
 .admin-dashboard .stat-card-primary .stat-icon {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
 }
 
 .admin-dashboard .stat-card-success .stat-icon {
@@ -435,7 +435,7 @@
 }
 
 .admin-dashboard .activity-icon.bg-primary {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
 }
 
 .admin-dashboard .activity-icon.bg-info {

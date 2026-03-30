@@ -454,9 +454,9 @@
     animation: compactDropdownFadeIn 0.2s ease-out !important;
     
     /* CRITICAL: Reset theme variables for admin role dropdown context */
-    --theme-primary: #6366f1 !important;
-    --theme-gradient: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-    --theme-shadow-color: rgba(99, 102, 241, 0.2) !important;
+    --theme-primary: #115e59 !important;
+    --theme-gradient: linear-gradient(135deg, #0f766e, #115e59) !important;
+    --theme-shadow-color: rgba(17, 94, 89, 0.2) !important;
 }
 
 /* UNIQUE ADMIN DROPDOWN HEADER - Uses .admin-role-dropdown-header class */
@@ -506,14 +506,14 @@
 .admin-role-dropdown-item:hover:not(:disabled) {
     background: #f0f9ff !important;
     padding-left: 1rem !important;
-    color: #6366f1 !important;
+    color: #115e59 !important;
 }
 
 .admin-role-dropdown-item i:first-child {
     font-size: 0.9rem !important;
     width: 18px !important;
     text-align: center !important;
-    color: #6366f1 !important;
+    color: #115e59 !important;
 }
 
 .admin-role-dropdown-item .admin-role-label {
@@ -523,14 +523,14 @@
 
 .admin-role-dropdown-item.active {
     background: linear-gradient(135deg, #eff6ff, #f0f9ff) !important;
-    color: #6366f1 !important;
+    color: #115e59 !important;
     font-weight: 600 !important;
-    border-left: 3px solid #6366f1 !important;
+    border-left: 3px solid #115e59 !important;
     padding-left: calc(0.8rem - 3px) !important;
 }
 
 .admin-role-dropdown-item.active i:first-child {
-    color: #6366f1 !important;
+    color: #115e59 !important;
 }
 
 .admin-role-dropdown-item:disabled {
@@ -546,7 +546,7 @@
 
 .profile-role-status-separator .admin-role-dropdown-menu .admin-role-dropdown-item:hover {
     background: #f0f9ff !important;
-    color: #6366f1 !important;
+    color: #115e59 !important;
 }
 
 /* ============================================================================
@@ -653,10 +653,10 @@
     overflow-x: hidden !important;
     
     /* CRITICAL: Reset theme variables to match Admin Dashboard */
-    /* White background with blue/purple accents */
-    --theme-primary: #6366f1 !important;
-    --theme-gradient: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-    --theme-shadow-color: rgba(99, 102, 241, 0.2) !important;
+    /* White background with teal/admin accents */
+    --theme-primary: #115e59 !important;
+    --theme-gradient: linear-gradient(135deg, #0f766e, #115e59) !important;
+    --theme-shadow-color: rgba(17, 94, 89, 0.2) !important;
 }
 
 .admin-profile-dropdown::before {
@@ -705,7 +705,7 @@
 
 .admin-profile-dropdown .dropdown-item:hover {
     background: #f0f9ff !important;
-    color: #6366f1 !important;
+    color: #115e59 !important;
     padding-left: 1.5rem !important;
 }
 
@@ -713,17 +713,17 @@
     font-size: 1rem !important;
     width: 20px !important;
     text-align: center !important;
-    color: #6366f1 !important;
+    color: #115e59 !important;
 }
 
 .admin-profile-dropdown .dropdown-item.active-item {
     background: linear-gradient(135deg, #eff6ff, #f0f9ff) !important;
-    color: #6366f1 !important;
+    color: #115e59 !important;
     font-weight: 600 !important;
 }
 
 .admin-profile-dropdown .dropdown-item.active-item i {
-    color: #6366f1 !important;
+    color: #115e59 !important;
 }
 
 .admin-profile-dropdown .dropdown-item.logout-item {
@@ -753,14 +753,14 @@
 
 .admin-profile-dropdown.dropdown-menu .dropdown-item:hover {
     background: #f0f9ff !important;
-    color: #6366f1 !important;
+    color: #115e59 !important;
     padding-left: 1.5rem !important;
 }
 
 .admin-profile-dropdown.dropdown-menu .dropdown-item.active-item,
 .admin-profile-dropdown.dropdown-menu .dropdown-item.active {
     background: linear-gradient(135deg, #eff6ff, #f0f9ff) !important;
-    color: #6366f1 !important;
+    color: #115e59 !important;
     font-weight: 600 !important;
 }
 

@@ -17,7 +17,7 @@
    ========================================== */
 
 .search-hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     border-radius: 0 0 50px 50px;
     padding: 2.5rem 0 2rem 0; /* Reduced padding for more compact look */
     margin-bottom: 1.5rem; /* Reduced bottom margin */
@@ -72,7 +72,7 @@
 }
 
 .form-control-search:focus {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     background: white;
     outline: none;
@@ -97,7 +97,7 @@
 }
 
 .clear-search-btn:hover {
-    color: #667eea;
+    color: #0d9488;
     transform: translateY(-50%) scale(1.2);
 }
 
@@ -110,7 +110,7 @@
     right: 1.5rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #667eea;
+    color: #0d9488;
     font-size: 1.2rem;
     z-index: 3;
     pointer-events: none;
@@ -134,7 +134,7 @@
 .results-header-card h3 {
     font-size: 1.4rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -171,7 +171,7 @@
 }
 
 .filter-label i {
-    color: #667eea;
+    color: #0d9488;
 }
 
 .category-filter-btn {
@@ -191,16 +191,16 @@
 }
 
 .category-filter-btn:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    border-color: #0d9488;
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
 }
 
 .category-filter-btn.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    border-color: #0d9488;
     color: white;
     box-shadow: 0 6px 15px rgba(102, 126, 234, 0.35);
 }
@@ -296,7 +296,7 @@
 }
 
 .empty-state-message strong {
-    color: #667eea;
+    color: #0d9488;
     font-weight: 600;
 }
 
@@ -306,7 +306,7 @@
 }
 
 .empty-state-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764fa2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #764fa2 100%);
     border: none;
     padding: 0.75rem 2rem;
     border-radius: 12px;
@@ -435,7 +435,7 @@
 .empty-icon {
     font-size: 4rem;
     margin-bottom: 1rem;
-    color: #667eea;
+    color: #0d9488;
     opacity: 0.7;
 }
 
@@ -465,7 +465,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: linear-gradient(90deg, #0d9488 0%, #0f766e 50%, #f093fb 100%);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -478,7 +478,7 @@
     transform: translateY(-10px) scale(1.02);
     box-shadow: 0 20px 45px rgba(102, 126, 234, 0.2), 
                 0 10px 25px rgba(0, 0, 0, 0.1);
-    border-color: #667eea;
+    border-color: #0d9488;
 }
 
 /* Course Image Container - Enhanced */
@@ -486,7 +486,7 @@
     position: relative;
     overflow: hidden;
     height: 200px; /* Increased height for better visual impact */
-    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    background: linear-gradient(135deg, #0d948815 0%, #0f766e15 100%);
     flex-shrink: 0;
     width: 100%;
 }
@@ -552,8 +552,8 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-    color: #667eea;
+    background: linear-gradient(135deg, #0d948815 0%, #0f766e15 100%);
+    color: #0d9488;
     font-size: 3rem;
     margin: 0 !important;
     padding: 0 !important;
@@ -640,7 +640,7 @@
 }
 
 .course-title a:hover {
-    color: #667eea;
+    color: #0d9488;
 }
 
 .course-meta-search {
@@ -719,7 +719,7 @@
 
 /* View Course Button - Enhanced */
 .btn-course-detail {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     border: none;
     border-radius: 12px;
     padding: 0.85rem 1.35rem; /* Slightly more padding */
@@ -805,15 +805,15 @@
 }
 
 .page-btn:hover:not(.disabled) {
-    background: #667eea;
-    border-color: #667eea;
+    background: #0d9488;
+    border-color: #0d9488;
     color: white;
     text-decoration: none;
 }
 
 .page-btn.active {
-    background: #667eea;
-    border-color: #667eea;
+    background: #0d9488;
+    border-color: #0d9488;
     color: white;
 }
 
@@ -827,7 +827,7 @@
    ========================================== */
 
 .cta-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     border-radius: 25px;
     padding: 2.5rem 1.5rem;
     margin-top: 3rem;
@@ -869,7 +869,7 @@
 
 .btn-cta {
     background: white;
-    color: #667eea;
+    color: #0d9488;
     border: none;
     border-radius: 12px;
     padding: 1rem 2rem;
@@ -886,7 +886,7 @@
     background: #f8f9fa;
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    color: #667eea;
+    color: #0d9488;
     text-decoration: none;
 }
 

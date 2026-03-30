@@ -23,7 +23,7 @@ const CourseReviews = ({ reviews = [], averageRating = 0, totalReviews = 0 }) =>
     // Function to get consistent color for user based on name
     const getUserColor = (name) => {
         const colors = [
-            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
             'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
             'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
             'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
@@ -197,7 +197,7 @@ const CourseReviews = ({ reviews = [], averageRating = 0, totalReviews = 0 }) =>
                                             justifyContent: 'center'
                                         }}
                                     >
-                                        <i className="fas fa-comments" style={{ fontSize: '3.5rem', color: '#667eea', opacity: '0.6' }}></i>
+                                        <i className="fas fa-comments" style={{ fontSize: '3.5rem', color: '#0d9488', opacity: '0.6' }}></i>
                                     </div>
                                     
                                     <h4 className="fw-bold mb-3" style={{ color: '#2c3e50' }}>
@@ -360,7 +360,7 @@ const CourseReviews = ({ reviews = [], averageRating = 0, totalReviews = 0 }) =>
                                 border: '3px dashed rgba(102, 126, 234, 0.2)'
                             }}
                         >
-                            <i className="fas fa-star" style={{ fontSize: '4rem', color: '#667eea', opacity: '0.5' }}></i>
+                            <i className="fas fa-star" style={{ fontSize: '4rem', color: '#0d9488', opacity: '0.5' }}></i>
                         </div>
                         
                         <h3 className="fw-bold mb-3" style={{ color: '#2c3e50' }}>
@@ -383,7 +383,7 @@ const CourseReviews = ({ reviews = [], averageRating = 0, totalReviews = 0 }) =>
                                 style={{
                                     width: '50px',
                                     height: '50px',
-                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                                     borderRadius: '15px',
                                     display: 'flex',
                                     alignItems: 'center',

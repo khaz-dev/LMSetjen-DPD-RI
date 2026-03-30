@@ -1200,7 +1200,7 @@ function QA() {
                                             {/* Search Input - 50% */}
                                             <div style={{ flex: '1 1 50%' }}>
                                                 <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                    <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#3498db' }}></i>
+                                                    <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#0f766e' }}></i>
                                                     Cari Pertanyaan
                                                 </label>
                                                 <input
@@ -1221,7 +1221,7 @@ function QA() {
                                                         outline: 'none'
                                                     }}
                                                     onFocus={(e) => {
-                                                        e.target.style.borderColor = '#3498db';
+                                                        e.target.style.borderColor = '#0f766e';
                                                         e.target.style.boxShadow = '0 0 0 3px rgba(52, 152, 219, 0.1)';
                                                     }}
                                                     onBlur={(e) => {
@@ -1234,7 +1234,7 @@ function QA() {
                                             {/* Bagian Filter Dropdown - 25% */}
                                             <div style={{ flex: '1 1 25%' }}>
                                                 <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                    <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#9b59b6' }}></i>
+                                                    <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#0d9488' }}></i>
                                                     Bagian
                                                 </label>
                                                 <select
@@ -1268,8 +1268,8 @@ function QA() {
                                                         cursor: 'pointer'
                                                     }}
                                                     onFocus={(e) => {
-                                                        e.target.style.borderColor = '#9b59b6';
-                                                        e.target.style.boxShadow = '0 0 0 3px rgba(155, 89, 182, 0.1)';
+                                                        e.target.style.borderColor = '#0d9488';
+                                                        e.target.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.1)';
                                                     }}
                                                     onBlur={(e) => {
                                                         e.target.style.borderColor = '#e9ecef';

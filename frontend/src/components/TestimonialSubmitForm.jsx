@@ -317,7 +317,7 @@ Contoh: Kursus ini sangat membantu saya dalam mengembangkan keterampilan..."
           className="mt-3 p-3"
           style={{
             background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-            borderLeft: '4px solid #667eea',
+            borderLeft: '4px solid #0d9488',
             borderRadius: '8px',
           }}
         >

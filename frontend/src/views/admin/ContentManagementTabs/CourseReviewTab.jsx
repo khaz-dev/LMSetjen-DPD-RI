@@ -111,7 +111,7 @@ function CourseReviewTab() {
                                 </div>
 
                                 <div className="cm-card-body">
-                                    <h5 className="cm-card-title" style={{ cursor: 'pointer', color: '#2196F3' }} onClick={() => handleViewDetails(course)}>
+                                    <h5 className="cm-card-title" style={{ cursor: 'pointer', color: '#0f766e' }} onClick={() => handleViewDetails(course)}>
                                         {course.title}
                                     </h5>
                                     

@@ -24,7 +24,7 @@
 .stat-number {
     font-size: 32px;
     font-weight: 700;
-    color: #007bff;
+    color: #0f766e;
     margin-bottom: 8px;
 }
 
@@ -67,7 +67,7 @@
 .filter-input:focus,
 .filter-select:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #0f766e;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
@@ -189,7 +189,7 @@
 
 .btn-view {
     padding: 6px 12px;
-    background: #007bff;
+    background: #0f766e;
     color: white;
     border: none;
     border-radius: 4px;
@@ -200,7 +200,7 @@
 }
 
 .btn-view:hover {
-    background: #0056b3;
+    background: #115e59;
 }
 
 /* Modal */
@@ -310,7 +310,7 @@
 }
 
 .info-section a {
-    color: #007bff;
+    color: #0f766e;
     text-decoration: none;
 }
 
@@ -344,7 +344,7 @@
 
 .update-select:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #0f766e;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
@@ -361,7 +361,7 @@
 
 .admin-notes:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #0f766e;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 

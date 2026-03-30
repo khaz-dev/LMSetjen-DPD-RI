@@ -68,7 +68,7 @@ const CourseSidebar = ({
                 title: 'Login Diperlukan',
                 text: 'Silakan login untuk mendaftar di kursus ini',
                 confirmButtonText: 'Ke Halaman Login',
-                confirmButtonColor: '#667eea'
+                confirmButtonColor: '#0d9488'
             }).then((result) => {
                 if (result.isConfirmed) {
                     navigate('/login');
@@ -89,7 +89,7 @@ const CourseSidebar = ({
                 icon: 'success',
                 title: 'Pendaftaran Berhasil!',
                 text: 'Anda telah berhasil mendaftar di kursus ini',
-                confirmButtonColor: '#667eea'
+                confirmButtonColor: '#0d9488'
             });
 
             setIsEnrolled(true);
@@ -127,7 +127,7 @@ const CourseSidebar = ({
                 title: 'Login Diperlukan',
                 text: 'Silakan login untuk menambahkan kursus ke wishlist Anda',
                 confirmButtonText: 'Ke Halaman Login',
-                confirmButtonColor: '#667eea'
+                confirmButtonColor: '#0d9488'
             }).then((result) => {
                 if (result.isConfirmed) {
                     navigate('/login');
@@ -235,13 +235,13 @@ const CourseSidebar = ({
                                 justifyContent: 'center'   // ✨ Center horizontally
                             }}
                         >
-                            <i className="fas fa-play" style={{ color: '#667eea', fontSize: '1rem' }}></i>
+                            <i className="fas fa-play" style={{ color: '#0d9488', fontSize: '1rem' }}></i>
                         </button>
                     </div>
                     <div 
                         className="position-absolute top-0 end-0 m-2"
                         style={{
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                             color: 'white',
                             padding: '0.4rem 0.8rem',
                             borderRadius: '12px',
@@ -311,7 +311,7 @@ const CourseSidebar = ({
                                 disabled={loading}
                                 className="btn"
                                 style={{
-                                    background: loading ? '#cccccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    background: loading ? '#cccccc' : 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '12px',
@@ -343,8 +343,8 @@ const CourseSidebar = ({
                                 className="btn"
                                 style={{
                                     background: isInWishlist ? 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)' : 'transparent',
-                                    color: isInWishlist ? 'white' : '#667eea',
-                                    border: isInWishlist ? 'none' : '2px solid #667eea',
+                                    color: isInWishlist ? 'white' : '#0d9488',
+                                    border: isInWishlist ? 'none' : '2px solid #0d9488',
                                     borderRadius: '12px',
                                     fontWeight: '600',
                                     padding: '0.6rem 1rem',
@@ -417,7 +417,7 @@ const CourseSidebar = ({
                             style={{
                                 width: '35px',
                                 height: '35px',
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                                 borderRadius: '10px',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -441,13 +441,13 @@ const CourseSidebar = ({
                                     className={`${item.icon} me-3`} 
                                     style={{ 
                                         width: '20px',
-                                        color: item.highlight ? '#667eea' : '#6c757d'
+                                        color: item.highlight ? '#0d9488' : '#6c757d'
                                     }}
                                 ></i>
                                 <span 
                                     className={`small ${item.highlight ? 'fw-semibold' : ''}`}
                                     style={{ 
-                                        color: item.highlight ? '#667eea' : '#6c757d'
+                                        color: item.highlight ? '#0d9488' : '#6c757d'
                                     }}
                                 >
                                     {item.text}
@@ -568,8 +568,8 @@ const CourseSidebar = ({
                                         className="btn btn-sm"
                                         style={{
                                             background: 'transparent',
-                                            color: '#667eea',
-                                            border: '1px solid #667eea',
+                                            color: '#0d9488',
+                                            border: '1px solid #0d9488',
                                             borderRadius: '10px',
                                             fontWeight: '500',
                                             fontSize: '0.8rem'

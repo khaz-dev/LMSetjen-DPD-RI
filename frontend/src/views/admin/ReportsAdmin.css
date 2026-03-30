@@ -93,8 +93,8 @@
 }
 
 .reports-tab-button.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
+    color: #0d9488;
+    border-bottom-color: #0d9488;
     background-color: #f8f9ff;
     font-weight: 700;
 }
@@ -131,7 +131,7 @@
 }
 
 .reports-description-box i {
-    color: #667eea;
+    color: #0d9488;
     font-size: 1.1rem;
 }
 
@@ -169,7 +169,7 @@
     background: #f8f9fa;
     padding: 1.5rem;
     border-radius: 12px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #0d9488;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -209,7 +209,7 @@
 }
 
 .review-abuse-tab .filter-select:focus {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -217,7 +217,7 @@
     display: flex !important;
     align-items: center !important;
     gap: 1rem !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
     color: white !important;
     padding: 1rem 1.5rem !important;
     border-radius: 8px !important;
@@ -346,8 +346,8 @@
 
 .review-abuse-tab .badge-info {
     background: rgba(13, 110, 253, 0.15);
-    color: #0d6efd;
-    border-left: 3px solid #0d6efd;
+    color: #0f766e;
+    border-left: 3px solid #0f766e;
 }
 
 .review-abuse-tab .badge-danger {
@@ -402,7 +402,7 @@
 }
 
 .review-abuse-tab .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     border: none;
     color: white;
 }
@@ -475,7 +475,7 @@
 }
 
 .review-abuse-tab .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
     padding: 1rem 1.5rem;
     border-bottom: none;
@@ -523,7 +523,7 @@
     margin-bottom: 1rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid #0d9488;
     padding-bottom: 0.5rem;
 }
 
@@ -540,7 +540,7 @@
     background: #f8f9fa !important;
     padding: 1rem !important;
     border-radius: 8px !important;
-    border-left: 3px solid #667eea !important;
+    border-left: 3px solid #0d9488 !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 0.5rem !important;
@@ -610,7 +610,7 @@
     background: #f8f9fa;
     padding: 1rem;
     border-radius: 8px;
-    border-left: 3px solid #667eea;
+    border-left: 3px solid #0d9488;
 }
 
 .review-abuse-tab .description-box p {
@@ -634,7 +634,7 @@
 
 .review-abuse-tab .form-control:focus,
 .review-abuse-tab .form-select:focus {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -766,7 +766,7 @@
     background: #f8f9fa;
     padding: 1.5rem;
     border-radius: 12px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #0d9488;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -806,7 +806,7 @@
 }
 
 .qa-reports-tab .filter-select:focus {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -814,7 +814,7 @@
     display: flex !important;
     align-items: center !important;
     gap: 1rem !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
     color: white !important;
     padding: 1rem 1.5rem !important;
     border-radius: 8px !important;
@@ -949,8 +949,8 @@
 
 .qa-reports-tab .badge-info {
     background: rgba(13, 110, 253, 0.15);
-    color: #0d6efd;
-    border-left: 3px solid #0d6efd;
+    color: #0f766e;
+    border-left: 3px solid #0f766e;
 }
 
 .qa-reports-tab .badge-danger {
@@ -1005,7 +1005,7 @@
 }
 
 .qa-reports-tab .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     border: none;
     color: white;
 }
@@ -1067,7 +1067,7 @@
 }
 
 .qa-reports-tab .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
     padding: 1rem 1.5rem;
     border-bottom: none;
@@ -1115,7 +1115,7 @@
     margin-bottom: 1rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid #0d9488;
     padding-bottom: 0.5rem;
 }
 
@@ -1132,7 +1132,7 @@
     background: #f8f9fa !important;
     padding: 1rem !important;
     border-radius: 8px !important;
-    border-left: 3px solid #667eea !important;
+    border-left: 3px solid #0d9488 !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 0.5rem !important;
@@ -1199,7 +1199,7 @@
     background: #f8f9fa;
     padding: 1rem;
     border-radius: 8px;
-    border-left: 3px solid #667eea;
+    border-left: 3px solid #0d9488;
 }
 
 .qa-reports-tab .description-box p {
@@ -1225,7 +1225,7 @@
 
 .qa-reports-tab .form-control:focus,
 .qa-reports-tab .form-select:focus {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 

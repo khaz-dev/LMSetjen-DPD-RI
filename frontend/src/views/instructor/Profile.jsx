@@ -913,7 +913,7 @@ function Profile() {
                 {uiState.autoSaveStatus === "saving" || uiState.autoSaving ? (
                     <>
                         <span className="spinner-border spinner-border-sm" role="status" style={{ width: "14px", height: "14px", borderWidth: "2px" }}></span>
-                        <span style={{ color: "#667eea", fontWeight: "500" }}>Menyimpan...</span>
+                        <span style={{ color: "#0d9488", fontWeight: "500" }}>Menyimpan...</span>
                     </>
                 ) : uiState.autoSaveStatus === "saved" ? (
                     <>

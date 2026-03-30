@@ -752,7 +752,7 @@ const LecturesTabNew = ({
                                         onMouseDown={() => setSeeking(true)}
                                         onMouseUp={handleSeekMouseUp}
                                         style={{
-                                            background: `linear-gradient(to right, #007bff 0%, #007bff ${played * 100}%, #e9ecef ${played * 100}%, #e9ecef 100%)`
+                                            background: `linear-gradient(to right, #0f766e 0%, #0f766e ${played * 100}%, #e9ecef ${played * 100}%, #e9ecef 100%)`
                                         }}
                                     />
                                     <div className="video-time-display">

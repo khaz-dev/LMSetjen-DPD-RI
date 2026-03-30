@@ -57,6 +57,7 @@ body::after {
 /* ========================================
    GLOBAL SCROLLBAR STYLING - PHASE 4.15+
    Visible scrollbars on all pages except landing (Index)
+   ✨ PHASE 11.X: Updated to Teal palette
    CRITICAL: Applied to html/body explicitly for maximum specificity
    ======================================== */
 
@@ -64,7 +65,7 @@ body::after {
 html,
 body {
   scrollbar-width: thin;
-  scrollbar-color: #667eea #f8f9fc;
+  scrollbar-color: #0d9488 #f0fdfa;  /* Teal-600 thumb on Teal-50 track */
 }
 
 html {
@@ -90,14 +91,14 @@ html::-webkit-scrollbar {
 }
 
 html::-webkit-scrollbar-track {
-  background: linear-gradient(180deg, #f8f9fc 0%, #f0f4ff 100%);
+  background: linear-gradient(180deg, #f0fdfa 0%, #ccfbf1 100%);  /* Teal-50 to Teal-100 gradient */
   border-radius: 10px;
   display: block !important;
   visibility: visible !important;
 }
 
 html::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(180deg, #0d9488 0%, #0f766e 100%);  /* Teal-600 to Teal-700 gradient */
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -108,9 +109,9 @@ html::-webkit-scrollbar-thumb {
 }
 
 html::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
+  background: linear-gradient(180deg, #0f766e 0%, #0d9488 100%);  /* Teal-700 to Teal-600 on hover */
   background-clip: padding-box;
-  box-shadow: inset 0 0 6px rgba(102, 126, 234, 0.3);
+  box-shadow: inset 0 0 6px rgba(13, 148, 136, 0.3);
 }
 
 /* ALSO APPLY TO BODY FOR FIREFOX COMPATIBILITY */
@@ -122,14 +123,14 @@ body::-webkit-scrollbar {
 }
 
 body::-webkit-scrollbar-track {
-  background: linear-gradient(180deg, #f8f9fc 0%, #f0f4ff 100%);
+  background: linear-gradient(180deg, #f0fdfa 0%, #ccfbf1 100%);  /* Teal-50 to Teal-100 */
   border-radius: 10px;
   display: block !important;
   visibility: visible !important;
 }
 
 body::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(180deg, #0d9488 0%, #0f766e 100%);  /* Teal-600 to Teal-700 */
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -140,9 +141,9 @@ body::-webkit-scrollbar-thumb {
 }
 
 body::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
+  background: linear-gradient(180deg, #0f766e 0%, #0d9488 100%);  /* Teal-700 to Teal-600 on hover */
   background-clip: padding-box;
-  box-shadow: inset 0 0 6px rgba(102, 126, 234, 0.3);
+  box-shadow: inset 0 0 6px rgba(13, 148, 136, 0.3);  /* Teal-600 shadow */
 }
 
 /* Hide scrollbar ONLY on landing page (Index component) - Most Specific */
@@ -167,22 +168,22 @@ body::-webkit-scrollbar-thumb:hover {
 
 /* Global Theme Variables */
 :root {
-  /* Student Theme (Purple) - Default */
-  --theme-primary: #667eea;
-  --theme-primary-dark: #764ba2;
-  --theme-primary-light: #8b5cf6;
-  --theme-primary-lighter: #a78bfa;
-  --theme-secondary: #9333ea;
-  --theme-accent: #c084fc;
-  --theme-gradient-start: #667eea;
-  --theme-gradient-end: #764ba2;
+  /* ✨ PHASE 11.X: Student Theme (Teal) - Default - APPROVED COLOR SYSTEM v3.0.7 */
+  --theme-primary: #0d9488;
+  --theme-primary-dark: #0f766e;
+  --theme-primary-light: #2dd4bf;
+  --theme-primary-lighter: #5eead4;
+  --theme-secondary: #14b8a6;
+  --theme-accent: #2dd4bf;
+  --theme-gradient-start: #0d9488;
+  --theme-gradient-end: #0f766e;
   --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
-  --theme-gradient-light: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-  --theme-shadow-color: rgba(102, 126, 234, 0.3);
-  --theme-hover-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-  --theme-card-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  --theme-gradient-light: linear-gradient(135deg, rgba(13, 148, 136, 0.1), rgba(15, 118, 110, 0.1));
+  --theme-shadow-color: rgba(13, 148, 136, 0.3);
+  --theme-hover-shadow: 0 8px 25px rgba(13, 148, 136, 0.4);
+  --theme-card-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
   --theme-text-on-primary: #ffffff;
-  --theme-border-color: rgba(102, 126, 234, 0.2);
+  --theme-border-color: rgba(13, 148, 136, 0.2);
 
   /* ✨ PHASE 42: Student Page Spacing Variables - CHANGE THESE TO CONTROL ALL STUDENT PAGES */
   /* WARNING: These variables control the gap between navbar and content across ALL student pages */
@@ -193,44 +194,65 @@ body::-webkit-scrollbar-thumb:hover {
   --header-card-gap: 1.5rem; /* Gap between header card and page content */
 }
 
-/* Instructor Theme (Blue) */
+/* ✨ PHASE 11.X: Instructor Theme (Teal-700) - Darker shade for role distinction */
 body.instructor-theme {
-  --theme-primary: #3498db;
-  --theme-primary-dark: #2980b9;
-  --theme-primary-light: #3b82f6;
-  --theme-primary-lighter: #60a5fa;
-  --theme-secondary: #2563eb;
-  --theme-accent: #6366f1;
-  --theme-gradient-start: #3498db;
-  --theme-gradient-end: #2980b9;
+  --theme-primary: #0f766e;
+  --theme-primary-dark: #115e59;
+  --theme-primary-light: #14b8a6;
+  --theme-primary-lighter: #2dd4bf;
+  --theme-secondary: #0d9488;
+  --theme-accent: #14b8a6;
+  --theme-gradient-start: #0f766e;
+  --theme-gradient-end: #115e59;
   --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
   --theme-gradient-horizontal: linear-gradient(90deg, var(--theme-gradient-start), var(--theme-gradient-end));
-  --theme-gradient-light: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(41, 128, 185, 0.1));
-  --theme-shadow-color: rgba(52, 152, 219, 0.3);
-  --theme-primary-dark-semi-transparent: rgba(41, 128, 185, 0.9);
-  --theme-hover-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
-  --theme-card-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  --theme-gradient-light: linear-gradient(135deg, rgba(15, 118, 110, 0.1), rgba(17, 94, 89, 0.1));
+  --theme-shadow-color: rgba(15, 118, 110, 0.3);
+  --theme-primary-dark-semi-transparent: rgba(17, 94, 89, 0.9);
+  --theme-hover-shadow: 0 8px 25px rgba(15, 118, 110, 0.4);
+  --theme-card-shadow: 0 4px 15px rgba(15, 118, 110, 0.3);
   --theme-text-on-primary: #ffffff;
-  --theme-border-color: rgba(52, 152, 219, 0.2);
+  --theme-border-color: rgba(15, 118, 110, 0.2);
 }
 
-/* Student Theme (Purple) - Explicit class for clarity */
+/* ✨ PHASE 11.X: Student Theme (Teal-600) - Explicit class for clarity */
 body.student-theme {
-  --theme-primary: #667eea;
-  --theme-primary-dark: #764ba2;
-  --theme-primary-light: #8b5cf6;
-  --theme-primary-lighter: #a78bfa;
-  --theme-secondary: #9333ea;
-  --theme-accent: #c084fc;
-  --theme-gradient-start: #667eea;
-  --theme-gradient-end: #764ba2;
+  --theme-primary: #0d9488;
+  --theme-primary-dark: #0f766e;
+  --theme-primary-light: #2dd4bf;
+  --theme-primary-lighter: #5eead4;
+  --theme-secondary: #14b8a6;
+  --theme-accent: #2dd4bf;
+  --theme-gradient-start: #0d9488;
+  --theme-gradient-end: #0f766e;
   --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
-  --theme-gradient-light: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-  --theme-shadow-color: rgba(102, 126, 234, 0.3);
-  --theme-hover-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-  --theme-card-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  --theme-gradient-light: linear-gradient(135deg, rgba(13, 148, 136, 0.1), rgba(15, 118, 110, 0.1));
+  --theme-shadow-color: rgba(13, 148, 136, 0.3);
+  --theme-hover-shadow: 0 8px 25px rgba(13, 148, 136, 0.4);
+  --theme-card-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
   --theme-text-on-primary: #ffffff;
-  --theme-border-color: rgba(102, 126, 234, 0.2);
+  --theme-border-color: rgba(13, 148, 136, 0.2);
+}
+
+/* ✨ PHASE 11.X: Admin Theme (Teal-800) - Darkest shade for system admin distinction */
+body.admin-theme {
+  --theme-primary: #115e59;
+  --theme-primary-dark: #134e4a;
+  --theme-primary-light: #0f766e;
+  --theme-primary-lighter: #0d9488;
+  --theme-secondary: #0f766e;
+  --theme-accent: #0f766e;
+  --theme-gradient-start: #115e59;
+  --theme-gradient-end: #134e4a;
+  --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
+  --theme-gradient-horizontal: linear-gradient(90deg, var(--theme-gradient-start), var(--theme-gradient-end));
+  --theme-gradient-light: linear-gradient(135deg, rgba(17, 94, 89, 0.1), rgba(19, 78, 74, 0.1));
+  --theme-shadow-color: rgba(17, 94, 89, 0.3);
+  --theme-primary-dark-semi-transparent: rgba(19, 78, 74, 0.9);
+  --theme-hover-shadow: 0 8px 25px rgba(17, 94, 89, 0.4);
+  --theme-card-shadow: 0 4px 15px rgba(17, 94, 89, 0.3);
+  --theme-text-on-primary: #ffffff;
+  --theme-border-color: rgba(17, 94, 89, 0.2);
 }
 
 /* ✨ PHASE 4+ FIX: Make student-theme pages fill full screen width like landing-fixed-header */
@@ -283,26 +305,49 @@ body.instructor-theme .qa-bg-section {
   margin-right: 0 !important;
 }
 
-/* Dark Theme (Student - Purple Dark Mode) */
+/* ✨ PHASE 11.X: Admin theme page styling override - match other role themes */
+body.admin-theme section,
+body.admin-theme main,
+body.admin-theme .modern-course-page,
+body.admin-theme .modern-students,
+body.admin-theme .modern-dashboard,
+body.admin-theme .courses-container,
+body.admin-theme .instructor-profile-page,
+body.admin-theme .instructor-review-page,
+body.admin-theme .instructor-notification-page,
+body.admin-theme .instructor-password-page,
+body.admin-theme .instructor-course-create-page,
+body.admin-theme .instructor-course-edit-page,
+body.admin-theme .instructor-course-edit-curriculum-page,
+body.admin-theme .qa-bg-section {
+  position: relative;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Dark Theme (Student - Teal Dark Mode) */
 body.student-theme.dark-theme,
 body.dark-theme {
-  --theme-primary: #a78bfa;
-  --theme-primary-dark: #c084fc;
-  --theme-primary-light: #e9d5ff;
-  --theme-primary-lighter: #f3e8ff;
-  --theme-secondary: #ddd6fe;
-  --theme-accent: #f3e8ff;
-  --theme-gradient-start: #8b5cf6;
-  --theme-gradient-end: #a78bfa;
+  --theme-primary: #5eead4;
+  --theme-primary-dark: #2dd4bf;
+  --theme-primary-light: #ccfbf1;
+  --theme-primary-lighter: #f0fdfa;
+  --theme-secondary: #99f6e4;
+  --theme-accent: #f0fdfa;
+  --theme-gradient-start: #14b8a6;
+  --theme-gradient-end: #0d9488;
   --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
   --theme-gradient-horizontal: linear-gradient(90deg, var(--theme-gradient-start), var(--theme-gradient-end));
-  --theme-gradient-light: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(167, 139, 250, 0.1));
-  --theme-shadow-color: rgba(139, 92, 246, 0.2);
-  --theme-primary-dark-semi-transparent: rgba(139, 92, 246, 0.9);
-  --theme-hover-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
-  --theme-card-shadow: 0 4px 15px rgba(139, 92, 246, 0.15);
+  --theme-gradient-light: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(13, 148, 136, 0.1));
+  --theme-shadow-color: rgba(20, 184, 166, 0.2);
+  --theme-primary-dark-semi-transparent: rgba(13, 148, 136, 0.9);
+  --theme-hover-shadow: 0 8px 25px rgba(20, 184, 166, 0.3);
+  --theme-card-shadow: 0 4px 15px rgba(20, 184, 166, 0.15);
   --theme-text-on-primary: #1f2937;
-  --theme-border-color: rgba(139, 92, 246, 0.2);
+  --theme-border-color: rgba(20, 184, 166, 0.2);
   
   /* Dark mode color overrides */
   --bg-primary: #0f172a;
@@ -314,24 +359,44 @@ body.dark-theme {
   --border-light: rgba(203, 213, 225, 0.15);
 }
 
-/* Dark Theme (Instructor - Blue Dark Mode) */
+/* Dark Theme (Instructor - Teal-700 Dark Mode) */
 body.instructor-theme.dark-theme {
-  --theme-primary: #60a5fa;
-  --theme-primary-dark: #93c5fd;
-  --theme-primary-light: #dbeafe;
-  --theme-primary-lighter: #eff6ff;
-  --theme-secondary: #e0f2fe;
-  --theme-accent: #eff6ff;
-  --theme-gradient-start: #3b82f6;
-  --theme-gradient-end: #60a5fa;
+  --theme-primary: #2dd4bf;
+  --theme-primary-dark: #5eead4;
+  --theme-primary-light: #99f6e4;
+  --theme-primary-lighter: #ccfbf1;
+  --theme-secondary: #14b8a6;
+  --theme-accent: #ccfbf1;
+  --theme-gradient-start: #0f766e;
+  --theme-gradient-end: #0d9488;
   --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
-  --theme-gradient-light: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(96, 165, 250, 0.15));
-  --theme-shadow-color: rgba(59, 130, 246, 0.2);
-  --theme-primary-dark-semi-transparent: rgba(30, 64, 175, 0.9);
-  --theme-hover-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-  --theme-card-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
-  --theme-text-on-primary: #1e3a8a;
-  --theme-border-color: rgba(59, 130, 246, 0.2);
+  --theme-gradient-light: linear-gradient(135deg, rgba(15, 118, 110, 0.15), rgba(13, 148, 136, 0.15));
+  --theme-shadow-color: rgba(15, 118, 110, 0.2);
+  --theme-primary-dark-semi-transparent: rgba(13, 148, 136, 0.9);
+  --theme-hover-shadow: 0 8px 25px rgba(15, 118, 110, 0.3);
+  --theme-card-shadow: 0 4px 15px rgba(15, 118, 110, 0.15);
+  --theme-text-on-primary: #0f766e;
+  --theme-border-color: rgba(15, 118, 110, 0.2);
+}
+
+/* Dark Theme (Admin - Teal-800 Dark Mode) */
+body.admin-theme.dark-theme {
+  --theme-primary: #14b8a6;
+  --theme-primary-dark: #2dd4bf;
+  --theme-primary-light: #5eead4;
+  --theme-primary-lighter: #99f6e4;
+  --theme-secondary: #0f766e;
+  --theme-accent: #99f6e4;
+  --theme-gradient-start: #115e59;
+  --theme-gradient-end: #0f766e;
+  --theme-gradient: linear-gradient(135deg, var(--theme-gradient-start), var(--theme-gradient-end));
+  --theme-gradient-light: linear-gradient(135deg, rgba(17, 94, 89, 0.15), rgba(15, 118, 110, 0.15));
+  --theme-shadow-color: rgba(17, 94, 89, 0.2);
+  --theme-primary-dark-semi-transparent: rgba(15, 118, 110, 0.9);
+  --theme-hover-shadow: 0 8px 25px rgba(17, 94, 89, 0.3);
+  --theme-card-shadow: 0 4px 15px rgba(17, 94, 89, 0.15);
+  --theme-text-on-primary: #115e59;
+  --theme-border-color: rgba(17, 94, 89, 0.2);
 }
 
 /* Dark Mode Background */

@@ -25,7 +25,7 @@
 }
 
 .instructor-request-panel .header-title h2 i {
-  color: #667eea;
+  color: #0d9488;
   font-size: 28px;
 }
 
@@ -71,14 +71,14 @@
 }
 
 .instructor-request-panel .filter-btn:hover {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #0d9488;
+  color: #0d9488;
   background-color: #f0f4ff;
 }
 
 .instructor-request-panel .filter-btn.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #0d9488;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
   color: white;
 }
 
@@ -100,7 +100,7 @@
   width: 40px;
   height: 40px;
   margin-bottom: 20px;
-  color: #667eea;
+  color: #0d9488;
 }
 
 .instructor-request-panel .loading-state p {
@@ -176,7 +176,7 @@
 
 .instructor-request-panel .request-card:hover {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: #667eea;
+  border-color: #0d9488;
 }
 
 /* Card Header */
@@ -208,7 +208,7 @@
 }
 
 .instructor-request-panel .user-email a {
-  color: #667eea;
+  color: #0d9488;
   text-decoration: none;
 }
 
@@ -256,7 +256,7 @@
 
 .instructor-request-panel .section-label i {
   margin-right: 6px;
-  color: #667eea;
+  color: #0d9488;
 }
 
 .instructor-request-panel .section-content {
@@ -319,14 +319,14 @@
 }
 
 .instructor-request-panel .btn-outline-primary {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #0d9488;
+  color: #0d9488;
 }
 
 .instructor-request-panel .btn-outline-primary:hover {
-  background-color: #667eea;
+  background-color: #0d9488;
   color: white;
-  border-color: #667eea;
+  border-color: #0d9488;
 }
 
 /* Responsive */

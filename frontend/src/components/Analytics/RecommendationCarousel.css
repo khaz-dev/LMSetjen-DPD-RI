@@ -46,7 +46,7 @@
   border-radius: 50%;
   border: 2px solid #e0e0e0;
   background: white;
-  color: #3498db;
+  color: #0f766e;
   font-size: 16px;
   cursor: pointer;
   display: flex;
@@ -56,8 +56,8 @@
 }
 
 .carousel-btn:hover:not(:disabled) {
-  border-color: #3498db;
-  background: #3498db;
+  border-color: #0f766e;
+  background: #0f766e;
   color: white;
   box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
   transform: scale(1.05);
@@ -102,7 +102,7 @@
 
 .auth-content i {
   font-size: 64px;
-  color: #3498db;
+  color: #0f766e;
   margin-bottom: 24px;
 }
 
@@ -140,7 +140,7 @@
 .recommendation-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  border-color: #3498db;
+  border-color: #0f766e;
 }
 
 .recommendation-card.enrolled {
@@ -149,7 +149,7 @@
 }
 
 .recommendation-card.viewed {
-  border-color: #3498db;
+  border-color: #0f766e;
   background: rgba(52, 152, 219, 0.02);
 }
 
@@ -199,7 +199,7 @@
 }
 
 .badge-primary {
-  background: #3498db;
+  background: #0f766e;
   color: white;
 }
 
@@ -331,7 +331,7 @@
 }
 
 .card-instructor i {
-  color: #3498db;
+  color: #0f766e;
 }
 
 .card-description {
@@ -369,20 +369,20 @@
 }
 
 .btn-outline:hover:not(:disabled) {
-  border-color: #3498db;
-  color: #3498db;
+  border-color: #0f766e;
+  color: #0f766e;
   background: white;
 }
 
 .btn-primary {
-  background: #3498db;
+  background: #0f766e;
   color: white;
   border: none;
   transition: all 0.2s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2980b9;
+  background: #115e59;
   box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
 }
 
@@ -411,12 +411,12 @@
 }
 
 .dot:hover {
-  border-color: #3498db;
+  border-color: #0f766e;
 }
 
 .dot.active {
-  background: #3498db;
-  border-color: #3498db;
+  background: #0f766e;
+  border-color: #0f766e;
   transform: scale(1.2);
 }
 

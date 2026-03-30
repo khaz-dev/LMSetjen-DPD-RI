@@ -649,8 +649,8 @@ function Login() {
                           title="Login menggunakan akun SSO"
                           style={{
                             backgroundColor: "#FFFFFF",
-                            color: "#0066CC",
-                            border: "1px solid #0066CC",
+                            color: "#0f766e",
+                            border: "1px solid #0f766e",
                             fontWeight: "500",
                           }}
                         >

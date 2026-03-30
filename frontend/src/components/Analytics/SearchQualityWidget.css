@@ -39,14 +39,14 @@
 }
 
 .sq-widget .nav-tabs .nav-link:hover {
-  color: #007bff;
+  color: #0f766e;
   background-color: #e9ecef;
 }
 
 .sq-widget .nav-tabs .nav-link.active {
-  color: #007bff;
+  color: #0f766e;
   background-color: white;
-  border-bottom: 3px solid #007bff;
+  border-bottom: 3px solid #0f766e;
   font-weight: 600;
 }
 
@@ -60,7 +60,7 @@
   padding: 1.5rem;
   border-radius: 8px;
   text-align: center;
-  border-left: 4px solid #007bff;
+  border-left: 4px solid #0f766e;
   transition: all 0.3s ease;
 }
 
@@ -70,9 +70,9 @@
 }
 
 .metric-card.highlight {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
   color: white;
-  border-left: 4px solid #0056b3;
+  border-left: 4px solid #115e59;
 }
 
 .metric-label {
@@ -91,7 +91,7 @@
 .metric-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #007bff;
+  color: #0f766e;
 }
 
 .metric-card.highlight .metric-value {
@@ -187,7 +187,7 @@
 }
 
 .sq-courses .form-select:focus {
-  border-color: #007bff;
+  border-color: #0f766e;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 

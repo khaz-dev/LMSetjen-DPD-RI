@@ -105,7 +105,7 @@ function CourseDetail() {
                 icon: "warning",
                 title: "Login Required",
                 text: "Please login to add courses to your wishlist",
-                confirmButtonColor: "#667eea"
+                confirmButtonColor: "#0d9488"
             });
             return;
         }
@@ -403,7 +403,7 @@ function CourseDetail() {
                                     style={{
                                         width: "40px",
                                         height: "40px",
-                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                         borderRadius: "12px",
                                         display: "flex",
                                         alignItems: "center",
@@ -485,7 +485,7 @@ function CourseDetail() {
                                     style={{
                                         width: "40px",
                                         height: "40px",
-                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                         borderRadius: "12px",
                                         display: "flex",
                                         alignItems: "center",
@@ -508,7 +508,7 @@ function CourseDetail() {
                                             borderRadius: "12px"
                                         }}
                                     >
-                                        <h6 className="fw-bold mb-1" style={{ color: "#667eea", fontSize: "0.95rem" }}>
+                                        <h6 className="fw-bold mb-1" style={{ color: "#0d9488", fontSize: "0.95rem" }}>
                                             {course?.curriculum?.length || 0} Modul
                                         </h6>
                                         <small className="text-muted" style={{ fontSize: "0.8rem" }}>Materi pembelajaran</small>
@@ -561,7 +561,7 @@ function CourseDetail() {
                                                     <span 
                                                         className="badge me-3"
                                                         style={{
-                                                            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                            background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                                             color: "white",
                                                             width: "30px",
                                                             height: "30px",
@@ -710,7 +710,7 @@ function CourseDetail() {
                             <div 
                                 className="modal-header border-0 text-white position-relative"
                                 style={{
-                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                     padding: "0.75rem 1.25rem",
                                     display: "flex",
                                     alignItems: "center",
@@ -1081,7 +1081,7 @@ function CourseDetail() {
                             borderRadius: "50%",
                             background: isInWishlist 
                                 ? "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)" 
-                                : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                : "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                             border: "3px solid rgba(255, 255, 255, 0.3)",
                             boxShadow: "0 8px 25px rgba(102, 126, 234, 0.4)",
                             display: "flex",

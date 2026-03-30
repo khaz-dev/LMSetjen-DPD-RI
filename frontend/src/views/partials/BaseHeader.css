@@ -911,7 +911,7 @@
 .nav-link-avatar .nav-instructor-role-icon,
 .nav-link-avatar .nav-admin-role-icon {
     position: absolute;
-    color: #667eea;
+    color: #0d9488;
     font-size: 1.2rem;
     flex-shrink: 0;
     transition: all 0.3s ease;
@@ -983,7 +983,7 @@
 }
 
 .nav-avatar-wrapper.default {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     border: none;
 }
 
@@ -1004,7 +1004,7 @@
     width: 1.25rem !important;
     height: 1.25rem !important;
     border-width: 2px !important;
-    color: #667eea !important;
+    color: #0d9488 !important;
 }
 
 .admin-link {

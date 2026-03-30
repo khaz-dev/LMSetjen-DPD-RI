@@ -206,17 +206,17 @@ button div,
    ================================ */
 :root {
     /* Instructor Color Palette - Matching Header Theme */
-    --instructor-primary: #3498db;
-    --instructor-primary-dark: #2980b9;
+    --instructor-primary: #0f766e;
+    --instructor-primary-dark: #115e59;
     --instructor-primary-light: #34495e;
-    --instructor-gradient: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
-    --instructor-gradient-hover: linear-gradient(135deg, #2980b9 0%, #1e3c72 100%);
+    --instructor-gradient: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #34495e 100%);
+    --instructor-gradient-hover: linear-gradient(135deg, #115e59 0%, #1e3c72 100%);
     
     /* Semantic Colors */
     --success-color: #10b981;
     --warning-color: #f59e0b;
     --error-color: #ef4444;
-    --info-color: #3b82f6;
+    --info-color: #0f766e;
     
     /* Neutral Colors */
     --neutral-50: #f9fafb;
@@ -840,7 +840,7 @@ button div,
 .ckeditor-container .ck-editor__editable.ck-focused,
 .ckeditor-container .ck-editor__editable.ck-focused *,
 .ckeditor-container .ck-editor__editable {
-    caret-color: #3498db !important;
+    caret-color: #0f766e !important;
 }
 
 /* Force caret to be visible */
@@ -924,7 +924,7 @@ button div,
 
 /* Enhanced Button States */
 .btn-update-course.submitting {
-    background: linear-gradient(135deg, var(--info-color) 0%, #2563eb 100%);
+    background: linear-gradient(135deg, var(--info-color) 0%, #0f766e 100%);
     cursor: wait;
     animation: pulse 2s infinite;
 }
@@ -1187,7 +1187,7 @@ button div,
 
 /* Modern Header Design */
 .create-header-modern {
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #34495e 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #34495e 100%);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1.5rem;
     border-radius: 15px;
@@ -1230,7 +1230,7 @@ button div,
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #3498db, #2980b9, #3498db);
+    background: linear-gradient(90deg, #0f766e, #115e59, #0f766e);
     background-size: 200% 100%;
     animation: shimmer 3s ease-in-out infinite;
 }
@@ -1297,7 +1297,7 @@ button div,
     left: 0;
     width: 60px;
     height: 3px;
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #0f766e, #115e59);
     border-radius: 2px;
 }
 
@@ -1325,7 +1325,7 @@ button div,
 
 /* Enhanced Button Styling */
 .btn-update-course {
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
     border: none;
     border-radius: 12px;
     padding: 0.875rem 2rem;
@@ -1977,13 +1977,13 @@ button div,
 }
 
 .modern-form-check .form-check-input:checked {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  border-color: #667eea !important;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+  border-color: #0d9488 !important;
   box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
 }
 
 .modern-form-check .form-check-input:focus {
-  border-color: #667eea !important;
+  border-color: #0d9488 !important;
   box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
 }
 

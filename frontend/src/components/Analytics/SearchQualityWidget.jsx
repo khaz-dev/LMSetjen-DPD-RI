@@ -83,7 +83,7 @@ export default function SearchQualityWidget() {
       case 'HIDDEN':
         return '#6c757d';
       default:
-        return '#007bff';
+        return '#0f766e';
     }
   };
 

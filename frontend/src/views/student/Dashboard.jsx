@@ -503,7 +503,7 @@ function Dashboard() {
                                                                                     style={{
                                                                                         width: `${course.progressPercentage}%`,
                                                                                         borderRadius: "10px",
-                                                                                        background: "linear-gradient(180deg, #28a745 0%, #20c997 100%)"
+                                                                                        background: "linear-gradient(180deg, #0d9488 0%, #2dd4bf 100%)"
                                                                                     }}
                                                                                 ></div>
                                                                             </div>

@@ -39,37 +39,37 @@
   color: inherit;
   vertical-align: middle !important;
 
-  /* Badge colors */
+  /* Badge colors - ✨ PHASE 11.X: Updated to Teal palette */
   &.badge-primary {
-    background-color: #0d6efd;
+    background-color: #0d9488;  /* Teal-600 for Student */
     color: white;
 
     &:hover:not(:disabled) {
-      background-color: #0b5ed7;
+      background-color: #0b7d6f;
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(13, 110, 253, 0.25);
+      box-shadow: 0 4px 8px rgba(13, 148, 136, 0.25);
     }
   }
 
   &.badge-success {
-    background-color: #198754;
+    background-color: #0f766e;  /* Teal-700 for Instructor */
     color: white;
 
     &:hover:not(:disabled) {
-      background-color: #157347;
+      background-color: #0d5f5a;
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(25, 135, 84, 0.25);
+      box-shadow: 0 4px 8px rgba(15, 118, 110, 0.25);
     }
   }
 
   &.badge-danger {
-    background-color: #dc3545;
+    background-color: #115e59;  /* Teal-800 for Admin */
     color: white;
 
     &:hover:not(:disabled) {
-      background-color: #bb2d3b;
+      background-color: #104d47;
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.25);
+      box-shadow: 0 4px 8px rgba(17, 94, 89, 0.25);
     }
   }
 
@@ -212,36 +212,36 @@
   transition: all 0.3s ease;
   position: relative;
 
-  /* Card colors based on role */
+  /* Card colors based on role - ✨ PHASE 11.X: Updated to Teal palette */
   &.badge-primary {
-    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0b7d6f 100%);  /* Teal-600 for Student */
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.1);
 
     &:hover {
-      box-shadow: 0 6px 12px rgba(13, 110, 253, 0.3);
+      box-shadow: 0 6px 12px rgba(13, 148, 136, 0.3);
       transform: translateY(-2px);
     }
   }
 
   &.badge-success {
-    background: linear-gradient(135deg, #198754 0%, #157347 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #0d5f5a 100%);  /* Teal-700 for Instructor */
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.1);
 
     &:hover {
-      box-shadow: 0 6px 12px rgba(25, 135, 84, 0.3);
+      box-shadow: 0 6px 12px rgba(15, 118, 110, 0.3);
       transform: translateY(-2px);
     }
   }
 
   &.badge-danger {
-    background: linear-gradient(135deg, #dc3545 0%, #bb2d3b 100%);
+    background: linear-gradient(135deg, #115e59 0%, #104d47 100%);  /* Teal-800 for Admin */
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.1);
 
     &:hover {
-      box-shadow: 0 6px 12px rgba(220, 53, 69, 0.3);
+      box-shadow: 0 6px 12px rgba(17, 94, 89, 0.3);
       transform: translateY(-2px);
     }
   }
@@ -394,28 +394,28 @@
   &:hover:not(:disabled),
   &:focus:not(:disabled) {
     background-color: #f8f9fa;
-    color: #0d6efd;
+    color: #0f766e;
 
     .role-label {
-      color: #0d6efd;
+      color: #0f766e;
     }
 
     .role-description {
-      color: #0d6efd;
+      color: #0f766e;
     }
   }
 
   &.active {
     background-color: #e7f1ff;
-    color: #0d6efd;
+    color: #0f766e;
 
     .role-label {
-      color: #0d6efd;
+      color: #0f766e;
       font-weight: 600;
     }
 
     i:first-child {
-      color: #0d6efd;
+      color: #0f766e;
     }
 
     i.fa-check-circle {
@@ -582,12 +582,12 @@
 
     &:hover:not(:disabled) {
       background-color: #343a40;
-      color: #0d6efd;
+      color: #0f766e;
     }
 
     &.active {
       background-color: #1e3a5f;
-      color: #0d6efd;
+      color: #0f766e;
     }
   }
 }

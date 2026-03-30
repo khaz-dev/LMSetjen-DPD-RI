@@ -57,7 +57,7 @@ function TestimonialSection() {
   // Get random gradient color
   const getGradientColor = (index) => {
     const gradients = [
-      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
       'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
       'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)',
     ];
@@ -73,7 +73,7 @@ function TestimonialSection() {
             <div 
               className="badge mb-3"
               style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                 color: 'white',
                 padding: '0.5rem 1rem',
                 borderRadius: '50px',
@@ -145,7 +145,7 @@ function TestimonialSection() {
           <div 
             className="badge mb-3"
             style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
               color: 'white',
               padding: '0.5rem 1rem',
               borderRadius: '50px',
@@ -243,7 +243,7 @@ function TestimonialSection() {
                       style={{
                         background: testimonial.role === 'instructor' 
                           ? 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)'
-                          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          : 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                         color: 'white',
                         padding: '0.35rem 0.75rem',
                         fontSize: '0.8rem',
@@ -290,7 +290,7 @@ function TestimonialSection() {
                     <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#6c757d', lineHeight: '1.4' }}>
                       {testimonial.unit_organisasi && (
                         <div>
-                          <i className="fas fa-building me-1" style={{ color: '#667eea' }}></i>
+                          <i className="fas fa-building me-1" style={{ color: '#0d9488' }}></i>
                           <span>{testimonial.unit_organisasi}</span>
                         </div>
                       )}

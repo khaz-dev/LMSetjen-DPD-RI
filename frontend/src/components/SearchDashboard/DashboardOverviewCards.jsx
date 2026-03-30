@@ -21,7 +21,7 @@ const DashboardOverviewCards = ({ overview = {}, loading = false }) => {
       title: 'Total Searches',
       value: total_searches.toLocaleString(),
       icon: '🔍',
-      color: '#2196F3',
+      color: '#0f766e',
       change: '+12%'
     },
     {
@@ -45,7 +45,7 @@ const DashboardOverviewCards = ({ overview = {}, loading = false }) => {
       title: 'Avg Results/Search',
       value: avg_results_per_search.toFixed(1),
       icon: '📊',
-      color: '#9C27B0',
+      color: '#0d9488',
       change: `${avg_results_per_search > 10 ? '✓' : '⚠'}`
     },
     {

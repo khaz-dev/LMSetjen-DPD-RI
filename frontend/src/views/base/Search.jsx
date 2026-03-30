@@ -585,7 +585,7 @@ function Search() {
                                                         border: "1px solid rgba(102, 126, 234, 0.2)",
                                                         textAlign: "center"
                                                     }}>
-                                                        <small style={{ fontSize: "0.8rem", color: "#667eea", fontWeight: "500" }}>
+                                                        <small style={{ fontSize: "0.8rem", color: "#0d9488", fontWeight: "500" }}>
                                                             <i className="fas fa-clock me-1"></i>
                                                             Total: <strong>{calculateTotalJP(c.lectures)}</strong> JP
                                                         </small>

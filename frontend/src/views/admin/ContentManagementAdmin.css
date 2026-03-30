@@ -23,7 +23,7 @@
 }
 
 .cm-page-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     border-radius: 16px;
     padding: 40px;
     color: white;
@@ -88,13 +88,13 @@
 }
 
 .cm-tab-button:hover {
-    color: #667eea;
+    color: #0d9488;
     background: rgba(102, 126, 234, 0.05);
 }
 
 .cm-tab-button.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
+    color: #0d9488;
+    border-bottom-color: #0d9488;
     background: rgba(102, 126, 234, 0.05);
 }
 
@@ -132,13 +132,13 @@
 .cm-materials-tab .nav-tabs .nav-link:hover {
     border-radius: 6px;
     background: rgba(102, 126, 234, 0.05);
-    color: #667eea;
+    color: #0d9488;
 }
 
 .cm-materials-tab .nav-tabs .nav-link.active {
-    color: #667eea;
+    color: #0d9488;
     background: transparent;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid #0d9488;
     border-radius: 0;
 }
 
@@ -156,7 +156,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    color: #667eea;
+    color: #0d9488;
     font-weight: 500;
     font-size: 0.95rem;
 }
@@ -209,7 +209,7 @@
 }
 
 .cm-tab-header h3 i {
-    color: #667eea;
+    color: #0d9488;
 }
 
 .cm-tab-header p {
@@ -230,13 +230,13 @@
     padding: 12px 20px;
     background: rgba(102, 126, 234, 0.1);
     border-radius: 12px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #0d9488;
 }
 
 .cm-stat-number {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #667eea;
+    color: #0d9488;
     display: block;
 }
 
@@ -274,7 +274,7 @@
     position: relative;
     height: 200px;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
 }
 
 .cm-card-image {
@@ -354,7 +354,7 @@
 .cm-stat-number {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #667eea;
+    color: #0d9488;
 }
 
 .cm-card-actions {
@@ -375,7 +375,7 @@
 
 /* Define consistent colors for all action buttons */
 .cm-card-actions .btn-info {
-    background: #2196F3 !important;
+    background: #0f766e !important;
     color: white !important;
 }
 
@@ -447,14 +447,14 @@
 
 .cm-subtab-button:hover {
     background: #e8e8e8;
-    border-color: #667eea;
-    color: #667eea;
+    border-color: #0d9488;
+    color: #0d9488;
 }
 
 .cm-subtab-button.active {
-    background: #667eea;
+    background: #0d9488;
     color: white;
-    border-color: #667eea;
+    border-color: #0d9488;
 }
 
 .cm-subtab-content {
@@ -495,7 +495,7 @@
     height: 50px;
     border-radius: 50%;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     flex-shrink: 0;
 }
 
@@ -569,7 +569,7 @@
 
 .cm-rating-value {
     font-weight: 600;
-    color: #667eea;
+    color: #0d9488;
     font-size: 0.9rem;
 }
 
@@ -656,7 +656,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, #0d9488 0%, #0f766e 100%);
 }
 
 .cm-stat-card:hover {
@@ -665,7 +665,7 @@
 }
 
 .stat-primary::before {
-    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(90deg, #0f766e 0%, #115e59 100%);
 }
 
 .stat-success::before {
@@ -701,7 +701,7 @@
 }
 
 .stat-primary .cm-stat-icon {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
 }
 
 .stat-success .cm-stat-icon {
@@ -812,7 +812,7 @@
 }
 
 .cm-action-buttons .btn-primary {
-    background: #667eea !important;
+    background: #0d9488 !important;
     color: white !important;
 }
 
@@ -1180,7 +1180,7 @@
 }
 
 .badge.bg-info {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
 }
 
 .badge.bg-success {
@@ -1237,8 +1237,8 @@
 }
 
 .modern-form-check .form-check-input:checked {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    border-color: #0d9488;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
@@ -1247,7 +1247,7 @@
 }
 
 .modern-form-check .form-check-input:focus {
-    border-color: #667eea;
+    border-color: #0d9488;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
@@ -1263,7 +1263,7 @@
 }
 
 .modern-form-check .form-check-label i {
-    color: #667eea;
+    color: #0d9488;
     margin-right: 8px;
 }
 

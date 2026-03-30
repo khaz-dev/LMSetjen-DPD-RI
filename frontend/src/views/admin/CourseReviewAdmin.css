@@ -32,7 +32,7 @@
     position: relative;
     height: 200px;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
 }
 
 .course-review-image {
@@ -118,7 +118,7 @@
 .stat-number {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #667eea;
+    color: #0d9488;
 }
 
 /* ✨ SCOPED: Course Review Admin stat label - only apply on course review admin page */
@@ -260,7 +260,7 @@
 }
 
 .badge.bg-info {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
     color: white;
 }
 
@@ -272,9 +272,9 @@
 
 .alert-info {
     background-color: rgba(33, 150, 243, 0.1);
-    border-left: 4px solid #2196f3;
+    border-left: 4px solid #0f766e;
 }
 
 .alert-info i {
-    color: #2196f3;
+    color: #0f766e;
 }

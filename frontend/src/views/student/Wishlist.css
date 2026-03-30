@@ -236,7 +236,7 @@
     font-size: 0.8rem !important;
     min-height: 28px !important;
     gap: 0.3rem !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
     color: white !important;
     align-items: center !important;  /* ✨ PHASE 4.77+: Center icon and text vertically */
     display: inline-flex !important;

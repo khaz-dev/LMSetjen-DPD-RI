@@ -4121,7 +4121,7 @@ function CourseDetail() {
                                                 {/* ✨ PHASE 11.161: Search Input - 25% */}
                                                 <div style={{ flex: '1 1 25%' }}>
                                                     <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                        <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#3498db' }}></i>
+                                                        <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#0f766e' }}></i>
                                                         Cari Catatan
                                                     </label>
                                                     <input
@@ -4142,7 +4142,7 @@ function CourseDetail() {
                                                             outline: 'none'
                                                         }}
                                                         onFocus={(e) => {
-                                                            e.target.style.borderColor = '#3498db';
+                                                            e.target.style.borderColor = '#0f766e';
                                                             e.target.style.boxShadow = '0 0 0 3px rgba(52, 152, 219, 0.1)';
                                                         }}
                                                         onBlur={(e) => {
@@ -4155,7 +4155,7 @@ function CourseDetail() {
                                                 {/* Bagian Filter Dropdown - 20% */}
                                                 <div style={{ flex: '1 1 20%' }}>
                                                     <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                        <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#9b59b6' }}></i>
+                                                        <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#0d9488' }}></i>
                                                         Bagian
                                                     </label>
                                                     <select
@@ -4175,8 +4175,8 @@ function CourseDetail() {
                                                             cursor: 'pointer'
                                                         }}
                                                         onFocus={(e) => {
-                                                            e.target.style.borderColor = '#9b59b6';
-                                                            e.target.style.boxShadow = '0 0 0 3px rgba(155, 89, 182, 0.1)';
+                                                            e.target.style.borderColor = '#0d9488';
+                                                            e.target.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.1)';
                                                         }}
                                                         onBlur={(e) => {
                                                             e.target.style.borderColor = '#e9ecef';
@@ -4271,16 +4271,16 @@ function CourseDetail() {
                                                         <option value="">Semua Warna</option>
                                                         <option value="#f39c12">🟠 Orange</option>
                                                         <option value="#e74c3c">🔴 Red</option>
-                                                        <option value="#3498db">🔵 Blue</option>
+                                                        <option value="#0f766e">🔵 Blue</option>
                                                         <option value="#2ecc71">🟢 Green</option>
-                                                        <option value="#9b59b6">🟣 Purple</option>
+                                                        <option value="#0d9488">🟣 Teal (Primary)</option>
                                                         <option value="#f1c40f">🟡 Yellow</option>
                                                         <option value="#e67e22">🟠 Dark Orange</option>
                                                         <option value="#95a5a6">⚪ Gray</option>
                                                         <option value="#1abc9c">🔷 Teal</option>
                                                         <option value="#34495e">🔹 Dark Blue</option>
                                                         <option value="#e91e63">💗 Pink</option>
-                                                        <option value="#8e44ad">🟣 Violet</option>
+                                                        <option value="#115e59">🟣 Teal Dark</option>
                                                     </select>
                                                 </div>
                                                 
@@ -4756,7 +4756,7 @@ function CourseDetail() {
                                                         {/* Search Input - 50% */}
                                                         <div style={{ flex: '1 1 50%' }}>
                                                             <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                                <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#3498db' }}></i>
+                                                                <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#0f766e' }}></i>
                                                                 Cari Pertanyaan
                                                             </label>
                                                             <input
@@ -4777,7 +4777,7 @@ function CourseDetail() {
                                                                     outline: 'none'
                                                                 }}
                                                                 onFocus={(e) => {
-                                                                    e.target.style.borderColor = '#3498db';
+                                                                    e.target.style.borderColor = '#0f766e';
                                                                     e.target.style.boxShadow = '0 0 0 3px rgba(52, 152, 219, 0.1)';
                                                                 }}
                                                                 onBlur={(e) => {
@@ -4790,7 +4790,7 @@ function CourseDetail() {
                                                         {/* Bagian Filter Dropdown - 25% */}
                                                         <div style={{ flex: '1 1 25%' }}>
                                                             <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                                <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#9b59b6' }}></i>
+                                                                <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#0d9488' }}></i>
                                                                 Bagian
                                                             </label>
                                                             <select
@@ -4810,8 +4810,8 @@ function CourseDetail() {
                                                                     cursor: 'pointer'
                                                                 }}
                                                                 onFocus={(e) => {
-                                                                    e.target.style.borderColor = '#9b59b6';
-                                                                    e.target.style.boxShadow = '0 0 0 3px rgba(155, 89, 182, 0.1)';
+                                                                    e.target.style.borderColor = '#0d9488';
+                                                                    e.target.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.1)';
                                                                 }}
                                                                 onBlur={(e) => {
                                                                     e.target.style.borderColor = '#e9ecef';
@@ -4990,7 +4990,7 @@ function CourseDetail() {
                                                                             </span>
                                                                         </span>
                                                                         <span className="question-meta-item">
-                                                                            <i className="fas fa-user" style={{ marginRight: '0.5rem', color: '#3498db' }}></i>
+                                                                            <i className="fas fa-user" style={{ marginRight: '0.5rem', color: '#0f766e' }}></i>
                                                                             {q.profile?.full_name || 'Anonim'}
                                                                         </span>
                                                                         <span className="question-meta-item">
@@ -5565,16 +5565,16 @@ function CourseDetail() {
                                 {[
                                     { color: "#f39c12", name: "Orange" },
                                     { color: "#e74c3c", name: "Red" },
-                                    { color: "#3498db", name: "Blue" },
+                                    { color: "#0f766e", name: "Blue" },
                                     { color: "#2ecc71", name: "Green" },
-                                    { color: "#9b59b6", name: "Purple" },
+                                    { color: "#0d9488", name: "Teal" },
                                     { color: "#f1c40f", name: "Yellow" },
                                     { color: "#e67e22", name: "Dark Orange" },
                                     { color: "#95a5a6", name: "Gray" },
-                                    { color: "#1abc9c", name: "Teal" },
+                                    { color: "#1abc9c", name: "Teal Light" },
                                     { color: "#34495e", name: "Dark Blue" },
                                     { color: "#e91e63", name: "Pink" },
-                                    { color: "#8e44ad", name: "Violet" }
+                                    { color: "#115e59", name: "Teal Dark" }
                                 ].map((colorOption) => (
                                     <div
                                         key={colorOption.color}

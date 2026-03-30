@@ -272,7 +272,7 @@
 /* Override badge-level globally to add specific colors for search results */
 .badge-level {
     background: #e3f2fd !important;
-    color: #1976d2 !important;
+    color: #115e59 !important;
 }
 
 .badge-level.badge-beginner {

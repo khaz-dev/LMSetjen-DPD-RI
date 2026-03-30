@@ -181,15 +181,15 @@ function SertifikatKursus() {
         });
     };
 
-    // Get certificate level badge color
+    // ✨ PHASE 11.X: Get certificate level badge color - Updated to Teal palette
     const getLevelColor = (level) => {
         const colors = {
-            'Beginner': '#28a745',
-            'Intermediate': '#ffc107',
-            'Advanced': '#dc3545',
-            'Expert': '#6f42c1'
+            'Beginner': '#2dd4bf',      // Teal-400 (lightest)
+            'Intermediate': '#0d9488',  // Teal-600 (medium)
+            'Advanced': '#0f766e',      // Teal-700 (dark)
+            'Expert': '#115e59'         // Teal-800 (darkest)
         };
-        return colors[level] || '#17a2b8';
+        return colors[level] || '#14b8a6';  // Teal-500 default
     };
 
     if (!userData?.user_id) {

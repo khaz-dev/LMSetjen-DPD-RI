@@ -264,14 +264,14 @@ function Wishlist() {
                                                             {/* Course Meta */}
                                                             <div className="mb-3">
                                                                 <small className="text-muted d-block mb-2">
-                                                                    <i className="fas fa-user me-1" style={{ color: '#667eea' }}></i>
+                                                                    <i className="fas fa-user me-1" style={{ color: '#0d9488' }}></i>
                                                                     Oleh: {w.course?.teacher?.full_name || 'Instruktur Tidak Diketahui'}
                                                                 </small>
                                                                 
                                                                 {/* Students & Rating Row */}
                                                                 <div className="d-flex justify-content-between align-items-center">
                                                                     <small className="text-muted">
-                                                                        <i className="fas fa-users me-1" style={{ color: '#667eea' }}></i>
+                                                                        <i className="fas fa-users me-1" style={{ color: '#0d9488' }}></i>
                                                                         {w.course?.students?.length || 0} Siswa{(w.course?.students?.length || 0) !== 1 && "s"}
                                                                     </small>
                                                                     

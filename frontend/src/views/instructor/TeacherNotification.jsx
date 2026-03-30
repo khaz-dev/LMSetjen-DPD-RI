@@ -109,14 +109,14 @@ function TeacherNotification() {
                                     right: '-20%',
                                     width: '300px',
                                     height: '300px',
-                                    background: 'linear-gradient(45deg, #3498db20, #2980b920)',
+                                    background: 'linear-gradient(45deg, #0f766e20, #115e5920)',
                                     borderRadius: '50%',
                                     zIndex: 1
                                 }}></div>
                                 <div className="d-flex align-items-center justify-content-between position-relative" style={{ zIndex: 2 }}>
                                     <div>
                                         <h1 className="mb-2" style={{
-                                            background: 'linear-gradient(135deg, #3498db, #2980b9)',
+                                            background: 'linear-gradient(135deg, #0f766e, #115e59)',
                                             WebkitBackgroundClip: 'text',
                                             WebkitTextFillColor: 'transparent',
                                             fontSize: '2.5rem',
@@ -288,7 +288,7 @@ function TeacherNotification() {
                                         <div className="empty-state-icon mb-4" style={{
                                             width: '100px',
                                             height: '100px',
-                                            background: 'linear-gradient(135deg, #3498db20, #2980b920)',
+                                            background: 'linear-gradient(135deg, #0f766e20, #115e5920)',
                                             borderRadius: '50%',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -297,7 +297,7 @@ function TeacherNotification() {
                                         }}>
                                             <i className="fas fa-bell-slash" style={{ 
                                                 fontSize: '2.5rem', 
-                                                color: '#3498db' 
+                                                color: '#0f766e' 
                                             }}></i>
                                         </div>
                                         <h4 className="mb-3" style={{ color: '#2c3e50' }}>Tidak Ada Notifikasi</h4>

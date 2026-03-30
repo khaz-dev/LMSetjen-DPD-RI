@@ -773,7 +773,7 @@ const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
     // Component Rendering Functions
     const renderLoadingAvatar = () => (
         <div className="loading-avatar">
-            <div className="spinner-border text-purple" role="status">
+            <div className="spinner-border text-info" role="status" style={{color: 'var(--theme-primary)'}}>
                 <span className="visually-hidden">Memuat...</span>
             </div>
             <small className="loading-text">Memuat...</small>
@@ -1137,7 +1137,7 @@ const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
                 {uiState.autoSaveStatus === "saving" || uiState.autoSaving ? (
                     <>
                         <span className="spinner-border spinner-border-sm" role="status" style={{ width: "14px", height: "14px", borderWidth: "2px" }}></span>
-                        <span style={{ color: "#667eea", fontWeight: "500" }}>Menyimpan...</span>
+                        <span style={{ color: "#0d9488", fontWeight: "500" }}>Menyimpan...</span>
                     </>
                 ) : uiState.autoSaveStatus === "saved" ? (
                     <>
@@ -1211,14 +1211,14 @@ const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
                                     right: "-20%",
                                     width: "300px",
                                     height: "300px",
-                                    background: "linear-gradient(45deg, #667eea20, #764ba220)",
+                                    background: "linear-gradient(45deg, #0d948820, #0f766e20)",
                                     borderRadius: "50%",
                                     zIndex: 1
                                 }}></div>
                                 <div className="d-flex align-items-center justify-content-between position-relative" style={{ zIndex: 2 }}>
                                     <div>
                                         <h1 className="mb-2" style={{
-                                            background: "linear-gradient(135deg, #667eea, #764ba2)",
+                                            background: "linear-gradient(135deg, #0d9488, #0f766e)",
                                             WebkitBackgroundClip: "text",
                                             WebkitTextFillColor: "transparent",
                                             fontSize: "2.5rem",

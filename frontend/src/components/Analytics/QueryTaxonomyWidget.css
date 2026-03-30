@@ -35,12 +35,12 @@
 }
 
 .metric-card:hover {
-  border-color: #007bff;
+  border-color: #0f766e;
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.1);
 }
 
 .metric-card.highlight {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
   color: white;
   border: none;
 }
@@ -160,7 +160,7 @@
 }
 
 .analytics-card:hover {
-  border-color: #007bff;
+  border-color: #0f766e;
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
 }
 
@@ -247,13 +247,13 @@
 }
 
 .qtw-widget .nav-tabs .nav-link:hover {
-  color: #007bff;
-  border-bottom-color: #007bff;
+  color: #0f766e;
+  border-bottom-color: #0f766e;
 }
 
 .qtw-widget .nav-tabs .nav-link.active {
-  color: #007bff;
-  border-bottom-color: #007bff;
+  color: #0f766e;
+  border-bottom-color: #0f766e;
   background: transparent;
 }
 
@@ -286,7 +286,7 @@
 }
 
 .qtw-queries .form-select:focus {
-  border-color: #007bff;
+  border-color: #0f766e;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 

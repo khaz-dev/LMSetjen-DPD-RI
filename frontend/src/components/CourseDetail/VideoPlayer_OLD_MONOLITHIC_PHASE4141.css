@@ -2,7 +2,7 @@
 
 /* Main Container */
 .video-player-inline {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;
@@ -13,7 +13,7 @@
 /* Header */
 .video-player-header {
     padding: 0.75rem 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
     display: flex;
     justify-content: space-between;
@@ -316,7 +316,7 @@
 }
 
 .video-player-file-icon {
-    color: #667eea;
+    color: #0d9488;
 }
 
 /* Overlay Container */

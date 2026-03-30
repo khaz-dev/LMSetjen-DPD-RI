@@ -419,7 +419,7 @@ body:has(.landing-page-container) {
 }
 
 .landing-page-container .course-card:hover .course-title-link {
-    color: #667eea !important;
+    color: #0d9488 !important;
 }
 
 .landing-page-container .wishlist-btn:hover {
@@ -477,7 +477,7 @@ body:has(.landing-page-container) {
 /* === HERO SECTION STYLES === */
 /* Scoped to landing page for isolation */
 .landing-page-container .hero-section {
-    background: linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%);
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.85) 0%, rgba(15, 118, 110, 0.85) 100%);
     min-height: 100vh !important;
     display: flex !important;
     flex-direction: column !important;
