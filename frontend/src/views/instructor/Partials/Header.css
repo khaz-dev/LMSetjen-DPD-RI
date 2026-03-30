@@ -497,9 +497,9 @@
     left: 0;
     right: auto;
     width: 220px;
-    background: linear-gradient(135deg, rgba(52, 152, 219, 0.95) 0%, rgba(41, 128, 185, 0.95) 100%);
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.95) 0%, rgba(17, 94, 89, 0.95) 100%);
     border-radius: 12px;
-    box-shadow: 0 15px 35px rgba(52, 152, 219, 0.35), 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 15px 35px rgba(15, 118, 110, 0.35), 0 5px 15px rgba(0, 0, 0, 0.2);
     z-index: 2002;
     padding: 0.5rem 0;
     margin: 0;
@@ -516,7 +516,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(52, 152, 219, 0.3);
+    background: rgba(15, 118, 110, 0.3);
 }
 
 .instructor-header-card .role-indicator.compact .role-dropdown-divider {
