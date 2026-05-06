@@ -3580,7 +3580,7 @@ function CourseDetail() {
                     {/* Header Here */}
                     <Header />
                         
-                        <div className="row mt-0 md-4">
+                        <div className="row mt-0">
                             {/* Sidebar Here */}
                             <Sidebar />
                             

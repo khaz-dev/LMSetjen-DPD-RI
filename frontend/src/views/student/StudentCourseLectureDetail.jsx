@@ -18,7 +18,7 @@ function StudentCourseLectureDetail() {
                 <div className="container">
                     {/* Header Here */}
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row mt-0">
                         {/* Sidebar Here */}
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>

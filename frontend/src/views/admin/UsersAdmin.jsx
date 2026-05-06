@@ -42,23 +42,43 @@ function UsersAdmin() {
     const [roleFilter, setRoleFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 25; // Display 25 users per page
+    // ✨ PHASE X: Make itemsPerPage configurable (ISSUE FIX #2)
+    const [itemsPerPage, setItemsPerPage] = useState(25); // Display 25 users per page by default
     const [showModal, setShowModal] = useState(false);
     const [modalType, setModalType] = useState("create"); // create, edit, view
     const [selectedUser, setSelectedUser] = useState(null);
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [showBulkActions, setShowBulkActions] = useState(false);
-    // Memoized statistics calculation
+    
+    // ✨ PHASE 67: Simplified backend stats (no pagination refs needed)
+    const [backendStats, setBackendStats] = useState({
+        total_users: 0,
+        active_users: 0,
+        students: 0,
+        teachers: 0,
+        admins: 0,
+        inactive_users: 0
+    });
+
+    // ✨ PHASE X: Memoized statistics calculation using backend stats (ISSUE FIX #1-4)
+    // Now uses pre-calculated backend stats instead of filtering from loaded pages
     const stats = useMemo(() => ({
-        total_users: users.length,
-        active_users: users.filter(user => user.is_active).length,
-        students: users.filter(user => user.role === "student").length,
-        teachers: users.filter(user => user.role === "teacher").length,
-        admins: users.filter(user => user.role === "admin").length
-    }), [users]);
+        total_users: backendStats.total_users,
+        active_users: backendStats.active_users,
+        students: backendStats.students,
+        teachers: backendStats.teachers,
+        admins: backendStats.admins
+    }), [backendStats]);
     
     // AbortController for cancelling sync
     const abortControllerRef = useRef(null);
+    
+    // ✨ PHASE 4.22: Track filter state changes
+    const prevFilterState = useRef({ 
+        searchTerm: "", 
+        roleFilter: "all", 
+        statusFilter: "all" 
+    });
     
     const [showPasswords, setShowPasswords] = useState({
         password: false,
@@ -94,48 +114,48 @@ function UsersAdmin() {
 
     const api = useAxios;
 
-    // Fetch users and statistics - OPTIMIZED WITH PAGINATION SUPPORT
+    // ✨ PHASE X: Fetch aggregated user stats from backend (ISSUE FIX #1-4)
+    // This gets stats for ALL users, not just loaded pages
+    const fetchUserStats = useCallback(async () => {
+        try {
+            const response = await api.get(`/admin/user-stats/?_t=${Date.now()}`);
+            if (response.data) {
+                setBackendStats({
+                    total_users: response.data.total_users || 0,
+                    active_users: response.data.active_users || 0,
+                    students: response.data.students || 0,
+                    teachers: response.data.teachers || 0,
+                    admins: response.data.admins || 0,
+                    inactive_users: response.data.inactive_users || 0
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching user stats:", error);
+            // Keep default stats if error
+        }
+    }, [api]);
+
+    // ✨ PHASE X: Load additional pages on-demand (PERFORMANCE FIX: Load only page 1 on mount)
+    // ✨ PHASE 67: Removed loadMorePages - no longer needed with all-data loading
+
+    // ✨ PHASE 67: Simplified fetch - Load ALL users at once
+    // New backend endpoint /admin/user-management/all/ returns all users without pagination
+    // This eliminates complex on-demand loading logic (1000+ lines reduced to 15 lines)
     const fetchUsers = useCallback(async () => {
         try {
-            let allUsers = [];
-            let nextPage = 1;
-            let hasMorePages = true;
-            let pageCount = 0;
-            const maxPages = 100; // Safety limit to prevent infinite loops
+            setLoading(true);
             
-            // Fetch all pages of users
-            while (hasMorePages && pageCount < maxPages) {
-                const response = await api.get(`/admin/user-management/?page=${nextPage}&_t=${Date.now()}`);
-                const usersData = response.data;
-                
-                // Handle both array and paginated response
-                if (Array.isArray(usersData)) {
-                    // Direct array response (old behavior)
-                    allUsers = usersData;
-                    hasMorePages = false;
-                } else if (usersData.results) {
-                    // Paginated response (new behavior)
-                    allUsers = [...allUsers, ...usersData.results];
-                    pageCount++;
-                    
-                    // Check if there are more pages
-                    hasMorePages = usersData.next !== null;
-                    nextPage++;
-                    
-                    // Add a small delay between requests to avoid overwhelming the server
-                    if (hasMorePages) {
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                    }
-                } else {
-                    // Unexpected format
-                    hasMorePages = false;
-                }
-            }
+            // ✨ PHASE 67: Load all users in a single request
+            const response = await api.get(`/admin/user-management/all/?_t=${Date.now()}`);
+            const usersData = response.data;
             
+            // Handle response format: { count, results }
+            const allUsers = usersData.results || usersData || [];
             setUsers(allUsers);
             setFilteredUsers(allUsers);
             setLoading(false);
         } catch (error) {
+            console.error("Error fetching users:", error);
             Toast().fire({
                 icon: "error",
                 title: "Gagal mengambil data pengguna"
@@ -174,20 +194,48 @@ function UsersAdmin() {
     }, [searchTerm, roleFilter, statusFilter, users]);
 
     // Apply filters and reset pagination
+    // ✨ PHASE 4.22: Only reset page when FILTERS change, not when data is added (pages loaded)
+    // This fixes the bug where last page button didn't work - pages would load but page reset to 1
     useEffect(() => {
+        // Check if filters actually changed (not just data updated)
+        const filtersChanged = 
+            prevFilterState.current.searchTerm !== searchTerm ||
+            prevFilterState.current.roleFilter !== roleFilter ||
+            prevFilterState.current.statusFilter !== statusFilter;
+        
+        // Update filtered users
         setFilteredUsers(filteredUsersData);
-        setCurrentPage(1); // Reset to first page when filters change
-    }, [filteredUsersData]);
+        
+        // Only reset to page 1 if filters actually changed
+        if (filtersChanged) {
+            setCurrentPage(1);
+            // Update the stored filter state
+            prevFilterState.current = { searchTerm, roleFilter, statusFilter };
+        }
+    }, [filteredUsersData, searchTerm, roleFilter, statusFilter]);
 
     // Keep applyFilters for backward compatibility (no-op now)
     const applyFilters = useCallback(() => {
         // Filtering is now handled by filteredUsersData useMemo
     }, []);
 
-    // Calculate pagination
-    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    // ✨ PHASE 67: Removed on-demand pagination state - all data loaded at once
+    
+    // ✨ PHASE 67: Simplified pagination - all data already loaded, just change displayed page
+    const handlePageChange = useCallback((newPage) => {
+        setCurrentPage(newPage);
+    }, []);
+
+    // ✨ PHASE 67: Simple pagination calculation - all data already loaded
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
+    
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
+    // Handle last page correctly - may have fewer items than itemsPerPage
+    const isLastPage = currentPage === totalPages;
+    const endIndex = isLastPage 
+        ? Math.min(startIndex + itemsPerPage, filteredUsers.length)
+        : startIndex + itemsPerPage;
+    // ✨ PHASE 67: Simple pagination - all data loaded, so no loading state needed
     const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
     
     // Validate password strength
@@ -246,6 +294,7 @@ function UsersAdmin() {
             setShowModal(false);
             resetForm();
             fetchUsers();
+            fetchUserStats(); // ✨ Refresh stats after user changes
         } catch (error) {
             console.error("Error saving user:", error);
             Toast().fire({
@@ -270,6 +319,7 @@ function UsersAdmin() {
                 title: "Pengguna berhasil dihapus"
             });
             fetchUsers();
+            fetchUserStats(); // ✨ Refresh stats after user deletion
         } catch (error) {
             console.error("Error deleting user:", error);
             Toast().fire({
@@ -308,6 +358,7 @@ function UsersAdmin() {
             setSelectedUsers([]);
             setShowBulkActions(false);
             fetchUsers();
+            fetchUserStats(); // ✨ Refresh stats after bulk actions
         } catch (error) {
             console.error("Error performing bulk action:", error);
             Toast().fire({
@@ -466,6 +517,7 @@ function UsersAdmin() {
             
             // Refresh users list after sync (no need to wait for auto-close)
             await fetchUsers();
+            await fetchUserStats(); // ✨ Refresh stats after sync
             
         } catch (error) {
             // Stop polling on error
@@ -606,7 +658,18 @@ function UsersAdmin() {
         if (users.length === 0) {
             fetchUsers();
         }
+        // ✨ PHASE X: Fetch user stats on mount (for all users, not just loaded pages)
+        fetchUserStats();
     }, []); // Only run on mount
+
+    // ✨ PHASE X: Preload pages based on itemsPerPage (ISSUE FIX #4 - PHASE 4.13)
+    // Intelligently preload enough pages to support selected itemsPerPage
+    // itemsPerPage 10/25: preload 2-3 pages (40-60 users)
+    // itemsPerPage 50: preload 3-4 pages (60-80 users) 
+    // itemsPerPage 100: preload 5-6 pages (100-120 users)
+    // ✨ PHASE 67: Removed preload effect - all data loaded at once on mount
+
+    // ✨ PHASE 67: Removed itemsPerPage sync effect - all data already loaded
 
     // Fetch last sync info from database on component mount
     useEffect(() => {
@@ -638,6 +701,10 @@ function UsersAdmin() {
         // Apply filters only when filters change, not when users change
         applyFilters();
     }, [searchTerm, roleFilter, statusFilter, applyFilters]);
+
+    // ✨ PHASE 67: Removed complex sync effect - no longer needed with all-data loading
+    // The old sync effect (PHASE 4.17) coordinated pagination and loading state
+    // With all data loaded at once, page changes are instant (no async loading needed)
 
     useEffect(() => {
         setShowBulkActions(selectedUsers.length > 0);
@@ -801,6 +868,17 @@ function UsersAdmin() {
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
+                                    {/* ✨ PHASE X: Clear search button (ISSUE FIX #3) */}
+                                    {searchTerm && (
+                                        <button
+                                            className="search-clear-btn-modern"
+                                            onClick={() => setSearchTerm("")}
+                                            title="Hapus pencarian"
+                                            aria-label="Clear search"
+                                        >
+                                            <FaTimes />
+                                        </button>
+                                    )}
                                 </div>
                                 
                                 <div className="filter-group-modern">
@@ -810,9 +888,9 @@ function UsersAdmin() {
                                         onChange={(e) => setRoleFilter(e.target.value)}
                                     >
                                         <option value="all">Semua Peran</option>
-                                        <option value="student">Hanya Siswa</option>
-                                        <option value="teacher">Hanya Instruktur</option>
-                                        <option value="admin">Hanya Admin</option>
+                                        <option value="student">Siswa</option>
+                                        <option value="teacher">Instruktur</option>
+                                        <option value="admin">Admin</option>
                                     </select>
                                 </div>
                                 
@@ -825,6 +903,24 @@ function UsersAdmin() {
                                         <option value="all">Semua Status</option>
                                         <option value="active">Pengguna Aktif</option>
                                         <option value="inactive">Pengguna Tidak Aktif</option>
+                                    </select>
+                                </div>
+                                
+                                {/* ✨ PHASE X: Items per page selector (ISSUE FIX #2) */}
+                                <div className="filter-group-modern">
+                                    <select 
+                                        className="filter-select-modern"
+                                        value={itemsPerPage}
+                                        onChange={(e) => {
+                                            setItemsPerPage(Number(e.target.value));
+                                            setCurrentPage(1); // Reset to first page when changing items per page
+                                        }}
+                                        title="Pilih jumlah pengguna per halaman"
+                                    >
+                                        <option value={10}>10 Per Halaman</option>
+                                        <option value={25}>25 Per Halaman</option>
+                                        <option value={50}>50 Per Halaman</option>
+                                        <option value={100}>100 Per Halaman</option>
                                     </select>
                                 </div>
                             </div>
@@ -869,6 +965,7 @@ function UsersAdmin() {
                         <table className="users-table-modern" role="table" aria-label="Users management table">
                             <thead>
                                 <tr>
+                                    {/* ✨ PHASE X: Select column moved to leftmost (ISSUE FIX #2) */}
                                     <th className="select-column" scope="col">
                                         <div className="checkbox-modern">
                                             {selectedUsers.length === filteredUsers.length ? 
@@ -889,6 +986,8 @@ function UsersAdmin() {
                                             }
                                         </div>
                                     </th>
+                                    {/* ✨ PHASE X: Add No column (ISSUE FIX #5) */}
+                                    <th className="no-column" scope="col">#</th>
                                     <th className="user-column" scope="col">Informasi Pengguna</th>
                                     <th className="role-column" scope="col">Peran</th>
                                     <th className="status-column" scope="col">Status</th>
@@ -899,8 +998,9 @@ function UsersAdmin() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedUsers.map((user) => (
+                                {paginatedUsers.map((user, index) => (
                                     <tr key={user.id} className={`user-row-modern ${selectedUsers.includes(user.id) ? "selected-row" : ""}`}>
+                                        {/* ✨ PHASE X: Select column moved to leftmost (ISSUE FIX #2) */}
                                         <td className="select-cell">
                                             <div className="checkbox-modern">
                                                 {selectedUsers.includes(user.id) ? 
@@ -924,6 +1024,10 @@ function UsersAdmin() {
                                                     />
                                                 }
                                             </div>
+                                        </td>
+                                        {/* ✨ PHASE X: Row number for each user (ISSUE FIX #5) */}
+                                        <td className="no-cell">
+                                            <span className="row-number">{((currentPage - 1) * itemsPerPage) + index + 1}</span>
                                         </td>
                                         <td className="user-info-cell">
                                             <div className="user-info-modern">
@@ -1064,6 +1168,8 @@ function UsersAdmin() {
                             )}
                             </tbody>
                         </table>
+                        
+                        {/* ✨ PHASE 67: Removed page loading overlay - all data loaded at once */}
                     </div>
 
                     {/* Pagination Controls - Compact Professional */}
@@ -1071,7 +1177,7 @@ function UsersAdmin() {
                         <div className="pagination-controls-compact">
                             <button 
                                 className="pagination-btn-compact"
-                                onClick={() => setCurrentPage(1)}
+                                onClick={() => handlePageChange(1)}
                                 disabled={currentPage === 1}
                                 title="Halaman pertama"
                             >
@@ -1079,7 +1185,7 @@ function UsersAdmin() {
                             </button>
                             <button 
                                 className="pagination-btn-compact"
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
                                 title="Halaman sebelumnya"
                             >
@@ -1107,7 +1213,7 @@ function UsersAdmin() {
                                     <button
                                         key={page}
                                         className={`pagination-page ${currentPage === page ? "active" : ""}`}
-                                        onClick={() => setCurrentPage(page)}
+                                        onClick={() => handlePageChange(page)}
                                     >
                                         {page}
                                     </button>
@@ -1115,12 +1221,13 @@ function UsersAdmin() {
                             </div>
                             
                             <span className="pagination-counter">
+                                {/* ✨ PHASE 67: Simple page display - no async loading */}
                                 {currentPage} / {totalPages}
                             </span>
                             
                             <button 
                                 className="pagination-btn-compact"
-                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
                                 title="Halaman berikutnya"
                             >
@@ -1128,7 +1235,7 @@ function UsersAdmin() {
                             </button>
                             <button 
                                 className="pagination-btn-compact"
-                                onClick={() => setCurrentPage(totalPages)}
+                                onClick={() => handlePageChange(totalPages)}
                                 disabled={currentPage === totalPages}
                                 title="Halaman terakhir"
                             >

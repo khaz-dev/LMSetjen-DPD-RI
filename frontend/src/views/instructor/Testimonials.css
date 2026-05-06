@@ -39,6 +39,23 @@
     max-width: 100% !important;
 }
 
+/* ✨ PHASE 65+: Ensure header row stays visible above content - prevent dropdown clipping */
+.instructor-testimonials-page > .container > .instructor-header-row {
+    position: relative;
+    z-index: 102;
+}
+
+.instructor-testimonials-page .instructor-header-card {
+    overflow: visible !important;
+}
+
+/* ✨ PHASE 65+: Protect role dropdown from being covered by main content */
+.instructor-testimonials-page .role-indicator.compact .role-dropdown-menu {
+    position: absolute;
+    z-index: 2002 !important;
+    pointer-events: auto;
+}
+
 /* SCOPED: Column styling for direct children of main layout row - NO negative padding */
 .instructor-testimonials-page > .container > .row > [class*="col-"] {
     margin-bottom: 0;

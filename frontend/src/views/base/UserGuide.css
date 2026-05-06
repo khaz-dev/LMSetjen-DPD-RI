@@ -36,12 +36,18 @@
     margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
+    color: white !important;
+}
+
+.guide-main-title i {
+    color: white !important;
 }
 
 .guide-subtitle {
     font-size: 1.15rem;
     opacity: 0.95;
     margin-bottom: 1rem;
+    color: white;
 }
 
 .user-guide-page .guide-meta {
@@ -610,10 +616,12 @@
 
     .guide-main-title {
         font-size: 2rem;
+        color: white;
     }
 
     .guide-subtitle {
         font-size: 1rem;
+        color: white;
     }
 
     .guide-meta {
@@ -663,10 +671,12 @@
 @media (max-width: 480px) {
     .guide-main-title {
         font-size: 1.6rem;
+        color: white;
     }
 
     .guide-main-title i {
         font-size: 1.4rem;
+        color: white;
     }
 
     /* ✨ SCOPED: UserGuide page only */

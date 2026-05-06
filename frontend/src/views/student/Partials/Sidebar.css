@@ -576,13 +576,6 @@
     }
 }
 
-/* Remove top gaps only on mobile - allow mt-md-4 to work on larger screens */
-@media (max-width: 767px) {
-    .row.mt-0.mt-md-4 {
-        margin-top: 0 !important;
-    }
-}
-
 /* Desktop: Large screens (lg >= 992px) */
 @media (min-width: 992px) {
     .modern-sidebar {

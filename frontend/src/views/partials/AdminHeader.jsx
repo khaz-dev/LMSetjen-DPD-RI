@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/auth';
 import UserData from '../plugin/UserData';
 import { useComingSoon } from '../../components/ComingSoonModal';
 import RoleIndicator from '../../components/RoleIndicator';
+import { ProfileContext } from '../plugin/Context';
 import './AdminHeader.css';
 
 function AdminHeader() {
@@ -14,6 +15,8 @@ function AdminHeader() {
     const navigate = useNavigate();
     const location = useLocation();
     const [isLoggedIn, user] = useAuthStore((state) => [state.isLoggedIn, state.user]);
+    // ✨ PHASE X: Use ProfileContext to get real-time avatar updates
+    const [profile] = useContext(ProfileContext) || [null];
     const userData = UserData();
     const isAdmin = userData?.role === 'admin';
     const isSuperAdmin = userData?.is_super_admin || false;
@@ -50,27 +53,6 @@ function AdminHeader() {
     };
 
     // Utility functions
-    const getFirstTwoWords = (fullName) => {
-        if (!fullName || typeof fullName !== 'string') return '';
-        const words = fullName.trim().split(/\s+/);
-        
-        if (words.length === 0) return '';
-        if (words.length === 1) return words[0];
-        return `${words[0]} ${words[1]}`;
-    };
-
-    const getDisplayName = () => {
-        if (userData?.full_name) {
-            const cleanedFullName = userData.full_name
-                .replace(/,+/g, '') // Remove all commas
-                .replace(/[^\w\s]/g, '') // Remove special characters except spaces and word characters
-                .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
-                .trim();
-            return getFirstTwoWords(cleanedFullName) || 'Admin';
-        }
-        return "Admin";
-    };
-
     const isActive = (path) => {
         return location.pathname.includes(path);
     };
@@ -208,18 +190,16 @@ function AdminHeader() {
                                     aria-expanded={dropdownOpen}
                                 >
                                     <div className="admin-avatar">
-                                        {userData?.image ? (
+                                        {profile?.image ? (
                                             <img 
-                                                src={userData.image} 
+                                                src={profile.image} 
                                                 alt="Admin" 
                                                 className="avatar-img"
+                                                title={profile?.full_name || 'Admin'}
                                             />
                                         ) : (
                                             <i className="fas fa-user"></i>
                                         )}
-                                    </div>
-                                    <div className="admin-info">
-                                        <span className="admin-name">{getDisplayName()}</span>
                                     </div>
                                 </button>
                                 

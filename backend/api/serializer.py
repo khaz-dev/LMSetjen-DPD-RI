@@ -140,9 +140,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     
 class UserSerializer(serializers.ModelSerializer):
-    """User serializer with Multi Role support - PHASE 4.10"""
-    enrollment_count = serializers.SerializerMethodField()
-    course_count = serializers.SerializerMethodField()
+    """User serializer with Multi Role support - PHASE 4.10
+    ✨ SPRINT 1 OPTIMIZATION: Uses pre-calculated annotations instead of N+1 queries
+    """
+    # ✨ SPRINT 1: Use pre-calculated fields from queryset annotations instead of calling methods
+    enrollment_count = serializers.IntegerField(read_only=True, source='_enrollment_count')
+    course_count = serializers.IntegerField(read_only=True, source='_course_count')
     
     class Meta:
         model = User
@@ -163,23 +166,13 @@ class UserSerializer(serializers.ModelSerializer):
             'course_count'
         ]
     
-    def get_enrollment_count(self, obj):
-        """Count enrollments if user is student - supports Multi Role system"""
-        if obj.is_student or obj.role == 'student':
-            from . import models as api_models
-            return api_models.EnrolledCourse.objects.filter(user=obj).count()
-        return 0
-    
-    def get_course_count(self, obj):
-        """Count courses if user is instructor - supports Multi Role system"""
-        if obj.is_instructor or obj.role == 'teacher':
-            from . import models as api_models
-            try:
-                teacher = api_models.Teacher.objects.get(user=obj)
-                return api_models.Course.objects.filter(teacher=teacher).count()
-            except api_models.Teacher.DoesNotExist:
-                return 0
-        return 0
+    def to_representation(self, instance):
+        """Override to provide default values if annotations not present"""
+        data = super().to_representation(instance)
+        # ✨ SPRINT 1: Fallback to 0 if annotations not available (backward compatibility)
+        data['enrollment_count'] = getattr(instance, '_enrollment_count', 0) or 0
+        data['course_count'] = getattr(instance, '_course_count', 0) or 0
+        return data
 
 class OrganizationUnitSerializer(serializers.ModelSerializer):
     class Meta:
@@ -1139,6 +1132,7 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
         ✨ PHASE 13.3: SUPER DETAILED LOGGING for completion filtering
         ✨ PHASE 13.4: Force fresh database query to avoid stale cache
         ✨ PHASE 37.1: Added raw SQL verification to debug missing lessons
+        ✨ PHASE 66.2: Removed all debug prints to clean terminal output
         
         A completed lesson is VALID if:
         1. The lesson has NO verification question (auto-complete allowed), OR
@@ -1146,30 +1140,8 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
         
         Fixes: Lessons showing as "Diselesaikan" even when verification question was NOT answered
         """
-        import sys
-        from django.utils import timezone
-        from django.db import connection
-        
         user_id = obj.user.id if obj.user else None
         course_id = obj.course.id if obj.course else None
-        timestamp = timezone.now().isoformat()
-        
-        # ✨ PHASE 37.1: RAW SQL CHECK - See exactly what's in the database
-        print(f"\n[PHASE 37.1] 🔍 RAW SQL CHECK for CompletedLesson")
-        print(f"[PHASE 37.1]    Querying: course_id={course_id}, user_id={user_id}")
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "SELECT id, variant_item_id, course_id, user_id, date FROM api_completedlesson WHERE course_id = %s AND user_id = %s ORDER BY date DESC",
-                    [course_id, user_id]
-                )
-                raw_rows = cursor.fetchall()
-                print(f"[PHASE 37.1]    Found {len(raw_rows)} records in database:")
-                for row in raw_rows:
-                    cl_id, var_id, c_id, u_id, d = row
-                    print(f"[PHASE 37.1]      ID={cl_id}, variant_item_id={var_id}, course_id={c_id}, user_id={u_id}, date={d}")
-        except Exception as e:
-            print(f"[PHASE 37.1] ❌ Error reading raw SQL: {e}")
         
         # Get all completed lessons for this enrollment (course + user)
         # Use list() and select_related() to force FRESH database query
@@ -1178,24 +1150,10 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
             user=obj.user
         ).select_related('variant_item'))  # Force evaluation NOW to get fresh data
         
-        print(f"\n[PHASE 13.4] ✅ FRESH DATABASE QUERY executed - list() forces evaluation")
-        print(f"[PHASE 13.3] 🔍 get_completed_lesson START at {timestamp}")
-        print(f"[PHASE 13.3] User: {obj.user.username} (ID: {user_id})")
-        print(f"[PHASE 13.3] Course: {obj.course.title} (ID: {course_id})")
-        print(f"[PHASE 13.3] Found {len(all_completed)} TOTAL completed lessons (ORM query)")
-        print(f"[PHASE 37.1] ⚠️ MISMATCH: Raw SQL found {len(raw_rows)} but ORM found {len(all_completed)} - check for missing variant_item FK!")
-        
         valid_completions = []
         
-        for idx, completion in enumerate(all_completed, 1):
+        for completion in all_completed:
             variant_item = completion.variant_item
-            item_title = variant_item.title if variant_item else "Unknown"
-            variant_item_id = variant_item.variant_item_id if variant_item else "Unknown"
-            completion_id = completion.id
-            
-            print(f"\n[PHASE 13.3] ──────────────────── Lesson {idx}/{len(all_completed)} ────────────────────")
-            print(f"[PHASE 13.3] ID: {completion_id}, Title: {item_title}")
-            print(f"[PHASE 13.3] variant_item_id: {variant_item_id}")
             
             # Check if this lesson has a verification/completion question
             verification_question = api_models.LessonCompletionQuestion.objects.filter(
@@ -1204,45 +1162,20 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
             
             if not verification_question:
                 # ✅ No verification question = lesson allows auto-completion
-                print(f"[PHASE 13.3] ✅ VERDICT: No verification question → AUTO-COMPLETE ALLOWED → VALID")
                 valid_completions.append(completion)
             else:
                 # ⚠️ Verification question EXISTS = student must answer correctly
-                print(f"[PHASE 13.3] ⚠️ Verification question EXISTS")
-                print(f"[PHASE 13.3]   Question ID: {verification_question.question_id}")
-                print(f"[PHASE 13.3]   Question text: {verification_question.question_text[:60]}...")
-                print(f"[PHASE 13.3]   Question type: {verification_question.question_type}")
-                
                 if user_id:
-                    # Check for correct answer - FORCE FRESH QUERY
-                    all_answers = list(api_models.LessonCompletionQuestionAnswer.objects.filter(
+                    # Check for correct answer
+                    correct_answer = api_models.LessonCompletionQuestionAnswer.objects.filter(
                         user_id=user_id,
-                        question=verification_question
-                    ).order_by('-answered_at'))  # list() forces evaluation NOW
-                    
-                    print(f"[PHASE 13.3]   Total answers from student: {len(all_answers)}")
-                    for answer_idx, ans in enumerate(all_answers[:3], 1):  # Show last 3 answers
-                        print(f"[PHASE 13.3]     Answer {answer_idx}: is_correct={ans.is_correct}, answered_at={ans.answered_at}")
-                    
-                    correct_answer = next((a for a in all_answers if a.is_correct), None)
+                        question=verification_question,
+                        is_correct=True
+                    ).exists()
                     
                     if correct_answer:
                         # ✅ Student answered correctly = completion is VALID
-                        print(f"[PHASE 13.3] ✅ VERDICT: Student answered CORRECTLY → VALID")
-                        print(f"[PHASE 13.3]   Correct answer record ID: {correct_answer.id}, answered_at: {correct_answer.answered_at}")
                         valid_completions.append(completion)
-                    else:
-                        # ❌ Student did not answer correctly = completion is INVALID
-                        print(f"[PHASE 13.3] ❌ VERDICT: Student did NOT answer correctly → INVALID (EXCLUDED)")
-                        if all_answers:
-                            latest = all_answers[0]
-                            print(f"[PHASE 13.3]   Latest answer: is_correct={latest.is_correct}, answered_at={latest.answered_at}")
-                else:
-                    print(f"[PHASE 13.3] ❌ VERDICT: No user_id available → INVALID (EXCLUDED)")
-        
-        print(f"\n[PHASE 13.3] 📊 FINAL RESULT: {len(valid_completions)}/{len(all_completed)} valid completions")
-        print(f"[PHASE 13.3] Valid lesson IDs: {[c.variant_item.variant_item_id for c in valid_completions if c.variant_item]}")
-        print(f"[PHASE 13.3] 🔍 get_completed_lesson END\n")
         
         # Serialize only the valid completions
         serializer = CompletedLessonSerializer(

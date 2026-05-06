@@ -165,7 +165,7 @@ function Activities() {
             <section className="activities-page">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0 md-4">
+                    <div className="row mt-0">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Page Header */}

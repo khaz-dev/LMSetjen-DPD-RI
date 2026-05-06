@@ -108,7 +108,7 @@ export function usePageCache(
         return () => {
             isMountedRef.current = false;
         };
-    }, [pageKey, pageCache, fetchFn, onDataChange]);
+    }, [pageKey, pageCache]);  // ✨ FIXED: Removed fetchFn & onDataChange - they cause infinite loops
 
     /**
      * Manual refetch function

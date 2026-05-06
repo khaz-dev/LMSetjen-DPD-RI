@@ -78,6 +78,7 @@ class User(AbstractUser):
 
     class Meta:
         # Add database indexes for frequently queried fields
+        # ✨ SPRINT 1 OPTIMIZATION: Added indexes for boolean role fields and external sync fields
         indexes = [
             models.Index(fields=['role']),
             models.Index(fields=['current_role']),
@@ -85,8 +86,17 @@ class User(AbstractUser):
             models.Index(fields=['-date_joined']),
             models.Index(fields=['role', 'is_active']),
             models.Index(fields=['current_role', 'is_active']),
-            # ✨ PHASE 4.10: New indexes for boolean role fields
-            # Note: These will be added via migration once fields exist
+            # ✨ SPRINT 1: New indexes for boolean role fields (PERFORMANCE FIX)
+            models.Index(fields=['is_student']),
+            models.Index(fields=['is_instructor']),
+            models.Index(fields=['is_admin']),
+            # ✨ SPRINT 1: Indexes for external sync operations
+            models.Index(fields=['external_id']),
+            models.Index(fields=['external_status']),
+            # ✨ SPRINT 1: Common filter combinations
+            models.Index(fields=['is_active', 'is_student']),
+            models.Index(fields=['is_active', 'is_instructor']),
+            models.Index(fields=['is_active', 'is_admin']),
         ]
 
     def __str__(self):

@@ -41,6 +41,7 @@ function BaseHeader() {
     // ✨ PHASE 4.20: Re-compute menu role checks based on currentRole dependency to update menu on role change
     const hasTeacherId = !!(userData?.teacher_id && userData?.teacher_id !== null && userData?.teacher_id !== undefined && userData?.teacher_id !== 0);
     const isAdmin = userData?.role === 'admin';
+    const isSuperAdmin = userData?.is_super_admin || false;  // ✨ PHASE X: Check if user is super admin for menu filtering
     
     // ✨ PHASE 4.21: Determine menu to show based on currentRole, not hasTeacherId
     // hasTeacherId is a permanent user attribute that doesn't change with role switches
@@ -358,6 +359,41 @@ function BaseHeader() {
         return displayName || (hasTeacherId ? 'Pemateri' : 'Peserta');
     };
 
+    // ✨ PHASE X: Render admin avatar in navigation - same as student/instructor
+    // ✨ Shows avatar image from ProfileContext or fallback to initials
+    const renderAdminAvatarInNav = () => {
+        // Show avatar image from profile context if available
+        if (profile?.image) {
+            return (
+                <div className="nav-avatar-wrapper">
+                    <img
+                        src={profile.image}
+                        className="nav-avatar-image"
+                        alt={`${profile?.full_name || "Admin"} avatar`}
+                        title={profile?.full_name || "Profil Admin"}
+                    />
+                </div>
+            );
+        }
+
+        // Default avatar with initials or icon
+        const fullName = allUserData?.full_name || userData?.full_name || profile?.full_name || "A";
+        const initials = fullName
+            .split(' ')
+            .slice(0, 2)
+            .map(word => word[0])
+            .join('')
+            .toUpperCase();
+
+        return (
+            <div className="nav-avatar-wrapper default">
+                <div className="nav-avatar-default">
+                    <span>{initials}</span>
+                </div>
+            </div>
+        );
+    };
+
     // ✨ PHASE 4.X: Render student profile avatar in navigation
     // ✨ PHASE 11.2: Render profile avatar from ProfileContext (updated when user changes profile picture)
     const renderProfileAvatarInNav = () => {
@@ -453,31 +489,53 @@ function BaseHeader() {
     ];
 
     const adminMenuItems = [
-        { to: "/admin/dashboard/", icon: "bi bi-grid-fill", text: "Dashboard" },
-        { to: "/admin/users/", icon: "fas fa-users", text: "Manajemen Pengguna" },
-        { to: "/admin/documentation/", icon: "fas fa-book", text: "Dokumentasi" },
-        { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar" }
+        { to: "/admin/dashboard/", icon: "bi bi-grid-fill", text: "Dashboard", requiresSuperAdmin: false },
+        { to: "/admin/users/", icon: "fas fa-users", text: "Kelola Pengguna", requiresSuperAdmin: false },
+        // ✨ PHASE 4: Unified content management page (replaces Review Kursus, Kurasi Testimoni, Kelola Materi)
+        { to: "/admin/content-management/", icon: "fas fa-cogs", text: "Manajemen Konten", requiresSuperAdmin: false },
+        // ✨ PHASE 4.210: Unified reports page (includes abuse reports and other system reports)
+        { to: "/admin/reports/", icon: "fas fa-file-alt", text: "Laporan Sistem", requiresSuperAdmin: false },
+        { to: "/admin/documentation/", icon: "fas fa-book", text: "Dokumentasi Sistem", requiresSuperAdmin: false },
+        // ✨ PHASE 11.1: User Feedback Management
+        { to: "/admin/feedback/", icon: "fas fa-comments", text: "Manajemen Masukan", requiresSuperAdmin: false },
+        { to: "/admin/system/", icon: "fas fa-cogs", text: "Pengaturan Sistem", requiresSuperAdmin: true },
+        { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar", requiresSuperAdmin: false }
     ];
+
+    // ✨ PHASE X: Filter admin menu items based on super admin privileges
+    const filteredAdminMenuItems = adminMenuItems.filter(item => 
+        !item.requiresSuperAdmin || isSuperAdmin
+    );
 
     // Render dropdown items
     const renderDropdownItems = (items) => (
         items.map((item, index) => {
-            const isItemActive = isActive(item.to);
-            const isLogoutItem = item.text === "Keluar";
+            // ✨ PHASE X: Handle logout as a button (not a Link) to prevent navigation attempts
+            if (item.to === "/logout/") {
+                return (
+                    <li key={index}>
+                        <button
+                            className="dropdown-item logout-item"
+                            onClick={handleLogout}
+                        >
+                            <i className={item.icon}></i>
+                            {item.text}
+                        </button>
+                    </li>
+                );
+            }
             
-            const itemClass = `dropdown-item ${isLogoutItem ? "logout-item" : ""} ${isItemActive ? "active-item" : ""}`;
+            const isItemActive = isActive(item.to);
+            const itemClass = `dropdown-item ${isItemActive ? "active-item" : ""}`;
             
             return (
                 <li key={index}>
                     <Link
                         className={itemClass}
                         to={item.to}
-                        onClick={item.to === "/logout/" ? (e) => {
-                            e.preventDefault();
-                            handleLogout();
-                        } : undefined}
+                        onClick={() => setDropdownOpen(false)}
                     >
-                        <i className={`${item.icon} me-3`}></i>
+                        <i className={item.icon}></i>
                         <span>{item.text}</span>
                     </Link>
                 </li>
@@ -748,11 +806,16 @@ function BaseHeader() {
                                         onMouseLeave={handleMouseLeave}
                                     >
                                         <div className="nav-link admin-link nav-link-avatar">
-                                            <span>{getDisplayName()}</span>
+                                            {renderAdminAvatarInNav()}
                                             <i className="fas fa-shield-alt nav-admin-role-icon"></i>
                                         </div>
-                                        <ul className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
-                                            {renderDropdownItems(adminMenuItems)}
+                                        {/* ✨ PHASE X: Use admin-profile-dropdown class and add header like AdminHeader */}
+                                        <ul className={`dropdown-menu admin-profile-dropdown ${dropdownOpen ? 'show' : ''}`}>
+                                            <li><h6 className="dropdown-header">
+                                                <i className="fas fa-shield-alt me-2"></i>
+                                                Panel Admin
+                                            </h6></li>
+                                            {renderDropdownItems(filteredAdminMenuItems)}
                                         </ul>
                                     </div>
                                 ) : currentMenuType === 'instructor' ? (

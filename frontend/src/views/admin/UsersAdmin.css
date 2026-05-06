@@ -35,10 +35,10 @@
         min-width: auto; /* Allow table to use full width */
     }
     
-    .users-table-modern .user-column { width: 350px; }
-    .users-table-modern .role-column { width: 220px; }
-    .users-table-modern .activity-column { width: 220px; }
-    .users-table-modern .actions-column { width: 180px; }
+    .users-table-modern .user-column { width: 220px; }
+    .users-table-modern .role-column { width: 200px; }
+    .users-table-modern .activity-column { width: 180px; }
+    .users-table-modern .actions-column { width: 150px; }
 }
 
 /* Dashboard Header */
@@ -185,16 +185,15 @@
 /* Enhanced Statistics Cards */
 .stat-card-enhanced {
     background: white;
-    border-radius: 20px;
-    padding: 0;
-    border: none;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    transition: all 0.4s ease;
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
     overflow: hidden;
     position: relative;
     display: flex;
     align-items: center;
-    padding: 30px;
 }
 
 .stat-card-enhanced::before {
@@ -233,37 +232,38 @@
 }
 
 .stat-icon-enhanced {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 30px;
+    font-size: 20px;
     color: white;
     background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
-    margin-right: 20px;
+    box-shadow: 0 5px 15px rgba(15, 118, 110, 0.3);
+    margin-right: 15px;
+    flex-shrink: 0;
 }
 
 .active-users .stat-icon-enhanced {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
 }
 
 .students .stat-icon-enhanced {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
 }
 
 .teachers .stat-icon-enhanced {
     background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-    box-shadow: 0 10px 20px rgba(6, 182, 212, 0.3);
+    box-shadow: 0 5px 15px rgba(6, 182, 212, 0.3);
 }
 
 .admins .stat-icon-enhanced {
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3);
+    box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
 }
 
 .stat-content {
@@ -272,7 +272,7 @@
 }
 
 .stat-number-enhanced {
-    font-size: 2.5rem;
+    font-size: 1.8rem;
     font-weight: 800;
     margin: 0;
     background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
@@ -284,9 +284,9 @@
 
 .stat-label-enhanced {
     color: #64748b;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    margin: 5px 0;
+    margin: 3px 0 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -425,6 +425,34 @@
     z-index: 3 !important;
 }
 
+/* ✨ PHASE X: Clear search button styling (ISSUE FIX #3) */
+.search-clear-btn-modern {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4;
+}
+
+.search-clear-btn-modern:hover {
+    color: #1e293b;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.search-clear-btn-modern:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
 .filter-group-modern {
     display: flex;
     gap: 15px;
@@ -432,7 +460,7 @@
 }
 
 .filter-select-modern {
-    padding: 12px 15px;
+    padding: 12px 40px 12px 15px !important;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     font-size: 0.9rem;
@@ -441,6 +469,12 @@
     cursor: pointer;
     transition: all 0.3s ease;
     min-width: 140px;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667eea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    padding-right: 35px !important;
 }
 
 .filter-select-modern:focus {
@@ -526,7 +560,7 @@
 
 .users-table-modern {
     width: 100%;
-    min-width: 1360px; /* Updated: 60+280+300+120+150+120+180+150 = 1360px */
+    min-width: 1410px; /* Updated: 50+60+280+300+120+150+120+180+150 = 1410px (added No column) */
     border-collapse: collapse;
     margin: 0;
     table-layout: auto; /* Changed from fixed to auto for proper content sizing */
@@ -555,8 +589,9 @@
 
 /* Define specific column widths for responsive behavior */
 .users-table-modern .select-column { width: 60px; min-width: 60px; }
-.users-table-modern .user-column { width: 280px; min-width: 250px; }
-.users-table-modern .role-column { width: 300px; min-width: 280px; }
+.users-table-modern .no-column { width: 50px; min-width: 50px; }
+.users-table-modern .user-column { width: 220px; min-width: 200px; }
+.users-table-modern .role-column { width: 200px; min-width: 180px; }
 .users-table-modern .status-column { width: 120px; min-width: 100px; }
 .users-table-modern .login-column { width: 150px; min-width: 130px; }
 .users-table-modern .date-column { width: 120px; min-width: 100px; }
@@ -698,7 +733,7 @@
 }
 
 .role-icon {
-    font-size: 0.95rem;
+    font-size: 0.95rem !important;
     flex-shrink: 0;
 }
 
@@ -1609,6 +1644,32 @@
     font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.9);
     font-weight: 500;
+}
+
+/* ✨ PHASE X: Styles for No column and row numbers (ISSUE FIX #5) */
+.users-table-modern .no-cell {
+    padding: 20px 15px;
+    text-align: center;
+    vertical-align: middle;
+    background: rgba(102, 126, 234, 0.03);
+}
+
+.row-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--theme-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.users-table-modern tbody tr:hover .row-number {
+    background: rgba(102, 126, 234, 0.2);
+    transform: scale(1.05);
 }
 
 /* ============================================
@@ -2871,11 +2932,56 @@
     .sync-actions {
         flex-direction: column;
     }
-    
-    .sync-action-btn {
-        width: 100%;
-        justify-content: center;
+}
+
+/* ✨ PHASE 4.15: Loading overlay for page transitions */
+.page-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    border-radius: 8px;
+    backdrop-filter: blur(2px);
+}
+
+.spinner-modern {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.spinner-inner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e0e0e0;
+    border-top-color: #1e88e5;
+    border-radius: 50%;
+    animation: spin-animation 0.8s linear infinite;
+}
+
+@keyframes spin-animation {
+    to {
+        transform: rotate(360deg);
     }
+}
+
+.spinner-modern span {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Ensure container has position relative for overlay positioning */
+.users-table-container {
+    position: relative;
 }
 
 /* ========================================

@@ -171,6 +171,9 @@ urlpatterns = [
     # Admin API URLs
     path("admin/dashboard-summary/", api_views.AdminSummaryAPIView.as_view()),
     path("admin/user-management/", api_views.AdminUserManagementAPIView.as_view()),
+    path("admin/user-management/all/", api_views.AdminUserManagementAllAPIView.as_view()),  # ✨ PHASE 67: Load all users at once
+    # ✨ PHASE X: Admin user stats endpoint for aggregated stats across all pages
+    path("admin/user-stats/", api_views.AdminUserStatsAPIView.as_view()),
     path("admin/user-detail/<user_id>/", api_views.AdminUserDetailAPIView.as_view()),
     path("admin/user-create/", api_views.AdminUserCreateAPIView.as_view()),
     path("admin/user-update/<user_id>/", api_views.AdminUserUpdateAPIView.as_view()),

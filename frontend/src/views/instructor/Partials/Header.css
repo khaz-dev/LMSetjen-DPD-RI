@@ -18,6 +18,8 @@
 .instructor-header-row > .col-md-12,
 .instructor-header-row > .col-12 {
     margin-bottom: 0 !important;
+    /* ✨ PHASE 65+: Ensure column doesn't clip absolutely positioned dropdown menu */
+    overflow: visible !important;
 }
 
 /* CSS Variables for flexible theming */

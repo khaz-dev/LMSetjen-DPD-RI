@@ -952,7 +952,6 @@
 .nav-link-avatar:hover .nav-admin-role-icon {
     color: #b91c1c;
     transform: scale(1.15);
-    box-shadow: 0 3px 12px rgba(220, 38, 38, 0.3);
 }
 
 .nav-avatar-wrapper {
@@ -1008,17 +1007,15 @@
 }
 
 .admin-link {
-    background: var(--theme-gradient) !important;
     border-radius: 8px;
     user-select: none; /* Prevent text selection */
-    color: white !important;
+    color: var(--theme-gradient) !important;
     transition: all 0.3s ease;
     cursor: pointer;
 }
 
 .admin-link:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.35) !important;
     cursor: pointer;
 }
 

@@ -32,7 +32,7 @@ function InstructorPageLoader({ message = "Loading...", className = "" }) {
             >
                 <div className="container" style={{ flex: 1 }}>
                     <Header />
-                    <div className="row mt-0 mt-md-4">
+                    <div className="row mt-0">
                         <Sidebar />
                         <div 
                             className="col-lg-9 col-md-8 col-12" 

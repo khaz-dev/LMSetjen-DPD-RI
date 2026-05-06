@@ -714,6 +714,22 @@
     gap: 0 !important;
 }
 
+/* ✨ PHASE 65+: Ensure header row stays visible above content - prevent dropdown clipping */
+.student-profile-page > .container > .student-header-row {
+    position: relative;
+    z-index: 102;
+}
+
+.student-profile-page .student-header-card {
+    overflow: visible !important;
+}
+
+.student-profile-page .role-indicator.compact .role-dropdown-menu {
+    position: absolute;
+    z-index: 2002 !important;
+    pointer-events: auto;
+}
+
 /* Exception: Allow student-header-row to use its own negative margins for edge-to-edge expansion */
 .student-profile-page .row.student-header-row {
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
