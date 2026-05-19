@@ -63,7 +63,7 @@ services:
 
       # CORS & Security
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,https://lms.dpd.go.id}
-      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-localhost,127.0.0.1,lms.dpd.go.id}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost,http://127.0.0.1,https://lms.dpd.go.id}
       
     volumes:
       - ./backend:/app

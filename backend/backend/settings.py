@@ -136,10 +136,7 @@ import urllib.parse
 # Support for DATABASE_URL environment variable (prioritized over individual settings)
 _database_url = env('DATABASE_URL', default=None)
 
-print(f"DEBUG: DATABASE_URL value: {_database_url}")
-
 if _database_url:
-    print("DEBUG: Using DATABASE_URL configuration")
     import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(
@@ -149,9 +146,7 @@ if _database_url:
                                # immediately after use, causing commits to fail unpredictably
         )
     }
-    print(f"DEBUG: DATABASES config: {DATABASES}")
 else:
-    print("DEBUG: Using individual DB configuration (PostgreSQL)")
     # Fall back to individual configuration with URL-encoded password
     _DB_NAME = env('DB_NAME', default='secure_password')
     # URL-encode the password to handle special characters
@@ -345,12 +340,8 @@ CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "http://localhost:5174",
     "http://127.0.0.1:5174",
-    "http://localhost:5174",
-    "http://127.0.0.1:5174",
-    "http://16.79.83.21",  # EC2 server IP (HTTP)
-    "https://16.79.83.21",  # EC2 server IP (HTTPS)
-    "https://lmsetjendpdri.duckdns.org",  # Production domain (HTTPS)
-    "https://lms.dpd.go.id",  # Server 
+    "https://lms.khaz.app",
+    "https://lms.dpd.go.id",
 ])
 
 CORS_ALLOW_CREDENTIALS = True
@@ -380,6 +371,16 @@ CORS_EXPOSE_HEADERS = [
     'x-csrftoken',
     'authorization',
 ]
+
+# CSRF Configuration - Trust staging and production domains
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
+    'http://localhost:8001',
+    'http://localhost:5174',
+    'http://127.0.0.1:8001',
+    'http://127.0.0.1:5174',
+    'https://lms.khaz.app',
+    'https://lms.dpd.go.id',
+])
 
 # Cache Configuration - Redis for production, local memory for development
 try:
@@ -452,7 +453,6 @@ except Exception as e:
     }
     # Use database sessions as fallback
     SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-    print("Redis not available, using local memory cache and database sessions")
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = False
 
@@ -523,9 +523,6 @@ try:
 except (PermissionError, OSError) as e:
     if os.path.exists(LOGS_DIR) and os.access(LOGS_DIR, os.W_OK):
         pass
-    else:
-        import sys
-        print(f"Warning: Could not create logs directory: {e}", file=sys.stderr)
 
 # Django Extensions for better development and monitoring
 if DEBUG:
@@ -576,9 +573,6 @@ for dir_path in MEDIA_SUBDIRS.values():
     except (PermissionError, OSError) as e:
         if os.path.exists(dir_path) and os.access(dir_path, os.W_OK):
             pass
-        else:
-            import sys
-            print(f"Warning: Could not create directory {dir_path}: {e}", file=sys.stderr)
 
 # File Size Limits by Type
 MAX_FILE_SIZES = {
@@ -638,5 +632,5 @@ if DEBUG and sys.platform == 'win32':
     os.environ['RUN_MAIN'] = 'true'
 
 # External API Configuration
-EXTERNAL_API_BASE_URL = env('EXTERNAL_API_BASE_URL', default='https://Cmb2.duckdns.org')
-EXTERNAL_API_TOKEN = env('EXTERNAL_API_TOKEN', default='hY89aCK6tgMmGQNootpLYsw9otfwmNAv24cZ3QIljC8aI8DQ4RbxQlHPn0cVBbgdtwuJpWbxfbu4qGCwTycKtAiIDwX8ePEcWRtBhu2LfKmsY87eGuCDXBv8pAvbLtEH')
+EXTERNAL_API_BASE_URL = env('EXTERNAL_API_BASE_URL', default='https://api.example.com')
+EXTERNAL_API_TOKEN = env('EXTERNAL_API_TOKEN', default='set-me-in-env-file')
