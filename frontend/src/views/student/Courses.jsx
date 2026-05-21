@@ -134,7 +134,7 @@ function Courses() {
                                             </p>
                                         </div>
                                         <div className="col-lg-5">
-                                            <div className="stats-grid mt-0">
+                                            <div className="page-header-stats-grid mt-0">
                                                 <div className="stat-card-header-wrapper">
                                                     <div className="stat-card-header">
                                                         <div className="stat-number justify-content-end">{courses?.filter(c => c.completed_lesson?.length > 0).length || 0}</div>

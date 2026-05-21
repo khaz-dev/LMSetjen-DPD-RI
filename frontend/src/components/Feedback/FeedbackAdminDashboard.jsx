@@ -235,7 +235,7 @@ const FeedbackAdminDashboard = () => {
         <div className="feedback-admin-dashboard">
             {/* Stats Cards */}
             {stats && (
-                <div className="stats-grid">
+                <div className="dashboard-stats-grid">
                     <div className="stat-card">
                         <div className="stat-number">{stats.total_feedback}</div>
                         <div className="stat-label">Total Masukan</div>

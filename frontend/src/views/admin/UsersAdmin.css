@@ -1434,8 +1434,8 @@
     gap: 20px;
 }
 
-/* Single Detail Item */
-.detail-item {
+/* PHASE 77: Scoped to prevent pollution to student activities page - CRITICAL FIX */
+.user-details-view .detail-item {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -1446,14 +1446,14 @@
     transition: all 0.3s ease;
 }
 
-.detail-item:hover {
+.user-details-view .detail-item:hover {
     border-color: var(--theme-primary) !important;
     background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }
 
-.detail-item label {
+.user-details-view .detail-item label {
     font-size: 0.8rem;
     font-weight: 700;
     color: #64748b;
@@ -1462,22 +1462,22 @@
     margin: 0;
 }
 
-.detail-item span {
+.user-details-view .detail-item span {
     font-size: 1.1rem;
     font-weight: 600;
     color: #1e293b;
     word-break: break-word;
 }
 
-.detail-item span:empty::after {
+.user-details-view .detail-item span:empty::after {
     content: 'Not provided';
     color: #cbd5e1;
     font-style: italic;
     font-weight: 400;
 }
 
-/* Status Badge in Detail Item */
-.detail-item .status-badge {
+/* Status Badge in Detail Item - PHASE 77: Scoped */
+.user-details-view .detail-item .status-badge {
     display: inline-flex;
     align-items: center;
     padding: 8px 16px;
@@ -1488,20 +1488,20 @@
     text-transform: capitalize;
 }
 
-.detail-item .status-badge.active {
+.user-details-view .detail-item .status-badge.active {
     background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
     color: #065f46;
     border: 1px solid #6ee7b7;
 }
 
-.detail-item .status-badge.inactive {
+.user-details-view .detail-item .status-badge.inactive {
     background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
     color: #7f1d1d;
     border: 1px solid #fca5a5;
 }
 
-/* Role Badge in Detail Item */
-.detail-item .role-badge {
+/* Role Badge in Detail Item - PHASE 77: Scoped */
+.user-details-view .detail-item .role-badge {
     display: inline-flex;
     align-items: center;
     padding: 6px 12px;
@@ -1524,19 +1524,19 @@
     margin: 0;
 }
 
-.detail-item .role-badge.student {
+.user-details-view .detail-item .role-badge.student {
     background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
     color: #115e59;
     border: 1px solid #93c5fd;
 }
 
-.detail-item .role-badge.teacher {
+.user-details-view .detail-item .role-badge.teacher {
     background: linear-gradient(135deg, #fecdd3 0%, #fbcfe8 100%);
     color: #831843;
     border: 1px solid #f472b6;
 }
 
-.detail-item .role-badge.admin {
+.user-details-view .detail-item .role-badge.admin {
     background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%);
     color: #3730a3;
     border: 1px solid #818cf8;
@@ -1727,15 +1727,15 @@
         gap: 15px;
     }
 
-    .detail-item {
+    .user-details-view .detail-item {
         padding: 14px;
     }
 
-    .detail-item label {
+    .user-details-view .detail-item label {
         font-size: 0.75rem;
     }
 
-    .detail-item span {
+    .user-details-view .detail-item span {
         font-size: 1rem;
     }
 
@@ -1807,16 +1807,16 @@
         gap: 12px;
     }
 
-    .detail-item {
+    .user-details-view .detail-item {
         padding: 12px;
     }
 
-    .detail-item label {
+    .user-details-view .detail-item label {
         font-size: 0.7rem;
         letter-spacing: 0.3px;
     }
 
-    .detail-item span {
+    .user-details-view .detail-item span {
         font-size: 0.95rem;
         line-height: 1.4;
     }

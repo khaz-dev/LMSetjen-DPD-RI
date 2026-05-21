@@ -87,8 +87,9 @@
     padding-right: 0 !important;
 }
 
+/* ✨ PHASE 76: Renamed to prevent conflict with dashboard .stats-grid */
 /* Stats Grid in Header */
-.stats-grid {
+.page-header-stats-grid {
     display: flex;
     flex-direction: row;
     gap: 1rem;
@@ -105,7 +106,8 @@
     backdrop-filter: blur(10px);
 }
 
-.stat-number {
+/* PHASE 76.1: Scoped to prevent pollution to admin dashboard */
+.page-header-stats-grid .stat-number {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 0.2rem;
@@ -800,8 +802,20 @@
         padding: 1rem;
     }
 
-    .stats-grid {
+    .page-header-stats-grid {
         margin-top: 1rem;
+    }
+}
+
+/* PHASE 76.1: Media query scoping for stat components */
+@media (max-width: 768px) {
+    .page-header-stats-grid .stat-number {
+        font-size: 1.2rem;
+    }
+
+    .certificate-page .stat-label,
+    .sertifikat-page .stat-label {
+        font-size: 0.7rem;
     }
 }
 
@@ -853,11 +867,11 @@
         padding: 1rem;
     }
 
-    .stat-number {
+    .page-header-stats-grid .stat-number {
         font-size: 1.5rem;
     }
 
-    .stat-label {
+    .certificate-page .stat-label {
         font-size: 0.8rem;
     }
 }

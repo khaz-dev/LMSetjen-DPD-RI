@@ -275,7 +275,8 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.stats-grid {
+/* ✨ PHASE 76: Renamed to prevent conflict with dashboard .stats-grid */
+.page-header-stats-grid {
     display: flex;
     flex-direction: row;
     gap: 1rem;
@@ -290,16 +291,18 @@
     flex-shrink: 0;
 }
 
+/* PHASE 77: Improved contrast for readability - use dark overlay instead of light */
 .stat-card-header {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(0, 0, 0, 0.15) !important;
     border-radius: 12px;
     padding: 0.8rem 1.2rem;
     text-align: right;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
 }
 
-.stat-number {
+/* PHASE 76.1: Scoped to prevent pollution to admin dashboard */
+.page-header-stats-grid .stat-number {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 0.2rem;
@@ -310,14 +313,14 @@
     justify-content: flex-end;
 }
 
-/* ✨ SCOPED: Wishlist page stat label - only apply on wishlist page */
+/* ✨ PHASE 77: SCOPED: Wishlist page stat label - fully opaque for readability */
 .modern-wishlist-page .stat-label,
 .wishlist-page .stat-label {
     font-size: 0.8rem;
-    opacity: 0.9;
+    opacity: 1;
     font-weight: 500;
     text-align: right;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 1);
 }
 
 .loading-spinner {
@@ -384,11 +387,12 @@
         padding: 0.6rem 0.9rem;
     }
     
-    .stat-number {
+    /* PHASE 76.1: Scoped media query to prevent pollution */
+    .page-header-stats-grid .stat-number {
         font-size: 1.2rem;
     }
     
-    .stat-label {
+    .wishlist-page .stat-label {
         font-size: 0.7rem;
     }
 }

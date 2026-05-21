@@ -7,7 +7,8 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.section-title {
+/* PHASE 76.2: Scoped to prevent pollution to student sidebar .nav-section-title */
+.course-review-container .section-title {
     font-size: 1.75rem;
     font-weight: 700;
     color: #1a1a1a;
@@ -115,7 +116,8 @@
     border-radius: 8px;
 }
 
-.stat-number {
+/* PHASE 77: Scoped to prevent pollution to Wishlist and other pages */
+.course-review-container .stat-number {
     font-size: 1.75rem;
     font-weight: 700;
     color: #0d9488;
@@ -218,7 +220,7 @@
         padding: 5px;
     }
 
-    .stat-number {
+    .course-review-container .stat-number {
         font-size: 1.5rem;
     }
 

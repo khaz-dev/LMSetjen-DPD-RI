@@ -105,8 +105,9 @@
     max-width: 100% !important;
 }
 
+/* ✨ PHASE 76: Scoped to prevent pollution from admin feedback page */
 /* Page Header - Matches SertifikatKursus Card Design */
-.page-header {
+.instructor-notifications-page .page-header {
     background: var(--theme-gradient) !important;
     border-radius: 20px !important;
     color: white !important;
@@ -117,7 +118,7 @@
     box-shadow: 0 15px 35px var(--theme-shadow-color) !important;
 }
 
-.page-header::before {
+.instructor-notifications-page .page-header::before {
     content: '' !important;
     position: absolute !important;
     top: -50% !important;
@@ -129,7 +130,7 @@
     z-index: 1 !important;
 }
 
-.page-header h2 {
+.instructor-notifications-page .page-header h2 {
     color: white !important;
     font-size: 2rem !important;
     font-weight: 700 !important;
@@ -138,7 +139,7 @@
     z-index: 2 !important;
 }
 
-.page-header p {
+.instructor-notifications-page .page-header p {
     font-size: 0.95rem;
     color: rgba(255, 255, 255, 0.9) !important;
     position: relative !important;
@@ -357,7 +358,8 @@
     font-size: 0.85rem;
 }
 
-.detail-item {
+/* PHASE 77: Scoped to prevent pollution to other pages like Activities */
+.instructor-notifications-page .activity-details .detail-item {
     color: #6c757d;
     display: inline-flex;
     align-items: center;
@@ -365,7 +367,7 @@
     white-space: nowrap;
 }
 
-.detail-item i {
+.instructor-notifications-page .activity-details .detail-item i {
     width: 16px;
     text-align: center;
 }

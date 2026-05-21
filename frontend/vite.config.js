@@ -109,7 +109,10 @@ export default defineConfig({
       usePolling: false,  // Disable polling - use native file system events
     },
     allowedHosts: [
-      'lms.dpd.go.id'
+      'lms.dpd.go.id',
+      'lms.khaz.app',
+      'localhost',
+      '127.0.0.1'
     ]
   },
   optimizeDeps: {

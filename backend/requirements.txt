@@ -43,7 +43,7 @@ tzdata==2023.3
 uritemplate==4.1.1
 urllib3==1.26.18
 moviepy==1.0.3
-yt-dlp==2024.1.1
+yt-dlp==2025.1.26
 pytube==15.0.0
 qrcode[pil]==7.4.2
 django-debug-toolbar==4.1.0

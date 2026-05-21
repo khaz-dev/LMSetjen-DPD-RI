@@ -131,7 +131,8 @@
     font-size: 1.1rem;
 }
 
-.stats-grid {
+/* ✨ PHASE 76: Renamed to prevent conflict with dashboard .stats-grid */
+.page-header-stats-grid {
     display: flex;
     flex-direction: row;
     gap: 1rem;
@@ -155,7 +156,8 @@
     backdrop-filter: blur(10px);
 }
 
-.stat-number {
+/* PHASE 76.1: Scoped to prevent pollution to admin dashboard */
+.page-header-stats-grid .stat-number {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 0.2rem;

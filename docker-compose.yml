@@ -21,18 +21,16 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: lms_backend
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
     restart: unless-stopped
     env_file: .env
     environment:
       # Database Configuration
-      # Uses existing PostgreSQL on host machine (host.docker.internal:5432)
-      # Windows Docker requires 'host.docker.internal' instead of 'localhost'
+      # Uses existing PostgreSQL on host machine (gateway IP for Linux Docker)
+      # Use the Docker network gateway to access host services
       DB_NAME: ${DB_NAME:-lmsdb}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-SimpleTest2026}
-      DB_HOST: host.docker.internal
+      DB_HOST: 172.18.0.1
       DB_PORT: ${DB_PORT:-5432}
       
       # Redis Cache (always Docker)

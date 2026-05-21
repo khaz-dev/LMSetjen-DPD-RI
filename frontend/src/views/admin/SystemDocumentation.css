@@ -219,7 +219,8 @@
     padding-bottom: 0;
 }
 
-.section-title {
+/* PHASE 76.2: Scoped to prevent pollution to student sidebar .nav-section-title */
+.documentation-content .section-title {
     font-size: 2rem;
     font-weight: 700;
     color: #1e293b;

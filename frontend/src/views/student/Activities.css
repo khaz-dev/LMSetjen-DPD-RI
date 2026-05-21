@@ -11,8 +11,9 @@
     overflow-x: hidden;
 }
 
+/* ✨ PHASE 76: Scoped to prevent pollution from admin feedback page */
 /* Page Header - Matches SertifikatKursus Card Design */
-.page-header {
+.activities-page .page-header {
     background: var(--theme-gradient) !important;
     border-radius: 20px !important;
     color: white !important;
@@ -23,7 +24,7 @@
     box-shadow: 0 15px 35px var(--theme-shadow-color) !important;
 }
 
-.page-header::before {
+.activities-page .page-header::before {
     content: '' !important;
     position: absolute !important;
     top: -50% !important;
@@ -35,7 +36,7 @@
     z-index: 1 !important;
 }
 
-.page-header h2 {
+.activities-page .page-header h2 {
     color: white !important;
     font-size: 2rem !important;
     font-weight: 700 !important;
@@ -44,7 +45,7 @@
     z-index: 2 !important;
 }
 
-.page-header p {
+.activities-page .page-header p {
     font-size: 0.95rem;
     color: rgba(255, 255, 255, 0.9) !important;
     position: relative !important;
@@ -345,11 +346,11 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .page-header {
+    .activities-page .page-header {
         padding: 1.5rem;
     }
 
-    .page-header h2 {
+    .activities-page .page-header h2 {
         font-size: 1.5rem;
     }
 
@@ -411,11 +412,11 @@
         padding: 1rem 0;
     }
 
-    .page-header {
+    .activities-page .page-header {
         padding: 1rem;
     }
 
-    .page-header h2 {
+    .activities-page .page-header h2 {
         font-size: 1.25rem;
     }
 
@@ -546,12 +547,12 @@
         margin-right: 0;
     }
 
-    .page-header {
+    .activities-page .page-header {
         padding: 1.25rem 0.75rem !important;
         margin-bottom: 1rem !important;
     }
 
-    .page-header h2 {
+    .activities-page .page-header h2 {
         font-size: 1.5rem !important;
     }
 

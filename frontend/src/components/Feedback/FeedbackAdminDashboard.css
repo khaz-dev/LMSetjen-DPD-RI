@@ -5,15 +5,17 @@
     min-height: 100vh;
 }
 
-/* Stats Grid */
-.stats-grid {
+/* ✨ PHASE 76: Renamed to prevent conflict with page-header .stats-grid */
+/* Dashboard Stats Grid */
+.dashboard-stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
     margin-bottom: 32px;
 }
 
-.stat-card {
+/* PHASE 76.1: Scoped to prevent pollution from student page .stat-card classes */
+.feedback-admin-dashboard .stat-card {
     background: white;
     border-radius: 8px;
     padding: 20px;
@@ -21,14 +23,16 @@
     text-align: center;
 }
 
-.stat-number {
+/* PHASE 76.1: Scoped to prevent pollution from student page .stat-number classes */
+.feedback-admin-dashboard .stat-number {
     font-size: 32px;
     font-weight: 700;
     color: #0f766e;
     margin-bottom: 8px;
 }
 
-.stat-label {
+/* PHASE 76.1: Scoped to prevent pollution from student page .stat-label classes */
+.feedback-admin-dashboard .stat-label {
     font-size: 14px;
     color: #666;
     font-weight: 500;
@@ -413,13 +417,14 @@
         padding: 12px;
     }
 
-    .stats-grid {
+    .dashboard-stats-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
         margin-bottom: 16px;
     }
 
-    .stat-number {
+    /* PHASE 76.1: Scoped media query to prevent pollution */
+    .feedback-admin-dashboard .stat-number {
         font-size: 24px;
     }
 

@@ -8,9 +8,12 @@
 }
 
 /* ✨ PHASE 54: Compact variant for dashboard card */
+/* PHASE 76.2: Add overflow-x: hidden to prevent horizontal scroll */
 .activity-display.compact {
     max-height: 600px;
     overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
 }
 
 /* Custom scrollbar for compact variant */

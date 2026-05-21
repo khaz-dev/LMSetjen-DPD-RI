@@ -402,20 +402,21 @@
     flex: 1;
 }
 
-.detail-item {
+/* PHASE 77: Scoped to prevent pollution to student activities page */
+.certificate-container .detail-item {
     padding-top: 0rem;
     margin: 0rem;
     display: flex;
     flex-direction: column;
 }
 
-.detail-item strong {
+.certificate-container .detail-item strong {
     color: #2c3e50;
     font-size: 0.9rem;
     margin-bottom: 0.25rem;
 }
 
-.detail-item span {
+.certificate-container .detail-item span {
     color: #495057;
     font-size: 0.75rem;
 }
