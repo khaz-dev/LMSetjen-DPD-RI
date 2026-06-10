@@ -132,10 +132,10 @@ USE_SSL=True
 
 # Database Configuration
 DB_ENGINE=django.db.backends.postgresql
-DB_NAME=lmsdb_staging
-DB_USER=lms_user_staging
+DB_NAME=lmsdb
+DB_USER=postgres
 DB_PASSWORD=$DB_PASSWORD
-DB_HOST=postgres
+DB_HOST=172.18.0.1
 DB_PORT=5432
 
 # Redis Configuration
