@@ -249,7 +249,7 @@ JAZZMIN_SETTINGS  = {
     "site_title": "LMSetjen DPD RI Admin",
     "site_header": "LMSetjen DPD RI Admin",
     "site_brand": "LMSetjen DPD RI Admin",
-    # "site_logo": "path-to-logo",
+    "site_logo": "/src/assets/logo/logo-32.png",
     "welcome_sign": "Welcome to the LMSetjen DPD RI Admin",
     "copyright": "LMSetjen DPD RI Admin Ltd",
     "show_ui_builder": True,
