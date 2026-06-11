@@ -28,9 +28,9 @@ from api import views as api_views
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="Desphixs LMS Backend APIs",
+      title="LMSetjen DPD RI Admin Backend APIs",
       default_version='v1',
-      description="This is the API documentation for Desphixs LMS project APIs",
+      description="This is the API documentation for LMSetjen DPD RI Admin project APIs",
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="destiny@gmail.com"),
       license=openapi.License(name="BSD License"),

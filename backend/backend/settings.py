@@ -246,12 +246,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 JAZZMIN_SETTINGS  = {
-    "site_title": "Desphixs LMS Admin",
-    "site_header": "Desphixs LMS",
-    "site_brand": "Desphixs LMS",
+    "site_title": "LMSetjen DPD RI Admin",
+    "site_header": "LMSetjen DPD RI Admin",
+    "site_brand": "LMSetjen DPD RI Admin",
     # "site_logo": "path-to-logo",
-    "welcome_sign": "Welcome to the Desphixs LMS",
-    "copyright": "Desphixs LMS Ltd",
+    "welcome_sign": "Welcome to the LMSetjen DPD RI Admin",
+    "copyright": "LMSetjen DPD RI Admin Ltd",
     "show_ui_builder": True,
 
 }
