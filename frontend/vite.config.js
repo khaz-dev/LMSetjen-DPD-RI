@@ -2,31 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
 
+const runtimeMode = (process.env.MODE || 'development').toLowerCase()
+const isLiveDeployment = runtimeMode === 'staging' || runtimeMode === 'production'
+
 function resolveHmrConfig() {
-  const mode = (process.env.MODE || 'development').toLowerCase()
   const vitePort = Number(process.env.VITE_PORT || 5173)
 
-  if (mode === 'staging' || mode === 'production') {
-    let host = 'lms.khaz.app'
-    let protocol = 'wss'
-    let clientPort = 443
-
-    try {
-      const frontendUrl = process.env.FRONTEND_SITE_URL || 'https://lms.khaz.app'
-      const parsed = new URL(frontendUrl)
-      host = parsed.hostname || host
-      protocol = parsed.protocol === 'https:' ? 'wss' : 'ws'
-      clientPort = parsed.port ? Number(parsed.port) : (parsed.protocol === 'https:' ? 443 : 80)
-    } catch {
-      // Keep safe staging defaults if URL parsing fails.
-    }
-
-    return {
-      protocol,
-      host,
-      clientPort,
-      port: vitePort,
-    }
+  if (isLiveDeployment) {
+    return false
   }
 
   return {
@@ -109,8 +92,8 @@ export default defineConfig({
   plugins: [
     spaFallbackPlugin(),
     react({
-      // Fast refresh disabled in production
-      fastRefresh: process.env.NODE_ENV !== 'production',
+      // Disable Fast Refresh for staging/production to avoid HMR websocket churn on live deployments.
+      fastRefresh: !isLiveDeployment,
     }),
     // Gzip compression
     viteCompression({
@@ -130,7 +113,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',  // Listen on all interfaces (IPv4 + IPv6)
     port: Number(process.env.VITE_PORT || 5173),
-    // Keep localhost HMR for local development, but use public staging domain over WSS in staging/prod.
+    // Disable HMR on live deployments; keep localhost websocket HMR only for local development.
     hmr: resolveHmrConfig(),
     // Use native file system watching instead of polling
     // Much faster and more efficient than polling
