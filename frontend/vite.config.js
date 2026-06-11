@@ -2,6 +2,40 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
 
+function resolveHmrConfig() {
+  const mode = (process.env.MODE || 'development').toLowerCase()
+  const vitePort = Number(process.env.VITE_PORT || 5173)
+
+  if (mode === 'staging' || mode === 'production') {
+    let host = 'lms.khaz.app'
+    let protocol = 'wss'
+    let clientPort = 443
+
+    try {
+      const frontendUrl = process.env.FRONTEND_SITE_URL || 'https://lms.khaz.app'
+      const parsed = new URL(frontendUrl)
+      host = parsed.hostname || host
+      protocol = parsed.protocol === 'https:' ? 'wss' : 'ws'
+      clientPort = parsed.port ? Number(parsed.port) : (parsed.protocol === 'https:' ? 443 : 80)
+    } catch {
+      // Keep safe staging defaults if URL parsing fails.
+    }
+
+    return {
+      protocol,
+      host,
+      clientPort,
+      port: vitePort,
+    }
+  }
+
+  return {
+    protocol: 'ws',
+    host: 'localhost',
+    port: vitePort,
+  }
+}
+
 // SPA Fallback Plugin - serve index.html for all non-file routes
 // This enables client-side routing for React Router
 function spaFallbackPlugin() {
@@ -95,14 +129,9 @@ export default defineConfig({
   ],
   server: {
     host: '0.0.0.0',  // Listen on all interfaces (IPv4 + IPv6)
-    port: process.env.VITE_PORT || 5174,
-    // ✨ PHASE 4.10: Enable HMR for hot module replacement (auto-reload on file changes)
-    // Configure HMR to work with development server
-    hmr: {
-      protocol: 'ws',  // Use WebSocket protocol for HMR
-      host: 'localhost',  // Connect back to localhost for file changes
-      port: process.env.VITE_PORT || 5174,
-    },
+    port: Number(process.env.VITE_PORT || 5173),
+    // Keep localhost HMR for local development, but use public staging domain over WSS in staging/prod.
+    hmr: resolveHmrConfig(),
     // Use native file system watching instead of polling
     // Much faster and more efficient than polling
     watch: {
