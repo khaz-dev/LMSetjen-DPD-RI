@@ -8530,218 +8530,299 @@ class SyncExternalUsersAPIView(APIView):
     """
     authentication_classes = [JWTAuthentication]  # Only JWT, no SessionAuthentication
     permission_classes = [IsAuthenticated]
-    
+
     def parse_datetime_safe(self, datetime_str):
-        """Safely parse datetime string with multiple format support"""
+        """Safely parse datetime string with multiple format support."""
         if not datetime_str:
             return timezone.now()
-        
+
         try:
-            # Handle different datetime formats
             datetime_str = str(datetime_str)
-            
-            # Replace 'Z' with '+00:00' for ISO format
             if datetime_str.endswith('Z'):
                 datetime_str = datetime_str.replace('Z', '+00:00')
-            
-            # Try Django's parse_datetime first
+
             parsed_dt = parse_datetime(datetime_str)
             if parsed_dt:
                 return parsed_dt
-            
-            # Fallback to fromisoformat
+
             return datetime.fromisoformat(datetime_str)
-            
+
         except (ValueError, TypeError) as e:
             print(f"DateTime parsing error for '{datetime_str}': {e}")
             return timezone.now()
-    
+
+    def _pick_first_value(self, data, keys, default=None):
+        """Pick first non-empty value from multiple candidate keys."""
+        if not isinstance(data, dict):
+            return default
+        for key in keys:
+            value = data.get(key)
+            if value is not None and str(value).strip() != '':
+                return value
+        return default
+
+    def _build_external_api_url(self):
+        """Build external API URL from settings with backward-compatible defaults."""
+        endpoint = getattr(settings, 'EXTERNAL_API_USERS_ENDPOINT', '/api/pegawai')
+        base_url = getattr(settings, 'EXTERNAL_API_BASE_URL', '').rstrip('/')
+
+        if str(endpoint).startswith('http://') or str(endpoint).startswith('https://'):
+            return endpoint
+
+        endpoint = f"/{str(endpoint).lstrip('/')}"
+        return f"{base_url}{endpoint}"
+
+    def _build_external_api_headers(self):
+        """Build authentication headers for external API request."""
+        token_header = getattr(settings, 'EXTERNAL_API_TOKEN_HEADER', 'X-API-TOKEN')
+        token_value = getattr(settings, 'EXTERNAL_API_TOKEN', '')
+
+        headers = {'Accept': 'application/json'}
+        if token_value:
+            headers[token_header] = token_value
+            # Send legacy casing as compatibility fallback.
+            headers['X-API-Token'] = token_value
+        return headers
+
+    def _normalize_nested_entity(self, value, fallback_key='name'):
+        """Normalize nested org/position payload into expected dict shape."""
+        if isinstance(value, dict):
+            return {
+                'id': value.get('id') or value.get('kode') or value.get('code') or value.get(fallback_key),
+                'name': value.get('name') or value.get('nama') or value.get(fallback_key),
+                'description': value.get('description') or value.get('deskripsi', '')
+            }
+
+        if value is None or str(value).strip() == '':
+            return None
+
+        text = str(value).strip()
+        return {
+            'id': text,
+            'name': text,
+            'description': ''
+        }
+
+    def _normalize_external_user(self, raw_user, idx):
+        """Normalize external API user payload to serializer-compatible shape."""
+        normalized = {
+            'id': self._pick_first_value(raw_user, ['id', 'external_id', 'pegawai_id', 'id_pegawai', 'nip']),
+            'name': self._pick_first_value(raw_user, ['name', 'nama', 'full_name', 'nama_pegawai'], default='Unknown User'),
+            'email': self._pick_first_value(raw_user, ['email', 'mail']),
+            'created_at': self._pick_first_value(raw_user, ['created_at', 'createdAt', 'tgl_buat', 'tanggal_dibuat']),
+            'updated_at': self._pick_first_value(raw_user, ['updated_at', 'updatedAt', 'tgl_ubah', 'tanggal_diubah']),
+            'status': self._pick_first_value(raw_user, ['status', 'active_status', 'state'], default='ACTIVE'),
+            'timezone': self._pick_first_value(raw_user, ['timezone', 'tz'], default='Asia/Jakarta'),
+            'nip': self._pick_first_value(raw_user, ['nip', 'no_induk_pegawai', 'nomor_induk']),
+            'golongan': self._pick_first_value(raw_user, ['golongan', 'gol']),
+            'kelas_jabatan': self._pick_first_value(raw_user, ['kelas_jabatan', 'kelasjabatan']),
+            'jenis_jabatan': self._pick_first_value(raw_user, ['jenis_jabatan', 'jenisjabatan']),
+            'unit_organisasi': self._normalize_nested_entity(
+                self._pick_first_value(raw_user, ['unit_organisasi', 'unit_kerja', 'organisasi', 'unit'])
+            ),
+            'jabatan': self._normalize_nested_entity(
+                self._pick_first_value(raw_user, ['jabatan', 'position', 'posisi'])
+            )
+        }
+
+        if not normalized['id']:
+            fallback_id = normalized.get('nip') or normalized.get('email')
+            if fallback_id:
+                normalized['id'] = str(fallback_id)
+            else:
+                normalized['id'] = f"row-{idx + 1}"
+
+        return normalized
+
+    def _extract_users_payload(self, external_data):
+        """Extract success flag, message, and user list from multiple API response formats."""
+        if isinstance(external_data, list):
+            return True, None, external_data
+
+        if not isinstance(external_data, dict):
+            return False, 'Invalid response format: expected JSON object or array.', []
+
+        message = external_data.get('message') or external_data.get('error') or external_data.get('detail')
+
+        if 'status' in external_data:
+            success = str(external_data.get('status')).strip().lower() in {'success', 'ok', 'true'}
+        elif 'success' in external_data:
+            success = bool(external_data.get('success'))
+        else:
+            success = True
+
+        users_data = external_data.get('data', [])
+        if isinstance(users_data, dict):
+            users_data = (
+                users_data.get('data')
+                or users_data.get('results')
+                or users_data.get('items')
+                or users_data.get('pegawai')
+                or users_data.get('users')
+                or []
+            )
+
+        if not isinstance(users_data, list):
+            users_data = []
+
+        return success, message, users_data
+
+    def _is_active_external_status(self, raw_status):
+        value = str(raw_status or '').strip().lower()
+        return value in {'active', 'aktif', '1', 'true', 'enabled'}
+
     def post(self, request):
         # Verify admin access
-        if not hasattr(request.user, 'role') or not (request.user.is_admin):
+        if not hasattr(request.user, 'role') or not request.user.is_admin:
             return Response(
                 {'error': 'Admin access required. Only admins can sync external users.'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
+
         # Reset sync state at the beginning
         reset_sync_state()
-        
+
         # Create SyncHistory record to track this sync operation
         sync_record = api_models.SyncHistory.start_sync('external_users')
-        
+
         try:
-            # External API URL from settings
-            external_api_url = f"{settings.EXTERNAL_API_BASE_URL}/api/external/users"
-            
+            external_api_url = self._build_external_api_url()
+            headers = self._build_external_api_headers()
+
             print(f"Attempting to fetch data from: {external_api_url}")
-            
-            # Add API authentication headers
-            headers = {
-                'X-API-Token': settings.EXTERNAL_API_TOKEN,
-                'Cookie': 'XSRF-TOKEN=eyJpdiI6IkwwenJpQk94QStXcHpVbUdFMEoraWc9PSIsInZhbHVlIjoidkUvN0Z2MjBKSThqazlvSFdBYjZnaWpaVC9PRGhvUlkzelZvVmp6Z3NQWk9jYXpnbjNIeHVFUmxmcUFFdFZ0YkYrZldibE5OKzIwU2U5US9BVnJqb2dtR0FXdXpOMFhEL0o5U0x2MHpSdnY3Q2E5MGFGcSt4dHRwVkxMYTNJY0MiLCJtYWMiOiIzODliMDRkNjQyOTkzNDdiNmQ3MDRjMGU5Y2ZhMTJhNmE2MGEzMmM2OWNhNTVhM2I0NWI4MTAzZmZkZjRiOTkxIiwidGFnIjoiIn0%3D; cmb_setjen_dpd_ri_session=eyJpdiI6ImM2NGhSSXBKSXhaM3QxTWROV3dxaGc9PSIsInZhbHVlIjoiVFVxSSt5MnIxKzREQUw1dm5tTW91UzJnQzZuc2ZjZGY1REJjZGNVazdJOCtLQnNLK2QwQ05BMVowUVpKMm8yRmovNndRelJhUFBnajd3bDBBeEdoTUdNWkVXcVhLbExmU2dOUlpYMFFFUVRtR3pSSmtmWmN3ajdUb0dDbzduQVIiLCJtYWMiOiI2ODc3YWRhZjAzNzBkZDQxZjBiZTc0NzhjYjcyY2IwOTQyMWEyYTY4YWI1N2NlOGM2Y2Y2NzNlM2E1ZmI5MDQ0IiwidGFnIjoiIn0%3D'
-            }
-            
-            # Add the ?all=1 parameter to get all data
-            full_api_url = f"{external_api_url}?all=1"
-            
+
+            full_api_url = external_api_url
+            if getattr(settings, 'EXTERNAL_API_QUERY_ALL', False):
+                separator = '&' if '?' in external_api_url else '?'
+                full_api_url = f"{external_api_url}{separator}all=1"
+
             try:
-                response = requests.get(full_api_url, headers=headers, timeout=30)
+                response = requests.get(
+                    full_api_url,
+                    headers=headers,
+                    timeout=getattr(settings, 'EXTERNAL_API_TIMEOUT', 30)
+                )
                 print(f"Response status code: {response.status_code}")
-                response.raise_for_status()
-                
-                external_data = response.json()
-                print(f"Received data keys: {list(external_data.keys()) if isinstance(external_data, dict) else 'Not a dict'}")
-                print(f"Total records received: {len(external_data.get('data', []))}")
-                
             except requests.exceptions.RequestException as req_error:
-                print(f"External API not accessible ({str(req_error)}), using mock data for testing...")
-                
-                # Mock data based on the structure you provided earlier
-                external_data = {
-                    "success": True,
-                    "data": [
-                        {
-                            "id": "mock_1",
-                            "name": "Test User Mock 1",
-                            "email": "testmock1@example.com",
-                            "created_at": "2024-01-01T10:00:00+00:00",
-                            "updated_at": "2024-01-01T10:00:00+00:00",
-                            "status": "active",
-                            "timezone": "Asia/Jakarta",
-                            "nip": "19876543210",
-                            "golongan": "III/a",
-                            "kelas_jabatan": "Pelaksana",
-                            "jenis_jabatan": "Fungsional",
-                            "unit_organisasi": {
-                                "id": "mock_101",
-                                "name": "IT Department Mock",
-                                "code": "IT_MOCK",
-                                "description": "Information Technology Department (Mock Data)"
-                            },
-                            "jabatan": {
-                                "id": "mock_201",
-                                "name": "Software Developer Mock",
-                                "code": "DEV_MOCK",
-                                "description": "Software Development Position (Mock Data)"
-                            }
-                        },
-                        {
-                            "id": "mock_2",
-                            "name": "Test User Mock 2",
-                            "email": "testmock2@example.com",
-                            "created_at": "2024-01-02T10:00:00+00:00",
-                            "updated_at": "2024-01-02T10:00:00+00:00",
-                            "status": "active",
-                            "timezone": "Asia/Jakarta",
-                            "nip": "19876543211",
-                            "golongan": "II/c",
-                            "kelas_jabatan": "Pelaksana Lanjutan",
-                            "jenis_jabatan": "Struktural",
-                            "unit_organisasi": {
-                                "id": "mock_102",
-                                "name": "HR Department Mock",
-                                "code": "HR_MOCK",
-                                "description": "Human Resources Department (Mock Data)"
-                            },
-                            "jabatan": {
-                                "id": "mock_202",
-                                "name": "HR Specialist Mock",
-                                "code": "HRS_MOCK",
-                                "description": "Human Resources Specialist Position (Mock Data)"
-                            }
-                        }
-                    ]
-                }
-                
-            except Exception as json_error:
-                print(f"JSON parsing error: {str(json_error)}")
-                # Record failure in database
-                sync_record.fail_sync(f'Invalid response format from external API: {str(json_error)}')
-                return Response({
-                    'error': f'Invalid response format from external API: {str(json_error)}'
-                }, status=status.HTTP_502_BAD_GATEWAY)
-            
-            # Check for success in the real API response structure
-            if external_data.get('status') != 'success':
-                error_msg = f"External API returned error: {external_data.get('message', 'Unknown error')}"
-                # Record failure in database
+                upstream_error_msg = f"External API request failed: {str(req_error)}"
+                sync_record.fail_sync(upstream_error_msg)
+                update_sync_state(
+                    is_syncing=False,
+                    status='error',
+                    completion_timestamp=datetime.now().isoformat()
+                )
+                return Response({'error': upstream_error_msg}, status=status.HTTP_502_BAD_GATEWAY)
+
+            try:
+                external_data = response.json()
+            except ValueError:
+                raw_preview = (response.text or '')[:300]
+                error_msg = f"External API returned non-JSON response (HTTP {response.status_code}). Preview: {raw_preview}"
                 sync_record.fail_sync(error_msg)
-                return Response({
-                    'error': error_msg
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            users_data = external_data.get('data', [])
-            
+                update_sync_state(
+                    is_syncing=False,
+                    status='error',
+                    completion_timestamp=datetime.now().isoformat()
+                )
+                return Response({'error': error_msg}, status=status.HTTP_502_BAD_GATEWAY)
+
+            print(f"Received data keys: {list(external_data.keys()) if isinstance(external_data, dict) else 'Not a dict'}")
+
+            if response.status_code >= 400:
+                upstream_msg = None
+                if isinstance(external_data, dict):
+                    upstream_msg = external_data.get('message') or external_data.get('error') or external_data.get('detail')
+                error_msg = f"External API returned HTTP {response.status_code}: {upstream_msg or 'Unknown error'}"
+                sync_record.fail_sync(error_msg)
+                update_sync_state(
+                    is_syncing=False,
+                    status='error',
+                    completion_timestamp=datetime.now().isoformat()
+                )
+                return Response({'error': error_msg}, status=status.HTTP_502_BAD_GATEWAY)
+
+            success, upstream_message, raw_users_data = self._extract_users_payload(external_data)
+            if not success:
+                error_msg = f"External API returned error: {upstream_message or 'Unknown error'}"
+                sync_record.fail_sync(error_msg)
+                return Response({'error': error_msg}, status=status.HTTP_400_BAD_REQUEST)
+
+            users_data = []
+            normalization_errors = []
+            for idx, item in enumerate(raw_users_data):
+                if not isinstance(item, dict):
+                    normalization_errors.append({
+                        'external_id': f'row-{idx + 1}',
+                        'error': f'Invalid user payload type: {type(item).__name__}'
+                    })
+                    continue
+                users_data.append(self._normalize_external_user(item, idx))
+
             print(f"Processing {len(users_data)} users from external API")
-            if users_data and len(users_data) > 0:
+            if users_data:
                 print(f"Sample user structure: {list(users_data[0].keys()) if users_data[0] else 'No first user'}")
-            
+
             sync_results = {
                 'total_users': len(users_data),
                 'created': 0,
                 'updated': 0,
-                'errors': []
+                'failed': len(normalization_errors),
+                'errors': normalization_errors.copy()
             }
-            
-            # Initialize sync state
+
             update_sync_state(
                 is_syncing=True,
                 total=len(users_data),
                 created=0,
                 updated=0,
-                failed=0,
-                errors=[],
+                failed=sync_results['failed'],
+                errors=sync_results['errors'],
                 new=0,
                 changed=0,
                 unchanged=0,
                 comparison_complete=False
             )
-            
-            # SMART COMPARISON PHASE: Categorize users before processing
+
             print("Starting user data comparison...")
             categorized_users = categorize_users_for_sync(users_data)
-            
-            # Update sync state with comparison results
+
             update_sync_state(
                 new=len(categorized_users['new']),
                 changed=len(categorized_users['changed']),
                 unchanged=len(categorized_users['unchanged']),
                 comparison_complete=True
             )
-            
-            print(f"Comparison complete: {len(categorized_users['new'])} new, {len(categorized_users['changed'])} changed, {len(categorized_users['unchanged'])} unchanged")
-            
-            # Process only NEW and CHANGED users (skip unchanged for efficiency)
+
+            print(
+                f"Comparison complete: {len(categorized_users['new'])} new, "
+                f"{len(categorized_users['changed'])} changed, "
+                f"{len(categorized_users['unchanged'])} unchanged"
+            )
+
             users_to_process = categorized_users['new'] + categorized_users['changed']
-            
+
             for user_data in users_to_process:
                 try:
-                    # [*] PHASE 5: CRITICAL FIX - Clean email BEFORE validation
-                    # External API may send empty email ("" or null)
-                    # Generate default if missing BEFORE passing to serializer
                     if not user_data.get('email') or user_data.get('email') == '':
                         nip = user_data.get('nip', user_data.get('id', ''))
                         user_data['email'] = f"{nip}@external-system.local"
                         print(f"Email missing for user {user_data.get('id')}, generated: {user_data['email']}")
-                    
-                    # NOW validate external user data (with cleaned email)
+
                     serializer = api_serializer.ExternalUserDataSerializer(data=user_data)
                     if not serializer.is_valid():
                         sync_results['errors'].append({
                             'external_id': user_data.get('id'),
                             'errors': serializer.errors
                         })
-                        # Update failed count
+                        sync_results['failed'] = len(sync_results['errors'])
                         update_sync_state(
-                            failed=len(sync_results['errors']),
+                            failed=sync_results['failed'],
                             errors=sync_results['errors']
                         )
                         continue
-                    
+
                     validated_data = serializer.validated_data
-                    
-                    # Get or create organization unit
+
                     org_unit = None
                     if validated_data.get('unit_organisasi'):
                         org_unit_data = validated_data['unit_organisasi']
@@ -8752,8 +8833,7 @@ class SyncExternalUsersAPIView(APIView):
                                 'description': org_unit_data.get('description', '')
                             }
                         )
-                    
-                    # Get or create position
+
                     position = None
                     if validated_data.get('jabatan'):
                         position_data = validated_data['jabatan']
@@ -8764,37 +8844,30 @@ class SyncExternalUsersAPIView(APIView):
                                 'description': position_data.get('description', '')
                             }
                         )
-                    
-                    # Check if user exists by external_id first, then by email
+
                     user = None
                     user_created = False
-                    
+
                     try:
-                        # First try to find by external_id
                         user = User.objects.get(external_id=validated_data['id'])
                         print(f"Found user by external_id: {user.email}")
-                        
+
                     except User.DoesNotExist:
                         try:
-                            # If not found by external_id, try to find by email
                             user = User.objects.get(email=validated_data['email'])
                             print(f"Found user by email: {user.email}, updating with external_id: {validated_data['id']}")
-                            
-                            # Update the existing user with external_id
                             user.external_id = validated_data['id']
-                            
+
                         except User.DoesNotExist:
-                            # User doesn't exist at all, create new one
                             print(f"Creating new user: {validated_data['email']}")
-                            
-                            # Generate unique username from email
+
                             email_username = validated_data['email'].split('@')[0]
                             username = email_username
                             counter = 1
                             while User.objects.filter(username=username).exists():
                                 username = f"{email_username}_{counter}"
                                 counter += 1
-                            
+
                             user = User.objects.create(
                                 username=username,
                                 email=validated_data['email'],
@@ -8809,15 +8882,13 @@ class SyncExternalUsersAPIView(APIView):
                                 external_created_at=self.parse_datetime_safe(validated_data.get('created_at')),
                                 external_updated_at=self.parse_datetime_safe(validated_data.get('updated_at')),
                                 last_sync_date=timezone.now(),
-                                is_active=validated_data.get('status', '').upper() == 'ACTIVE',
-                                role='student'  # Default role for external users
+                                is_active=self._is_active_external_status(validated_data.get('status')),
+                                role='student'
                             )
                             user_created = True
                             sync_results['created'] += 1
-                            # Update created count in real-time
                             update_sync_state(created=sync_results['created'])
-                    
-                    # Update existing user (whether found by external_id or email)
+
                     if not user_created:
                         user.full_name = validated_data['name']
                         user.email = validated_data['email']
@@ -8830,14 +8901,12 @@ class SyncExternalUsersAPIView(APIView):
                         user.external_created_at = self.parse_datetime_safe(validated_data.get('created_at'))
                         user.external_updated_at = self.parse_datetime_safe(validated_data.get('updated_at'))
                         user.last_sync_date = timezone.now()
-                        user.is_active = validated_data.get('status', '').upper() == 'ACTIVE'
+                        user.is_active = self._is_active_external_status(validated_data.get('status'))
                         user.save()
-                        
+
                         sync_results['updated'] += 1
-                        # Update updated count in real-time
                         update_sync_state(updated=sync_results['updated'])
-                    
-                    # Update or create profile
+
                     profile, created = Profile.objects.get_or_create(
                         user=user,
                         defaults={
@@ -8845,41 +8914,50 @@ class SyncExternalUsersAPIView(APIView):
                             'position': position,
                         }
                     )
-                    
+
                     if not created:
                         profile.organization_unit = org_unit
                         profile.position = position
                         profile.save()
-                        
+
                 except Exception as e:
                     error_msg = str(e)
-                    print(f"Error processing user {user_data.get('id', 'unknown')} ({user_data.get('email', 'no-email')}): {error_msg}")
+                    print(
+                        f"Error processing user {user_data.get('id', 'unknown')} "
+                        f"({user_data.get('email', 'no-email')}): {error_msg}"
+                    )
                     sync_results['errors'].append({
                         'external_id': user_data.get('id'),
                         'name': user_data.get('name', 'Unknown'),
                         'email': user_data.get('email', 'Unknown'),
                         'error': error_msg
                     })
-                    # Update failed count and errors in real-time
+                    sync_results['failed'] = len(sync_results['errors'])
                     update_sync_state(
-                        failed=len(sync_results['errors']),
+                        failed=sync_results['failed'],
                         errors=sync_results['errors']
                     )
                     continue
-            
-            # Log final results
-            print(f"Sync completed: {sync_results['created']} created, {sync_results['updated']} updated, {len(sync_results['errors'])} errors")
-            
-            # Record successful completion in database
+
+            print(
+                f"Sync completed: {sync_results['created']} created, "
+                f"{sync_results['updated']} updated, "
+                f"{len(sync_results['errors'])} errors"
+            )
+
             sync_record.complete_sync(
                 created=sync_results['created'],
                 updated=sync_results['updated'],
-                failed=len(sync_results['errors']),
+                failed=sync_results['failed'],
                 total=len(users_data),
-                notes=f"Successfully synced {len(users_data)} users from external API. {len(categorized_users['new'])} new, {len(categorized_users['changed'])} changed, {len(categorized_users['unchanged'])} unchanged."
+                notes=(
+                    f"Successfully synced {len(users_data)} users from external API. "
+                    f"{len(categorized_users['new'])} new, "
+                    f"{len(categorized_users['changed'])} changed, "
+                    f"{len(categorized_users['unchanged'])} unchanged."
+                )
             )
-            
-            # Mark sync as complete with timestamp
+
             now_timestamp = datetime.now().isoformat()
             update_sync_state(
                 is_syncing=False,
@@ -8887,19 +8965,17 @@ class SyncExternalUsersAPIView(APIView):
                 completion_timestamp=now_timestamp,
                 last_successful_sync_timestamp=now_timestamp
             )
-            
+
             return Response({
                 'message': 'User synchronization completed successfully',
                 'results': sync_results,
                 'sync_record_id': sync_record.id,
                 'last_sync_time': sync_record.completed_at
             }, status=status.HTTP_200_OK)
-            
+
         except Exception as e:
             print(f"Unexpected error in sync: {str(e)}")
-            # Record failure in database
             sync_record.fail_sync(f'Synchronization failed: {str(e)}')
-            # Mark sync as failed with timestamp
             update_sync_state(
                 is_syncing=False,
                 status='error',
