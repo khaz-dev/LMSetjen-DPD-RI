@@ -205,7 +205,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR.parent, "frontend", "src", "assets"),
+]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
@@ -249,7 +252,10 @@ JAZZMIN_SETTINGS  = {
     "site_title": "LMSetjen DPD RI Admin",
     "site_header": "LMSetjen DPD RI Admin",
     "site_brand": "LMSetjen DPD RI Admin",
-    "site_logo": "/src/assets/logo/logo-32.png",
+    "site_logo": "logo/logo-32.png",
+    "site_icon": "logo/logo-32.png",
+    "login_logo": "logo/logo-192.png",
+    "site_logo_classes": "img-fluid",
     "welcome_sign": "Welcome to the LMSetjen DPD RI Admin",
     "copyright": "LMSetjen DPD RI Admin Ltd",
     "show_ui_builder": True,
