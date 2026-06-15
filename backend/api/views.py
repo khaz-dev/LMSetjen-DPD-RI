@@ -8725,6 +8725,9 @@ class SyncExternalUsersAPIView(APIView):
                     "EXTERNAL_API_VERIFY_SSL=False only for temporary troubleshooting."
                 )
                 error_msg = f"External API SSL error: {str(ssl_error)}. {ssl_hint}"
+                print(f"❌ SSL ERROR: {error_msg}")
+                print(f"   Verify Mode: {verify_mode}")
+                print(f"   API URL: {external_api_url}")
                 sync_record.fail_sync(error_msg)
                 update_sync_state(
                     is_syncing=False,
@@ -8734,6 +8737,7 @@ class SyncExternalUsersAPIView(APIView):
                 return Response({'error': error_msg}, status=status.HTTP_502_BAD_GATEWAY)
             except requests.exceptions.RequestException as req_error:
                 upstream_error_msg = f"External API request failed: {str(req_error)}"
+                print(f"❌ REQUEST ERROR: {upstream_error_msg}")
                 sync_record.fail_sync(upstream_error_msg)
                 update_sync_state(
                     is_syncing=False,
@@ -8747,6 +8751,7 @@ class SyncExternalUsersAPIView(APIView):
             except ValueError:
                 raw_preview = (response.text or '')[:300]
                 error_msg = f"External API returned non-JSON response (HTTP {response.status_code}). Preview: {raw_preview}"
+                print(f"❌ JSON PARSE ERROR: {error_msg}")
                 sync_record.fail_sync(error_msg)
                 update_sync_state(
                     is_syncing=False,

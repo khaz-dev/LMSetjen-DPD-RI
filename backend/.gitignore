@@ -132,6 +132,8 @@ verify_*.py
 *.key
 *.crt
 secrets.json
+# Exception: public CA certificates for external API integrations are safe to commit
+!ca-certificates/**/*.crt
 
 # ===================================
 # PRODUCTION

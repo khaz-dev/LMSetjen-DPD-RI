@@ -21,13 +21,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     ffmpeg \
     libmagic1 \
-    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app user
 RUN useradd -m -u 1000 appuser && \
     mkdir -p /app && \
     chown -R appuser:appuser /app
+
+# Add custom CA certificate for CMB DPD API (DigiCert)
+# This ensures Python's requests library can verify the SSL certificate for cmb.dpd.go.id
+RUN mkdir -p /usr/local/share/ca-certificates/custom
+COPY ca-certificates/cmb-dpd.crt /usr/local/share/ca-certificates/custom/
+RUN update-ca-certificates
 
 WORKDIR /app
 
