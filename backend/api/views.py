@@ -8584,6 +8584,19 @@ class SyncExternalUsersAPIView(APIView):
             headers['X-API-Token'] = token_value
         return headers
 
+    def _build_external_api_verify(self):
+        """Build TLS verification mode for requests (bool or CA bundle path)."""
+        verify_ssl = getattr(settings, 'EXTERNAL_API_VERIFY_SSL', True)
+        ca_bundle = str(getattr(settings, 'EXTERNAL_API_CA_BUNDLE', '') or '').strip()
+
+        if not verify_ssl:
+            return False
+
+        if ca_bundle:
+            return ca_bundle
+
+        return True
+
     def _normalize_nested_entity(self, value, fallback_key='name'):
         """Normalize nested org/position payload into expected dict shape."""
         if isinstance(value, dict):
@@ -8688,6 +8701,7 @@ class SyncExternalUsersAPIView(APIView):
         try:
             external_api_url = self._build_external_api_url()
             headers = self._build_external_api_headers()
+            verify_mode = self._build_external_api_verify()
 
             print(f"Attempting to fetch data from: {external_api_url}")
 
@@ -8700,9 +8714,24 @@ class SyncExternalUsersAPIView(APIView):
                 response = requests.get(
                     full_api_url,
                     headers=headers,
+                    verify=verify_mode,
                     timeout=getattr(settings, 'EXTERNAL_API_TIMEOUT', 30)
                 )
                 print(f"Response status code: {response.status_code}")
+            except requests.exceptions.SSLError as ssl_error:
+                ssl_hint = (
+                    "TLS certificate verification failed when calling external API. "
+                    "Configure EXTERNAL_API_CA_BUNDLE with trusted CA chain or set "
+                    "EXTERNAL_API_VERIFY_SSL=False only for temporary troubleshooting."
+                )
+                error_msg = f"External API SSL error: {str(ssl_error)}. {ssl_hint}"
+                sync_record.fail_sync(error_msg)
+                update_sync_state(
+                    is_syncing=False,
+                    status='error',
+                    completion_timestamp=datetime.now().isoformat()
+                )
+                return Response({'error': error_msg}, status=status.HTTP_502_BAD_GATEWAY)
             except requests.exceptions.RequestException as req_error:
                 upstream_error_msg = f"External API request failed: {str(req_error)}"
                 sync_record.fail_sync(upstream_error_msg)

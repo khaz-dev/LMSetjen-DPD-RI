@@ -14,12 +14,14 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     gcc \
     g++ \
     libpq-dev \
     postgresql-client \
     ffmpeg \
     libmagic1 \
+    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app user
