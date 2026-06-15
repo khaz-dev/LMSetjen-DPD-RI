@@ -31,7 +31,7 @@ RUN useradd -m -u 1000 appuser && \
 # Add custom CA certificate for CMB DPD API (DigiCert)
 # This ensures Python's requests library can verify the SSL certificate for cmb.dpd.go.id
 RUN mkdir -p /usr/local/share/ca-certificates/custom
-COPY ca-certificates/cmb-dpd.crt /usr/local/share/ca-certificates/custom/
+COPY backend/ca-certificates/cmb-dpd.crt /usr/local/share/ca-certificates/custom/
 RUN update-ca-certificates
 
 WORKDIR /app
