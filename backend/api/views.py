@@ -50,6 +50,10 @@ import requests
 from datetime import datetime, timedelta
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
+import base64
+import hashlib
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
 
 # Updates
 from django.core.files.storage import default_storage
@@ -8599,6 +8603,74 @@ class SyncExternalUsersAPIView(APIView):
 
         return token
 
+    def _is_encrypted_external_api_token(self, token_value):
+        token = self._normalize_external_api_token(token_value)
+        return token.startswith('v1.aes:')
+
+    def _encrypt_external_api_token(self, token_value, salt_value=None):
+        """Encrypt token using CMB-compatible scheme: v1.aes:base64(iv+ciphertext)."""
+        token = self._normalize_external_api_token(token_value)
+        if not token:
+            return ''
+
+        # Pass-through if already encrypted.
+        if token.startswith('v1.aes:'):
+            return token
+
+        salt = str(salt_value if salt_value is not None else '').strip()
+        if not salt:
+            salt = token
+
+        # Key derivation matches provided frontend logic:
+        # SHA-256( token + salt ) => 32-byte AES-256 key
+        key = hashlib.sha256((token + salt).encode('utf-8')).digest()
+
+        iv = os.urandom(16)
+        padder = padding.PKCS7(128).padder()
+        padded_data = padder.update(token.encode('utf-8')) + padder.finalize()
+
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+        encryptor = cipher.encryptor()
+        ciphertext = encryptor.update(padded_data) + encryptor.finalize()
+
+        payload = base64.b64encode(iv + ciphertext).decode('utf-8')
+        return f"v1.aes:{payload}"
+
+    def _build_external_api_encrypted_candidates(self, raw_token):
+        """Build encrypted variants for a raw token using supported salts."""
+        token = self._normalize_external_api_token(raw_token)
+        if not token or token.startswith('v1.aes:'):
+            return []
+
+        if not getattr(settings, 'EXTERNAL_API_TOKEN_ENABLE_ENCRYPTED_CANDIDATES', True):
+            return []
+
+        candidates = []
+        seen = set()
+
+        salt_candidates = []
+
+        # Primary mode from provided implementation example: salt=token.
+        if getattr(settings, 'EXTERNAL_API_TOKEN_ENCRYPT_WITH_SELF_SALT', True):
+            salt_candidates.append(token)
+
+        # Optional fixed salt mode for compatibility with older integrations.
+        configured_salt = str(getattr(settings, 'EXTERNAL_API_TOKEN_ENCRYPTION_SALT', '') or '').strip()
+        if configured_salt:
+            salt_candidates.append(configured_salt)
+
+        # Final compatibility fallback from shared snippet.
+        if not salt_candidates:
+            salt_candidates.append('nusa-dpd-salt')
+
+        for salt in salt_candidates:
+            encrypted = self._encrypt_external_api_token(token, salt)
+            if encrypted and encrypted not in seen:
+                seen.add(encrypted)
+                candidates.append(encrypted)
+
+        return candidates
+
     def _build_external_api_token_candidates(self):
         """Build ordered token candidates to support primary/fallback tokens."""
         primary = self._normalize_external_api_token(getattr(settings, 'EXTERNAL_API_TOKEN', ''))
@@ -8619,6 +8691,16 @@ class SyncExternalUsersAPIView(APIView):
                 if token and token not in seen:
                     seen.add(token)
                     candidates.append(token)
+
+        # Auto-add encrypted token candidates for each raw token.
+        encrypted_candidates = []
+        for token in list(candidates):
+            for encrypted in self._build_external_api_encrypted_candidates(token):
+                if encrypted and encrypted not in seen:
+                    seen.add(encrypted)
+                    encrypted_candidates.append(encrypted)
+
+        candidates.extend(encrypted_candidates)
 
         return candidates
 
