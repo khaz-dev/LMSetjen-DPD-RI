@@ -200,7 +200,7 @@ frontend/
 3. **frontend** (React dev server)
    - Build: `./frontend/Dockerfile.dev`
    - Container: `lms_frontend`
-   - Port: `5174:5173`
+   - Port: `5174:5174`
    - Server: Vite dev server with HMR support
 
 **Networks**: `lms_network` (bridge driver)
@@ -369,7 +369,7 @@ DB_BACKUP_FILE=${BACKUP_DIR}/lmsdb_backup_${BACKUP_TIMESTAMP}.sql
 **Development Image** (`Dockerfile.dev`)
 - Node 20-alpine
 - Vite dev server
-- Port 5173 (exposed as 5174)
+- Port 5174
 - WebSocket HMR support
 - No health check (dev server)
 
@@ -655,7 +655,7 @@ DB_BACKUP_FILE=${BACKUP_DIR}/lmsdb_backup_${BACKUP_TIMESTAMP}.sql
 - **Backend Subdomain**: `lms-be.khaz.app`
 
 ### Port Mapping
-- Frontend: 5174 (Vite dev server on 5173)
+- Frontend: 5174 (Vite dev server)
 - Backend: 8001 (Gunicorn)
 - Redis: 6381
 - PostgreSQL: 5432 (on host)

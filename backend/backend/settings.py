@@ -347,6 +347,10 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "https://lms.dpd.go.id",
 ])
 
+# Keep local/dev auth flows working with the configured frontend URL.
+if FRONTEND_SITE_URL.startswith('http') and FRONTEND_SITE_URL not in CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS.append(FRONTEND_SITE_URL)
+
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -384,6 +388,9 @@ CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
     'https://lms.khaz.app',
     'https://lms.dpd.go.id',
 ])
+
+if FRONTEND_SITE_URL.startswith('http') and FRONTEND_SITE_URL not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append(FRONTEND_SITE_URL)
 
 # Cache Configuration - Redis for production, local memory for development
 try:

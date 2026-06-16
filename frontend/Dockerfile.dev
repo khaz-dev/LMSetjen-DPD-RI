@@ -17,7 +17,7 @@ RUN npm install --legacy-peer-deps
 COPY frontend .
 
 # Expose Vite dev server port
-EXPOSE 5173
+EXPOSE 5174
 
 # Note: Removed health check - frontend is dev server (always ready)
 # Backend has health check which is what matters

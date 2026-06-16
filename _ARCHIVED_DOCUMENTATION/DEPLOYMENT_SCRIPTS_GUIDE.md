@@ -662,7 +662,7 @@ chmod +x deploy-on-staging.sh
 │                       │ (Optional: SSH to another server)         │
 │                       ▼                                           │
 │  ┌──────────────────────────────────────────────────────────┐    │
-│  │ Docker: Development Instance (port 5173/8002)            │    │
+│  │ Docker: Development Instance (port 5174/8002)            │    │
 │  │ • Separate database                                      │    │
 │  │ • Separate Redis cache                                   │    │
 │  │ • Test environment for code changes                      │    │

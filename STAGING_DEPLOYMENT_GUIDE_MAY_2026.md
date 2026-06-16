@@ -175,7 +175,7 @@ docker-compose ps
 # lms_redis       Up 2 minutes        
 # lms_postgres    Up 2 minutes        5432/tcp
 # lms_backend     Up 1 minute         0.0.0.0:8001->8001/tcp
-# lms_frontend    Up 1 minute         0.0.0.0:5174->5173/tcp
+# lms_frontend    Up 1 minute         0.0.0.0:5174->5174/tcp
 ```
 
 ### Check Logs (On Staging Server)

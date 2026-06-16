@@ -6,7 +6,7 @@ const runtimeMode = (process.env.MODE || 'development').toLowerCase()
 const isLiveDeployment = runtimeMode === 'staging' || runtimeMode === 'production'
 
 function resolveHmrConfig() {
-  const vitePort = Number(process.env.VITE_PORT || 5173)
+  const vitePort = Number(process.env.VITE_PORT || 5174)
 
   if (isLiveDeployment) {
     return false
@@ -112,7 +112,7 @@ export default defineConfig({
   ],
   server: {
     host: '0.0.0.0',  // Listen on all interfaces (IPv4 + IPv6)
-    port: Number(process.env.VITE_PORT || 5173),
+    port: Number(process.env.VITE_PORT || 5174),
     // Disable HMR on live deployments; keep localhost websocket HMR only for local development.
     hmr: resolveHmrConfig(),
     // Use native file system watching instead of polling
