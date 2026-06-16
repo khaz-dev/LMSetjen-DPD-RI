@@ -637,7 +637,7 @@ if DEBUG and sys.platform == 'win32':
 # External API Configuration
 EXTERNAL_API_BASE_URL = env('EXTERNAL_API_BASE_URL', default='https://cmb.dpd.go.id')
 EXTERNAL_API_USERS_ENDPOINT = env('EXTERNAL_API_USERS_ENDPOINT', default='/api/pegawai')
-EXTERNAL_API_TOKEN = env('EXTERNAL_API_TOKEN', default='set-me-in-env-file')
+EXTERNAL_API_TOKEN = env('EXTERNAL_API_TOKEN', default='')
 EXTERNAL_API_TOKEN_HEADER = env('EXTERNAL_API_TOKEN_HEADER', default='X-API-TOKEN')
 EXTERNAL_API_TIMEOUT = env.int('EXTERNAL_API_TIMEOUT', default=30)
 EXTERNAL_API_QUERY_ALL = env.bool('EXTERNAL_API_QUERY_ALL', default=False)

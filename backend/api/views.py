@@ -8572,10 +8572,60 @@ class SyncExternalUsersAPIView(APIView):
         endpoint = f"/{str(endpoint).lstrip('/')}"
         return f"{base_url}{endpoint}"
 
-    def _build_external_api_headers(self):
+    def _normalize_external_api_token(self, token_value):
+        """Normalize token from env: trims quotes and optional header prefix."""
+        token = str(token_value or '').strip()
+        if not token:
+            return ''
+
+        if len(token) >= 2 and token[0] == token[-1] and token[0] in {'"', "'"}:
+            token = token[1:-1].strip()
+
+        # Accept pasted formats like: "X-API-TOKEN: <token>" or "Authorization: Bearer <token>"
+        header_match = re.match(r'^\s*(x-api-token|authorization)\s*[:=]\s*(.+)$', token, flags=re.IGNORECASE)
+        if header_match:
+            token = header_match.group(2).strip()
+
+        if token.lower().startswith('bearer '):
+            token = token[7:].strip()
+
+        if len(token) >= 2 and token[0] == token[-1] and token[0] in {'"', "'"}:
+            token = token[1:-1].strip()
+
+        # Treat placeholders as unset values.
+        placeholders = {'set-me-in-env-file', 'your-api-token-here', '<token>', 'changeme'}
+        if token.lower() in placeholders:
+            return ''
+
+        return token
+
+    def _build_external_api_token_candidates(self):
+        """Build ordered token candidates to support primary/fallback tokens."""
+        primary = self._normalize_external_api_token(getattr(settings, 'EXTERNAL_API_TOKEN', ''))
+        fallback = self._normalize_external_api_token(getattr(settings, 'EXTERNAL_API_TOKEN_FALLBACK', ''))
+        raw_candidates = str(getattr(settings, 'EXTERNAL_API_TOKEN_CANDIDATES', '') or '').strip()
+
+        candidates = []
+        seen = set()
+
+        for token in (primary, fallback):
+            if token and token not in seen:
+                seen.add(token)
+                candidates.append(token)
+
+        if raw_candidates:
+            for part in re.split(r'\n|\|\|', raw_candidates):
+                token = self._normalize_external_api_token(part)
+                if token and token not in seen:
+                    seen.add(token)
+                    candidates.append(token)
+
+        return candidates
+
+    def _build_external_api_headers(self, token_value):
         """Build authentication headers for external API request."""
         token_header = getattr(settings, 'EXTERNAL_API_TOKEN_HEADER', 'X-API-TOKEN')
-        token_value = getattr(settings, 'EXTERNAL_API_TOKEN', '')
+        token_value = self._normalize_external_api_token(token_value)
 
         headers = {'Accept': 'application/json'}
         if token_value:
@@ -8700,8 +8750,21 @@ class SyncExternalUsersAPIView(APIView):
 
         try:
             external_api_url = self._build_external_api_url()
-            headers = self._build_external_api_headers()
+            token_candidates = self._build_external_api_token_candidates()
             verify_mode = self._build_external_api_verify()
+
+            if not token_candidates:
+                config_error = (
+                    "External API token is missing or invalid placeholder. "
+                    "Set EXTERNAL_API_TOKEN in .env/.env.staging."
+                )
+                sync_record.fail_sync(config_error)
+                update_sync_state(
+                    is_syncing=False,
+                    status='error',
+                    completion_timestamp=datetime.now().isoformat()
+                )
+                return Response({'error': config_error}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             print(f"Attempting to fetch data from: {external_api_url}")
 
@@ -8711,13 +8774,23 @@ class SyncExternalUsersAPIView(APIView):
                 full_api_url = f"{external_api_url}{separator}all=1"
 
             try:
-                response = requests.get(
-                    full_api_url,
-                    headers=headers,
-                    verify=verify_mode,
-                    timeout=getattr(settings, 'EXTERNAL_API_TIMEOUT', 30)
-                )
-                print(f"Response status code: {response.status_code}")
+                response = None
+                for idx, token in enumerate(token_candidates):
+                    headers = self._build_external_api_headers(token)
+                    response = requests.get(
+                        full_api_url,
+                        headers=headers,
+                        verify=verify_mode,
+                        timeout=getattr(settings, 'EXTERNAL_API_TIMEOUT', 30)
+                    )
+                    print(f"Response status code: {response.status_code} (token candidate {idx + 1}/{len(token_candidates)})")
+
+                    # Try next token candidate for auth failures only.
+                    if response.status_code in {401, 403} and idx < len(token_candidates) - 1:
+                        print(f"Auth failed with token candidate {idx + 1}, trying fallback token...")
+                        continue
+
+                    break
             except requests.exceptions.SSLError as ssl_error:
                 ssl_hint = (
                     "TLS certificate verification failed when calling external API. "
@@ -8773,6 +8846,12 @@ class SyncExternalUsersAPIView(APIView):
                     status='error',
                     completion_timestamp=datetime.now().isoformat()
                 )
+                if response.status_code in {401, 403}:
+                    auth_hint = (
+                        " External API authentication failed. Verify EXTERNAL_API_TOKEN value "
+                        "and confirm server IP whitelist with upstream provider."
+                    )
+                    return Response({'error': error_msg + auth_hint}, status=status.HTTP_403_FORBIDDEN)
                 return Response({'error': error_msg}, status=status.HTTP_502_BAD_GATEWAY)
 
             success, upstream_message, raw_users_data = self._extract_users_payload(external_data)
