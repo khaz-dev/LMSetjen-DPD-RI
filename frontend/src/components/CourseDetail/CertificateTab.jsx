@@ -29,8 +29,6 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
             setQuizResults(response.data.quiz_results || []);
             
             if (response.data.certificate) {
-                console.log('✨ Certificate from API:', response.data.certificate); // DEBUG
-                console.log('✨ PDF File URL:', response.data.certificate.pdf_file_url); // DEBUG
                 setCertificate(response.data.certificate);
                 // ✨ PHASE 4.146: Notify parent that existing certificate was found
                 if (onCertificateGenerated) {
@@ -123,8 +121,6 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                         }
                     });
 
-                    console.log('✨ Certificate image saved successfully:', response.data);
-                    console.log(`✨ Certificate filename: ${courseId}_${userId}.png`);
                     
                     // ✨ PHASE 4.225: Refresh certificate data to show the image
                     const certResponse = await apiInstance.get(

@@ -2667,63 +2667,6 @@ function CourseDetail() {
     }, [isQuizActive]);
 
     // ✨ PHASE 4.103: Block LEFT/RIGHT arrow keys on the entire course page
-    // ✨ PHASE 11.180 FIX: COMPLETELY DISABLED - Arrow key blocking now handled by video player components only
-    // Removing the global document-level listeners that were interfering with video player keyboard navigation
-    // 
-    // useEffect(() => {
-    //     const lastKeyNotificationTimeRef = useRef(0);
-    //     const NOTIFICATION_THROTTLE_MS = 3000;
-    //
-    //     const showArrowKeyNotification = (arrowType) => {
-    //         const now = Date.now();
-    //         if (now - lastKeyNotificationTimeRef.current > NOTIFICATION_THROTTLE_MS) {
-    //             lastKeyNotificationTimeRef.current = now;
-    //             const titles = {
-    //                 'ArrowLeft': 'Tombol Panah Kiri Dinonaktifkan',
-    //                 'ArrowRight': 'Tombol Panah Kanan Dinonaktifkan'
-    //             };
-    //             Toast().fire({
-    //                 icon: "info",
-    //                 title: titles[arrowType] || "Tombol Panah Dinonaktifkan",
-    //                 text: "Navigasi tombol panah tidak tersedia di halaman ini.",
-    //                 timer: 2000,
-    //                 toast: true,
-    //                 position: "top-end"
-    //             });
-    //         }
-    //     };
-    //
-    //     const handleArrowKeyBlock = (e) => {
-    //         if (e.key === 'ArrowLeft') {
-    //             e.preventDefault();
-    //             e.stopPropagation();
-    //             showArrowKeyNotification('ArrowLeft');
-    //             return false;
-    //         }
-    //         if (e.key === 'ArrowRight') {
-    //             e.preventDefault();
-    //             e.stopPropagation();
-    //             showArrowKeyNotification('ArrowRight');
-    //             return false;
-    //         }
-    //     };
-    //
-    //     const handleVideoArrowKeyBlocked = (e) => {
-    //         if (e.detail && (e.detail.key === 'ArrowLeft' || e.detail.key === 'ArrowRight')) {
-    //             showArrowKeyNotification(e.detail.key);
-    //         }
-    //     };
-    //
-    //     document.addEventListener('keydown', handleArrowKeyBlock, true);
-    //     window.addEventListener('keydown', handleArrowKeyBlock, true);
-    //     document.addEventListener('arrowKeyBlocked', handleVideoArrowKeyBlocked, true);
-    //
-    //     return () => {
-    //         document.removeEventListener('keydown', handleArrowKeyBlock, true);
-    //         window.removeEventListener('keydown', handleArrowKeyBlock, true);
-    //         document.removeEventListener('arrowKeyBlocked', handleVideoArrowKeyBlocked, true);
-    //     };
-    // }, []);
 
     const handleColorChange = (color) => {
         // Validate color format
