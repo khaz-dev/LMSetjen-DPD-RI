@@ -54,6 +54,10 @@ FROM base as production
 COPY --from=dependencies /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=dependencies /usr/local/bin /usr/local/bin
 
+# Append CMB DPD certificate to certifi's CA bundle so Python requests library trusts it.
+# Python's requests uses certifi's bundle, not the system CA store.
+RUN python -c "import certifi; bundle=certifi.where(); open(bundle,'ab').write(open('/usr/local/share/ca-certificates/custom/cmb-dpd.crt','rb').read()); print(f'Appended CMB cert to certifi bundle: {bundle}')"
+
 # Copy application code
 COPY --chown=appuser:appuser . .
 
