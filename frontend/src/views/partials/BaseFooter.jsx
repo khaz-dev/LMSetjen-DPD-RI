@@ -2,6 +2,7 @@ import React, { memo } from "react"
 import { Link } from "react-router-dom"
 import Toast from "../plugin/Toast"
 import "./BaseFooter.css"
+import { APP_VERSION } from "../../utils/version";
 
 function BaseFooter() {
   const currentYear = new Date().getFullYear();
@@ -20,7 +21,8 @@ function BaseFooter() {
     brand: {
       name: "LMSetjen DPD RI",
       description: "Platform e-learning berbasis LMS yang dikembangkan oleh BPSDM OKK untuk mendukung pelatihan digital pegawai dan anggota Setjen DPD RI.",
-      copyright: `© ${currentYear} BPSDM All rights reserved.`
+      copyright: `© ${currentYear} BPSDM | OKK | Setjen DPD RI`,
+      version: `v${APP_VERSION}`
     },
     contact: {
       email: "sdm@dpd.go.id",
@@ -120,7 +122,7 @@ function BaseFooter() {
         <div className="row align-items-center pt-4 footer-bottom">
           {/* Copyright */}
           <div className="col-md-6 col-12 text-center text-md-start">
-            <span className="footer-copyright">{config.brand.copyright}</span>
+            <span className="footer-copyright">{config.brand.copyright} {config.brand.version}</span>
           </div>
           
           {/* Legal Links */}

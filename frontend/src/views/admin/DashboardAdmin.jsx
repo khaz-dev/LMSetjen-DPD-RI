@@ -4,6 +4,7 @@ import Footer from "../partials/Footer";
 import apiInstance from "../../utils/axios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
+import { APP_VERSION } from "../../utils/version";
 
 // Analytics Components
 import ContentGapWidget from "../../components/Analytics/ContentGapWidget";
@@ -115,6 +116,7 @@ function DashboardAdmin() {
         // Server information
         server_name: "Nama Server",
         operating_system: "Sistem Operasi",
+        app_version: "Versi Aplikasi",
         python_version: "Versi Python",
         django_version: "Versi Django",
         database_engine: "Engine Database",
@@ -630,6 +632,19 @@ function DashboardAdmin() {
                         {/* System Health Tab */}
                         {activeTab === "system" && systemHealth && (
                             <div className="tab-pane fade show active">
+                                {/* App Version Banner */}
+                                <div className="alert alert-primary d-flex align-items-center gap-2 mb-3" role="alert">
+                                    <i className="fas fa-code-branch"></i>
+                                    <span>
+                                        <strong>Versi Aplikasi:</strong>{" "}
+                                        <span className="badge bg-primary ms-1">v{APP_VERSION}</span>
+                                        {systemHealth.server_information?.app_version && systemHealth.server_information.app_version !== APP_VERSION && (
+                                            <span className="badge bg-warning ms-2 text-dark">
+                                                Backend: v{systemHealth.server_information.app_version}
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
                                 <div className="row">
                                     <div className="col-lg-8 mb-4">
                                         <div className="system-health-panel">

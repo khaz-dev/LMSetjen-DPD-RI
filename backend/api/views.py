@@ -42,6 +42,7 @@ from rest_framework.pagination import PageNumberPagination
 # Import custom permissions
 from api.permissions import IsAdminUser
 from api.serializer import MyTokenObtainPairSerializer
+from api.version import APP_VERSION, APP_NAME
 
 
 import random
@@ -213,7 +214,8 @@ class HealthCheckAPIView(APIView):
         """Simple health check endpoint for monitoring"""
         return Response({
             'status': 'healthy',
-            'service': 'LMS Backend API',
+            'service': APP_NAME,
+            'version': APP_VERSION,
             'timestamp': timezone.now().isoformat()
         }, status=status.HTTP_200_OK)
 
@@ -7837,6 +7839,7 @@ class AdminSystemHealthAPIView(generics.RetrieveAPIView):
             
             # Server information
             server_info = {
+                'app_version': APP_VERSION,
                 'django_version': f"{django.VERSION[0]}.{django.VERSION[1]}.{django.VERSION[2]}",
                 'python_version': f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
                 'debug_mode': settings.DEBUG,
