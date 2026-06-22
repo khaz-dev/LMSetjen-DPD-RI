@@ -289,7 +289,6 @@ TROUBLESHOOTING-*.md
 # Old deployment guides (keep only main guide)
 DEPLOY_*.sh
 DEPLOY_*.ps1
-deploy-*.sh
 deploy-*.ps1
 !deploy-to-production.sh
 
