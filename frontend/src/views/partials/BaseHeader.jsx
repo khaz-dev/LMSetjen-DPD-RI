@@ -32,6 +32,7 @@ function BaseHeader() {
     const [showSearchHistory, setShowSearchHistory] = useState(false);  // ✨ PHASE 3: Show history dropdown
     const [trendingSearches, setTrendingSearches] = useState([]);  // ✨ PHASE 3: Trending searches
     const [showTrendingSearches, setShowTrendingSearches] = useState(false);  // ✨ PHASE 3: Show trending dropdown
+    const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
     
     const navigate = useNavigate();
     const location = useLocation();
@@ -71,6 +72,11 @@ function BaseHeader() {
         const timer = setTimeout(() => setTypingComplete(true), 4000);
         return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+        // Reset avatar error state when profile image changes.
+        setAvatarLoadFailed(false);
+    }, [profile?.image]);
 
     // ✨ PHASE 3: Load search history from localStorage and fetch trending searches on component mount
     useEffect(() => {
@@ -363,7 +369,7 @@ function BaseHeader() {
     // ✨ Shows avatar image from ProfileContext or fallback to initials
     const renderAdminAvatarInNav = () => {
         // Show avatar image from profile context if available
-        if (profile?.image) {
+        if (profile?.image && !avatarLoadFailed) {
             return (
                 <div className="nav-avatar-wrapper">
                     <img
@@ -371,6 +377,7 @@ function BaseHeader() {
                         className="nav-avatar-image"
                         alt={`${profile?.full_name || "Admin"} avatar`}
                         title={profile?.full_name || "Profil Admin"}
+                        onError={() => setAvatarLoadFailed(true)}
                     />
                 </div>
             );
@@ -398,7 +405,7 @@ function BaseHeader() {
     // ✨ PHASE 11.2: Render profile avatar from ProfileContext (updated when user changes profile picture)
     const renderProfileAvatarInNav = () => {
         // Show avatar image from profile context if available
-        if (profile?.image) {
+        if (profile?.image && !avatarLoadFailed) {
             return (
                 <div className="nav-avatar-wrapper">
                     <img
@@ -406,6 +413,7 @@ function BaseHeader() {
                         className="nav-avatar-image"
                         alt={`${profile?.full_name || "Pengguna"} avatar`}
                         title={profile?.full_name || "Profil Saya"}
+                        onError={() => setAvatarLoadFailed(true)}
                     />
                 </div>
             );
@@ -432,7 +440,7 @@ function BaseHeader() {
     // ✨ PHASE 11.2: Render instructor avatar - same as student, from ProfileContext
     const renderInstructorAvatarInNav = () => {
         // Show avatar image from profile context if available
-        if (profile?.image) {
+        if (profile?.image && !avatarLoadFailed) {
             return (
                 <div className="nav-avatar-wrapper">
                     <img
@@ -440,6 +448,7 @@ function BaseHeader() {
                         className="nav-avatar-image"
                         alt={`${profile?.full_name || "Pengguna"} avatar`}
                         title={profile?.full_name || "Profil Saya"}
+                        onError={() => setAvatarLoadFailed(true)}
                     />
                 </div>
             );
