@@ -187,12 +187,59 @@ load_environment() {
     DB_PASSWORD="$(get_env_value "DB_PASSWORD")"
     DB_HOST="$(get_env_value "DB_HOST")"
     DB_PORT="$(get_env_value "DB_PORT")"
+    FRONTEND_SITE_URL="$(get_env_value "FRONTEND_SITE_URL")"
+    BACKEND_SITE_URL="$(get_env_value "BACKEND_SITE_URL")"
+    BACKEND_HOST_PORT="$(get_env_value "BACKEND_HOST_PORT")"
 
     : "${DB_NAME:?DB_NAME is required in .env}"
     : "${DB_USER:?DB_USER is required in .env}"
     : "${DB_PASSWORD:?DB_PASSWORD is required in .env}"
     : "${DB_HOST:?DB_HOST is required in .env}"
     DB_PORT="${DB_PORT:-5432}"
+    FRONTEND_SITE_URL="${FRONTEND_SITE_URL:-https://lms.dpd.go.id}"
+    BACKEND_SITE_URL="${BACKEND_SITE_URL:-https://lms-be.dpd.go.id}"
+    BACKEND_HOST_PORT="${BACKEND_HOST_PORT:-8001}"
+}
+
+verify_runtime_health() {
+    print_step "Verifying backend runtime health"
+
+    if ! docker ps --filter "name=lms_backend" --filter "status=running" --format '{{.Names}}' | grep -q '^lms_backend$'; then
+        print_error "Backend container is not running (lms_backend)"
+        print_info "Last 80 backend log lines:"
+        run_compose logs --tail=80 backend || true
+        return 1
+    fi
+
+    if ! run_compose exec -T backend python manage.py check > /dev/null 2>&1; then
+        print_error "Django system check failed inside backend container"
+        print_info "Last 80 backend log lines:"
+        run_compose logs --tail=80 backend || true
+        return 1
+    fi
+
+    local local_health_url="http://127.0.0.1:${BACKEND_HOST_PORT}/api/v1/health/"
+    if command -v curl > /dev/null 2>&1; then
+        if ! curl -fsS --max-time 15 "$local_health_url" > /dev/null; then
+            print_error "Local backend health check failed at: $local_health_url"
+            print_info "This commonly means reverse proxy upstream port or backend bind mismatch"
+            return 1
+        fi
+
+        local cors_header
+        cors_header="$(curl -sSI -H "Origin: ${FRONTEND_SITE_URL}" --max-time 20 "${BACKEND_SITE_URL}/api/v1/health/" | tr -d '\r' | awk -F': ' 'tolower($1)=="access-control-allow-origin" {print $2; exit}')"
+        if [ "$cors_header" != "$FRONTEND_SITE_URL" ]; then
+            print_error "CORS verification failed via public API domain"
+            print_info "Expected Access-Control-Allow-Origin: ${FRONTEND_SITE_URL}"
+            print_info "Actual Access-Control-Allow-Origin: ${cors_header:-<missing>}"
+            print_info "Check reverse proxy (Apache/Nginx) upstream and backend container health"
+            return 1
+        fi
+    else
+        print_warning "curl not found; skipped HTTP/CORS runtime verification"
+    fi
+
+    print_success "Backend runtime and CORS verification passed"
 }
 
 parse_arguments() {
@@ -514,6 +561,8 @@ main() {
             deploy_update_with_data_refresh || exit 1
             ;;
     esac
+
+    verify_runtime_health || exit 1
     
     show_deployment_info
     print_success "All deployment steps completed successfully"
