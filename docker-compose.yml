@@ -30,7 +30,7 @@ services:
       # Use the Docker network gateway to access host services
       DB_NAME: ${DB_NAME:-lmsdb}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-SimpleTest2026}
+      DB_PASSWORD: ${DB_PASSWORD:-Okkdpdri@2026}
       # Do not hardcode Docker gateway IP; this differs across hosts.
       DB_HOST: ${DB_HOST:-host.docker.internal}
       DB_PORT: ${DB_PORT:-5432}
