@@ -159,7 +159,7 @@ else:
             'USER': env('DB_USER', default='lms_user'),
             'PASSWORD': env('DB_PASSWORD', default='secure_password'),
             'HOST': env('DB_HOST', default='host.docker.internal'),  # Use Docker host for Windows
-            'PORT': env('DB_PORT', default='5432'),
+            'PORT': env('DB_PORT', default='5433'),
             'CONN_MAX_AGE': 600,  # ✨ PHASE 45: CRITICAL FIX - Keep connections alive for 600s
                                    # Prevents transaction rollback due to closed connections
                                    # Was causing CompletedLesson records to vanish after insert

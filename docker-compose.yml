@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5433"  # Exposes port 5432 to the host machine if needed
+      - "5433:5433"  # Exposes port 5433 to the host machine if needed
     networks:
       - lms_network
     healthcheck:
@@ -51,7 +51,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-Okkdpdri@2026}
       # Do not hardcode Docker gateway IP; this differs across hosts.
       DB_HOST: ${DB_HOST:-host.docker.internal}
-      DB_PORT: ${DB_PORT:-5432}
+      DB_PORT: ${DB_PORT:-5433}
       
       # Redis Cache (always Docker)
       REDIS_HOST: redis
@@ -105,7 +105,7 @@ services:
       - lms_network
     command: >
       sh -c "
-        echo '🔄 Waiting for database (${DB_HOST:-postgres}:${DB_PORT:-5432})...' &&
+        echo '🔄 Waiting for database (${DB_HOST:-postgres}:${DB_PORT:-5433})...' &&
         python manage.py wait_for_db &&
         echo '📦 Running migrations...' &&
         python manage.py migrate --noinput &&
