@@ -1,4 +1,23 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: lms_db_container
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-lmsdb}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-Okkdpdri@2026}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5433"  # Exposes port 5432 to the host machine if needed
+    networks:
+      - lms_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-lmsdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   redis:
     image: redis:7-alpine
     container_name: lms_redis
@@ -22,8 +41,6 @@ services:
       target: production
     container_name: lms_backend
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     env_file: .env
     environment:
       # Database Configuration
@@ -82,6 +99,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      db:
+        condition: service_healthy
     networks:
       - lms_network
     command: >
@@ -127,6 +146,8 @@ volumes:
     name: lms_redis_data
   # ⚠️ PHASE 3: media_files volume DEPRECATED - no longer used for new content
   # Kept only for backward compatibility with existing media files
+  postgres_data:
+    name: lms_postgres_data
   media_files:
     name: lms_media_files
   static_files:
