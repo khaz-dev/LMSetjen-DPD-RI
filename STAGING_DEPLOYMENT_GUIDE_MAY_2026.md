@@ -173,7 +173,7 @@ docker-compose ps
 # Expected output:
 # NAME            STATUS              PORTS
 # lms_redis       Up 2 minutes        
-# lms_postgres    Up 2 minutes        5432/tcp
+# lms_postgres    Up 2 minutes        5433/tcp
 # lms_backend     Up 1 minute         0.0.0.0:8001->8001/tcp
 # lms_frontend    Up 1 minute         0.0.0.0:5174->5174/tcp
 ```

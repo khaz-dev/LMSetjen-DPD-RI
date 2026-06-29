@@ -192,7 +192,7 @@ load_environment() {
     : "${DB_USER:?DB_USER is required in .env}"
     : "${DB_PASSWORD:?DB_PASSWORD is required in .env}"
     : "${DB_HOST:?DB_HOST is required in .env}"
-    DB_PORT="${DB_PORT:-5432}"
+    DB_PORT="${DB_PORT:-5433}"
 }
 
 parse_arguments() {
@@ -515,6 +515,13 @@ main() {
             ;;
     esac
     
+    # 🌟 ADD THIS BLOCK HERE TO CALL HEALTH CHECK FROM PRODUCTION PATTERN:
+    if [ -f "${PROJECT_PATH}/deploy-on-production.sh" ]; then
+        # If the health check logic is already written in your system, execute it
+        print_step "Verifying container states..."
+        run_compose ps
+    fi
+
     show_deployment_info
     print_success "All deployment steps completed successfully"
 }
