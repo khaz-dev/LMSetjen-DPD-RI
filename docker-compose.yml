@@ -15,11 +15,7 @@ services:
       - "5433:5433"  # Exposes port 5433 to the host machine if needed
     networks:
       - lms_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-lmsdb}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+
   redis:
     image: redis:7-alpine
     container_name: lms_redis
@@ -102,7 +98,7 @@ services:
       redis:
         condition: service_healthy
       db:
-        condition: service_healthy
+        condition: service_started
     networks:
       - lms_network
     command: >
