@@ -3,6 +3,8 @@ services:
     image: postgres:16-alpine
     container_name: lms_db_container
     restart: unless-stopped
+    # 🌟 ADD THIS LINE: Forces Postgres to change its internal engine port to 5433
+    command: -p 5433
     environment:
       POSTGRES_DB: ${DB_NAME:-lmsdb}
       POSTGRES_USER: ${DB_USER:-postgres}
