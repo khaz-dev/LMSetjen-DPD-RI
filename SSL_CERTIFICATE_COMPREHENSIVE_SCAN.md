@@ -317,7 +317,7 @@ backend:
   environment:
     # Database: Uses host PostgreSQL (172.18.0.1)
     DB_HOST: 172.18.0.1
-    DB_PORT: ${DB_PORT:-5433}
+    DB_PORT: ${DB_PORT:-5432}
     
     # Redis: Docker container
     REDIS_HOST: redis
