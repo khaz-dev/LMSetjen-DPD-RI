@@ -43,7 +43,7 @@ testfixdb     | postgres         -- TEST (DELETE) ❌
 DB_NAME=lmsdb_staging          # Wrong!
 DB_USER=lms_user_staging       # Wrong!
 DB_HOST=postgres               # Wrong!
-DB_PORT=5433
+DB_PORT=5432
 ```
 
 **After (CORRECT)** - Fixed on Jun 10, 2026:
@@ -51,7 +51,7 @@ DB_PORT=5433
 DB_NAME=lmsdb                  # ✅ Now matches .env.staging
 DB_USER=postgres               # ✅ Now matches .env.staging
 DB_HOST=172.18.0.1             # ✅ Docker gateway IP for host PostgreSQL
-DB_PORT=5433
+DB_PORT=5432
 ```
 
 #### 2️⃣ **Test Databases from Manual Testing**
@@ -72,7 +72,7 @@ Your current deployment uses **`lmsdb`** as confirmed by:
    DB_USER=postgres
    DB_PASSWORD=Okkdpdri@2026
    DB_HOST=172.18.0.1
-   DB_PORT=5433
+   DB_PORT=5432
    ```
 
 2. **`docker-compose.yml` backend service** configuration:
@@ -316,7 +316,7 @@ Since `setup-staging.sh` is now fixed, if you need to run it in the future, it w
 systemctl status postgresql
 
 # Check connections
-netstat -tlnp | grep 5433
+netstat -tlnp | grep 5432
 ```
 
 ### "Database is locked"

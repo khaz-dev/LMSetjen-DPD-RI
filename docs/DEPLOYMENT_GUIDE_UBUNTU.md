@@ -133,7 +133,7 @@ DB_NAME=lms_db
 DB_USER=postgres
 DB_NAME=<secure_password>
 DB_HOST=localhost
-DB_PORT=5433
+DB_PORT=5432
 
 # Django Settings
 DEBUG=False
@@ -193,7 +193,7 @@ The `docker-compose.production.yml` orchestrates:
 
 ### PostgreSQL
 - Runs on host machine (not Docker)
-- Port: 5433
+- Port: 5432
 - Database: `lms_db`
 
 ---

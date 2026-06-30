@@ -192,7 +192,7 @@ load_environment() {
     : "${DB_USER:?DB_USER is required in .env}"
     : "${DB_PASSWORD:?DB_PASSWORD is required in .env}"
     : "${DB_HOST:?DB_HOST is required in .env}"
-    DB_PORT="${DB_PORT:-5433}"
+    DB_PORT="${DB_PORT:-5432}"
 }
 
 parse_arguments() {

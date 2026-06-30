@@ -195,7 +195,7 @@ load_environment() {
     : "${DB_USER:?DB_USER is required in .env}"
     : "${DB_PASSWORD:?DB_PASSWORD is required in .env}"
     : "${DB_HOST:?DB_HOST is required in .env}"
-    DB_PORT="${DB_PORT:-5433}"
+    DB_PORT="${DB_PORT:-5432}"
     FRONTEND_SITE_URL="${FRONTEND_SITE_URL:-https://lms.dpd.go.id}"
     BACKEND_SITE_URL="${BACKEND_SITE_URL:-https://lms-be.dpd.go.id}"
     BACKEND_HOST_PORT="${BACKEND_HOST_PORT:-8001}"
