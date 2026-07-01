@@ -53,29 +53,50 @@ class SSOTokenVerifier:
         """
         Verify and decode SSO JWT token
         
+        🔒 SECURITY FIX: Always requires secret_key for production
+        - Never allows unsigned tokens in production
+        - Validates token expiration
+        - Validates token signature
+        
         Args:
             token (str): JWT token from SSO
-            secret_key (str): Secret key to verify signature (if None, doesn't verify signature)
+            secret_key (str): Secret key to verify signature (REQUIRED for production)
             algorithms (list): List of allowed algorithms
             
         Returns:
             dict: Decoded token payload
             
         Raises:
-            jwt.InvalidTokenError: If token is invalid or expired
+            jwt.InvalidTokenError: If token is invalid, expired, or unsigned in production
         """
+        from django.conf import settings
+        
         try:
-            # If no secret key provided, decode without verification (not recommended for production)
-            options = {}
-            if secret_key is None:
-                options = {"verify_signature": False}
-                
-            decoded = jwt.decode(
-                token,
-                secret_key or "",
-                algorithms=algorithms,
-                options=options
-            )
+            # 🔒 SECURITY: In production, secret_key MUST be provided
+            if not settings.DEBUG and not secret_key:
+                raise jwt.InvalidTokenError(
+                    "Secret key is required for SSO token verification in production. "
+                    "Set SSO_SECRET_KEY environment variable."
+                )
+            
+            # Always verify signature if secret key provided
+            if secret_key:
+                decoded = jwt.decode(
+                    token,
+                    secret_key,
+                    algorithms=algorithms,
+                    options={"verify_signature": True}  # Explicitly verify
+                )
+            else:
+                # Development only - not recommended
+                import logging
+                logger = logging.getLogger('security')
+                logger.warning("SSO token verification without secret key - DEVELOPMENT ONLY")
+                decoded = jwt.decode(
+                    token,
+                    options={"verify_signature": False}
+                )
+            
             return decoded
         except jwt.ExpiredSignatureError:
             raise jwt.InvalidTokenError("Token has expired")

@@ -48,6 +48,11 @@ from api.version import APP_VERSION, APP_NAME
 import random
 from decimal import Decimal
 import requests
+
+# 🔒 SECURITY: Logging for security events and debugging
+import logging
+logger = logging.getLogger('api')
+security_logger = logging.getLogger('security')
 from datetime import datetime, timedelta
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
@@ -592,8 +597,11 @@ class PasswordResetEmailVerifyAPIView(generics.RetrieveAPIView):
 
             msg.attach_alternative(html_body, "text/html")
             msg.send()
-
-            print("link ======", link)
+            
+            # 🔒 SECURITY: Use logging instead of print statements
+            import logging
+            logger = logging.getLogger('api')
+            logger.debug(f"Password reset link generated for {email}")
         return user
     
 @method_decorator(csrf_exempt, name='dispatch')
@@ -811,11 +819,12 @@ class PublicStatsAPIView(generics.GenericAPIView):
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
-            print(f"Error in PublicStatsAPIView: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            # 🔒 SECURITY: Log error securely, return generic response
+            import logging
+            logger = logging.getLogger('security')
+            logger.error(f"Error in PublicStatsAPIView: {str(e)}", exc_info=True)
             return Response({
-                'error': str(e),
+                'error': 'An error occurred while fetching statistics',
                 'total_courses': 0,
                 'total_students': 0,
                 'total_teachers': 0,
@@ -963,11 +972,12 @@ class TestimonialListAPIView(generics.GenericAPIView):
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
-            print(f"Error in TestimonialListAPIView: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            # 🔒 SECURITY: Log error securely, return generic response
+            import logging
+            logger = logging.getLogger('security')
+            logger.error(f"Error in TestimonialListAPIView: {str(e)}", exc_info=True)
             return Response({
-                'error': str(e),
+                'error': 'An error occurred while fetching testimonials',
                 'results': []
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -1278,14 +1288,20 @@ class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
             # If trying to edit a published course, return error
             # Instructor must use "Edit Versi Terbaru" to create a draft first
             if course.is_published_version:
-                print(f"[Teacher Course Detail] [FAIL] Attempt to edit published course directly: {course.title}")
+                # 🔒 SECURITY: Use logging instead of print
+                import logging
+                logger = logging.getLogger('api')
+                logger.warning(f"[Teacher Course Detail] [FAIL] Attempt to edit published course directly: {course.title}")
                 # Return None to signal published course (will be handled in get method)
                 setattr(course, '_is_published_version_attempt', True)
                 return course
             
             # Check if this is a draft of a published course
             if course.parent_course and course.parent_course.is_published_version:
-                print(f"[Teacher Course Detail] [OK] Loading draft revision for editing: {course.title}")
+                # 🔒 SECURITY: Use logging instead of print
+                import logging
+                logger = logging.getLogger('api')
+                logger.info(f"[Teacher Course Detail] [OK] Loading draft revision for editing: {course.title}")
                 return course
             
             # Regular draft course

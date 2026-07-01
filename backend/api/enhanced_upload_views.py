@@ -5,12 +5,12 @@ Enhanced File Upload Views for Optimized Local Storage
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 import os
 import math
 from django.conf import settings
@@ -22,18 +22,18 @@ try:
 except ImportError:
     VideoFileClip = None
 
-@method_decorator(csrf_exempt, name='dispatch')
 class EnhancedFileUploadAPIView(APIView):
     """
     Enhanced file upload with local storage optimization
     
-    CSRF exempt because:
-    - Uses JWT authentication for authenticated requests  
-    - AllowAny permission for public uploads
-    - Safe file handling with UUID-based storage
+    🔒 SECURITY FIX: Requires JWT authentication for file uploads
+    - Removed CSRF exemption
+    - Requires authenticated user
+    - Validates file types and sizes
+    - Uses UUID-based storage to prevent path traversal
     """
-    permission_classes = [AllowAny]
-    authentication_classes = []  # Disable authentication to avoid CSRF issues
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     parser_classes = (MultiPartParser, FormParser)
 
     @swagger_auto_schema(
@@ -55,9 +55,17 @@ class EnhancedFileUploadAPIView(APIView):
                 }
             )),
             400: openapi.Response('Upload failed', openapi.Schema(type=openapi.TYPE_OBJECT)),
+            401: openapi.Response('Authentication required'),
         }
     )
     def post(self, request):
+        # 🔒 SECURITY: Authenticate user
+        if not request.user or not request.user.is_authenticated:
+            return Response(
+                {"error": "Authentication required for file upload"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
         serializer = api_serializer.FileUploadSerializer(data=request.data)
         
         if not serializer.is_valid():
@@ -146,15 +154,16 @@ class EnhancedFileUploadAPIView(APIView):
         
         return duration_info
 
-@method_decorator(csrf_exempt, name='dispatch')
 class BulkFileUploadAPIView(APIView):
     """
     Handle multiple file uploads at once
     
-    CSRF exempt for the same security reasons as EnhancedFileUploadAPIView
+    🔒 SECURITY FIX: Requires JWT authentication for file uploads
+    - Removed CSRF exemption
+    - Requires authenticated user
     """
-    permission_classes = [AllowAny]
-    authentication_classes = []  # Disable authentication to avoid CSRF issues
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     parser_classes = (MultiPartParser, FormParser)
     
     @swagger_auto_schema(
@@ -168,6 +177,13 @@ class BulkFileUploadAPIView(APIView):
         ]
     )
     def post(self, request):
+        # 🔒 SECURITY: Authenticate user
+        if not request.user or not request.user.is_authenticated:
+            return Response(
+                {"error": "Authentication required for file upload"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
         files = request.FILES.getlist('files')
         context = request.data.get('context', 'general')
         

@@ -25,10 +25,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY', default='django-insecure-+c@7t#q96f*r#f-@ss1$2r5a3!xi59@8(o21u-8x%s%vmh4#tc')
+# 🔒 SECURITY FIX: No default SECRET_KEY - must be set via environment variable
+SECRET_KEY = env('SECRET_KEY', default=None)
+if not SECRET_KEY:
+    raise ValueError(
+        'SECRET_KEY environment variable is not set.\n'
+        'Generate a new key with: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"\n'
+        'Set it in your .env file: SECRET_KEY=<generated_key>'
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG', default=True)
+# 🔒 SECURITY FIX: DEBUG mode defaults to False (production-safe)
+DEBUG = env.bool('DEBUG', default=False)
 
 # Get ALLOWED_HOSTS from environment
 # In production, this MUST be set via .env or docker-compose
@@ -148,23 +156,40 @@ if _database_url:
     }
 else:
     # Fall back to individual configuration with URL-encoded password
-    _DB_NAME = env('DB_NAME', default='secure_password')
-    # URL-encode the password to handle special characters
-    _DB_NAME_encoded = urllib.parse.quote(_DB_NAME, safe='')
+    # 🔒 SECURITY FIX: All database credentials MUST come from environment variables
+    DB_NAME = env('DB_NAME', default=None)
+    DB_USER = env('DB_USER', default=None)
+    DB_PASSWORD = env('DB_PASSWORD', default=None)
+    DB_HOST = env('DB_HOST', default=None)
+    
+    # Validate required database credentials
+    if not all([DB_NAME, DB_USER, DB_PASSWORD, DB_HOST]):
+        missing = [k for k, v in {
+            'DB_NAME': DB_NAME,
+            'DB_USER': DB_USER,
+            'DB_PASSWORD': DB_PASSWORD,
+            'DB_HOST': DB_HOST,
+        }.items() if not v]
+        raise ValueError(
+            f'Missing required database environment variables: {", ".join(missing)}\n'
+            'Set all of: DB_NAME, DB_USER, DB_PASSWORD, DB_HOST in your .env file'
+        )
     
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': env('DB_NAME', default='lms_db'),
-            'USER': env('DB_USER', default='lms_user'),
-            'PASSWORD': env('DB_PASSWORD', default='secure_password'),
-            'HOST': env('DB_HOST', default='host.docker.internal'),  # Use Docker host for Windows
+            'NAME': DB_NAME,
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': DB_HOST,
             'PORT': env('DB_PORT', default='5432'),
             'CONN_MAX_AGE': 600,  # ✨ PHASE 45: CRITICAL FIX - Keep connections alive for 600s
                                    # Prevents transaction rollback due to closed connections
                                    # Was causing CompletedLesson records to vanish after insert
             'OPTIONS': {
                 'connect_timeout': 10,
+                # 🔒 SECURITY FIX: Use SSL for database connections in production
+                'sslmode': env('DB_SSLMODE', default='disable'),  # Use 'require' in production
             },
         }
     }
@@ -305,9 +330,10 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['rest_framework.filters.SearchFilter', 'rest_framework.filters.OrderingFilter'],
 }
 
+# 🔒 SECURITY FIX: Reduced JWT token lifetimes for security
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=3),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=50),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Reduced from 3 days
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Reduced from 50 days
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
@@ -562,6 +588,90 @@ if DEBUG:
 # Keep MEDIA settings for serving legacy content only
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+# ============================================================================
+# 🔒 SECURITY HARDENING CONFIGURATION (PHASE: Penetration Test Preparation)
+# ============================================================================
+
+# 1. Request Size Limits (DoS Protection)
+DATA_UPLOAD_MAX_MEMORY_SIZE = env.int('DATA_UPLOAD_MAX_MEMORY_SIZE', default=5242880)  # 5MB default
+FILE_UPLOAD_MAX_MEMORY_SIZE = env.int('FILE_UPLOAD_MAX_MEMORY_SIZE', default=10485760)  # 10MB default
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
+
+# 2. Session Security
+SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=not DEBUG)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# 3. CSRF Protection
+CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=not DEBUG)
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'
+CSRF_FAILURE_VIEW = 'api.views.csrf_failure'
+CSRF_USE_SESSIONS = False
+
+# 4. Security Headers (Django Middleware)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking
+
+# 5. HTTPS/HSTS Configuration (Production Only)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+# 6. Content Security Policy (CSP) Headers
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# 7. API Request Throttling/Rate Limiting (DRF Configuration)
+REST_FRAMEWORK = REST_FRAMEWORK or {}
+REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = [
+    'rest_framework.throttling.AnonRateThrottle',
+    'rest_framework.throttling.UserRateThrottle'
+]
+REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
+    'anon': env('ANON_THROTTLE_RATE', default='100/hour'),  # 100 requests per hour for anonymous users
+    'user': env('USER_THROTTLE_RATE', default='1000/hour'),  # 1000 requests per hour for authenticated users
+}
+
+# 8. Password Validation Enhancements
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 12}  # Increased from default 8
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+# 9. Login Attempt Limits (if using django-axes or similar)
+# Configure failed login attempt tracking
+LOGIN_ATTEMPT_LIMIT = env.int('LOGIN_ATTEMPT_LIMIT', default=5)
+LOGIN_ATTEMPT_TIMEOUT = env.int('LOGIN_ATTEMPT_TIMEOUT', default=300)  # 5 minutes
+
+# 10. Security Logging Configuration
+SECURITY_LOG_LEVEL = env('SECURITY_LOG_LEVEL', default='WARNING')
+
+# Add security logger
+if 'security' not in LOGGING['loggers']:
+    LOGGING['loggers']['security'] = {
+        'handlers': ['console', 'file'],
+        'level': SECURITY_LOG_LEVEL,
+        'propagate': False,
+    }
 
 # Create organized media subdirectories
 MEDIA_SUBDIRS = {
