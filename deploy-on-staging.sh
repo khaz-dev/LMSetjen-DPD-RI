@@ -159,6 +159,48 @@ run_compose() {
     fi
 }
 
+run_backend_management() {
+    local description="$1"
+    shift
+
+    print_verbose "$description"
+    if ! run_compose exec -T backend "$@"; then
+        print_error "$description failed"
+        print_info "Recent backend logs:"
+        run_compose logs --tail=80 backend || true
+        exit 1
+    fi
+}
+
+wait_for_backend_health() {
+    local timeout_seconds="${1:-120}"
+    local elapsed=0
+
+    print_step "Waiting for backend to become healthy (timeout: ${timeout_seconds}s)"
+
+    while [ "$elapsed" -lt "$timeout_seconds" ]; do
+        if run_compose ps backend 2>/dev/null | grep -q "healthy"; then
+            print_success "Backend container is healthy"
+            return 0
+        fi
+
+        if run_compose ps backend 2>/dev/null | grep -q "unhealthy"; then
+            print_error "Backend container is unhealthy"
+            print_info "Recent backend logs:"
+            run_compose logs --tail=120 backend || true
+            return 1
+        fi
+
+        sleep 5
+        elapsed=$((elapsed + 5))
+    done
+
+    print_error "Backend health check timed out after ${timeout_seconds}s"
+    print_info "Recent backend logs:"
+    run_compose logs --tail=120 backend || true
+    return 1
+}
+
 sync_environment_file() {
     if [ -f "${PROJECT_PATH}/.env.staging" ]; then
         cp -f "${PROJECT_PATH}/.env.staging" "$ENV_FILE"
@@ -282,13 +324,14 @@ backup_database() {
     
     mkdir -p "$BACKUP_DIR"
     
-    if run_compose exec -T backend env PGPASSWORD="$DB_PASSWORD" pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" > "$DB_BACKUP_FILE" 2>/dev/null; then
+    if run_compose exec -T backend env PGPASSWORD="$DB_PASSWORD" pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" > "$DB_BACKUP_FILE" 2>"${BACKUP_DIR}/db_backup_error_${BACKUP_TIMESTAMP}.log"; then
         print_success "Database backed up to: $DB_BACKUP_FILE"
         print_verbose "Backup size: $(du -h "$DB_BACKUP_FILE" | cut -f1)"
         return 0
     else
         print_error "Database backup failed"
-        return 1
+        print_warning "See backup error log: ${BACKUP_DIR}/db_backup_error_${BACKUP_TIMESTAMP}.log"
+        return 0
     fi
 }
 
@@ -360,9 +403,9 @@ deploy_full_clean_build() {
     
     print_verbose "Starting containers..."
     run_compose up -d 2>&1 | tail -5
-    
-    print_verbose "Waiting for services (30 seconds)..."
-    sleep 30
+
+    wait_for_backend_health 180 || exit 1
+    run_backend_management "Running Django system checks" python manage.py check
     
     print_verbose "Container status:"
     run_compose ps
@@ -394,12 +437,10 @@ deploy_update_only() {
     print_verbose "Restarting containers..."
     run_compose down
     run_compose up -d
-    
-    print_verbose "Waiting for services (20 seconds)..."
-    sleep 20
-    
-    print_verbose "Running migrations..."
-    run_compose exec -T backend python manage.py migrate --noinput
+
+    wait_for_backend_health 180 || exit 1
+    run_backend_management "Running Django system checks" python manage.py check
+    run_backend_management "Running migrations" python manage.py migrate --noinput
     
     print_verbose "Container status:"
     run_compose ps
@@ -437,17 +478,12 @@ deploy_update_with_data_refresh() {
     run_compose down
     run_compose up -d
     
-    print_verbose "Waiting for database (15 seconds)..."
-    sleep 15
-    
-    print_verbose "Running migrations..."
-    run_compose exec -T backend python manage.py migrate --noinput 2>&1 | tail -10
-    
-    print_verbose "Initializing default users..."
-    run_compose exec -T backend python manage.py init_db --skip-if-exists 2>&1 | tail -5
-    
-    print_verbose "Collecting static files..."
-    run_compose exec -T backend python manage.py collectstatic --noinput --clear 2>&1 | tail -5
+    wait_for_backend_health 180 || exit 1
+
+    run_backend_management "Running Django system checks" python manage.py check
+    run_backend_management "Running migrations" python manage.py migrate --noinput
+    run_backend_management "Initializing default users" python manage.py init_db --skip-if-exists
+    run_backend_management "Collecting static files" python manage.py collectstatic --noinput --clear
     
     print_verbose "Container status:"
     run_compose ps

@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
@@ -217,15 +216,14 @@ class BulkFileUploadAPIView(APIView):
             "errors": errors
         }, status=status.HTTP_200_OK)
 
-@method_decorator(csrf_exempt, name='dispatch')
 class FileInfoAPIView(APIView):
     """
     Get information about uploaded files
-    
-    CSRF exempt for consistency with other file upload endpoints
+
+    Restricted to authenticated users to avoid unauthenticated metadata exposure.
     """
-    permission_classes = [AllowAny]
-    authentication_classes = []  # Disable authentication to avoid CSRF issues
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def get(self, request, file_id=None):
         # This would integrate with a file tracking system
