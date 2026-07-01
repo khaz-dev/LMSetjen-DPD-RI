@@ -7,7 +7,7 @@ from django.db import models
 from django.db.models import Q, F, Value, Count, Sum, Avg, Max
 from django.db.models.functions import ExtractMonth
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.utils.decorators import method_decorator
@@ -126,6 +126,19 @@ def get_sync_state():
     """Get current sync state"""
     global _SYNC_STATE
     return _SYNC_STATE.copy()
+
+
+def csrf_failure(request, reason=""):
+    """Custom CSRF failure handler used by settings.CSRF_FAILURE_VIEW."""
+    payload = {
+        "detail": "CSRF verification failed.",
+        "reason": reason or "CSRF token missing or incorrect.",
+    }
+
+    if request.path.startswith("/api/"):
+        return JsonResponse(payload, status=403)
+
+    return HttpResponse("CSRF verification failed.", status=403)
 
 
 # ============================================================
