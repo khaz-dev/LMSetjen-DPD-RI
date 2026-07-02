@@ -65,7 +65,7 @@ from cryptography.hazmat.primitives import padding
 from django.core.files.storage import default_storage
 import os
 import re
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 try:
     from moviepy.editor import VideoFileClip
 except ImportError:
@@ -8783,6 +8783,196 @@ class SyncExternalUsersAPIView(APIView):
 
         return True
 
+    def _bool_to_query_value(self, value):
+        return 'true' if bool(value) else 'false'
+
+    def _append_external_api_query_params(self, base_url):
+        """Append configurable query params for external API calls."""
+        parsed = urlparse(base_url)
+        query_pairs = parse_qsl(parsed.query, keep_blank_values=True)
+        query_map = {k: v for k, v in query_pairs}
+
+        include_json = getattr(settings, 'EXTERNAL_API_INCLUDE_JSON', False)
+        with_pagination = getattr(settings, 'EXTERNAL_API_WITH_PAGINATION', False)
+        query_all = getattr(settings, 'EXTERNAL_API_QUERY_ALL', False)
+
+        query_map['include_json'] = self._bool_to_query_value(include_json)
+        query_map['with_pagination'] = self._bool_to_query_value(with_pagination)
+        if query_all:
+            query_map['all'] = '1'
+
+        encoded_query = urlencode(query_map)
+        return urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            encoded_query,
+            parsed.fragment,
+        ))
+
+    def _get_nested(self, data, key):
+        """Safely get nested dictionary value by key."""
+        if isinstance(data, dict):
+            return data.get(key)
+        return None
+
+    def _extract_next_page_url(self, external_data):
+        """Extract next page URL from various API pagination shapes."""
+        if not isinstance(external_data, dict):
+            return None
+
+        data_obj = self._get_nested(external_data, 'data')
+        meta_obj = self._get_nested(external_data, 'meta')
+        links_obj = self._get_nested(external_data, 'links')
+
+        candidates = [
+            self._get_nested(external_data, 'next_page_url'),
+            self._get_nested(data_obj, 'next_page_url'),
+            self._get_nested(meta_obj, 'next_page_url'),
+            self._get_nested(links_obj, 'next'),
+            self._get_nested(data_obj, 'next'),
+            self._get_nested(meta_obj, 'next'),
+        ]
+
+        for candidate in candidates:
+            if candidate and str(candidate).strip():
+                return str(candidate).strip()
+
+        return None
+
+    def _extract_page_numbers(self, external_data):
+        """Extract pagination numbers from multiple response formats."""
+        if not isinstance(external_data, dict):
+            return None, None
+
+        data_obj = self._get_nested(external_data, 'data')
+        meta_obj = self._get_nested(external_data, 'meta')
+
+        def as_int(value):
+            try:
+                if value is None or str(value).strip() == '':
+                    return None
+                return int(value)
+            except (TypeError, ValueError):
+                return None
+
+        current_page = (
+            as_int(self._get_nested(external_data, 'current_page'))
+            or as_int(self._get_nested(meta_obj, 'current_page'))
+            or as_int(self._get_nested(data_obj, 'current_page'))
+            or as_int(self._get_nested(external_data, 'page'))
+        )
+
+        last_page = (
+            as_int(self._get_nested(external_data, 'last_page'))
+            or as_int(self._get_nested(meta_obj, 'last_page'))
+            or as_int(self._get_nested(data_obj, 'last_page'))
+            or as_int(self._get_nested(external_data, 'total_pages'))
+            or as_int(self._get_nested(meta_obj, 'total_pages'))
+            or as_int(self._get_nested(data_obj, 'total_pages'))
+        )
+
+        return current_page, last_page
+
+    def _set_page_query_param(self, url, page_number):
+        """Return URL with updated page query parameter."""
+        page_param = str(getattr(settings, 'EXTERNAL_API_PAGE_PARAM', 'page') or 'page').strip() or 'page'
+        parsed = urlparse(url)
+        query_map = {k: v for k, v in parse_qsl(parsed.query, keep_blank_values=True)}
+        query_map[page_param] = str(page_number)
+
+        return urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            urlencode(query_map),
+            parsed.fragment,
+        ))
+
+    def _collect_all_external_users(self, initial_url, initial_data, token_value, verify_mode):
+        """Collect all users by following pagination when external API returns paged payloads."""
+        success, message, first_batch = self._extract_users_payload(initial_data)
+        if not success:
+            return success, message, first_batch, []
+
+        all_users = list(first_batch)
+        pagination_errors = []
+
+        # If pagination is disabled by query and upstream honors it, there is nothing else to fetch.
+        next_page_url = self._extract_next_page_url(initial_data)
+        current_page, last_page = self._extract_page_numbers(initial_data)
+
+        if not next_page_url and not (current_page and last_page and last_page > current_page):
+            return True, message, all_users, pagination_errors
+
+        headers = self._build_external_api_headers(token_value)
+        timeout = getattr(settings, 'EXTERNAL_API_TIMEOUT', 30)
+        max_pages = max(int(getattr(settings, 'EXTERNAL_API_PAGINATION_MAX_PAGES', 200)), 1)
+
+        page_fetch_count = 0
+        seen_signatures = set()
+
+        def signature_for_users(raw_users):
+            if not isinstance(raw_users, list):
+                return None
+            ids = []
+            for idx, item in enumerate(raw_users[:10]):
+                if isinstance(item, dict):
+                    ids.append(str(self._pick_first_value(item, ['id', 'external_id', 'pegawai_id', 'id_pegawai', 'nip', 'email'], default=f'idx-{idx}')))
+                else:
+                    ids.append(f'idx-{idx}:{type(item).__name__}')
+            return '|'.join(ids)
+
+        while page_fetch_count < max_pages:
+            if next_page_url:
+                target_url = next_page_url
+            elif current_page and last_page and last_page > current_page:
+                target_url = self._set_page_query_param(initial_url, current_page + 1)
+            else:
+                break
+
+            try:
+                page_response = requests.get(
+                    target_url,
+                    headers=headers,
+                    verify=verify_mode,
+                    timeout=timeout,
+                )
+                page_response.raise_for_status()
+                page_data = page_response.json()
+            except Exception as page_error:
+                pagination_errors.append(f"Failed to fetch page from {target_url}: {page_error}")
+                break
+
+            page_success, page_message, page_users = self._extract_users_payload(page_data)
+            if not page_success:
+                pagination_errors.append(
+                    f"Pagination halted due upstream error on {target_url}: {page_message or 'Unknown error'}"
+                )
+                break
+
+            page_signature = signature_for_users(page_users)
+            if page_signature and page_signature in seen_signatures:
+                # Prevent accidental infinite loops when upstream repeatedly returns same page.
+                break
+
+            if page_signature:
+                seen_signatures.add(page_signature)
+
+            if page_users:
+                all_users.extend(page_users)
+
+            page_fetch_count += 1
+            next_page_url = self._extract_next_page_url(page_data)
+            current_page, last_page = self._extract_page_numbers(page_data)
+
+            if not next_page_url and not (current_page and last_page and last_page > current_page):
+                break
+
+        return True, message, all_users, pagination_errors
+
     def _normalize_nested_entity(self, value, fallback_key='name'):
         """Normalize nested org/position payload into expected dict shape."""
         if isinstance(value, dict):
@@ -8904,13 +9094,11 @@ class SyncExternalUsersAPIView(APIView):
 
             print(f"Attempting to fetch data from: {external_api_url}")
 
-            full_api_url = external_api_url
-            if getattr(settings, 'EXTERNAL_API_QUERY_ALL', False):
-                separator = '&' if '?' in external_api_url else '?'
-                full_api_url = f"{external_api_url}{separator}all=1"
+            full_api_url = self._append_external_api_query_params(external_api_url)
 
             try:
                 response = None
+                selected_token = None
                 for idx, token in enumerate(token_candidates):
                     headers = self._build_external_api_headers(token)
                     response = requests.get(
@@ -8926,6 +9114,7 @@ class SyncExternalUsersAPIView(APIView):
                         print(f"Auth failed with token candidate {idx + 1}, trying fallback token...")
                         continue
 
+                    selected_token = token
                     break
             except requests.exceptions.SSLError as ssl_error:
                 ssl_hint = (
@@ -8993,14 +9182,22 @@ class SyncExternalUsersAPIView(APIView):
                     return Response({'error': error_msg + auth_hint}, status=status.HTTP_403_FORBIDDEN)
                 return Response({'error': error_msg}, status=status.HTTP_502_BAD_GATEWAY)
 
-            success, upstream_message, raw_users_data = self._extract_users_payload(external_data)
+            success, upstream_message, raw_users_data, pagination_errors = self._collect_all_external_users(
+                full_api_url,
+                external_data,
+                selected_token,
+                verify_mode,
+            )
             if not success:
                 error_msg = f"External API returned error: {upstream_message or 'Unknown error'}"
                 sync_record.fail_sync(error_msg)
                 return Response({'error': error_msg}, status=status.HTTP_400_BAD_REQUEST)
 
+            if pagination_errors:
+                print(f"⚠️ Pagination warnings: {pagination_errors}")
+
             users_data = []
-            normalization_errors = []
+            normalization_errors = [{'external_id': 'pagination', 'error': err} for err in pagination_errors]
             for idx, item in enumerate(raw_users_data):
                 if not isinstance(item, dict):
                     normalization_errors.append({
