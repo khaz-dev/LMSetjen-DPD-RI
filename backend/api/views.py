@@ -8763,6 +8763,7 @@ class SyncExternalUsersAPIView(APIView):
         token_value = self._normalize_external_api_token(token_value)
 
         headers = {'Accept': 'application/json'}
+        headers['origin'] = getattr(settings, 'BACKEND_SITE_URL', 'https://example.com')
         if token_value:
             headers[token_header] = token_value
             # Send legacy casing as compatibility fallback.
