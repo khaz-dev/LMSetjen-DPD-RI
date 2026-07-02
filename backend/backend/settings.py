@@ -752,9 +752,15 @@ if DEBUG and sys.platform == 'win32':
     os.environ['RUN_MAIN'] = 'true'
 
 # External API Configuration
-EXTERNAL_API_BASE_URL = env('EXTERNAL_API_BASE_URL', default='https://cmb.dpd.go.id')
+# Backward compatibility:
+# - Legacy integrations may still provide CMB_API_URL / CMB_API_TOKEN / API_TOKEN.
+# - Prefer EXTERNAL_API_* keys, but gracefully fall back to legacy names.
+_legacy_cmb_api_url = env('CMB_API_URL', default='')
+_legacy_cmb_api_token = env('CMB_API_TOKEN', default=env('API_TOKEN', default=''))
+
+EXTERNAL_API_BASE_URL = env('EXTERNAL_API_BASE_URL', default=_legacy_cmb_api_url or 'https://cmb.dpd.go.id')
 EXTERNAL_API_USERS_ENDPOINT = env('EXTERNAL_API_USERS_ENDPOINT', default='/api/pegawai')
-EXTERNAL_API_TOKEN = env('EXTERNAL_API_TOKEN', default='')
+EXTERNAL_API_TOKEN = env('EXTERNAL_API_TOKEN', default=_legacy_cmb_api_token or '')
 EXTERNAL_API_TOKEN_HEADER = env('EXTERNAL_API_TOKEN_HEADER', default='X-API-TOKEN')
 EXTERNAL_API_TOKEN_ENABLE_ENCRYPTED_CANDIDATES = env.bool('EXTERNAL_API_TOKEN_ENABLE_ENCRYPTED_CANDIDATES', default=True)
 EXTERNAL_API_TOKEN_ENCRYPT_WITH_SELF_SALT = env.bool('EXTERNAL_API_TOKEN_ENCRYPT_WITH_SELF_SALT', default=True)

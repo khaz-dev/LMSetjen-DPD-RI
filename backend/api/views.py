@@ -65,6 +65,7 @@ from cryptography.hazmat.primitives import padding
 from django.core.files.storage import default_storage
 import os
 import re
+from urllib.parse import urlparse, urlunparse
 try:
     from moviepy.editor import VideoFileClip
 except ImportError:
@@ -8606,7 +8607,27 @@ class SyncExternalUsersAPIView(APIView):
             return endpoint
 
         endpoint = f"/{str(endpoint).lstrip('/')}"
-        return f"{base_url}{endpoint}"
+
+        parsed_base = urlparse(base_url)
+        base_path = (parsed_base.path or '').rstrip('/')
+
+        # If base URL already includes /api and endpoint also starts with /api,
+        # avoid generating duplicated paths such as /api/api/pegawai.
+        if base_path == '/api' and endpoint.startswith('/api'):
+            joined_path = endpoint
+        elif not base_path:
+            joined_path = endpoint
+        else:
+            joined_path = f"{base_path}{endpoint}"
+
+        return urlunparse((
+            parsed_base.scheme,
+            parsed_base.netloc,
+            joined_path,
+            '',
+            '',
+            ''
+        ))
 
     def _normalize_external_api_token(self, token_value):
         """Normalize token from env: trims quotes and optional header prefix."""
@@ -8924,6 +8945,9 @@ class SyncExternalUsersAPIView(APIView):
                 return Response({'error': error_msg}, status=status.HTTP_502_BAD_GATEWAY)
             except requests.exceptions.RequestException as req_error:
                 upstream_error_msg = f"External API request failed: {str(req_error)}"
+                endpoint_config = str(getattr(settings, 'EXTERNAL_API_USERS_ENDPOINT', '/api/pegawai') or '').strip()
+                if endpoint_config in {'/api', 'api'}:
+                    upstream_error_msg += " Hint: EXTERNAL_API_USERS_ENDPOINT is '/api'. Use '/api/pegawai' for Pegawai sync."
                 print(f"❌ REQUEST ERROR: {upstream_error_msg}")
                 sync_record.fail_sync(upstream_error_msg)
                 update_sync_state(
