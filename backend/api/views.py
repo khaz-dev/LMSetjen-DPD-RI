@@ -94,7 +94,9 @@ _SYNC_STATE = {
     'new': 0,  # Users not in system (will be created)
     'changed': 0,  # Users with changes (will be updated)
     'unchanged': 0,  # Users with no changes (skipped)
-    'comparison_complete': False
+    'comparison_complete': False,
+    'current_page': 0,  # Current page being fetched
+    'total_pages': 0  # Total pages to fetch
 }
 
 def reset_sync_state():
@@ -113,7 +115,9 @@ def reset_sync_state():
         'new': 0,
         'changed': 0,
         'unchanged': 0,
-        'comparison_complete': False
+        'comparison_complete': False,
+        'current_page': 0,
+        'total_pages': 0
     }
 
 def update_sync_state(**kwargs):
@@ -8904,6 +8908,9 @@ class SyncExternalUsersAPIView(APIView):
         next_page_url = self._extract_next_page_url(initial_data)
         current_page, last_page = self._extract_page_numbers(initial_data)
 
+        # Initialize page tracking in sync state
+        update_sync_state(current_page=1, total_pages=last_page or 1)
+
         if not next_page_url and not (current_page and last_page and last_page > current_page):
             return True, message, all_users, pagination_errors
 
@@ -8967,6 +8974,11 @@ class SyncExternalUsersAPIView(APIView):
             page_fetch_count += 1
             next_page_url = self._extract_next_page_url(page_data)
             current_page, last_page = self._extract_page_numbers(page_data)
+
+            # Update sync state with current page progress
+            if current_page and last_page:
+                print(f"Fetching page {current_page}/{last_page}...")
+                update_sync_state(current_page=current_page, total_pages=last_page)
 
             if not next_page_url and not (current_page and last_page and last_page > current_page):
                 break

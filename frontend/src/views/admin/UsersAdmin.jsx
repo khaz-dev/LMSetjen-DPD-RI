@@ -29,7 +29,9 @@ function UsersAdmin() {
         updated: 0,
         failed: 0,
         total: 0,
-        errors: []
+        errors: [],
+        currentPage: 0,  // Current page being fetched
+        totalPages: 0    // Total pages to fetch
     });
     // Initialize from localStorage for persistence across sessions
     const [lastSuccessfulSyncTime, setLastSuccessfulSyncTime] = useState(() => {
@@ -439,7 +441,9 @@ function UsersAdmin() {
                             changed: progressResponse.data.changed || 0,
                             unchanged: progressResponse.data.unchanged || 0,
                             comparisonComplete: progressResponse.data.comparison_complete || false,
-                            lastSuccessfulSyncTimestamp: progressResponse.data.last_successful_sync_timestamp || null
+                            lastSuccessfulSyncTimestamp: progressResponse.data.last_successful_sync_timestamp || null,
+                            currentPage: progressResponse.data.current_page || 0,
+                            totalPages: progressResponse.data.total_pages || 0
                         }));
                         
                         // SMART POLLING: Check if backend says sync is done
@@ -1629,6 +1633,16 @@ function UsersAdmin() {
 
                         {/* Modal Body */}
                         <div className="sync-progress-body">
+                            {/* Page Progress Display - Show during fetching */}
+                            {(syncProgress.status === "syncing" || syncProgress.status === "initializing") && 
+                             syncProgress.totalPages > 0 && syncProgress.currentPage > 0 && (
+                                <div className="sync-page-progress">
+                                    <div className="page-progress-label">
+                                        Fetching page {syncProgress.currentPage}/{syncProgress.totalPages}...
+                                    </div>
+                                </div>
+                            )}
+                            
                             {/* Show stats during syncing and after completion */}
                             {(syncProgress.status === "syncing" || syncProgress.status === "completed") && (
                                 <>

@@ -2553,6 +2553,31 @@
     font-weight: 500;
 }
 
+/* Page Progress Display */
+.sync-page-progress {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 2px solid #fbbf24;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-progress-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #92400e;
+    text-align: center;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 /* Statistics Grid */
 .sync-stats {
     display: grid;
