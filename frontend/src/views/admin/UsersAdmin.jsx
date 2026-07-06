@@ -1673,20 +1673,28 @@ function UsersAdmin() {
                                     {/* Statistics Grid - Processing Results */}
                                     <div className="sync-stats">
                                         <div className="sync-stat-item created">
-                                            <div className="sync-stat-label">Created</div>
+                                            <div className="sync-stat-label">Dibuat</div>
                                             <div className="sync-stat-value">{syncProgress.created}</div>
                                         </div>
                                         <div className="sync-stat-item updated">
-                                            <div className="sync-stat-label">Updated</div>
+                                            <div className="sync-stat-label">Diperbarui</div>
                                             <div className="sync-stat-value">{syncProgress.updated}</div>
                                         </div>
                                         <div className="sync-stat-item failed">
-                                            <div className="sync-stat-label">Failed</div>
+                                            <div className="sync-stat-label">Gagal</div>
                                             <div className="sync-stat-value">{syncProgress.failed}</div>
                                         </div>
                                         <div className="sync-stat-item total">
-                                            <div className="sync-stat-label">Total</div>
+                                            <div className="sync-stat-label">Total Data Eksternal</div>
                                             <div className="sync-stat-value">{syncProgress.total}</div>
+                                        </div>
+                                        <div className="sync-stat-item total">
+                                            <div className="sync-stat-label">Pengguna Sistem Saat Ini</div>
+                                            <div className="sync-stat-value">{stats.total_users}</div>
+                                        </div>
+                                        <div className="sync-stat-item updated">
+                                            <div className="sync-stat-label">Total Diproses</div>
+                                            <div className="sync-stat-value">{syncProgress.created + syncProgress.updated + syncProgress.failed}</div>
                                         </div>
                                     </div>
 
@@ -1724,7 +1732,8 @@ function UsersAdmin() {
                                     </div>
                                     <h4>Successfully Synced!</h4>
                                     <p>
-                                        All user data has been synchronized from the external source.
+                                        Data sinkronisasi mengambil total data dari sumber eksternal,
+                                        sedangkan kartu "Total Pengguna" menampilkan jumlah akun di database LMS.
                                         {syncProgress.created > 0 && ` ${syncProgress.created} new user(s) created.`}
                                         {syncProgress.updated > 0 && ` ${syncProgress.updated} user(s) updated.`}
                                     </p>
