@@ -366,12 +366,26 @@ pull_latest_code() {
     
     cd "$PROJECT_PATH"
 
+    # Prevent partial deployments when local edits would block a fast-forward pull.
+    if ! git diff-index --quiet HEAD --; then
+        print_error "Working tree has local changes. Commit/stash/discard changes before deployment."
+        git status --short || true
+        return 1
+    fi
+
     local current_branch
     current_branch="$(git branch --show-current)"
     print_verbose "Current branch: ${current_branch}"
 
-    git fetch origin main
-    git pull --ff-only origin main
+    if ! git fetch origin main; then
+        print_error "git fetch failed"
+        return 1
+    fi
+
+    if ! git pull --ff-only origin main; then
+        print_error "git pull failed (non fast-forward or local conflict)"
+        return 1
+    fi
 
     print_success "Code pulled successfully"
 }
