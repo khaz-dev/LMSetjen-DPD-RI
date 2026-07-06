@@ -372,6 +372,7 @@ function UsersAdmin() {
 
     // Sync external users data - ENHANCED WITH SMART POLLING
     const syncData = async () => {
+        const syncStartedAt = new Date();
         
         // Create new AbortController for this sync operation
         abortControllerRef.current = new AbortController();
@@ -548,6 +549,115 @@ function UsersAdmin() {
                 }, 1500);
             } else {
                 console.error("Error syncing external users:", error);
+
+                // Recovery path for transient CORS/network failures:
+                // backend may still complete sync while browser request fails.
+                const isNetworkLikeError = !error.response && (
+                    error.code === "ERR_NETWORK" ||
+                    error.message === "Network Error" ||
+                    error.message?.toLowerCase().includes("network")
+                );
+
+                if (isNetworkLikeError) {
+                    setSyncProgress(prev => ({
+                        ...prev,
+                        status: "syncing",
+                        message: "Koneksi terputus sesaat. Memverifikasi status sinkronisasi..."
+                    }));
+
+                    let recoveredFromProgress = false;
+
+                    // Retry a few times to confirm whether sync actually finished on backend.
+                    for (let attempt = 0; attempt < 8; attempt++) {
+                        try {
+                            const progressResponse = await api.get("/admin/sync-progress/");
+                            const progress = progressResponse?.data || {};
+
+                            const backendCompleted = (
+                                progress.status === "completed" ||
+                                (progress.completion_timestamp && progress.is_syncing === false)
+                            );
+
+                            if (backendCompleted) {
+                                recoveredFromProgress = true;
+                                const recoveredTotal = progress.total || (progress.created + progress.updated + progress.failed);
+
+                                setSyncProgress(prev => ({
+                                    ...prev,
+                                    status: "completed",
+                                    message: "Sync completed successfully! ✓",
+                                    created: progress.created || 0,
+                                    updated: progress.updated || 0,
+                                    failed: progress.failed || 0,
+                                    total: recoveredTotal || prev.total,
+                                    errors: progress.errors || []
+                                }));
+
+                                const lastSyncTs = progress.last_successful_sync_timestamp;
+                                if (lastSyncTs) {
+                                    setLastSuccessfulSyncTime(lastSyncTs);
+                                    localStorage.setItem("lastSuccessfulSyncTime", lastSyncTs);
+                                }
+
+                                Toast().fire({
+                                    icon: "success",
+                                    title: `Sync completed! Created: ${progress.created || 0}, Updated: ${progress.updated || 0}`,
+                                });
+
+                                await fetchUsers();
+                                await fetchUserStats();
+
+                                autoCloseTimeout = setTimeout(() => {
+                                    closeSyncProgress();
+                                }, 2500);
+
+                                break;
+                            }
+                        } catch (recoveryError) {
+                            console.debug("Recovery progress check failed (non-critical):", recoveryError);
+                        }
+
+                        await new Promise(resolve => setTimeout(resolve, 1200));
+                    }
+
+                    // Secondary fallback: if DB last sync timestamp moved after this run started,
+                    // treat operation as completed to avoid false negative UI state.
+                    if (!recoveredFromProgress) {
+                        try {
+                            const lastSyncResponse = await api.get("/admin/last-sync-info/");
+                            const lastSyncTime = lastSyncResponse?.data?.last_sync_time;
+                            if (lastSyncTime && new Date(lastSyncTime) >= syncStartedAt) {
+                                recoveredFromProgress = true;
+                                setLastSuccessfulSyncTime(lastSyncTime);
+                                localStorage.setItem("lastSuccessfulSyncTime", lastSyncTime);
+
+                                setSyncProgress(prev => ({
+                                    ...prev,
+                                    status: "completed",
+                                    message: "Sinkronisasi selesai. Respons akhir jaringan tidak stabil.",
+                                }));
+
+                                Toast().fire({
+                                    icon: "success",
+                                    title: "Sinkronisasi selesai (terverifikasi dari server)",
+                                });
+
+                                await fetchUsers();
+                                await fetchUserStats();
+
+                                autoCloseTimeout = setTimeout(() => {
+                                    closeSyncProgress();
+                                }, 2500);
+                            }
+                        } catch (lastSyncError) {
+                            console.debug("Recovery last-sync check failed (non-critical):", lastSyncError);
+                        }
+                    }
+
+                    if (recoveredFromProgress) {
+                        return;
+                    }
+                }
                 
                 setSyncProgress(prev => ({
                     ...prev,

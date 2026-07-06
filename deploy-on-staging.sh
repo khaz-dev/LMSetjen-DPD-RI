@@ -279,6 +279,37 @@ verify_runtime_health() {
             print_info "Check reverse proxy upstream and backend container health"
             return 1
         fi
+
+        # Validate CORS on sync endpoint preflight and non-2xx path.
+        # This catches cases where browser reports a false "Network Error"
+        # because an upstream error response is missing CORS headers.
+        local sync_preflight_cors
+        sync_preflight_cors="$(curl -sSI -X OPTIONS \
+            -H "Origin: ${FRONTEND_SITE_URL}" \
+            -H "Access-Control-Request-Method: POST" \
+            -H "Access-Control-Request-Headers: authorization,content-type" \
+            --max-time 20 \
+            "${BACKEND_SITE_URL}/api/v1/admin/sync-external-users/" | tr -d '\r' | awk -F': ' 'tolower($1)=="access-control-allow-origin" {print $2; exit}')"
+        if [ "$sync_preflight_cors" != "$FRONTEND_SITE_URL" ]; then
+            print_error "Sync endpoint preflight CORS check failed"
+            print_info "Expected Access-Control-Allow-Origin: ${FRONTEND_SITE_URL}"
+            print_info "Actual Access-Control-Allow-Origin: ${sync_preflight_cors:-<missing>}"
+            return 1
+        fi
+
+        local sync_error_path_cors
+        sync_error_path_cors="$(curl -sSI -X POST \
+            -H "Origin: ${FRONTEND_SITE_URL}" \
+            -H "Content-Type: application/json" \
+            --data '{}' \
+            --max-time 20 \
+            "${BACKEND_SITE_URL}/api/v1/admin/sync-external-users/" | tr -d '\r' | awk -F': ' 'tolower($1)=="access-control-allow-origin" {print $2; exit}')"
+        if [ "$sync_error_path_cors" != "$FRONTEND_SITE_URL" ]; then
+            print_error "Sync endpoint error-path CORS check failed"
+            print_info "Expected Access-Control-Allow-Origin: ${FRONTEND_SITE_URL}"
+            print_info "Actual Access-Control-Allow-Origin: ${sync_error_path_cors:-<missing>}"
+            return 1
+        fi
     else
         print_warning "curl not found; skipped HTTP/CORS runtime verification"
     fi
