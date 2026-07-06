@@ -8612,6 +8612,15 @@ class SyncExternalUsersAPIView(APIView):
 
         endpoint = f"/{str(endpoint).lstrip('/')}"
 
+        # Compatibility guard: some deployments still set EXTERNAL_API_USERS_ENDPOINT=/api.
+        # For user sync we need the pegawai collection endpoint.
+        if endpoint.rstrip('/') in {'/api', '/pegawai', '/users'}:
+            print(
+                f"Normalizing EXTERNAL_API_USERS_ENDPOINT from '{endpoint}' to '/api/pegawai' "
+                "for external user sync compatibility"
+            )
+            endpoint = '/api/pegawai'
+
         parsed_base = urlparse(base_url)
         base_path = (parsed_base.path or '').rstrip('/')
 

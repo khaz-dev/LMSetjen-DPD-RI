@@ -226,13 +226,46 @@ verify_runtime_health() {
             return 1
         fi
 
+        local public_curl_args="--max-time 20"
+        if ! curl -fsS -H "Origin: ${FRONTEND_SITE_URL}" --max-time 20 "${BACKEND_SITE_URL}/api/v1/health/" > /dev/null 2>&1; then
+            print_warning "Public HTTPS verification failed (likely CA chain on host). Retrying CORS checks with insecure TLS mode."
+            public_curl_args="-k --max-time 20"
+        fi
+
         local cors_header
-        cors_header="$(curl -sSI -H "Origin: ${FRONTEND_SITE_URL}" --max-time 20 "${BACKEND_SITE_URL}/api/v1/health/" | tr -d '\r' | awk -F': ' 'tolower($1)=="access-control-allow-origin" {print $2; exit}')"
+        cors_header="$(curl -sSI ${public_curl_args} -H "Origin: ${FRONTEND_SITE_URL}" "${BACKEND_SITE_URL}/api/v1/health/" | tr -d '\r' | awk -F': ' 'tolower($1)=="access-control-allow-origin" {print $2; exit}')"
         if [ "$cors_header" != "$FRONTEND_SITE_URL" ]; then
             print_error "CORS verification failed via public API domain"
             print_info "Expected Access-Control-Allow-Origin: ${FRONTEND_SITE_URL}"
             print_info "Actual Access-Control-Allow-Origin: ${cors_header:-<missing>}"
             print_info "Check reverse proxy (Apache/Nginx) upstream and backend container health"
+            return 1
+        fi
+
+        # Validate CORS on sync endpoint preflight and non-2xx path.
+        local sync_preflight_cors
+        sync_preflight_cors="$(curl -sSI ${public_curl_args} -X OPTIONS \
+            -H "Origin: ${FRONTEND_SITE_URL}" \
+            -H "Access-Control-Request-Method: POST" \
+            -H "Access-Control-Request-Headers: authorization,content-type" \
+            "${BACKEND_SITE_URL}/api/v1/admin/sync-external-users/" | tr -d '\r' | awk -F': ' 'tolower($1)=="access-control-allow-origin" {print $2; exit}')"
+        if [ "$sync_preflight_cors" != "$FRONTEND_SITE_URL" ]; then
+            print_error "Sync endpoint preflight CORS check failed"
+            print_info "Expected Access-Control-Allow-Origin: ${FRONTEND_SITE_URL}"
+            print_info "Actual Access-Control-Allow-Origin: ${sync_preflight_cors:-<missing>}"
+            return 1
+        fi
+
+        local sync_error_path_cors
+        sync_error_path_cors="$(curl -sSI ${public_curl_args} -X POST \
+            -H "Origin: ${FRONTEND_SITE_URL}" \
+            -H "Content-Type: application/json" \
+            --data '{}' \
+            "${BACKEND_SITE_URL}/api/v1/admin/sync-external-users/" | tr -d '\r' | awk -F': ' 'tolower($1)=="access-control-allow-origin" {print $2; exit}')"
+        if [ "$sync_error_path_cors" != "$FRONTEND_SITE_URL" ]; then
+            print_error "Sync endpoint error-path CORS check failed"
+            print_info "Expected Access-Control-Allow-Origin: ${FRONTEND_SITE_URL}"
+            print_info "Actual Access-Control-Allow-Origin: ${sync_error_path_cors:-<missing>}"
             return 1
         fi
     else
