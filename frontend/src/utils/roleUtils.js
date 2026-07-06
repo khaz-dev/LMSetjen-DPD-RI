@@ -77,11 +77,32 @@ export const switchRole = async (role, options = {}) => {
     
   } catch (error) {
     console.error('PHASE 4.17: Error switching role:', error);
-    
+
     if (error.response?.status === 400) {
       return {
         success: false,
         error: error.response.data.error || 'Pilihan peran tidak valid'
+      };
+    }
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Sesi login tidak valid atau telah berakhir. Silakan login kembali.'
+      };
+    }
+
+    if (error.response?.status === 403) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Akses ditolak untuk mengganti peran.'
+      };
+    }
+
+    if (error.response?.data?.error) {
+      return {
+        success: false,
+        error: error.response.data.error
       };
     }
     
@@ -144,16 +165,19 @@ export const getAvailableRoles = async () => {
  */
 const updateAuthTokens = (access_token, refresh_token) => {
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isHttps = window.location.protocol === 'https:';
+
   const cookieOptions = {
-    expires: isLocalhost ? 1 : 1,
-    secure: !isLocalhost,
-    sameSite: isLocalhost ? 'Lax' : 'strict'
+    expires: 1,
+    // Use protocol-aware secure flag to avoid silently dropped cookies on non-HTTPS staging/tests.
+    secure: isHttps,
+    sameSite: isHttps ? 'Strict' : 'Lax'
   };
 
   Cookie.set('access_token', access_token, cookieOptions);
   Cookie.set('refresh_token', refresh_token, {
     ...cookieOptions,
-    expires: isLocalhost ? 7 : 7
+    expires: 7
   });
   
   console.log('PHASE 4: Tokens updated');

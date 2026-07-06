@@ -311,18 +311,20 @@ export const setAuthUser = (access_token, refresh_token) => {
     }
     
     if (access_token && refresh_token) {
-        // Determine secure cookie settings based on environment
+        // Determine secure cookie settings based on actual protocol.
+        // Non-HTTPS environments cannot persist cookies with secure=true.
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const isHttps = window.location.protocol === 'https:';
         const cookieOptions = {
-            expires: isLocalhost ? 1 : 1,  // 1 day for access token
-            secure: !isLocalhost,  // Only secure flag on HTTPS (production)
-            sameSite: isLocalhost ? 'Lax' : 'strict'  // Lax for localhost, strict for HTTPS
+            expires: 1,  // 1 day for access token
+            secure: isHttps,
+            sameSite: isHttps ? 'Strict' : 'Lax'
         };
 
         Cookie.set("access_token", access_token, cookieOptions);
         Cookie.set("refresh_token", refresh_token, {
             ...cookieOptions,
-            expires: isLocalhost ? 7 : 7,  // 7 days for refresh token
+            expires: 7,  // 7 days for refresh token
         });
 
 

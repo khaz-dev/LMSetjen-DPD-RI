@@ -8,7 +8,6 @@ import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
 import { setAuthUser, redirectUserByRole } from '../../utils/auth';
 import RoleSelectionModal from '../../components/RoleSelectionModal';
-import Cookie from 'js-cookie';
 import './SSOLogin.css';
 
 /**
@@ -83,18 +82,6 @@ function SSOLogin() {
       if (!access || !refresh) {
         throw new Error("Invalid response from backend: missing tokens");
       }
-
-      // Store tokens in cookies immediately
-      Cookie.set('access_token', access, {
-        expires: 7,
-        secure: false,
-        sameSite: 'Lax',
-      });
-      Cookie.set('refresh_token', refresh, {
-        expires: 7,
-        secure: false,
-        sameSite: 'Lax',
-      });
 
       // CRITICAL: Update auth store with user data
       useAuthStore.getState().setUser({
