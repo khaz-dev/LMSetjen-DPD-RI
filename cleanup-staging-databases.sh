@@ -18,7 +18,6 @@
 #    - lmsdb_staging (old/unused LMS staging database)
 #
 #  DATABASES TO KEEP:
-#    - kmsdb        (KMS application - DO NOT DELETE)
 #    - lmsdb        (LMS application - DO NOT DELETE)
 #    - postgres     (PostgreSQL system database - DO NOT DELETE)
 #    - template0    (PostgreSQL template - DO NOT DELETE)
@@ -214,7 +213,6 @@ print_header "✅ CLEANUP COMPLETE"
 print_success "Deleted ${#EXISTING_DBS[@]} test database(s)"
 print_info "Backup location: $BACKUP_FILE"
 print_info "Active databases:"
-print_item "kmsdb (KMS application)"
 print_item "lmsdb (LMS application) ← Currently used by Docker"
 print_item "postgres (PostgreSQL system)"
 

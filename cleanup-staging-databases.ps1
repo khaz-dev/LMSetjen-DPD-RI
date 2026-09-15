@@ -18,7 +18,6 @@
 #    - lmsdb_staging (old/unused LMS staging database)
 #
 #  DATABASES TO KEEP:
-#    - kmsdb        (KMS application - DO NOT DELETE)
 #    - lmsdb        (LMS application - DO NOT DELETE)
 #
 ################################################################################
@@ -206,7 +205,6 @@ Write-Success "Unnecessary databases have been removed"
 Write-Info "Your staging server PostgreSQL is now clean!"
 Write-Info ""
 Write-Info "Active databases:"
-Write-Host "  • kmsdb (KMS application)"
 Write-Host "  • lmsdb (LMS application - used by Docker) ← Current"
 Write-Host "  • postgres (PostgreSQL system)"
 Write-Info ""

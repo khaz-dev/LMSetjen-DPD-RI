@@ -4,7 +4,6 @@
 
 - **Staging Server**: `165.245.191.216`
 - **LMS Domain**: `lms.khaz.app`
-- **KMS Domain**: `kms.khaz.app` (existing project)
 - **LMS Project Path**: `/var/www/html/lms`
 - **SSH Access**: `ssh -i c:\Users\khair\khaz root@165.245.191.216`
 
@@ -15,7 +14,6 @@
 ### Updated Project Structure
 - Old path: `/root/lmsetjendpdri` ❌
 - **New path: `/var/www/html/lms`** ✅
-- Matches existing KMS structure at `/var/www/html/kms`
 - Allows both projects to coexist with same nginx server
 
 ### Fixed CSRF Configuration
@@ -31,10 +29,8 @@ All `CSRF_TRUSTED_ORIGINS` now include schemes (http:// or https://):
 - [ ] SSH access verified to `165.245.191.216`
 - [ ] Nginx is running on staging server
 - [ ] Nginx config directory: `/etc/nginx/sites-available/`
-- [ ] KMS project is at `/var/www/html/kms` and working
 - [ ] Domains configured in DNS:
   - `lms.khaz.app` → `165.245.191.216`
-  - `kms.khaz.app` → `165.245.191.216` (already working)
 
 ---
 
@@ -232,16 +228,7 @@ Open these URLs in your browser:
 
 ---
 
-## 🔍 Step 5: Verify Both Projects Work
-
-### Test KMS Project (Should Still Work)
-
-```bash
-# In your browser
-https://kms.khaz.app
-
-# Should work normally without any changes
-```
+## 🔍 Step 5: Verify LMS Projects Work
 
 ### Test LMS Project
 

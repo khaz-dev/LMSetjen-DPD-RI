@@ -22,7 +22,6 @@ Your staging server PostgreSQL has **unnecessary test databases** that were crea
 ### Current Database Status
 
 ```sql
-kmsdb         | postgres         -- KMS application (KEEP)
 lmsdb         | postgres         -- LMS application (KEEP) ✅ ACTIVE
 postgres      | postgres         -- System database (KEEP)
 template0     | postgres         -- Template (KEEP)
@@ -192,7 +191,6 @@ ssh -i c:\Users\khair\khaz root@165.245.191.216
 sudo -i -u postgres psql -l
 
 # Should show:
-# kmsdb         | postgres
 # lmsdb         | postgres         ← Your active LMS database
 # postgres      | postgres
 # template0     | postgres

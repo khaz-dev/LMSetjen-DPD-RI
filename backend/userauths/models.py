@@ -390,3 +390,18 @@ post_save.connect(create_user_profile, sender=User)
 post_save.connect(save_user_profile, sender=User)
 post_save.connect(create_admin_profile, sender=User)
 post_save.connect(sync_profile_with_teacher, sender=Profile)
+
+# ==========================================
+# TAMBAHAN UNTUK KEAMANAN SSO (MENCEGAH REPLAY ATTACK K-02)
+# ==========================================
+class UsedSSOToken(models.Model):
+    # Menyimpan bagian ketiga dari JWT (signature) yang sifatnya unik
+    token_signature = models.CharField(max_length=500, unique=True, db_index=True)
+    used_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'used_sso_tokens'
+        verbose_name = 'Used SSO Token'
+
+    def __str__(self):
+        return f"Token used at {self.used_at}"

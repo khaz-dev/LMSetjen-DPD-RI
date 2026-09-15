@@ -28,7 +28,7 @@ except ImportError:
 
 from api import serializer as api_serializer
 from api import models as api_models
-from userauths.models import User, Profile, OrganizationUnit, Position
+from userauths.models import User, Profile, OrganizationUnit, Position, UsedSSOToken
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -255,7 +255,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 class SSOTokenVerifyAPIView(APIView):
     """
     Verify SSO token and exchange for LMS JWT tokens
-    
+
     Endpoint: /api/v1/sso/verify/
     Method: POST
     
@@ -293,7 +293,7 @@ class SSOTokenVerifyAPIView(APIView):
         
         logger = logging.getLogger(__name__)
         
-        # Get SSO token from request
+        # 1. Ambil token dari request
         sso_token = request.data.get('sso_token')
         
         logger.info("🔐 SSO Token Verification Started")
@@ -307,14 +307,37 @@ class SSOTokenVerifyAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # ==========================================
+        # 2. EKSTRAKSI SIGNATURE TOKEN (KODE BARU)
+        # ==========================================
+        try:
+            token_parts = sso_token.split('.')
+            if len(token_parts) != 3:
+                raise ValueError
+            signature = token_parts[2]
+        except Exception:
+            logger.error("[FAIL] Format token SSO tidak valid.")
+            return Response({"error": "Format token tidak valid."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ========================================================
+        # 3. CEK APAKAH TOKEN SUDAH PERNAH DIPAKAI (KODE BARU)
+        # ========================================================
+        if UsedSSOToken.objects.filter(token_signature=signature).exists():
+            logger.error("[FAIL] Akses ditolak: Token SSO sudah pernah digunakan.")
+            return Response(
+                {"error": "Akses ditolak: Token sudah kadaluarsa atau pernah digunakan."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # ==========================================================
+        # 4. KODE LAMA ANDA UNTUK DECODE TOKEN & LOGIN TETAP DI SINI
+        # ==========================================================
         try:
             logger.info("📤 Decoding SSO token...")
             # Decode SSO token without verification (trusting the SSO provider)
-            # In production, you should verify the signature using the SSO provider's public key
             sso_data = SSOTokenVerifier.decode_token_unsafe(sso_token)
             
             logger.info(f"[DONE] Token decoded successfully")
-            logger.info(f"SSO data: {sso_data}")
             
             # Validate SSO data
             logger.info("🔍 Validating SSO data...")
@@ -333,24 +356,28 @@ class SSOTokenVerifyAPIView(APIView):
             user, created = SSOUserManager.get_or_create_user_from_sso(sso_data)
             
             logger.info(f"[DONE] User found/created: {user.id}, created={created}")
-            logger.info(f"User details: email={user.email}, role={user.role}, nip={user.nip}")
             
             # Generate JWT tokens for LMS
             logger.info("🔑 Generating JWT tokens for LMS...")
             refresh = RefreshToken.for_user(user)
             
             # Use the same method as MyTokenObtainPairSerializer to add custom fields
-            # This ensures both access_token and refresh token have all user data
             api_serializer.MyTokenObtainPairSerializer._add_user_fields(refresh.access_token, user)
             api_serializer.MyTokenObtainPairSerializer._add_user_fields(refresh, user)
             
-            # Also ensure is_active is present (not added by serializer)
+            # Also ensure is_active is present
             refresh.access_token['is_active'] = user.is_active
             refresh['is_active'] = user.is_active
             
             logger.info("[DONE] JWT tokens generated successfully")
             logger.info(f"🎉 SSO login successful for user: {user.email}")
             
+            # ==========================================================
+            # 5. JIKA LOGIN BERHASIL, SIMPAN TOKEN (KODE BARU)
+            # ==========================================================
+            UsedSSOToken.objects.create(token_signature=signature)
+
+            # 6. KEMBALIKAN RESPONSE SUKSES (Kode asli Anda)
             return Response(
                 {
                     "access": str(refresh.access_token),
@@ -362,7 +389,6 @@ class SSOTokenVerifyAPIView(APIView):
                         "role": user.role,
                         "nip": user.nip,
                         "is_active": user.is_active,
-                        # 🔥 CRITICAL FIX: Use boolean roles for role selector (supports instructor/teacher)
                         "available_roles": user.get_available_boolean_roles(),
                         "current_role": user.current_role,
                         "roles": user.roles,
