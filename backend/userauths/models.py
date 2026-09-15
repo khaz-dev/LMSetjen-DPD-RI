@@ -72,6 +72,7 @@ class User(AbstractUser):
     external_created_at = models.DateTimeField(null=True, blank=True, help_text="External system creation date")
     external_updated_at = models.DateTimeField(null=True, blank=True, help_text="External system update date")
     last_sync_date = models.DateTimeField(null=True, blank=True, help_text="Last synchronization with external system")
+    is_internal = models.BooleanField(default=False, help_text="Designates whether the user is an internal DPD RI employee.")
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']

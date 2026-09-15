@@ -151,7 +151,6 @@ class SSOUserManager:
             raise ValueError("NIP (employee ID) is required from SSO data")
         
         user = None
-        created = False
         
         # PRIMARY LOOKUP: Try to find existing user by EMAIL first (unique field)
         # This ensures users logging in via Google + SSO are treated as the same account
@@ -165,41 +164,31 @@ class SSOUserManager:
                 pass  # User doesn't exist by email, continue
         
         # FALLBACK: Try to find by NIP
-        # ⚠️ Note: NIP is not unique, so this may return multiple users
-        # Handle MultipleObjectsReturned gracefully by taking the first/primary one
         try:
             users = User.objects.filter(nip=nip)
             
             if users.exists():
-                # If multiple users with same NIP, use the oldest (first created)
-                # This handles duplicate NIP edge case
                 user = users.order_by('date_joined').first()
-                
-                # Update NIP-based user with email if provided
                 if email and user.email != email:
-                    # Only update email if it's not already taken by another user
                     if not User.objects.filter(email=email).exclude(id=user.id).exists():
                         user.email = email
                         user.save()
                 
-                # Update other user data from SSO
                 user = SSOUserManager.update_user_from_sso(user, sso_data)
                 return user, False
         except Exception as e:
-            # Continue to create new user if lookup fails
             pass
         
-        # CREATE NEW USER: If not found by email or NIP, create new user
+        # CREATE NEW USER FROM SSO
         user = SSOUserManager.create_user_from_sso(sso_data)
         return user, True
     
     @staticmethod
     def create_user_from_sso(sso_data):
-        """Create new user from SSO data"""
+        """Create new user from SSO data (Otomatis Pegawai / Internal)"""
         nip = sso_data.get('nip')
         name = sso_data.get('name', '')
         email = sso_data.get('email', '')
-        # ✨ PHASE 5.1: Support jenis_jabatan from SSO data
         jenis_jabatan = sso_data.get('jenis_jabatan', '')
         golongan = sso_data.get('golongan', '')
         kelas_jabatan = sso_data.get('kelas_jabatan', '')
@@ -214,17 +203,20 @@ class SSOUserManager:
         # Generate unique username
         username = SSOUserManager.generate_unique_username(email)
         
-        # Create user with full employee information from SSO
+        # Karena berasal dari sinkronisasi pegawai (SSO), maka is_internal = True
         user = User.objects.create(
             username=username,
             email=email,
             full_name=name,
             nip=nip,
-            # ✨ PHASE 5.1: Populate employee information fields
             jenis_jabatan=jenis_jabatan,
             golongan=golongan,
             kelas_jabatan=kelas_jabatan,
-            role='student',  # Default role for SSO users
+            role='student',
+            is_student=True,
+            is_instructor=False,
+            is_admin=False,
+            is_internal=True,
             is_active=True,
             external_status='ACTIVE'
         )
@@ -236,38 +228,23 @@ class SSOUserManager:
     
     @staticmethod
     def update_user_from_sso(user, sso_data):
-        """
-        Update existing user with SSO data
-        
-        ✨ PHASE 5: Synchronize user data from SSO
-        - Merge Gmail accounts with SSO accounts
-        - Keep all existing role permissions
-        - Preserve name from sync (Sinkronisasi Data Pegawai) process
-        - ✨ PHASE 5.1: Sync employee information fields (jenis_jabatan, golongan, kelas_jabatan)
-        """
+        """ Update existing user with SSO data """
         name = sso_data.get('name')
         email = sso_data.get('email')
         nip = sso_data.get('nip')
-        # ✨ PHASE 5.1: Get employee information from SSO data
         jenis_jabatan = sso_data.get('jenis_jabatan')
         golongan = sso_data.get('golongan')
         kelas_jabatan = sso_data.get('kelas_jabatan')
         
-        # ✨ PHASE 5: Only update full_name if currently blank
-        # Preserve name set during sync, don't override on SSO login
         if name and not user.full_name:
             user.full_name = name
         
         if email and user.email != email:
             user.email = email
         
-        # CRITICAL: Sync NIP from SSO if not already set
-        # This merges users who first signed up via Google
         if nip and not user.nip:
             user.nip = nip
-        
-        # ✨ PHASE 5.1: Sync employee information fields
-        # Only update if provided AND current value is empty
+
         if jenis_jabatan and not user.jenis_jabatan:
             user.jenis_jabatan = jenis_jabatan
         
@@ -277,7 +254,9 @@ class SSOUserManager:
         if kelas_jabatan and not user.kelas_jabatan:
             user.kelas_jabatan = kelas_jabatan
         
-        # Update external fields
+        # Pastikan karena masuk lewat jalur SSO/sinkronisasi, status internalnya True
+        user.is_internal = True
+
         if 'iat' in sso_data:
             user.external_created_at = datetime.fromtimestamp(sso_data['iat'])
         
@@ -291,7 +270,6 @@ class SSOUserManager:
     
     @staticmethod
     def generate_unique_username(email):
-        """Generate unique username from email"""
         base_username = email.split('@')[0]
         username = base_username
         counter = 1
@@ -436,7 +414,6 @@ class GoogleOAuthUserManager:
             tuple: (user, created) where created is boolean
         """
         email = google_data.get('email')
-        google_id = google_data.get('google_id')
         
         if not email:
             raise ValueError("Email is required from Google OAuth data")
@@ -454,28 +431,33 @@ class GoogleOAuthUserManager:
     
     @staticmethod
     def create_user_from_google(google_data):
-        """Create new user from Google OAuth data"""
+        """Create new user from Google OAuth data (Default Publik, kecuali sudah punya NIP hasil sinkronisasi)"""
         email = google_data.get('email')
         name = google_data.get('name', '')
-        google_id = google_data.get('google_id')
         
         if not name:
             name = email.split('@')[0]
         
         # Generate unique username from email
         username = GoogleOAuthUserManager.generate_unique_username(email)
+
+        # Cek apakah user ini sebenarnya sudah memiliki NIP (misal emailnya pernah didaftarkan/disinkronkan lewat data pegawai sebelumnya)
+        existing_nip_check = User.objects.filter(email=email, nip__isnull=False).exists()
+        is_employee_internal = bool(existing_nip_check)
         
-        # Create user
         user = User.objects.create(
             username=username,
             email=email,
             full_name=name,
-            role='student',  # Default role for Google OAuth users
+            role='student',
+            is_student=True,
+            is_instructor=False,
+            is_admin=False,
+            is_internal=is_employee_internal,  # ✨ True jika sudah ada data NIP-nya, False jika murni publik mendaftar via Google
             is_active=True,
             external_status='ACTIVE'
         )
         
-        # Create user profile with Google ID
         profile, _ = Profile.objects.get_or_create(user=user)
         profile.full_name = name
         profile.save()
@@ -488,12 +470,12 @@ class GoogleOAuthUserManager:
         name = google_data.get('name')
         picture = google_data.get('picture')
         
-        # ✨ PHASE 5: Only update full_name if currently blank
-        # Preserve name set during sync (Sinkronisasi Data Pegawai)
-        # Only use Google name if user has no name yet (new user)
         if name and not user.full_name:
             user.full_name = name
         
+        # ✨ Validasi konsistensi: User internal adalah yang memiliki NIP (hasil sinkronisasi pegawai)
+        user.is_internal = bool(user.nip)
+
         user.last_login = datetime.now()
         user.save()
         
@@ -504,7 +486,7 @@ class GoogleOAuthUserManager:
                 profile.profile_pic = picture
             profile.save()
         except Profile.DoesNotExist:
-            profile = Profile.objects.create(user=user, profile_pic=picture)
+            Profile.objects.create(user=user, profile_pic=picture)
         
         return user
     

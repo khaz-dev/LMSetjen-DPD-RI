@@ -156,6 +156,7 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'full_name',
             'role',
+            'is_internal',
             'is_student',
             'is_instructor',
             'is_admin',
