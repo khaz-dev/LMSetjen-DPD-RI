@@ -506,19 +506,19 @@ class UserTestimonialsListAPIView(generics.ListAPIView):
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class FileUploadAPIView(APIView):
     """
-    File Upload API View (Mengatasi Temuan Pentest T-01)
+    File Upload API View (Mengatasi Temuan Pentest T-01 & T-02)
     
     Security controls:
-    1. Whitelist ekstensi ketat: hanya .pdf, .png, .jpg, .jpeg, .mp4.
-    2. Tolak mentah-mentah file berbahaya: .html, .svg, .php, .exe, .js, dll.
-    3. Validasi Content-Type / MIME Type dan inspeksi Magic Bytes / payload script.
-    4. Ganti nama file menjadi acak menggunakan uuid4().hex untuk mencegah path traversal dan tebakan lokasi file.
+    1. 🔒 Autentikasi wajib (IsAuthenticated) - mencegah anonymous upload dan mencatat pengunggah.
+    2. 🔒 Whitelist ekstensi ketat: hanya .pdf, .png, .jpg, .jpeg, .mp4.
+    3. 🔒 Tolak mentah-mentah file berbahaya: .html, .svg, .php, .exe, .js, dll.
+    4. 🔒 Validasi Content-Type / MIME Type dan inspeksi Magic Bytes / payload script.
+    5. 🔒 Ganti nama file menjadi acak menggunakan uuid4().hex untuk mencegah path traversal.
+    6. 🔒 Pencatatan ke model UploadedFile di database dengan relasi ke request.user (T-02).
     """
-    permission_classes = [AllowAny]
-    authentication_classes = []  # Explicitly disable authentication for this view
+    permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser,)
 
     ALLOWED_EXTENSIONS = {'.pdf', '.png', '.jpg', '.jpeg', '.mp4'}
@@ -537,11 +537,12 @@ class FileUploadAPIView(APIView):
     }
 
     @swagger_auto_schema(
-        operation_description="Upload a file with strict security validation (T-01)",
+        operation_description="Upload a file with strict security validation (T-01 & T-02)",
         request_body=api_serializer.FileUploadSerializer,
         responses={
             200: openapi.Response('File uploaded successfully', openapi.Schema(type=openapi.TYPE_OBJECT)),
             400: openapi.Response('Disallowed or invalid file', openapi.Schema(type=openapi.TYPE_OBJECT)),
+            401: openapi.Response('Authentication required'),
         }
     )
     def post(self, request):
@@ -557,7 +558,7 @@ class FileUploadAPIView(APIView):
         file_extension = os.path.splitext(file.name)[1].lower()
         if file_extension in self.DANGEROUS_EXTENSIONS or file_extension not in self.ALLOWED_EXTENSIONS:
             security_logger.warning(
-                f"[FILE UPLOAD REJECTED] Disallowed extension '{file_extension}' for file '{file.name}'"
+                f"[FILE UPLOAD REJECTED] Disallowed extension '{file_extension}' for file '{file.name}' by user {request.user.id}"
             )
             return Response(
                 {"error": f"Format file '{file_extension}' tidak diizinkan. Hanya file .pdf, .png, .jpg, dan .mp4 yang diperbolehkan."},
@@ -570,7 +571,7 @@ class FileUploadAPIView(APIView):
             # Block dangerous content types
             if any(danger in content_type for danger in ['html', 'svg', 'php', 'javascript', 'x-sh', 'x-executable']):
                 security_logger.warning(
-                    f"[FILE UPLOAD REJECTED] Malicious content-type '{content_type}' for file '{file.name}'"
+                    f"[FILE UPLOAD REJECTED] Malicious content-type '{content_type}' for file '{file.name}' by user {request.user.id}"
                 )
                 return Response(
                     {"error": "Tipe konten file tidak diizinkan."},
@@ -597,7 +598,7 @@ class FileUploadAPIView(APIView):
         script_signatures = [b'<?php', b'<html', b'<script', b'<svg', b'#!/bin', b'eval(', b'<%']
         if any(sig in file_header_lower for sig in script_signatures):
             security_logger.warning(
-                f"[FILE UPLOAD REJECTED] Embedded script signature detected in file '{file.name}'"
+                f"[FILE UPLOAD REJECTED] Embedded script signature detected in file '{file.name}' by user {request.user.id}"
             )
             return Response(
                 {"error": "File terdeteksi mengandung konten atau skrip yang tidak diizinkan."},
@@ -613,7 +614,6 @@ class FileUploadAPIView(APIView):
             return Response({"error": "File JPEG tidak valid (header rusak atau dimanipulasi)."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 4. 🔒 Random File Naming using UUID (T-01)
-        # Jangan simpan file dengan nama aslinya untuk mencegah tebakan lokasi file berbahaya
         random_name = f"{uuid.uuid4().hex}{file_extension}"
         upload_type = request.data.get('upload_type', 'course')
         
@@ -629,23 +629,40 @@ class FileUploadAPIView(APIView):
                 old_path = urlparse(old_file_url).path
                 if '/media/' in old_path:
                     rel_path = old_path.split('/media/', 1)[1]
-                    # Secure check: ensure target is within allowed dirs and no directory traversal
                     if (rel_path.startswith('course-file/') or rel_path.startswith('curriculum-media/')) and '..' not in rel_path:
                         if default_storage.exists(rel_path):
                             default_storage.delete(rel_path)
-                            print(f"[FileUploadAPIView] 🗑️ Deleted previous file: {rel_path}")
+                            print(f"[FileUploadAPIView] 🗑️ Deleted previous physical file: {rel_path}")
+                        # Clean up previous UploadedFile DB record if owned by request.user
+                        api_models.UploadedFile.objects.filter(
+                            file_url=old_file_url,
+                            uploaded_by=request.user
+                        ).delete()
             except Exception as e:
                 print(f"[FileUploadAPIView] ⚠️ Error cleaning up old file: {e}")
 
-        # Save the file to storage with UUID-based name
+        # 6. Save the file to storage with UUID-based name
         file_path = default_storage.save(unique_filename, ContentFile(file.read()))
         file_url = request.build_absolute_uri(default_storage.url(file_path))
+        file_category = self.determine_file_type(file_extension)
+
+        # 7. 🔒 Record in UploadedFile database model for ownership tracking (T-02)
+        uploaded_file = api_models.UploadedFile.objects.create(
+            uploaded_by=request.user,
+            file_name=file.name,
+            file_path=file_path,
+            file_url=file_url,
+            file_size=file.size,
+            file_type=file_category
+        )
 
         response_data = {
+            "id": uploaded_file.id,
+            "file_id": uploaded_file.file_id,
             "url": file_url,
             "file_name": file.name,
             "file_size": file.size,
-            "file_type": self.determine_file_type(file_extension)
+            "file_type": file_category
         }
 
         # Handle video duration metadata if it is an MP4 video
@@ -684,111 +701,168 @@ class FileUploadAPIView(APIView):
         return "other"
 
 
+# ==================== FILE CLEANUP API (PENTEST T-02) ====================
 
-
-# ✨ PHASE 4.101.4: File Cleanup API
-# Used when user switches image source without saving draft
-# Example: User had uploaded file, now wants to set URL instead → delete old file immediately
-@method_decorator(csrf_exempt, name='dispatch')
 class FileCleanupAPIView(APIView):
     """
-    Delete uploaded files on demand
+    Delete uploaded files with ownership validation (Mengatasi Temuan Pentest T-02)
     
-    DELETE /api/v1/file-cleanup/
-    Expects: { "file_url": "http://localhost:8001/media/course-file/abc.jpg" }
-            OR: { "file_url": "http://localhost:8001/media/curriculum-media/271157-variant-221316-1.mp4" }
-    
-    GET /api/v1/file-cleanup/ for debugging - shows all course files
-    Used when user switches image source (File → URL or URL → File)
-    or deletes uploaded curriculum media files
-    to ensure only ONE source exists at a time
-    ✨ PHASE 4.167: Support both /media/course-file/ and /media/curriculum-media/ deletion
+    Security controls:
+    1. 🔒 Autentikasi wajib (IsAuthenticated).
+    2. 🔒 Menghapus berdasarkan ID file di database (file_id atau id), bukan URL mentah.
+    3. 🔒 Verifikasi kepemilikan ketat: file.uploaded_by == request.user sebelum file dihapus.
+    4. 🔒 Fallback terverifikasi untuk file kursus/kurikulum lama milik pengajar yang bersangkutan.
+    5. 🔒 Endpoint GET diamankan hanya menampilkan file milik pengguna yang sedang login.
     """
-    
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        """Debug endpoint to list all files in media/course-file/"""
-        import os
-        course_file_dir = os.path.join(settings.MEDIA_ROOT, 'course-file')
-        
-        print(f"\n[FileCleanupAPIView.get] 🔍 DEBUG: Listing all course files")
-        print(f"[FileCleanupAPIView.get] Directory: {course_file_dir}")
-        
-        if not os.path.exists(course_file_dir):
-            print(f"[FileCleanupAPIView.get] ❌ Directory doesn't exist!")
-            return Response({"error": "course-file directory not found"}, status=400)
-        
-        files = os.listdir(course_file_dir)
-        file_info = []
-        for filename in files:
-            filepath = os.path.join(course_file_dir, filename)
-            size = os.path.getsize(filepath)
-            mtime = os.path.getmtime(filepath)
-            from datetime import datetime
-            mod_time = datetime.fromtimestamp(mtime).isoformat()
-            file_info.append({
-                "name": filename,
-                "size_bytes": size,
-                "modified": mod_time
-            })
-            print(f"[FileCleanupAPIView.get]   - {filename} ({size} bytes)")
-        
+        """
+        List files uploaded by the current authenticated user only.
+        Secured against unauthorized information disclosure.
+        """
+        user_files = api_models.UploadedFile.objects.filter(
+            uploaded_by=request.user
+        ).order_by('-created_at')[:50]
+
+        file_info = [
+            {
+                "file_id": f.file_id,
+                "name": f.file_name,
+                "url": f.file_url,
+                "size_bytes": f.file_size,
+                "file_type": f.file_type,
+                "created_at": f.created_at.isoformat()
+            }
+            for f in user_files
+        ]
+
         return Response({
             "total_files": len(file_info),
             "files": file_info,
-            "message": "Use DELETE endpoint with file_url to delete a file"
-        }, status=200)
-    
+        }, status=status.HTTP_200_OK)
+
     def delete(self, request):
+        """
+        DELETE /api/v1/file-cleanup/
+        Payload: { "file_id": "abc123xyz" } OR { "id": 123 } OR { "file_url": "http://..." }
+        """
+        file_id = request.data.get('file_id') or request.data.get('id')
         file_url = request.data.get('file_url')
-        
-        print(f"\n[FileCleanupAPIView.delete] 🔍 DELETE REQUEST RECEIVED")
-        print(f"[FileCleanupAPIView.delete] file_url parameter: {repr(file_url)}")
-        print(f"[FileCleanupAPIView.delete] request.data: {request.data}")
-        
-        if not file_url:
-            print(f"[FileCleanupAPIView.delete] ❌ ERROR: file_url is required")
+
+        if not file_id and not file_url:
             return Response(
-                {"error": "file_url is required"}, 
+                {"error": "Parameter file_id atau file_url diperlukan."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # ✨ PHASE 4.167: Allow deletion of local /media/course-file/ AND /media/curriculum-media/ files
-        # Don't allow external URLs (Google Drive, etc.)
-        is_local = (
-            '/media/course-file/' in file_url or 'media/course-file/' in file_url or
-            '/media/curriculum-media/' in file_url or 'media/curriculum-media/' in file_url
+
+        # 1. 🔍 Cari record file di database UploadedFile
+        file_record = None
+        if file_id:
+            if str(file_id).isdigit():
+                file_record = api_models.UploadedFile.objects.filter(
+                    Q(id=int(file_id)) | Q(file_id=str(file_id))
+                ).first()
+            else:
+                file_record = api_models.UploadedFile.objects.filter(file_id=str(file_id)).first()
+        elif file_url:
+            file_record = api_models.UploadedFile.objects.filter(file_url=file_url).first()
+
+        # 2. 🔒 Validasi kepemilikan jika record ditemukan di UploadedFile
+        if file_record:
+            is_owner = (file_record.uploaded_by == request.user)
+            is_admin_or_staff = (
+                request.user.is_staff or 
+                request.user.is_superuser or 
+                getattr(request.user, 'role', '') == 'admin'
+            )
+
+            if not is_owner and not is_admin_or_staff:
+                security_logger.warning(
+                    f"[FILE CLEANUP FORBIDDEN] User {request.user.id} ({request.user.username}) "
+                    f"attempted to delete file '{file_record.file_id}' owned by user {file_record.uploaded_by_id}"
+                )
+                return Response(
+                    {"error": "Anda tidak memiliki izin untuk menghapus file ini (bukan pemilik file)."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Kepemilikan terverifikasi! Hapus file fisik di storage
+            target_path = file_record.file_path
+            try:
+                if default_storage.exists(target_path):
+                    default_storage.delete(target_path)
+                elif file_record.file_url:
+                    delete_orphaned_file(file_record.file_url)
+            except Exception as e:
+                logger.error(f"[FileCleanupAPIView] Error deleting physical file {target_path}: {e}")
+
+            # Hapus record dari database
+            file_record.delete()
+            return Response(
+                {"message": "File berhasil dihapus dari database dan server."},
+                status=status.HTTP_200_OK
+            )
+
+        # 3. 🔒 Fallback terverifikasi untuk file legacy (diunggah sebelum model UploadedFile ada)
+        if file_url:
+            # Abaikan URL eksternal (Google Drive, YouTube, dll)
+            is_local = (
+                '/media/course-file/' in file_url or 'media/course-file/' in file_url or
+                '/media/curriculum-media/' in file_url or 'media/curriculum-media/' in file_url
+            )
+            if not is_local:
+                return Response(
+                    {"message": "URL eksternal tidak perlu dihapus dari server."},
+                    status=status.HTTP_200_OK
+                )
+
+            # Cek kepemilikan kursus / kurikulum di database
+            owns_course_file = api_models.Course.objects.filter(
+                teacher__user=request.user
+            ).filter(
+                Q(image=file_url) | Q(file=file_url)
+            ).exists()
+
+            owns_curriculum_file = api_models.VariantItem.objects.filter(
+                variant__course__teacher__user=request.user,
+                file=file_url
+            ).exists()
+
+            is_admin_or_staff = (
+                request.user.is_staff or 
+                request.user.is_superuser or 
+                getattr(request.user, 'role', '') == 'admin'
+            )
+
+            if not owns_course_file and not owns_curriculum_file and not is_admin_or_staff:
+                security_logger.warning(
+                    f"[FILE CLEANUP FORBIDDEN] User {request.user.id} ({request.user.username}) "
+                    f"attempted to delete unverified/foreign file_url: {file_url}"
+                )
+                return Response(
+                    {"error": "File tidak ditemukan di database atau Anda bukan pemilik yang berhak menghapus file ini."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Terverifikasi sebagai pemilik kursus/kurikulum! Hapus file fisik
+            try:
+                delete_orphaned_file(file_url)
+                return Response(
+                    {"message": "File lama berhasil diverifikasi kepemilikannya dan dihapus."},
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                logger.error(f"[FileCleanupAPIView] Error deleting legacy file: {e}")
+                return Response(
+                    {"message": "Permintaan penghapusan file diproses."},
+                    status=status.HTTP_200_OK
+                )
+
+        return Response(
+            {"error": "File tidak ditemukan di database sistem."},
+            status=status.HTTP_404_NOT_FOUND
         )
-        print(f"[FileCleanupAPIView.delete] is_local file: {is_local}")
-        print(f"[FileCleanupAPIView.delete] Checking '/media/course-file/': {'/media/course-file/' in file_url}")
-        print(f"[FileCleanupAPIView.delete] Checking 'media/course-file/': {'media/course-file/' in file_url}")
-        print(f"[FileCleanupAPIView.delete] Checking '/media/curriculum-media/': {'/media/curriculum-media/' in file_url}")
-        print(f"[FileCleanupAPIView.delete] Checking 'media/curriculum-media/': {'media/curriculum-media/' in file_url}")
-        
-        if not is_local:
-            print(f"[FileCleanupAPIView.delete] ⏭️  SKIPPED: External URL (not local file): {file_url}")
-            return Response(
-                {"message": "External URLs not deleted"}, 
-                status=status.HTTP_200_OK
-            )
-        
-        try:
-            print(f"[FileCleanupAPIView.delete] 🗑️  Attempting to delete file...")
-            print(f"[FileCleanupAPIView.delete] delete_orphaned_file('{file_url}')")
-            delete_orphaned_file(file_url)
-            print(f"[FileCleanupAPIView.delete] ✅ Successfully deleted: {file_url}")
-            return Response(
-                {"message": "File deleted successfully"}, 
-                status=status.HTTP_200_OK
-            )
-        except Exception as e:
-            print(f"[FileCleanupAPIView.delete] ❌ Error deleting file: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            # Return success anyway (file might not exist)
-            return Response(
-                {"message": "Deletion request processed"}, 
-                status=status.HTTP_200_OK
-            )
 
 
 

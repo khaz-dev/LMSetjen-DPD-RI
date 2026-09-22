@@ -1192,6 +1192,7 @@ function SortableLessonItem({
                                             handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
                                             handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
                                             handleLessonChange(variantIndex, itemIndex, "uploadedFile", response.data.url);
+                                            handleLessonChange(variantIndex, itemIndex, "file_id", response.data.file_id || response.data.id);
                                                             // ✨ PHASE 4.189: Set media_source to 'upload' so it updates in admin panel
                                                             handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
                                                             
@@ -2478,8 +2479,12 @@ function CourseEditCurriculum() {
         try {
             // Call backend to delete the actual file
             // ✨ PHASE 4.146: Use singleton useAxios with relative path
+            const currentItem = variants?.[variantIndex]?.items?.[itemIndex];
             await useAxios.delete('file-cleanup/', {
-                data: { file_url: fileUrl }
+                data: { 
+                    file_url: fileUrl,
+                    file_id: currentItem?.file_id 
+                }
             });
             
             console.log('[Curriculum] File deleted successfully:', fileUrl);

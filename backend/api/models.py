@@ -3881,6 +3881,67 @@ class Feedback(models.Model):
         return 'unknown'
 
 
+# ==================== UPLOADED FILE MODEL (PENTEST T-02) ====================
+
+class UploadedFile(models.Model):
+    """
+    Model pelacakan file yang diunggah ke server (Mengatasi Pentest T-02)
+    Digunakan untuk memvalidasi kepemilikan file sebelum penghapusan di /api/v1/file-cleanup/
+    serta mencegah kerentanan Arbitrary File Deletion / IDOR.
+    """
+    file_id = ShortUUIDField(
+        unique=True,
+        length=12,
+        max_length=25,
+        alphabet="abcdefghijklmnopqrstuvwxyz1234567890",
+        help_text="Public identifier for file operations"
+    )
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='uploaded_files',
+        help_text="User yang mengunggah file"
+    )
+    file_name = models.CharField(
+        max_length=255,
+        help_text="Nama asli file dari klien"
+    )
+    file_path = models.CharField(
+        max_length=500,
+        help_text="Path relatif penyimpanan di storage (misal: course-file/uuid.png)"
+    )
+    file_url = models.CharField(
+        max_length=1000,
+        db_index=True,
+        help_text="URL publik file"
+    )
+    file_size = models.BigIntegerField(
+        default=0,
+        help_text="Ukuran file dalam bytes"
+    )
+    file_type = models.CharField(
+        max_length=50,
+        default='other',
+        help_text="Kategori file (image, video, document, other)"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True
+    )
+
+    class Meta:
+        db_table = 'api_uploadedfile'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['uploaded_by', '-created_at']),
+            models.Index(fields=['file_url']),
+            models.Index(fields=['file_id']),
+        ]
+
+    def __str__(self):
+        return f"File {self.file_id} ({self.file_name}) by {self.uploaded_by.username}"
+
+
 # Connect the signals
 post_save.connect(sync_teacher_with_profile, sender=Teacher)
 post_save.connect(track_course_click, sender=SearchLog)

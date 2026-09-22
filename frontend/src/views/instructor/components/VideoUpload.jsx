@@ -117,6 +117,7 @@ const VideoUpload = ({ courseData, setCourseData, onVideoChange, onVideoDelete }
         setCourseData(prevData => ({
           ...prevData,
           file: response?.data?.url,
+          video_file_id: response?.data?.file_id,
           intro_video_source: "upload"
         }));
 
@@ -198,7 +199,10 @@ const VideoUpload = ({ courseData, setCourseData, onVideoChange, onVideoDelete }
       if (isLocalFile) {
         // Call backend to delete the actual file
         await useAxios.delete('file-cleanup/', {
-          data: { file_url: courseData.file }
+          data: { 
+            file_url: courseData.file,
+            file_id: courseData.video_file_id 
+          }
         });
         console.log('[VideoUpload] Intro video deleted successfully:', courseData.file);
       } else {

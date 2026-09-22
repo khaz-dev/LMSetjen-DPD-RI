@@ -135,7 +135,10 @@ const ImageUpload = ({
       console.log('[ImageUpload.deleteOldFileIfLocal] File URL:', courseData.image);
       
       const response = await useAxios().delete('/api/v1/file-cleanup/', {
-        data: { file_url: courseData.image }
+        data: { 
+          file_url: courseData.image,
+          file_id: courseData.image_file_id 
+        }
       });
       
       console.log('[ImageUpload.deleteOldFileIfLocal] ✅ Delete response:', response);
@@ -384,6 +387,7 @@ const ImageUpload = ({
         setCourseData(prevData => ({
           ...prevData,
           image: response?.data?.url,
+          image_file_id: response?.data?.file_id,
         }));
 
         // Trigger callback to mark form as dirty
