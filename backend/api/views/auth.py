@@ -31,6 +31,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, APIView
@@ -521,10 +522,11 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
     """
     User Profile API
     
-    CSRF exempt because:
-    - Uses JWT authentication for user identification
-    - Profile updates validated by serializer
-    - Public endpoint with AllowAny for flexibility
+    Secured with:
+    - JWT authentication (IsAuthenticated)
+    - Anti-IDOR Object-Level Authorization (K-03, K-04):
+      Pengguna hanya dapat melihat dan memperbarui profil mereka sendiri,
+      kecuali pengguna tersebut memiliki hak akses admin/staff.
     """
     serializer_class = api_serializer.ProfileSerializer
     permission_classes = [IsAuthenticated]
@@ -532,12 +534,30 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
     parser_classes = [MultiPartParser, FormParser]  # Support file uploads
 
     def get_object(self):
+        user_id = self.kwargs.get('user_id')
+        request_user = self.request.user
+        
+        # 🔒 Anti-IDOR Check (K-03 & K-04):
+        # Hanya izinkan akses jika mengakses profil sendiri atau admin/staff
+        is_admin_or_staff = (
+            request_user.is_staff or 
+            getattr(request_user, 'is_admin', False) or 
+            getattr(request_user, 'role', None) == 'admin'
+        )
+        if str(request_user.id) != str(user_id) and not is_admin_or_staff:
+            security_logger.warning(
+                f"[IDOR ATTEMPT] User {request_user.id} ({request_user.email}) "
+                f"attempted unauthorized access to profile of user_id={user_id}"
+            )
+            raise PermissionDenied("Anda tidak memiliki izin untuk mengakses atau mengubah profil ini.")
+            
         try:
-            user_id = self.kwargs['user_id']
             user = User.objects.get(id=user_id)
-            return Profile.objects.get(user=user)
-        except:
-            return None
+        except User.DoesNotExist:
+            raise Http404("User tidak ditemukan.")
+            
+        profile, _ = Profile.objects.get_or_create(user=user)
+        return profile
     
     def perform_update(self, serializer):
         # Update profile (including image if provided)

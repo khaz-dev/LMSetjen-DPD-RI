@@ -31,6 +31,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, APIView
@@ -863,11 +864,36 @@ class TeacherCreateFromProfileAPIView(APIView):
 
 
 class TeacherProfileAPIView(generics.RetrieveAPIView):
+    """
+    Teacher Profile API (Private Dashboard)
+    
+    Secured with:
+    - JWT authentication (IsAuthenticated)
+    - Anti-IDOR Object-Level Authorization:
+      Hanya pemilik akun guru atau admin/staff yang berhak melihat profil internal pengajar.
+    """
     serializer_class = api_serializer.BasicTeacherSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def get_object(self):
-        user_id = self.kwargs['user_id']
+        user_id = self.kwargs.get('user_id')
+        request_user = self.request.user
+        
+        # 🔒 Anti-IDOR Check:
+        # Hanya izinkan akses jika user mengakses profilnya sendiri atau admin/staff
+        is_admin_or_staff = (
+            request_user.is_staff or 
+            getattr(request_user, 'is_admin', False) or 
+            getattr(request_user, 'role', None) == 'admin'
+        )
+        if str(request_user.id) != str(user_id) and not is_admin_or_staff:
+            security_logger.warning(
+                f"[IDOR ATTEMPT] User {request_user.id} ({request_user.email}) "
+                f"attempted unauthorized access to teacher profile of user_id={user_id}"
+            )
+            raise PermissionDenied("Anda tidak memiliki izin untuk mengakses profil pengajar ini.")
+        
         teacher = api_models.Teacher.objects.filter(user_id=user_id).first()
         if not teacher:
             # If teacher doesn't exist, create one from profile
@@ -876,7 +902,7 @@ class TeacherProfileAPIView(generics.RetrieveAPIView):
                 profile = Profile.objects.get(user_id=user_id)
                 teacher = api_models.Teacher.create_from_profile(profile.user)
             except Profile.DoesNotExist:
-                return None
+                raise Http404("Data pengajar tidak ditemukan.")
         return teacher
 
 
@@ -918,16 +944,33 @@ class TeacherProfileUpdateAPIView(APIView):
     
     CSRF exempt because:
     - Uses JWT authentication for teacher operations
-    - Updates teacher profile data
-    - Secured by JWT token validation
+    - Secured by JWT token validation (IsAuthenticated)
+    - Anti-IDOR Object-Level Authorization:
+      Hanya pemilik akun pengajar atau admin/staff yang dapat mengubah data profil.
     """
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def patch(self, request, user_id):
         try:
             if not user_id:
                 return Response({'error': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            request_user = request.user
+            is_admin_or_staff = (
+                request_user.is_staff or 
+                getattr(request_user, 'is_admin', False) or 
+                getattr(request_user, 'role', None) == 'admin'
+            )
+            if str(request_user.id) != str(user_id) and not is_admin_or_staff:
+                security_logger.warning(
+                    f"[IDOR ATTEMPT] User {request_user.id} ({request_user.email}) "
+                    f"attempted unauthorized patch on teacher profile of user_id={user_id}"
+                )
+                return Response(
+                    {'error': 'Anda tidak memiliki izin untuk mengubah profil pengajar ini.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             
             # Get user to fetch actual full_name
             try:
