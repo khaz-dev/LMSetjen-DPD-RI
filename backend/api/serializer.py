@@ -206,6 +206,11 @@ class ProfileSerializer(serializers.ModelSerializer):
     # FileField automatically handles both reading URLs and writing file uploads
     image = serializers.FileField(required=False, allow_null=True)
     
+    # 🔒 Security: Expose role & admin flags as read-only, preventing Mass-Assignment
+    role = serializers.CharField(source='user.role', read_only=True)
+    is_admin = serializers.BooleanField(source='user.is_admin', read_only=True)
+    is_super_admin = serializers.SerializerMethodField()
+    
     # Computed fields for frontend display
     organization_unit_name = serializers.SerializerMethodField()
     position_name = serializers.SerializerMethodField()
@@ -213,6 +218,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = "__all__"
+        read_only_fields = ['role', 'is_admin', 'is_super_admin', 'nip', 'email']
     
 
     def to_representation(self, instance):
@@ -268,6 +274,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         
     def get_position_name(self, obj):
         return obj.position.name if obj.position else ""
+
+    def get_is_super_admin(self, obj):
+        try:
+            return bool(hasattr(obj.user, 'admin') and obj.user.admin.is_super_admin)
+        except Exception:
+            return False
 
 
 class AdminSerializer(serializers.ModelSerializer):

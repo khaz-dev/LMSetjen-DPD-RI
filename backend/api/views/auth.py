@@ -563,11 +563,12 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
         # Update profile (including image if provided)
         profile = serializer.save()
         
-        # Update user fields if provided
+        # 🔒 Anti-Mass-Assignment: Only allow non-sensitive user fields to be updated
+        # Fields like 'role', 'is_admin', 'is_super_admin', 'nip', 'email' are strictly protected
         user = profile.user
-        user_fields = ['full_name', 'nip', 'golongan', 'kelas_jabatan', 'jenis_jabatan']
+        allowed_user_fields = ['full_name', 'golongan', 'kelas_jabatan', 'jenis_jabatan']
         
-        for field in user_fields:
+        for field in allowed_user_fields:
             if field in self.request.data and self.request.data[field] is not None:
                 setattr(user, field, self.request.data[field])
         
