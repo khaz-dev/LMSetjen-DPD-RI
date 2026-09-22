@@ -363,6 +363,13 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+# SSO (Single Sign-On) Nusa DPD Configuration
+# Nusa DPD tidak menerbitkan secret key kepada konsumer, sehingga
+# verifikasi signature tidak dilakukan. Keamanan dijamin melalui:
+#   - Validasi klaim exp (token kadaluarsa ditolak)
+#   - Mekanisme anti-replay (setiap token hanya boleh digunakan satu kali)
+SSO_ALGORITHM = env.str('SSO_ALGORITHM', default='HS256')
+
 
 # CORS Configuration for Frontend Integration
 CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)

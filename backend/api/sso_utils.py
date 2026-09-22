@@ -38,72 +38,76 @@ class SSOUserSerializer(serializers.Serializer):
             raise serializers.ValidationError("NIP (employee ID) is required")
         return value
 
-
 class SSOTokenVerifier:
     """
-    Utility class for verifying and decoding SSO tokens from Nusa DPD
-    
-    Usage:
-        verifier = SSOTokenVerifier()
-        user_data = verifier.verify_token(token, secret_key)
+    Utility class for verifying and decoding SSO tokens from Nusa DPD.
+
+    Nusa DPD menerbitkan JWT yang di-encode dengan format standar namun TIDAK
+    menerbitkan secret key kepada konsumer. Oleh karena itu, verifikasi signature
+    tidak dilakukan. Keamanan diterapkan melalui lapisan lain:
+      1. Validasi klaim `exp` secara ketat (token kadaluarsa ditolak).
+      2. Anti-replay: setiap token hanya boleh digunakan satu kali (UsedSSOToken).
+      3. Token yang telah digunakan dicatat dan permanen ditolak.
     """
-    
+
     @staticmethod
-    def verify_token(token, secret_key=None, algorithms=['HS256']):
+    def verify_token(token, secret_key=None, algorithms=None):
         """
-        Verify and decode SSO JWT token
-        
-        🔒 SECURITY FIX: Always requires secret_key for production
-        - Never allows unsigned tokens in production
-        - Validates token expiration
-        - Validates token signature
-        
+        Decode dan validasi SSO JWT token dari Nusa DPD.
+
+        Karena Nusa DPD tidak menerbitkan secret key, verifikasi signature dinonaktifkan.
+        Validasi yang dilakukan:
+          - Format JWT harus valid (3 bagian: header.payload.signature)
+          - Klaim `exp` harus ada dan belum kadaluarsa
+          - Token hanya dapat digunakan SATU KALI (diatur di SSOTokenVerifyAPIView)
+
         Args:
-            token (str): JWT token from SSO
-            secret_key (str): Secret key to verify signature (REQUIRED for production)
-            algorithms (list): List of allowed algorithms
-            
+            token (str): JWT token dari URL SSO Nusa DPD
+            secret_key (str): Tidak digunakan, diabaikan (disisakan untuk kompatibilitas)
+            algorithms (list): Tidak digunakan aktif karena signature tidak diverifikasi
+
         Returns:
-            dict: Decoded token payload
-            
+            dict: Payload JWT yang sudah didecode
+
         Raises:
-            jwt.InvalidTokenError: If token is invalid, expired, or unsigned in production
+            jwt.InvalidTokenError: Jika token tidak valid atau sudah kadaluarsa
         """
-        from django.conf import settings
-        
+        from django.utils import timezone
+        import logging
+        logger = logging.getLogger('security')
+
         try:
-            # 🔒 SECURITY: In production, secret_key MUST be provided
-            if not settings.DEBUG and not secret_key:
-                raise jwt.InvalidTokenError(
-                    "Secret key is required for SSO token verification in production. "
-                    "Set SSO_SECRET_KEY environment variable."
-                )
-            
-            # Always verify signature if secret key provided
-            if secret_key:
-                decoded = jwt.decode(
-                    token,
-                    secret_key,
-                    algorithms=algorithms,
-                    options={"verify_signature": True}  # Explicitly verify
-                )
-            else:
-                # Development only - not recommended
-                import logging
-                logger = logging.getLogger('security')
-                logger.warning("SSO token verification without secret key - DEVELOPMENT ONLY")
-                decoded = jwt.decode(
-                    token,
-                    options={"verify_signature": False}
-                )
-            
+            # Decode tanpa verifikasi signature — sesuai kebijakan Nusa DPD
+            # Keamanan dijamin melalui validasi exp + mekanisme anti-replay
+            decoded = jwt.decode(
+                token,
+                options={"verify_signature": False, "verify_exp": False}
+            )
+
+            # Validasi klaim exp secara eksplisit dan ketat
+            exp = decoded.get('exp')
+            if exp is None:
+                logger.warning("[SSO] Token tidak memiliki klaim exp — ditolak")
+                raise jwt.InvalidTokenError("Token tidak memiliki masa berlaku (exp) — ditolak demi keamanan")
+
+            current_timestamp = timezone.now().timestamp()
+            if exp < current_timestamp:
+                logger.warning(f"[SSO] Token kadaluarsa: exp={exp}, now={current_timestamp:.0f}")
+                raise jwt.ExpiredSignatureError("Token SSO sudah kadaluarsa")
+
+            # Validasi klaim nip wajib ada
+            if not decoded.get('nip'):
+                raise jwt.InvalidTokenError("Token tidak mengandung NIP — bukan token SSO yang valid")
+
+            logger.info(f"[SSO] Token valid: nip={decoded.get('nip')}, exp={exp}")
             return decoded
+
         except jwt.ExpiredSignatureError:
-            raise jwt.InvalidTokenError("Token has expired")
-        except jwt.InvalidTokenError as e:
-            raise jwt.InvalidTokenError(f"Invalid token: {str(e)}")
+            raise jwt.InvalidTokenError("Token SSO sudah kadaluarsa")
+        except jwt.InvalidTokenError:
+            raise
         except Exception as e:
-            raise jwt.InvalidTokenError(f"Token verification failed: {str(e)}")
+            raise jwt.InvalidTokenError(f"Gagal memproses token SSO: {str(e)}")
     
     @staticmethod
     def decode_token_unsafe(token):

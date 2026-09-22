@@ -30,8 +30,7 @@ import RoleRoute from "./layouts/RoleRoute";
 // Auth Routes
 const Login = lazy(() => import("./views/auth/Login"));
 const SSOLogin = lazy(() => import("./views/auth/SSOLogin"));
-const ForgotPassword = lazy(() => import("./views/auth/ForgotPassword"));
-const CreateNewPassword = lazy(() => import("./views/auth/CreateNewPassword"));
+// ForgotPassword & CreateNewPassword dihapus — sistem hanya mendukung login via Google OAuth dan SSO Nusa DPD
 
 // Base Routes
 const Index = lazy(() => import("./views/base/Index"));
@@ -233,8 +232,9 @@ function App() {
                                     <Route path="/login/" element={<Login />} />
                                     <Route path="/sso/:sso_token/" element={<SSOLogin />} />
                                     <Route path="/sso/login/:sso_token/" element={<SSOLogin />} />
-                                    <Route path="/forgot-password/" element={<ForgotPassword />} />
-                                    <Route path="/create-new-password/" element={<CreateNewPassword />} />
+                                    {/* S-01 FIX: Fitur password reset dihapus — login hanya via Google OAuth dan SSO Nusa DPD */}
+                                    <Route path="/forgot-password/" element={<Navigate to="/login/" replace />} />
+                                    <Route path="/create-new-password/" element={<Navigate to="/login/" replace />} />
 
                                 {/* Base Routes */}
                                 <Route path="/" element={<Index />} />
