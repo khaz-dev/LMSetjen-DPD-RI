@@ -1818,6 +1818,27 @@ class QuizSubmissionSerializer(serializers.Serializer):
 class FileUploadSerializer(serializers.Serializer):
     file = serializers.FileField(required=True)
 
+    def validate_file(self, value):
+        """
+        Validate file extension against strict whitelist (T-01 Pentest Fix)
+        Only allows: .pdf, .png, .jpg, .jpeg, .mp4
+        Rejects: .html, .svg, .php, etc.
+        """
+        import os
+        allowed_extensions = {'.pdf', '.png', '.jpg', '.jpeg', '.mp4'}
+        dangerous_extensions = {
+            '.html', '.htm', '.svg', '.php', '.phtml', '.php3', '.php4', '.php5',
+            '.sh', '.bash', '.exe', '.bat', '.cmd', '.js', '.jsx', '.ts', '.tsx',
+            '.py', '.pl', '.cgi', '.asp', '.aspx', '.jsp', '.jspx', '.htaccess'
+        }
+        
+        ext = os.path.splitext(value.name)[1].lower()
+        if ext in dangerous_extensions or ext not in allowed_extensions:
+            raise serializers.ValidationError(
+                f"Format file '{ext}' tidak diizinkan. Hanya file .pdf, .png, .jpg, dan .mp4 yang diperbolehkan."
+            )
+        return value
+
 class ExternalUserDataSerializer(serializers.Serializer):
     """Serializer for external API user data"""
     id = serializers.CharField()

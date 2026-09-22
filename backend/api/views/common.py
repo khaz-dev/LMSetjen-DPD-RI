@@ -56,6 +56,7 @@ from cryptography.hazmat.primitives import padding
 
 from django.core.files.storage import default_storage
 import os
+import uuid
 import re
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 try:
@@ -508,211 +509,179 @@ class UserTestimonialsListAPIView(generics.ListAPIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class FileUploadAPIView(APIView):
     """
-    File Upload API View
+    File Upload API View (Mengatasi Temuan Pentest T-01)
     
-    Allows file uploads without CSRF token validation.
-    This is safe because:
-    1. Uses JWT authentication for authenticated requests
-    2. AllowAny permission allows public uploads (for course thumbnails, etc.)
-    3. Files are stored securely with UUID-based filenames
-    4. File type validation is performed by the serializer
+    Security controls:
+    1. Whitelist ekstensi ketat: hanya .pdf, .png, .jpg, .jpeg, .mp4.
+    2. Tolak mentah-mentah file berbahaya: .html, .svg, .php, .exe, .js, dll.
+    3. Validasi Content-Type / MIME Type dan inspeksi Magic Bytes / payload script.
+    4. Ganti nama file menjadi acak menggunakan uuid4().hex untuk mencegah path traversal dan tebakan lokasi file.
     """
     permission_classes = [AllowAny]
     authentication_classes = []  # Explicitly disable authentication for this view
-    parser_classes = (MultiPartParser, FormParser,)  # Allow file uploads
+    parser_classes = (MultiPartParser, FormParser,)
+
+    ALLOWED_EXTENSIONS = {'.pdf', '.png', '.jpg', '.jpeg', '.mp4'}
+    DANGEROUS_EXTENSIONS = {
+        '.html', '.htm', '.svg', '.php', '.phtml', '.php3', '.php4', '.php5',
+        '.phps', '.phar', '.sh', '.bash', '.exe', '.bat', '.cmd', '.js',
+        '.jsx', '.ts', '.tsx', '.py', '.pl', '.cgi', '.asp', '.aspx',
+        '.jsp', '.jspx', '.htaccess', '.env', '.config', '.war'
+    }
+    ALLOWED_MIME_TYPES = {
+        '.pdf': ['application/pdf'],
+        '.png': ['image/png'],
+        '.jpg': ['image/jpeg', 'image/pjpeg'],
+        '.jpeg': ['image/jpeg', 'image/pjpeg'],
+        '.mp4': ['video/mp4', 'application/mp4', 'video/x-m4v'],
+    }
 
     @swagger_auto_schema(
-        operation_description="Upload a file",
-        request_body=api_serializer.FileUploadSerializer,  # Use the serializer here
+        operation_description="Upload a file with strict security validation (T-01)",
+        request_body=api_serializer.FileUploadSerializer,
         responses={
             200: openapi.Response('File uploaded successfully', openapi.Schema(type=openapi.TYPE_OBJECT)),
-            400: openapi.Response('No file provided', openapi.Schema(type=openapi.TYPE_OBJECT)),
+            400: openapi.Response('Disallowed or invalid file', openapi.Schema(type=openapi.TYPE_OBJECT)),
         }
     )
-
     def post(self, request):
+        serializer = api_serializer.FileUploadSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        file = serializer.validated_data.get("file")
+        if not file:
+            return Response({"error": "File tidak ditemukan."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 1. 🔒 Whitelist & Blacklist extension check (T-01)
+        file_extension = os.path.splitext(file.name)[1].lower()
+        if file_extension in self.DANGEROUS_EXTENSIONS or file_extension not in self.ALLOWED_EXTENSIONS:
+            security_logger.warning(
+                f"[FILE UPLOAD REJECTED] Disallowed extension '{file_extension}' for file '{file.name}'"
+            )
+            return Response(
+                {"error": f"Format file '{file_extension}' tidak diizinkan. Hanya file .pdf, .png, .jpg, dan .mp4 yang diperbolehkan."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 2. 🔒 Content-Type / MIME Type check
+        content_type = getattr(file, 'content_type', '').lower()
+        if content_type:
+            # Block dangerous content types
+            if any(danger in content_type for danger in ['html', 'svg', 'php', 'javascript', 'x-sh', 'x-executable']):
+                security_logger.warning(
+                    f"[FILE UPLOAD REJECTED] Malicious content-type '{content_type}' for file '{file.name}'"
+                )
+                return Response(
+                    {"error": "Tipe konten file tidak diizinkan."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Verify content-type matches expected MIME types for the extension
+            expected_types = self.ALLOWED_MIME_TYPES.get(file_extension, [])
+            if expected_types and not any(exp in content_type for exp in expected_types):
+                security_logger.warning(
+                    f"[FILE UPLOAD REJECTED] MIME type mismatch '{content_type}' for extension '{file_extension}'"
+                )
+                return Response(
+                    {"error": f"Tipe konten '{content_type}' tidak sesuai dengan ekstensi file '{file_extension}'."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # 3. 🔒 File Header & Script Signature Inspection (Magic Bytes)
+        file_header = file.read(2048)
+        file.seek(0)  # Reset pointer
+        file_header_lower = file_header.lower()
+
+        # Check for web shell / malicious script patterns
+        script_signatures = [b'<?php', b'<html', b'<script', b'<svg', b'#!/bin', b'eval(', b'<%']
+        if any(sig in file_header_lower for sig in script_signatures):
+            security_logger.warning(
+                f"[FILE UPLOAD REJECTED] Embedded script signature detected in file '{file.name}'"
+            )
+            return Response(
+                {"error": "File terdeteksi mengandung konten atau skrip yang tidak diizinkan."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate magic bytes for common formats
+        if file_extension == '.pdf' and not file_header.startswith(b'%PDF'):
+            return Response({"error": "File PDF tidak valid (header rusak atau dimanipulasi)."}, status=status.HTTP_400_BAD_REQUEST)
+        elif file_extension == '.png' and not file_header.startswith(b'\x89PNG\r\n\x1a\n'):
+            return Response({"error": "File PNG tidak valid (header rusak atau dimanipulasi)."}, status=status.HTTP_400_BAD_REQUEST)
+        elif file_extension in ['.jpg', '.jpeg'] and not file_header.startswith(b'\xff\xd8\xff'):
+            return Response({"error": "File JPEG tidak valid (header rusak atau dimanipulasi)."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 4. 🔒 Random File Naming using UUID (T-01)
+        # Jangan simpan file dengan nama aslinya untuk mencegah tebakan lokasi file berbahaya
+        random_name = f"{uuid.uuid4().hex}{file_extension}"
+        upload_type = request.data.get('upload_type', 'course')
         
-        serializer = api_serializer.FileUploadSerializer(data=request.data)  
+        if upload_type == 'curriculum':
+            unique_filename = f"curriculum-media/{random_name}"
+        else:
+            unique_filename = f"course-file/{random_name}"
 
-        if serializer.is_valid():
-            file = serializer.validated_data.get("file")
-            
-            # ✨ PHASE 4.101.3: DELETE OLD FILE BEFORE SAVING NEW ONE
-            # When user uploads a new image, immediately delete the old one
-            # This ensures only ONE image file exists on disk at a time
-            old_file_url = request.data.get('old_file_url')  # Frontend can send previous URL
-            
-            print(f"\n[FileUploadAPIView.post] 📤 NEW FILE UPLOAD RECEIVED")
-            print(f"[FileUploadAPIView.post] file name: {file.name}")
-            
-            # ✨ PHASE 4.102: Get course_id for consistent filename
-            course_id = request.data.get('course_id')
-            print(f"[FileUploadAPIView.post] course_id: {repr(course_id)}")
-            
-            # ✨ PHASE 4.107: Get upload type (curriculum, intro, or image)
-            upload_type = request.data.get('upload_type', 'course')  # Default: course image/intro
-            print(f"[FileUploadAPIView.post] upload_type: {repr(upload_type)}")
-            
-            old_file_url = request.data.get('old_file_url')
-            print(f"[FileUploadAPIView.post] old_file_url: {repr(old_file_url)}")
-            
-            # Note: old_file_url no longer needed for deletion (file overwrites by name)
-            # Kept for backwards compatibility with older frontend versions
-            
-            # ✨ PHASE 4.102/4.103: Create consistent filename based on course_id
-            # Format (course uploads):
-            #   - {course_id}-gk.{extension}  for images (gk = gambar kursus)
-            #   - {course_id}-intro.{extension}  for videos (intro = pengantar)
-            # Format (curriculum uploads - ✨ PHASE 4.107):
-            #   - {course_id}-variant-{variant_id}-{item_id}.{extension}  for lesson media
-            # This ensures new uploads overwrite old ones automatically!
-            file_extension = os.path.splitext(file.name)[1].lower()
-            
-            # Determine if this is a video or image file
-            video_extensions = ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.ogg', '.ogv', '.flv', '.wmv', '.m4v']
-            is_video_file = file_extension in video_extensions
-            
-            # ✨ PHASE 4.107: Handle curriculum media uploads separately from course image/intro
-            # ✨ PHASE 4.174: Use {course_id}_{variant_id}_{variant_item_id} pattern for unique names
-            if upload_type == 'curriculum' and course_id:
-                # Curriculum/lesson media uses variant + item IDs for unique naming
-                variant_id = request.data.get('variant_id', 'unknown')
-                item_id = request.data.get('item_id', 'unknown')  # Now variant_item_id from frontend
-                
-                # Naming: {course_id}_{variant_id}_{item_id}.{extension} (underscores for clarity)
-                # Directory: curriculum-media/ (separate from course files)
-                unique_filename = f"curriculum-media/{course_id}_{variant_id}_{item_id}{file_extension}"
-                file_suffix = f"{variant_id}_{item_id}"  # For deletion pattern
-                print(f"[FileUploadAPIView.post] ✨ Curriculum media upload detected!")
-                print(f"[FileUploadAPIView.post] ✨ Using curriculum filename: {unique_filename}")
-                print(f"[FileUploadAPIView.post] variant_id: {variant_id}, item_id (variant_item_id): {item_id}")
-            elif course_id:
-                # Course image/intro video uploads (existing logic)
-                # Use consistent course-based filename for automatic overwriting
-                # Different suffixes for images (gk) vs videos (intro)
-                file_suffix = "intro" if is_video_file else "gk"
-                unique_filename = f"course-file/{course_id}-{file_suffix}{file_extension}"
-                print(f"[FileUploadAPIView.post] ✨ Using consistent filename: {unique_filename}")
-                print(f"[FileUploadAPIView.post] File type: {'VIDEO' if is_video_file else 'IMAGE'}")
-            else:
-                # Fallback to UUID if course_id not provided (backwards compatibility)
-                import uuid
-                unique_filename = f"course-file/{uuid.uuid4()}{file_extension}"
-                print(f"[FileUploadAPIView.post] ⚠️  No course_id, falling back to UUID: {unique_filename}")
-            
-            print(f"[FileUploadAPIView.post] 💾 Saving file: {unique_filename}")
+        # 5. 🗑️ Clean up previous file if old_file_url provided by frontend
+        old_file_url = request.data.get('old_file_url')
+        if old_file_url:
+            try:
+                old_path = urlparse(old_file_url).path
+                if '/media/' in old_path:
+                    rel_path = old_path.split('/media/', 1)[1]
+                    # Secure check: ensure target is within allowed dirs and no directory traversal
+                    if (rel_path.startswith('course-file/') or rel_path.startswith('curriculum-media/')) and '..' not in rel_path:
+                        if default_storage.exists(rel_path):
+                            default_storage.delete(rel_path)
+                            print(f"[FileUploadAPIView] 🗑️ Deleted previous file: {rel_path}")
+            except Exception as e:
+                print(f"[FileUploadAPIView] ⚠️ Error cleaning up old file: {e}")
 
-            # ✨ PHASE 4.102.1/4.107: DELETE OLD FILES BEFORE SAVING
-            # Django's default_storage.save() appends random chars for file collisions
-            # So we must manually delete old files FIRST to ensure true overwriting!
-            if course_id:
-                # Find and delete ALL old files matching the pattern
-                # This handles cases where user uploads JPG then PNG (different extensions)
-                import glob
-                from django.conf import settings
-                
-                media_root = settings.MEDIA_ROOT
-                
-                if upload_type == 'curriculum':
-                    # Curriculum media: delete {course_id}_{variant_id}_{item_id}.* (✨ PHASE 4.174)
-                    variant_id = request.data.get('variant_id', 'unknown')
-                    item_id = request.data.get('item_id', 'unknown')
-                    curriculum_media_dir = os.path.join(media_root, 'curriculum-media')
-                    old_file_pattern = os.path.join(curriculum_media_dir, f"{course_id}_{variant_id}_{item_id}.*")
-                    deletion_type = "curriculum"
-                else:
-                    # Course files: delete {course_id}-gk.* or {course_id}-intro.*
-                    course_file_dir = os.path.join(media_root, 'course-file')
-                    file_suffix = "intro" if is_video_file else "gk"
-                    old_file_pattern = os.path.join(course_file_dir, f"{course_id}-{file_suffix}.*")
-                    deletion_type = "course"
-                
-                try:
-                    old_files = glob.glob(old_file_pattern)
-                    if old_files:
-                        for old_file_path in old_files:
-                            try:
-                                os.remove(old_file_path)
-                                old_file_name = os.path.basename(old_file_path)
-                                print(f"[FileUploadAPIView.post] 🗑️  Deleted old {deletion_type} file: {old_file_name}")
-                            except Exception as e:
-                                print(f"[FileUploadAPIView.post] ⚠️  Could not delete {old_file_path}: {e}")
-                    else:
-                        print(f"[FileUploadAPIView.post] ℹ️  No old files found matching pattern: {old_file_pattern}")
-                except Exception as e:
-                    print(f"[FileUploadAPIView.post] ⚠️  Error finding old files: {e}")
-            
-            # Save the file to the media directory
-            # Now it will TRULY overwrite (old file deleted above)
-            file_path = default_storage.save(unique_filename, ContentFile(file.read()))
-            file_url = request.build_absolute_uri(default_storage.url(file_path))
-            
-            print(f"[FileUploadAPIView.post] ✅ File saved successfully!")
-            print(f"[FileUploadAPIView.post] File URL: {file_url}")
-            if course_id:
-                print(f"[FileUploadAPIView.post] ✅ Old file deleted and new file saved (true overwriting!)!")
-            else:
-                print(f"[FileUploadAPIView.post] ℹ️  Using UUID filename (no automatic overwriting)")
+        # Save the file to storage with UUID-based name
+        file_path = default_storage.save(unique_filename, ContentFile(file.read()))
+        file_url = request.build_absolute_uri(default_storage.url(file_path))
 
-            # Determine file type and prepare response data
-            response_data = {
-                "url": file_url,
-                "file_name": file.name,
-                "file_size": file.size,
-                "file_type": self.determine_file_type(file_extension)
-            }
+        response_data = {
+            "url": file_url,
+            "file_name": file.name,
+            "file_size": file.size,
+            "file_type": self.determine_file_type(file_extension)
+        }
 
-            # Check if the file is a video by inspecting its extension
-            if file_extension in ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.ogg']:
-                # Calculate the video duration
-                file_full_path = os.path.join(default_storage.location, file_path)
-                try:
+        # Handle video duration metadata if it is an MP4 video
+        if file_extension == '.mp4':
+            file_full_path = os.path.join(default_storage.location, file_path)
+            try:
+                if VideoFileClip:
                     clip = VideoFileClip(file_full_path)
                     duration_seconds = clip.duration
-                    clip.close()  # Free memory
+                    clip.close()
 
-                    # Calculate minutes and seconds for display
                     minutes, remainder = divmod(duration_seconds, 60)
                     minutes = math.floor(minutes)
                     seconds = math.floor(remainder)
-
                     duration_text = f"{minutes}m {seconds}s"
 
-                    print("url ==========", file_url)
-                    print("duration_seconds ==========", duration_seconds)
-
-                    # Return video data with duration information
                     response_data.update({
-                        "duration_seconds": duration_seconds,  # Raw seconds for database storage
-                        "video_duration": duration_text,       # Formatted text for display
+                        "duration_seconds": duration_seconds,
+                        "video_duration": duration_text,
                         "is_video": True
                     })
+            except Exception as e:
+                print(f"[FileUploadAPIView] Error processing video metadata: {e}")
+                response_data["duration_error"] = str(e)
 
-                except Exception as e:
-                    print(f"Error processing video: {e}")
-                    response_data["duration_error"] = str(e)
+        return Response(response_data, status=status.HTTP_200_OK)
 
-            return Response(response_data)
-
-        return Response({"error": "No file provided"}, status=400)
-    
     def determine_file_type(self, file_extension):
-        """Determine the file type based on extension"""
-        video_extensions = ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.ogg']
-        document_extensions = ['.pdf', '.doc', '.docx', '.txt']
-        presentation_extensions = ['.ppt', '.pptx']
-        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp']
-        
-        if file_extension in video_extensions:
+        """Determine file type category based on extension"""
+        if file_extension == '.mp4':
             return "video"
-        elif file_extension in document_extensions:
+        elif file_extension == '.pdf':
             return "document"
-        elif file_extension in presentation_extensions:
-            return "presentation"
-        elif file_extension in image_extensions:
+        elif file_extension in ['.jpg', '.jpeg', '.png']:
             return "image"
-        else:
-            return "file"
+        return "other"
 
 
 
