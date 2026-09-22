@@ -30,7 +30,6 @@ import RoleRoute from "./layouts/RoleRoute";
 // Auth Routes
 const Login = lazy(() => import("./views/auth/Login"));
 const SSOLogin = lazy(() => import("./views/auth/SSOLogin"));
-// ForgotPassword & CreateNewPassword dihapus — sistem hanya mendukung login via Google OAuth dan SSO Nusa DPD
 
 // Base Routes
 const Index = lazy(() => import("./views/base/Index"));
