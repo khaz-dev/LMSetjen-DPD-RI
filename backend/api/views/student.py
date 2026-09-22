@@ -36,7 +36,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, APIView
 from rest_framework.pagination import PageNumberPagination
 
-from api.permissions import IsAdminUser
+from api.permissions import IsAdminUser, IsOwnerOrStaff
 from api.serializer import MyTokenObtainPairSerializer
 from api.version import APP_VERSION, APP_NAME
 
@@ -72,12 +72,26 @@ from api.views.helpers import _SYNC_STATE, reset_sync_state, update_sync_state, 
 
 
 class StudentSummaryAPIView(generics.ListAPIView):
+    """
+    Student Academic Summary API (Mengatasi H-01 IDOR)
+    
+    Menampilkan ringkasan kursus yang diikuti, pelajaran selesai, dan sertifikat diraih.
+    Secured with:
+    - JWT authentication (IsAuthenticated)
+    - Anti-IDOR Permission (IsOwnerOrStaff):
+      Student hanya dapat melihat summary akademik miliknya sendiri,
+      kecuali pengguna memiliki hak akses admin/staff.
+    """
     serializer_class = api_serializer.StudentSummarySerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         user_id = self.kwargs['user_id']
-        user = User.objects.get(id=user_id)
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise Http404("User tidak ditemukan.")
 
         total_courses = api_models.EnrolledCourse.objects.filter(user=user).count()
         completed_lessons = api_models.CompletedLesson.objects.filter(user=user).count()

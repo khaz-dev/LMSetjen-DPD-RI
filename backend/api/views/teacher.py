@@ -37,7 +37,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, APIView
 from rest_framework.pagination import PageNumberPagination
 
-from api.permissions import IsAdminUser
+from api.permissions import IsAdminUser, IsOwnerOrStaff
 from api.serializer import MyTokenObtainPairSerializer
 from api.version import APP_VERSION, APP_NAME
 
@@ -873,7 +873,7 @@ class TeacherProfileAPIView(generics.RetrieveAPIView):
       Hanya pemilik akun guru atau admin/staff yang berhak melihat profil internal pengajar.
     """
     serializer_class = api_serializer.BasicTeacherSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
     
     def get_object(self):
@@ -945,10 +945,10 @@ class TeacherProfileUpdateAPIView(APIView):
     CSRF exempt because:
     - Uses JWT authentication for teacher operations
     - Secured by JWT token validation (IsAuthenticated)
-    - Anti-IDOR Object-Level Authorization:
+    - Anti-IDOR Object-Level Authorization (IsOwnerOrStaff):
       Hanya pemilik akun pengajar atau admin/staff yang dapat mengubah data profil.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
     
     def patch(self, request, user_id):

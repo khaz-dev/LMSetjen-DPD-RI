@@ -37,7 +37,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, APIView
 from rest_framework.pagination import PageNumberPagination
 
-from api.permissions import IsAdminUser
+from api.permissions import IsAdminUser, IsOwnerOrStaff
 from api.serializer import MyTokenObtainPairSerializer
 from api.version import APP_VERSION, APP_NAME
 
@@ -529,7 +529,7 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
       kecuali pengguna tersebut memiliki hak akses admin/staff.
     """
     serializer_class = api_serializer.ProfileSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
     parser_classes = [MultiPartParser, FormParser]  # Support file uploads
 

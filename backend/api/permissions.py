@@ -235,3 +235,89 @@ class IsTeacherOrAdmin(permissions.BasePermission):
         return False
     
     message = 'Teacher or admin access required.'
+
+
+class IsOwnerOrStaff(permissions.BasePermission):
+    """
+    Custom permission to ensure users can only access and modify their own data,
+    while administrative staff retain authorized access.
+    
+    Mitigates IDOR (Insecure Direct Object Reference) vulnerabilities:
+    - User Profile API (/api/v1/user/profile/<user_id>/) - K-03, K-04
+    - Academic Summary API (/api/v1/student/summary/<user_id>/) - H-01
+    - Teacher Profile API (/api/v1/teacher/profile/<user_id>/)
+    
+    Checks:
+    1. User is authenticated
+    2. If user is admin/staff (is_staff=True, is_admin=True, role='admin') -> Allow
+    3. At view level (has_permission):
+       - If 'user_id' in URL kwargs -> request.user.id == int(user_id)
+       - If 'teacher_id' in URL kwargs -> request.user.id == teacher.user_id
+    4. At object level (has_object_permission):
+       - If obj is User -> obj.id == request.user.id
+       - If obj has user -> obj.user == request.user or obj.user.id == request.user.id
+       - If obj has user_id -> obj.user_id == request.user.id
+    """
+    message = 'Anda hanya dapat mengakses data Anda sendiri kecuali Anda memiliki hak akses admin/staff.'
+
+    def _is_staff_or_admin(self, user):
+        if not user or not user.is_authenticated:
+            return False
+        return bool(
+            user.is_staff or 
+            getattr(user, 'is_superuser', False) or 
+            getattr(user, 'is_admin', False) or 
+            getattr(user, 'role', None) == 'admin' or
+            (hasattr(user, 'current_role') and user.current_role == 'admin')
+        )
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        if self._is_staff_or_admin(request.user):
+            return True
+        
+        # Check URL parameter 'user_id' if present in view kwargs
+        user_id = view.kwargs.get('user_id')
+        if user_id is not None:
+            return str(request.user.id) == str(user_id)
+        
+        # Check URL parameter 'teacher_id' if present in view kwargs
+        teacher_id = view.kwargs.get('teacher_id')
+        if teacher_id is not None:
+            try:
+                from api.models import Teacher
+                teacher = Teacher.objects.filter(id=teacher_id).first()
+                if teacher and teacher.user_id == request.user.id:
+                    return True
+                return False
+            except Exception:
+                return False
+            
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        if not request.user or not request.user.is_authenticated:
+            return False
+            
+        if self._is_staff_or_admin(request.user):
+            return True
+            
+        # If obj is User itself
+        if hasattr(obj, 'id') and isinstance(obj, type(request.user)):
+            return obj.id == request.user.id
+            
+        # If obj has user attribute (e.g. Profile, EnrolledCourse, Teacher)
+        if hasattr(obj, 'user'):
+            if obj.user == request.user:
+                return True
+            if getattr(obj.user, 'id', None) == request.user.id:
+                return True
+                
+        # If obj has user_id attribute
+        if hasattr(obj, 'user_id'):
+            return obj.user_id == request.user.id
+            
+        return False
+
