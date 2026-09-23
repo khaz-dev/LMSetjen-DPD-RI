@@ -90,14 +90,10 @@ class APIRootView(APIView):
         """
         API Root - Welcome page for the LMS Backend API
         """
-        return Response({
+        data = {
             "message": "Welcome to LMSetjen DPD RI - Learning Management System API",
             "version": "v1",
             "status": "operational",
-            "documentation": {
-                "swagger": request.build_absolute_uri('/swagger/'),
-                "redoc": request.build_absolute_uri('/redoc/'),
-            },
             "endpoints": {
                 "health": request.build_absolute_uri('/api/v1/health/'),
                 "authentication": {
@@ -110,12 +106,26 @@ class APIRootView(APIView):
                     "categories": request.build_absolute_uri('/api/v1/course/category/'),
                     "search": request.build_absolute_uri('/api/v1/course/search/'),
                 },
-            },
-            "support": {
-                "docs": "See /swagger/ or /redoc/ for complete API documentation",
+            }
+        }
+
+        # 🔒 SECURITY: Sembunyikan link dokumentasi kecuali untuk Admin terotentikasi
+        if request.user and request.user.is_authenticated and (
+            getattr(request.user, 'is_staff', False) or 
+            getattr(request.user, 'is_superuser', False) or 
+            getattr(request.user, 'is_admin', False) or 
+            getattr(request.user, 'role', '') == 'admin' or 
+            getattr(request.user, 'current_role', '') == 'admin'
+        ):
+            data["documentation"] = {
+                "swagger": request.build_absolute_uri('/swagger/'),
+                "redoc": request.build_absolute_uri('/redoc/'),
+            }
+            data["support"] = {
                 "admin": request.build_absolute_uri('/admin/'),
             }
-        })
+
+        return Response(data)
 
 
 

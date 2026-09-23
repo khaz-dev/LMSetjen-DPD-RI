@@ -21,28 +21,39 @@ from django.conf.urls.static import static
 from django.views.generic import RedirectView
 
 from rest_framework import permissions
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from api.permissions import IsAdminUser
 from api.media_views import VideoStreamView, EnhancedMediaView
 from api import views as api_views
 
+# 🔒 SECURITY FIX (Mengatasi Pentest T-04): Sembunyikan Swagger / Dokumentasi API
+# Wajibkan autentikasi dan batasi akses hanya untuk pengguna dengan hak Admin (IsAdminUser)
 schema_view = get_schema_view(
    openapi.Info(
       title="LMSetjen DPD RI Admin Backend APIs",
       default_version='v1',
-      description="This is the API documentation for LMSetjen DPD RI Admin project APIs",
+      description="API documentation for LMSetjen DPD RI Admin project (Restricted to Administrators)",
       terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="destiny@gmail.com"),
+      contact=openapi.Contact(email="sdm@dpd.go.id"),
       license=openapi.License(name="BSD License"),
    ),
-   public=True,
-   permission_classes=(permissions.AllowAny,),
+   public=False,
+   permission_classes=[permissions.IsAuthenticated, IsAdminUser],
+   authentication_classes=[
+       JWTAuthentication,
+       SessionAuthentication,
+       BasicAuthentication,
+   ],
 )
 
 urlpatterns = [
-    # Root redirect to API documentation
+    # Root redirect to API root
     path('', RedirectView.as_view(url='api/v1/', permanent=False)),
     
+    # 🔒 Swagger & ReDoc endpoints protected by IsAdminUser
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),

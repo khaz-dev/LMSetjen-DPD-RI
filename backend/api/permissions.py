@@ -31,12 +31,18 @@ class IsAdminUser(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # NEW: Check boolean is_admin field (primary check)
+        # Check Django standard staff or superuser
+        if getattr(request.user, 'is_staff', False) or getattr(request.user, 'is_superuser', False):
+            return True
+
+        # Check boolean is_admin field
         if hasattr(request.user, 'is_admin') and request.user.is_admin:
             return True
         
-        # FALLBACK: Check current_role for backward compatibility (users in transition)
+        # Check role fields
         if hasattr(request.user, 'current_role') and request.user.current_role == 'admin':
+            return True
+        if hasattr(request.user, 'role') and request.user.role == 'admin':
             return True
         
         return False
