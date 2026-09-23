@@ -430,7 +430,7 @@ class GoogleOAuthAPIView(APIView):
     
     def post(self, request):
         """Verify Google token and create/update user"""
-        from .sso_utils import GoogleOAuthVerifier, GoogleOAuthUserManager
+        from api.sso_utils import GoogleOAuthVerifier, GoogleOAuthUserManager
         import logging
         
         logger = logging.getLogger(__name__)
