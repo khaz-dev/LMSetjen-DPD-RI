@@ -9,7 +9,11 @@ Menggunakan library django-ipware untuk mengekstrak IP klien yang sebenarnya.
 import logging
 import ipaddress
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle, SimpleRateThrottle
-from ipware import get_client_ip
+
+try:
+    from ipware import get_client_ip
+except ImportError:
+    get_client_ip = None
 
 logger = logging.getLogger('api')
 security_logger = logging.getLogger('security')
@@ -37,26 +41,27 @@ def get_real_client_ip(request):
     
     1. Mengecek header proxy dengan validasi routable (IP publik).
     2. Mencegah manipulasi header X-Forwarded-For palsu / injeksi IP private dari klien eksternal.
-    3. Fallback aman ke REMOTE_ADDR jika header tidak valid.
+    3. Fallback aman ke REMOTE_ADDR jika header tidak valid atau ipware belum terpasang.
     """
     remote_addr = request.META.get('REMOTE_ADDR')
 
-    try:
-        client_ip, is_routable = get_client_ip(request)
-        if client_ip:
-            client_ip_str = str(client_ip)
-            # Jika IP dari proxy adalah IP publik/routable yang valid, gunakan itu
-            if is_routable:
+    if get_client_ip is not None:
+        try:
+            client_ip, is_routable = get_client_ip(request)
+            if client_ip:
+                client_ip_str = str(client_ip)
+                # Jika IP dari proxy adalah IP publik/routable yang valid, gunakan itu
+                if is_routable:
+                    return client_ip_str
+
+                # Jika IP yang dihasilkan adalah private/unroutable tetapi REMOTE_ADDR adalah IP eksternal publik,
+                # berarti klien publik mencoba memalsukan IP internal. Gunakan REMOTE_ADDR asli!
+                if remote_addr and not is_private_or_loopback(remote_addr):
+                    return str(remote_addr)
+
                 return client_ip_str
-
-            # Jika IP yang dihasilkan adalah private/unroutable tetapi REMOTE_ADDR adalah IP eksternal publik,
-            # berarti klien publik mencoba memalsukan IP internal. Gunakan REMOTE_ADDR asli!
-            if remote_addr and not is_private_or_loopback(remote_addr):
-                return str(remote_addr)
-
-            return client_ip_str
-    except Exception as e:
-        logger.warning(f"[Throttling] Error extracting client IP with ipware: {e}")
+        except Exception as e:
+            logger.warning(f"[Throttling] Error extracting client IP with ipware: {e}")
 
     # Fallback ke direct REMOTE_ADDR
     if remote_addr:
