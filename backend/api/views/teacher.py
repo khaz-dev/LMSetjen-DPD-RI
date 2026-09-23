@@ -227,8 +227,18 @@ class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
 
 
 class TeacherSummaryAPIView(generics.ListAPIView):
+    """
+    Teacher Summary API (Mengatasi Temuan Pentest H-01 IDOR)
+    
+    Secured with:
+    - JWT authentication (IsAuthenticated)
+    - Anti-IDOR Permission (IsOwnerOrStaff):
+      Teacher hanya dapat melihat ringkasan performa/siswa miliknya sendiri,
+      kecuali pengguna memiliki hak akses admin/staff.
+    """
     serializer_class = api_serializer.TeacherSummarySerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
@@ -289,8 +299,16 @@ class TeacherSummaryAPIView(generics.ListAPIView):
 
 
 class TeacherCourseListAPIView(generics.ListAPIView):
+    """
+    Teacher Draft Course List API (Mengatasi Temuan Pentest H-01 IDOR)
+    
+    Secured with:
+    - JWT authentication (IsAuthenticated)
+    - Anti-IDOR Permission (IsOwnerOrStaff)
+    """
     serializer_class = api_serializer.CourseSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
     pagination_class = None  # [*] PHASE 4 - Disable pagination for direct array response
 
     def get_queryset(self):

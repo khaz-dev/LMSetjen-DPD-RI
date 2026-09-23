@@ -112,8 +112,18 @@ class StudentSummaryAPIView(generics.ListAPIView):
 
 
 class StudentCourseListAPIView(generics.ListAPIView):
+    """
+    Student Enrolled Courses List API (Mengatasi Temuan Pentest H-01 IDOR)
+    
+    Secured with:
+    - JWT authentication (IsAuthenticated)
+    - Anti-IDOR Permission (IsOwnerOrStaff):
+      Student hanya dapat melihat daftar kursus miliknya sendiri,
+      kecuali pengguna memiliki hak akses admin/staff.
+    """
     serializer_class = api_serializer.EnrolledCourseSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         user_id = self.kwargs.get('user_id')
@@ -134,8 +144,16 @@ class StudentCourseListAPIView(generics.ListAPIView):
 
 
 class StudentCourseDetailAPIView(generics.RetrieveAPIView):
+    """
+    Student Enrolled Course Detail API (Mengatasi Temuan Pentest H-01 IDOR)
+    
+    Secured with:
+    - JWT authentication (IsAuthenticated)
+    - Anti-IDOR Permission (IsOwnerOrStaff)
+    """
     serializer_class = api_serializer.EnrolledCourseSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
     lookup_field = 'enrollment_id'
 
     def get_object(self):
@@ -1958,9 +1976,9 @@ class StudentQuizAttemptsAPIView(generics.ListAPIView):
 # Certificate API Views
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentCertificateEligibilityAPIView(APIView):
-    """Check if student is eligible for certificate and return certificate data"""
-    authentication_classes = []
-    permission_classes = [AllowAny]  # Allow students to check eligibility
+    """Check if student is eligible for certificate and return certificate data (Mengatasi Pentest H-01 IDOR)"""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     
     def get(self, request, user_id, course_id):
         try:
@@ -2198,9 +2216,9 @@ class StudentCertificateSavePDFAPIView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(xframe_options_exempt, name='dispatch')
 class StudentCertificateDownloadAPIView(APIView):
-    """Download certificate image (PNG) from server using course_id and user_id"""
-    authentication_classes = []
-    permission_classes = [AllowAny]  # Allow anyone with course_id and user_id to download
+    """Download certificate image (PNG) from server using course_id and user_id (Mengatasi Pentest H-01 IDOR)"""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     
     @xframe_options_exempt
     def get(self, request, course_id, user_id):
@@ -2295,9 +2313,9 @@ class StudentCertificateImageAPIView(APIView):
 # ✨ PHASE 4.228: List all certificates for a student (new endpoint for "Sertifikat Kursus" page)
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentCertificateListAPIView(APIView):
-    """List all certificates for the current student"""
-    authentication_classes = []
-    permission_classes = [AllowAny]  # Allow any student to view their own certificates
+    """List all certificates for the current student (Mengatasi Temuan Pentest H-01 IDOR)"""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     
     def get(self, request, user_id):
         """Get all certificates for a specific student"""
