@@ -36,7 +36,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, APIView
 from rest_framework.pagination import PageNumberPagination
 
-from api.permissions import IsAdminUser
+from api.permissions import IsAdminUser, IsOwnerOrStaff
 from api.serializer import MyTokenObtainPairSerializer
 from api.version import APP_VERSION, APP_NAME
 
@@ -413,8 +413,8 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
     """
     queryset = api_models.Course.objects.all()
     serializer_class = api_serializer.CourseSerializer
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
 
     def get_object(self):
         teacher_id = self.kwargs['teacher_id']
@@ -423,7 +423,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
         teacher = api_models.Teacher.objects.get(id=teacher_id)
 
         # 🔒 FIX IDOR: Validasi kepemilikan sebelum memproses update
-        is_admin = getattr(self.request.user, 'is_admin', False)
+        is_admin = getattr(self.request.user, 'is_admin', False) or getattr(self.request.user, 'is_staff', False)
         if teacher.user != self.request.user and not is_admin:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("Akses ditolak. Anda bukan pemilik kursus ini.")
@@ -908,12 +908,20 @@ class CoursePublishAPIView(APIView):
     - Course publishing requires proper authentication
     - Safe state-changing operation with JWT validation
     """
-    permission_classes = [AllowAny]
-    authentication_classes = []  # Disable SessionAuthentication to prevent CSRF enforcement
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def post(self, request, course_id):
         try:
             course = api_models.Course.objects.get(course_id=course_id)
+            
+            # 🔒 Validasi kepemilikan kursus
+            is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+            if course.teacher.user != request.user and not is_admin:
+                return Response(
+                    {"success": False, "message": "Akses ditolak. Anda bukan pemilik kursus ini."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             
             # Validation checks
             errors = []
@@ -1010,13 +1018,21 @@ class CourseRestoreAPIView(APIView):
     - Courses with platform_status = "Published" that have published_copies
     - Normal Draft courses cannot be restored (nothing published yet)
     """
-    permission_classes = [AllowAny]
-    authentication_classes = []  # Will check authentication in post method
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def post(self, request, course_id):
         try:
             # Get the draft course to restore
             course = api_models.Course.objects.get(course_id=course_id)
+            
+            # 🔒 Validasi kepemilikan kursus
+            is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+            if course.teacher.user != request.user and not is_admin:
+                return Response(
+                    {"success": False, "message": "Akses ditolak. Anda bukan pemilik kursus ini."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             
             print(f"[Restore API] Restore request for course: {course.title}")
             
@@ -1120,13 +1136,21 @@ class CourseEditPublishedAPIView(APIView):
     
     Returns: The newly created draft course record with all metadata
     """
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def post(self, request, course_id):
         try:
             # Get the published course
             course = api_models.Course.objects.get(course_id=course_id)
+            
+            # 🔒 Validasi kepemilikan kursus
+            is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+            if course.teacher.user != request.user and not is_admin:
+                return Response(
+                    {"success": False, "message": "Akses ditolak. Anda bukan pemilik kursus ini."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             
             # Verify this is the published version
             if not course.is_published_version:
@@ -1374,14 +1398,9 @@ class CourseApprovalAPIView(APIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class CourseDetailAPIView(generics.RetrieveDestroyAPIView):
+class CourseDetailAPIView(generics.RetrieveAPIView):
     """
-    Course Detail API (Retrieve/Delete)
-    
-    CSRF exempt because:
-    - Uses JWT authentication for course operations
-    - Public endpoint for course viewing
-    - Course deletion secured by ownership verification
+    Public Course Detail API (Read-only)
     """
     serializer_class = api_serializer.CourseSerializer
     permission_classes = [AllowAny]

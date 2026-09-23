@@ -159,11 +159,11 @@ urlpatterns = [
     path("file-upload/", api_views.FileUploadAPIView.as_view()),  # DEPRECATED - Use external URLs instead
     path("file-cleanup/", api_views.FileCleanupAPIView.as_view()),  # ✨ PHASE 4.101.4: Delete files when switching sources
     
-    # ⚠️ DEPRECATED (Phase 3): Enhanced Local Storage APIs - No longer needed
-    # Will be removed when all clients migrate to external URL-based approach
-    path("upload/enhanced/", enhanced_upload_views.EnhancedFileUploadAPIView.as_view()),  # DEPRECATED
-    path("upload/bulk/", enhanced_upload_views.BulkFileUploadAPIView.as_view()),  # DEPRECATED
-    path("storage/info/", enhanced_upload_views.FileInfoAPIView.as_view()),  # DEPRECATED
+    # 🔒 SECURITY FIX (T-01): Nonaktifkan endpoint upload legacy yang deprecated
+    # Seluruh upload file wajib melewati file-upload/ yang memiliki whitelist ekstensi & magic bytes
+    # path("upload/enhanced/", enhanced_upload_views.EnhancedFileUploadAPIView.as_view()),
+    # path("upload/bulk/", enhanced_upload_views.BulkFileUploadAPIView.as_view()),
+    # path("storage/info/", enhanced_upload_views.FileInfoAPIView.as_view()),
     
     # Admin API URLs
     path("admin/dashboard-summary/", api_views.AdminSummaryAPIView.as_view()),

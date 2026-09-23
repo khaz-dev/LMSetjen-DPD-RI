@@ -494,7 +494,7 @@ class VideoProgressDetailAPIView(generics.RetrieveUpdateAPIView):
     - Data validated by serializer
     """
     serializer_class = api_serializer.VideoProgressSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
 
     def get_object(self):
@@ -631,7 +631,7 @@ class VideoProgressDeleteAPIView(generics.DestroyAPIView):
     - Deletes video progress records
     - Secured by user ID verification
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
 
     def get_object(self):
@@ -673,7 +673,7 @@ class StudentNoteCreateAPIView(generics.ListCreateAPIView):
     - Data validated by serializer
     """
     serializer_class = api_serializer.NoteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
@@ -762,7 +762,7 @@ class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     - Secured by user ownership verification
     """
     serializer_class = api_serializer.NoteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
 
     def get_object(self):
@@ -917,7 +917,7 @@ class StudentRateCourseUpdateAPIView(generics.RetrieveUpdateAPIView):
     - Data validated by ReviewSerializer
     """
     serializer_class = api_serializer.ReviewSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
 
     def get_object(self):
@@ -950,7 +950,7 @@ class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
     - Data validated by WishlistSerializer
     """
     serializer_class = api_serializer.WishlistSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
@@ -975,6 +975,11 @@ class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
                     {"message": "User ID and Course ID are required"}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
+            # 🔒 Validasi kepemilikan
+            is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+            if str(request.user.id) != str(user_id) and not is_admin:
+                return Response({"message": "Akses ditolak. Anda tidak berhak memodifikasi wishlist pengguna lain."}, status=status.HTTP_403_FORBIDDEN)
 
             # Get user and validate
             try:
@@ -1727,7 +1732,8 @@ class StudentQAReportsAPIView(generics.ListAPIView):
 class StudentQuizListAPIView(generics.ListAPIView):
     """List all active quizzes for a specific course"""
     serializer_class = api_serializer.QuizSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
     
     def get_queryset(self):
         course_id = self.kwargs['course_id']
@@ -1772,7 +1778,8 @@ class StudentQuizListAPIView(generics.ListAPIView):
 class StudentQuizDetailAPIView(generics.RetrieveAPIView):
     """Get quiz details for taking the quiz"""
     serializer_class = api_serializer.QuizSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
     lookup_field = 'quiz_id'
     
     def get_queryset(self):
@@ -1834,8 +1841,8 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
     - Data validated by QuizSubmissionSerializer
     """
     serializer_class = api_serializer.QuizSubmissionSerializer
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
     
     def create(self, request, *args, **kwargs):
         user_id = kwargs.get('user_id')
@@ -1957,7 +1964,8 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
 class StudentQuizAttemptsAPIView(generics.ListAPIView):
     """List all quiz attempts by a user"""
     serializer_class = api_serializer.QuizAttemptSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
     
     def get_queryset(self):
         user_id = self.kwargs['user_id']
@@ -2037,14 +2045,19 @@ class StudentCertificateEligibilityAPIView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentCertificateGenerateAPIView(APIView):
     """Generate certificate for eligible student"""
-    authentication_classes = []
-    permission_classes = [AllowAny]  # Allow students to generate certificates
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def post(self, request):
         try:
             user_id = request.data.get('user_id')
             course_id = request.data.get('course_id')
             enrollment_id = request.data.get('enrollment_id')
+            
+            # 🔒 Validasi kepemilikan
+            is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+            if str(request.user.id) != str(user_id) and not is_admin:
+                return Response({"error": "Akses ditolak. Anda tidak berhak menerbitkan sertifikat untuk pengguna lain."}, status=status.HTTP_403_FORBIDDEN)
             
             # Get user, course, and enrollment
             user = User.objects.get(id=user_id)
@@ -2093,8 +2106,8 @@ class StudentCertificateGenerateAPIView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class StudentCertificateSaveImageAPIView(APIView):
     """Save certificate image (PNG only) to server media directory with filename: course_id_user_id.png"""
-    authentication_classes = []
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     parser_classes = (MultiPartParser, FormParser)
     
     def post(self, request):
@@ -2102,6 +2115,11 @@ class StudentCertificateSaveImageAPIView(APIView):
             file = request.FILES.get('file')
             user_id = request.data.get('user_id')
             course_id = request.data.get('course_id')
+            
+            # 🔒 Validasi kepemilikan
+            is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+            if str(request.user.id) != str(user_id) and not is_admin:
+                return Response({"error": "Akses ditolak. Anda tidak berhak menyimpan gambar sertifikat pengguna lain."}, status=status.HTTP_403_FORBIDDEN)
             
             if not file:
                 return Response({

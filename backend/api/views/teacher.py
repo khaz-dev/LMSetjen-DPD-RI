@@ -398,8 +398,8 @@ class TeacherReviewDetailAPIView(generics.RetrieveUpdateAPIView):
     - Public endpoint for teacher dashboard
     """
     serializer_class = api_serializer.ReviewSerializer
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
 
     def get_object(self):
         teacher_id = self.kwargs['teacher_id']
@@ -595,7 +595,8 @@ class TeacherAbuseReportCloseAPIView(generics.UpdateAPIView):
 
 
 class TeacherStudentsListAPIView(viewsets.ViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
     
     def list(self, request, teacher_id=None):
         try:
@@ -679,7 +680,8 @@ class TeacherStudentsListAPIView(viewsets.ViewSet):
 
 
 class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
 
     def list(self, request, teacher_id=None):
         try:
@@ -746,7 +748,8 @@ class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
 class TeacherCourseOrdersListAPIView(generics.ListAPIView):
     # Changed to use EnrolledCourse instead of CartOrder
     serializer_class = api_serializer.EnrolledCourseSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
@@ -765,7 +768,8 @@ class TeacherCourseOrdersListAPIView(generics.ListAPIView):
 
 class TeacherQuestionAnswerListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.Question_AnswerSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
@@ -793,7 +797,8 @@ class TeacherQuestionAnswerListAPIView(generics.ListAPIView):
 
 class TeacherNotificationListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.NotificationSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
@@ -822,8 +827,8 @@ class TeacherNotificationDetailAPIView(generics.RetrieveUpdateAPIView):
     - Public endpoint for teacher dashboard
     """
     serializer_class = api_serializer.NotificationSerializer
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
 
     def get_object(self):
         teacher_id = self.kwargs['teacher_id']
@@ -839,19 +844,21 @@ class TeacherCreateFromProfileAPIView(APIView):
     """
     Teacher Profile Creation API
     
-    CSRF exempt because:
-    - Uses JWT authentication for teacher operations
-    - Creates teacher profile from user profile
-    - Secured by JWT token validation
+    Secured by JWT authentication and ownership validation
     """
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def post(self, request):
         try:
             user_id = request.data.get('user_id')
             if not user_id:
                 return Response({'error': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # 🔒 Validasi kepemilikan
+            is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+            if str(request.user.id) != str(user_id) and not is_admin:
+                return Response({'error': 'Akses ditolak. Anda tidak berhak membuat profil pengajar untuk user lain.'}, status=status.HTTP_403_FORBIDDEN)
             
             # Check if teacher already exists
             existing_teacher = api_models.Teacher.objects.filter(user_id=user_id).first()
