@@ -636,15 +636,18 @@ if not DEBUG:
 # 6. Content Security Policy (CSP) Headers
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
-# 7. API Request Throttling/Rate Limiting (DRF Configuration)
+# 7. 🔒 API Request Throttling/Rate Limiting (Mengatasi Pentest T-03)
+# Menggunakan SecureAnonRateThrottle & SecureUserRateThrottle berbasis django-ipware
+# Mencegah bypass throttling dengan memanipulasi header X-Forwarded-For mentah
 REST_FRAMEWORK = REST_FRAMEWORK or {}
 REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = [
-    'rest_framework.throttling.AnonRateThrottle',
-    'rest_framework.throttling.UserRateThrottle'
+    'api.throttling.SecureAnonRateThrottle',
+    'api.throttling.SecureUserRateThrottle'
 ]
 REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
     'anon': env('ANON_THROTTLE_RATE', default='100/hour'),  # 100 requests per hour for anonymous users
     'user': env('USER_THROTTLE_RATE', default='1000/hour'),  # 1000 requests per hour for authenticated users
+    'burst': env('BURST_THROTTLE_RATE', default='30/minute'),  # 30 requests per minute burst limit
 }
 
 # 8. Password Validation Enhancements
