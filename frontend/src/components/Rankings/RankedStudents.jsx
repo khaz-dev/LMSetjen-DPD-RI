@@ -134,6 +134,10 @@ const RankedStudents = ({ maxResults = 5 }) => {
                     src={student.image || '/images/placeholders/default-avatar.svg'}
                     alt={student.full_name}
                     className="ranking-avatar rounded-circle"
+                    loading="lazy"
+                    decoding="async"
+                    width="60"
+                    height="60"
                     onError={() => handleImageError(student.id)}
                   />
                 ) : (
@@ -142,6 +146,10 @@ const RankedStudents = ({ maxResults = 5 }) => {
                       src="/images/placeholders/default-avatar.svg"
                       alt={student.full_name}
                       className="placeholder-image"
+                      loading="lazy"
+                      decoding="async"
+                      width="60"
+                      height="60"
                     />
                   </div>
                 )}

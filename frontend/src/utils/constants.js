@@ -12,8 +12,10 @@ export const API_BASE_URL = baseURL.startsWith('http')
   ? `${baseURL}/api/v1/`   // Full URL: append /api/v1/
   : `${baseURL}/v1/`;       // Relative: append /v1/ (baseURL already has /api)
 
-// Default image URL for fallback cases
-export const DEFAULT_IMAGE_URL = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+// Default image URLs for fallback cases (self-hosted local SVGs for 0ms offline/efficient loading)
+export const DEFAULT_IMAGE_URL = "/images/placeholders/default-course.svg";
+export const DEFAULT_AVATAR_URL = "/images/placeholders/default-avatar.svg";
+export const DEFAULT_INSTRUCTOR_URL = "/images/placeholders/default-instructor.svg";
 
 // Helper function to get full media URL
 // ✨ PHASE 4.30: Fixed to use correct backend origin for media files in development

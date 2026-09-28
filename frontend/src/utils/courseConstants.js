@@ -16,7 +16,7 @@ export const DEFAULT_COURSE_DATA = {
   category: ""
 };
 
-export const DEFAULT_IMAGE_URL = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+export const DEFAULT_IMAGE_URL = "/images/placeholders/default-course.svg";
 
 export const FILE_SIZE_LIMITS = {
   IMAGE_MAX_SIZE: 5 * 1024 * 1024, // 5MB

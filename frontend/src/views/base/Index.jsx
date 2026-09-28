@@ -16,9 +16,11 @@ import RankedStudents from "../../components/Rankings/RankedStudents";  // ✨ P
 import RankedInstructors from "../../components/Rankings/RankedInstructors";  // ✨ PHASE 10.1: Ranking components
 import "./Index.css";
 
-// Import frontend assets
-import heroImage from "../../assets/LMSetjen-DPD-RI.jpg";
-import regionMapImage from "../../assets/region-indonesia-map.jpg";
+// Import frontend assets (Modern WebP + JPG fallback)
+import heroImageWebP from "../../assets/LMSetjen-DPD-RI.webp";
+import heroImageJpg from "../../assets/LMSetjen-DPD-RI.jpg";
+import regionMapWebP from "../../assets/region-indonesia-map.webp";
+import regionMapJpg from "../../assets/region-indonesia-map.jpg";
 
 function Index() {
     const [courses, setCourses] = useState([]);
@@ -306,6 +308,9 @@ function Index() {
                 title="Beranda - LMSetjen DPD RI | Learning Management System"
                 description="Platform pembelajaran online Setjen DPD RI. Akses ribuan kursus, pelatihan, dan program sertifikasi untuk meningkatkan kompetensi pegawai DPD RI."
                 keywords="LMS DPD RI, e-learning Setjen, pelatihan online, kursus pegawai, sertifikasi DPD RI"
+                preloadImages={[
+                    { href: heroImageWebP, type: "image/webp", fetchPriority: "high" }
+                ]}
             />
             {/* Fixed Header - Always on top */}
             <div className="landing-fixed-header">
@@ -503,12 +508,19 @@ function Index() {
                                         border: "1px solid rgba(255, 255, 255, 0.2)"
                                     }}
                                 >
-                                    <img 
-                                        src={heroImage}
-                                        alt="LMS DPD RI" 
-                                        className="img-fluid hero-right-image"
-                                        loading="eager"
-                                    />
+                                    <picture>
+                                        <source srcSet={heroImageWebP} type="image/webp" />
+                                        <img 
+                                            src={heroImageJpg}
+                                            alt="LMSetjen DPD RI - Platform Pembelajaran Digital Pegawai" 
+                                            className="img-fluid hero-right-image"
+                                            loading="eager"
+                                            fetchPriority="high"
+                                            decoding="async"
+                                            width="1024"
+                                            height="764"
+                                        />
+                                    </picture>
                                 </div>
 
                                 {/* Floating Elements */}
@@ -628,20 +640,27 @@ function Index() {
                                 <div 
                                     className="image-container about-image-container"
                                 >
-                                    <img 
-                                        src={regionMapImage}
-                                        alt="Kantor Setjen DPD RI" 
-                                        className="img-fluid"
-                                        style={{ 
-                                            borderRadius: "15px",
-                                            objectFit: "cover",
-                                            width: "100%",
-                                            height: "100%"
-                                        }}
-                                        onError={(e) => {
-                                            e.target.src = "https://geeksui.codescandy.com/geeks/assets/images/background/acedamy-img/about-img.jpg";
-                                        }}
-                                    />
+                                    <picture>
+                                        <source srcSet={regionMapWebP} type="image/webp" />
+                                        <img 
+                                            src={regionMapJpg}
+                                            alt="Peta Wilayah Kerja Sekretariat Jenderal DPD RI" 
+                                            className="img-fluid"
+                                            loading="lazy"
+                                            decoding="async"
+                                            width="1600"
+                                            height="587"
+                                            style={{ 
+                                                borderRadius: "15px",
+                                                objectFit: "cover",
+                                                width: "100%",
+                                                height: "100%"
+                                            }}
+                                            onError={(e) => {
+                                                e.target.src = regionMapJpg;
+                                            }}
+                                        />
+                                    </picture>
                                 </div>
                                 
                                 {/* Floating Stats */}
@@ -1649,16 +1668,20 @@ function Index() {
                                         {/* Course Image */}
                                         <div className="position-relative" style={{ overflow: "hidden" }}>
                                             <img 
-                                                src={getImageUrl(course.image) || "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png"} 
+                                                src={getImageUrl(course.image) || "/images/placeholders/default-course.svg"} 
                                                 alt={course.title}
                                                 className="card-img-top course-card-image"
+                                                loading="lazy"
+                                                decoding="async"
+                                                width="400"
+                                                height="180"
                                                 style={{ 
                                                     height: "180px",
                                                     objectFit: "cover",
                                                     transition: "transform 0.3s ease"
                                                 }}
                                                 onError={(e) => {
-                                                    e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+                                                    e.target.src = "/images/placeholders/default-course.svg";
                                                 }}
                                             />
                                             
@@ -1767,6 +1790,10 @@ function Index() {
                                                 <img 
                                                     src={getImageUrl(course.teacher?.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(course.teacher?.full_name || 'Instruktur')}&background=0d9488&color=ffffff&bold=true&size=28`}
                                                     alt={course.teacher?.full_name || "Instruktur"}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    width="28"
+                                                    height="28"
                                                     style={{
                                                         width: "28px",
                                                         height: "28px",
@@ -1776,7 +1803,7 @@ function Index() {
                                                         border: "1px solid rgba(255, 255, 255, 0.3)"
                                                     }}
                                                     onError={(e) => {
-                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(course.teacher?.full_name || 'Instruktur')}&background=0d9488&color=ffffff&bold=true&size=28`;
+                                                        e.target.src = "/images/placeholders/default-instructor.svg";
                                                     }}
                                                 />
                                                 <small className="text-muted" style={{ fontSize: "0.8rem", fontWeight: "500" }}>

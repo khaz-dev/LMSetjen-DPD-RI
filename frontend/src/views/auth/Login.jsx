@@ -9,7 +9,9 @@ import Toast from "../plugin/Toast";
 import UserData from "../plugin/UserData";
 import apiInstance from "../../utils/useAxios";
 import RoleSelectionModal from "../../components/RoleSelectionModal";
+import logoWebP from "../../assets/logo/logo-192.webp";
 import logoPNG from "../../assets/logo/logo-192.png";
+import logoNusaWebP from "../../assets/logo_nusa.webp";
 import logoNusa from "../../assets/logo_nusa.png";
 import "./Login.css";
 
@@ -528,11 +530,18 @@ function Login() {
                     <div className="mb-3">
                       <div className="d-inline-flex align-items-center justify-content-center">
                         <div className="login-logo-container">
-                          <img
-                            src={logoPNG}
-                            alt="LMSetjen DPD RI Logo"
-                            className="login-logo"
-                          />
+                          <picture>
+                            <source srcSet={logoWebP} type="image/webp" />
+                            <img
+                              src={logoPNG}
+                              alt="LMSetjen DPD RI Logo"
+                              className="login-logo"
+                              width="112"
+                              height="112"
+                              loading="eager"
+                              decoding="async"
+                            />
+                          </picture>
                         </div>
                       </div>
                     </div>
@@ -654,16 +663,23 @@ function Login() {
                             fontWeight: "500",
                           }}
                         >
-                          <img
-                            src={logoNusa}
-                            alt="Nusa Logo"
-                            style={{
-                              height: "1.5rem",
-                              width: "1.5rem",
-                              objectFit: "contain",
-                              marginRight: "0.5rem",
-                            }}
-                          />
+                          <picture>
+                            <source srcSet={logoNusaWebP} type="image/webp" />
+                            <img
+                              src={logoNusa}
+                              alt="Nusa Logo"
+                              width="24"
+                              height="24"
+                              loading="lazy"
+                              decoding="async"
+                              style={{
+                                height: "1.5rem",
+                                width: "1.5rem",
+                                objectFit: "contain",
+                                marginRight: "0.5rem",
+                              }}
+                            />
+                          </picture>
                           Login dengan SSO
                         </a>
                       </div>

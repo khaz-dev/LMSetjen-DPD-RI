@@ -54,6 +54,10 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
                                     src={getImageUrl(teacher.image) || '/images/placeholders/default-instructor.svg'}
                                     alt={teacher.full_name}
                                     className="instructor-avatar-img"
+                                    loading="lazy"
+                                    decoding="async"
+                                    width="96"
+                                    height="96"
                                     onError={(e) => {
                                         e.target.src = '/images/placeholders/default-instructor.svg';
                                     }}

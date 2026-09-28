@@ -210,6 +210,10 @@ const CourseSidebar = ({
                         src={getImageUrl(course?.image) || '/images/placeholders/default-course.svg'}
                         alt={course?.title}
                         className="card-img-top"
+                        loading="lazy"
+                        decoding="async"
+                        width="360"
+                        height="160"
                         style={{ 
                             borderRadius: '15px 15px 0 0',
                             height: '160px',

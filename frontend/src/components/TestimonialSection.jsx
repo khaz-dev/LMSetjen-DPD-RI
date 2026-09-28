@@ -206,10 +206,17 @@ function TestimonialSection() {
                       <img 
                         src={testimonial.image} 
                         alt={testimonial.full_name}
+                        loading="lazy"
+                        decoding="async"
+                        width="60"
+                        height="60"
                         style={{
                           width: '100%',
                           height: '100%',
                           objectFit: 'cover'
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
                         }}
                       />
                     ) : (

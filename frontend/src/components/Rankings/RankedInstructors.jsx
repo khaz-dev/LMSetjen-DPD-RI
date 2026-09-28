@@ -134,6 +134,10 @@ const RankedInstructors = ({ maxResults = 5 }) => {
                     src={instructor.image || '/images/placeholders/default-instructor.svg'}
                     alt={instructor.full_name}
                     className="ranking-avatar rounded-circle"
+                    loading="lazy"
+                    decoding="async"
+                    width="60"
+                    height="60"
                     onError={() => handleImageError(instructor.id)}
                   />
                 ) : (
@@ -142,6 +146,10 @@ const RankedInstructors = ({ maxResults = 5 }) => {
                       src="/images/placeholders/default-instructor.svg"
                       alt={instructor.full_name}
                       className="placeholder-image"
+                      loading="lazy"
+                      decoding="async"
+                      width="60"
+                      height="60"
                     />
                   </div>
                 )}

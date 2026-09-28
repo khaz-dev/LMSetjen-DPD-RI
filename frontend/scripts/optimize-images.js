@@ -16,10 +16,11 @@ const IMAGE_CONFIGS = {
   'logo/logo-16.png': { width: 32, height: 32, quality: 90 },
   
   // Large images that need optimization
-  'LMSetjen-DPD-RI.jpg': { width: 1920, height: 958, quality: 85 },
+  'LMSetjen-DPD-RI.jpg': { width: 1024, height: 764, quality: 85 },
   'background.jpg': { width: 1920, height: 1080, quality: 80 },
   'region-indonesia-map.jpg': { width: 1600, height: 587, quality: 85 },
   'certificate-bg.png': { width: 1920, height: 1080, quality: 85 },
+  'logo_nusa.png': { width: 128, height: 128, quality: 90 },
 };
 
 const assetsDir = path.join(__dirname, '../src/assets');

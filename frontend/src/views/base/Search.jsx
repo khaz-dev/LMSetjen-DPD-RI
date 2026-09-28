@@ -517,6 +517,10 @@ function Search() {
                                                         alt={c.title}
                                                         className="course-image-modern"
                                                         loading="lazy"
+                                                        decoding="async"
+                                                        onError={(e) => {
+                                                            e.target.src = "/images/placeholders/default-course.svg";
+                                                        }}
                                                     />
                                                     {!c.image && (
                                                         <div className="course-image-placeholder">

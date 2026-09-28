@@ -192,8 +192,10 @@ function Courses() {
                                                             <>
                                                                 <img
                                                                     src={getImageUrl(c.course.image)}
-                                                                    alt="course"
+                                                                    alt={c.course?.title || "Kursus"}
                                                                     className="course-image w-100"
+                                                                    loading="lazy"
+                                                                    decoding="async"
                                                                     onError={(e) => {
                                                                         e.target.style.display = "none";
                                                                         const placeholder = e.target.parentElement?.querySelector(".course-placeholder");

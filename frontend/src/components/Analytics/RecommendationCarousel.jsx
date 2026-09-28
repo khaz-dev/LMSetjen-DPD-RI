@@ -139,6 +139,8 @@ export default function RecommendationCarousel() {
                   <img 
                     src={rec.course_detail.image} 
                     alt={rec.course_detail?.title || 'Course'}
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.nextElementSibling.style.display = 'flex';

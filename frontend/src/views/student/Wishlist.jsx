@@ -202,10 +202,12 @@ function Wishlist() {
                                                             <Link to={`/course-detail/${w.course?.slug || '#'}/`}>
                                                                 <img
                                                                     src={getImageUrl(w.course?.image)}
-                                                                    alt="course"
+                                                                    alt={w.course?.title || "Kursus"}
                                                                     className="course-image"
+                                                                    loading="lazy"
+                                                                    decoding="async"
                                                                     onError={(e) => {
-                                                                        e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+                                                                        e.target.src = "/images/placeholders/default-course.svg";
                                                                     }}
                                                                 />
                                                             </Link>

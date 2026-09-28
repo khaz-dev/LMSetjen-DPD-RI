@@ -232,6 +232,10 @@ const CourseReviews = ({ reviews = [], averageRating = 0, totalReviews = 0 }) =>
                                                 src={review.user.image} 
                                                 alt={review.user?.full_name}
                                                 className="rounded-circle me-3"
+                                                loading="lazy"
+                                                decoding="async"
+                                                width="50"
+                                                height="50"
                                                 style={{ 
                                                     width: '50px', 
                                                     height: '50px', 

@@ -162,8 +162,12 @@ const CourseCard = ({ course, index }) => {
                         src={getImageUrl(course.image)}
                         alt={course.title || "Course"}
                         className="course-image"
+                        loading="lazy"
+                        decoding="async"
+                        width="400"
+                        height="225"
                         onError={(e) => {
-                            e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+                            e.target.src = "/images/placeholders/default-course.svg";
                         }}
                     />
                     

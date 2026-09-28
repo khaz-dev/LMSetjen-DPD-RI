@@ -440,6 +440,8 @@ function Dashboard() {
                                                                         src={getImageUrl(course.course.image)}
                                                                         alt={course.course.title || "Course"}
                                                                         className="course-image"
+                                                                        loading="lazy"
+                                                                        decoding="async"
                                                                         onError={(e) => {
                                                                             e.target.style.display = "none";
                                                                             const placeholder = e.target.parentElement?.querySelector(".course-placeholder");

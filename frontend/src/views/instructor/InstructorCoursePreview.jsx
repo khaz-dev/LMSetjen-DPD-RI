@@ -181,8 +181,10 @@ function InstructorCoursePreview() {
                                         src={getImageUrl(course.image)}
                                         alt={course.title}
                                         className="icp-course-image"
+                                        loading="lazy"
+                                        decoding="async"
                                         onError={(e) => {
-                                            e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+                                            e.target.src = "/images/placeholders/default-course.svg";
                                         }}
                                     />
                                 </div>
@@ -279,7 +281,6 @@ function InstructorCoursePreview() {
                                                     <source src={course.file} type="video/mp4" />
                                                     Browser Anda tidak mendukung video element.
                                                 </video>
-                                            )}
                                         </div>
                                     )}
                                 </div>

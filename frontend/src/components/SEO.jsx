@@ -8,10 +8,22 @@ const SEO = ({
   author = 'Setjen DPD RI',
   image = '/logo/logo-512.png',
   url = window.location.href,
-  type = 'website'
+  type = 'website',
+  preloadImages = []
 }) => {
   return (
     <Helmet>
+      {/* Preload Critical Images */}
+      {Array.isArray(preloadImages) && preloadImages.map((img, idx) => (
+        <link
+          key={`preload-img-${idx}`}
+          rel="preload"
+          as="image"
+          href={img.href}
+          type={img.type || 'image/webp'}
+          {...(img.fetchPriority ? { fetchpriority: img.fetchPriority } : {})}
+        />
+      ))}
       {/* Primary Meta Tags */}
       <title>{title}</title>
       <meta name="title" content={title} />
