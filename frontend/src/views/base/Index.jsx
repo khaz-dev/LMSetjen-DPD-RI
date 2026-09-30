@@ -41,7 +41,7 @@ function Index() {
         platform_rating: 4.8
     });
     const [wishlistCount, setWishlistCount, refreshWishlistCount] = useContext(WishlistContext);
-    
+
     // ✨ PHASE 4.177: Fetch guard to prevent duplicate API calls in React Strict Mode
     const hasFetchedRef = useRef(false);
 
@@ -63,14 +63,14 @@ function Index() {
             // If response has 'results' key (paginated), use that; otherwise use data directly
             const coursesData = coursesResponse.data?.results || coursesResponse.data || [];
             const categoriesData = categoriesResponse.data?.results || categoriesResponse.data || [];
-            
+
             // Ensure coursesData is an array before using
             const coursesArray = Array.isArray(coursesData) ? coursesData : [];
             const categoriesArray = Array.isArray(categoriesData) ? categoriesData : [];
-            
+
             setCourses(coursesArray);
             setCategories(categoriesArray);
-            
+
             // Get featured courses (first 6 courses)
             setFeaturedCourses(coursesArray.slice(0, 6));
 
@@ -143,18 +143,18 @@ function Index() {
     useEffect(() => {
         // Scroll to top on page load
         window.scrollTo(0, 0);
-        
+
         // ✨ PHASE 4.177: Guard against duplicate API calls in React Strict Mode
         // Skip if data is already loaded (check for any course data)
         if (courses && courses.length > 0) return;
-        
+
         if (hasFetchedRef.current) return;
         hasFetchedRef.current = true;
-        
+
         // Fetch data
         fetchData();
         fetchStatistics();
-        
+
         // Fetch wishlist items if user is logged in
         if (userId && !isAdminOrTeacher) {
             fetchWishlistItems();
@@ -189,7 +189,7 @@ function Index() {
                 icon: "success",
                 title: response.data.message || "Wishlist berhasil diperbarui",
             });
-            
+
             // Refresh wishlist data
             await fetchWishlistItems();
             refreshWishlistCount();
@@ -205,14 +205,14 @@ function Index() {
     // 1 JP = 45 seconds, so JP = Math.ceil(totalSeconds / 2700)
     const calculateTotalJP = useCallback((lectures) => {
         if (!lectures || !Array.isArray(lectures)) return 0;
-        
+
         let totalSeconds = 0;
         lectures.forEach(lecture => {
             if (lecture.content_duration) {
                 totalSeconds += parseDurationToSeconds(lecture.content_duration);
             }
         });
-        
+
         // 1 JP = 45 minutes = 2700 seconds
         return Math.ceil(totalSeconds / 2700);
     }, []);
@@ -235,7 +235,7 @@ function Index() {
 
         let scrollTimeout;
         let hideTimeout;
-        
+
         const handleScroll = () => {
             // Debounce scroll events for better performance
             clearTimeout(scrollTimeout);
@@ -252,12 +252,12 @@ function Index() {
                         setActiveSection(index);
                         // Show label when transitioning between sections
                         setShowSectionLabel(true);
-                        
+
                         // Clear existing hide timeout
                         if (hideTimeout) {
                             clearTimeout(hideTimeout);
                         }
-                        
+
                         // Hide label after 3 seconds
                         hideTimeout = setTimeout(() => {
                             setShowSectionLabel(false);
@@ -266,10 +266,10 @@ function Index() {
                 });
             }, 50); // 50ms debounce for smooth performance
         };
-        
+
         // Add scroll listener with passive for better performance
         container.addEventListener("scroll", handleScroll, { passive: true });
-        
+
         // Initial check
         handleScroll();
 
@@ -288,13 +288,13 @@ function Index() {
         if (sections[index]) {
             // Show label when user clicks to scroll
             setShowSectionLabel(true);
-            
+
             // Hide label after 3 seconds
             setTimeout(() => {
                 setShowSectionLabel(false);
             }, 5174);
-            
-            sections[index].scrollIntoView({ 
+
+            sections[index].scrollIntoView({
                 behavior: "smooth",
                 block: "start",
                 inline: "nearest"
@@ -304,7 +304,7 @@ function Index() {
 
     return (
         <>
-            <SEO 
+            <SEO
                 title="Beranda - LMSetjen DPD RI | Learning Management System"
                 description="Platform pembelajaran online Setjen DPD RI. Akses ribuan kursus, pelatihan, dan program sertifikasi untuk meningkatkan kompetensi pegawai DPD RI."
                 keywords="LMS DPD RI, e-learning Setjen, pelatihan online, kursus pegawai, sertifikasi DPD RI"
@@ -328,1659 +328,1657 @@ function Index() {
                             onClick={() => scrollToSection(index)}
                         >
                             <div className="section-nav-dot"></div>
-                        <div className={`section-nav-label ${showSectionLabel && activeSection === index ? "visible" : ""}`}>
-                            <i className={`fas fa-${section.icon} me-2`}></i>
-                            {section.label}
+                            <div className={`section-nav-label ${showSectionLabel && activeSection === index ? "visible" : ""}`}>
+                                <i className={`fas fa-${section.icon} me-2`}></i>
+                                {section.label}
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
-            
-            <div className="landing-page-container">
-                {/* Hero Section */}
-                <section className="hero-section snap-section">
-                    {/* Background Pattern */}
-                    <div className="position-absolute w-100 h-100 hero-background-pattern"></div>
+                    ))}
+                </div>
 
-                    <div className="container position-relative hero-container">
-                    <div className="row align-items-center">
-                        {/* Hero Content */}
-                        <div className="col-lg-6 mb-5 mb-lg-0">
-                            <div className="hero-content text-white">
-                                {/* Badge */}
-                                <div className="d-inline-flex align-items-center mb-4 px-3 py-2 hero-badge">
-                                    <i className="fas fa-university me-2"></i>
-                                    <span className="fw-medium">Platform Pembelajaran Setjen DPD RI</span>
-                                </div>
+                <div className="landing-page-container">
+                    {/* Hero Section */}
+                    <section className="hero-section snap-section">
+                        {/* Background Pattern */}
+                        <div className="position-absolute w-100 h-100 hero-background-pattern"></div>
 
-                                {/* Main Headline */}
-                                <h1 
-                                    className="display-4 fw-bold mb-4 hero-main-title"
-                                >
-                                    LMS<span className="hero-title-accent">etjen</span> DPD RI
-                                </h1>
-                                
-                                <h2 className="h3 mb-4 opacity-90">
-                                    Tingkatkan Kompetensi Melalui Pembelajaran Digital
-                                </h2>
+                        <div className="container position-relative hero-container">
+                            <div className="row align-items-center">
+                                {/* Hero Content */}
+                                <div className="col-lg-6 mb-5 mb-lg-0">
+                                    <div className="hero-content text-white">
+                                        {/* Badge */}
+                                        <div className="d-inline-flex align-items-center mb-4 px-3 py-2 hero-badge">
+                                            <i className="fas fa-university me-2"></i>
+                                            <span className="fw-medium">Platform Pembelajaran Setjen DPD RI</span>
+                                        </div>
 
-                                {/* Description */}
-                                <p 
-                                    className="lead mb-5 opacity-85 hero-description"
-                                >
-                                    Platform pembelajaran online untuk pengembangan kapasitas dan kompetensi 
-                                    pegawai Sekretariat Jenderal DPD RI. Akses ribuan materi pembelajaran 
-                                    berkualitas dari instruktur berpengalaman.
-                                </p>
+                                        {/* Main Headline */}
+                                        <h1
+                                            className="display-4 fw-bold mb-4 hero-main-title"
+                                        >
+                                            LMS<span className="hero-title-accent">etjen</span> DPD RI
+                                        </h1>
 
-                                {/* CTA Buttons */}
-                                <div className="d-flex flex-wrap gap-3 mb-5">
-                                    <button 
-                                        className="btn btn-lg btn-outline-light px-4 py-3 hero-btn-secondary-outline"
-                                        onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
-                                    >
-                                        <i className="fas fa-search me-2"></i>
-                                        Jelajahi Kursus
-                                    </button>
-                                </div>
+                                        <h2 className="h3 mb-4 opacity-90">
+                                            Tingkatkan Kompetensi Melalui Pembelajaran Digital
+                                        </h2>
 
-                                {/* Stats Preview - Compact for single line */}
-                                <div className="row g-2">
-                                    <div className="col-4">
-                                        <div className="text-center">
-                                            {isStatsLoading ? (
-                                                <>
-                                                    <div 
-                                                        style={{
-                                                            width: "50px",
-                                                            height: "32px",
-                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                            backgroundSize: "200% 100%",
-                                                            animation: "shimmer 1.5s infinite",
-                                                            borderRadius: "4px",
-                                                            margin: "0 auto 0.5rem"
-                                                        }}
-                                                    ></div>
-                                                    <div 
-                                                        style={{
-                                                            width: "40px",
-                                                            height: "12px",
-                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                            backgroundSize: "200% 100%",
-                                                            animation: "shimmer 1.5s infinite",
-                                                            borderRadius: "4px",
-                                                            margin: "0 auto"
-                                                        }}
-                                                    ></div>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.total_courses}+</h3>
-                                                    <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Kursus</small>
-                                                </>
-                                            )}
+                                        {/* Description */}
+                                        <p
+                                            className="lead mb-5 opacity-85 hero-description"
+                                        >
+                                            Platform pembelajaran online untuk pengembangan kapasitas dan kompetensi
+                                            pegawai Sekretariat Jenderal DPD RI. Akses ribuan materi pembelajaran
+                                            berkualitas dari instruktur berpengalaman.
+                                        </p>
+
+                                        {/* CTA Buttons */}
+                                        <div className="d-flex flex-wrap gap-3 mb-5">
+                                            <button
+                                                className="btn btn-lg btn-outline-light px-4 py-3 hero-btn-secondary-outline"
+                                                onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
+                                            >
+                                                <i className="fas fa-search me-2"></i>
+                                                Jelajahi Kursus
+                                            </button>
+                                        </div>
+
+                                        {/* Stats Preview - Compact for single line */}
+                                        <div className="row g-2">
+                                            <div className="col-4">
+                                                <div className="text-center">
+                                                    {isStatsLoading ? (
+                                                        <>
+                                                            <div
+                                                                style={{
+                                                                    width: "50px",
+                                                                    height: "32px",
+                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                                    backgroundSize: "200% 100%",
+                                                                    animation: "shimmer 1.5s infinite",
+                                                                    borderRadius: "4px",
+                                                                    margin: "0 auto 0.5rem"
+                                                                }}
+                                                            ></div>
+                                                            <div
+                                                                style={{
+                                                                    width: "40px",
+                                                                    height: "12px",
+                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                                    backgroundSize: "200% 100%",
+                                                                    animation: "shimmer 1.5s infinite",
+                                                                    borderRadius: "4px",
+                                                                    margin: "0 auto"
+                                                                }}
+                                                            ></div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.total_courses}+</h3>
+                                                            <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Kursus</small>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="col-4">
+                                                <div className="text-center">
+                                                    {isStatsLoading ? (
+                                                        <>
+                                                            <div
+                                                                style={{
+                                                                    width: "50px",
+                                                                    height: "32px",
+                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                                    backgroundSize: "200% 100%",
+                                                                    animation: "shimmer 1.5s infinite",
+                                                                    borderRadius: "4px",
+                                                                    margin: "0 auto 0.5rem"
+                                                                }}
+                                                            ></div>
+                                                            <div
+                                                                style={{
+                                                                    width: "40px",
+                                                                    height: "12px",
+                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                                    backgroundSize: "200% 100%",
+                                                                    animation: "shimmer 1.5s infinite",
+                                                                    borderRadius: "4px",
+                                                                    margin: "0 auto"
+                                                                }}
+                                                            ></div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.total_students}+</h3>
+                                                            <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Peserta</small>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="col-4">
+                                                <div className="text-center">
+                                                    {isStatsLoading ? (
+                                                        <>
+                                                            <div
+                                                                style={{
+                                                                    width: "50px",
+                                                                    height: "32px",
+                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                                    backgroundSize: "200% 100%",
+                                                                    animation: "shimmer 1.5s infinite",
+                                                                    borderRadius: "4px",
+                                                                    margin: "0 auto 0.5rem"
+                                                                }}
+                                                            ></div>
+                                                            <div
+                                                                style={{
+                                                                    width: "40px",
+                                                                    height: "12px",
+                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
+                                                                    backgroundSize: "200% 100%",
+                                                                    animation: "shimmer 1.5s infinite",
+                                                                    borderRadius: "4px",
+                                                                    margin: "0 auto"
+                                                                }}
+                                                            ></div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.completion_rate}%</h3>
+                                                            <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Tingkat Selesai</small>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="col-4">
-                                        <div className="text-center">
-                                            {isStatsLoading ? (
-                                                <>
-                                                    <div 
-                                                        style={{
-                                                            width: "50px",
-                                                            height: "32px",
-                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                            backgroundSize: "200% 100%",
-                                                            animation: "shimmer 1.5s infinite",
-                                                            borderRadius: "4px",
-                                                            margin: "0 auto 0.5rem"
-                                                        }}
-                                                    ></div>
-                                                    <div 
-                                                        style={{
-                                                            width: "40px",
-                                                            height: "12px",
-                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                            backgroundSize: "200% 100%",
-                                                            animation: "shimmer 1.5s infinite",
-                                                            borderRadius: "4px",
-                                                            margin: "0 auto"
-                                                        }}
-                                                    ></div>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.total_students}+</h3>
-                                                    <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Peserta</small>
-                                                </>
-                                            )}
+                                </div>
+
+                                {/* Hero Image */}
+                                <div className="col-lg-6">
+                                    <div className="position-relative">
+                                        <div
+                                            className="hero-image-wrapper"
+                                            style={{
+                                                background: "rgba(255, 255, 255, 0.1)",
+                                                borderRadius: "30px",
+                                                padding: "0.5rem",
+                                                backdropFilter: "blur(10px)",
+                                                border: "1px solid rgba(255, 255, 255, 0.2)"
+                                            }}
+                                        >
+                                            <picture>
+                                                <source srcSet={heroImageWebP} type="image/webp" />
+                                                <img
+                                                    src={heroImageJpg}
+                                                    alt="LMSetjen DPD RI - Platform Pembelajaran Digital Pegawai"
+                                                    className="img-fluid hero-right-image"
+                                                    loading="eager"
+                                                    fetchpriority="high"
+                                                    decoding="async"
+                                                    width="1024"
+                                                    height="764"
+                                                />
+                                            </picture>
                                         </div>
-                                    </div>
-                                    <div className="col-4">
-                                        <div className="text-center">
-                                            {isStatsLoading ? (
-                                                <>
-                                                    <div 
-                                                        style={{
-                                                            width: "50px",
-                                                            height: "32px",
-                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                            backgroundSize: "200% 100%",
-                                                            animation: "shimmer 1.5s infinite",
-                                                            borderRadius: "4px",
-                                                            margin: "0 auto 0.5rem"
-                                                        }}
-                                                    ></div>
-                                                    <div 
-                                                        style={{
-                                                            width: "40px",
-                                                            height: "12px",
-                                                            background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                            backgroundSize: "200% 100%",
-                                                            animation: "shimmer 1.5s infinite",
-                                                            borderRadius: "4px",
-                                                            margin: "0 auto"
-                                                        }}
-                                                    ></div>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.completion_rate}%</h3>
-                                                    <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Tingkat Selesai</small>
-                                                </>
-                                            )}
+
+                                        {/* Floating Elements */}
+                                        <div
+                                            className="position-absolute floating-stats-card"
+                                        >
+                                            <div className="d-flex align-items-center">
+                                                <div
+                                                    className="me-3 floating-card-icon"
+                                                >
+                                                    <i className="fas fa-certificate"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 className="mb-0 fw-bold card-heading-text">Sertifikat</h4>
+                                                    <small className="text-muted">Resmi & Diakui</small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            className="position-absolute floating-stats-card-bottom"
+                                        >
+                                            <div className="d-flex align-items-center">
+                                                <div
+                                                    className="me-3 floating-card-icon-green"
+                                                >
+                                                    <i className="fas fa-chart-line"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 className="mb-0 fw-bold card-heading-text">Progress</h4>
+                                                    <small className="text-muted">Real-time Tracking</small>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Hero Image */}
-                        <div className="col-lg-6">
-                            <div className="position-relative">
-                                <div 
-                                    className="hero-image-wrapper"
-                                    style={{
-                                        background: "rgba(255, 255, 255, 0.1)",
-                                        borderRadius: "30px",
-                                        padding: "2rem",
-                                        backdropFilter: "blur(10px)",
-                                        border: "1px solid rgba(255, 255, 255, 0.2)"
-                                    }}
-                                >
-                                    <picture>
-                                        <source srcSet={heroImageWebP} type="image/webp" />
-                                        <img 
-                                            src={heroImageJpg}
-                                            alt="LMSetjen DPD RI - Platform Pembelajaran Digital Pegawai" 
-                                            className="img-fluid hero-right-image"
-                                            loading="eager"
-                                            fetchPriority="high"
-                                            decoding="async"
-                                            width="1024"
-                                            height="764"
-                                        />
-                                    </picture>
+                        {/* Scroll Indicator */}
+                        <div
+                            className="position-absolute w-100 text-center text-white hero-scroll-indicator"
+                        >
+                            <div className="animate-bounce">
+                                <i className="fas fa-chevron-down"></i>
+                                <div className="mt-2">
+                                    <small>Scroll untuk melihat lebih banyak</small>
                                 </div>
+                            </div>
+                        </div>
+                    </section>
 
-                                {/* Floating Elements */}
-                                <div 
-                                    className="position-absolute floating-stats-card"
-                                >
-                                    <div className="d-flex align-items-center">
-                                        <div 
-                                            className="me-3 floating-card-icon"
+                    {/* About DPD RI Section */}
+                    <section className="py-5 about-section snap-section" style={{ background: "rgba(255,255,255,0.70)" }}>
+                        <div className="container">
+                            <div className="row align-items-center">
+                                <div className="col-lg-6 mb-5 mb-lg-0">
+                                    <div className="pe-lg-4">
+                                        <div
+                                            className="badge mb-3 about-badge"
                                         >
-                                            <i className="fas fa-certificate"></i>
+                                            <i className="fas fa-building me-2"></i>
+                                            Tentang Setjen DPD RI
                                         </div>
-                                        <div>
-                                            <h4 className="mb-0 fw-bold card-heading-text">Sertifikat</h4>
-                                            <small className="text-muted">Resmi & Diakui</small>
+
+                                        <h2 className="display-6 fw-bold mb-4 about-section-heading">
+                                            Sekretariat Jenderal<br />Dewan Perwakilan Daerah<br />Republik Indonesia
+                                        </h2>
+
+
+                                        <p className="lead text-muted mb-4">
+                                            Setjen DPD RI adalah perangkat pendukung yang menyediakan dukungan administratif,
+                                            teknis, dan keahlian untuk memastikan kelancaran kerja DPD RI
+                                            dalam menjalankan fungsi legislasi dan pengawasannya.
+                                        </p>
+
+                                        <div className="row g-3 mb-4">
+                                            <div className="col-sm-6">
+                                                <div className="d-flex align-items-center">
+                                                    <div
+                                                        className="me-3 floating-card-icon-green"
+                                                    >
+                                                        <i className="fas fa-users"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="fw-bold mb-1">Pengembangan SDM</h5>
+                                                        <small className="text-muted">Peningkatan kompetensi pegawai</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-sm-6">
+                                                <div className="d-flex align-items-center">
+                                                    <div
+                                                        className="me-3 feature-icon-red"
+                                                    >
+                                                        <i className="fas fa-graduation-cap"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="fw-bold mb-1">Pembelajaran Digital</h5>
+                                                        <small className="text-muted">Transformasi digital pendidikan</small>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
+
+                                        <p className="text-muted">
+                                            Platform LMSetjen DPD RI hadir sebagai solusi pembelajaran digital untuk mendukung
+                                            pengembangan kapasitas dan kompetensi pegawai dalam melaksanakan tugas dan fungsinya
+                                            secara optimal.
+                                        </p>
                                     </div>
                                 </div>
 
-                                <div 
-                                    className="position-absolute floating-stats-card-bottom"
-                                >
-                                    <div className="d-flex align-items-center">
-                                        <div 
-                                            className="me-3 floating-card-icon-green"
+                                <div className="col-lg-6">
+                                    <div className="position-relative">
+                                        <div
+                                            className="image-container about-image-container"
                                         >
-                                            <i className="fas fa-chart-line"></i>
+                                            <picture>
+                                                <source srcSet={regionMapWebP} type="image/webp" />
+                                                <img
+                                                    src={regionMapJpg}
+                                                    alt="Peta Wilayah Kerja Sekretariat Jenderal DPD RI"
+                                                    className="img-fluid"
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    width="1600"
+                                                    height="587"
+                                                    style={{
+                                                        borderRadius: "15px",
+                                                        objectFit: "cover",
+                                                        width: "100%",
+                                                        height: "100%"
+                                                    }}
+                                                    onError={(e) => {
+                                                        e.target.src = regionMapJpg;
+                                                    }}
+                                                />
+                                            </picture>
                                         </div>
-                                        <div>
-                                            <h4 className="mb-0 fw-bold card-heading-text">Progress</h4>
-                                            <small className="text-muted">Real-time Tracking</small>
+
+                                        {/* Floating Stats */}
+                                        <div
+                                            className="position-absolute"
+                                            style={{
+                                                bottom: "15%",
+                                                right: "-10%",
+                                                background: "white",
+                                                borderRadius: "20px",
+                                                padding: "1rem",
+                                                boxShadow: "0 15px 35px rgba(0, 0, 0, 0.1)",
+                                                border: "1px solid #e9ecef"
+                                            }}
+                                        >
+                                            <div className="text-center">
+                                                <h3 className="fw-bold mb-1 stats-number-blue">38</h3>
+                                                <p className="mb-0 text-muted">Provinsi</p>
+                                                <small className="text-muted">Terwakili</small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </section>
 
-                {/* Scroll Indicator */}
-                <div 
-                    className="position-absolute w-100 text-center text-white hero-scroll-indicator"
-                >
-                    <div className="animate-bounce">
-                        <i className="fas fa-chevron-down"></i>
-                        <div className="mt-2">
-                            <small>Scroll untuk melihat lebih banyak</small>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* About DPD RI Section */}
-            <section className="py-5 about-section snap-section" style={{ background: "rgba(255,255,255,0.70)" }}>
-                <div className="container">
-                    <div className="row align-items-center">
-                        <div className="col-lg-6 mb-5 mb-lg-0">
-                            <div className="pe-lg-4">
-                                <div 
+                    {/* Statistics Section */}
+                    <section className="py-5 statistics-section snap-section" style={{ background: "rgba(255,255,255,0.2)" }}>
+                        <div className="container">
+                            <div className="text-center mb-5">
+                                <div
                                     className="badge mb-3 about-badge"
                                 >
-                                    <i className="fas fa-building me-2"></i>
-                                    Tentang Setjen DPD RI
+                                    <i className="fas fa-chart-bar me-2"></i>
+                                    Statistik Platform
                                 </div>
-                                
-                                <h2 className="display-6 fw-bold mb-4 about-section-heading">
-                                    Sekretariat Jenderal<br/>Dewan Perwakilan Daerah<br/>Republik Indonesia
+
+                                <h2 className="display-6 fw-bold mb-3 about-section-heading">
+                                    Pencapaian LMSetjen DPD RI
                                 </h2>
-                                
-                                
-                                <p className="lead text-muted mb-4">
-                                    Setjen DPD RI adalah perangkat pendukung yang menyediakan dukungan administratif,
-                                     teknis, dan keahlian untuk memastikan kelancaran kerja DPD RI
-                                      dalam menjalankan fungsi legislasi dan pengawasannya.
-                                </p>
-                                
-                                <div className="row g-3 mb-4">
-                                    <div className="col-sm-6">
-                                        <div className="d-flex align-items-center">
-                                            <div 
-                                                className="me-3 floating-card-icon-green"
-                                            >
-                                                <i className="fas fa-users"></i>
-                                            </div>
-                                            <div>
-                                                <h5 className="fw-bold mb-1">Pengembangan SDM</h5>
-                                                <small className="text-muted">Peningkatan kompetensi pegawai</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="col-sm-6">
-                                        <div className="d-flex align-items-center">
-                                            <div 
-                                                className="me-3 feature-icon-red"
-                                            >
-                                                <i className="fas fa-graduation-cap"></i>
-                                            </div>
-                                            <div>
-                                                <h5 className="fw-bold mb-1">Pembelajaran Digital</h5>
-                                                <small className="text-muted">Transformasi digital pendidikan</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <p className="text-muted">
-                                    Platform LMSetjen DPD RI hadir sebagai solusi pembelajaran digital untuk mendukung 
-                                    pengembangan kapasitas dan kompetensi pegawai dalam melaksanakan tugas dan fungsinya 
-                                    secara optimal.
+
+                                <p className="lead text-muted">
+                                    Data terkini mengenai perkembangan dan capaian platform pembelajaran Setjen DPD RI
                                 </p>
                             </div>
-                        </div>
-                        
-                        <div className="col-lg-6">
-                            <div className="position-relative">
-                                <div 
-                                    className="image-container about-image-container"
-                                >
-                                    <picture>
-                                        <source srcSet={regionMapWebP} type="image/webp" />
-                                        <img 
-                                            src={regionMapJpg}
-                                            alt="Peta Wilayah Kerja Sekretariat Jenderal DPD RI" 
-                                            className="img-fluid"
-                                            loading="lazy"
-                                            decoding="async"
-                                            width="1600"
-                                            height="587"
-                                            style={{ 
-                                                borderRadius: "15px",
-                                                objectFit: "cover",
-                                                width: "100%",
-                                                height: "100%"
-                                            }}
-                                            onError={(e) => {
-                                                e.target.src = regionMapJpg;
-                                            }}
-                                        />
-                                    </picture>
-                                </div>
-                                
-                                {/* Floating Stats */}
-                                <div 
-                                    className="position-absolute"
-                                    style={{
-                                        bottom: "15%",
-                                        right: "-10%",
-                                        background: "white",
-                                        borderRadius: "20px",
-                                        padding: "1rem",
-                                        boxShadow: "0 15px 35px rgba(0, 0, 0, 0.1)",
-                                        border: "1px solid #e9ecef"
-                                    }}
-                                >
-                                    <div className="text-center">
-                                        <h3 className="fw-bold mb-1 stats-number-blue">38</h3>
-                                        <p className="mb-0 text-muted">Provinsi</p>
-                                        <small className="text-muted">Terwakili</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
-            {/* Statistics Section */}
-            <section className="py-5 statistics-section snap-section" style={{ background: "rgba(255,255,255,0.2)" }}>
-                <div className="container">
-                    <div className="text-center mb-5">
-                        <div 
-                            className="badge mb-3 about-badge"
-                        >
-                            <i className="fas fa-chart-bar me-2"></i>
-                            Statistik Platform
-                        </div>
-                        
-                        <h2 className="display-6 fw-bold mb-3 about-section-heading">
-                            Pencapaian LMSetjen DPD RI
-                        </h2>
-                        
-                        <p className="lead text-muted">
-                            Data terkini mengenai perkembangan dan capaian platform pembelajaran Setjen DPD RI
-                        </p>
-                    </div>
-
-                    {/* Changed to 2x4 layout (2 rows, 4 cards - compact design) */}
-                    <div className="row g-3 justify-content-center">
-                        {/* Row 1 - All 4 stats */}
-                        <div className="col-lg-3 col-md-6">
-                            {isStatsLoading ? (
-                                <div 
-                                    className="card border-0 h-100 text-center"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        padding: "1.5rem"
-                                    }}
-                                >
-                                    <div className="placeholder rounded-circle mx-auto mb-3" style={{ width: "50px", height: "50px", background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
-                                    <div className="placeholder rounded mx-auto mb-2" style={{ width: "60%", height: "24px", background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
-                                    <div className="placeholder rounded mx-auto" style={{ width: "70%", height: "14px", background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
-                                </div>
-                            ) : (
-                                <div 
-                                    className="card border-0 h-100 text-center"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        transition: "all 0.3s ease"
-                                    }}
-                                >
-                                    <div className="card-body p-3">
-                                        <div 
-                                            className="d-inline-flex align-items-center justify-content-center mb-2"
+                            {/* Changed to 2x4 layout (2 rows, 4 cards - compact design) */}
+                            <div className="row g-3 justify-content-center">
+                                {/* Row 1 - All 4 stats */}
+                                <div className="col-lg-3 col-md-6">
+                                    {isStatsLoading ? (
+                                        <div
+                                            className="card border-0 h-100 text-center"
                                             style={{
-                                                width: "50px",
-                                                height: "50px",
-                                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                                borderRadius: "12px",
-                                                color: "white",
-                                                fontSize: "1.3rem"
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                padding: "1.5rem"
                                             }}
                                         >
-                                            <i className="fas fa-book-open"></i>
+                                            <div className="placeholder rounded-circle mx-auto mb-3" style={{ width: "50px", height: "50px", background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+                                            <div className="placeholder rounded mx-auto mb-2" style={{ width: "60%", height: "24px", background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+                                            <div className="placeholder rounded mx-auto" style={{ width: "70%", height: "14px", background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
                                         </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_courses}+</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Kursus Tersedia</p>
-                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
-                                            <i className="fas fa-arrow-up me-1"></i>
-                                            +5 kursus baru
-                                        </small>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-lg-3 col-md-6">
-                            {isStatsLoading ? (
-                                <div 
-                                    className="card border-0 h-100"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        padding: "1.5rem"
-                                    }}
-                                >
-                                    <div 
-                                        style={{
-                                            width: "50px",
-                                            height: "50px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "12px",
-                                            margin: "0 auto 1rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "80px",
-                                            height: "24px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto 0.5rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "100px",
-                                            height: "16px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto"
-                                        }}
-                                    ></div>
-                                </div>
-                            ) : (
-                                <div 
-                                    className="card border-0 h-100 text-center"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        transition: "all 0.3s ease"
-                                    }}
-                                >
-                                    <div className="card-body p-3">
-                                        <div 
-                                            className="d-inline-flex align-items-center justify-content-center mb-2"
+                                    ) : (
+                                        <div
+                                            className="card border-0 h-100 text-center"
                                             style={{
-                                                width: "50px",
-                                                height: "50px",
-                                                background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
-                                                borderRadius: "12px",
-                                                color: "white",
-                                                fontSize: "1.3rem"
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                transition: "all 0.3s ease"
                                             }}
                                         >
-                                            <i className="fas fa-users"></i>
+                                            <div className="card-body p-3">
+                                                <div
+                                                    className="d-inline-flex align-items-center justify-content-center mb-2"
+                                                    style={{
+                                                        width: "50px",
+                                                        height: "50px",
+                                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                                        borderRadius: "12px",
+                                                        color: "white",
+                                                        fontSize: "1.3rem"
+                                                    }}
+                                                >
+                                                    <i className="fas fa-book-open"></i>
+                                                </div>
+                                                <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_courses}+</h4>
+                                                <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Kursus Tersedia</p>
+                                                <small className="text-success" style={{ fontSize: "0.75rem" }}>
+                                                    <i className="fas fa-arrow-up me-1"></i>
+                                                    +5 kursus baru
+                                                </small>
+                                            </div>
                                         </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_students}+</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Peserta Aktif</p>
-                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
-                                            <i className="fas fa-arrow-up me-1"></i>
-                                            +12 peserta baru
-                                        </small>
-                                    </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
 
-                        <div className="col-lg-3 col-md-6">
-                            {isStatsLoading ? (
-                                <div 
-                                    className="card border-0 h-100"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        padding: "1.5rem"
-                                    }}
-                                >
-                                    <div 
-                                        style={{
-                                            width: "50px",
-                                            height: "50px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "12px",
-                                            margin: "0 auto 1rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "80px",
-                                            height: "24px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto 0.5rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "100px",
-                                            height: "16px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto"
-                                        }}
-                                    ></div>
-                                </div>
-                            ) : (
-                                <div 
-                                    className="card border-0 h-100 text-center"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        transition: "all 0.3s ease"
-                                    }}
-                                >
-                                    <div className="card-body p-3">
-                                        <div 
-                                            className="d-inline-flex align-items-center justify-content-center mb-2"
-                                            style={{
-                                                width: "50px",
-                                                height: "50px",
-                                                background: "linear-gradient(135deg, #ffc107 0%, #ff8800 100%)",
-                                                borderRadius: "12px",
-                                                color: "white",
-                                                fontSize: "1.3rem"
-                                            }}
-                                        >
-                                            <i className="fas fa-chalkboard-teacher"></i>
-                                        </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_teachers}+</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Instruktur Ahli</p>
-                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
-                                            <i className="fas fa-certificate me-1"></i>
-                                            Tersertifikasi
-                                        </small>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-lg-3 col-md-6">
-                            {isStatsLoading ? (
-                                <div 
-                                    className="card border-0 h-100"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        padding: "1.5rem"
-                                    }}
-                                >
-                                    <div 
-                                        style={{
-                                            width: "50px",
-                                            height: "50px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "12px",
-                                            margin: "0 auto 1rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "80px",
-                                            height: "24px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto 0.5rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "100px",
-                                            height: "16px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto"
-                                        }}
-                                    ></div>
-                                </div>
-                            ) : (
-                                <div 
-                                    className="card border-0 h-100 text-center"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        transition: "all 0.3s ease"
-                                    }}
-                                >
-                                    <div className="card-body p-3">
-                                        <div 
-                                            className="d-inline-flex align-items-center justify-content-center mb-2"
-                                            style={{
-                                                width: "50px",
-                                                height: "50px",
-                                                background: "linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)",
-                                                borderRadius: "12px",
-                                                color: "white",
-                                                fontSize: "1.3rem"
-                                            }}
-                                        >
-                                            <i className="fas fa-chart-line"></i>
-                                        </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.completion_rate}%</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Tingkat Kelulusan</p>
-                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
-                                            <i className="fas fa-trophy me-1"></i>
-                                            Rata-rata tinggi
-                                        </small>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Row 2 - Additional stats for 2x4 visual layout */}
-                        <div className="col-lg-3 col-md-6">
-                            {isStatsLoading ? (
-                                <div 
-                                    className="card border-0 h-100"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        padding: "1.5rem"
-                                    }}
-                                >
-                                    <div 
-                                        style={{
-                                            width: "50px",
-                                            height: "50px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "12px",
-                                            margin: "0 auto 1rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "80px",
-                                            height: "24px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto 0.5rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "100px",
-                                            height: "16px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto"
-                                        }}
-                                    ></div>
-                                </div>
-                            ) : (
-                                <div 
-                                    className="card border-0 h-100 text-center"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        transition: "all 0.3s ease"
-                                    }}
-                                >
-                                    <div className="card-body p-3">
-                                        <div 
-                                            className="d-inline-flex align-items-center justify-content-center mb-2"
-                                            style={{
-                                                width: "50px",
-                                                height: "50px",
-                                                background: "linear-gradient(135deg, #17a2b8 0%, #138496 100%)",
-                                                borderRadius: "12px",
-                                                color: "white",
-                                                fontSize: "1.3rem"
-                                            }}
-                                        >
-                                            <i className="fas fa-certificate"></i>
-                                        </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_certificates}+</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Sertifikat Diterbitkan</p>
-                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
-                                            <i className="fas fa-arrow-up me-1"></i>
-                                            Terus meningkat
-                                        </small>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-lg-3 col-md-6">
-                            {isStatsLoading ? (
-                                <div 
-                                    className="card border-0 h-100"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        padding: "1.5rem"
-                                    }}
-                                >
-                                    <div 
-                                        style={{
-                                            width: "50px",
-                                            height: "50px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "12px",
-                                            margin: "0 auto 1rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "80px",
-                                            height: "24px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto 0.5rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "100px",
-                                            height: "16px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto"
-                                        }}
-                                    ></div>
-                                </div>
-                            ) : (
-                                <div 
-                                    className="card border-0 h-100 text-center"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        transition: "all 0.3s ease"
-                                    }}
-                                >
-                                    <div className="card-body p-3">
-                                        <div 
-                                            className="d-inline-flex align-items-center justify-content-center mb-2"
-                                            style={{
-                                                width: "50px",
-                                                height: "50px",
-                                                background: "linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)",
-                                                borderRadius: "12px",
-                                                color: "white",
-                                                fontSize: "1.3rem"
-                                            }}
-                                        >
-                                            <i className="fas fa-clock"></i>
-                                        </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>24/7</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Akses Kapan Saja</p>
-                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
-                                            <i className="fas fa-check me-1"></i>
-                                            Fleksibel
-                                        </small>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-lg-3 col-md-6">
-                            {isStatsLoading ? (
-                                <div 
-                                    className="card border-0 h-100"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        padding: "1.5rem"
-                                    }}
-                                >
-                                    <div 
-                                        style={{
-                                            width: "50px",
-                                            height: "50px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "12px",
-                                            margin: "0 auto 1rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "80px",
-                                            height: "24px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto 0.5rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "100px",
-                                            height: "16px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto"
-                                        }}
-                                    ></div>
-                                </div>
-                            ) : (
-                                <div 
-                                    className="card border-0 h-100 text-center"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        transition: "all 0.3s ease"
-                                    }}
-                                >
-                                    <div className="card-body p-3">
-                                        <div 
-                                            className="d-inline-flex align-items-center justify-content-center mb-2"
-                                            style={{
-                                                width: "50px",
-                                                height: "50px",
-                                                background: "linear-gradient(135deg, #fd7e14 0%, #dc3545 100%)",
-                                                borderRadius: "12px",
-                                                color: "white",
-                                                fontSize: "1.3rem"
-                                            }}
-                                        >
-                                            <i className="fas fa-video"></i>
-                                        </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_materials}+</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Video Pembelajaran</p>
-                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
-                                            <i className="fas fa-play me-1"></i>
-                                            HD Quality
-                                        </small>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-lg-3 col-md-6">
-                            {isStatsLoading ? (
-                                <div 
-                                    className="card border-0 h-100"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        padding: "1.5rem"
-                                    }}
-                                >
-                                    <div 
-                                        style={{
-                                            width: "50px",
-                                            height: "50px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "12px",
-                                            margin: "0 auto 1rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "80px",
-                                            height: "24px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto 0.5rem"
-                                        }}
-                                    ></div>
-                                    <div 
-                                        style={{
-                                            width: "100px",
-                                            height: "16px",
-                                            background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 1.5s infinite",
-                                            borderRadius: "4px",
-                                            margin: "0 auto"
-                                        }}
-                                    ></div>
-                                </div>
-                            ) : (
-                                <div 
-                                    className="card border-0 h-100 text-center"
-                                    style={{
-                                        borderRadius: "16px",
-                                        background: "white",
-                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                        transition: "all 0.3s ease"
-                                    }}
-                                >
-                                    <div className="card-body p-3">
-                                        <div 
-                                            className="d-inline-flex align-items-center justify-content-center mb-2"
-                                            style={{
-                                                width: "50px",
-                                                height: "50px",
-                                                background: "linear-gradient(135deg, #20c997 0%, #28a745 100%)",
-                                                borderRadius: "12px",
-                                                color: "white",
-                                                fontSize: "1.3rem"
-                                            }}
-                                        >
-                                            <i className="fas fa-star"></i>
-                                        </div>
-                                        <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.platform_rating}/5</h4>
-                                        <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Rating Platform</p>
-                                        <small className="text-success" style={{ fontSize: "0.75rem" }}>
-                                            <i className="fas fa-thumbs-up me-1"></i>
-                                            Sangat memuaskan
-                                        </small>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Course Categories Section */}
-            <section className="py-5 snap-section" style={{ background: "rgba(255,255,255,0.70)" }}>
-                <div className="container">
-                    <div className="text-center mb-4">
-                        <div 
-                            className="badge mb-3"
-                            style={{
-                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                color: "white",
-                                padding: "0.5rem 1rem",
-                                borderRadius: "50px",
-                                fontSize: "0.9rem"
-                            }}
-                        >
-                            <i className="fas fa-th-large me-2"></i>
-                            Kategori Kursus
-                        </div>
-                        
-                        <h2 className="display-6 fw-bold mb-3" style={{ color: "#2c3e50" }}>
-                            Jelajahi Berdasarkan Kategori
-                        </h2>
-                        
-                        <p className="lead text-muted">
-                            Temukan kursus yang sesuai dengan minat dan kebutuhan pengembangan karir Anda
-                        </p>
-                    </div>
-
-                    {/* Changed to 2x4 layout (2 rows, 4 cards each - compact) */}
-                    <div className="row g-3 justify-content-center">
-                        {isLoading ? (
-                            // Loading skeleton - 8 cards with placeholder content
-                            [...Array(8)].map((_, index) => (
-                                <div key={index} className="col-lg-3 col-md-6">
-                                    <div 
-                                        className="card border-0"
-                                        style={{
-                                            borderRadius: "16px",
-                                            background: "white",
-                                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                            height: "160px",
-                                            overflow: "hidden"
-                                        }}
-                                    >
-                                        <div className="card-body p-3 text-center d-flex flex-column justify-content-center">
-                                            <div 
-                                                className="placeholder rounded-circle mx-auto mb-2"
-                                                style={{
-                                                    width: "50px",
-                                                    height: "50px",
-                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                                                    backgroundSize: "200% 100%",
-                                                    animation: "shimmer 1.5s infinite"
-                                                }}
-                                            />
-                                            <div 
-                                                className="placeholder rounded mx-auto mb-2" 
-                                                style={{ 
-                                                    width: "70%", 
-                                                    height: "16px",
-                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                                                    backgroundSize: "200% 100%",
-                                                    animation: "shimmer 1.5s infinite"
-                                                }}
-                                            />
-                                            <div 
-                                                className="placeholder rounded mx-auto" 
-                                                style={{ 
-                                                    width: "50%", 
-                                                    height: "12px",
-                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                                                    backgroundSize: "200% 100%",
-                                                    animation: "shimmer 1.5s infinite"
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : categories.length > 0 ? (
-                            categories.slice(0, 8).map((category, index) => (
-                                <div key={category.id} className="col-lg-3 col-md-6">
-                                    <Link 
-                                        to={`/search/?category=${encodeURIComponent(category.title)}`}
-                                        className="text-decoration-none"
-                                    >
-                                        <div 
+                                <div className="col-lg-3 col-md-6">
+                                    {isStatsLoading ? (
+                                        <div
                                             className="card border-0 h-100"
                                             style={{
                                                 borderRadius: "16px",
                                                 background: "white",
                                                 boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                                transition: "all 0.3s ease",
-                                                cursor: "pointer"
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.transform = "translateY(-5px)";
-                                                e.currentTarget.style.boxShadow = "0 8px 20px rgba(0, 0, 0, 0.12)";
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.transform = "translateY(0)";
-                                                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.06)";
+                                                padding: "1.5rem"
                                             }}
                                         >
-                                            <div className="card-body p-3 text-center">
-                                                <div 
-                                                    className="category-icon mx-auto mb-2"
+                                            <div
+                                                style={{
+                                                    width: "50px",
+                                                    height: "50px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "12px",
+                                                    margin: "0 auto 1rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "80px",
+                                                    height: "24px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto 0.5rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "100px",
+                                                    height: "16px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto"
+                                                }}
+                                            ></div>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="card border-0 h-100 text-center"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                transition: "all 0.3s ease"
+                                            }}
+                                        >
+                                            <div className="card-body p-3">
+                                                <div
+                                                    className="d-inline-flex align-items-center justify-content-center mb-2"
                                                     style={{
                                                         width: "50px",
                                                         height: "50px",
-                                                        background: `linear-gradient(135deg, ${
-                                                            ["#0d9488, #0f766e", "#28a745, #20c997", "#ffc107, #ff8800", "#dc3545, #e83e8c", "#17a2b8, #138496", "#6f42c1, #e83e8c", "#fd7e14, #dc3545", "#20c997, #28a745"][index % 8]
-                                                        })`,
+                                                        background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
                                                         borderRadius: "12px",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
                                                         color: "white",
-                                                        fontSize: "1.5rem"
+                                                        fontSize: "1.3rem"
                                                     }}
                                                 >
-                                                    <i 
-                                                        className={`fas ${
-                                                            ["fa-globe", "fa-chart-line", "fa-paint-brush", "fa-code", "fa-database", "fa-tools", "fa-brain", "fa-graduation-cap"][index % 8]
-                                                        }`}
-                                                        style={{
-                                                            fontSize: "1.3rem"
-                                                        }}
-                                                    ></i>
+                                                    <i className="fas fa-users"></i>
                                                 </div>
-                                                
-                                                <h3 className="fw-bold mb-1" style={{ color: "#2c3e50", fontSize: "0.95rem" }}>
-                                                    {category.title}
-                                                </h3>
-                                                
-                                                <p className="text-muted mb-2" style={{ fontSize: "0.8rem" }}>
-                                                    {category.course_count} kursus
-                                                </p>
-                                                
-                                                <div 
-                                                    className="btn btn-sm"
-                                                    style={{
-                                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                                        color: "white",
-                                                        border: "none",
-                                                        borderRadius: "8px",
-                                                        fontWeight: "500",
-                                                        fontSize: "0.75rem",
-                                                        padding: "0.5rem 1rem",
-                                                        display: "inline-flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        height: "auto",
-                                                        cursor: "pointer",
-                                                        transition: "all 0.3s ease"
-                                                    }}
-                                                >
-                                                    Lihat Kursus
-                                                </div>
+                                                <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_students}+</h4>
+                                                <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Peserta Aktif</p>
+                                                <small className="text-success" style={{ fontSize: "0.75rem" }}>
+                                                    <i className="fas fa-arrow-up me-1"></i>
+                                                    +12 peserta baru
+                                                </small>
                                             </div>
                                         </div>
-                                    </Link>
+                                    )}
                                 </div>
-                            ))
-                        ) : (
-                            <div className="col-12 text-center">
-                                <p className="text-muted">Kategori kursus akan segera tersedia</p>
-                            </div>
-                        )}
-                    </div>
 
-                    {categories.length > 6 && (
-                        <div className="text-center mt-5">
-                            <Link 
-                                to="/search/"
-                                className="btn btn-lg px-4"
-                                style={{
-                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "15px",
-                                    fontWeight: "600"
-                                }}
-                            >
-                                Lihat Semua Kategori
-                            </Link>
-                        </div>
-                    )}
-                </div>
-            </section>
-
-            {/* Featured Courses Section */}
-            <section id="courses-section" className="py-5 snap-section" style={{ background: "rgba(255,255,255,0.2)" }}>
-                <div className="container">
-                    <div className="text-center mb-5">
-                        <div 
-                            className="badge mb-3"
-                            style={{
-                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                color: "white",
-                                padding: "0.5rem 1rem",
-                                borderRadius: "50px",
-                                fontSize: "0.9rem"
-                            }}
-                        >
-                            <i className="fas fa-star me-2"></i>
-                            Kursus Populer
-                        </div>
-                        
-                        <h2 className="display-6 fw-bold mb-3" style={{ color: "#2c3e50" }}>
-                            Kursus Terfavorit
-                        </h2>
-                        
-                        <p className="lead text-muted">
-                            Kursus paling diminati dan memiliki rating tertinggi dari peserta
-                        </p>
-                    </div>
-
-                    {/* Changed to 3x1 layout (1 row, 3 cards - compact) */}
-                    <div className="row g-3 justify-content-center">
-                        {isLoading ? (
-                            // Loading skeleton - 3 course cards with placeholder content
-                            [...Array(3)].map((_, index) => (
-                                <div key={index} className="col-lg-4 col-md-6">
-                                    <div 
-                                        className="card border-0"
-                                        style={{
-                                            borderRadius: "16px",
-                                            background: "white",
-                                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                            height: "380px",
-                                            overflow: "hidden"
-                                        }}
-                                    >
-                                        <div 
-                                            className="placeholder" 
-                                            style={{ 
-                                                height: "180px", 
-                                                background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                                                backgroundSize: "200% 100%",
-                                                animation: "shimmer 1.5s infinite"
-                                            }}
-                                        />
-                                        <div className="card-body p-3">
-                                            <div 
-                                                className="placeholder rounded mb-2" 
-                                                style={{ 
-                                                    width: "60%", 
-                                                    height: "12px",
-                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                                                    backgroundSize: "200% 100%",
-                                                    animation: "shimmer 1.5s infinite"
-                                                }}
-                                            />
-                                            <div 
-                                                className="placeholder rounded mb-2" 
-                                                style={{ 
-                                                    width: "90%", 
-                                                    height: "18px",
-                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                                                    backgroundSize: "200% 100%",
-                                                    animation: "shimmer 1.5s infinite"
-                                                }}
-                                            />
-                                            <div 
-                                                className="placeholder rounded mb-3" 
-                                                style={{ 
-                                                    width: "70%", 
-                                                    height: "18px",
-                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                                                    backgroundSize: "200% 100%",
-                                                    animation: "shimmer 1.5s infinite"
-                                                }}
-                                            />
-                                            <div className="d-flex justify-content-between mb-2">
-                                                <div 
-                                                    className="placeholder rounded" 
-                                                    style={{ 
-                                                        width: "45%", 
-                                                        height: "14px",
-                                                        background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                                                        backgroundSize: "200% 100%",
-                                                        animation: "shimmer 1.5s infinite"
-                                                    }}
-                                                />
-                                                <div 
-                                                    className="placeholder rounded" 
-                                                    style={{ 
-                                                        width: "45%", 
-                                                        height: "14px",
-                                                        background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                                                        backgroundSize: "200% 100%",
-                                                        animation: "shimmer 1.5s infinite"
-                                                    }}
-                                                />
-                                            </div>
-                                            <div 
-                                                className="placeholder rounded" 
-                                                style={{ 
-                                                    width: "100%", 
-                                                    height: "40px",
-                                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                                                    backgroundSize: "200% 100%",
-                                                    animation: "shimmer 1.5s infinite"
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : featuredCourses.length > 0 ? (
-                            featuredCourses.slice(0, 3).map((course, index) => (
-                                <div key={course.id} className="col-lg-4 col-md-6">
-                                    <div 
-                                        className="card border-0 h-100 course-card"
-                                        style={{
-                                            borderRadius: "16px",
-                                            background: "white",
-                                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                                            transition: "all 0.3s ease",
-                                            overflow: "hidden",
-                                            position: "relative"
-                                        }}
-                                    >
-                                        {/* Gradient Overlay on Hover */}
-                                        <div 
-                                            className="card-gradient-overlay"
+                                <div className="col-lg-3 col-md-6">
+                                    {isStatsLoading ? (
+                                        <div
+                                            className="card border-0 h-100"
                                             style={{
-                                                position: "absolute",
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                bottom: 0,
-                                                background: "linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)",
-                                                opacity: 0,
-                                                transition: "opacity 0.3s ease",
-                                                pointerEvents: "none",
-                                                zIndex: 1
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                padding: "1.5rem"
                                             }}
-                                        />
-                                        
-                                        {/* Course Image */}
-                                        <div className="position-relative" style={{ overflow: "hidden" }}>
-                                            <img 
-                                                src={getImageUrl(course.image) || "/images/placeholders/default-course.svg"} 
-                                                alt={course.title}
-                                                className="card-img-top course-card-image"
-                                                loading="lazy"
-                                                decoding="async"
-                                                width="400"
-                                                height="180"
-                                                style={{ 
-                                                    height: "180px",
-                                                    objectFit: "cover",
-                                                    transition: "transform 0.3s ease"
+                                        >
+                                            <div
+                                                style={{
+                                                    width: "50px",
+                                                    height: "50px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "12px",
+                                                    margin: "0 auto 1rem"
                                                 }}
-                                                onError={(e) => {
-                                                    e.target.src = "/images/placeholders/default-course.svg";
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "80px",
+                                                    height: "24px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto 0.5rem"
                                                 }}
-                                            />
-                                            
-                                            {/* Wishlist Button - Only show for students */}
-                                            {!isAdminOrTeacher && (
-                                                <button 
-                                                    onClick={() => addToWishlist(course.id)}
-                                                    className="btn position-absolute wishlist-btn"
-                                                    title={isCourseInWishlist(course.id) ? "Hapus dari wishlist" : "Tambahkan ke wishlist"}
-                                                    disabled={!userId}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "100px",
+                                                    height: "16px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto"
+                                                }}
+                                            ></div>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="card border-0 h-100 text-center"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                transition: "all 0.3s ease"
+                                            }}
+                                        >
+                                            <div className="card-body p-3">
+                                                <div
+                                                    className="d-inline-flex align-items-center justify-content-center mb-2"
                                                     style={{
-                                                        top: "10px",
-                                                        right: "10px",
-                                                        width: "36px",
-                                                        height: "36px",
-                                                        borderRadius: "50%",
-                                                        background: "rgba(255, 255, 255, 0.95)",
-                                                        backdropFilter: "blur(10px)",
-                                                        border: "none",
-                                                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        transition: "all 0.3s ease",
-                                                        zIndex: 2
+                                                        width: "50px",
+                                                        height: "50px",
+                                                        background: "linear-gradient(135deg, #ffc107 0%, #ff8800 100%)",
+                                                        borderRadius: "12px",
+                                                        color: "white",
+                                                        fontSize: "1.3rem"
                                                     }}
                                                 >
-                                                    <i 
-                                                        className={`${isCourseInWishlist(course.id) ? "fas" : "far"} fa-heart`}
+                                                    <i className="fas fa-chalkboard-teacher"></i>
+                                                </div>
+                                                <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_teachers}+</h4>
+                                                <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Instruktur Ahli</p>
+                                                <small className="text-success" style={{ fontSize: "0.75rem" }}>
+                                                    <i className="fas fa-certificate me-1"></i>
+                                                    Tersertifikasi
+                                                </small>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="col-lg-3 col-md-6">
+                                    {isStatsLoading ? (
+                                        <div
+                                            className="card border-0 h-100"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                padding: "1.5rem"
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    width: "50px",
+                                                    height: "50px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "12px",
+                                                    margin: "0 auto 1rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "80px",
+                                                    height: "24px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto 0.5rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "100px",
+                                                    height: "16px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto"
+                                                }}
+                                            ></div>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="card border-0 h-100 text-center"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                transition: "all 0.3s ease"
+                                            }}
+                                        >
+                                            <div className="card-body p-3">
+                                                <div
+                                                    className="d-inline-flex align-items-center justify-content-center mb-2"
+                                                    style={{
+                                                        width: "50px",
+                                                        height: "50px",
+                                                        background: "linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)",
+                                                        borderRadius: "12px",
+                                                        color: "white",
+                                                        fontSize: "1.3rem"
+                                                    }}
+                                                >
+                                                    <i className="fas fa-chart-line"></i>
+                                                </div>
+                                                <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.completion_rate}%</h4>
+                                                <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Tingkat Kelulusan</p>
+                                                <small className="text-success" style={{ fontSize: "0.75rem" }}>
+                                                    <i className="fas fa-trophy me-1"></i>
+                                                    Rata-rata tinggi
+                                                </small>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Row 2 - Additional stats for 2x4 visual layout */}
+                                <div className="col-lg-3 col-md-6">
+                                    {isStatsLoading ? (
+                                        <div
+                                            className="card border-0 h-100"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                padding: "1.5rem"
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    width: "50px",
+                                                    height: "50px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "12px",
+                                                    margin: "0 auto 1rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "80px",
+                                                    height: "24px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto 0.5rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "100px",
+                                                    height: "16px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto"
+                                                }}
+                                            ></div>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="card border-0 h-100 text-center"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                transition: "all 0.3s ease"
+                                            }}
+                                        >
+                                            <div className="card-body p-3">
+                                                <div
+                                                    className="d-inline-flex align-items-center justify-content-center mb-2"
+                                                    style={{
+                                                        width: "50px",
+                                                        height: "50px",
+                                                        background: "linear-gradient(135deg, #17a2b8 0%, #138496 100%)",
+                                                        borderRadius: "12px",
+                                                        color: "white",
+                                                        fontSize: "1.3rem"
+                                                    }}
+                                                >
+                                                    <i className="fas fa-certificate"></i>
+                                                </div>
+                                                <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_certificates}+</h4>
+                                                <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Sertifikat Diterbitkan</p>
+                                                <small className="text-success" style={{ fontSize: "0.75rem" }}>
+                                                    <i className="fas fa-arrow-up me-1"></i>
+                                                    Terus meningkat
+                                                </small>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="col-lg-3 col-md-6">
+                                    {isStatsLoading ? (
+                                        <div
+                                            className="card border-0 h-100"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                padding: "1.5rem"
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    width: "50px",
+                                                    height: "50px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "12px",
+                                                    margin: "0 auto 1rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "80px",
+                                                    height: "24px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto 0.5rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "100px",
+                                                    height: "16px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto"
+                                                }}
+                                            ></div>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="card border-0 h-100 text-center"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                transition: "all 0.3s ease"
+                                            }}
+                                        >
+                                            <div className="card-body p-3">
+                                                <div
+                                                    className="d-inline-flex align-items-center justify-content-center mb-2"
+                                                    style={{
+                                                        width: "50px",
+                                                        height: "50px",
+                                                        background: "linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)",
+                                                        borderRadius: "12px",
+                                                        color: "white",
+                                                        fontSize: "1.3rem"
+                                                    }}
+                                                >
+                                                    <i className="fas fa-clock"></i>
+                                                </div>
+                                                <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>24/7</h4>
+                                                <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Akses Kapan Saja</p>
+                                                <small className="text-success" style={{ fontSize: "0.75rem" }}>
+                                                    <i className="fas fa-check me-1"></i>
+                                                    Fleksibel
+                                                </small>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="col-lg-3 col-md-6">
+                                    {isStatsLoading ? (
+                                        <div
+                                            className="card border-0 h-100"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                padding: "1.5rem"
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    width: "50px",
+                                                    height: "50px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "12px",
+                                                    margin: "0 auto 1rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "80px",
+                                                    height: "24px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto 0.5rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "100px",
+                                                    height: "16px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto"
+                                                }}
+                                            ></div>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="card border-0 h-100 text-center"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                transition: "all 0.3s ease"
+                                            }}
+                                        >
+                                            <div className="card-body p-3">
+                                                <div
+                                                    className="d-inline-flex align-items-center justify-content-center mb-2"
+                                                    style={{
+                                                        width: "50px",
+                                                        height: "50px",
+                                                        background: "linear-gradient(135deg, #fd7e14 0%, #dc3545 100%)",
+                                                        borderRadius: "12px",
+                                                        color: "white",
+                                                        fontSize: "1.3rem"
+                                                    }}
+                                                >
+                                                    <i className="fas fa-video"></i>
+                                                </div>
+                                                <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.total_materials}+</h4>
+                                                <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Video Pembelajaran</p>
+                                                <small className="text-success" style={{ fontSize: "0.75rem" }}>
+                                                    <i className="fas fa-play me-1"></i>
+                                                    HD Quality
+                                                </small>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="col-lg-3 col-md-6">
+                                    {isStatsLoading ? (
+                                        <div
+                                            className="card border-0 h-100"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                padding: "1.5rem"
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    width: "50px",
+                                                    height: "50px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "12px",
+                                                    margin: "0 auto 1rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "80px",
+                                                    height: "24px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto 0.5rem"
+                                                }}
+                                            ></div>
+                                            <div
+                                                style={{
+                                                    width: "100px",
+                                                    height: "16px",
+                                                    background: "linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%)",
+                                                    backgroundSize: "200% 100%",
+                                                    animation: "shimmer 1.5s infinite",
+                                                    borderRadius: "4px",
+                                                    margin: "0 auto"
+                                                }}
+                                            ></div>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="card border-0 h-100 text-center"
+                                            style={{
+                                                borderRadius: "16px",
+                                                background: "white",
+                                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                transition: "all 0.3s ease"
+                                            }}
+                                        >
+                                            <div className="card-body p-3">
+                                                <div
+                                                    className="d-inline-flex align-items-center justify-content-center mb-2"
+                                                    style={{
+                                                        width: "50px",
+                                                        height: "50px",
+                                                        background: "linear-gradient(135deg, #20c997 0%, #28a745 100%)",
+                                                        borderRadius: "12px",
+                                                        color: "white",
+                                                        fontSize: "1.3rem"
+                                                    }}
+                                                >
+                                                    <i className="fas fa-star"></i>
+                                                </div>
+                                                <h4 className="fw-bold mb-1" style={{ fontSize: "1.5rem", color: "#2c3e50" }}>{stats.platform_rating}/5</h4>
+                                                <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Rating Platform</p>
+                                                <small className="text-success" style={{ fontSize: "0.75rem" }}>
+                                                    <i className="fas fa-thumbs-up me-1"></i>
+                                                    Sangat memuaskan
+                                                </small>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Course Categories Section */}
+                    <section className="py-5 snap-section" style={{ background: "rgba(255,255,255,0.70)" }}>
+                        <div className="container">
+                            <div className="text-center mb-4">
+                                <div
+                                    className="badge mb-3"
+                                    style={{
+                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                        color: "white",
+                                        padding: "0.5rem 1rem",
+                                        borderRadius: "50px",
+                                        fontSize: "0.9rem"
+                                    }}
+                                >
+                                    <i className="fas fa-th-large me-2"></i>
+                                    Kategori Kursus
+                                </div>
+
+                                <h2 className="display-6 fw-bold mb-3" style={{ color: "#2c3e50" }}>
+                                    Jelajahi Berdasarkan Kategori
+                                </h2>
+
+                                <p className="lead text-muted">
+                                    Temukan kursus yang sesuai dengan minat dan kebutuhan pengembangan karir Anda
+                                </p>
+                            </div>
+
+                            {/* Changed to 2x4 layout (2 rows, 4 cards each - compact) */}
+                            <div className="row g-3 justify-content-center">
+                                {isLoading ? (
+                                    // Loading skeleton - 8 cards with placeholder content
+                                    [...Array(8)].map((_, index) => (
+                                        <div key={index} className="col-lg-3 col-md-6">
+                                            <div
+                                                className="card border-0"
+                                                style={{
+                                                    borderRadius: "16px",
+                                                    background: "white",
+                                                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                    height: "160px",
+                                                    overflow: "hidden"
+                                                }}
+                                            >
+                                                <div className="card-body p-3 text-center d-flex flex-column justify-content-center">
+                                                    <div
+                                                        className="placeholder rounded-circle mx-auto mb-2"
                                                         style={{
-                                                            color: isCourseInWishlist(course.id) ? "#dc3545" : "#6c757d",
-                                                            fontSize: "0.95rem"
+                                                            width: "50px",
+                                                            height: "50px",
+                                                            background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite"
                                                         }}
                                                     />
-                                                </button>
-                                            )}
-
-                                            {/* Level Badge - Positioned at top-left inside card image */}
-                                            <div 
-                                                className="position-absolute"
-                                                style={{
-                                                    top: "10px",
-                                                    left: "10px",
-                                                    zIndex: 2
-                                                }}
-                                            >
-                                                <span 
-                                                    className="badge"
-                                                    style={{
-                                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                                        color: "white",
-                                                        padding: "0.35rem 0.75rem",
-                                                        borderRadius: "8px",
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: "600",
-                                                        boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)"
-                                                    }}
-                                                >
-                                                    {getLevelText(course.level)}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Card Body */}
-                                        <div className="card-body p-3" style={{ position: "relative", zIndex: 2 }}>
-                                            {/* Category */}
-                                            <div className="mb-2">
-                                                <span 
-                                                    className="badge"
-                                                    style={{
-                                                        background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
-                                                        color: "#0d9488",
-                                                        border: "1px solid rgba(102, 126, 234, 0.2)",
-                                                        borderRadius: "8px",
-                                                        fontSize: "0.65rem",
-                                                        fontWeight: "600",
-                                                        padding: "0.3rem 0.6rem"
-                                                    }}
-                                                >
-                                                    <i className="fas fa-folder me-1"></i>
-                                                    {course.category?.title || "General"}
-                                                </span>
-                                            </div>
-
-                                            {/* Course Title */}
-                                            <h3 className="fw-bold mb-2" style={{ minHeight: "42px", fontSize: "0.95rem" }}>
-                                                <Link 
-                                                    to={`/course-detail/${course.slug}/`}
-                                                    className="text-decoration-none course-title-link"
-                                                    style={{ 
-                                                        color: "#2c3e50",
-                                                        display: "-webkit-box",
-                                                        WebkitLineClamp: "2",
-                                                        WebkitBoxOrient: "vertical",
-                                                        overflow: "hidden",
-                                                        lineHeight: "1.4",
-                                                        transition: "color 0.3s ease"
-                                                    }}
-                                                >
-                                                    {course.title}
-                                                </Link>
-                                            </h3>
-
-                                            {/* Instructor */}
-                                            <div className="mb-2 d-flex align-items-center">
-                                                <img 
-                                                    src={getImageUrl(course.teacher?.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(course.teacher?.full_name || 'Instruktur')}&background=0d9488&color=ffffff&bold=true&size=28`}
-                                                    alt={course.teacher?.full_name || "Instruktur"}
-                                                    loading="lazy"
-                                                    decoding="async"
-                                                    width="28"
-                                                    height="28"
-                                                    style={{
-                                                        width: "28px",
-                                                        height: "28px",
-                                                        borderRadius: "50%",
-                                                        marginRight: "8px",
-                                                        objectFit: "cover",
-                                                        border: "1px solid rgba(255, 255, 255, 0.3)"
-                                                    }}
-                                                    onError={(e) => {
-                                                        e.target.src = "/images/placeholders/default-instructor.svg";
-                                                    }}
-                                                />
-                                                <small className="text-muted" style={{ fontSize: "0.8rem", fontWeight: "500" }}>
-                                                    {course.teacher?.full_name || "Instruktur"}
-                                                </small>
-                                            </div>
-
-                                            {/* Rating & Stats */}
-                                            <div 
-                                                className="d-flex align-items-center justify-content-between mb-2 p-2"
-                                                style={{
-                                                    background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
-                                                    borderRadius: "8px"
-                                                }}
-                                            >
-                                                <div className="d-flex align-items-center">
-                                                    <Rating
-                                                        initialValue={course.average_rating || 0}
-                                                        readonly={true}
-                                                        size={14}
-                                                        fillColor="#ffc107"
-                                                        emptyColor="#e4e5e9"
+                                                    <div
+                                                        className="placeholder rounded mx-auto mb-2"
+                                                        style={{
+                                                            width: "70%",
+                                                            height: "16px",
+                                                            background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite"
+                                                        }}
                                                     />
-                                                    <span className="text-warning fw-bold ms-1" style={{ fontSize: "0.8rem" }}>
-                                                        {course.average_rating || 0}
-                                                    </span>
+                                                    <div
+                                                        className="placeholder rounded mx-auto"
+                                                        style={{
+                                                            width: "50%",
+                                                            height: "12px",
+                                                            background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite"
+                                                        }}
+                                                    />
                                                 </div>
-                                                <small className="text-muted" style={{ fontSize: "0.7rem" }}>
-                                                    ({course.reviews?.length || 0})
-                                                </small>
-                                            </div>
-
-                                            {/* Students Count */}
-                                            <div 
-                                                className="d-flex align-items-center justify-content-between p-2 mb-2"
-                                                style={{
-                                                    background: "rgba(40, 167, 69, 0.05)",
-                                                    borderRadius: "8px",
-                                                    border: "1px solid rgba(40, 167, 69, 0.1)"
-                                                }}
-                                            >
-                                                <small className="fw-medium" style={{ fontSize: "0.8rem", color: "#146c43" }}>
-                                                    <i className="fas fa-users me-1"></i>
-                                                    {course.students?.length || 0} siswa
-                                                </small>
-                                                <small className="text-muted" style={{ fontSize: "0.7rem" }}>
-                                                    <i className="fas fa-book-open me-1"></i>
-                                                    Aktif
-                                                </small>
-                                            </div>
-
-                                            {/* Total Duration in JP (Jam Pelajaran) - ✨ PHASE 4.77+ */}
-                                            <div 
-                                                className="d-flex align-items-center justify-content-center p-2 mb-2"
-                                                style={{
-                                                    background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
-                                                    borderRadius: "8px",
-                                                    border: "1px solid rgba(102, 126, 234, 0.2)"
-                                                }}
-                                            >
-                                                <small className="fw-medium" style={{ fontSize: "0.8rem", color: "#0d9488" }}>
-                                                    <i className="fas fa-clock me-1"></i>
-                                                    Total: <strong>{calculateTotalJP(course.lectures)}</strong> JP (Jam Pelajaran)
-                                                </small>
                                             </div>
                                         </div>
-
-                                        {/* Card Footer */}
-                                        <div className="card-footer bg-transparent border-0 p-3 pt-0" style={{ position: "relative", zIndex: 2 }}>
-                                            <Link 
-                                                to={`/course-detail/${course.slug}/`} 
-                                                className="btn w-100 fw-semibold course-detail-btn"
-                                                style={{
-                                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                                    border: "none",
-                                                    borderRadius: "10px",
-                                                    color: "white",
-                                                    transition: "all 0.3s ease",
-                                                    padding: "0.6rem 1rem",
-                                                    fontSize: "0.85rem",
-                                                    boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center"
-                                                }}
+                                    ))
+                                ) : categories.length > 0 ? (
+                                    categories.slice(0, 8).map((category, index) => (
+                                        <div key={category.id} className="col-lg-3 col-md-6">
+                                            <Link
+                                                to={`/search/?category=${encodeURIComponent(category.title)}`}
+                                                className="text-decoration-none"
                                             >
-                                                <i className="fas fa-arrow-right me-2"></i>
-                                                Mulai Belajar
+                                                <div
+                                                    className="card border-0 h-100"
+                                                    style={{
+                                                        borderRadius: "16px",
+                                                        background: "white",
+                                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                        transition: "all 0.3s ease",
+                                                        cursor: "pointer"
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.transform = "translateY(-5px)";
+                                                        e.currentTarget.style.boxShadow = "0 8px 20px rgba(0, 0, 0, 0.12)";
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.transform = "translateY(0)";
+                                                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.06)";
+                                                    }}
+                                                >
+                                                    <div className="card-body p-3 text-center">
+                                                        <div
+                                                            className="category-icon mx-auto mb-2"
+                                                            style={{
+                                                                width: "50px",
+                                                                height: "50px",
+                                                                background: `linear-gradient(135deg, ${["#0d9488, #0f766e", "#28a745, #20c997", "#ffc107, #ff8800", "#dc3545, #e83e8c", "#17a2b8, #138496", "#6f42c1, #e83e8c", "#fd7e14, #dc3545", "#20c997, #28a745"][index % 8]
+                                                                    })`,
+                                                                borderRadius: "12px",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                color: "white",
+                                                                fontSize: "1.5rem"
+                                                            }}
+                                                        >
+                                                            <i
+                                                                className={`fas ${["fa-globe", "fa-chart-line", "fa-paint-brush", "fa-code", "fa-database", "fa-tools", "fa-brain", "fa-graduation-cap"][index % 8]
+                                                                    }`}
+                                                                style={{
+                                                                    fontSize: "1.3rem"
+                                                                }}
+                                                            ></i>
+                                                        </div>
+
+                                                        <h3 className="fw-bold mb-1" style={{ color: "#2c3e50", fontSize: "0.95rem" }}>
+                                                            {category.title}
+                                                        </h3>
+
+                                                        <p className="text-muted mb-2" style={{ fontSize: "0.8rem" }}>
+                                                            {category.course_count} kursus
+                                                        </p>
+
+                                                        <div
+                                                            className="btn btn-sm"
+                                                            style={{
+                                                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                                                color: "white",
+                                                                border: "none",
+                                                                borderRadius: "8px",
+                                                                fontWeight: "500",
+                                                                fontSize: "0.75rem",
+                                                                padding: "0.5rem 1rem",
+                                                                display: "inline-flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                height: "auto",
+                                                                cursor: "pointer",
+                                                                transition: "all 0.3s ease"
+                                                            }}
+                                                        >
+                                                            Lihat Kursus
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </Link>
                                         </div>
+                                    ))
+                                ) : (
+                                    <div className="col-12 text-center">
+                                        <p className="text-muted">Kategori kursus akan segera tersedia</p>
                                     </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="col-12 text-center">
-                                <p className="text-muted">Kursus akan segera tersedia</p>
+                                )}
                             </div>
-                        )}
-                    </div>
 
-                    {courses.length > 6 && (
-                        <div className="text-center mt-5">
-                            <Link 
-                                to="/search/"
-                                className="btn btn-lg px-4"
-                                style={{
-                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "15px",
-                                    fontWeight: "600"
-                                }}
-                            >
-                                Lihat Semua Kursus
-                            </Link>
+                            {categories.length > 6 && (
+                                <div className="text-center mt-5">
+                                    <Link
+                                        to="/search/"
+                                        className="btn btn-lg px-4"
+                                        style={{
+                                            background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                            color: "white",
+                                            border: "none",
+                                            borderRadius: "15px",
+                                            fontWeight: "600"
+                                        }}
+                                    >
+                                        Lihat Semua Kategori
+                                    </Link>
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </section>
+
+                    {/* Featured Courses Section */}
+                    <section id="courses-section" className="py-5 snap-section" style={{ background: "rgba(255,255,255,0.2)" }}>
+                        <div className="container">
+                            <div className="text-center mb-5">
+                                <div
+                                    className="badge mb-3"
+                                    style={{
+                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                        color: "white",
+                                        padding: "0.5rem 1rem",
+                                        borderRadius: "50px",
+                                        fontSize: "0.9rem"
+                                    }}
+                                >
+                                    <i className="fas fa-star me-2"></i>
+                                    Kursus Populer
+                                </div>
+
+                                <h2 className="display-6 fw-bold mb-3" style={{ color: "#2c3e50" }}>
+                                    Kursus Terfavorit
+                                </h2>
+
+                                <p className="lead text-muted">
+                                    Kursus paling diminati dan memiliki rating tertinggi dari peserta
+                                </p>
+                            </div>
+
+                            {/* Changed to 3x1 layout (1 row, 3 cards - compact) */}
+                            <div className="row g-3 justify-content-center">
+                                {isLoading ? (
+                                    // Loading skeleton - 3 course cards with placeholder content
+                                    [...Array(3)].map((_, index) => (
+                                        <div key={index} className="col-lg-4 col-md-6">
+                                            <div
+                                                className="card border-0"
+                                                style={{
+                                                    borderRadius: "16px",
+                                                    background: "white",
+                                                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                    height: "380px",
+                                                    overflow: "hidden"
+                                                }}
+                                            >
+                                                <div
+                                                    className="placeholder"
+                                                    style={{
+                                                        height: "180px",
+                                                        background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                        backgroundSize: "200% 100%",
+                                                        animation: "shimmer 1.5s infinite"
+                                                    }}
+                                                />
+                                                <div className="card-body p-3">
+                                                    <div
+                                                        className="placeholder rounded mb-2"
+                                                        style={{
+                                                            width: "60%",
+                                                            height: "12px",
+                                                            background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite"
+                                                        }}
+                                                    />
+                                                    <div
+                                                        className="placeholder rounded mb-2"
+                                                        style={{
+                                                            width: "90%",
+                                                            height: "18px",
+                                                            background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite"
+                                                        }}
+                                                    />
+                                                    <div
+                                                        className="placeholder rounded mb-3"
+                                                        style={{
+                                                            width: "70%",
+                                                            height: "18px",
+                                                            background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite"
+                                                        }}
+                                                    />
+                                                    <div className="d-flex justify-content-between mb-2">
+                                                        <div
+                                                            className="placeholder rounded"
+                                                            style={{
+                                                                width: "45%",
+                                                                height: "14px",
+                                                                background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                                backgroundSize: "200% 100%",
+                                                                animation: "shimmer 1.5s infinite"
+                                                            }}
+                                                        />
+                                                        <div
+                                                            className="placeholder rounded"
+                                                            style={{
+                                                                width: "45%",
+                                                                height: "14px",
+                                                                background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                                backgroundSize: "200% 100%",
+                                                                animation: "shimmer 1.5s infinite"
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div
+                                                        className="placeholder rounded"
+                                                        style={{
+                                                            width: "100%",
+                                                            height: "40px",
+                                                            background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                                            backgroundSize: "200% 100%",
+                                                            animation: "shimmer 1.5s infinite"
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : featuredCourses.length > 0 ? (
+                                    featuredCourses.slice(0, 3).map((course, index) => (
+                                        <div key={course.id} className="col-lg-4 col-md-6">
+                                            <div
+                                                className="card border-0 h-100 course-card"
+                                                style={{
+                                                    borderRadius: "16px",
+                                                    background: "white",
+                                                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                                                    transition: "all 0.3s ease",
+                                                    overflow: "hidden",
+                                                    position: "relative"
+                                                }}
+                                            >
+                                                {/* Gradient Overlay on Hover */}
+                                                <div
+                                                    className="card-gradient-overlay"
+                                                    style={{
+                                                        position: "absolute",
+                                                        top: 0,
+                                                        left: 0,
+                                                        right: 0,
+                                                        bottom: 0,
+                                                        background: "linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)",
+                                                        opacity: 0,
+                                                        transition: "opacity 0.3s ease",
+                                                        pointerEvents: "none",
+                                                        zIndex: 1
+                                                    }}
+                                                />
+
+                                                {/* Course Image */}
+                                                <div className="position-relative" style={{ overflow: "hidden" }}>
+                                                    <img
+                                                        src={getImageUrl(course.image) || "/images/placeholders/default-course.svg"}
+                                                        alt={course.title}
+                                                        className="card-img-top course-card-image"
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        width="400"
+                                                        height="180"
+                                                        style={{
+                                                            height: "180px",
+                                                            objectFit: "cover",
+                                                            transition: "transform 0.3s ease"
+                                                        }}
+                                                        onError={(e) => {
+                                                            e.target.src = "/images/placeholders/default-course.svg";
+                                                        }}
+                                                    />
+
+                                                    {/* Wishlist Button - Only show for students */}
+                                                    {!isAdminOrTeacher && (
+                                                        <button
+                                                            onClick={() => addToWishlist(course.id)}
+                                                            className="btn position-absolute wishlist-btn"
+                                                            title={isCourseInWishlist(course.id) ? "Hapus dari wishlist" : "Tambahkan ke wishlist"}
+                                                            disabled={!userId}
+                                                            style={{
+                                                                top: "10px",
+                                                                right: "10px",
+                                                                width: "36px",
+                                                                height: "36px",
+                                                                borderRadius: "50%",
+                                                                background: "rgba(255, 255, 255, 0.95)",
+                                                                backdropFilter: "blur(10px)",
+                                                                border: "none",
+                                                                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                transition: "all 0.3s ease",
+                                                                zIndex: 2
+                                                            }}
+                                                        >
+                                                            <i
+                                                                className={`${isCourseInWishlist(course.id) ? "fas" : "far"} fa-heart`}
+                                                                style={{
+                                                                    color: isCourseInWishlist(course.id) ? "#dc3545" : "#6c757d",
+                                                                    fontSize: "0.95rem"
+                                                                }}
+                                                            />
+                                                        </button>
+                                                    )}
+
+                                                    {/* Level Badge - Positioned at top-left inside card image */}
+                                                    <div
+                                                        className="position-absolute"
+                                                        style={{
+                                                            top: "10px",
+                                                            left: "10px",
+                                                            zIndex: 2
+                                                        }}
+                                                    >
+                                                        <span
+                                                            className="badge"
+                                                            style={{
+                                                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                                                color: "white",
+                                                                padding: "0.35rem 0.75rem",
+                                                                borderRadius: "8px",
+                                                                fontSize: "0.7rem",
+                                                                fontWeight: "600",
+                                                                boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)"
+                                                            }}
+                                                        >
+                                                            {getLevelText(course.level)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Card Body */}
+                                                <div className="card-body p-3" style={{ position: "relative", zIndex: 2 }}>
+                                                    {/* Category */}
+                                                    <div className="mb-2">
+                                                        <span
+                                                            className="badge"
+                                                            style={{
+                                                                background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
+                                                                color: "#0d9488",
+                                                                border: "1px solid rgba(102, 126, 234, 0.2)",
+                                                                borderRadius: "8px",
+                                                                fontSize: "0.65rem",
+                                                                fontWeight: "600",
+                                                                padding: "0.3rem 0.6rem"
+                                                            }}
+                                                        >
+                                                            <i className="fas fa-folder me-1"></i>
+                                                            {course.category?.title || "General"}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Course Title */}
+                                                    <h3 className="fw-bold mb-2" style={{ minHeight: "42px", fontSize: "0.95rem" }}>
+                                                        <Link
+                                                            to={`/course-detail/${course.slug}/`}
+                                                            className="text-decoration-none course-title-link"
+                                                            style={{
+                                                                color: "#2c3e50",
+                                                                display: "-webkit-box",
+                                                                WebkitLineClamp: "2",
+                                                                WebkitBoxOrient: "vertical",
+                                                                overflow: "hidden",
+                                                                lineHeight: "1.4",
+                                                                transition: "color 0.3s ease"
+                                                            }}
+                                                        >
+                                                            {course.title}
+                                                        </Link>
+                                                    </h3>
+
+                                                    {/* Instructor */}
+                                                    <div className="mb-2 d-flex align-items-center">
+                                                        <img
+                                                            src={getImageUrl(course.teacher?.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(course.teacher?.full_name || 'Instruktur')}&background=0d9488&color=ffffff&bold=true&size=28`}
+                                                            alt={course.teacher?.full_name || "Instruktur"}
+                                                            loading="lazy"
+                                                            decoding="async"
+                                                            width="28"
+                                                            height="28"
+                                                            style={{
+                                                                width: "28px",
+                                                                height: "28px",
+                                                                borderRadius: "50%",
+                                                                marginRight: "8px",
+                                                                objectFit: "cover",
+                                                                border: "1px solid rgba(255, 255, 255, 0.3)"
+                                                            }}
+                                                            onError={(e) => {
+                                                                e.target.src = "/images/placeholders/default-instructor.svg";
+                                                            }}
+                                                        />
+                                                        <small className="text-muted" style={{ fontSize: "0.8rem", fontWeight: "500" }}>
+                                                            {course.teacher?.full_name || "Instruktur"}
+                                                        </small>
+                                                    </div>
+
+                                                    {/* Rating & Stats */}
+                                                    <div
+                                                        className="d-flex align-items-center justify-content-between mb-2 p-2"
+                                                        style={{
+                                                            background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+                                                            borderRadius: "8px"
+                                                        }}
+                                                    >
+                                                        <div className="d-flex align-items-center">
+                                                            <Rating
+                                                                initialValue={course.average_rating || 0}
+                                                                readonly={true}
+                                                                size={14}
+                                                                fillColor="#ffc107"
+                                                                emptyColor="#e4e5e9"
+                                                            />
+                                                            <span className="text-warning fw-bold ms-1" style={{ fontSize: "0.8rem" }}>
+                                                                {course.average_rating || 0}
+                                                            </span>
+                                                        </div>
+                                                        <small className="text-muted" style={{ fontSize: "0.7rem" }}>
+                                                            ({course.reviews?.length || 0})
+                                                        </small>
+                                                    </div>
+
+                                                    {/* Students Count */}
+                                                    <div
+                                                        className="d-flex align-items-center justify-content-between p-2 mb-2"
+                                                        style={{
+                                                            background: "rgba(40, 167, 69, 0.05)",
+                                                            borderRadius: "8px",
+                                                            border: "1px solid rgba(40, 167, 69, 0.1)"
+                                                        }}
+                                                    >
+                                                        <small className="fw-medium" style={{ fontSize: "0.8rem", color: "#146c43" }}>
+                                                            <i className="fas fa-users me-1"></i>
+                                                            {course.students?.length || 0} siswa
+                                                        </small>
+                                                        <small className="text-muted" style={{ fontSize: "0.7rem" }}>
+                                                            <i className="fas fa-book-open me-1"></i>
+                                                            Aktif
+                                                        </small>
+                                                    </div>
+
+                                                    {/* Total Duration in JP (Jam Pelajaran) - ✨ PHASE 4.77+ */}
+                                                    <div
+                                                        className="d-flex align-items-center justify-content-center p-2 mb-2"
+                                                        style={{
+                                                            background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
+                                                            borderRadius: "8px",
+                                                            border: "1px solid rgba(102, 126, 234, 0.2)"
+                                                        }}
+                                                    >
+                                                        <small className="fw-medium" style={{ fontSize: "0.8rem", color: "#0d9488" }}>
+                                                            <i className="fas fa-clock me-1"></i>
+                                                            Total: <strong>{calculateTotalJP(course.lectures)}</strong> JP (Jam Pelajaran)
+                                                        </small>
+                                                    </div>
+                                                </div>
+
+                                                {/* Card Footer */}
+                                                <div className="card-footer bg-transparent border-0 p-3 pt-0" style={{ position: "relative", zIndex: 2 }}>
+                                                    <Link
+                                                        to={`/course-detail/${course.slug}/`}
+                                                        className="btn w-100 fw-semibold course-detail-btn"
+                                                        style={{
+                                                            background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                                            border: "none",
+                                                            borderRadius: "10px",
+                                                            color: "white",
+                                                            transition: "all 0.3s ease",
+                                                            padding: "0.6rem 1rem",
+                                                            fontSize: "0.85rem",
+                                                            boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center"
+                                                        }}
+                                                    >
+                                                        <i className="fas fa-arrow-right me-2"></i>
+                                                        Mulai Belajar
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="col-12 text-center">
+                                        <p className="text-muted">Kursus akan segera tersedia</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {courses.length > 6 && (
+                                <div className="text-center mt-5">
+                                    <Link
+                                        to="/search/"
+                                        className="btn btn-lg px-4"
+                                        style={{
+                                            background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                            color: "white",
+                                            border: "none",
+                                            borderRadius: "15px",
+                                            fontWeight: "600"
+                                        }}
+                                    >
+                                        Lihat Semua Kursus
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* CTA Section with Rankings - ✨ PHASE 10.1 */}
+                    <section className="py-5 snap-section cta-section" style={{
+                        background: "linear-gradient(135deg, rgba(13, 148, 136, 0.85) 0%, rgba(15, 118, 110, 0.85) 100%)",
+                    }}>
+                        <div className="container">
+                            <div className="row align-items-stretch gap-3 gap-lg-0">
+                                {/* Left Column: Ranked Students */}
+                                <div className="col-lg-4">
+                                    <RankedStudents maxResults={5} />
+                                </div>
+
+                                {/* Right Column: Ranked Instructors */}
+                                <div className="col-lg-4">
+                                    <RankedInstructors maxResults={5} />
+                                </div>
+
+                                {/* Center Column: CTA Content */}
+                                <div className="col-lg-4 d-flex flex-column justify-content-center">
+                                    <h2 className="display-6 fw-bold mb-3" style={{ color: "white" }}>
+                                        Siap Memulai Perjalanan Pembelajaran Anda?
+                                    </h2>
+                                    <p className="lead mb-4" style={{ color: "white" }}>
+                                        Bergabunglah dengan ribuan pegawai Setjen DPD RI yang telah meningkatkan kompetensi mereka
+                                        melalui platform LMSetjen DPD RI. Daftar sekarang dan akses seluruh kursus secara gratis!
+                                    </p>
+                                    <button
+                                        onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
+                                        className="btn btn-lg px-4 py-3 cta-register-btn align-self-start"
+                                        style={{
+                                            background: "white",
+                                            color: "#0d9488",
+                                            border: "none",
+                                            borderRadius: "15px",
+                                            fontWeight: "700",
+                                            boxShadow: "0 8px 25px rgba(255, 255, 255, 0.2)",
+                                            cursor: "pointer",
+                                            pointerEvents: "auto",
+                                            position: "relative",
+                                            zIndex: 10,
+                                            textDecoration: "none",
+                                            display: "inline-block",
+                                            transition: "all 0.3s ease"
+                                        }}
+                                    >
+                                        <i className="fas fa-search me-2"></i>
+                                        Jelajahi Kursus Kami
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Testimonials Section - Now fetches real testimonials from API */}
+                    <TestimonialSection />
+
                 </div>
-            </section>
-
-            {/* CTA Section with Rankings - ✨ PHASE 10.1 */}
-            <section className="py-5 snap-section cta-section" style={{ 
-                background: "linear-gradient(135deg, rgba(13, 148, 136, 0.85) 0%, rgba(15, 118, 110, 0.85) 100%)",
-            }}>
-                <div className="container">
-                    <div className="row align-items-stretch gap-3 gap-lg-0">
-                        {/* Left Column: Ranked Students */}
-                        <div className="col-lg-4">
-                            <RankedStudents maxResults={5} />
-                        </div>
-
-                        {/* Right Column: Ranked Instructors */}
-                        <div className="col-lg-4">
-                            <RankedInstructors maxResults={5} />
-                        </div>
-
-                        {/* Center Column: CTA Content */}
-                        <div className="col-lg-4 d-flex flex-column justify-content-center">
-                            <h2 className="display-6 fw-bold mb-3" style={{ color: "white" }}>
-                                Siap Memulai Perjalanan Pembelajaran Anda?
-                            </h2>
-                            <p className="lead mb-4" style={{ color: "white" }}>
-                                Bergabunglah dengan ribuan pegawai Setjen DPD RI yang telah meningkatkan kompetensi mereka 
-                                melalui platform LMSetjen DPD RI. Daftar sekarang dan akses seluruh kursus secara gratis!
-                            </p>
-                            <button 
-                                onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
-                                className="btn btn-lg px-4 py-3 cta-register-btn align-self-start"
-                                style={{
-                                    background: "white",
-                                    color: "#0d9488",
-                                    border: "none",
-                                    borderRadius: "15px",
-                                    fontWeight: "700",
-                                    boxShadow: "0 8px 25px rgba(255, 255, 255, 0.2)",
-                                    cursor: "pointer",
-                                    pointerEvents: "auto",
-                                    position: "relative",
-                                    zIndex: 10,
-                                    textDecoration: "none",
-                                    display: "inline-block",
-                                    transition: "all 0.3s ease"
-                                }}
-                            >
-                                <i className="fas fa-search me-2"></i>
-                                Jelajahi Kursus Kami
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            </section>
-
-            {/* Testimonials Section - Now fetches real testimonials from API */}
-            <TestimonialSection />
-
-            </div>
             </main>
         </>
     );
