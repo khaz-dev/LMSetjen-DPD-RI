@@ -160,14 +160,16 @@ run_compose() {
 }
 
 sync_environment_file() {
-    if [ -f "${PROJECT_PATH}/.env.production" ]; then
-        cp -f "${PROJECT_PATH}/.env.production" "$ENV_FILE"
-        print_verbose "✓ Applied .env.production to .env"
-    elif [ ! -f "$ENV_FILE" ]; then
-        print_error "Neither .env.production nor .env found in: $PROJECT_PATH"
-        exit 1
+    if [ ! -f "$ENV_FILE" ]; then
+        if [ -f "${PROJECT_PATH}/.env.production" ]; then
+            cp -f "${PROJECT_PATH}/.env.production" "$ENV_FILE"
+            print_info "Created .env from .env.production"
+        else
+            print_error "Neither .env.production nor .env found in: $PROJECT_PATH"
+            exit 1
+        fi
     else
-        print_warning ".env.production not found, using existing .env"
+        print_verbose "✓ Using existing .env file"
     fi
 }
 
