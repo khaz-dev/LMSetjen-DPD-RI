@@ -4,6 +4,10 @@
 # ENVIRONMENT & CONFIGURATION FILES
 # ===================================
 .env
+.env.example
+.env.example.secure
+.env.production
+.env.staging
 .env.local
 .env.*.local
 *.env
