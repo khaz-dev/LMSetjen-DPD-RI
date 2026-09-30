@@ -21,6 +21,9 @@ const IMAGE_CONFIGS = {
   'region-indonesia-map.jpg': { width: 1600, height: 587, quality: 85 },
   'certificate-bg.png': { width: 1920, height: 1080, quality: 85 },
   'logo_nusa.png': { width: 128, height: 128, quality: 90 },
+  'logo/logo-setjen-dpd.png': { height: 120, quality: 85 },
+  'logo/logo-okk.png': { height: 105, quality: 85 },
+  'logo/logo-bpsdm.png': { height: 120, quality: 85 },
 };
 
 const assetsDir = path.join(__dirname, '../src/assets');
@@ -57,7 +60,7 @@ async function optimizeImage(inputPath, config) {
 
     // Optimize and convert to WebP
     await sharp(inputPath)
-      .resize(config.width, config.height, {
+      .resize(config.width || null, config.height || null, {
         fit: 'inside',
         withoutEnlargement: true,
       })
@@ -72,7 +75,7 @@ async function optimizeImage(inputPath, config) {
     const savings = ((1 - outputStats.size / inputStats.size) * 100).toFixed(1);
 
     console.log(`✅ Optimized: ${path.basename(inputPath)}`);
-    console.log(`   ${config.width}×${config.height} | ${inputSizeKB}KB → ${outputSizeKB}KB (saved ${savings}%)`);
+    console.log(`   ${config.width || 'auto'}×${config.height || 'auto'} | ${inputSizeKB}KB → ${outputSizeKB}KB (saved ${savings}%)`);
     
     optimizedCount.success++;
   } catch (error) {

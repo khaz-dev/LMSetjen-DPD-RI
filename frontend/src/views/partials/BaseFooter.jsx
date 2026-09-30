@@ -4,6 +4,14 @@ import Toast from "../plugin/Toast"
 import "./BaseFooter.css"
 import { APP_VERSION } from "../../utils/version";
 
+// Import institution logos (optimized WebP with PNG fallback)
+import logoSetjenWebP from "../../assets/logo/logo-setjen-dpd.webp";
+import logoSetjenPNG from "../../assets/logo/logo-setjen-dpd.png";
+import logoOkkWebP from "../../assets/logo/logo-okk.webp";
+import logoOkkPNG from "../../assets/logo/logo-okk.png";
+import logoBpsdmWebP from "../../assets/logo/logo-bpsdm.webp";
+import logoBpsdmPNG from "../../assets/logo/logo-bpsdm.png";
+
 function BaseFooter() {
   const currentYear = new Date().getFullYear();
 
@@ -53,19 +61,65 @@ function BaseFooter() {
           </div>
 
           {/* Institution Links */}
-          <div className="offset-lg-1 col-lg-2 col-md-3 col-6">
+          <div className="col-lg-3 col-md-6 col-12">
             <div className="mb-4">
               <h5 className="footer-section-title fw-bold mb-3">Instansi</h5>
-              <ul className="footer-section-list list-unstyled">
+              <ul className="footer-section-list list-unstyled mb-3">
                 <li className="mb-2"><a href="/tentang/" className="footer-link">Tentang</a></li>
                 <li className="mb-2"><a href="/capaian/" className="footer-link">Capaian</a></li>
                 <li className="mb-2"><a href="/contact/" className="footer-link">Kontak</a></li>
               </ul>
+              
+              {/* Logo Instansi: Setjen DPD RI, OKK, BPSDM (Horizontal kiri ke kanan, tinggi 40) */}
+              <div className="footer-institution-logos" aria-label="Logo Instansi Terkait">
+                <div className="footer-institution-logo-item" title="Sekretariat Jenderal DPD RI">
+                  <picture>
+                    <source srcSet={logoSetjenWebP} type="image/webp" />
+                    <img 
+                      src={logoSetjenPNG} 
+                      alt="Logo Setjen DPD RI" 
+                      className="footer-institution-logo-img" 
+                      height="40"
+                      width="44"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
+                </div>
+                <div className="footer-institution-logo-item" title="Biro Organisasi, Keanggotaan, & Kepegawaian (OKK)">
+                  <picture>
+                    <source srcSet={logoOkkWebP} type="image/webp" />
+                    <img 
+                      src={logoOkkPNG} 
+                      alt="Logo Biro OKK Setjen DPD RI" 
+                      className="footer-institution-logo-img footer-institution-logo-okk" 
+                      height="35"
+                      width="69"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
+                </div>
+                <div className="footer-institution-logo-item" title="Bagian Pengembangan Sumber Daya Manusia (BPSDM)">
+                  <picture>
+                    <source srcSet={logoBpsdmWebP} type="image/webp" />
+                    <img 
+                      src={logoBpsdmPNG} 
+                      alt="Logo BPSDM Setjen DPD RI" 
+                      className="footer-institution-logo-img" 
+                      height="40"
+                      width="35"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Support Links */}
-          <div className="col-lg-2 col-md-3 col-6">
+          <div className="col-lg-2 col-md-6 col-6">
             <div className="mb-4">
               <h5 className="footer-section-title fw-bold mb-3">Dukungan</h5>
               <ul className="footer-section-list list-unstyled">
@@ -77,7 +131,7 @@ function BaseFooter() {
           </div>
 
           {/* Contact Information */}
-          <div className="col-lg-3 col-md-12">
+          <div className="col-lg-3 col-md-6 col-12">
             <div className="mb-4">
               <h5 className="footer-section-title fw-bold mb-3">Hubungi Kami</h5>
               <div className="contact-info d-flex flex-column gap-2">
