@@ -554,3 +554,22 @@ admin.site.register(models.ActivityLog, ActivityLogAdmin)
 admin.site.register(models.ActivityFilter, ActivityFilterAdmin)
 admin.site.register(models.ActivityAggregate, ActivityAggregateAdmin)
 
+
+class LearningModuleAdmin(admin.ModelAdmin):
+    list_display = ('judul', 'module_type', 'entry_file', 'author', 'course', 'tanggal_dibuat')
+    list_filter = ('module_type', 'tanggal_dibuat')
+    search_fields = ('judul', 'deskripsi', 'author__username', 'author__email')
+    readonly_fields = ('extracted_path', 'tanggal_dibuat', 'tanggal_diperbarui', 'player_url')
+
+
+class UserProgressAdmin(admin.ModelAdmin):
+    list_display = ('user', 'learning_module', 'lesson_status', 'score_raw', 'session_time', 'last_accessed')
+    list_filter = ('lesson_status', 'last_accessed')
+    search_fields = ('user__username', 'user__email', 'learning_module__judul')
+    readonly_fields = ('last_accessed', 'completed_at')
+
+
+admin.site.register(models.LearningModule, LearningModuleAdmin)
+admin.site.register(models.UserProgress, UserProgressAdmin)
+
+

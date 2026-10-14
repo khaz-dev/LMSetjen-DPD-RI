@@ -55,6 +55,7 @@ const Wishlist = lazy(() => import("./views/student/Wishlist"));
 const StudentProfile = lazy(() => import("./views/student/Profile"));
 const SertifikatKursus = lazy(() => import("./views/student/SertifikatKursus"));  // ✨ PHASE 4.228: Student certificate page
 const Activities = lazy(() => import("./views/student/Activities"));  // ✨ PHASE 53: Student activities history page
+const ModulePlayerPage = lazy(() => import("./views/student/ModulePlayerPage")); // E-Learning SCORM 1.2 & H5P Player Page
 
 // Instructor Routes
 const Dashboard = lazy(() => import("./views/instructor/Dashboard"));
@@ -248,6 +249,7 @@ function App() {
                                 <Route path="/privacy-policy/" element={<PrivacyPolicy />} />
                                 <Route path="/terms-and-conditions/" element={<TermsAndConditions />} />
                                 <Route path="/cookie-policy/" element={<CookiePolicy />} />
+                                <Route path="/modules/:moduleId/player/" element={<ModulePlayerPage />} />
 
                                 {/* Student Routes */}
                                 <Route

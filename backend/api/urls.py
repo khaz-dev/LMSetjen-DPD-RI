@@ -1,9 +1,11 @@
 from api import views as api_views
 from api import enhanced_upload_views
 from api.video_metadata_view import VideoMetadataAPIView
+from api.views import scorm_views
 from django.urls import path
 
 from rest_framework_simplejwt.views import TokenRefreshView
+
 
 urlpatterns = [
     # API Root (no authentication required)
@@ -278,4 +280,11 @@ urlpatterns = [
     path("feedback/mark-resolved/<int:pk>/", api_views.FeedbackMarkResolvedAPIView.as_view()),  # POST - Mark as resolved
     path("feedback/mark-in-progress/<int:pk>/", api_views.FeedbackMarkInProgressAPIView.as_view()),  # POST - Mark as in progress
     path("feedback/my-feedback/", api_views.FeedbackMyFeedbackAPIView.as_view()),  # GET - User's feedback submissions
+    
+    # ✨ E-Learning SCORM 1.2 & H5P Integration Endpoints
+    path("teacher/upload-elearning-module/", scorm_views.UploadElearningModuleAPIView.as_view(), name="upload-elearning-module"),
+    path("api/v1/modules/<int:module_id>/tracking/", scorm_views.SCORMTrackingAPIView.as_view(), name="scorm_tracking_api"),
+    path("api/v1/modules/<int:module_id>/detail/", scorm_views.ModuleDetailAPIView.as_view(), name="scorm_module_detail"),
+    path("modules/<int:module_id>/player/", scorm_views.scorm_player_view, name="scorm_player"),
 ]
+

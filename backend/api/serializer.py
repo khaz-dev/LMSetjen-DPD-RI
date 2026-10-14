@@ -527,6 +527,33 @@ class BasicTeacherSerializer(serializers.ModelSerializer):
         return "Instruktur"
 
 
+class LearningModuleSerializer(serializers.ModelSerializer):
+    player_url = serializers.ReadOnlyField()
+
+    class Meta:
+        model = api_models.LearningModule
+        fields = [
+            'id', 'judul', 'deskripsi', 'module_type', 
+            'file_zip', 'extracted_path', 'entry_file', 
+            'player_url', 'course', 'author', 
+            'tanggal_dibuat', 'tanggal_diperbarui'
+        ]
+        read_only_fields = ['extracted_path', 'entry_file', 'player_url', 'tanggal_dibuat', 'tanggal_diperbarui']
+
+
+class UserProgressSerializer(serializers.ModelSerializer):
+    learning_module_judul = serializers.CharField(source='learning_module.judul', read_only=True)
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+
+    class Meta:
+        model = api_models.UserProgress
+        fields = [
+            'id', 'user', 'user_name', 'learning_module', 
+            'learning_module_judul', 'course', 'variant_item',
+            'lesson_status', 'score_raw', 'lesson_location', 
+            'session_time', 'suspend_data', 'last_accessed', 'completed_at'
+        ]
+        read_only_fields = ['last_accessed', 'completed_at']
 
 
 class VariantItemSerializer(serializers.ModelSerializer):
@@ -537,6 +564,7 @@ class VariantItemSerializer(serializers.ModelSerializer):
     completion_question = serializers.SerializerMethodField()  # ✨ PHASE 4.143: Include lesson completion question
     is_fully_watched = serializers.SerializerMethodField()  # ✨ PHASE 11.178: Track if student watched 100%
     is_completed = serializers.SerializerMethodField()  # ✨ PHASE 11.178: Track if student finished (watched + answered correctly)
+    learning_module_info = serializers.SerializerMethodField()
     
     class Meta:
         fields = '__all__'
@@ -696,6 +724,19 @@ class VariantItemSerializer(serializers.ModelSerializer):
         except Exception as e:
             print(f"\n[VariantItemSerializer.get_is_completed] ERROR: {e}")
             return False
+
+    def get_learning_module_info(self, obj):
+        """Include SCORM / H5P metadata and player url if learning_module is linked"""
+        if obj.learning_module:
+            return {
+                "id": obj.learning_module.id,
+                "judul": obj.learning_module.judul,
+                "module_type": obj.learning_module.module_type,
+                "player_url": obj.learning_module.player_url,
+                "entry_file": obj.learning_module.entry_file,
+            }
+        return None
+
 
 
 class VariantSerializer(serializers.ModelSerializer):
@@ -1363,10 +1404,12 @@ class CourseSerializer(serializers.ModelSerializer):
     qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.16: Add QA count for instructor QA page
     # ✨ PHASE 4.228: Add total_jam_pelatihan (JP) calculated from course lectures
     total_jam_pelatihan = serializers.SerializerMethodField()
+    learning_module = LearningModuleSerializer(read_only=True)
     
     class Meta:
-        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan"]
+        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan", "course_type", "learning_module"]
         model = api_models.Course
+
     
     def get_qa_count(self, obj):
         """✨ PHASE 4.16 + PHASE 7.13 FIX: Count total questions from published version if exists

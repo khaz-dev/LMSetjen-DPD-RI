@@ -294,6 +294,14 @@ class CourseCreateAPIView(APIView):
             if not teacher:
                 return Response({"error": "No teacher profile found and could not create one"}, status=status.HTTP_400_BAD_REQUEST)
 
+            course_type = request.data.get("course_type", "standard")
+            learning_module_id = request.data.get("learning_module_id")
+            learning_module_obj = None
+            if learning_module_id:
+                learning_module_obj = api_models.LearningModule.objects.filter(id=learning_module_id).first()
+                if learning_module_obj and course_type == 'standard':
+                    course_type = learning_module_obj.module_type
+
             # Create course with Draft status (not published until curriculum is complete)
             course = api_models.Course.objects.create(
                 teacher=teacher,
@@ -304,18 +312,42 @@ class CourseCreateAPIView(APIView):
                 description=description,
                 level=level,
                 platform_status="Draft",           # Set to Draft for admin/platform review
-                teacher_course_status="Draft"      # Set to Draft - teacher needs to complete curriculum
+                teacher_course_status="Draft",     # Set to Draft - teacher needs to complete curriculum
+                course_type=course_type,
+                learning_module=learning_module_obj
             )
 
+            # Auto-create curriculum for SCORM/H5P course if learning module is attached
+            if learning_module_obj:
+                learning_module_obj.course = course
+                learning_module_obj.save(update_fields=['course'])
+
+                variant = api_models.Variant.objects.create(
+                    course=course,
+                    title="Modul Interaktif Utama",
+                    order=1
+                )
+                api_models.VariantItem.objects.create(
+                    variant=variant,
+                    title=f"Modul: {learning_module_obj.judul}",
+                    description=learning_module_obj.deskripsi or "Pelajari modul interaktif berikut secara mandiri hingga selesai.",
+                    learning_module=learning_module_obj,
+                    preview=True,
+                    order=1
+                )
+
             print(f"Course created successfully with ID: {course.course_id}")
-            print(f"Course status: platform_status={course.platform_status}, teacher_course_status={course.teacher_course_status}")
+            print(f"Course status: platform_status={course.platform_status}, teacher_course_status={course.teacher_course_status}, type={course.course_type}")
 
             return Response({
                 "message": "Course Created Successfully",
                 "course_id": course.course_id,
                 "status": "draft",
+                "course_type": course.course_type,
+                "learning_module_id": learning_module_obj.id if learning_module_obj else None,
                 "next_step": "Add curriculum, lessons, and quizzes to publish your course"
             }, status=status.HTTP_201_CREATED)
+
         
         except Exception as e:
             import traceback

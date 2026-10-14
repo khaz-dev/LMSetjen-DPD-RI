@@ -1,3 +1,7 @@
+import os
+import zipfile
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
@@ -12,6 +16,15 @@ try:
 except ImportError:
     VideoFileClip = None  # Fallback if moviepy not installed
 import math
+
+def validate_scorm_or_h5p_extension(value):
+    ext = os.path.splitext(value.name)[1].lower()
+    if ext not in ['.zip', '.h5p']:
+        raise ValidationError('Format file tidak didukung. Harap unggah paket zip SCORM (.zip) atau paket H5P (.h5p).')
+
+def scorm_upload_path(instance, filename):
+    return f'learning_modules/packages/{timezone.now().strftime("%Y/%m")}/{instance.pk or "temp"}_{filename}'
+
 
 LEVEL = (
     ("Beginner", "Beginner"),
@@ -233,13 +246,32 @@ class Course(models.Model):
     
     # ✨ PHASE 4.72: Published Snapshot for Restore Functionality
     # Stores a JSON snapshot of the course data when it's published
-    # Used to restore published course if instructor makes mistakes during edit
-    # Format: {"title": "...", "description": "...", "image": "...", etc}
     published_snapshot = models.JSONField(
         null=True,
         blank=True,
         help_text="JSON snapshot of course state when published (for restore functionality)"
     )
+    
+    # E-Learning SCORM 1.2 & H5P integration fields
+    course_type = models.CharField(
+        max_length=20,
+        choices=(
+            ('standard', 'Standar (Video/Materi)'),
+            ('scorm_12', 'SCORM 1.2'),
+            ('h5p', 'H5P Interactive Content'),
+        ),
+        default='standard',
+        verbose_name="Tipe Kursus"
+    )
+    learning_module = models.ForeignKey(
+        'LearningModule',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_courses',
+        verbose_name="Modul E-Learning Utama"
+    )
+
 
     class Meta:
         # ✨ PHASE 4: GIN index for fast full-text search queries
@@ -763,6 +795,14 @@ class Variant(models.Model):
     
 class VariantItem(models.Model):
     variant = models.ForeignKey(Variant, on_delete=models.CASCADE, related_name="variant_items")
+    learning_module = models.ForeignKey(
+        'LearningModule',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='variant_items',
+        verbose_name="Modul E-Learning (SCORM/H5P)"
+    )
     title = models.CharField(max_length=1000)
     description = models.TextField(null=True, blank=True)
     file = models.URLField(max_length=500, blank=True, null=True)  # Changed to URLField for file-upload API
@@ -791,13 +831,19 @@ class VariantItem(models.Model):
     
     @property
     def file_type(self):
-        """Determine file type based on URL extension"""
+        """Determine file type based on URL extension or linked learning_module"""
+        if self.learning_module_id:
+            return "h5p" if self.learning_module.module_type == "h5p" else "scorm"
         if not self.file:
             return "unknown"
         
         file_url = self.file.lower()
         if any(ext in file_url for ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.ogg']):
             return "video"
+        elif any(ext in file_url for ext in ['.zip']) and 'scorm' in file_url:
+            return "scorm"
+        elif any(ext in file_url for ext in ['.h5p']):
+            return "h5p"
         elif any(ext in file_url for ext in ['.pdf']):
             return "pdf"
         elif any(ext in file_url for ext in ['.doc', '.docx']):
@@ -815,6 +861,8 @@ class VariantItem(models.Model):
         file_type = self.file_type
         icon_map = {
             "video": "fas fa-play-circle",
+            "scorm": "fas fa-cubes",
+            "h5p": "fas fa-puzzle-piece",
             "pdf": "fas fa-file-pdf",
             "document": "fas fa-file-word",
             "presentation": "fas fa-file-powerpoint",
@@ -1228,7 +1276,392 @@ class VideoProgress(models.Model):
         minutes = int(self.total_duration) // 60
         seconds = int(self.total_duration) % 60
         return f"{minutes:02d}:{seconds:02d}"
-    
+
+
+class LearningModule(models.Model):
+    MODULE_TYPE_CHOICES = (
+        ('scorm_12', 'SCORM 1.2'),
+        ('h5p', 'H5P Interactive Content'),
+    )
+
+    judul = models.CharField(max_length=255, verbose_name="Judul Modul")
+    deskripsi = models.TextField(blank=True, null=True, verbose_name="Deskripsi Modul")
+    module_type = models.CharField(
+        max_length=20,
+        choices=MODULE_TYPE_CHOICES,
+        default='scorm_12',
+        verbose_name="Tipe Modul"
+    )
+    file_zip = models.FileField(
+        upload_to=scorm_upload_path,
+        max_length=500,
+        validators=[validate_scorm_or_h5p_extension],
+        verbose_name="File Paket Modul (ZIP / H5P)",
+        help_text="Unggah file .zip (SCORM 1.2) atau .h5p maksimal 500MB."
+    )
+    extracted_path = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="Direktori Ekstraksi"
+    )
+    entry_file = models.CharField(
+        max_length=255,
+        default='index.html',
+        verbose_name="Entry File Player"
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='learning_modules',
+        verbose_name="Kursus Terkait"
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_learning_modules',
+        verbose_name="Pembuat Modul"
+    )
+    tanggal_dibuat = models.DateTimeField(auto_now_add=True, verbose_name="Tanggal Dibuat")
+    tanggal_diperbarui = models.DateTimeField(auto_now=True, verbose_name="Terakhir Diperbarui")
+
+    class Meta:
+        db_table = 'learning_modules'
+        verbose_name = 'Learning Module'
+        verbose_name_plural = 'Learning Modules'
+        ordering = ['-tanggal_dibuat']
+
+    def __str__(self):
+        return f"{self.judul} ({self.get_module_type_display()})"
+
+    def extract_package(self):
+        """
+        Mengekstrak paket ZIP/H5P ke direktori media yang terisolasi dengan
+        proteksi penuh terhadap kerentanan Zip-Slip (Path Traversal).
+        Mendukung:
+        1. Standar SCORM 1.2 / 2004 dengan membaca resource launch dari imsmanifest.xml
+        2. Paket SCORM di dalam subfolder atau arsip bundle berisi nested zip
+        3. Paket H5P dengan h5p.json
+        4. Fallback deteksi launcher HTML standar dan fallback index generator (Zero 404)
+        """
+        if not self.file_zip:
+            return
+
+        file_path = getattr(self.file_zip, 'path', None)
+        if not file_path or not os.path.exists(file_path):
+            return
+
+        extract_dir_name = f'extracted_{self.pk}'
+        extract_full_path = os.path.join(settings.MEDIA_ROOT, 'learning_modules', extract_dir_name)
+        os.makedirs(extract_full_path, exist_ok=True)
+
+        def safe_extract_zip(source_zip_path, target_dir):
+            with zipfile.ZipFile(source_zip_path, 'r') as zip_ref:
+                for member in zip_ref.namelist():
+                    member_path = os.path.abspath(os.path.join(target_dir, member))
+                    if not member_path.startswith(os.path.abspath(target_dir)):
+                        raise ValidationError(f"File zip berbahaya terdeteksi (Zip Slip attack): {member}")
+                zip_ref.extractall(target_dir)
+
+        # 1. Ekstrak file zip utama
+        safe_extract_zip(file_path, extract_full_path)
+
+        # 2. Cek apakah ini bundle arsip yang berisi nested zip (misal xtoscorm sample packages / zip dalam zip)
+        has_root_manifest = any(
+            'imsmanifest.xml' in files or 'h5p.json' in files or 'index.html' in files
+            for _, _, files in os.walk(extract_full_path)
+        )
+        if not has_root_manifest:
+            nested_zips = [f for f in os.listdir(extract_full_path) if f.lower().endswith('.zip')]
+            if nested_zips:
+                # Prioritaskan zip bertipe SCORM 1.2 jika tipe modul scorm_12
+                chosen_zip = None
+                for nz in nested_zips:
+                    nl = nz.lower()
+                    if 'scorm12' in nl or 'scorm1.2' in nl or 'scorm_12' in nl:
+                        chosen_zip = nz
+                        break
+                if not chosen_zip:
+                    # Cari zip yang mengandung imsmanifest.xml
+                    for nz in nested_zips:
+                        try:
+                            with zipfile.ZipFile(os.path.join(extract_full_path, nz)) as test_z:
+                                if 'imsmanifest.xml' in test_z.namelist():
+                                    chosen_zip = nz
+                                    break
+                        except Exception:
+                            continue
+                if not chosen_zip:
+                    chosen_zip = nested_zips[0]
+
+                nested_zip_path = os.path.join(extract_full_path, chosen_zip)
+                try:
+                    safe_extract_zip(nested_zip_path, extract_full_path)
+                except Exception as e:
+                    print(f"[LearningModule] Warning extracting nested zip {chosen_zip}: {e}")
+
+        self.extracted_path = os.path.join('learning_modules', extract_dir_name).replace('\\', '/')
+
+        found_entry = None
+
+        # 3. Prioritas 1: Parse imsmanifest.xml jika ada
+        manifest_paths = []
+        for root, _, files in os.walk(extract_full_path):
+            if 'imsmanifest.xml' in files:
+                manifest_paths.append(os.path.join(root, 'imsmanifest.xml'))
+
+        if manifest_paths:
+            manifest_paths.sort(key=lambda p: len(p.split(os.sep)))
+            for mp in manifest_paths:
+                try:
+                    import xml.etree.ElementTree as ET
+                    tree = ET.parse(mp)
+                    root_elem = tree.getroot()
+                    clean = lambda t: t.split('}')[-1] if '}' in t else t
+                    
+                    manifest_dir = os.path.dirname(mp)
+                    default_org = None
+                    for elem in root_elem.iter():
+                        if clean(elem.tag) == 'organizations':
+                            default_org = elem.attrib.get('default')
+                            break
+
+                    target_res_id = None
+                    for elem in root_elem.iter():
+                        if clean(elem.tag) == 'organization':
+                            if not default_org or elem.attrib.get('identifier') == default_org:
+                                for item in elem.iter():
+                                    if clean(item.tag) == 'item' and item.attrib.get('identifierref'):
+                                        target_res_id = item.attrib.get('identifierref')
+                                        break
+                                if target_res_id:
+                                    break
+
+                    candidate_href = None
+                    if target_res_id:
+                        for elem in root_elem.iter():
+                            if clean(elem.tag) == 'resource' and elem.attrib.get('identifier') == target_res_id:
+                                candidate_href = elem.attrib.get('href')
+                                break
+
+                    if not candidate_href:
+                        for elem in root_elem.iter():
+                            if clean(elem.tag) == 'resource' and 'href' in elem.attrib:
+                                href = elem.attrib.get('href', '').strip()
+                                if href:
+                                    candidate_href = href
+                                    break
+
+                    if candidate_href:
+                        candidate_clean = candidate_href.split('?')[0].split('#')[0].strip()
+                        abs_candidate = os.path.normpath(os.path.join(manifest_dir, candidate_clean))
+                        if os.path.exists(abs_candidate):
+                            rel_entry = os.path.relpath(abs_candidate, extract_full_path)
+                            found_entry = rel_entry.replace('\\', '/')
+                            break
+                except Exception as e:
+                    print(f"[LearningModule] Manifest parse error in {mp}: {e}")
+
+        # 4. Prioritas 2: H5P
+        if not found_entry:
+            if self.module_type == 'h5p' and os.path.exists(os.path.join(extract_full_path, 'h5p.json')):
+                found_entry = 'h5p.json'
+
+        # 5. Prioritas 3: Standar HTML Entrypoint
+        if not found_entry:
+            common_entry_files = [
+                'index.html', 'index.htm', 'story.html', 'index_lms.html',
+                'player.html', 'launcher.html', 'default.htm', 'default.html'
+            ]
+            for root, _, files in os.walk(extract_full_path):
+                file_lower_map = {f.lower(): f for f in files}
+                for ce in common_entry_files:
+                    if ce in file_lower_map:
+                        actual_file = file_lower_map[ce]
+                        rel_path = os.path.relpath(os.path.join(root, actual_file), extract_full_path)
+                        found_entry = rel_path.replace('\\', '/')
+                        break
+                if found_entry:
+                    break
+
+        # 6. Prioritas 4: Fallback HTML Launcher jika tidak ada file index standar
+        if not found_entry:
+            fallback_index_path = os.path.join(extract_full_path, 'index.html')
+            if not os.path.exists(fallback_index_path):
+                html_candidates = []
+                for root, _, files in os.walk(extract_full_path):
+                    for f in files:
+                        if f.lower().endswith(('.html', '.htm')):
+                            rel = os.path.relpath(os.path.join(root, f), extract_full_path).replace('\\', '/')
+                            html_candidates.append(rel)
+                
+                links_html = "".join([
+                    f'<li class="mb-2"><a href="{h}" class="btn btn-outline-primary btn-sm px-3"><i class="fas fa-play-circle me-1"></i> Buka {h}</a></li>'
+                    for h in html_candidates[:10]
+                ]) or '<p class="text-muted">Modul berhasil diekstrak dan siap digunakan.</p>'
+
+                fallback_content = f"""<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>{self.judul}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {{ background: #f8fafc; font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }}
+    .card {{ border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); max-width: 600px; width: 100%; border: none; }}
+  </style>
+</head>
+<body>
+  <div class="card p-4 text-center">
+    <div class="mb-3 text-teal"><i class="fas fa-box-open fa-3x" style="color:#0f766e;"></i></div>
+    <h4 class="fw-bold mb-2">{self.judul}</h4>
+    <p class="text-secondary small mb-4">Paket modul e-learning telah berhasil diekstrak.</p>
+    <div class="text-start">
+      <h6 class="fw-semibold mb-2">Pilih unit / materi untuk mulai:</h6>
+      <ul class="list-unstyled">
+        {links_html}
+      </ul>
+    </div>
+  </div>
+</body>
+</html>"""
+                try:
+                    with open(fallback_index_path, 'w', encoding='utf-8') as f:
+                        f.write(fallback_content)
+                    found_entry = 'index.html'
+                except Exception as e:
+                    print(f"[LearningModule] Fallback index write error: {e}")
+
+        if found_entry:
+            self.entry_file = found_entry
+            root_index_path = os.path.join(extract_full_path, 'index.html')
+            if found_entry != 'index.html' and not os.path.exists(root_index_path):
+                try:
+                    with open(root_index_path, 'w', encoding='utf-8') as f:
+                        f.write(f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url={found_entry}">
+  <title>Mengarahkan...</title>
+  <script>window.location.replace("{found_entry}");</script>
+</head>
+<body>
+  <p>Mengarahkan ke modul: <a href="{found_entry}">{found_entry}</a></p>
+</body>
+</html>""")
+                except Exception as e:
+                    print(f"[LearningModule] Root redirect index creation error: {e}")
+
+        LearningModule.objects.filter(pk=self.pk).update(
+            extracted_path=self.extracted_path,
+            entry_file=self.entry_file
+        )
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new or not self.extracted_path:
+            try:
+                self.extract_package()
+            except Exception as e:
+                print(f"[LearningModule] Error extracting package: {e}")
+
+    @property
+    def player_url(self):
+        if self.extracted_path and self.entry_file:
+            media_url = getattr(settings, 'MEDIA_URL', '/media/')
+            return f"{media_url.rstrip('/')}/{self.extracted_path.strip('/')}/{self.entry_file.lstrip('/')}"
+        return None
+
+
+class UserProgress(models.Model):
+    LESSON_STATUS_CHOICES = (
+        ('passed', 'Passed'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('incomplete', 'Incomplete'),
+        ('browsed', 'Browsed'),
+        ('not attempted', 'Not Attempted'),
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='scorm_progress_set',
+        verbose_name="ASN / Pegawai"
+    )
+    learning_module = models.ForeignKey(
+        LearningModule,
+        on_delete=models.CASCADE,
+        related_name='user_progress_set',
+        verbose_name="Modul E-Learning"
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='scorm_user_progress',
+        verbose_name="Kursus Terkait"
+    )
+    variant_item = models.ForeignKey(
+        VariantItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='scorm_user_progress',
+        verbose_name="Pelajaran Terkait"
+    )
+    lesson_status = models.CharField(
+        max_length=20,
+        choices=LESSON_STATUS_CHOICES,
+        default='not attempted',
+        db_index=True,
+        verbose_name="Status Modul (cmi.core.lesson_status)"
+    )
+    score_raw = models.FloatField(
+        default=0.0,
+        verbose_name="Nilai Raw (cmi.core.score.raw)"
+    )
+    lesson_location = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Titik Resume (cmi.core.lesson_location)"
+    )
+    session_time = models.CharField(
+        max_length=50,
+        default='00:00:00',
+        verbose_name="Durasi Sesi Terakhir (cmi.core.session_time)"
+    )
+    suspend_data = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Suspend Data (cmi.suspend_data)"
+    )
+    last_accessed = models.DateTimeField(auto_now=True, verbose_name="Akses Terakhir")
+    completed_at = models.DateTimeField(blank=True, null=True, verbose_name="Waktu Selesai")
+
+    class Meta:
+        db_table = 'scorm_user_progress'
+        verbose_name = 'Progress E-Learning ASN'
+        verbose_name_plural = 'Progress E-Learning ASN'
+        unique_together = ('user', 'learning_module')
+        indexes = [
+            models.Index(fields=['user', 'learning_module'], name='idx_scorm_user_mod'),
+            models.Index(fields=['lesson_status'], name='idx_scorm_status'),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.learning_module.judul} [{self.lesson_status}]"
+
+
 class EnrolledCourse(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)

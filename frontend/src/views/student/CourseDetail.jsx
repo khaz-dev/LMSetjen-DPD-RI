@@ -10,6 +10,7 @@ import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import LecturesTab from "../../components/CourseDetail/LecturesTab";
 import VideoPlayer from "../../components/CourseDetail/VideoPlayer"; // ✨ PHASE 4.86: Inline video player (not modal)
+import ScormPlayer from "../../components/CourseDetail/ScormPlayer"; // E-Learning SCORM 1.2 & H5P Player
 import CertificateTab from "../../components/CourseDetail/CertificateTab";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
@@ -3981,18 +3982,28 @@ function CourseDetail() {
                                     - Clean, stable switching between any lesson at any time
                                    */}
                                 <div ref={videoPlayerContainerRef} style={{ display: variantItem && !(existingCertificate?.image_file_url && activeTab === 'certificate') && !(activeTab === 'quiz' && (quizShow || isQuizActive)) ? 'block' : 'none' }}>
-                                    <VideoPlayer
-                                        ref={videoPlayerRef}
-                                        variantItem={variantItem}
-                                        courseId={course?.course?.id}  // ✨ PHASE 4.144+: Pass courseId for completion endpoint
-                                        course={course}  // ✨ PHASE 12.9: Pass full course data so VideoPlayerGoogle can check actual completed_lesson array
-                                        onClose={handleVideoPlayerClose}  // ✨ PHASE 17.12 FIX: Use memoized callback instead of inline function
-                                        handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}  // ✨ PHASE 4.143+: Use memoized callback
-                                        autoplay={autoplayVideo}  // ✨ PHASE 12.15: Enable autoplay when user clicks lesson or on hard refresh
-                                        onPlayingChange={setIsVideoPlaying}  // ✨ PHASE 4.105: Track playing state
-                                        onProgress={handleVideoProgress}  // ✨ PHASE 4.115: Pass progress callback
-                                        seekPosition={seekPosition}  // ✨ PHASE 4.117: Pass seek position for resume
-                                    />
+                                    {variantItem?.file_type === 'scorm' || variantItem?.file_type === 'h5p' || variantItem?.learning_module_info ? (
+                                        <ScormPlayer
+                                            variantItem={variantItem}
+                                            courseId={course?.course?.id}
+                                            course={course}
+                                            onClose={handleVideoPlayerClose}
+                                            handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
+                                        />
+                                    ) : (
+                                        <VideoPlayer
+                                            ref={videoPlayerRef}
+                                            variantItem={variantItem}
+                                            courseId={course?.course?.id}  // ✨ PHASE 4.144+: Pass courseId for completion endpoint
+                                            course={course}  // ✨ PHASE 12.9: Pass full course data so VideoPlayerGoogle can check actual completed_lesson array
+                                            onClose={handleVideoPlayerClose}  // ✨ PHASE 17.12 FIX: Use memoized callback instead of inline function
+                                            handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}  // ✨ PHASE 4.143+: Use memoized callback
+                                            autoplay={autoplayVideo}  // ✨ PHASE 12.15: Enable autoplay when user clicks lesson or on hard refresh
+                                            onPlayingChange={setIsVideoPlaying}  // ✨ PHASE 4.105: Track playing state
+                                            onProgress={handleVideoProgress}  // ✨ PHASE 4.115: Pass progress callback
+                                            seekPosition={seekPosition}  // ✨ PHASE 4.117: Pass seek position for resume
+                                        />
+                                    )}
                                 </div>
 
                                 <div className="modern-tabs">

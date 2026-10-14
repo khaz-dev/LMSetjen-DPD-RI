@@ -33,6 +33,14 @@ class EnhancedMediaView(View):
         # Construct full file path
         full_path = os.path.join(settings.MEDIA_ROOT, path)
         
+        # Check if path is a directory and resolve index.html / index.htm
+        if os.path.isdir(full_path):
+            for candidate in ['index.html', 'index.htm']:
+                cand_path = os.path.join(full_path, candidate)
+                if os.path.exists(cand_path) and os.path.isfile(cand_path):
+                    full_path = cand_path
+                    break
+
         # Check if file exists
         if not os.path.exists(full_path) or not os.path.isfile(full_path):
             raise Http404("File not found")

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Learning Player - {{ module.judul }} | LMSetjen DPD RI</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0f172a;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+        header.player-navbar {
+            height: 54px;
+            background: #1e293b;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #334155;
+            z-index: 10;
+        }
+        .module-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .dpd-logo-badge {
+            background: #0f766e;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+        .module-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #f1f5f9;
+            max-width: 500px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .badge-status {
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: capitalize;
+            background-color: #3b82f6;
+            color: white;
+        }
+        .badge-status.completed, .badge-status.passed { background-color: #10b981; }
+        .badge-status.failed { background-color: #ef4444; }
+        .badge-status.incomplete { background-color: #f59e0b; }
+        
+        .sync-indicator {
+            font-size: 13px;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+            transition: background-color 0.2s ease;
+        }
+        .sync-dot.syncing {
+            background-color: #f59e0b;
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { opacity: 0.3; }
+            to { opacity: 1; }
+        }
+        .iframe-container {
+            flex: 1;
+            width: 100%;
+            height: calc(100% - 54px);
+            position: relative;
+            background: #ffffff;
+        }
+        iframe#scorm_content_frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="player-navbar">
+        <div class="module-info">
+            <span class="dpd-logo-badge">LMSetjen DPD RI</span>
+            <span class="module-title">{{ module.judul }}</span>
+            <span id="status-badge" class="badge-status {{ progress.lesson_status }}">{{ progress.lesson_status }}</span>
+        </div>
+        <div class="sync-indicator">
+            <span id="sync-dot" class="sync-dot"></span>
+            <span id="sync-text">Tersinkronisasi</span>
+        </div>
+    </header>
+
+    <div class="iframe-container">
+        <iframe 
+            id="scorm_content_frame" 
+            name="scorm_content_frame"
+            src="{{ module.player_url }}" 
+            allowfullscreen="true"
+            webkitallowfullscreen="true"
+            mozallowfullscreen="true">
+        </iframe>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const TRACKING_URL = "/api/v1/modules/{{ module.id }}/tracking/";
+        const CSRF_TOKEN = getCookie('csrftoken');
+
+        // State CMI Standar SCORM 1.2
+        const cmiData = {
+            "cmi.core.student_id": "{{ user.id|escapejs }}",
+            "cmi.core.student_name": "{{ user.full_name|default:user.username|escapejs }}",
+            "cmi.core.lesson_status": "{{ progress.lesson_status|default:'not attempted'|escapejs }}",
+            "cmi.core.score.raw": "{{ progress.score_raw|default:'0'|escapejs }}",
+            "cmi.core.lesson_location": "{{ progress.lesson_location|default:''|escapejs }}",
+            "cmi.core.session_time": "00:00:00",
+            "cmi.suspend_data": "{{ progress.suspend_data|default:''|escapejs }}",
+            "cmi.core.entry": "{{ progress.lesson_location|yesno:'resume,ab-initio' }}",
+            "cmi.core.exit": "",
+            "cmi.core.total_time": "00:00:00",
+            "cmi.core.lesson_mode": "normal"
+        };
+
+        let isInitialized = false;
+        let lastError = "0";
+
+        function updateUIState(status) {
+            const badge = document.getElementById('status-badge');
+            if (badge && status) {
+                badge.className = `badge-status ${status.toLowerCase()}`;
+                badge.textContent = status;
+            }
+        }
+
+        function syncToBackend(isBeacon = false) {
+            const syncDot = document.getElementById('sync-dot');
+            const syncText = document.getElementById('sync-text');
+
+            if (syncDot) syncDot.classList.add('syncing');
+            if (syncText) syncText.textContent = 'Menyimpan...';
+
+            const payload = {
+                lesson_status: cmiData["cmi.core.lesson_status"],
+                score: cmiData["cmi.core.score.raw"],
+                lesson_location: cmiData["cmi.core.lesson_location"],
+                session_time: cmiData["cmi.core.session_time"],
+                suspend_data: cmiData["cmi.suspend_data"]
+            };
+
+            const jsonString = JSON.stringify(payload);
+
+            if (isBeacon && navigator.sendBeacon) {
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                navigator.sendBeacon(TRACKING_URL, blob);
+                return;
+            }
+
+            fetch(TRACKING_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN
+                },
+                body: jsonString,
+                keepalive: true
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (syncDot) syncDot.classList.remove('syncing');
+                if (syncText) syncText.textContent = 'Tersimpan';
+                if (data.lesson_status) {
+                    updateUIState(data.lesson_status);
+                }
+            })
+            .catch(err => {
+                console.error('[SCORM Sync Error]:', err);
+                if (syncDot) syncDot.classList.remove('syncing');
+                if (syncText) syncText.textContent = 'Gagal menyimpan';
+            });
+        }
+
+        /**
+         * SCORM 1.2 RTE API Wrapper Object
+         */
+        window.API = {
+            LMSInitialize: function(param) {
+                console.log('[SCORM API] LMSInitialize called:', param);
+                isInitialized = true;
+                lastError = "0";
+                return "true";
+            },
+
+            LMSGetValue: function(element) {
+                if (!isInitialized) {
+                    lastError = "301";
+                    return "";
+                }
+                lastError = "0";
+                const val = cmiData[element] !== undefined ? cmiData[element] : "";
+                console.log(`[SCORM API] LMSGetValue(${element}) ->`, val);
+                return val;
+            },
+
+            LMSSetValue: function(element, value) {
+                if (!isInitialized) {
+                    lastError = "301";
+                    return "false";
+                }
+                console.log(`[SCORM API] LMSSetValue(${element}, ${value})`);
+                cmiData[element] = String(value);
+                lastError = "0";
+
+                if (element === "cmi.core.lesson_status") {
+                    updateUIState(value);
+                }
+                return "true";
+            },
+
+            LMSCommit: function(param) {
+                console.log('[SCORM API] LMSCommit triggered');
+                if (!isInitialized) {
+                    lastError = "301";
+                    return "false";
+                }
+                syncToBackend(false);
+                lastError = "0";
+                return "true";
+            },
+
+            LMSFinish: function(param) {
+                console.log('[SCORM API] LMSFinish triggered');
+                if (!isInitialized) {
+                    lastError = "301";
+                    return "false";
+                }
+                syncToBackend(false);
+                isInitialized = false;
+                lastError = "0";
+                return "true";
+            },
+
+            LMSGetLastError: function() {
+                return lastError;
+            },
+
+            LMSGetErrorString: function(errorCode) {
+                const errors = {
+                    "0": "No error",
+                    "101": "General exception",
+                    "201": "Invalid argument error",
+                    "301": "Not initialized",
+                    "401": "Not implemented error"
+                };
+                return errors[errorCode] || "Unknown error";
+            },
+
+            LMSGetDiagnostic: function(errorCode) {
+                return this.LMSGetErrorString(errorCode);
+            }
+        };
+
+        window.addEventListener('beforeunload', function() {
+            if (isInitialized) {
+                syncToBackend(true);
+            }
+        });
+    </script>
+</body>
+</html>
