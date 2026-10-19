@@ -65,7 +65,7 @@ function InstructorActivityDisplay({ maxDisplay = 6, showViewAll = true, variant
             try {
                 setLoading(true);
                 const params = new URLSearchParams();
-                
+
                 if (filters.activity_type) {
                     params.append('activity_type', filters.activity_type);
                 }
@@ -74,11 +74,11 @@ function InstructorActivityDisplay({ maxDisplay = 6, showViewAll = true, variant
                 }
                 params.append('limit', maxDisplay);
                 params.append('offset', (page - 1) * maxDisplay);
-                
+
                 const response = await useAxios.get(
                     `instructor/activities/?${params.toString()}`
                 );
-                
+
                 if (response.data) {
                     setActivities(response.data.results || []);
                     setTotalCount(response.data.count || 0);
@@ -193,8 +193,8 @@ function InstructorActivityDisplay({ maxDisplay = 6, showViewAll = true, variant
                     activities.map((activity) => {
                         const actType = getActivityIcon(activity.activity_type);
                         return (
-                            <div 
-                                key={activity.id} 
+                            <div
+                                key={activity.id}
                                 className="activity-item"
                                 style={{
                                     borderLeftColor: `var(--bs-${actType.color})`
@@ -203,7 +203,7 @@ function InstructorActivityDisplay({ maxDisplay = 6, showViewAll = true, variant
                                 {/* Row 1: Icon | Activity Type | Success Badge */}
                                 <div className="activity-item-row1">
                                     {/* Icon - Column 1 */}
-                                    <div 
+                                    <div
                                         className="activity-item-icon"
                                         style={{
                                             backgroundColor: `var(--bs-${actType.color})`
@@ -279,7 +279,7 @@ function InstructorActivityDisplay({ maxDisplay = 6, showViewAll = true, variant
                         <i className="fas fa-inbox activity-item-empty-icon"></i>
                         <p className="activity-item-empty-text">Tidak ada aktivitas</p>
                         <small className="activity-item-empty-subtext">
-                            ✨ PHASE 53+: Aktivitas siswa dan pengajaran Anda akan tampil di sini
+                            Aktivitas siswa dan pengajaran Anda akan tampil di sini
                         </small>
                     </div>
                 )}

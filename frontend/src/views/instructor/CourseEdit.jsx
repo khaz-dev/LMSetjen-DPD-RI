@@ -236,21 +236,12 @@ function CourseEdit() {
                     setIsDirty(false);
                     setAutoSaveStatus("saved");
                     setLastAutoSaveTime(new Date());
-                    
-                    // Show saved indicator briefly, then clear
-                    setTimeout(() => {
-                        setAutoSaveStatus("idle");
-                    }, 2000);
+                    // ✨ Timestamp status tetap dipertahankan
                 }
             );
         } catch (error) {
             console.error('[CourseEdit.debouncedAutoSave] ❌ Error:', error);
             setAutoSaveStatus("error");
-            
-            // Retry after 5 seconds on error
-            setTimeout(() => {
-                setAutoSaveStatus("idle");
-            }, 5000);
         }
     }, 2000, [isDirty, submitStatus, courseData, initialCourseData, submitCourse, param?.course_id, setCourseData]);
 
@@ -1336,33 +1327,32 @@ function CourseEdit() {
                                     <div className="form-status-and-actions d-flex flex-column flex-sm-row align-items-center gap-3">
                                         <div className="form-status-info">
                                             {/* ✨ PHASE 4.168: Auto-save status indicator */}
-                                            {autoSaveStatus === "saving" && (
-                                                <div className="text-info small">
-                                                    <div className="spinner-border spinner-border-sm me-1" style={{ width: '14px', height: '14px', display: 'inline-block' }}></div>
-                                                    Menyimpan perubahan otomatis...
+                                            {autoSaveStatus === "saving" ? (
+                                                <div className="text-info small d-flex align-items-center">
+                                                    <span className="spinner-border spinner-border-sm me-1.5" style={{ width: '13px', height: '13px', display: 'inline-block' }}></span>
+                                                    <span>Menyimpan perubahan otomatis...</span>
                                                 </div>
-                                            )}
-                                            {autoSaveStatus === "saved" && (
-                                                <div className="text-success small">
-                                                    <i className="fas fa-check-circle me-1"></i>
-                                                    Perubahan tersimpan otomatis
-                                                    {lastAutoSaveTime && (
-                                                        <span className="ms-1 text-muted">
-                                                            pada {lastAutoSaveTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                                                        </span>
-                                                    )}
+                                            ) : isDirty ? (
+                                                <div className="text-secondary small d-flex align-items-center">
+                                                    <span className="spinner-border spinner-border-sm text-warning me-1.5" style={{ width: '13px', height: '13px', display: 'inline-block' }}></span>
+                                                    <span>Menyimpan perubahan...</span>
                                                 </div>
-                                            )}
-                                            {autoSaveStatus === "error" && (
-                                                <div className="text-danger small">
-                                                    <i className="fas fa-exclamation-circle me-1"></i>
-                                                    Gagal menyimpan otomatis, akan dicoba lagi...
+                                            ) : autoSaveStatus === "error" ? (
+                                                <div className="text-danger small d-flex align-items-center">
+                                                    <i className="fas fa-exclamation-circle text-danger me-1.5"></i>
+                                                    <span>Gagal menyimpan otomatis, akan dicoba lagi...</span>
                                                 </div>
-                                            )}
-                                            {autoSaveStatus === "idle" && !isDirty && (
-                                                <div className="text-muted small">
-                                                    <i className="fas fa-save me-1"></i>
-                                                    Semua perubahan tersimpan
+                                            ) : lastAutoSaveTime ? (
+                                                <div className="text-muted small d-flex align-items-center">
+                                                    <i className="fas fa-check-circle text-success me-1.5"></i>
+                                                    <span>
+                                                        Perubahan tersimpan pada {lastAutoSaveTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/:/g, '.')}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="text-muted small d-flex align-items-center">
+                                                    <i className="fas fa-check-circle text-success me-1.5"></i>
+                                                    <span>Semua perubahan tersimpan</span>
                                                 </div>
                                             )}
                                         </div>

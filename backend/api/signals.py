@@ -712,7 +712,7 @@ def log_instructor_lesson_activities(sender, instance, created, **kwargs):
                     'lesson_title': instance.title,
                     'course_id': str(course.id),
                     'course_title': course.title,
-                    'variant_id': str(instance.variant_id) if hasattr(instance.variant_id) else str(instance.variant.id),
+                    'variant_id': str(instance.variant_id) if hasattr(instance, 'variant_id') else str(instance.variant.id),
                     'variant_title': instance.variant.title if hasattr(instance.variant, 'title') else 'Variant'
                 }
             )

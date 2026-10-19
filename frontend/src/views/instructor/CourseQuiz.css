@@ -1001,43 +1001,162 @@ button div,
    CHOICE INPUT GROUPS
    ================================ */
 
+/* ================================
+   INLINE QUESTION FORM & CHOICE INPUT GROUPS
+   ================================ */
+
+.question-form-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--instructor-primary);
+    box-shadow: 0 10px 25px -5px rgba(15, 118, 110, 0.15), 0 8px 10px -6px rgba(15, 118, 110, 0.1);
+    overflow: hidden;
+    transition: all var(--transition-normal);
+    animation: inlineQuestionSlideIn 0.3s ease-out;
+}
+
+@keyframes inlineQuestionSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.question-form-card.adding {
+    border-color: #0f766e;
+    background: #ffffff;
+}
+
+.question-form-card.editing {
+    border-color: #2563eb;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.18), 0 8px 10px -6px rgba(37, 99, 235, 0.1);
+}
+
+.question-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 1.5rem;
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.08) 0%, #f9fafb 100%);
+    border-bottom: 1px solid var(--neutral-200);
+}
+
+.question-form-card.editing .question-form-header {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, #f9fafb 100%);
+}
+
+.question-form-header .question-number {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+    margin-right: 0;
+}
+
+.question-form-card.editing .question-number {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.question-form-body {
+    padding: 1.5rem;
+}
+
+.question-form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: #f9fafb;
+    border-top: 1px solid var(--neutral-200);
+    gap: var(--space-md);
+}
+
+.choices-form-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
 .choice-input-group {
     display: flex;
     align-items: center;
-    margin-bottom: var(--space-md);
-    padding: var(--space-md);
-    border: 1px solid var(--neutral-200);
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--neutral-300);
     border-radius: var(--radius-md);
-    background: var(--neutral-50);
+    background: #ffffff;
+    transition: all var(--transition-normal);
+    cursor: pointer;
+}
+
+.choice-input-group:hover {
+    border-color: var(--neutral-400);
+    background: #fafafa;
+}
+
+.choice-input-group.is-selected-correct {
+    background: rgba(16, 185, 129, 0.07);
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .choice-selector {
     display: flex;
     align-items: center;
-    margin-right: var(--space-md);
-    min-width: 60px;
+    margin-right: 0.75rem;
+    min-width: 55px;
+    cursor: pointer;
 }
 
 .choice-selector input[type="radio"] {
-    margin-right: var(--space-sm);
-    transform: scale(1.2);
+    margin-right: 0.5rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    cursor: pointer;
+    accent-color: #10b981;
 }
 
 .choice-letter {
     font-weight: 700;
     color: var(--instructor-primary);
-    min-width: 25px;
+    min-width: 20px;
+    user-select: none;
+    font-size: 0.95rem;
 }
 
 .choice-input {
     flex: 1;
     border: 1px solid var(--neutral-300);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.85rem;
     background: white;
+    cursor: text;
+    transition: all var(--transition-normal);
 }
 
 .choice-input:focus {
     border-color: var(--instructor-primary);
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+}
+
+.choice-input-group.is-selected-correct .choice-input:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.correct-pill {
+    white-space: nowrap;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.35rem 0.65rem !important;
+    border-radius: 9999px;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    background-color: rgba(16, 185, 129, 0.12) !important;
+    color: #065f46 !important;
+    animation: fadeIn 0.2s ease-in;
 }
 
 /* ================================

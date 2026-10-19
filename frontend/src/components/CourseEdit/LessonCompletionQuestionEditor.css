@@ -133,35 +133,22 @@
     }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .question-editor-form {
-        background-color: #2d2d2d !important;
-        color: #e0e0e0;
-    }
-
-    .choice-item {
-        background-color: #3a3a3a !important;
-        border-left-color: #555;
-    }
-
-    .choice-item:hover {
-        background-color: #4a4a4a !important;
-    }
-
-    .question-summary {
-        background: linear-gradient(135deg, #2a4a3f 0%, #235845 100%) !important;
-        color: #e0e0e0;
-    }
-
-    .form-control,
-    .form-check-input {
-        background-color: #3a3a3a;
-        border-color: #555;
-        color: #e0e0e0;
-    }
-
-    .form-control:disabled {
-        opacity: 0.6;
-    }
+/* Form control styling strictly scoped to lesson-completion-question-editor */
+.lesson-completion-question-editor .form-control {
+    background-color: #ffffff !important;
+    border: 1px solid #ced4da !important;
+    color: #212529 !important;
 }
+
+.lesson-completion-question-editor .form-control:focus {
+    background-color: #ffffff !important;
+    border-color: #0f766e !important;
+    color: #212529 !important;
+    box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.15) !important;
+}
+
+.lesson-completion-question-editor .form-check-input {
+    background-color: #ffffff;
+    border-color: #ced4da;
+}
+

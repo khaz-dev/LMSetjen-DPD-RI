@@ -756,10 +756,19 @@ USE_X_FORWARDED_PORT = True
 # the venv's sys.path and environment variables
 # See: https://docs.djangoproject.com/en/4.2/ref/django-admin/#django-admin-runserver
 import sys
-if DEBUG and sys.platform == 'win32':
-    # Use WatchmanReloaderClass or PollingReloader if autoreloader fails
-    # This ensures subprocess properly inherits sys.executable and venv
-    os.environ['RUN_MAIN'] = 'true'
+if sys.platform == 'win32':
+    # Ensure stdout/stderr handles UTF-8 (emojis in logs) without crashing Windows cp1252 console
+    try:
+        if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        if sys.stderr and hasattr(sys.stderr, 'reconfigure'):
+            sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+    if DEBUG:
+        # Use WatchmanReloaderClass or PollingReloader if autoreloader fails
+        # This ensures subprocess properly inherits sys.executable and venv
+        os.environ['RUN_MAIN'] = 'true'
 
 # External API Configuration
 # Backward compatibility:

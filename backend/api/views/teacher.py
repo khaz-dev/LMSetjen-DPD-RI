@@ -689,7 +689,7 @@ class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
             if not teacher_id or teacher_id == 0:
                 return Response([])
             
-            from .url_utils import clean_and_process_image_url
+            from api.url_utils import clean_and_process_image_url
             
             teacher = api_models.Teacher.objects.get(id=teacher_id)
             courses_with_sales = []

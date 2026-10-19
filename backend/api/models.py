@@ -872,18 +872,18 @@ class VariantItem(models.Model):
         return icon_map.get(file_type, "fas fa-file")
     
     def clean(self):
-        """✨ PHASE 4.170: Validate that duration is cleared when file is empty"""
+        """✨ PHASE 4.170: Validate that duration is cleared when file and learning module are empty"""
         from django.core.exceptions import ValidationError
         
-        # If file is empty, duration should also be empty
-        if not self.file and self.duration:
+        # If both file and learning_module are empty, duration should also be empty
+        if not self.file and not self.learning_module_id and self.duration:
             raise ValidationError({
-                'duration': 'Durasi harus kosong ketika File field kosong. Silakan bersihkan field durasi.',
+                'duration': 'Durasi harus kosong ketika File dan Modul E-Learning kosong. Silakan bersihkan field durasi.',
             })
     
     def save(self, *args, **kwargs):
-        # ✨ PHASE 4.170: Auto-clear duration when file is removed
-        if not self.file:
+        # ✨ PHASE 4.170: Auto-clear duration when both file and learning module are empty
+        if not self.file and not self.learning_module_id:
             self.duration = None
         
         super().save(*args, **kwargs)

@@ -46,7 +46,7 @@ function CourseQuiz() {
     
     // UI States
     const [showQuizModal, setShowQuizModal] = useState(false);
-    const [showQuestionModal, setShowQuestionModal] = useState(false);
+    const [isAddingQuestion, setIsAddingQuestion] = useState(false);
     const [editingQuiz, setEditingQuiz] = useState(null);
     const [editingQuestion, setEditingQuestion] = useState(null);
     const [activeTab, setActiveTab] = useState("overview");
@@ -251,22 +251,21 @@ function CourseQuiz() {
                 title: editingQuestion ? "Pertanyaan diperbarui dengan sukses" : "Pertanyaan ditambahkan dengan sukses"
             });
 
-            // If editing, close modal. If adding and continuous mode, reset form but keep modal open
+            // If editing, close edit form. If adding and continuous mode, reset form but keep add form open
             if (editingQuestion) {
-                setShowQuestionModal(false);
+                setEditingQuestion(null);
                 resetQuestionForm();
                 setQuestionsAdded(0);
             } else if (isContinuousAdd) {
-                // Reset form for next question but keep modal open
+                // Reset form for next question but keep add form open
                 resetQuestionForm();
-                // Focus on question text area for convenience
                 setTimeout(() => {
-                    const textarea = document.querySelector(".modal-body textarea");
+                    const textarea = document.getElementById("new-question-textarea");
                     if (textarea) textarea.focus();
                 }, 100);
             } else {
-                // Close modal if not in continuous mode
-                setShowQuestionModal(false);
+                // Close add form if not in continuous mode
+                setIsAddingQuestion(false);
                 resetQuestionForm();
                 setQuestionsAdded(0);
             }
@@ -326,6 +325,10 @@ function CourseQuiz() {
                 icon: "success",
                 title: "Pertanyaan berhasil dihapus"
             });
+            if (editingQuestion?.question_id === questionId) {
+                setEditingQuestion(null);
+                resetQuestionForm();
+            }
             fetchQuestions(currentQuiz.quiz_id);
             fetchQuizzes();
         } catch (error) {
@@ -354,7 +357,6 @@ function CourseQuiz() {
             ]
         });
         setEditingQuestion(null);
-        // Don't reset questionsAdded and isContinuousAdd here - handle in close modal
     };
 
     const handleEditQuiz = (quiz) => {
@@ -368,23 +370,46 @@ function CourseQuiz() {
     };
 
     const handleEditQuestion = (question) => {
+        setIsAddingQuestion(false);
+        const existingChoices = question.choices && Array.isArray(question.choices) ? question.choices : [];
+        let formChoices = [];
+        if (existingChoices.length >= 4) {
+            formChoices = existingChoices.slice(0, 4).map(c => ({
+                choice_text: c.choice_text || "",
+                is_correct: !!c.is_correct
+            }));
+        } else {
+            formChoices = [
+                ...existingChoices.map(c => ({
+                    choice_text: c.choice_text || "",
+                    is_correct: !!c.is_correct
+                })),
+                ...Array(4 - existingChoices.length).fill(null).map(() => ({
+                    choice_text: "",
+                    is_correct: false
+                }))
+            ];
+        }
+
         setQuestionForm({
-            question_text: question.question_text,
-            choices: question.choices.length >= 4 
-                ? question.choices.slice(0, 4)
-                : [
-                    ...question.choices,
-                    ...Array(4 - question.choices.length).fill({ choice_text: "", is_correct: false })
-                ]
+            question_text: question.question_text || "",
+            choices: formChoices
         });
         setEditingQuestion(question);
-        setIsContinuousAdd(false); // Disable continuous mode when editing
-        setShowQuestionModal(true);
+        setIsContinuousAdd(false);
+        setTimeout(() => {
+            const formElem = document.getElementById(`edit-question-${question.question_id}`);
+            if (formElem) {
+                formElem.scrollIntoView({ behavior: "smooth", block: "center" });
+                const textarea = formElem.querySelector("textarea");
+                if (textarea) textarea.focus();
+            }
+        }, 100);
     };
 
     const handleChoiceChange = (index, field, value) => {
         const newChoices = [...questionForm.choices];
-        if (field === "is_correct" && value) {
+        if (field === "is_correct") {
             // Only one correct answer allowed
             newChoices.forEach((choice, i) => {
                 choice.is_correct = i === index;
@@ -398,17 +423,31 @@ function CourseQuiz() {
     const selectQuiz = (quiz) => {
         setCurrentQuiz(quiz);
         setActiveTab("questions");
+        setIsAddingQuestion(false);
+        setEditingQuestion(null);
+        resetQuestionForm();
         fetchQuestions(quiz.quiz_id);
     };
 
-    const handleOpenQuestionModal = () => {
-        setShowQuestionModal(true);
-        setIsContinuousAdd(true);
+    const handleOpenAddQuestion = () => {
+        setEditingQuestion(null);
+        resetQuestionForm();
+        setIsAddingQuestion(true);
+        setIsContinuousAdd(false);
         setQuestionsAdded(0);
+        setTimeout(() => {
+            const formElem = document.getElementById("new-question-inline-form");
+            if (formElem) {
+                formElem.scrollIntoView({ behavior: "smooth", block: "center" });
+                const textarea = formElem.querySelector("textarea");
+                if (textarea) textarea.focus();
+            }
+        }, 100);
     };
 
-    const handleCloseQuestionModal = () => {
-        setShowQuestionModal(false);
+    const handleCancelQuestionForm = () => {
+        setIsAddingQuestion(false);
+        setEditingQuestion(null);
         resetQuestionForm();
         setIsContinuousAdd(false);
         setQuestionsAdded(0);
@@ -664,92 +703,378 @@ function CourseQuiz() {
                                         <div className="quiz-header">
                                             <div className="quiz-info">
                                                 <h3 className="quiz-title">{currentQuiz.title}</h3>
-                                                <p className="quiz-description">{currentQuiz.description}</p>
+                                                <p className="quiz-description">{currentQuiz.description || "Kelola pertanyaan kuis untuk kursus ini"}</p>
                                             </div>
-
+                                            {!isAddingQuestion && !editingQuestion && (
+                                                <button 
+                                                    className="btn btn-update-course"
+                                                    onClick={handleOpenAddQuestion}
+                                                >
+                                                    <i className="fas fa-plus me-2"></i>
+                                                    Tambah Pertanyaan
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
 
                                     {/* Questions List */}
                                     <div className="questions-list">
-                                        {questions.length === 0 ? (
+                                        {questions.length === 0 && !isAddingQuestion ? (
                                             <div className="quiz-empty-card text-center py-5">
                                                 <div className="empty-state">
                                                     <i className="fas fa-question empty-icon"></i>
                                                     <h4>Belum Ada Pertanyaan</h4>
-                                                    <p className="text-muted">Tambahkan pertanyaan pertama Anda ke kuis ini</p>
+                                                    <p className="text-muted">Tambahkan pertanyaan pertama Anda ke kuis ini secara langsung</p>
                                                     <button 
                                                         className="btn btn-update-course"
-                                                        onClick={handleOpenQuestionModal}
+                                                        onClick={handleOpenAddQuestion}
                                                     >
                                                         <i className="fas fa-plus me-2"></i>
-                                                        Tambah Pertanyaan
+                                                        Tambah Pertanyaan Pertama
                                                     </button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            questions.map((question, index) => (
-                                                <div key={question.question_id} className="question-card mb-0">
-                                                    <div className="question-header">
-                                                        <div className="question-number">
-                                                            <span>Q{index + 1}</span>
-                                                        </div>
-                                                        <div className="question-text">
-                                                            <h5>{question.question_text}</h5>
-                                                        </div>
-                                                        <div className="question-actions">
-                                                            <button 
-                                                                className="btn-icon"
-                                                                onClick={() => handleEditQuestion(question)}
-                                                                title="Edit Pertanyaan"
-                                                            >
-                                                                <i className="fas fa-edit"></i>
-                                                            </button>
-                                                            <button 
-                                                                className="btn-icon btn-danger"
-                                                                onClick={() => handleDeleteQuestion(question.question_id)}
-                                                                title="Hapus Pertanyaan"
-                                                            >
-                                                                <i className="fas fa-trash"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="question-choices">
-                                                        {question.choices?.map((choice, choiceIndex) => (
+                                            <>
+                                                {questions.map((question, index) => {
+                                                    const isThisEditing = editingQuestion?.question_id === question.question_id;
+
+                                                    if (isThisEditing) {
+                                                        return (
                                                             <div 
-                                                                key={choice.choice_id} 
-                                                                className={`choice-item ${choice.is_correct ? "correct" : ""}`}
+                                                                key={question.question_id} 
+                                                                id={`edit-question-${question.question_id}`} 
+                                                                className="question-card question-form-card editing mb-0"
                                                             >
-                                                                <div className="choice-indicator">
-                                                                    {choice.is_correct ? (
-                                                                        <i className="fas fa-check-circle text-success"></i>
-                                                                    ) : (
-                                                                        <i className="fas fa-circle text-muted"></i>
-                                                                    )}
+                                                                <div className="question-form-header">
+                                                                    <div className="d-flex align-items-center gap-3">
+                                                                        <div className="question-number">
+                                                                            <span>Q{index + 1}</span>
+                                                                        </div>
+                                                                        <div>
+                                                                            <h5 className="mb-0 fw-bold text-dark">
+                                                                                Edit Pertanyaan Q{index + 1}
+                                                                            </h5>
+                                                                            <small className="text-muted">
+                                                                                Ubah teks pertanyaan dan pilih jawaban yang benar
+                                                                            </small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button 
+                                                                        type="button" 
+                                                                        className="btn-icon"
+                                                                        onClick={handleCancelQuestionForm}
+                                                                        title="Batalkan Edit"
+                                                                    >
+                                                                        <i className="fas fa-times"></i>
+                                                                    </button>
                                                                 </div>
-                                                                <div className="choice-text">
-                                                                    <span className="choice-label">
-                                                                        {String.fromCharCode(65 + choiceIndex)}.
-                                                                    </span>
-                                                                    {choice.choice_text}
+                                                                
+                                                                <form onSubmit={handleCreateQuestion}>
+                                                                    <div className="question-form-body">
+                                                                        <div className="form-group">
+                                                                            <label className="form-label">Teks Pertanyaan *</label>
+                                                                            <textarea
+                                                                                className="form-control"
+                                                                                rows="3"
+                                                                                value={questionForm.question_text}
+                                                                                onChange={(e) => setQuestionForm({...questionForm, question_text: e.target.value})}
+                                                                                placeholder="Masukkan pertanyaan kuis Anda di sini..."
+                                                                                required
+                                                                            />
+                                                                        </div>
+                                                                        
+                                                                        <div className="form-group mb-0">
+                                                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                                                <label className="form-label mb-0">Pilihan Jawaban *</label>
+                                                                                <span className="form-help mb-0">
+                                                                                    <i className="fas fa-info-circle me-1"></i>Pilih radio untuk menandai kunci jawaban yang benar
+                                                                                </span>
+                                                                            </div>
+                                                                            
+                                                                            <div className="choices-form-list">
+                                                                                {questionForm.choices.map((choice, cIndex) => (
+                                                                                    <div 
+                                                                                        key={cIndex} 
+                                                                                        className={`choice-input-group ${choice.is_correct ? "is-selected-correct" : ""}`}
+                                                                                        onClick={(e) => {
+                                                                                            if (e.target.tagName !== 'INPUT' || e.target.type === 'radio') {
+                                                                                                handleChoiceChange(cIndex, "is_correct", true);
+                                                                                            }
+                                                                                        }}
+                                                                                    >
+                                                                                        <div className="choice-selector">
+                                                                                            <input
+                                                                                                type="radio"
+                                                                                                id={`edit-choice-${question.question_id}-${cIndex}`}
+                                                                                                name={`correct_answer_edit_${question.question_id}`}
+                                                                                                checked={choice.is_correct}
+                                                                                                onChange={(e) => handleChoiceChange(cIndex, "is_correct", e.target.checked)}
+                                                                                            />
+                                                                                            <label 
+                                                                                                htmlFor={`edit-choice-${question.question_id}-${cIndex}`}
+                                                                                                className="choice-letter"
+                                                                                            >
+                                                                                                {String.fromCharCode(65 + cIndex)}.
+                                                                                            </label>
+                                                                                        </div>
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            className="form-control choice-input"
+                                                                                            value={choice.choice_text}
+                                                                                            onChange={(e) => handleChoiceChange(cIndex, "choice_text", e.target.value)}
+                                                                                            placeholder={`Pilihan ${String.fromCharCode(65 + cIndex)}`}
+                                                                                            onClick={(e) => e.stopPropagation()}
+                                                                                        />
+                                                                                        {choice.is_correct && (
+                                                                                            <span className="badge bg-success-subtle text-success ms-2 px-2 py-1 correct-pill">
+                                                                                                <i className="fas fa-check me-1"></i>Kunci Jawaban
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <div className="question-form-footer">
+                                                                        <button 
+                                                                            type="button" 
+                                                                            className="btn btn-secondary"
+                                                                            onClick={handleCancelQuestionForm}
+                                                                            disabled={isSubmitting}
+                                                                        >
+                                                                            Batalkan
+                                                                        </button>
+                                                                        <button 
+                                                                            type="submit" 
+                                                                            className="btn btn-update-course"
+                                                                            disabled={isSubmitting}
+                                                                        >
+                                                                            {isSubmitting && <span className="spinner-border spinner-border-sm me-2"></span>}
+                                                                            <i className="fas fa-save me-2"></i>
+                                                                            Perbarui Pertanyaan
+                                                                        </button>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        );
+                                                    }
+
+                                                    return (
+                                                        <div key={question.question_id} className="question-card mb-0">
+                                                            <div className="question-header">
+                                                                <div className="question-number">
+                                                                    <span>Q{index + 1}</span>
+                                                                </div>
+                                                                <div className="question-text">
+                                                                    <h5>{question.question_text}</h5>
+                                                                </div>
+                                                                <div className="question-actions">
+                                                                    <button 
+                                                                        className="btn-icon"
+                                                                        onClick={() => handleEditQuestion(question)}
+                                                                        title="Edit Pertanyaan"
+                                                                    >
+                                                                        <i className="fas fa-edit"></i>
+                                                                    </button>
+                                                                    <button 
+                                                                        className="btn-icon btn-danger"
+                                                                        onClick={() => handleDeleteQuestion(question.question_id)}
+                                                                        title="Hapus Pertanyaan"
+                                                                    >
+                                                                        <i className="fas fa-trash"></i>
+                                                                    </button>
                                                                 </div>
                                                             </div>
-                                                        ))}
+                                                            <div className="question-choices">
+                                                                {question.choices?.map((choice, choiceIndex) => (
+                                                                    <div 
+                                                                        key={choice.choice_id || choiceIndex} 
+                                                                        className={`choice-item ${choice.is_correct ? "correct" : ""}`}
+                                                                    >
+                                                                        <div className="choice-indicator">
+                                                                            {choice.is_correct ? (
+                                                                                <i className="fas fa-check-circle text-success"></i>
+                                                                            ) : (
+                                                                                <i className="fas fa-circle text-muted"></i>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="choice-text">
+                                                                            <span className="choice-label">
+                                                                                {String.fromCharCode(65 + choiceIndex)}.
+                                                                            </span>
+                                                                            {choice.choice_text}
+                                                                        </div>
+                                                                        {choice.is_correct && (
+                                                                            <span className="badge bg-success-subtle text-success ms-auto px-2 py-1 correct-pill">
+                                                                                <i className="fas fa-check me-1"></i>Jawaban Benar
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+
+                                                {/* Inline Add Question Form */}
+                                                {isAddingQuestion && (
+                                                    <div id="new-question-inline-form" className="question-card question-form-card adding mb-0">
+                                                        <div className="question-form-header">
+                                                            <div className="d-flex align-items-center gap-3">
+                                                                <div className="question-number">
+                                                                    <span>Q{questions.length + 1}</span>
+                                                                </div>
+                                                                <div>
+                                                                    <h5 className="mb-0 fw-bold text-dark">
+                                                                        Tambah Pertanyaan #{questions.length + 1}
+                                                                    </h5>
+                                                                    {questionsAdded > 0 ? (
+                                                                        <small className="text-success fw-medium">
+                                                                            <i className="fas fa-check-circle me-1"></i>
+                                                                            {questionsAdded} pertanyaan berhasil ditambahkan dalam sesi ini
+                                                                        </small>
+                                                                    ) : (
+                                                                        <small className="text-muted">
+                                                                            Tuliskan teks pertanyaan dan tentukan satu jawaban yang benar
+                                                                        </small>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <button 
+                                                                type="button" 
+                                                                className="btn-icon"
+                                                                onClick={handleCancelQuestionForm}
+                                                                title="Batalkan Tambah"
+                                                            >
+                                                                <i className="fas fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                        
+                                                        <form onSubmit={handleCreateQuestion}>
+                                                            <div className="question-form-body">
+                                                                <div className="form-group">
+                                                                    <label className="form-label">Teks Pertanyaan *</label>
+                                                                    <textarea
+                                                                        id="new-question-textarea"
+                                                                        className="form-control"
+                                                                        rows="3"
+                                                                        value={questionForm.question_text}
+                                                                        onChange={(e) => setQuestionForm({...questionForm, question_text: e.target.value})}
+                                                                        placeholder="Masukkan pertanyaan kuis Anda di sini..."
+                                                                        required
+                                                                    />
+                                                                </div>
+                                                                
+                                                                <div className="form-group mb-0">
+                                                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                                                        <label className="form-label mb-0">Pilihan Jawaban *</label>
+                                                                        <span className="form-help mb-0">
+                                                                            <i className="fas fa-info-circle me-1"></i>Pilih radio untuk menandai kunci jawaban yang benar
+                                                                        </span>
+                                                                    </div>
+                                                                    
+                                                                    <div className="choices-form-list">
+                                                                        {questionForm.choices.map((choice, cIndex) => (
+                                                                            <div 
+                                                                                key={cIndex} 
+                                                                                className={`choice-input-group ${choice.is_correct ? "is-selected-correct" : ""}`}
+                                                                                onClick={(e) => {
+                                                                                    if (e.target.tagName !== 'INPUT' || e.target.type === 'radio') {
+                                                                                        handleChoiceChange(cIndex, "is_correct", true);
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                <div className="choice-selector">
+                                                                                    <input
+                                                                                        type="radio"
+                                                                                        id={`new-choice-${cIndex}`}
+                                                                                        name="correct_answer_new"
+                                                                                        checked={choice.is_correct}
+                                                                                        onChange={(e) => handleChoiceChange(cIndex, "is_correct", e.target.checked)}
+                                                                                    />
+                                                                                    <label 
+                                                                                        htmlFor={`new-choice-${cIndex}`}
+                                                                                        className="choice-letter"
+                                                                                    >
+                                                                                        {String.fromCharCode(65 + cIndex)}.
+                                                                                    </label>
+                                                                                </div>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    className="form-control choice-input"
+                                                                                    value={choice.choice_text}
+                                                                                    onChange={(e) => handleChoiceChange(cIndex, "choice_text", e.target.value)}
+                                                                                    placeholder={`Pilihan ${String.fromCharCode(65 + cIndex)}`}
+                                                                                    onClick={(e) => e.stopPropagation()}
+                                                                                />
+                                                                                {choice.is_correct && (
+                                                                                    <span className="badge bg-success-subtle text-success ms-2 px-2 py-1 correct-pill">
+                                                                                        <i className="fas fa-check me-1"></i>Kunci Jawaban
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div className="question-form-footer">
+                                                                <button 
+                                                                    type="button" 
+                                                                    className="btn btn-secondary"
+                                                                    onClick={handleCancelQuestionForm}
+                                                                    disabled={isSubmitting}
+                                                                >
+                                                                    Batalkan
+                                                                </button>
+                                                                <div className="d-flex gap-2">
+                                                                    <button 
+                                                                        type="submit" 
+                                                                        className="btn btn-success"
+                                                                        disabled={isSubmitting}
+                                                                        onClick={() => setIsContinuousAdd(true)}
+                                                                    >
+                                                                        {isSubmitting && isContinuousAdd && <span className="spinner-border spinner-border-sm me-2"></span>}
+                                                                        <i className="fas fa-plus me-2"></i>
+                                                                        Simpan & Tambah Lagi
+                                                                    </button>
+                                                                    <button 
+                                                                        type="submit" 
+                                                                        className="btn btn-update-course"
+                                                                        disabled={isSubmitting}
+                                                                        onClick={() => setIsContinuousAdd(false)}
+                                                                    >
+                                                                        {isSubmitting && !isContinuousAdd && <span className="spinner-border spinner-border-sm me-2"></span>}
+                                                                        <i className="fas fa-check me-2"></i>
+                                                                        Simpan Pertanyaan
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </form>
                                                     </div>
-                                                </div>
-                                            ))
+                                                )}
+                                            </>
                                         )}
                                     </div>
 
-                                    <div className="d-flex justify-content-end mt-4">
-                                        <button 
-                                            className="btn btn-update-course"
-                                            onClick={handleOpenQuestionModal}
-                                        >
-                                            <i className="fas fa-plus me-2"></i>
-                                            Tambah Pertanyaan
-                                        </button>
-                                    </div>
+                                    {/* Action Bar at Bottom of Questions */}
+                                    {!isAddingQuestion && !editingQuestion && questions.length > 0 && (
+                                        <div className="d-flex justify-content-between align-items-center mt-4 pt-2">
+                                            <span className="text-muted small">
+                                                <i className="fas fa-list-ol me-1"></i>
+                                                Total <strong>{questions.length}</strong> pertanyaan dalam kuis ini
+                                            </span>
+                                            <button 
+                                                className="btn btn-update-course"
+                                                onClick={handleOpenAddQuestion}
+                                            >
+                                                <i className="fas fa-plus me-2"></i>
+                                                Tambah Pertanyaan
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -826,123 +1151,6 @@ function CourseQuiz() {
                                                     {isSubmitting && <span className="spinner-border spinner-border-sm me-2"></span>}
                                                     {editingQuiz ? "Perbarui Kuis" : "Buat Kuis"}
                                                 </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Question Modal */}
-                            {showQuestionModal && (
-                                <div className="quiz-modal-overlay">
-                                    <div className="quiz-modal quiz-modal-large">
-                                        <div className="modal-header">
-                                            <div>
-                                                <h4>
-                                                    {editingQuestion ? "Edit Pertanyaan" : `Tambah Pertanyaan #${questions.length + 1}`}
-                                                </h4>
-                                                {!editingQuestion && isContinuousAdd && questionsAdded > 0 && (
-                                                    <p className="text-muted mb-0 mt-1" style={{ fontSize: "0.9rem" }}>
-                                                        <i className="fas fa-check-circle text-success me-2"></i>
-                                                        {questionsAdded} pertanyaan{questionsAdded > 1 ? "" : ""} berhasil ditambahkan dalam sesi ini
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <button 
-                                                className="btn-close"
-                                                onClick={handleCloseQuestionModal}
-                                            >
-                                                <i className="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                        <form onSubmit={handleCreateQuestion}>
-                                            <div className="modal-body">
-                                                <div className="form-group">
-                                                    <label className="form-label">Teks Pertanyaan *</label>
-                                                    <textarea
-                                                        className="form-control"
-                                                        rows="3"
-                                                        value={questionForm.question_text}
-                                                        onChange={(e) => setQuestionForm({...questionForm, question_text: e.target.value})}
-                                                        placeholder="Masukkan pertanyaan Anda"
-                                                        required
-                                                    />
-                                                </div>
-                                                
-                                                <div className="form-group">
-                                                    <label className="form-label">Pilihan Jawaban *</label>
-                                                    <p className="form-help">Tandai jawaban yang benar dengan mengklik tombol radio</p>
-                                                    
-                                                    {questionForm.choices.map((choice, index) => (
-                                                        <div key={index} className="choice-input-group">
-                                                            <div className="choice-selector">
-                                                                <input
-                                                                    type="radio"
-                                                                    name="correct_answer"
-                                                                    checked={choice.is_correct}
-                                                                    onChange={(e) => handleChoiceChange(index, "is_correct", e.target.checked)}
-                                                                />
-                                                                <label className="choice-letter">
-                                                                    {String.fromCharCode(65 + index)}.
-                                                                </label>
-                                                            </div>
-                                                            <input
-                                                                type="text"
-                                                                className="form-control choice-input"
-                                                                value={choice.choice_text}
-                                                                onChange={(e) => handleChoiceChange(index, "choice_text", e.target.value)}
-                                                                placeholder={`Pilihan ${String.fromCharCode(65 + index)}`}
-                                                            />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div className="modal-footer">
-                                                <button 
-                                                    type="button" 
-                                                    className="btn btn-secondary"
-                                                    onClick={handleCloseQuestionModal}
-                                                    disabled={isSubmitting}
-                                                >
-                                                    {editingQuestion ? "Batalkan" : "Tutup & Selesai"}
-                                                </button>
-                                                
-                                                {!editingQuestion && (
-                                                    <div className="d-flex gap-2">
-                                                        <button 
-                                                            type="submit" 
-                                                            className="btn btn-success"
-                                                            disabled={isSubmitting}
-                                                            onClick={() => setIsContinuousAdd(true)}
-                                                        >
-                                                            {isSubmitting && <span className="spinner-border spinner-border-sm me-2"></span>}
-                                                            <i className="fas fa-plus me-2"></i>
-                                                            Tambah & Lanjutkan
-                                                        </button>
-                                                        <button 
-                                                            type="submit" 
-                                                            className="btn btn-update-course"
-                                                            disabled={isSubmitting}
-                                                            onClick={() => setIsContinuousAdd(false)}
-                                                        >
-                                                            {isSubmitting && <span className="spinner-border spinner-border-sm me-2"></span>}
-                                                            <i className="fas fa-check me-2"></i>
-                                                            Tambah & Tutup
-                                                        </button>
-                                                    </div>
-                                                )}
-                                                
-                                                {editingQuestion && (
-                                                    <button 
-                                                        type="submit" 
-                                                        className="btn btn-update-course"
-                                                        disabled={isSubmitting}
-                                                    >
-                                                        {isSubmitting && <span className="spinner-border spinner-border-sm me-2"></span>}
-                                                        <i className="fas fa-save me-2"></i>
-                                                        Perbarui Pertanyaan
-                                                    </button>
-                                                )}
                                             </div>
                                         </form>
                                     </div>

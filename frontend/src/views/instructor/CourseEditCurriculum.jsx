@@ -42,6 +42,7 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import { useDebouncedCallback } from "../../utils/useOptimization";  // ✨ PHASE 4.170: Auto-save utility
+import { getMediaUrl } from "../../utils/constants";
 
 // Styles
 import "./CourseEditCurriculum.css";
@@ -749,8 +750,14 @@ function SortableLessonItem({
     setLessonLinkInputs, // ✨ PHASE 4.175: Setter for temporary link inputs
     formatSecondsToHMS, // ✨ PHASE 4.198: Format seconds to hh:mm:ss
     extractedDuration, // ✨ PHASE 4.204: Extracted duration state for display
-    setExtractedDuration // ✨ PHASE 4.204: Setter for extracted duration state
+    setExtractedDuration, // ✨ PHASE 4.204: Setter for extracted duration state
+    isElearningScorm,
+    onPreviewScorm
 }) {
+    const isItemScorm = isElearningScorm || Boolean(item?.learning_module_id) || Boolean(item?.learning_module_info) || item?.file_type === 'scorm';
+    const currentSeconds = Number(item?.duration_seconds) || 0;
+    const currentJP = currentSeconds > 0 ? Math.ceil(currentSeconds / 2700) : 0;
+
     const {
         attributes,
         listeners,
@@ -822,9 +829,21 @@ function SortableLessonItem({
                         </div>
                         
                         <span className="lesson-number-badge">
-                            <i className="fas fa-play-circle me-1"></i>
+                            <i className={`fas ${isItemScorm ? 'fa-cubes' : 'fa-play-circle'} me-1`}></i>
                             Pelajaran {itemIndex + 1}
                         </span>
+                        {isItemScorm && (
+                            <>
+                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle ms-1" style={{ fontSize: "11px", padding: "4px 8px" }}>
+                                    <i className="fas fa-cube me-1"></i>
+                                    SCORM 1.2
+                                </span>
+                                <span className={`badge ${currentJP > 0 ? 'bg-teal text-white' : 'bg-warning-subtle text-dark border border-warning-subtle'} ms-1`} style={{ fontSize: "11px", padding: "4px 8px" }}>
+                                    <i className="fas fa-graduation-cap me-1"></i>
+                                    {currentJP > 0 ? `${currentJP} JP` : '0 JP'}
+                                </span>
+                            </>
+                        )}
                         <h6 className="mb-0 lesson-title-preview">
                             {item?.title || "Pelajaran Tanpa Judul"}
                         </h6>
@@ -893,10 +912,8 @@ function SortableLessonItem({
                             )}
                         </div>
 
-                        {/* ✨ PHASE 4.44: Duration Display and Edit Section - Above form-check */}
-                        {/* ✨ PHASE 4.62: Support both Google Drive and YouTube links for duration display */}
-                        {/* ✨ PHASE 4.110.1: Also show duration section for uploaded files */}
-                        {(item?.gdriveLink || item?.youtubeLink || item?.uploadedFile) && (
+                        {/* ✨ Duration Display and Edit Section - Standard Video Only */}
+                        {!isItemScorm && (item?.gdriveLink || item?.youtubeLink || item?.uploadedFile) && (
                             <div className="mb-3 mt-3">
                                 <div className="duration-display-section p-3 bg-light border rounded" style={{borderLeft: '4px solid #0f766e'}}>
                                     <div className="d-flex justify-content-between align-items-center">
@@ -1032,32 +1049,183 @@ function SortableLessonItem({
                             </div>
                         )}
 
-                        {/* ✨ PHASE 4.70: Display duration validation error if present */}
-                        {validationState.errors[`item_${variantIndex}_${itemIndex}_duration`] && (
+                        {/* ✨ Display duration validation error if present (standard video only) */}
+                        {!isItemScorm && validationState.errors[`item_${variantIndex}_${itemIndex}_duration`] && (
                             <div className="curriculum-invalid-feedback mt-2">
                                 <i className="fas fa-exclamation-circle me-1"></i>
                                 {validationState.errors[`item_${variantIndex}_${itemIndex}_duration`]}
                             </div>
                         )}
 
-                        <div className="form-check" style={{paddingLeft: 0, marginLeft: 0}}>
+                        {/* ✨ SCORM Jam Pelajaran (JP) Configuration */}
+                        {isItemScorm && (
+                            <div className="scorm-jp-section p-3 mb-2 bg-light border rounded-3" style={{ borderLeft: '4px solid #0f766e' }}>
+                                <div className="d-flex align-items-center justify-content-between mb-2">
+                                    <label className="form-label mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                                        <i className="fas fa-graduation-cap text-teal"></i>
+                                        <span>Alokasi Jam Pelajaran (JP)</span>
+                                    </label>
+                                    <span className={`badge ${currentJP > 0 ? 'bg-teal text-white' : 'bg-secondary text-white'}`} style={{ fontSize: '0.85rem', padding: '0.4rem 0.65rem' }}>
+                                        <i className="fas fa-award me-1"></i>
+                                        {currentJP > 0 ? `${currentJP} JP (${Math.floor(currentSeconds / 3600)}j ${Math.floor((currentSeconds % 3600) / 60)}m)` : 'Belum Diatur (0 JP)'}
+                                    </span>
+                                </div>
+
+                                <p className="text-muted small mb-2.5">
+                                    Tentukan bobot Jam Pelajaran untuk modul SCORM ini (standar <strong>1 JP = 45 menit</strong>). Alokasi ini akan otomatis diakumulasikan ke total JP kursus.
+                                </p>
+
+                                {/* Custom JP or Hour/Minute Input */}
+                                <div className="row g-3 align-items-end pt-1">
+                                    <div className="col-sm-5">
+                                        <label className="form-label small fw-semibold text-dark mb-1.5 d-flex align-items-center gap-1">
+                                            <i className="fas fa-edit text-teal small"></i>
+                                            <span>Set Jumlah JP:</span>
+                                        </label>
+                                        <div className="input-group input-group-sm">
+                                            <input
+                                                type="number"
+                                                className="form-control scorm-jp-input"
+                                                min="0"
+                                                max="100"
+                                                placeholder="Contoh: 2"
+                                                value={currentJP > 0 ? currentJP : ''}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value) || 0;
+                                                    const secs = val * 2700;
+                                                    handleDurationInput(variantIndex, itemIndex, secs.toString());
+                                                }}
+                                                disabled={uiState.isSubmitting}
+                                            />
+                                            <span className="input-group-text fw-bold text-teal">JP</span>
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-7">
+                                        <label className="form-label small fw-semibold text-dark mb-1.5 d-flex align-items-center gap-1">
+                                            <i className="fas fa-clock text-teal small"></i>
+                                            <span>Atau Durasi (Jam & Menit):</span>
+                                        </label>
+                                        <div className="d-flex gap-1.5">
+                                            <div className="input-group input-group-sm">
+                                                <input
+                                                    type="number"
+                                                    className="form-control scorm-jp-input"
+                                                    min="0"
+                                                    max="99"
+                                                    placeholder="0"
+                                                    value={currentSeconds ? Math.floor(currentSeconds / 3600) : ''}
+                                                    onChange={(e) => {
+                                                        const hours = parseInt(e.target.value) || 0;
+                                                        const currentMins = currentSeconds ? Math.floor((currentSeconds % 3600) / 60) : 0;
+                                                        const total = (hours * 3600) + (currentMins * 60);
+                                                        handleDurationInput(variantIndex, itemIndex, total.toString());
+                                                    }}
+                                                    disabled={uiState.isSubmitting}
+                                                />
+                                                <span className="input-group-text text-muted">jam</span>
+                                            </div>
+                                            <div className="input-group input-group-sm">
+                                                <input
+                                                    type="number"
+                                                    className="form-control scorm-jp-input"
+                                                    min="0"
+                                                    max="59"
+                                                    placeholder="0"
+                                                    value={currentSeconds ? Math.floor((currentSeconds % 3600) / 60) : ''}
+                                                    onChange={(e) => {
+                                                        const minutes = parseInt(e.target.value) || 0;
+                                                        const currentHours = currentSeconds ? Math.floor(currentSeconds / 3600) : 0;
+                                                        const total = (currentHours * 3600) + (minutes * 60);
+                                                        handleDurationInput(variantIndex, itemIndex, total.toString());
+                                                    }}
+                                                    disabled={uiState.isSubmitting}
+                                                />
+                                                <span className="input-group-text text-muted">menit</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="form-check curriculum-preview-check">
                             <input
                                 type="checkbox"
                                 className="form-check-input"
                                 id={`preview-${variantIndex}-${itemIndex}`}
                                 checked={item?.preview || false}
                                 onChange={(e) => handleLessonChange(variantIndex, itemIndex, "preview", e.target.checked)}
-                                style={{marginLeft: 0}}
                             />
-                            <label className="form-check-label" htmlFor={`preview-${variantIndex}-${itemIndex}`} style={{paddingLeft: 0}}>
+                            <label className="form-check-label" htmlFor={`preview-${variantIndex}-${itemIndex}`}>
                                 Izinkan Pratinjau (Siswa dapat melihat pelajaran ini sebelum mendaftar)
                             </label>
                         </div>
 
                     </div>
 
-                    {/* Right Column: File Upload and Preview */}
+                    {/* Right Column: SCORM Module Card OR File Upload and Preview */}
                     <div className="col-md-6">
+                        {isItemScorm ? (
+                            <div className="scorm-module-card bg-white shadow-sm h-100 d-flex flex-column justify-content-between p-4">
+                                <div className="px-1">
+                                    <div className="d-flex align-items-center justify-content-between mb-3">
+                                        <span className="badge px-3 py-1.5 text-white fw-semibold bg-teal">
+                                            <i className="fas fa-cubes me-1.5"></i>
+                                            Paket Modul {item?.learning_module_info?.module_type?.toUpperCase() || course?.course_type?.toUpperCase() || 'SCORM 1.2'}
+                                        </span>
+                                        <span className="badge bg-light text-secondary border px-2.5 py-1">
+                                            <i className="fas fa-check-circle text-success me-1"></i>
+                                            Terhubung
+                                        </span>
+                                    </div>
+
+                                    <h6 className="fw-bold text-dark mb-2">
+                                        {item?.learning_module_info?.judul || course?.learning_module?.judul || course?.title || "Paket Modul SCORM"}
+                                    </h6>
+                                    <p className="text-secondary small mb-3">
+                                        Pelajaran ini dijalankan secara interaktif melalui player web SCORM dengan pelacakan data CMI (status penyelesaian, waktu sesi, dan nilai evaluasi).
+                                    </p>
+
+                                    <div className="px-3 py-2 rounded-3 bg-light border mb-3 small">
+                                        <div className="d-flex justify-content-between py-2 border-bottom align-items-center">
+                                            <span className="text-muted"><i className="fas fa-file-code me-1.5 text-primary"></i> Berkas Utama:</span>
+                                            <code className="text-dark fw-bold px-2 py-0.5 bg-white rounded border">{item?.learning_module_info?.entry_file || course?.learning_module?.entry_file || "index.html"}</code>
+                                        </div>
+                                        <div className="d-flex justify-content-between py-2 border-bottom align-items-center">
+                                            <span className="text-muted"><i className="fas fa-sliders-h me-1.5 text-info"></i> Model Pelacakan:</span>
+                                            <span className="fw-semibold text-secondary">SCORM 1.2 RTE (cmi.core)</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between py-2 border-bottom align-items-center">
+                                            <span className="text-muted"><i className="fas fa-graduation-cap me-1.5 text-teal"></i> Alokasi Beban Belajar:</span>
+                                            <span className="fw-bold text-teal">
+                                                {currentJP > 0 ? `${currentJP} JP (${Math.floor(currentSeconds / 3600)}j ${Math.floor((currentSeconds % 3600) / 60)}m)` : '0 JP (Belum Diatur)'}
+                                            </span>
+                                        </div>
+                                        <div className="d-flex justify-content-between py-2 align-items-center">
+                                            <span className="text-muted"><i className="fas fa-tachometer-alt me-1.5 text-teal"></i> Status Sesi:</span>
+                                            <span className="text-success fw-semibold">Otomatis via Sesi Siswa</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="d-flex align-items-center justify-content-between pt-3 mt-2 border-top px-1">
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2 px-3 py-1.5"
+                                        onClick={() => onPreviewScorm && onPreviewScorm(item)}
+                                        title="Uji coba pemutar SCORM langsung di halaman ini"
+                                    >
+                                        <i className="fas fa-play text-teal" style={{ fontSize: "11px" }}></i>
+                                        <span>Pratinjau Modul SCORM</span>
+                                    </button>
+                                    <small className="text-muted fst-italic">
+                                        <i className="fas fa-shield-alt text-success me-1"></i>
+                                        RTE Bridge Aktif
+                                    </small>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
                         {/* ✨ PHASE 4.173: Video Preview Section - Shows currently selected media */}
                         {(item?.youtubeLink || item?.uploadedFile) && (
                             <div className="mb-4">
@@ -1310,18 +1478,28 @@ function SortableLessonItem({
                                 </div>
                             </div>
                         )}
-
+                        </>
+                    )}
                     </div>
                 </div>
 
-                {/* ✨ PHASE 4.143: Lesson Completion Question Editor */}
-                <LessonCompletionQuestionEditor 
-                    variantItemId={item?.variant_item_id}
-                    onQuestionSaved={(question) => {
-                        // Refresh question data if needed
-                        console.log('Question saved:', question);
-                    }}
-                />
+                {/* Bottom Section: SCORM Evaluation Alert OR Lesson Completion Question Editor */}
+                {isItemScorm ? (
+                    <div className="alert alert-light border rounded-2 p-2.5 mt-3 mb-0 d-flex align-items-center gap-2 small text-secondary" style={{ backgroundColor: "#f8fafc" }}>
+                        <i className="fas fa-info-circle text-teal fs-5" style={{ color: "#0f766e" }}></i>
+                        <div>
+                            <strong>Pelacakan Kuis & Kelulusan Terintegrasi:</strong> Kuis interaktif dan penilaian evaluasi telah terintegrasi langsung di dalam paket e-learning SCORM ini. Nilai skor (<code>cmi.core.score.raw</code>) dan status kelulusan (<code>cmi.core.lesson_status</code>) akan disinkronkan secara otomatis saat siswa menyelesaikan materi.
+                        </div>
+                    </div>
+                ) : (
+                    <LessonCompletionQuestionEditor 
+                        variantItemId={item?.variant_item_id}
+                        onQuestionSaved={(question) => {
+                            // Refresh question data if needed
+                            console.log('Question saved:', question);
+                        }}
+                    />
+                )}
             </div>
         </div>
     );
@@ -1376,6 +1554,112 @@ function CourseEditCurriculum() {
             items: [{ title: "", description: "", file: "", preview: false }],
         },
     ]);
+
+    // ✨ SCORM E-Learning detection
+    const isElearningScorm = course?.course_type === 'scorm_12' || 
+                             course?.course_type === 'scorm_2004' || 
+                             course?.course_type === 'h5p' || 
+                             Boolean(course?.learning_module_id || course?.learning_module);
+
+    // ✨ State for interactive SCORM Player preview modal
+    const [scormPreviewModal, setScormPreviewModal] = useState({
+        isOpen: false,
+        title: "",
+        url: "",
+        moduleType: "scorm_12",
+        isFullscreen: false
+    });
+    const [scormPlayerStatus, setScormPlayerStatus] = useState("not attempted");
+    const [scormPlayerScore, setScormPlayerScore] = useState(null);
+    const scormIframeRef = useRef(null);
+
+    // SCORM 1.2 RTE API bridge for interactive preview testing by instructor
+    useEffect(() => {
+        if (!scormPreviewModal.isOpen) return;
+
+        const cmi = {
+            "cmi.core.student_id": "instructor_preview",
+            "cmi.core.student_name": "Instruktur Penguji",
+            "cmi.core.lesson_status": scormPlayerStatus,
+            "cmi.core.score.raw": scormPlayerScore !== null ? String(scormPlayerScore) : "0",
+            "cmi.core.lesson_location": "",
+            "cmi.core.session_time": "00:00:00",
+            "cmi.suspend_data": "",
+            "cmi.core.entry": "ab-initio",
+            "cmi.core.exit": "",
+            "cmi.core.total_time": "00:00:00",
+            "cmi.core.lesson_mode": "normal"
+        };
+
+        window.API = {
+            LMSInitialize: (param) => {
+                console.log("[Curriculum SCORM RTE] LMSInitialize:", param);
+                return "true";
+            },
+            LMSGetValue: (element) => {
+                const val = cmi[element] !== undefined ? cmi[element] : "";
+                console.log(`[Curriculum SCORM RTE] LMSGetValue(${element}) ->`, val);
+                return val;
+            },
+            LMSSetValue: (element, value) => {
+                console.log(`[Curriculum SCORM RTE] LMSSetValue(${element}, ${value})`);
+                cmi[element] = String(value);
+                if (element === "cmi.core.lesson_status") {
+                    setScormPlayerStatus(String(value).toLowerCase());
+                }
+                if (element === "cmi.core.score.raw") {
+                    setScormPlayerScore(Number(value) || 0);
+                }
+                return "true";
+            },
+            LMSCommit: (param) => {
+                console.log("[Curriculum SCORM RTE] LMSCommit:", param);
+                return "true";
+            },
+            LMSFinish: (param) => {
+                console.log("[Curriculum SCORM RTE] LMSFinish:", param);
+                return "true";
+            },
+            LMSGetLastError: () => "0",
+            LMSGetErrorString: () => "No error",
+            LMSGetDiagnostic: () => "No error"
+        };
+
+        return () => {
+            delete window.API;
+        };
+    }, [scormPreviewModal.isOpen]);
+
+    const handleOpenScormPreview = (item) => {
+        const lm = item?.learning_module_info || course?.learning_module;
+        let url = "";
+        if (lm?.player_url) {
+            url = getMediaUrl(lm.player_url);
+        } else if (lm?.id) {
+            url = getMediaUrl(`/media/learning_modules/extracted_${lm.id}/${lm.entry_file || 'index.html'}`);
+        } else if (course?.learning_module_id) {
+            url = getMediaUrl(`/media/learning_modules/extracted_${course.learning_module_id}/index.html`);
+        }
+
+        if (!url) {
+            Toast().fire({
+                icon: "warning",
+                title: "Modul SCORM Belum Siap",
+                text: "URL pemutar modul SCORM tidak ditemukan. Pastikan modul SCORM telah berhasil diunggah."
+            });
+            return;
+        }
+
+        setScormPlayerStatus("not attempted");
+        setScormPlayerScore(null);
+        setScormPreviewModal({
+            isOpen: true,
+            title: item?.title || lm?.judul || course?.title || "Pratinjau Modul SCORM",
+            url: url,
+            moduleType: lm?.module_type || course?.course_type || "scorm_12",
+            isFullscreen: false
+        });
+    };
 
     // UI state consolidated
     const [uiState, setUiState] = useState({
@@ -1738,30 +2022,32 @@ function CourseEditCurriculum() {
             }
         }
 
-        // ✨ PHASE 4.110: Validate media sources - accept Google Drive, YouTube, or Uploaded File
-        const hasGoogleDriveLink = item.gdriveLink && item.gdriveLink.trim().length > 0;
-        const hasYouTubeLink = item.youtubeLink && item.youtubeLink.trim().length > 0;
-        const hasUploadedFile = item.uploadedFile && item.uploadedFile.trim().length > 0;
-        const hasValidLink = hasGoogleDriveLink || hasYouTubeLink || hasUploadedFile;
-        const isExistingItem = item.variant_item_id || item.id;
-        
-        if (!hasValidLink && !isExistingItem) {
-            itemErrors.mediaLink = 'Silakan tambahkan link media pelajaran (Google Drive, YouTube, atau Upload File)';
-        } else if (hasGoogleDriveLink && !item.gdriveLink.includes('drive.google.com') && !item.gdriveLink.includes('drive.usercontent.google.com')) {
-            // Validate Google Drive format - only if Google Drive is explicitly selected
-            itemErrors.gdriveLink = 'Link Google Drive harus dari drive.google.com';
-        } else if (hasYouTubeLink && !item.youtubeLink.includes('youtube.com') && !item.youtubeLink.includes('youtu.be')) {
-            // ✨ PHASE 4.73: Validate YouTube format - only if YouTube is explicitly selected
-            itemErrors.youtubeLink = 'Link YouTube harus dari youtube.com atau youtu.be';
-        }
+        // ✨ SCORM Lesson: Content and duration are managed directly by the SCORM package & RTE API
+        const isItemScorm = isElearningScorm || Boolean(item.learning_module_id) || Boolean(item.learning_module_info) || item.file_type === 'scorm';
 
-        // ✨ PHASE 4.110.1: Validate duration for all media types
-        // Duration is automatically extracted from uploaded videos by the backend
-        // Duration must be set and greater than 0 for all media (Google Drive, YouTube, or Uploaded Files)
-        if (hasGoogleDriveLink || hasYouTubeLink || hasUploadedFile) {
-            const durationSeconds = item.duration_seconds || 0;
-            if (!durationSeconds || durationSeconds === 0) {
-                itemErrors.duration = 'Durasi video harus diisi (tidak boleh 0m 0s). Durasi diekstraksi otomatis saat mengunggah file, atau gunakan tombol "Edit" untuk memasukkan durasi manual.';
+        if (!isItemScorm) {
+            // Validate media sources for standard video - accept Google Drive, YouTube, or Uploaded File
+            const hasGoogleDriveLink = item.gdriveLink && item.gdriveLink.trim().length > 0;
+            const hasYouTubeLink = item.youtubeLink && item.youtubeLink.trim().length > 0;
+            const hasUploadedFile = item.uploadedFile && item.uploadedFile.trim().length > 0;
+            const hasValidLink = hasGoogleDriveLink || hasYouTubeLink || hasUploadedFile;
+            const isExistingItem = item.variant_item_id || item.id;
+            
+            if (!hasValidLink && !isExistingItem) {
+                itemErrors.mediaLink = 'Silakan tambahkan link media pelajaran (Google Drive, YouTube, atau Upload File)';
+            } else if (hasGoogleDriveLink && !item.gdriveLink.includes('drive.google.com') && !item.gdriveLink.includes('drive.usercontent.google.com')) {
+                // Validate Google Drive format - only if Google Drive is explicitly selected
+                itemErrors.gdriveLink = 'Link Google Drive harus dari drive.google.com';
+            } else if (hasYouTubeLink && !item.youtubeLink.includes('youtube.com') && !item.youtubeLink.includes('youtu.be')) {
+                itemErrors.youtubeLink = 'Link YouTube harus dari youtube.com atau youtu.be';
+            }
+
+            // Validate duration for all standard media types
+            if (hasGoogleDriveLink || hasYouTubeLink || hasUploadedFile) {
+                const durationSeconds = item.duration_seconds || 0;
+                if (!durationSeconds || durationSeconds === 0) {
+                    itemErrors.duration = 'Durasi video harus diisi (tidak boleh 0m 0s). Durasi diekstraksi otomatis saat mengunggah file, atau gunakan tombol "Edit" untuk memasukkan durasi manual.';
+                }
             }
         }
 
@@ -1896,6 +2182,12 @@ function CourseEditCurriculum() {
                 return orderA - orderB;
             });
             
+            const courseData = courseResponse.data;
+            const isCourseScorm = courseData?.course_type === 'scorm_12' || 
+                                  courseData?.course_type === 'scorm_2004' || 
+                                  courseData?.course_type === 'h5p' || 
+                                  Boolean(courseData?.learning_module_id || courseData?.learning_module);
+
             const formattedVariants = sortedCurriculumData.length > 0 ? sortedCurriculumData.map((variant, index) => {
                 // Sort variant items (lessons) by order field
                 const sortedItems = (variant.variant_items || variant.items || []).sort((a, b) => {
@@ -1916,6 +2208,11 @@ function CourseEditCurriculum() {
                         const isUploadedFile = fileUrl.includes('/media/') || 
                                              /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl); // Check for video extensions
                         
+                        // ✨ Detect SCORM learning module
+                        const itemLmInfo = item.learning_module_info || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module : courseData.learning_module);
+                        const itemLmId = item.learning_module_id || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module.id : (typeof item.learning_module === 'number' ? item.learning_module : (courseData.learning_module_id || courseData.learning_module?.id)));
+                        const isItemScorm = isCourseScorm || Boolean(itemLmId) || item.file_type === 'scorm';
+
                         return {
                             title: item.title || "",
                             description: item.description || "",
@@ -1927,16 +2224,42 @@ function CourseEditCurriculum() {
                             order: item.order !== undefined ? item.order : itemIndex, // ✅ Preserve lesson order
                             duration_seconds: item.duration_seconds || null, // ✨ PHASE 4.43.9: Preserve duration_seconds from backend
                             duration_formatted: item.content_duration || null, // ✨ PHASE 4.43.9: Also preserve formatted duration for display
-                            // ✨ PHASE 4.187: Load saved media_source from backend to remember user's source selection
-                            media_source: item.media_source || null
+                            media_source: item.media_source || (isItemScorm ? 'scorm' : null),
+                            learning_module_id: itemLmId || null,
+                            learning_module_info: itemLmInfo ? {
+                                id: itemLmInfo.id,
+                                judul: itemLmInfo.judul || courseData.title,
+                                module_type: itemLmInfo.module_type || courseData.course_type,
+                                player_url: itemLmInfo.player_url,
+                                entry_file: itemLmInfo.entry_file || "index.html"
+                            } : null,
+                            file_type: isItemScorm ? 'scorm' : (item.file_type || null)
                         };
                     })
                 };
             }) : [
                 {
-                    title: "",
+                    title: isCourseScorm ? "Modul Utama" : "",
                     order: 0,
-                    items: [{ title: "", description: "", youtubeLink: "", preview: false, order: 0, duration_seconds: null, duration_formatted: null, media_source: 'upload' }],
+                    items: [{ 
+                        title: isCourseScorm ? (courseData.title || "Pelajaran 1") : "", 
+                        description: "", 
+                        youtubeLink: "", 
+                        preview: false, 
+                        order: 0, 
+                        duration_seconds: null, 
+                        duration_formatted: null, 
+                        media_source: isCourseScorm ? 'scorm' : 'upload',
+                        learning_module_id: isCourseScorm ? (courseData.learning_module_id || courseData.learning_module?.id || null) : null,
+                        learning_module_info: isCourseScorm && courseData.learning_module ? {
+                            id: courseData.learning_module.id,
+                            judul: courseData.learning_module.judul || courseData.title,
+                            module_type: courseData.learning_module.module_type || courseData.course_type,
+                            player_url: courseData.learning_module.player_url,
+                            entry_file: courseData.learning_module.entry_file || "index.html"
+                        } : null,
+                        file_type: isCourseScorm ? 'scorm' : null
+                    }],
                 }
             ];
             
@@ -2449,8 +2772,12 @@ function CourseEditCurriculum() {
                 return updated;
             });
             
-            // ✨ PHASE 4.70: Removed Toast notification on every input change for better UX
-            // Notification will only show when user clicks "Selesai" button
+            trackFormChanges();
+            setUiState(prev => ({
+                ...prev,
+                isDirty: true,
+                hasUnsavedChanges: true
+            }));
 
         } catch (error) {
             console.error('[Curriculum] Error setting duration:', error);
@@ -2611,7 +2938,17 @@ function CourseEditCurriculum() {
                         preview: false,
                         order: 0, // ✅ Assign order to new lesson
                         duration_seconds: null,  // ✨ PHASE 4.43.9: Initialize duration_seconds for new items
-                        duration_formatted: null  // ✨ PHASE 4.44: Initialize duration_formatted for new items
+                        duration_formatted: null,  // ✨ PHASE 4.44: Initialize duration_formatted for new items
+                        media_source: isElearningScorm ? 'scorm' : 'upload',
+                        learning_module_id: isElearningScorm ? (course.learning_module_id || course.learning_module?.id || null) : null,
+                        learning_module_info: isElearningScorm && course.learning_module ? {
+                            id: course.learning_module.id,
+                            judul: course.learning_module.judul || course.title,
+                            module_type: course.learning_module.module_type || course.course_type,
+                            player_url: course.learning_module.player_url,
+                            entry_file: course.learning_module.entry_file || "index.html"
+                        } : null,
+                        file_type: isElearningScorm ? 'scorm' : null
                     }],
                 },
             ];
@@ -2711,7 +3048,16 @@ function CourseEditCurriculum() {
             order: newOrder, // ✅ Assign order to new lesson
             duration_seconds: null,  // ✨ PHASE 4.43.9: Initialize duration_seconds for new items
             duration_formatted: null,  // ✨ PHASE 4.44: Initialize duration_formatted for new items
-            media_source: 'upload'  // Default to upload for new items
+            media_source: isElearningScorm ? 'scorm' : 'upload',
+            learning_module_id: isElearningScorm ? (course.learning_module_id || course.learning_module?.id || null) : null,
+            learning_module_info: isElearningScorm && course.learning_module ? {
+                id: course.learning_module.id,
+                judul: course.learning_module.judul || course.title,
+                module_type: course.learning_module.module_type || course.course_type,
+                player_url: course.learning_module.player_url,
+                entry_file: course.learning_module.entry_file || "index.html"
+            } : null,
+            file_type: isElearningScorm ? 'scorm' : null
         });
 
         setVariants(updatedVariants);
@@ -2941,6 +3287,8 @@ function CourseEditCurriculum() {
                     item.gdriveLink ||
                     item.youtubeLink ||
                     item.uploadedFile ||
+                    item.learning_module_id ||
+                    item.learning_module_info ||
                     item.variant_item_id
                 );
                 return hasTitle || hasNonEmptyLessons || variant.variant_id;
@@ -2954,6 +3302,8 @@ function CourseEditCurriculum() {
                     item.gdriveLink ||
                     item.youtubeLink ||
                     item.uploadedFile ||
+                    item.learning_module_id ||
+                    item.learning_module_info ||
                     item.variant_item_id
                 )
             }));
@@ -2965,16 +3315,29 @@ function CourseEditCurriculum() {
 
             console.log("[AutoSave] Saving curriculum after file upload...");
 
-            // Prepare form data (same as handleSubmit)
+            // Prepare form data
             const formData = new FormData();
-            formData.append("title", course.title);
-            formData.append("description", ckEditorData);
-            formData.append("category", course.category);
-            formData.append("language", course.language);
-            formData.append("level", course.level);
-            formData.append("price", course.price);
-            formData.append("file", course.file);
-            formData.append("teacher", UserData()?.teacher_id);
+            if (course.title) formData.append("title", course.title);
+            if (ckEditorData !== undefined && ckEditorData !== null) formData.append("description", ckEditorData);
+            
+            const categoryId = course.category?.id || (typeof course.category === 'number' || (typeof course.category === 'string' && course.category !== '[object Object]') ? course.category : null);
+            if (categoryId) {
+                formData.append("category", categoryId);
+            }
+            if (course.level && course.level !== 'undefined') formData.append("level", course.level);
+            if (course.language && course.language !== 'undefined') formData.append("language", course.language);
+            if (course.price !== undefined && course.price !== null && course.price !== 'undefined') {
+                formData.append("price", course.price);
+            }
+            if (course.file && typeof course.file === 'string' && course.file !== 'null' && course.file !== 'undefined') {
+                formData.append("file", course.file);
+            } else if (course.file && typeof course.file === 'object') {
+                formData.append("file", course.file);
+            }
+            const teacherId = UserData()?.teacher_id || course.teacher?.id || course.teacher;
+            if (teacherId) {
+                formData.append("teacher", teacherId);
+            }
 
             if (course.image && typeof course.image !== "string") {
                 formData.append("image", course.image);
@@ -3017,6 +3380,10 @@ function CourseEditCurriculum() {
                         if (item.variant_item_id) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][variant_item_id]`, item.variant_item_id);
                         }
+                        const targetLmId = item.learning_module_id || (isElearningScorm ? (course.learning_module_id || course.learning_module?.id) : null);
+                        if (targetLmId) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][learning_module_id]`, targetLmId);
+                        }
                     });
                 }
             });
@@ -3055,6 +3422,8 @@ function CourseEditCurriculum() {
                     item.gdriveLink ||
                     item.youtubeLink ||
                     item.uploadedFile ||
+                    item.learning_module_id ||
+                    item.learning_module_info ||
                     item.variant_item_id
                 );
                 return hasTitle || hasNonEmptyLessons || variant.variant_id;
@@ -3068,19 +3437,34 @@ function CourseEditCurriculum() {
                     item.gdriveLink ||
                     item.youtubeLink ||
                     item.uploadedFile ||
+                    item.learning_module_id ||
+                    item.learning_module_info ||
                     item.variant_item_id
                 )
             }));
 
             const formData = new FormData();
-            formData.append("title", course.title);
-            formData.append("description", ckEditorData);
-            formData.append("category", course.category);
-            formData.append("language", course.language);
-            formData.append("level", course.level);
-            formData.append("price", course.price);
-            formData.append("file", course.file);
-            formData.append("teacher", UserData()?.teacher_id);
+            if (course.title) formData.append("title", course.title);
+            if (ckEditorData !== undefined && ckEditorData !== null) formData.append("description", ckEditorData);
+            
+            const categoryId = course.category?.id || (typeof course.category === 'number' || (typeof course.category === 'string' && course.category !== '[object Object]') ? course.category : null);
+            if (categoryId) {
+                formData.append("category", categoryId);
+            }
+            if (course.level && course.level !== 'undefined') formData.append("level", course.level);
+            if (course.language && course.language !== 'undefined') formData.append("language", course.language);
+            if (course.price !== undefined && course.price !== null && course.price !== 'undefined') {
+                formData.append("price", course.price);
+            }
+            if (course.file && typeof course.file === 'string' && course.file !== 'null' && course.file !== 'undefined') {
+                formData.append("file", course.file);
+            } else if (course.file && typeof course.file === 'object') {
+                formData.append("file", course.file);
+            }
+            const teacherId = UserData()?.teacher_id || course.teacher?.id || course.teacher;
+            if (teacherId) {
+                formData.append("teacher", teacherId);
+            }
 
             if (course.image && typeof course.image !== "string") {
                 formData.append("image", course.image);
@@ -3121,6 +3505,10 @@ function CourseEditCurriculum() {
                         if (item.variant_item_id) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][variant_item_id]`, item.variant_item_id);
                         }
+                        const targetLmId = item.learning_module_id || (isElearningScorm ? (course.learning_module_id || course.learning_module?.id) : null);
+                        if (targetLmId) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][learning_module_id]`, targetLmId);
+                        }
                     });
                 }
             });
@@ -3134,38 +3522,11 @@ function CourseEditCurriculum() {
                 isDirty: false,
                 hasUnsavedChanges: false
             }));
-            
-            // ✨ PHASE 4.186: Show Toast notification when auto-save completes
-            Toast().fire({
-                icon: "success",
-                title: "Kurikulum Tersimpan",
-                text: "Perubahan kurikulum telah disimpan otomatis",
-                timer: 1500,
-                showConfirmButton: false,
-                position: "top-end"
-            });
-            
-            setTimeout(() => {
-                setAutoSaveStatus("idle");
-            }, 2000);
+            // ✨ Timestamp status tetap dipertahankan agar pengguna tahu kapan terakhir tersimpan
         } catch (error) {
-            console.error("[AutoSave] Error:", error);
+            console.error("[AutoSave] Error:", error?.response?.data || error);
             setAutoSaveStatus("error");
-            
-            // ✨ PHASE 4.186: Show error notification on auto-save failure
-            Toast().fire({
-                icon: "error",
-                title: "Gagal Menyimpan",
-                text: "Terjadi kesalahan saat menyimpan kurikulum. Sistem akan mencoba lagi.",
-                timer: 2000,
-                position: "top-end"
-            });
-            
-            setTimeout(() => {
-                if (uiState.isDirty) {
-                    performAutoSave();
-                }
-            }, 5000);
+            // Do NOT spam loud toast popups or loop infinitely via setTimeout
         }
     };
     
@@ -3205,6 +3566,9 @@ function CourseEditCurriculum() {
                     (item.description && item.description.trim().length > 0) || 
                     item.gdriveLink ||
                     item.youtubeLink ||  // ✨ PHASE 4.73: Include YouTube links
+                    item.uploadedFile ||
+                    item.learning_module_id ||
+                    item.learning_module_info ||
                     item.variant_item_id // Keep if it's already saved in database
                 );
                 return hasTitle || hasNonEmptyLessons || variant.variant_id; // Keep if already saved in database
@@ -3218,6 +3582,9 @@ function CourseEditCurriculum() {
                     (item.description && item.description.trim().length > 0) ||
                     item.gdriveLink ||
                     item.youtubeLink ||  // ✨ PHASE 4.73: Include YouTube links
+                    item.uploadedFile ||
+                    item.learning_module_id ||
+                    item.learning_module_info ||
                     item.variant_item_id // Keep if already saved in database
                 )
             }));
@@ -3276,14 +3643,27 @@ function CourseEditCurriculum() {
 
             // Prepare form data
             const formData = new FormData();
-            formData.append("title", course.title);
-            formData.append("description", ckEditorData);
-            formData.append("category", course.category);
-            formData.append("language", course.language);
-            formData.append("level", course.level);
-            formData.append("price", course.price);
-            formData.append("file", course.file);
-            formData.append("teacher", UserData()?.teacher_id);
+            if (course.title) formData.append("title", course.title);
+            if (ckEditorData !== undefined && ckEditorData !== null) formData.append("description", ckEditorData);
+            
+            const categoryId = course.category?.id || (typeof course.category === 'number' || (typeof course.category === 'string' && course.category !== '[object Object]') ? course.category : null);
+            if (categoryId) {
+                formData.append("category", categoryId);
+            }
+            if (course.level && course.level !== 'undefined') formData.append("level", course.level);
+            if (course.language && course.language !== 'undefined') formData.append("language", course.language);
+            if (course.price !== undefined && course.price !== null && course.price !== 'undefined') {
+                formData.append("price", course.price);
+            }
+            if (course.file && typeof course.file === 'string' && course.file !== 'null' && course.file !== 'undefined') {
+                formData.append("file", course.file);
+            } else if (course.file && typeof course.file === 'object') {
+                formData.append("file", course.file);
+            }
+            const teacherId = UserData()?.teacher_id || course.teacher?.id || course.teacher;
+            if (teacherId) {
+                formData.append("teacher", teacherId);
+            }
 
             if (course.image && typeof course.image !== "string") {
                 formData.append("image", course.image);
@@ -3330,6 +3710,12 @@ function CourseEditCurriculum() {
                         // Handle duration data for videos
                         if (item.duration_seconds) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][duration_seconds]`, item.duration_seconds);
+                        }
+                        
+                        // Handle learning_module_id for SCORM / e-learning module courses
+                        const targetLmId = item.learning_module_id || (isElearningScorm ? (course.learning_module_id || course.learning_module?.id) : null);
+                        if (targetLmId) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][learning_module_id]`, targetLmId);
                         }
                         
                         // Include variant_item_id for existing items
@@ -3419,7 +3805,9 @@ function CourseEditCurriculum() {
                             duration_seconds: item.duration_seconds,  // ✨ PHASE 4.43.9: Store duration in seconds
                             duration_formatted: item.content_duration,  // Store formatted duration for potential display
                             // ✨ PHASE 4.187: Load saved media_source from backend to remember user's source selection
-                            media_source: item.media_source || null
+                            media_source: item.media_source || (item.learning_module_id || isElearningScorm ? 'scorm' : null),
+                            learning_module_id: item.learning_module_id || (isElearningScorm ? (course.learning_module_id || course.learning_module?.id) : null),
+                            learning_module_info: item.learning_module_info || course.learning_module_info || null
                         };
                     })
                 };
@@ -3468,6 +3856,8 @@ function CourseEditCurriculum() {
                 hasUnsavedChanges: false,
                 lastSaved: new Date(),
             }));
+            setLastAutoSaveTime(new Date());
+            setAutoSaveStatus("saved");
 
             // ✨ PHASE 4.70: Only show save confirmation on curriculum page
             // Do NOT auto-request admin review here - that should only happen from Edit Course page
@@ -3499,6 +3889,12 @@ function CourseEditCurriculum() {
             });
         }
     };
+
+    // Total course duration & JP calculation
+    const totalCourseSeconds = (variants || []).reduce((acc, section) => {
+        return acc + (section.items || []).reduce((itemAcc, it) => itemAcc + (Number(it.duration_seconds) || 0), 0);
+    }, 0);
+    const totalCourseJP = totalCourseSeconds > 0 ? Math.ceil(totalCourseSeconds / 2700) : 0;
 
     // Show full-page loading spinner on initial load
     if (uiState.loading && !course.title) {
@@ -3580,6 +3976,57 @@ function CourseEditCurriculum() {
                             </div>
 
                             <form onSubmit={handleSubmit} className="form-body-modern" ref={formRef}>
+                                {/* ✨ SCORM Curriculum Banner */}
+                                {isElearningScorm && (
+                                    <div className="scorm-curriculum-banner mb-4 p-4 rounded-3 border">
+                                        <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                            <div className="d-flex align-items-start gap-3">
+                                                <div className="scorm-curriculum-icon bg-white p-3 rounded-3 shadow-sm text-teal d-flex align-items-center justify-content-center" style={{ width: "54px", height: "54px", fontSize: "24px" }}>
+                                                    <i className="fas fa-boxes-stacked"></i>
+                                                </div>
+                                                <div>
+                                                    <div className="d-flex flex-wrap align-items-center gap-2 mb-1.5">
+                                                        <span className="badge bg-teal text-white fw-bold px-2.5 py-1">
+                                                            E-Learning SCORM Terintegrasi
+                                                        </span>
+                                                        <span className="badge bg-white text-teal border border-teal-subtle px-2.5 py-1">
+                                                            {course?.learning_module?.module_type?.toUpperCase() || course?.course_type?.toUpperCase() || 'SCORM 1.2'}
+                                                        </span>
+                                                        <span className="badge bg-white text-dark border border-teal-subtle shadow-sm px-2.5 py-1">
+                                                            <i className="fas fa-graduation-cap me-1.5 text-teal"></i>
+                                                            Total Beban: <strong className="text-teal ms-1">{totalCourseJP} JP</strong>
+                                                            {totalCourseSeconds > 0 ? (
+                                                                <span className="text-muted ms-1">({Math.floor(totalCourseSeconds / 3600)}j {Math.floor((totalCourseSeconds % 3600) / 60)}m)</span>
+                                                            ) : (
+                                                                <span className="text-danger ms-1">(Belum diatur)</span>
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    <h5 className="fw-bold mb-1 text-dark">
+                                                        {course?.learning_module?.judul || course?.title || 'Paket SCORM E-Learning'}
+                                                    </h5>
+                                                    <p className="text-muted small mb-0">
+                                                        Kurikulum kursus ini berjalan dalam lingkungan modul interaktif SCORM. Pelajaran telah terhubung otomatis ke modul paket SCORM tanpa perlu mengunggah video manual.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-teal px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2"
+                                                    onClick={() => handleOpenScormPreview({
+                                                        title: course?.learning_module?.judul || course?.title,
+                                                        learning_module_info: course?.learning_module
+                                                    })}
+                                                >
+                                                    <i className="fas fa-play text-teal"></i>
+                                                    <span>Uji Coba Paket SCORM</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Submit Status Message */}
                                 {uiState.submitMessage && (
                                     <div className={`status-message ${uiState.submitStatus}`} style={{
@@ -3707,6 +4154,8 @@ function CourseEditCurriculum() {
                                                                                     formatSecondsToHMS={formatSecondsToHMS}  // ✨ PHASE 4.198: Format seconds to hh:mm:ss
                                                                                     extractedDuration={extractedDuration}  // ✨ PHASE 4.204: Extracted duration state
                                                                                     setExtractedDuration={setExtractedDuration}  // ✨ PHASE 4.204: Setter for extracted duration
+                                                                                    isElearningScorm={isElearningScorm}
+                                                                                    onPreviewScorm={handleOpenScormPreview}
                                                                                 />
                                                                             );
                                                                         })}
@@ -3748,33 +4197,32 @@ function CourseEditCurriculum() {
                                     <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
                                         {/* Auto-save status info on the left */}
                                         <div className="form-status-info">
-                                            {autoSaveStatus === "saving" && (
-                                                <div className="text-info small">
-                                                    <div className="spinner-border spinner-border-sm me-1" style={{ width: '14px', height: '14px', display: 'inline-block' }}></div>
-                                                    Menyimpan kurikulum...
+                                            {autoSaveStatus === "saving" ? (
+                                                <div className="text-info small d-flex align-items-center">
+                                                    <span className="spinner-border spinner-border-sm me-1.5" style={{ width: '13px', height: '13px', display: 'inline-block' }}></span>
+                                                    <span>Menyimpan kurikulum...</span>
                                                 </div>
-                                            )}
-                                            {autoSaveStatus === "saved" && (
-                                                <div className="text-success small">
-                                                    <i className="fas fa-check-circle me-1"></i>
-                                                    Kurikulum tersimpan
-                                                    {lastAutoSaveTime && (
-                                                        <span className="ms-1 text-muted">
-                                                            pada {lastAutoSaveTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                                                        </span>
-                                                    )}
+                                            ) : uiState.isDirty ? (
+                                                <div className="text-secondary small d-flex align-items-center">
+                                                    <span className="spinner-border spinner-border-sm text-warning me-1.5" style={{ width: '13px', height: '13px', display: 'inline-block' }}></span>
+                                                    <span>Menyimpan perubahan...</span>
                                                 </div>
-                                            )}
-                                            {autoSaveStatus === "error" && (
-                                                <div className="text-danger small">
-                                                    <i className="fas fa-exclamation-circle me-1"></i>
-                                                    Gagal menyimpan, akan dicoba lagi...
+                                            ) : autoSaveStatus === "error" ? (
+                                                <div className="text-danger small d-flex align-items-center">
+                                                    <i className="fas fa-exclamation-circle text-danger me-1.5"></i>
+                                                    <span>Gagal menyimpan otomatis, akan dicoba lagi...</span>
                                                 </div>
-                                            )}
-                                            {autoSaveStatus === "idle" && !uiState.isDirty && (
-                                                <div className="text-muted small">
-                                                    <i className="fas fa-save me-1"></i>
-                                                    Semua perubahan tersimpan
+                                            ) : lastAutoSaveTime ? (
+                                                <div className="text-muted small d-flex align-items-center">
+                                                    <i className="fas fa-check-circle text-success me-1.5"></i>
+                                                    <span>
+                                                        Kurikulum tersimpan pada {lastAutoSaveTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/:/g, '.')}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="text-muted small d-flex align-items-center">
+                                                    <i className="fas fa-check-circle text-success me-1.5"></i>
+                                                    <span>Semua perubahan tersimpan</span>
                                                 </div>
                                             )}
                                         </div>
@@ -3800,6 +4248,95 @@ function CourseEditCurriculum() {
 
                                 
                             </form>
+
+                            {/* ✨ Interactive SCORM Player Modal for Instructor Preview */}
+                            {scormPreviewModal.isOpen && (
+                                <div 
+                                    className="modal fade show d-block" 
+                                    tabIndex="-1" 
+                                    style={{ backgroundColor: "rgba(0,0,0,0.7)", zIndex: 1060 }}
+                                >
+                                    <div className={`modal-dialog modal-dialog-centered ${scormPreviewModal.isFullscreen ? "modal-fullscreen" : "modal-xl"}`} style={{ maxWidth: scormPreviewModal.isFullscreen ? "100%" : "1100px" }}>
+                                        <div className="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                                            <div className="modal-header bg-dark text-white py-3 px-4 d-flex align-items-center justify-content-between">
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <span className="badge bg-teal text-white px-2.5 py-1">
+                                                        <i className="fas fa-cube me-1"></i>
+                                                        {scormPreviewModal.moduleType.toUpperCase()}
+                                                    </span>
+                                                    <h6 className="modal-title mb-0 fw-bold text-white">
+                                                        {scormPreviewModal.title}
+                                                    </h6>
+                                                </div>
+                                                <div className="d-flex align-items-center gap-3">
+                                                    <div className="d-none d-sm-flex align-items-center gap-2 bg-secondary bg-opacity-25 px-2.5 py-1 rounded small">
+                                                        <span className="text-light opacity-75">Status RTE:</span>
+                                                        <span className={`badge ${
+                                                            scormPlayerStatus === 'completed' || scormPlayerStatus === 'passed' ? 'bg-success' : 
+                                                            scormPlayerStatus === 'failed' ? 'bg-danger' : 'bg-warning text-dark'
+                                                        }`}>
+                                                            {scormPlayerStatus}
+                                                        </span>
+                                                        {scormPlayerScore !== null && (
+                                                            <span className="badge bg-info text-dark">
+                                                                Skor: {scormPlayerScore}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-light border-0"
+                                                        onClick={() => setScormPreviewModal(prev => ({ ...prev, isFullscreen: !prev.isFullscreen }))}
+                                                        title={scormPreviewModal.isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+                                                    >
+                                                        <i className={`fas fa-${scormPreviewModal.isFullscreen ? 'compress' : 'expand'}`}></i>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-close btn-close-white"
+                                                        onClick={() => setScormPreviewModal(prev => ({ ...prev, isOpen: false }))}
+                                                        aria-label="Tutup"
+                                                    ></button>
+                                                </div>
+                                            </div>
+                                            <div className="modal-body p-0 bg-black" style={{ minHeight: scormPreviewModal.isFullscreen ? "calc(100vh - 60px)" : "620px" }}>
+                                                {scormPreviewModal.url ? (
+                                                    <iframe
+                                                        ref={scormIframeRef}
+                                                        src={scormPreviewModal.url}
+                                                        title="SCORM Player Simulation"
+                                                        className="w-100 h-100 border-0"
+                                                        style={{ 
+                                                            minHeight: scormPreviewModal.isFullscreen ? "calc(100vh - 60px)" : "620px",
+                                                            display: "block" 
+                                                        }}
+                                                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                    />
+                                                ) : (
+                                                    <div className="text-center p-5 text-white-50">
+                                                        <i className="fas fa-exclamation-triangle fa-2x mb-3 text-warning"></i>
+                                                        <p>URL konten SCORM tidak dapat dimuat.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="modal-footer bg-light py-2 px-4 d-flex justify-content-between">
+                                                <small className="text-muted">
+                                                    <i className="fas fa-info-circle me-1 text-primary"></i>
+                                                    Uji interaksi modul SCORM langsung menggunakan RTE API Bridge bawaan LMS Setjen DPD RI.
+                                                </small>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-secondary"
+                                                    onClick={() => setScormPreviewModal(prev => ({ ...prev, isOpen: false }))}
+                                                >
+                                                    Tutup Pratinjau
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                         </div>
                     </div>

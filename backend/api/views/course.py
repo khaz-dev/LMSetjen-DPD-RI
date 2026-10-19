@@ -544,15 +544,46 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
             # ✨ PHASE 4.101.3: Simplified - old files now deleted automatically on each upload
             # No need to process unsaved_image_uploads here anymore!
             
+            # ✨ Sanitize mutable request data before serialization
+            mutable_data = request.data.dict() if hasattr(request.data, 'dict') else dict(request.data)
+            
+            # Clean up dummy / legacy flags
+            if 'has_related_changes' in mutable_data:
+                del mutable_data['has_related_changes']
+                
+            # Clean up file field if stringified null/undefined/empty
+            if 'file' in mutable_data:
+                file_val = mutable_data['file']
+                if file_val == "" or file_val is None or str(file_val).strip() in ["null", "undefined", "None"]:
+                    del mutable_data['file']
+                    course.file = None
+                    
+            # Clean up category field if stringified null/undefined/object
+            if 'category' in mutable_data:
+                cat_val = mutable_data['category']
+                if str(cat_val).strip() in ['[object Object]', 'null', 'undefined', 'NaN', 'None', '']:
+                    del mutable_data['category']
+                elif isinstance(cat_val, dict) and 'id' in cat_val:
+                    mutable_data['category'] = cat_val['id']
+                    
+            # Clean up price and language if invalid
+            if 'price' in mutable_data and str(mutable_data['price']).strip() in ['undefined', 'null', 'NaN']:
+                del mutable_data['price']
+                
+            if 'language' in mutable_data and str(mutable_data['language']).strip() in ['undefined', 'null', 'NaN']:
+                del mutable_data['language']
+
+            # Allow partial updates for PATCH requests
+            is_partial = request.method == 'PATCH' or kwargs.get('partial', True)
+            
             # Serialize and validate
-            serializer = self.get_serializer(course, data=request.data)
+            serializer = self.get_serializer(course, data=mutable_data, partial=is_partial)
             
             # Add detailed error information
             if not serializer.is_valid():
                 print(f"Serializer errors: {serializer.errors}")
                 print(f"Full request data: {request.data}")
 
-            
             serializer.is_valid(raise_exception=True)
 
             # Handle image URL update
@@ -813,7 +844,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                 if not duration_seconds and file and ('youtube.com' in file or 'youtu.be' in file):
                     print(f"[Curriculum Update] Extracting duration from URL: {file}")
                     try:
-                        from .url_utils import extract_video_duration_from_url
+                        from api.url_utils import extract_video_duration_from_url
                         duration_info = extract_video_duration_from_url(file)
                         if duration_info and duration_info.get('duration_seconds'):
                             duration_seconds = duration_info['duration_seconds']
@@ -847,10 +878,31 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                         variant_item.file = file
                         if duration is not None:
                             variant_item.duration = duration
+                        
+                        # ✨ Support SCORM learning_module_id
+                        item_lm_id = item_data.get("learning_module_id")
+                        if item_lm_id and str(item_lm_id) not in ["null", "undefined", ""]:
+                            try:
+                                variant_item.learning_module_id = int(item_lm_id)
+                            except (ValueError, TypeError):
+                                pass
+                        elif not variant_item.learning_module_id and course.learning_module_id and course.course_type != 'standard':
+                            variant_item.learning_module = course.learning_module
+
                         variant_item.save()
                         updated_item_ids.add(variant_item.variant_item_id)
                     else:
                         print(f"[Curriculum Update] Item ID {variant_item_id} not found, creating new item: {item_title}")
+                        item_lm_id = item_data.get("learning_module_id")
+                        target_lm_id = None
+                        if item_lm_id and str(item_lm_id) not in ["null", "undefined", ""]:
+                            try:
+                                target_lm_id = int(item_lm_id)
+                            except (ValueError, TypeError):
+                                pass
+                        elif course.learning_module_id and course.course_type != 'standard':
+                            target_lm_id = course.learning_module_id
+
                         variant_item = api_models.VariantItem.objects.create(
                             variant=variant,
                             title=item_title,
@@ -858,11 +910,22 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                             file=file,
                             duration=duration,
                             preview=preview,
-                            order=int(item_order) if item_order else 0
+                            order=int(item_order) if item_order else 0,
+                            learning_module_id=target_lm_id
                         )
                         updated_item_ids.add(variant_item.variant_item_id)
                 else:
                     print(f"[Curriculum Update] Creating new item: {item_title}")
+                    item_lm_id = item_data.get("learning_module_id")
+                    target_lm_id = None
+                    if item_lm_id and str(item_lm_id) not in ["null", "undefined", ""]:
+                        try:
+                            target_lm_id = int(item_lm_id)
+                        except (ValueError, TypeError):
+                            pass
+                    elif course.learning_module_id and course.course_type != 'standard':
+                        target_lm_id = course.learning_module_id
+
                     variant_item = api_models.VariantItem.objects.create(
                         variant=variant,
                         title=item_title,
@@ -870,7 +933,8 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                         file=file,
                         duration=duration,
                         preview=preview,
-                        order=int(item_order) if item_order else 0
+                        order=int(item_order) if item_order else 0,
+                        learning_module_id=target_lm_id
                     )
                     updated_item_ids.add(variant_item.variant_item_id)
         

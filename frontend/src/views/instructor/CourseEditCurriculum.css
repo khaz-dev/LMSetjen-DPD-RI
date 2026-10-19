@@ -725,6 +725,40 @@
     padding-left: 8px;
 }
 
+/* ✨ Lesson Preview Checkbox - Tight spacing, no unnecessary top/bottom gap */
+.form-check.curriculum-preview-check {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    min-height: auto !important;
+}
+
+.form-check.curriculum-preview-check .form-check-input {
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    cursor: pointer;
+}
+
+.form-check.curriculum-preview-check .form-check-label {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+    cursor: pointer !important;
+    line-height: 1.3 !important;
+    user-select: none;
+}
+
 /* ============================================
    BUTTONS - Action Styling
    ============================================ */
@@ -1198,3 +1232,186 @@
     background-color: #e9ecef;
     border-color: #dee2e6;
 }
+
+/* ========================================================
+   ✨ SCORM E-LEARNING CURRICULUM ENHANCEMENTS
+   ======================================================== */
+.scorm-curriculum-banner {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 60%, #134e4a 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 118, 110, 0.25), 0 8px 10px -6px rgba(15, 118, 110, 0.2) !important;
+    border-radius: 12px;
+}
+
+.scorm-curriculum-banner::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.scorm-module-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0 !important;
+    border-left: 4px solid #0f766e !important;
+    border-radius: 12px;
+    padding: 1.5rem 1.65rem !important;
+    transition: all 0.25s ease;
+}
+
+.scorm-module-card:hover {
+    box-shadow: 0 8px 24px rgba(15, 118, 110, 0.12);
+    border-color: #cbd5e1 !important;
+    border-left-color: #0f766e !important;
+}
+
+.scorm-jp-section {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-left: 4px solid #0f766e !important;
+    border-radius: 10px !important;
+    padding: 1.25rem 1.35rem !important;
+    transition: all 0.2s ease;
+}
+
+.scorm-jp-section:focus-within {
+    border-color: #0f766e !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.08) !important;
+}
+
+/* ✨ Ensure SCORM JP inputs are always clean white with crisp dark text */
+.scorm-jp-section .scorm-jp-input,
+.scorm-jp-section input.form-control {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    font-size: 0.925rem !important;
+    font-weight: 600 !important;
+    padding: 0.45rem 0.75rem !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.2s ease !important;
+}
+
+.scorm-jp-section .scorm-jp-input:focus,
+.scorm-jp-section input.form-control:focus {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #0f766e !important;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15) !important;
+    outline: none !important;
+}
+
+.scorm-jp-section .scorm-jp-input::placeholder,
+.scorm-jp-section input.form-control::placeholder {
+    color: #94a3b8 !important;
+    font-weight: 400 !important;
+    opacity: 1 !important;
+}
+
+.scorm-jp-section .input-group-text {
+    background-color: #f1f5f9 !important;
+    color: #0f766e !important;
+    border: 1.5px solid #cbd5e1 !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    padding: 0.45rem 0.75rem !important;
+}
+
+.scorm-jp-section .input-group .scorm-jp-input {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.scorm-jp-section .input-group .input-group-text {
+    border-left: none !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+.btn-teal {
+    background-color: #0f766e !important;
+    border-color: #0f766e !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-teal:hover {
+    background-color: #115e59 !important;
+    border-color: #115e59 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 118, 110, 0.25);
+}
+
+.btn-outline-teal {
+    color: #0f766e !important;
+    border-color: #0f766e !important;
+    background-color: transparent !important;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-teal:hover {
+    color: #ffffff !important;
+    background-color: #0f766e !important;
+    border-color: #0f766e !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 118, 110, 0.25);
+}
+
+.bg-teal {
+    background-color: #0f766e !important;
+}
+
+.text-teal {
+    color: #0f766e !important;
+}
+
+.border-teal-subtle {
+    border-color: #ccfbf1 !important;
+}
+
+.bg-teal-subtle {
+    background-color: #f0fdfa !important;
+}
+
+/* ============================================================================
+   LIGHT THEME ENFORCEMENT FOR FORM CONTROLS (Prevents Dark Mode Leakage)
+   =========================================================================== */
+.instructor-course-edit-curriculum-page .form-control,
+.instructor-course-edit-curriculum-page .form-select {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+.instructor-course-edit-curriculum-page .form-control:focus,
+.instructor-course-edit-curriculum-page .form-select:focus {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #0f766e !important;
+    box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.15) !important;
+}
+
+.instructor-course-edit-curriculum-page .form-control:disabled,
+.instructor-course-edit-curriculum-page .form-select:disabled,
+.instructor-course-edit-curriculum-page .form-control[readonly] {
+    background-color: #f8fafc !important;
+    color: #64748b !important;
+    border-color: #e2e8f0 !important;
+}
+
+.instructor-course-edit-curriculum-page .form-control::placeholder {
+    color: #94a3b8 !important;
+}
+

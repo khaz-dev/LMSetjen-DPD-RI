@@ -2035,3 +2035,33 @@ div.form-check.modern-form-check {
   padding: 12px !important;
   flex-wrap: nowrap !important;
 }
+
+/* ============================================================================
+   LIGHT THEME ENFORCEMENT FOR FORM CONTROLS (Prevents Dark Mode Leakage)
+   =========================================================================== */
+.instructor-course-edit-page .form-control,
+.instructor-course-edit-page .form-select {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.instructor-course-edit-page .form-control:focus,
+.instructor-course-edit-page .form-select:focus {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #0f766e !important;
+  box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.15) !important;
+}
+
+.instructor-course-edit-page .form-control:disabled,
+.instructor-course-edit-page .form-select:disabled,
+.instructor-course-edit-page .form-control[readonly] {
+  background-color: #f8fafc !important;
+  color: #64748b !important;
+  border-color: #e2e8f0 !important;
+}
+
+.instructor-course-edit-page .form-control::placeholder {
+  color: #94a3b8 !important;
+}
