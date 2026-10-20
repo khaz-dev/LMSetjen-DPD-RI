@@ -271,6 +271,7 @@ urlpatterns = [
     path("instructor/activities/", api_views.InstructorActivitiesAPIView.as_view()),  # Dashboard activities
     path("instructor/course/<int:course_id>/activities/", api_views.InstructorCourseActivitiesAPIView.as_view()),  # Course-specific activities
     path("instructor/activities/analytics/", api_views.InstructorActivityAnalyticsAPIView.as_view()),  # Activity analytics
+    path("instructor/points-breakdown/", api_views.InstructorPointsBreakdownAPIView.as_view()),  # Instructor points breakdown & audit
     path("admin/activities/analytics/", api_views.AdminActivityAnalyticsAPIView.as_view()),
     
     # ✨ PHASE 11.1: Feedback System endpoints

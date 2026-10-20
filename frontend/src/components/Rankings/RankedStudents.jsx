@@ -67,6 +67,18 @@ const RankedStudents = ({ maxResults = 5 }) => {
     setBrokenImages(prev => ({ ...prev, [studentId]: true }));
   };
 
+  /**
+   * Get points value based on current period or API returned points
+   */
+  const getPoints = (student) => {
+    if (student?.points !== undefined && student?.points !== null) {
+      return student.points;
+    }
+    if (period === 'monthly') return student?.monthly_points ?? 0;
+    if (period === 'yearly') return student?.yearly_points ?? 0;
+    return student?.lifetime_points ?? 0;
+  };
+
   return (
     <div className="ranked-students-widget card h-100 shadow-sm">
       {/* Header */}
@@ -87,7 +99,7 @@ const RankedStudents = ({ maxResults = 5 }) => {
               className={`btn btn-sm flex-fill ${
                 period === p 
                   ? 'btn-primary' 
-                  : 'btn-secondary'
+                  : 'btn-outline-secondary'
               }`}
               onClick={() => handlePeriodChange(p)}
             >
@@ -113,7 +125,13 @@ const RankedStudents = ({ maxResults = 5 }) => {
       {!loading && students.length === 0 && (
         <div className="card-body text-center py-4">
           <i className="fas fa-inbox text-muted mb-2" style={{ fontSize: '2rem' }}></i>
-          <p className="text-muted mb-0">Belum ada data untuk periode ini</p>
+          <p className="text-muted mb-0">
+            {period === 'monthly'
+              ? 'Belum ada data untuk bulan ini'
+              : period === 'yearly'
+              ? 'Belum ada data untuk tahun ini'
+              : 'Belum ada data siswa'}
+          </p>
         </div>
       )}
 
@@ -171,7 +189,7 @@ const RankedStudents = ({ maxResults = 5 }) => {
               {/* Points Display */}
               <div className="ranking-points text-end">
                 <div className="points-value">
-                  {student.lifetime_points || student.yearly_points || student.monthly_points || 0}
+                  {getPoints(student)}
                 </div>
                 <small className="points-label text-muted">poin</small>
               </div>

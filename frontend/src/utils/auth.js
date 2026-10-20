@@ -305,10 +305,8 @@ export const setUser = async () => {
 };
 
 export const setAuthUser = (access_token, refresh_token) => {
-    // Don't set auth if we're in the middle of logging out
-    if (sessionStorage.getItem('logging_out') === 'true') {
-        return;
-    }
+    // When storing tokens, the user is actively authenticating - always clear any stale logging_out flag
+    sessionStorage.removeItem('logging_out');
     
     if (access_token && refresh_token) {
         // Determine secure cookie settings based on actual protocol.
@@ -318,7 +316,8 @@ export const setAuthUser = (access_token, refresh_token) => {
         const cookieOptions = {
             expires: 1,  // 1 day for access token
             secure: isHttps,
-            sameSite: isHttps ? 'Strict' : 'Lax'
+            sameSite: isHttps ? 'Strict' : 'Lax',
+            path: '/'   // Crucial: ensure cookie is accessible across all application routes
         };
 
         Cookie.set("access_token", access_token, cookieOptions);

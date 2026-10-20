@@ -60,11 +60,48 @@ const RankedInstructors = ({ maxResults = 5 }) => {
     setPeriod(newPeriod);
   };
 
+  const [selectedInstructor, setSelectedInstructor] = useState(null);
+  const [breakdownData, setBreakdownData] = useState(null);
+  const [loadingBreakdown, setLoadingBreakdown] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  /**
+   * Handle opening breakdown modal for an instructor
+   */
+  const handleOpenBreakdown = async (instructor) => {
+    setSelectedInstructor(instructor);
+    setShowModal(true);
+    setLoadingBreakdown(true);
+    setBreakdownData(null);
+    try {
+      const response = await apiInstance.get(`/instructor/points-breakdown/?teacher_id=${instructor.id}`);
+      if (response.data) {
+        setBreakdownData(response.data);
+      }
+    } catch (err) {
+      console.error('Error fetching breakdown:', err);
+    } finally {
+      setLoadingBreakdown(false);
+    }
+  };
+
   /**
    * Handle broken image - show gradient fallback
    */
   const handleImageError = (instructorId) => {
     setBrokenImages(prev => ({ ...prev, [instructorId]: true }));
+  };
+
+  /**
+   * Get points value based on current period or API returned points
+   */
+  const getPoints = (instructor) => {
+    if (instructor?.points !== undefined && instructor?.points !== null) {
+      return instructor.points;
+    }
+    if (period === 'monthly') return instructor?.monthly_points ?? 0;
+    if (period === 'yearly') return instructor?.yearly_points ?? 0;
+    return instructor?.lifetime_points ?? 0;
   };
 
   return (
@@ -87,7 +124,7 @@ const RankedInstructors = ({ maxResults = 5 }) => {
               className={`btn btn-sm flex-fill ${
                 period === p 
                   ? 'btn-success' 
-                  : 'btn-secondary'
+                  : 'btn-outline-secondary'
               }`}
               onClick={() => handlePeriodChange(p)}
             >
@@ -113,7 +150,13 @@ const RankedInstructors = ({ maxResults = 5 }) => {
       {!loading && instructors.length === 0 && (
         <div className="card-body text-center py-4">
           <i className="fas fa-inbox text-muted mb-2" style={{ fontSize: '2rem' }}></i>
-          <p className="text-muted mb-0">Belum ada data untuk periode ini</p>
+          <p className="text-muted mb-0">
+            {period === 'monthly'
+              ? 'Belum ada data untuk bulan ini'
+              : period === 'yearly'
+              ? 'Belum ada data untuk tahun ini'
+              : 'Belum ada data instruktur'}
+          </p>
         </div>
       )}
 
@@ -168,12 +211,20 @@ const RankedInstructors = ({ maxResults = 5 }) => {
                 </small>
               </div>
 
-              {/* Points Display */}
-              <div className="ranking-points text-end">
-                <div className="points-value">
-                  {instructor.lifetime_points || instructor.yearly_points || instructor.monthly_points || 0}
+              {/* Points Display - Interactive with Click to View Breakdown */}
+              <div 
+                className="ranking-points text-end"
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleOpenBreakdown(instructor)}
+                title="Klik untuk melihat darimana poin ini diperoleh"
+              >
+                <div className="points-value d-flex align-items-center justify-content-end gap-1">
+                  <span>{getPoints(instructor)}</span>
+                  <i className="fas fa-circle-info text-success ms-1" style={{ fontSize: '0.85rem' }}></i>
                 </div>
-                <small className="points-label text-muted">poin</small>
+                <small className="points-label text-muted d-block" style={{ fontSize: '0.72rem' }}>
+                  poin • <span className="text-success fw-bold">rincian</span>
+                </small>
               </div>
             </div>
           ))}
@@ -187,11 +238,139 @@ const RankedInstructors = ({ maxResults = 5 }) => {
 
       {/* Footer */}
       <div className="card-footer bg-light p-3 text-center">
-        <small className="text-muted">
+        <small className="text-muted d-block">
           <i className="fas fa-info-circle me-1"></i>
-          Dapatkan poin dari siswa yang mendaftar dan memberi rating
+          Poin diperoleh dari publikasi kursus, siswa mendaftar, ulasan rating & testimoni
         </small>
       </div>
+
+      {/* Modal Rincian Perolehan Poin */}
+      {showModal && (
+        <div 
+          className="modal fade show d-block" 
+          tabIndex="-1" 
+          style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', zIndex: 10050 }}
+          onClick={() => setShowModal(false)}
+        >
+          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content rounded-4 shadow-lg border-0">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title fw-bold">
+                  <i className="fas fa-award me-2 text-warning"></i>
+                  Rincian Poin Instruktur
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button>
+              </div>
+              <div className="modal-body p-4">
+                {/* Instructor Card Header */}
+                <div className="d-flex align-items-center gap-3 p-3 bg-light rounded-3 mb-3 border">
+                  <img
+                    src={selectedInstructor?.image || '/images/placeholders/default-instructor.svg'}
+                    alt={selectedInstructor?.full_name}
+                    className="rounded-circle"
+                    width="48"
+                    height="48"
+                    style={{ objectFit: 'cover' }}
+                  />
+                  <div>
+                    <h6 className="fw-bold mb-0">{selectedInstructor?.full_name}</h6>
+                    <small className="text-muted">{selectedInstructor?.position_name || 'Instruktur LMS'}</small>
+                  </div>
+                  <div className="ms-auto text-end">
+                    <span className="badge bg-success fs-6">
+                      {getPoints(selectedInstructor)} Poin
+                    </span>
+                    <small className="d-block text-muted" style={{ fontSize: '0.72rem' }}>
+                      {period === 'monthly' ? 'Bulan Ini' : period === 'yearly' ? 'Tahun Ini' : 'Sepanjang Masa'}
+                    </small>
+                  </div>
+                </div>
+
+                {loadingBreakdown ? (
+                  <div className="text-center py-4">
+                    <div className="spinner-border text-success" role="status">
+                      <span className="visually-hidden">Memuat rincian...</span>
+                    </div>
+                    <p className="mt-2 text-muted small">Memuat riwayat perolehan poin...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Summary category badges */}
+                    <div className="p-3 bg-light rounded-3 border mb-3">
+                      <small className="fw-bold text-muted d-block mb-2 text-uppercase" style={{ fontSize: '0.72rem' }}>Sumber Perolehan Poin:</small>
+                      <div className="d-flex flex-wrap gap-2">
+                        <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1">
+                          <i className="fas fa-rocket text-success"></i>
+                          <span>Publikasi Kursus: <strong>{breakdownData?.summary?.course_published?.count || 0}</strong> ({breakdownData?.summary?.course_published?.points || 0} pt)</span>
+                        </div>
+                        <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1">
+                          <i className="fas fa-heart text-warning"></i>
+                          <span>Testimoni Platform: <strong>{breakdownData?.summary?.platform_testimonial?.count || 0}</strong> ({breakdownData?.summary?.platform_testimonial?.points || 0} pt)</span>
+                        </div>
+                        <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1">
+                          <i className="fas fa-user-graduate text-info"></i>
+                          <span>Siswa Terdaftar: <strong>{breakdownData?.summary?.student_enrollment?.count || 0}</strong> ({breakdownData?.summary?.student_enrollment?.points || 0} pt)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Points History / Audit Trail */}
+                    <h6 className="fw-bold mb-2">
+                      <i className="fas fa-history text-success me-2"></i>
+                      Riwayat Aktivitas Perolehan Poin:
+                    </h6>
+
+                    {breakdownData?.history && breakdownData.history.length > 0 ? (
+                      <div className="list-group list-group-flush mb-4 border rounded-3 overflow-hidden">
+                        {breakdownData.history.map((item) => (
+                          <div key={item.id} className="list-group-item d-flex align-items-center justify-content-between p-3">
+                            <div className="me-2">
+                              <div className="fw-bold text-dark small">{item.description}</div>
+                              <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                                {new Date(item.awarded_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </small>
+                            </div>
+                            <span className="badge bg-warning text-dark fw-bold px-2 py-1">
+                              +{item.points_awarded} pt
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="alert alert-light border small text-muted mb-4">
+                        <i className="fas fa-info-circle me-1"></i>
+                        Poin ini tercatat dari total kontribusi awal pada sistem.
+                      </div>
+                    )}
+
+                    {/* How Points Are Calculated (Rules) */}
+                    <h6 className="fw-bold mb-2">
+                      <i className="fas fa-book-open text-primary me-2"></i>
+                      Cara Instruktur Memperoleh Poin:
+                    </h6>
+                    <div className="d-flex flex-column gap-2">
+                      {breakdownData?.rules?.map((rule) => (
+                        <div key={rule.key} className="p-2 px-3 bg-light rounded-3 border">
+                          <div className="d-flex justify-content-between align-items-center mb-1">
+                            <strong className="small text-dark">{rule.title}</strong>
+                            <span className="badge bg-success" style={{ fontSize: '0.72rem' }}>{rule.points_text}</span>
+                          </div>
+                          <small className="text-muted d-block" style={{ fontSize: '0.78rem' }}>{rule.description}</small>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="modal-footer bg-light">
+                <button type="button" className="btn btn-secondary btn-sm rounded-3 px-3" onClick={() => setShowModal(false)}>
+                  Tutup
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

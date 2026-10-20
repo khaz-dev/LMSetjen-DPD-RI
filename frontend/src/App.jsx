@@ -387,6 +387,16 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
+                            <Route
+                                path="/instructor/activities/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                            <InstructorNotifications />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
 
                             <Route                                path="/instructor/question-answer/"
                                 element={

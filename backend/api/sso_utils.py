@@ -359,23 +359,23 @@ class GoogleOAuthVerifier:
                 raise ValueError(f"Invalid ID token: {error_msg}")
             
             token_data = response.json()
-            logger.info(f"✅ Token data received from Google")
+            logger.info("[SUCCESS] Token data received from Google")
             logger.info(f"Token 'aud' (audience): {token_data.get('aud')}")
             logger.info(f"Expected client_id: {client_id}")
             
             # Verify audience (client ID)
             if not client_id:
-                logger.warning("⚠️  Client ID is not configured in settings! Skipping client ID verification")
+                logger.warning("[WARNING] Client ID is not configured in settings! Skipping client ID verification")
             elif token_data.get('aud') != client_id:
-                logger.error(f"❌ Client ID mismatch! Token has: {token_data.get('aud')}, Expected: {client_id}")
+                logger.error(f"[ERROR] Client ID mismatch! Token has: {token_data.get('aud')}, Expected: {client_id}")
                 raise ValueError("Invalid client ID in token")
             else:
-                logger.info("✅ Client ID verified successfully")
+                logger.info("[SUCCESS] Client ID verified successfully")
             
             return token_data
             
         except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Network error during ID token verification: {str(e)}")
+            logger.error(f"[ERROR] Network error during ID token verification: {str(e)}")
             raise ValueError(f"ID token verification failed: {str(e)}")
         except Exception as e:
             logger.error(f"❌ Unexpected error in verify_id_token: {str(e)}")

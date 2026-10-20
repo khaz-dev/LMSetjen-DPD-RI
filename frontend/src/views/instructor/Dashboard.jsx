@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
 import dayjs, { moment } from "../../utils/dayjs";
 import "./Dashboard.css";
 
@@ -20,18 +21,18 @@ import { usePageCache } from "../../utils/usePageCache"; // ✨ PHASE 11.12+: Fi
 
 function Dashboard() {
     const isCollapsed = useInstructorSidebarCollapse();
-    
+
     // ✨ PHASE 11.12+: Wrap fetch logic for usePageCache
     const fetchDashboardData = useCallback(async () => {
         const teacherId = UserData()?.teacher_id;
-        
+
         const [
-            statsResponse, 
-            coursesResponse, 
-            studentsResponse, 
-            reviewsResponse, 
-            notificationsResponse, 
-            ordersResponse, 
+            statsResponse,
+            coursesResponse,
+            studentsResponse,
+            reviewsResponse,
+            notificationsResponse,
+            ordersResponse,
             questionsResponse,
             bestCoursesResponse
         ] = await Promise.all([
@@ -44,7 +45,7 @@ function Dashboard() {
             useAxios.get(`teacher/question-answer-list/${teacherId}/`),
             useAxios.get(`teacher/best-course-earning/${teacherId}/`)
         ]);
-        
+
         // Normalize responses to arrays (handle both array and paginated responses)
         const coursesData = Array.isArray(coursesResponse.data) ? coursesResponse.data : (coursesResponse.data?.results || []);
         const reviewsData = Array.isArray(reviewsResponse.data) ? reviewsResponse.data : (reviewsResponse.data?.results || []);
@@ -53,11 +54,7 @@ function Dashboard() {
         const questionsData = Array.isArray(questionsResponse.data) ? questionsResponse.data : (questionsResponse.data?.results || []);
         const bestCoursesData = Array.isArray(bestCoursesResponse.data) ? bestCoursesResponse.data : (bestCoursesResponse.data?.results || []);
         const studentsData = Array.isArray(studentsResponse.data) ? studentsResponse.data : (studentsResponse.data?.results || []);
-        
-        // ✨ PHASE 53 EXTENDED: Removed manual activity generation
-        // Activities are now fetched dynamically by InstructorActivityDisplay component
-        // This keeps the dashboard lightweight and activities always up-to-date
-        
+
         return {
             stats: statsResponse.data[0] || {},
             courses: coursesData,
@@ -76,7 +73,7 @@ function Dashboard() {
         fetchDashboardData,
         { showLoadingOnStale: false }
     );
-    
+
     // Destructure data with fallbacks - use nullish coalescing to handle null values
     const stats = dashboardData?.stats || {};
     const courses = dashboardData?.courses || [];
@@ -92,83 +89,82 @@ function Dashboard() {
         if (!imageUrl) {
             return DEFAULT_IMAGE_URL;
         }
-        
-        // Clean the URL - remove any extra encoding or nested URLs
+
         let cleanUrl = imageUrl;
-        
-        // If it contains encoded URLs, decode and extract the actual path
         if (cleanUrl.includes("%3A") || cleanUrl.includes("http%3A")) {
             cleanUrl = decodeURIComponent(cleanUrl);
         }
-        
-        // ✨ PHASE 4.X: Handle Google Drive URLs specially - convert to thumbnail format
+
         if (cleanUrl.includes("drive.google.com")) {
-            // Extract file ID from Google Drive URL
             const fileIdMatch1 = cleanUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
             const fileIdMatch2 = cleanUrl.match(/[?&]id=([a-zA-Z0-9-_]+)/);
             const fileId = (fileIdMatch1 && fileIdMatch1[1]) || (fileIdMatch2 && fileIdMatch2[1]);
-            
+
             if (fileId) {
-                // Use Google Drive's thumbnail endpoint for reliable image loading
                 return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`;
             }
         }
-        
-        // If it's already a complete URL, return as is
-        // Must check BEFORE trying to extract media path, since full URLs contain /media/
+
         if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
             return cleanUrl;
         }
-        
-        // Extract just the filename if it's a nested URL structure (for relative paths)
+
         if (cleanUrl.includes("/media/")) {
             const parts = cleanUrl.split("/media/");
             if (parts.length > 1) {
-                // Get the last part which should be the actual filename
                 cleanUrl = "/media/" + parts[parts.length - 1];
             }
         }
-        
-        // Use the centralized helper
+
         return getMediaUrl(cleanUrl);
     };
 
-    // ✨ PHASE 4.77+: Calculate total JP (Jam Pelajaran) from course lectures
+    // Calculate total JP (Jam Pelajaran) from course lectures
     // 1 JP = 45 minutes = 2700 seconds
     const calculateTotalJP = (lectures) => {
         if (!lectures || !Array.isArray(lectures)) return 0;
-        
+
         let totalSeconds = 0;
         lectures.forEach(lecture => {
             if (lecture.content_duration) {
                 totalSeconds += parseDurationToSeconds(lecture.content_duration);
             }
         });
-        
+
         return Math.ceil(totalSeconds / 2700);
     };
 
-    // Memoize enhanced statistics calculation
-    const enhancedStats = useMemo(() => {
-        // Ensure arrays
-        const reviewsArray = Array.isArray(reviews) ? reviews : [];
-        const notificationsArray = Array.isArray(notifications) ? notifications : [];
-        const questionsArray = Array.isArray(questions) ? questions : [];
-        
-        const averageRating = reviewsArray.length > 0 
-            ? (reviewsArray.reduce((sum, review) => sum + review.rating, 0) / reviewsArray.length).toFixed(1)
+    // Course status analytics memo (integrated into Dasbor Header)
+    const courseAnalytics = useMemo(() => {
+        const publishedCourses = courses.filter(c => c.platform_status === "Published");
+        const draftCourses = courses.filter(c => c.platform_status === "Draft");
+        const reviewCourses = courses.filter(c => c.platform_status === "Review");
+        const totalCourses = stats.total_courses || courses.length || 0;
+        const publishedPercentage = totalCourses > 0
+            ? Math.round((publishedCourses.length / totalCourses) * 100)
             : 0;
-        const unreadNotifications = notificationsArray.filter(n => !n.seen).length;
-        const pendingQuestions = questionsArray.filter(q => !q.answered).length;
-        
+
+        return {
+            publishedCount: publishedCourses.length,
+            draftCount: draftCourses.length,
+            reviewCount: reviewCourses.length,
+            totalCourses,
+            publishedPercentage
+        };
+    }, [courses, stats.total_courses]);
+
+    // Memoize enhanced statistics calculation (Notifikasi Belum Dibaca & Pertanyaan Tertunda removed)
+    const enhancedStats = useMemo(() => {
+        const reviewsArray = Array.isArray(reviews) ? reviews : [];
+        const averageRating = reviewsArray.length > 0
+            ? (reviewsArray.reduce((sum, review) => sum + (parseFloat(review.rating) || 0), 0) / reviewsArray.length).toFixed(1)
+            : "0.0";
+
         return {
             averageRating,
-            unreadNotifications,
-            pendingQuestions,
-            totalReviews: reviewsArray.length,
-            totalQuestions: questionsArray.length
+            totalReviews: reviewsArray.length
         };
-    }, [reviews, notifications, questions]);
+    }, [reviews]);
 
     // Memoize total content duration calculation
     const totalContentDuration = useMemo(() => {
@@ -193,7 +189,7 @@ function Dashboard() {
                         <Header />
                         <div className="row">
                             <Sidebar />
-                        <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
                                     <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Memuat...</span>
@@ -219,222 +215,204 @@ function Dashboard() {
                     <div className="row">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
-                            {/* Dashboard Header */}
+
+                            {/* 1. Dasbor Header with Integrated Analitik Kursus */}
                             <div className="dashboard-header-modern mb-3">
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h2 className="dashboard-title">
-                                            <i className="bi bi-speedometer2 me-3"></i>
-                                            Dasbor Instruktur
-                                        </h2>
-                                        <p className="dashboard-subtitle">
-                                            Selamat kembali! Berikut apa yang terjadi dengan kursus Anda hari ini.
-                                        </p>
+                                <div className="dash-header-main-bar">
+                                    <div className="d-flex align-items-center gap-3">
+                                        <div className="dash-header-icon-box">
+                                            <i className="bi bi-speedometer2"></i>
+                                        </div>
+                                        <div>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <h2 className="dash-header-title">Dasbor Instruktur</h2>
+                                                <span className="dash-live-badge">
+                                                    <span className="live-dot"></span> Live
+                                                </span>
+                                            </div>
+                                            <p className="dash-header-subtitle">
+                                                Selamat kembali! Berikut ringkasan status publikasi dan performa materi Anda.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="dash-header-actions">
+                                        <Link to="/instructor/create-course/" className="btn-dash-create">
+                                            <i className="fas fa-plus"></i>
+                                            <span>Buat Kursus</span>
+                                        </Link>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Enhanced Statistics Grid */}
-                            <div className="row">
-                                {/* Primary Stats */}
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
-                                    <div className="stat-card-enhanced" style={{"--card-accent": "#0f766e", "--icon-bg": "#0f766e"}}>
-                                        <div className="stat-icon-enhanced">
-                                            <i className="fas fa-book-open"></i>
-                                        </div>
-                                        <div className="stat-content">
-                                            <div className="stat-number-enhanced">{stats.total_courses || 0}</div>
-                                            <div className="stat-label-enhanced">Total Kursus</div>
-                                            <div className="stat-change positive">
-                                                <i className="fas fa-arrow-up"></i> +2 bulan ini
+                                {/* Integrated Analitik Kursus Strip */}
+                                <div className="dash-analytics-strip">
+                                    <div className="row g-2">
+                                        <div className="col-md-4 col-12">
+                                            <div className="dash-analytic-chip published">
+                                                <div className="chip-icon">
+                                                    <i className="fas fa-circle-check"></i>
+                                                </div>
+                                                <div className="chip-info">
+                                                    <div className="chip-value">
+                                                        {courseAnalytics.publishedCount} <span className="chip-unit">Kursus</span>
+                                                    </div>
+                                                    <div className="chip-label">Dipublikasikan</div>
+                                                </div>
+                                                <div className="chip-badge">{courseAnalytics.publishedPercentage}%</div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
-                                    <div className="stat-card-enhanced" style={{"--card-accent": "#10b981", "--icon-bg": "#10b981"}}>
-                                        <div className="stat-icon-enhanced">
-                                            <i className="fas fa-users"></i>
-                                        </div>
-                                        <div className="stat-content">
-                                            <div className="stat-number-enhanced">{stats.total_students || 0}</div>
-                                            <div className="stat-label-enhanced">Total Siswa</div>
-                                            <div className="stat-change positive">
-                                                <i className="fas fa-arrow-up"></i> +{students.length > 5 ? students.length - 5 : 0} minggu ini
+                                        <div className="col-md-4 col-12">
+                                            <div className="dash-analytic-chip review">
+                                                <div className="chip-icon">
+                                                    <i className="fas fa-hourglass-half"></i>
+                                                </div>
+                                                <div className="chip-info">
+                                                    <div className="chip-value">
+                                                        {courseAnalytics.reviewCount} <span className="chip-unit">Review</span>
+                                                    </div>
+                                                    <div className="chip-label">Sedang Ditinjau</div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-1">
-                                    <div className="stat-card-enhanced" style={{"--card-accent": "#115e59", "--icon-bg": "#115e59"}}>
-                                        <div className="stat-icon-enhanced">
-                                            <i className="fas fa-star"></i>
-                                        </div>
-                                        <div className="stat-content">
-                                            <div className="stat-number-enhanced">{enhancedStats.averageRating}</div>
-                                            <div className="stat-label-enhanced">Rating Rata-rata</div>
-                                            <div className="stat-change neutral">
-                                                <i className="fas fa-star"></i> {enhancedStats.totalReviews} ulasan
+                                        <div className="col-md-4 col-12">
+                                            <div className="dash-analytic-chip draft">
+                                                <div className="chip-icon">
+                                                    <i className="fas fa-file-pen"></i>
+                                                </div>
+                                                <div className="chip-info">
+                                                    <div className="chip-value">
+                                                        {courseAnalytics.draftCount} <span className="chip-unit">Draf</span>
+                                                    </div>
+                                                    <div className="chip-label">Dalam Draf</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Secondary Stats Row */}
-                            <div className="row mb-3">
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-2 mt-2">
-                                    <div className="mini-stat-card">
-                                        <div className="mini-stat-icon text-warning">
-                                            <i className="fas fa-bell"></i>
-                                        </div>
-                                        <div className="mini-stat-content">
-                                            <div className="mini-stat-number">{enhancedStats.unreadNotifications}</div>
-                                            <div className="mini-stat-label">Notifikasi Belum Dibaca</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-2 mt-2">
-                                    <div className="mini-stat-card">
-                                        <div className="mini-stat-icon text-info">
-                                            <i className="fas fa-question-circle"></i>
-                                        </div>
-                                        <div className="mini-stat-content">
-                                            <div className="mini-stat-number">{enhancedStats.pendingQuestions}</div>
-                                            <div className="mini-stat-label">Pertanyaan Tertunda</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="col-xl-4 col-lg-6 col-sm-6 mb-2 mt-2">
-                                    <div className="mini-stat-card">
-                                        <div className="mini-stat-icon text-success">
-                                            <i className="fas fa-chart-line"></i>
-                                        </div>
-                                        <div className="mini-stat-content">
-                                            <div className="mini-stat-number">{courses.filter(c => c.platform_status === "Published").length}</div>
-                                            <div className="mini-stat-label">Kursus Dipublikasikan</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Content Creation Statistics */}
+                            {/* 2. Primary KPI Grid: Total Kursus, Total Siswa, Rating Rata-rata */}
+                            <div className="row g-3 mb-3">
+                                <div className="col-md-4 col-sm-6 col-12">
+                                    <div className="stat-card-compact theme-teal">
+                                        <div className="stat-card-inner">
+                                            <div className="stat-icon-wrapper">
+                                                <i className="fas fa-book-open"></i>
+                                            </div>
+                                            <div className="stat-info-wrapper">
+                                                <div className="stat-number">{courseAnalytics.totalCourses}</div>
+                                                <div className="stat-label">Total Kursus</div>
+                                            </div>
+                                        </div>
+                                        <div className="stat-footer">
+                                            <span className="stat-badge neutral">
+                                                <i className="fas fa-layer-group me-1"></i> Semua Kurikulum
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-4 col-sm-6 col-12">
+                                    <div className="stat-card-compact theme-blue">
+                                        <div className="stat-card-inner">
+                                            <div className="stat-icon-wrapper">
+                                                <i className="fas fa-users"></i>
+                                            </div>
+                                            <div className="stat-info-wrapper">
+                                                <div className="stat-number">{stats.total_students || 0}</div>
+                                                <div className="stat-label">Total Siswa</div>
+                                            </div>
+                                        </div>
+                                        <div className="stat-footer">
+                                            <span className="stat-badge info">
+                                                <i className="fas fa-arrow-up me-1"></i> +{students.length > 5 ? students.length - 5 : 0} minggu ini
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-4 col-sm-6 col-12">
+                                    <div className="stat-card-compact theme-amber">
+                                        <div className="stat-card-inner">
+                                            <div className="stat-icon-wrapper">
+                                                <i className="fas fa-star"></i>
+                                            </div>
+                                            <div className="stat-info-wrapper">
+                                                <div className="stat-number">{enhancedStats.averageRating}</div>
+                                                <div className="stat-label">Rating Rata-rata</div>
+                                            </div>
+                                        </div>
+                                        <div className="stat-footer">
+                                            <span className="stat-badge warning">
+                                                <i className="fas fa-star me-1"></i> {enhancedStats.totalReviews} ulasan siswa
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 3. Ringkasan Pembuatan Konten: Total Konten Dibuat, Total Materi, Durasi Rata-rata Materi, Materi Terlama */}
                             <div className="row mb-3">
                                 <div className="col-12">
-                                    <div className="dashboard-card">
-                                        <div className="card-body p-3">
-                                            <h5 className="mb-3 fw-bold">
-                                                <i className="fas fa-clock me-2"></i>
-                                                Ringkasan Pembuatan Konten
-                                            </h5>
-                                            <div className="row g-3">
-                                                <div className="col-md-3">
-                                                    <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
-                                                        <i className="fas fa-hourglass-half text-primary mb-2" style={{fontSize: "2rem"}}></i>
-                                                        <div className="h5 fw-bold mb-0">{totalContentDuration.withJP || "0m 0s (0JP)"}</div>
-                                                        <small className="text-muted">Total Konten Dibuat</small>
-                                                    </div>
+                                    <div className="content-summary-card">
+                                        <div className="content-summary-header d-flex align-items-center justify-content-between">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <div className="summary-icon-circle">
+                                                    <i className="fas fa-film"></i>
                                                 </div>
-                                                <div className="col-md-3">
-                                                    <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
-                                                        <i className="fas fa-film text-info mb-2" style={{fontSize: "2rem"}}></i>
-                                                        <div className="h5 fw-bold mb-0">{courseDurationStats.count || 0}</div>
-                                                        <small className="text-muted">Total Materi</small>
-                                                    </div>
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
-                                                        <i className="fas fa-chart-line text-success mb-2" style={{fontSize: "2rem"}}></i>
-                                                        <div className="h5 fw-bold mb-0">{courseDurationStats.averageWithJP || "0m 0s (0JP)"}</div>
-                                                        <small className="text-muted">Durasi Rata-rata Materi</small>
-                                                    </div>
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <div className="d-flex flex-column align-items-center p-3 bg-light rounded text-center">
-                                                        <i className="fas fa-fire text-danger mb-2" style={{fontSize: "2rem"}}></i>
-                                                        <div className="h5 fw-bold mb-0">{courseDurationStats.maxWithJP || "0m 0s (0JP)"}</div>
-                                                        <small className="text-muted">Materi Terlama</small>
-                                                    </div>
+                                                <div>
+                                                    <h6 className="summary-title mb-0">Ringkasan Pembuatan Konten</h6>
+                                                    <span className="summary-subtitle">Metrik agregat produksi video & materi kursus</span>
                                                 </div>
                                             </div>
+                                            <span className="summary-tag">
+                                                <i className="fas fa-clock me-1"></i> Terkini
+                                            </span>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Main Content Grid */}
-                            <div className="row">
-                                {/* Recent Activity Panel */}
-                                <div className="col-lg-6 mb-3">
-                                    <div className="activity-panel-modern">
-                                        <div className="panel-header">
-                                            <h5 className="panel-title">
-                                                <i className="fas fa-clock me-2"></i>
-                                                Aktivitas Terbaru
-                                            </h5>
-                                            <a href="/instructor/activities/" className="view-all-link">Lihat Semua</a>
-                                        </div>
-                                        {/* ✨ PHASE 53: Use InstructorActivityDisplay component for comprehensive activity tracking */}
-                                        <InstructorActivityDisplay maxDisplay={6} showViewAll={false} variant="compact" />
-                                    </div>
-                                </div>
-
-                                {/* Course Analytics Chart */}
-                                <div className="col-lg-6 mb-3">
-                                    <div className="analytics-panel-modern">
-                                        <div className="panel-header">
-                                            <h5 className="panel-title">
-                                                <i className="fas fa-analytics me-2"></i>
-                                                Analitik Kursus
-                                            </h5>
-                                            <div className="analytics-filters">
-                                                <select className="form-select form-select-sm">
-                                                    <option>7 hari terakhir</option>
-                                                    <option>30 hari terakhir</option>
-                                                    <option>3 bulan terakhir</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div className="analytics-content">
-                                            {/* Simple Analytics Cards */}
-                                            <div className="row">
-                                                <div className="col-md-6 mb-3">
-                                                    <div className="analytics-metric">
-                                                        <div className="metric-value">{courses.filter(c => c.platform_status === "Published").length}</div>
-                                                        <div className="metric-label">Dipublikasikan</div>
-                                                        <div className="metric-chart">
-                                                            <div className="chart-bar" style={{width: "85%", backgroundColor: "#10b981"}}></div>
+                                        <div className="content-summary-body">
+                                            <div className="row g-2">
+                                                <div className="col-md-3 col-sm-6">
+                                                    <div className="summary-metric-box">
+                                                        <div className="metric-icon text-primary">
+                                                            <i className="fas fa-hourglass-half"></i>
+                                                        </div>
+                                                        <div className="metric-data">
+                                                            <div className="metric-val">{totalContentDuration.withJP || "0m 0s (0JP)"}</div>
+                                                            <div className="metric-lbl">Total Konten Dibuat</div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="col-md-6 mb-3">
-                                                    <div className="analytics-metric">
-                                                        <div className="metric-value">{courses.filter(c => c.platform_status === "Draft").length}</div>
-                                                        <div className="metric-label">Draf</div>
-                                                        <div className="metric-chart">
-                                                            <div className="chart-bar" style={{width: "45%", backgroundColor: "#f59e0b"}}></div>
+                                                <div className="col-md-3 col-sm-6">
+                                                    <div className="summary-metric-box">
+                                                        <div className="metric-icon text-info">
+                                                            <i className="fas fa-video"></i>
+                                                        </div>
+                                                        <div className="metric-data">
+                                                            <div className="metric-val">{courseDurationStats.count || 0}</div>
+                                                            <div className="metric-lbl">Total Materi</div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="col-md-6 mb-3">
-                                                    <div className="analytics-metric">
-                                                        <div className="metric-value">{courses.filter(c => c.platform_status === "Review").length}</div>
-                                                        <div className="metric-label">Sedang Ditinjau</div>
-                                                        <div className="metric-chart">
-                                                            <div className="chart-bar" style={{width: "25%", backgroundColor: "#0f766e"}}></div>
+                                                <div className="col-md-3 col-sm-6">
+                                                    <div className="summary-metric-box">
+                                                        <div className="metric-icon text-success">
+                                                            <i className="fas fa-chart-line"></i>
+                                                        </div>
+                                                        <div className="metric-data">
+                                                            <div className="metric-val">{courseDurationStats.averageWithJP || "0m 0s (0JP)"}</div>
+                                                            <div className="metric-lbl">Durasi Rata-rata Materi</div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="col-md-6 mb-3">
-                                                    <div className="analytics-metric">
-                                                        <div className="metric-value">{courses.reduce((sum, c) => sum + (c.students?.length || 0), 0)}</div>
-                                                        <div className="metric-label">Total Pendaftaran</div>
-                                                        <div className="metric-chart">
-                                                            <div className="chart-bar" style={{width: "100%", backgroundColor: "#115e59"}}></div>
+                                                <div className="col-md-3 col-sm-6">
+                                                    <div className="summary-metric-box">
+                                                        <div className="metric-icon text-danger">
+                                                            <i className="fas fa-fire"></i>
+                                                        </div>
+                                                        <div className="metric-data">
+                                                            <div className="metric-val">{courseDurationStats.maxWithJP || "0m 0s (0JP)"}</div>
+                                                            <div className="metric-lbl">Materi Terlama</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -444,67 +422,105 @@ function Dashboard() {
                                 </div>
                             </div>
 
-                            {/* Top Performing Courses Row */}
-                            <div className="row mb-3">
-                                {/* Top Performing Courses */}
-                                <div className="col-lg-12 mb-3">
-                                    <div className="performance-panel-modern">
-                                        <div className="panel-header">
-                                            <h5 className="panel-title">
-                                                <i className="fas fa-chart-line me-2"></i>
-                                                Kursus Berkinerja Terbaik
+                            {/* 4. Side-by-side Balanced Row: Kursus Berkinerja Terbaik & Aktivitas Terbaru */}
+                            <div className="row g-3 mb-3">
+                                {/* Kursus Berkinerja Terbaik */}
+                                <div className="col-lg-6 mb-3">
+                                    <div className="performance-panel-modern h-50">
+                                        <div className="panel-header d-flex justify-content-between align-items-center">
+                                            <h5 className="panel-title d-flex align-items-center gap-2 mb-0">
+                                                <i className="fas fa-trophy text-warning"></i>
+                                                <span>Kursus Berkinerja Terbaik</span>
                                             </h5>
-                                            <a href="/instructor/courses/" className="view-all-link">Lihat Semua</a>
+                                            <Link to="/instructor/courses/" className="view-all-link">
+                                                Lihat Semua <i className="fas fa-arrow-right ms-1"></i>
+                                            </Link>
                                         </div>
                                         <div className="performance-content">
                                             {bestCourses.length > 0 ? (
-                                                <div className="row">
-                                                    {bestCourses.slice(0, 3).map((course, index) => (
-                                                        <div key={index} className="col-md-4 mb-3">
-                                                            <div className="performance-course-card">
-                                                                <div className="course-rank">#{index + 1}</div>
-                                                                <img 
-                                                                    src={getImageUrl(course.image)} 
-                                                                    alt={course.title}
-                                                                    className="performance-course-image"
-                                                                    onError={(e) => {
-                                                                        e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
-                                                                    }}
-                                                                />
-                                                                <div className="performance-course-info" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '80px' }}>
-                                                                    <h6 className="course-title-small" style={{ marginBottom: 0 }}>{course.title}</h6>
-                                                                    <div className="course-metrics" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
-                                                                        <div className="metric">
-                                                                            <i className="fas fa-users"></i>
-                                                                            <span>{course.students?.length || 0} siswa</span>
-                                                                        </div>
-                                                                        <div className="metric">
-                                                                            <i className="fas fa-star"></i>
-                                                                            <span>{course.average_rating || 0}★</span>
-                                                                        </div>
-                                                                        {/* ✨ PHASE 4.77+: Show total JP */}
-                                                                        <div className="metric">
-                                                                            <i className="fas fa-clock"></i>
-                                                                            <span>{calculateTotalJP(course.lectures)} JP</span>
-                                                                        </div>
-                                                                    </div>
+                                                <div className="performance-list">
+                                                    {bestCourses.slice(0, 4).map((course, index) => (
+                                                        <div key={course.id || index} className="performance-list-item">
+                                                            <div className={`course-rank-badge rank-${index + 1 <= 3 ? index + 1 : 'other'}`}>
+                                                                {index === 0 ? <i className="fas fa-crown"></i> : `#${index + 1}`}
+                                                            </div>
+                                                            <img
+                                                                src={getImageUrl(course.image)}
+                                                                alt={course.title}
+                                                                className="performance-item-thumb"
+                                                                onError={(e) => {
+                                                                    e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+                                                                }}
+                                                            />
+                                                            <div className="performance-item-details">
+                                                                <h6 className="performance-item-title" title={course.title}>
+                                                                    {course.title}
+                                                                </h6>
+                                                                <div className="performance-item-tags">
+                                                                    <span className="metric-chip">
+                                                                        <i className="fas fa-users text-primary"></i>
+                                                                        {course.students?.length || 0} siswa
+                                                                    </span>
+                                                                    <span className="metric-chip">
+                                                                        <i className="fas fa-star text-warning"></i>
+                                                                        {course.average_rating || 0}★
+                                                                    </span>
+                                                                    <span className="metric-chip">
+                                                                        <i className="fas fa-clock text-info"></i>
+                                                                        {calculateTotalJP(course.lectures)} JP
+                                                                    </span>
                                                                 </div>
                                                             </div>
+                                                            {course.id && (
+                                                                <Link
+                                                                    to={`/instructor/edit-course/${course.course_id || course.id}/`}
+                                                                    className="btn-item-action"
+                                                                    title="Kelola Kursus"
+                                                                >
+                                                                    <i className="fas fa-pen-to-square"></i>
+                                                                </Link>
+                                                            )}
                                                         </div>
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <div className="empty-performance">
-                                                    <i className="fas fa-chart-bar"></i>
-                                                    <h6>Belum ada data kinerja</h6>
-                                                    <p>Buat dan publikasikan kursus untuk melihat metrik kinerja</p>
+                                                <div className="empty-performance py-4">
+                                                    <i className="fas fa-chart-line fa-2x mb-2 text-muted"></i>
+                                                    <h6 className="fw-semibold">Belum ada data kinerja kursus</h6>
+                                                    <p className="text-muted small mb-3">Publikasikan kursus untuk mulai memantau metrik pendaftaran</p>
+                                                    <Link to="/instructor/create-course/" className="btn btn-sm btn-primary">
+                                                        <i className="fas fa-plus me-1"></i> Buat Kursus
+                                                    </Link>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
+                                {/* Aktivitas Terbaru */}
+                                <div className="col-lg-6 mb-3">
+                                    <div className="activity-panel-modern h-100">
+                                        <div className="panel-header d-flex justify-content-between align-items-center">
+                                            <h5 className="panel-title d-flex align-items-center gap-2 mb-0">
+                                                <i className="fas fa-clock-rotate-left text-teal"></i>
+                                                <span>Aktivitas Terbaru</span>
+                                            </h5>
+                                            <Link to="/instructor/notifications/" className="view-all-link">
+                                                Lihat Semua <i className="fas fa-arrow-right ms-1"></i>
+                                            </Link>
+                                        </div>
+                                        <div className="activity-panel-body">
+                                            <InstructorActivityDisplay 
+                                                maxDisplay={4} 
+                                                showViewAll={false} 
+                                                variant="compact" 
+                                                showFilters={false} 
+                                                showPagination={false} 
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                         </div>
                     </div>

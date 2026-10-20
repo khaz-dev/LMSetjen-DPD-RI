@@ -8,11 +8,171 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* ✨ PHASE 54: Compact variant for dashboard card */
+/* ✨ Compact variant for modern dashboard card */
 .instructor-activity-display.compact {
-    max-height: 600px;
-    overflow-y: auto;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow-y: visible !important;
 }
+
+.instructor-activity-display.compact .activities-list {
+    min-height: auto;
+    gap: 0.65rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ✨ Compact Activity Item */
+.instructor-activity-display .activity-item-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #edf2f7;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.instructor-activity-display .activity-item-compact:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.activity-compact-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.activity-compact-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-compact-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.activity-compact-title {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+.activity-compact-time {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.activity-compact-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+    overflow: hidden;
+}
+
+.compact-meta-chip {
+    font-size: 0.7rem;
+    color: #64748b;
+    background: rgba(226, 232, 240, 0.7);
+    padding: 0.12rem 0.45rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.compact-meta-chip.user {
+    color: #0f766e;
+    background: rgba(15, 118, 110, 0.09);
+    font-weight: 600;
+}
+
+.compact-meta-chip.course {
+    color: #0369a1;
+    background: rgba(2, 132, 199, 0.09);
+}
+
+.compact-meta-chip.instructor {
+    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.09);
+    font-weight: 600;
+}
+
+.activity-compact-status {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+}
+
+.activity-compact-status.success {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.activity-compact-status.failed {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.activity-compact-points {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #b45309;
+    background: #fef3c7;
+    padding: 0.18rem 0.5rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Soft color utility classes */
+.bg-soft-primary { background: rgba(37, 99, 235, 0.12) !important; color: #2563eb !important; }
+.bg-soft-success { background: rgba(16, 185, 129, 0.12) !important; color: #059669 !important; }
+.bg-soft-info { background: rgba(6, 182, 212, 0.12) !important; color: #0891b2 !important; }
+.bg-soft-warning { background: rgba(245, 158, 11, 0.14) !important; color: #d97706 !important; }
+.bg-soft-danger { background: rgba(239, 68, 68, 0.12) !important; color: #dc2626 !important; }
+.bg-soft-secondary { background: rgba(100, 116, 139, 0.12) !important; color: #475569 !important; }
+.bg-soft-teal { background: rgba(15, 118, 110, 0.12) !important; color: #0f766e !important; }
+.bg-soft-purple { background: rgba(124, 58, 237, 0.12) !important; color: #7c3aed !important; }
+.bg-soft-amber { background: rgba(217, 119, 6, 0.14) !important; color: #b45309 !important; }
+
+.text-teal { color: #0f766e !important; }
+.text-purple { color: #7c3aed !important; }
+.text-amber { color: #b45309 !important; }
 
 /* Custom scrollbar for compact variant */
 .instructor-activity-display.compact::-webkit-scrollbar {

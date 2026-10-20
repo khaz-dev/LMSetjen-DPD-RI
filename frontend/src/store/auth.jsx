@@ -21,6 +21,8 @@ const useAuthStore = create((set, get) => ({
     
     setLoading: (loading) => set({loading}),
 
+    logout: () => set({ allUserData: null }),
+
     isLoggedIn: () => get().allUserData !== null,
 }));    
 

@@ -464,18 +464,18 @@ class GoogleOAuthAPIView(APIView):
             logger.info(f"Google user info: {user_info}")
             
             # Extract user data from Google response
-            logger.info("📊 Extracting user data from Google token...")
+            logger.info("[INFO] Extracting user data from Google token...")
             google_data = GoogleOAuthVerifier.get_user_data_from_token(user_info)
             
             # Get or create user from Google data
-            logger.info("👤 Getting or creating user from Google data...")
+            logger.info("[INFO] Getting or creating user from Google data...")
             user, created = GoogleOAuthUserManager.get_or_create_user_from_google(google_data)
             
             logger.info(f"[DONE] User found/created: {user.id}, created={created}")
             logger.info(f"User details: email={user.email}, role={user.role}")
             
             # Generate JWT tokens for LMS
-            logger.info("🔑 Generating JWT tokens for LMS...")
+            logger.info("[INFO] Generating JWT tokens for LMS...")
             refresh = RefreshToken.for_user(user)
             
             # Add custom fields to tokens using serializer
@@ -487,7 +487,7 @@ class GoogleOAuthAPIView(APIView):
             refresh['is_active'] = user.is_active
             
             logger.info("[DONE] JWT tokens generated successfully")
-            logger.info(f"🎉 Google OAuth login successful for user: {user.email}")
+            logger.info(f"[SUCCESS] Google OAuth login successful for user: {user.email}")
             
             return Response(
                 {

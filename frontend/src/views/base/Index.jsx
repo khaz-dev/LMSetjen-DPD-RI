@@ -224,7 +224,7 @@ function Index() {
         { id: "statistics", label: "Statistik", icon: "chart-bar" },
         { id: "categories", label: "Kategori", icon: "th-large" },
         { id: "courses", label: "Kursus", icon: "graduation-cap" },
-        { id: "cta", label: "Daftar", icon: "rocket" },
+        { id: "cta", label: "Peringkat", icon: "rocket" },
         { id: "testimonials", label: "Testimoni", icon: "quote-left" }
     ];
 

@@ -6,7 +6,7 @@ import UserData from '../plugin/UserData';
 import apiInstance from '../../utils/axios';
 import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
-import { setAuthUser, redirectUserByRole } from '../../utils/auth';
+import { setAuthUser, redirectUserByRole, logout } from '../../utils/auth';
 import RoleSelectionModal from '../../components/RoleSelectionModal';
 import './SSOLogin.css';
 
@@ -195,7 +195,7 @@ function SSOLogin() {
     });
     
     // Clear auth data
-    useAuthStore.getState().logout();
+    logout();
     
     // Redirect to login
     setTimeout(() => {

@@ -2855,13 +2855,18 @@ class RankedStudentsAPIView(generics.ListAPIView):
     def get_queryset(self):
         """Get top ranked students sorted by points"""
         period = self.kwargs.get('period', 'lifetime')
+        from django.utils import timezone
+        now = timezone.now()
         
         if period == 'yearly':
             queryset = api_models.StudentPoints.objects.filter(
+                yearly_year=now.year,
                 yearly_points__gt=0
             ).order_by('-yearly_points')[:10]
         elif period == 'monthly':
             queryset = api_models.StudentPoints.objects.filter(
+                monthly_year=now.year,
+                monthly_month=now.month,
                 monthly_points__gt=0
             ).order_by('-monthly_points')[:10]
         else:  # lifetime
@@ -2873,6 +2878,7 @@ class RankedStudentsAPIView(generics.ListAPIView):
     
     def list(self, request, *args, **kwargs):
         """Get ranked students with rank position"""
+        period = self.kwargs.get('period', 'lifetime')
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         
@@ -2880,6 +2886,14 @@ class RankedStudentsAPIView(generics.ListAPIView):
         data = serializer.data
         for idx, item in enumerate(data, start=1):
             item['rank_position'] = idx
+            if period == 'yearly':
+                item['points'] = item.get('yearly_points', 0)
+            elif period == 'monthly':
+                item['points'] = item.get('monthly_points', 0)
+            else:
+                item['points'] = item.get('lifetime_points', 0)
+            item['period'] = period
+            
             # Determine rank badge
             if idx == 1:
                 item['rank'] = "🥇"

@@ -162,12 +162,12 @@ function Sidebar() {
                             <Link 
                                 className={`instructor-nav-link ${isActive("/instructor/notifications") ? "active" : ""}`} 
                                 to="/instructor/notifications/"
-                                data-tooltip="Notifikasi"
+                                data-tooltip="Riwayat Aktivitas"
                             >
                                 <div className="instructor-nav-icon nav-icon">
-                                    <i className="fas fa-bell"></i>
+                                    <i className="fas fa-clock-rotate-left"></i>
                                 </div>
-                                <span className="nav-text">Notifikasi</span>
+                                <span className="nav-text">Riwayat Aktivitas</span>
                             </Link>
                         </div>
 

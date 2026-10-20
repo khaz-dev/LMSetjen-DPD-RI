@@ -725,7 +725,8 @@ class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
                     lectures_data = []
 
                 courses_with_sales.append({
-                    'id': course.id,  # ✨ Add ID for identification
+                    'id': course.id,  # Database PK
+                    'course_id': course.course_id,  # Course unique identifier string for routing
                     'image': clean_and_process_image_url(course.image),
                     'title': course.title if course.title else 'Untitled Course',
                     'sales': sales,
@@ -1152,13 +1153,18 @@ class RankedInstructorsAPIView(generics.ListAPIView):
     def get_queryset(self):
         """Get top ranked instructors sorted by points"""
         period = self.kwargs.get('period', 'lifetime')
+        from django.utils import timezone
+        now = timezone.now()
         
         if period == 'yearly':
             queryset = api_models.InstructorPoints.objects.filter(
+                yearly_year=now.year,
                 yearly_points__gt=0
             ).order_by('-yearly_points')[:10]
         elif period == 'monthly':
             queryset = api_models.InstructorPoints.objects.filter(
+                monthly_year=now.year,
+                monthly_month=now.month,
                 monthly_points__gt=0
             ).order_by('-monthly_points')[:10]
         else:  # lifetime
@@ -1170,6 +1176,7 @@ class RankedInstructorsAPIView(generics.ListAPIView):
     
     def list(self, request, *args, **kwargs):
         """Get ranked instructors with rank position"""
+        period = self.kwargs.get('period', 'lifetime')
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         
@@ -1177,6 +1184,14 @@ class RankedInstructorsAPIView(generics.ListAPIView):
         data = serializer.data
         for idx, item in enumerate(data, start=1):
             item['rank_position'] = idx
+            if period == 'yearly':
+                item['points'] = item.get('yearly_points', 0)
+            elif period == 'monthly':
+                item['points'] = item.get('monthly_points', 0)
+            else:
+                item['points'] = item.get('lifetime_points', 0)
+            item['period'] = period
+            
             # Determine rank badge
             if idx == 1:
                 item['rank'] = "🥇"
@@ -1227,8 +1242,9 @@ class InstructorActivitiesAPIView(generics.ListAPIView):
         #   1. Student activities in these courses
         #   2. Instructor's own teaching activities for these courses
         # The role_at_time field distinguishes them at database level
+        from django.db.models import Q
         queryset = api_models.ActivityLog.objects.filter(
-            course__in=courses
+            Q(course__in=courses) | Q(user=user, role_at_time='instructor')
         )
         
         # Filter by activity type
@@ -1398,6 +1414,165 @@ class InstructorActivityAnalyticsAPIView(APIView):
         
         serializer = api_serializer.InstructorActivityStatsSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class InstructorPointsBreakdownAPIView(APIView):
+    """
+    GET /api/v1/instructor/points-breakdown/
+    GET /api/v1/instructor/points-breakdown/?teacher_id=<id>&user_id=<id>
+    
+    Provides comprehensive breakdown of how an instructor earned points:
+    - Lifetime, Yearly, and Monthly points
+    - Categorized summary (published courses, student enrollments, student ratings/testimonials)
+    - Full chronological history from PointsAuditLog
+    - Clear rules explaining point awards
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request, *args, **kwargs):
+        user = request.user if request.user.is_authenticated else None
+        
+        teacher_id = request.query_params.get('teacher_id')
+        user_id = request.query_params.get('user_id')
+        
+        target_user = None
+        target_teacher = None
+        
+        if teacher_id:
+            target_teacher = api_models.Teacher.objects.filter(id=teacher_id).first()
+            if target_teacher:
+                target_user = target_teacher.user
+        elif user_id:
+            target_user = api_models.User.objects.filter(id=user_id).first()
+            if target_user:
+                target_teacher = api_models.Teacher.objects.filter(user=target_user).first()
+        elif user:
+            target_user = user
+            target_teacher = api_models.Teacher.objects.filter(user=user).first()
+            
+        if not target_user:
+            return Response(
+                {"detail": "Instruktur / Pengguna tidak ditemukan"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        # Self-healing synchronization: Check if teacher has published courses not yet in PointsAuditLog
+        if target_user:
+            published_courses = api_models.Course.objects.filter(
+                teacher__user=target_user,
+                is_published_version=True,
+                platform_status='Published'
+            )
+            for pub_course in published_courses:
+                has_audit = api_models.PointsAuditLog.objects.filter(
+                    user=target_user,
+                    points_type='instructor',
+                    activity_type='course_published',
+                    course_id=pub_course.id
+                ).exists()
+                if not has_audit:
+                    api_models.InstructorPoints.add_points(
+                        target_user,
+                        50,
+                        'course_published',
+                        course_id=pub_course.id,
+                        description=f"Publikasi Kursus: {pub_course.title}"
+                    )
+                    
+        points_record = api_models.InstructorPoints.objects.filter(user=target_user).first()
+        
+        # Get audit logs for this instructor
+        audit_logs = api_models.PointsAuditLog.objects.filter(
+            user=target_user,
+            points_type='instructor'
+        ).order_by('-awarded_at')[:40]
+        
+        history = []
+        for log in audit_logs:
+            # Format friendly activity type display
+            disp = log.get_activity_type_display()
+            if log.activity_type == 'student_rating' and 'testimonial' in (log.description or '').lower():
+                disp = "Testimoni Platform"
+            elif log.activity_type == 'platform_testimonial':
+                disp = "Testimoni Platform"
+
+            history.append({
+                'id': log.id,
+                'activity_type': log.activity_type,
+                'activity_type_display': disp,
+                'points_awarded': log.points_awarded,
+                'description': log.description,
+                'course_id': log.course_id,
+                'quiz_id': log.quiz_id,
+                'review_id': log.review_id,
+                'awarded_at': log.awarded_at,
+            })
+            
+        # Summary counts by activity_type
+        summary = {
+            'course_published': {
+                'points': sum(l.points_awarded for l in audit_logs if l.activity_type == 'course_published'),
+                'count': sum(1 for l in audit_logs if l.activity_type == 'course_published')
+            },
+            'student_enrollment': {
+                'points': sum(l.points_awarded for l in audit_logs if l.activity_type == 'student_enrollment'),
+                'count': sum(1 for l in audit_logs if l.activity_type == 'student_enrollment')
+            },
+            'student_rating': {
+                'points': sum(l.points_awarded for l in audit_logs if l.activity_type in ['student_rating', 'platform_testimonial']),
+                'count': sum(1 for l in audit_logs if l.activity_type in ['student_rating', 'platform_testimonial'])
+            },
+            'platform_testimonial': {
+                'points': sum(l.points_awarded for l in audit_logs if l.activity_type == 'platform_testimonial' or (l.activity_type == 'student_rating' and 'testimonial' in (l.description or '').lower())),
+                'count': sum(1 for l in audit_logs if l.activity_type == 'platform_testimonial' or (l.activity_type == 'student_rating' and 'testimonial' in (l.description or '').lower()))
+            }
+        }
+        
+        # Rank position in rankings
+        rank_pos = None
+        if points_record and points_record.lifetime_points > 0:
+            rank_pos = api_models.InstructorPoints.objects.filter(
+                lifetime_points__gt=points_record.lifetime_points
+            ).count() + 1
+            
+        rules = [
+            {
+                'key': 'course_published',
+                'title': 'Publikasi Kursus Baru',
+                'points_text': '+50 Poin',
+                'description': 'Diberikan otomatis setiap kursus Anda berhasil dipublikasikan untuk siswa.'
+            },
+            {
+                'key': 'student_enrollment',
+                'title': 'Pendaftaran Siswa Baru',
+                'points_text': '+10 Poin',
+                'description': 'Diberikan setiap kali seorang siswa mendaftar ke kursus yang Anda ajar.'
+            },
+            {
+                'key': 'student_rating',
+                'title': 'Ulasan & Rating Bintang',
+                'points_text': '+10 s/d +50 Poin',
+                'description': 'Diberikan saat siswa memberikan ulasan pada kursus Anda (1★ = 10 pt, 2★ = 20 pt, 3★ = 30 pt, 4★ = 40 pt, 5★ = 50 pt).'
+            },
+            {
+                'key': 'platform_contribution',
+                'title': 'Testimoni & Kontribusi Platform',
+                'points_text': '+50 Poin',
+                'description': 'Diberikan sebagai apresiasi kontribusi testimoni dan feedback instruktur pada platform.'
+            }
+        ]
+        
+        return Response({
+            'user_id': target_user.id,
+            'teacher_name': target_user.get_full_name() or target_user.username,
+            'lifetime_points': points_record.lifetime_points if points_record else 0,
+            'yearly_points': points_record.yearly_points if points_record else 0,
+            'monthly_points': points_record.monthly_points if points_record else 0,
+            'rank_position': rank_pos,
+            'summary': summary,
+            'history': history,
+            'rules': rules
+        }, status=status.HTTP_200_OK)
 
 
 

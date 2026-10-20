@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { redirectUserByRole, setAuthUser } from "../../utils/auth";
+import { redirectUserByRole, setAuthUser, logout } from "../../utils/auth";
 import { useAuthStore } from "../../store/auth";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
@@ -26,6 +26,11 @@ function Login() {
 
   const navigate = useNavigate();
   const { isLoggedIn, setAuthToken } = useAuthStore();
+
+  // Clear any stale logout flag when user visits login page
+  useEffect(() => {
+    sessionStorage.removeItem("logging_out");
+  }, []);
 
   useEffect(() => {
     if (isLoggedIn()) {
@@ -73,7 +78,8 @@ function Login() {
         const result = event.data.data;
 
         try {
-          // Store tokens
+          // Explicitly clear logging_out flag and store tokens
+          sessionStorage.removeItem("logging_out");
           setAuthUser(result.access, result.refresh);
 
           // Check if user has multiple roles
@@ -502,8 +508,8 @@ function Login() {
       text: "Anda perlu memilih peran untuk melanjutkan.",
     });
 
-    // Clear auth data
-    useAuthStore.getState().logout();
+    // Clear auth data properly using logout()
+    logout();
   };
 
   return (

@@ -3792,13 +3792,17 @@ class StudentPoints(models.Model):
         try:
             PointsAuditLog.objects.create(
                 user=user,
-                points=points,
-                category=category,
-                role='student',
-                metadata=kwargs
+                points_type='student',
+                activity_type=category,
+                points_awarded=points,
+                course_id=kwargs.get('course_id'),
+                quiz_id=kwargs.get('quiz_id'),
+                review_id=kwargs.get('review_id'),
+                description=kwargs.get('description', '')
             )
-        except:
-            pass  # Audit logging is optional
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Error creating student PointsAuditLog: {e}")
         
         return obj
 
@@ -3885,13 +3889,17 @@ class InstructorPoints(models.Model):
         try:
             PointsAuditLog.objects.create(
                 user=user,
-                points=points,
-                category=category,
-                role='instructor',
-                metadata=kwargs
+                points_type='instructor',
+                activity_type=category,
+                points_awarded=points,
+                course_id=kwargs.get('course_id'),
+                quiz_id=kwargs.get('quiz_id'),
+                review_id=kwargs.get('review_id'),
+                description=kwargs.get('description', '')
             )
-        except:
-            pass  # Audit logging is optional
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Error creating instructor PointsAuditLog: {e}")
         
         return obj
 
@@ -3922,6 +3930,7 @@ class PointsAuditLog(models.Model):
             ('student_rating', 'Rating Received by Instructor'),
             ('course_published', 'Course Published'),
             ('student_enrollment', 'Student Enrollment'),
+            ('platform_testimonial', 'Platform Testimonial'),
         ]
     )
     
@@ -4004,17 +4013,27 @@ class ActivityLog(models.Model):
         ('content_liked', 'Sukai Konten'),
         ('wishlist_added', 'Tambah Wishlist'),
         ('discussion_participated', 'Ikut Diskusi'),
-        # ✨ PHASE 53+: Instructor Teaching Activities (10 types)
+        # ✨ PHASE 53+: Instructor Teaching Activities
         ('course_created', 'Buat Kursus'),
         ('course_updated', 'Update Kursus'),
+        ('course_deleted', 'Hapus Kursus'),
         ('course_published', 'Publikasikan Kursus'),
         ('lesson_created', 'Tambah Pelajaran'),
         ('lesson_updated', 'Update Pelajaran'),
+        ('lesson_deleted', 'Hapus Pelajaran'),
         ('quiz_created', 'Buat Kuis'),
+        ('quiz_updated', 'Update Kuis'),
+        ('quiz_deleted', 'Hapus Kuis'),
         ('student_enrolled_manual', 'Daftar Siswa Secara Manual'),
         ('student_unenrolled', 'Hapus Siswa'),
         ('announcement_posted', 'Posting Pengumuman'),
         ('grade_recorded', 'Berikan Nilai'),
+        # ✨ Reviews & Testimonials
+        ('review_updated', 'Update Review'),
+        ('review_deleted', 'Hapus Review'),
+        ('testimonial_posted', 'Kirim Testimoni Platform'),
+        ('testimonial_updated', 'Update Testimoni Platform'),
+        ('testimonial_deleted', 'Hapus Testimoni Platform'),
     ]
     
     ROLE_CHOICES = [

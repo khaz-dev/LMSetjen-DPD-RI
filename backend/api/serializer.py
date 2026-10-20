@@ -3091,10 +3091,24 @@ class RankedStudentSerializer(serializers.Serializer):
     organization_unit_name = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
     lifetime_points = serializers.IntegerField()
-    yearly_points = serializers.IntegerField()
-    monthly_points = serializers.IntegerField()
+    yearly_points = serializers.SerializerMethodField()
+    monthly_points = serializers.SerializerMethodField()
     rank = serializers.SerializerMethodField()
     rank_position = serializers.SerializerMethodField()
+    
+    def get_yearly_points(self, obj):
+        from django.utils import timezone
+        now = timezone.now()
+        if getattr(obj, 'yearly_year', 0) == now.year:
+            return obj.yearly_points
+        return 0
+
+    def get_monthly_points(self, obj):
+        from django.utils import timezone
+        now = timezone.now()
+        if getattr(obj, 'monthly_year', 0) == now.year and getattr(obj, 'monthly_month', 0) == now.month:
+            return obj.monthly_points
+        return 0
     
     def get_id(self, obj):
         return obj.id
@@ -3224,10 +3238,24 @@ class RankedInstructorSerializer(serializers.Serializer):
     organization_unit_name = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
     lifetime_points = serializers.IntegerField()
-    yearly_points = serializers.IntegerField()
-    monthly_points = serializers.IntegerField()
+    yearly_points = serializers.SerializerMethodField()
+    monthly_points = serializers.SerializerMethodField()
     rank = serializers.SerializerMethodField()
     rank_position = serializers.SerializerMethodField()
+    
+    def get_yearly_points(self, obj):
+        from django.utils import timezone
+        now = timezone.now()
+        if getattr(obj, 'yearly_year', 0) == now.year:
+            return obj.yearly_points
+        return 0
+
+    def get_monthly_points(self, obj):
+        from django.utils import timezone
+        now = timezone.now()
+        if getattr(obj, 'monthly_year', 0) == now.year and getattr(obj, 'monthly_month', 0) == now.month:
+            return obj.monthly_points
+        return 0
     
     def get_id(self, obj):
         return obj.id

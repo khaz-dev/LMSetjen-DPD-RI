@@ -32,9 +32,18 @@ export const switchRole = async (role, options = {}) => {
   try {
     console.log(`PHASE 4.17: Switching to role: ${role}`);
     
+    // Explicitly guarantee Authorization header from cookies or options
+    const token = options.accessToken || Cookie.get('access_token');
+    const config = {};
+    if (token) {
+      config.headers = {
+        Authorization: `Bearer ${token}`
+      };
+    }
+    
     const response = await apiInstance.post(`auth/select-role/`, {
       role: role.toLowerCase().trim()
-    });
+    }, config);
     
     if (response.data.success) {
       console.log('PHASE 4.17: Role switched successfully');
@@ -171,7 +180,8 @@ const updateAuthTokens = (access_token, refresh_token) => {
     expires: 1,
     // Use protocol-aware secure flag to avoid silently dropped cookies on non-HTTPS staging/tests.
     secure: isHttps,
-    sameSite: isHttps ? 'Strict' : 'Lax'
+    sameSite: isHttps ? 'Strict' : 'Lax',
+    path: '/'
   };
 
   Cookie.set('access_token', access_token, cookieOptions);
