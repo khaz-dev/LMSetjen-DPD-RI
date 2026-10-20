@@ -1805,6 +1805,13 @@ class StudentQuizDetailAPIView(generics.RetrieveAPIView):
                 serializer = self.get_serializer(quiz)
                 quiz_data = serializer.data
                 
+                # If presentation mode is random, shuffle questions for student
+                if getattr(quiz, 'presentation_mode', 'ordered') == 'random' and 'questions' in quiz_data and isinstance(quiz_data['questions'], list):
+                    import random
+                    shuffled_questions = list(quiz_data['questions'])
+                    random.shuffle(shuffled_questions)
+                    quiz_data['questions'] = shuffled_questions
+
                 # Add attempt information
                 today_attempts = api_models.QuizAttempt.get_daily_attempts_count(user, quiz)
                 can_attempt = api_models.QuizAttempt.can_attempt_quiz(user, quiz)

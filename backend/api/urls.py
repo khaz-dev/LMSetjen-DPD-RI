@@ -150,6 +150,7 @@ urlpatterns = [
     # Quiz Management API Endpoints
     path("quiz/list-create/", api_views.QuizListCreateAPIView.as_view()),
     path("quiz/detail/<quiz_id>/", api_views.QuizDetailAPIView.as_view()),
+    path("quiz/question/reorder/", api_views.QuizQuestionReorderAPIView.as_view()),
     path("quiz/question/list-create/", api_views.QuizQuestionListCreateAPIView.as_view()),
     path("quiz/question/detail/<question_id>/", api_views.QuizQuestionDetailAPIView.as_view()),
     path("quiz/choice/list-create/", api_views.QuizChoiceListCreateAPIView.as_view()),

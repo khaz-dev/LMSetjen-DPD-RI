@@ -1872,10 +1872,21 @@ class Country(models.Model):
         return self.name
 
 class Quiz(models.Model):
+    QUIZ_TYPE_CHOICES = (
+        ('quiz', 'Kuis'),
+        ('pre_post_test', 'Pre & Post-test'),
+    )
+    PRESENTATION_MODE_CHOICES = (
+        ('ordered', 'Sesuai Urutan'),
+        ('random', 'Acak'),
+    )
+
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="quizzes")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     quiz_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    quiz_type = models.CharField(max_length=30, choices=QUIZ_TYPE_CHOICES, default='quiz')
+    presentation_mode = models.CharField(max_length=30, choices=PRESENTATION_MODE_CHOICES, default='ordered')
     is_active = models.BooleanField(default=True)
     date = models.DateTimeField(default=timezone.now)
 

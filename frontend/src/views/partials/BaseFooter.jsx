@@ -29,8 +29,8 @@ function BaseFooter() {
     brand: {
       name: "LMSetjen DPD RI",
       description: "Platform e-learning berbasis LMS yang dikembangkan oleh BPSDM OKK untuk mendukung pelatihan digital pegawai dan anggota Setjen DPD RI.",
-      copyright: `© ${currentYear} BPSDM | OKK | Setjen DPD RI`,
-      version: `v${APP_VERSION}`
+      copyright: `©${currentYear} BPSDM OKK Setjen DPD RI`,
+      version: `${APP_VERSION}`
     },
     contact: {
       email: "sdm@dpd.go.id",
@@ -40,7 +40,7 @@ function BaseFooter() {
   };
 
   return (
-    <footer 
+    <footer
       role="contentinfo"
       className="base-footer"
     >
@@ -69,16 +69,16 @@ function BaseFooter() {
                 <li className="mb-2"><a href="/capaian/" className="footer-link">Capaian</a></li>
                 <li className="mb-2"><a href="/contact/" className="footer-link">Kontak</a></li>
               </ul>
-              
+
               {/* Logo Instansi: Setjen DPD RI, OKK, BPSDM (Horizontal kiri ke kanan, tinggi 40) */}
               <div className="footer-institution-logos" aria-label="Logo Instansi Terkait">
                 <div className="footer-institution-logo-item" title="Sekretariat Jenderal DPD RI">
                   <picture>
                     <source srcSet={logoSetjenWebP} type="image/webp" />
-                    <img 
-                      src={logoSetjenPNG} 
-                      alt="Logo Setjen DPD RI" 
-                      className="footer-institution-logo-img" 
+                    <img
+                      src={logoSetjenPNG}
+                      alt="Logo Setjen DPD RI"
+                      className="footer-institution-logo-img"
                       height="40"
                       width="44"
                       loading="lazy"
@@ -89,10 +89,10 @@ function BaseFooter() {
                 <div className="footer-institution-logo-item" title="Biro Organisasi, Keanggotaan, & Kepegawaian (OKK)">
                   <picture>
                     <source srcSet={logoOkkWebP} type="image/webp" />
-                    <img 
-                      src={logoOkkPNG} 
-                      alt="Logo Biro OKK Setjen DPD RI" 
-                      className="footer-institution-logo-img footer-institution-logo-okk" 
+                    <img
+                      src={logoOkkPNG}
+                      alt="Logo Biro OKK Setjen DPD RI"
+                      className="footer-institution-logo-img footer-institution-logo-okk"
                       height="35"
                       width="69"
                       loading="lazy"
@@ -103,10 +103,10 @@ function BaseFooter() {
                 <div className="footer-institution-logo-item" title="Bagian Pengembangan Sumber Daya Manusia (BPSDM)">
                   <picture>
                     <source srcSet={logoBpsdmWebP} type="image/webp" />
-                    <img 
-                      src={logoBpsdmPNG} 
-                      alt="Logo BPSDM Setjen DPD RI" 
-                      className="footer-institution-logo-img" 
+                    <img
+                      src={logoBpsdmPNG}
+                      alt="Logo BPSDM Setjen DPD RI"
+                      className="footer-institution-logo-img"
                       height="40"
                       width="35"
                       loading="lazy"
@@ -171,14 +171,14 @@ function BaseFooter() {
             </div>
           </div>
         </div>
-        
+
         {/* Bottom Section */}
         <div className="row align-items-center pt-4 footer-bottom">
           {/* Copyright */}
           <div className="col-md-6 col-12 text-center text-md-start">
             <span className="footer-copyright">{config.brand.copyright} {config.brand.version}</span>
           </div>
-          
+
           {/* Legal Links */}
           <div className="col-md-6 col-12 text-center text-md-end">
             <div className="footer-legal-links d-flex justify-content-center justify-content-md-end flex-wrap gap-3">

@@ -2,7 +2,7 @@ from urllib3.exceptions import InsecureRequestWarning
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib.auth.hashers import check_password
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q, F, Value, Count, Sum, Avg, Max
 from django.db.models.functions import ExtractMonth
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -1844,7 +1844,44 @@ class QuizQuestionDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             return api_models.QuizQuestion.objects.all() 
             
         # Jika bukan admin, hanya bisa memanipulasi kuis di kursus miliknya
-        return api_models.QuizQuestion.objects.filter(course__teacher__user=user)
+        return api_models.QuizQuestion.objects.filter(quiz__course__teacher__user=user)
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class QuizQuestionReorderAPIView(APIView):
+    """
+    Reorder questions in a quiz
+    POST payload:
+    {
+        "orders": [
+            {"question_id": "123456", "order": 1},
+            {"question_id": "654321", "order": 2}
+        ]
+    }
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request, *args, **kwargs):
+        orders = request.data.get('orders', [])
+        if not orders:
+            return Response({"error": "No orders provided"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = request.user
+        is_admin = getattr(user, 'is_admin', False)
+
+        with transaction.atomic():
+            for item in orders:
+                q_id = item.get('question_id')
+                new_order = item.get('order')
+                if q_id and new_order is not None:
+                    qs = api_models.QuizQuestion.objects.filter(question_id=q_id)
+                    if not is_admin:
+                        qs = qs.filter(quiz__course__teacher__user=user)
+                    qs.update(order=new_order)
+
+        return Response({"message": "Questions reordered successfully"}, status=status.HTTP_200_OK)
 
 
 

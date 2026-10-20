@@ -1807,7 +1807,7 @@ class QuizSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = api_models.Quiz
-        fields = ['quiz_id', 'title', 'description', 'is_active', 'date', 'questions', 'total_questions', 'course_title']
+        fields = ['quiz_id', 'title', 'description', 'quiz_type', 'presentation_mode', 'is_active', 'date', 'questions', 'total_questions', 'course_title']
 
     def get_course_title(self, obj):
         return obj.course.title if obj.course else None

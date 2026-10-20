@@ -10,7 +10,7 @@ function Footer() {
   const content = {
     brand: {
       name: "LMSetjen DPD RI",
-      copyright: `© ${currentYear} BPSDM | OKK | Setjen DPD RI`,
+      copyright: `©${currentYear} BPSDM OKK Setjen DPD RI`,
       version: `v${APP_VERSION}`
     },
     contact: {
