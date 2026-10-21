@@ -10,17 +10,9 @@ class IsAdminUser(permissions.BasePermission):
     """
     Custom permission to only allow admin users to access the view.
     
-    ✨ PHASE 4.10: Updated to use boolean role field (is_admin)
-    
-    This permission checks:
+    Ensures active role is 'admin' for multi-role users.
     1. User is authenticated
-    2. User has is_admin = True (new boolean system)
-    3. Falls back to current_role == 'admin' if boolean field not available (backward compat)
-    
-    Supports multi-role system:
-    - Checks is_admin boolean field (primary method)
-    - Falls back to current_role for users migrating from old system
-    - Type-safe boolean check instead of string comparison
+    2. User is staff/superuser OR (has admin capability AND current active role is 'admin')
     
     Usage:
         permission_classes = [IsAdminUser]
@@ -31,40 +23,32 @@ class IsAdminUser(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # Check Django standard staff or superuser
+        # Django standard staff or superuser always has full access
         if getattr(request.user, 'is_staff', False) or getattr(request.user, 'is_superuser', False):
             return True
 
-        # Check boolean is_admin field
-        if hasattr(request.user, 'is_admin') and request.user.is_admin:
-            return True
+        # Check if user has admin capability
+        has_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'role', None) == 'admin'
+        if not has_admin:
+            return False
+
+        # Active role check: user must be currently in 'admin' role
+        current_role = getattr(request.user, 'current_role', None)
+        if current_role and current_role != 'admin':
+            return False
         
-        # Check role fields
-        if hasattr(request.user, 'current_role') and request.user.current_role == 'admin':
-            return True
-        if hasattr(request.user, 'role') and request.user.role == 'admin':
-            return True
-        
-        return False
+        return True
     
-    message = 'Admin access required. Only users with admin role can access this endpoint.'
+    message = 'Admin access required. Only users with active admin role can access this endpoint.'
 
 
 class IsTeacherUser(permissions.BasePermission):
     """
     Custom permission to only allow teacher/instructor users to access the view.
     
-    ✨ PHASE 4.10: Updated to use boolean role field (is_instructor)
-    
-    This permission checks:
+    Ensures active role is 'teacher' or 'instructor' for multi-role users.
     1. User is authenticated
-    2. User has is_instructor = True (new boolean system)
-    3. Falls back to current_role in ['teacher', 'instructor'] if not available (backward compat)
-    
-    Supports multi-role system:
-    - Checks is_instructor boolean field (primary method)
-    - Falls back to current_role for users migrating from old system
-    - Type-safe boolean check instead of string comparison
+    2. User has instructor capability AND current active role is in ['teacher', 'instructor']
     
     Usage:
         permission_classes = [IsTeacherUser]
@@ -75,34 +59,35 @@ class IsTeacherUser(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # NEW: Check boolean is_instructor field (primary check)
-        if hasattr(request.user, 'is_instructor') and request.user.is_instructor:
+        # Django standard staff or superuser always has full access
+        if getattr(request.user, 'is_staff', False) or getattr(request.user, 'is_superuser', False):
             return True
+
+        # Check if user has instructor capability
+        has_teacher = (
+            getattr(request.user, 'is_instructor', False) or 
+            getattr(request.user, 'role', None) in ['teacher', 'instructor']
+        )
+        if not has_teacher:
+            return False
+
+        # Active role check: user must be currently in 'teacher' or 'instructor' role
+        current_role = getattr(request.user, 'current_role', None)
+        if current_role and current_role not in ['teacher', 'instructor']:
+            return False
         
-        # FALLBACK: Check current_role for backward compatibility (users in transition)
-        if hasattr(request.user, 'current_role') and request.user.current_role in ['teacher', 'instructor']:
-            return True
-        
-        return False
+        return True
     
-    message = 'Teacher access required. Only users with teacher or instructor role can access this endpoint.'
+    message = 'Teacher access required. Only users with active teacher or instructor role can access this endpoint.'
 
 
 class IsStudentUser(permissions.BasePermission):
     """
     Custom permission to only allow student users to access the view.
     
-    ✨ PHASE 4.10: Updated to use boolean role field (is_student)
-    
-    This permission checks:
+    Ensures active role is 'student' for multi-role users.
     1. User is authenticated
-    2. User has is_student = True (new boolean system)
-    3. Falls back to current_role == 'student' if boolean field not available (backward compat)
-    
-    Supports multi-role system:
-    - Checks is_student boolean field (primary method)
-    - Falls back to current_role for users migrating from old system
-    - Type-safe boolean check instead of string comparison
+    2. User has student capability AND current active role is 'student'
     
     Usage:
         permission_classes = [IsStudentUser]
@@ -113,17 +98,22 @@ class IsStudentUser(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # NEW: Check boolean is_student field (primary check)
-        if hasattr(request.user, 'is_student') and request.user.is_student:
-            return True
+        # Check if user has student capability
+        has_student = (
+            getattr(request.user, 'is_student', False) or 
+            getattr(request.user, 'role', None) == 'student'
+        )
+        if not has_student:
+            return False
+
+        # Active role check: user must be currently in 'student' role
+        current_role = getattr(request.user, 'current_role', None)
+        if current_role and current_role != 'student':
+            return False
         
-        # FALLBACK: Check current_role for backward compatibility (users in transition)
-        if hasattr(request.user, 'current_role') and request.user.current_role == 'student':
-            return True
-        
-        return False
+        return True
     
-    message = 'Student access required. Only users with student role can access this endpoint.'
+    message = 'Student access required. Only users with active student role can access this endpoint.'
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
@@ -213,15 +203,7 @@ class ReadOnly(permissions.BasePermission):
 class IsTeacherOrAdmin(permissions.BasePermission):
     """
     Custom permission to allow teacher/instructor or admin users to access the view.
-    
-    This permission checks:
-    1. User is authenticated
-    2. User has 'teacher', 'instructor', or 'admin' role (checks current_role first, fallback to role)
-    
-    Supports multi-role system:
-    - Checks current_role field if user has multiple roles
-    - Falls back to role field for single-role users (backward compatible)
-    - Works with both old and new systems during transition
+    Ensures active role is 'teacher', 'instructor', or 'admin'.
     
     Usage:
         permission_classes = [IsTeacherOrAdmin]
@@ -232,7 +214,18 @@ class IsTeacherOrAdmin(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # Check boolean role fields (new multi-role system)
+        if getattr(request.user, 'is_staff', False) or getattr(request.user, 'is_superuser', False):
+            return True
+        
+        current_role = getattr(request.user, 'current_role', None)
+        if current_role:
+            if current_role == 'admin':
+                return getattr(request.user, 'is_admin', False) or getattr(request.user, 'role', None) == 'admin'
+            elif current_role in ['teacher', 'instructor']:
+                return getattr(request.user, 'is_instructor', False) or getattr(request.user, 'role', None) in ['teacher', 'instructor']
+            return False
+
+        # Fallback if current_role is not set
         if hasattr(request.user, 'is_instructor') and request.user.is_instructor:
             return True
         if hasattr(request.user, 'is_admin') and request.user.is_admin:
@@ -269,13 +262,16 @@ class IsOwnerOrStaff(permissions.BasePermission):
     def _is_staff_or_admin(self, user):
         if not user or not user.is_authenticated:
             return False
-        return bool(
-            user.is_staff or 
-            getattr(user, 'is_superuser', False) or 
-            getattr(user, 'is_admin', False) or 
-            getattr(user, 'role', None) == 'admin' or
-            (hasattr(user, 'current_role') and user.current_role == 'admin')
-        )
+        # Superuser and staff can always act as staff
+        if user.is_staff or getattr(user, 'is_superuser', False):
+            return True
+        # For admin user: must have admin capability AND current active role must be 'admin'
+        has_admin = getattr(user, 'is_admin', False) or getattr(user, 'role', None) == 'admin'
+        if has_admin:
+            current_role = getattr(user, 'current_role', None)
+            if not current_role or current_role == 'admin':
+                return True
+        return False
 
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:

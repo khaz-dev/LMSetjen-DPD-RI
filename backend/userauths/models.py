@@ -374,6 +374,14 @@ def sync_profile_with_teacher(sender, instance, created, **kwargs):
             teacher_instance.full_name = instance.full_name
             teacher_instance.country = instance.country
             teacher_instance.about = instance.about
+            if instance.bio is not None:
+                teacher_instance.bio = (instance.bio or "")[:100]
+            if instance.facebook is not None:
+                teacher_instance.facebook = instance.facebook
+            if instance.twitter is not None:
+                teacher_instance.twitter = instance.twitter
+            if instance.linkedin is not None:
+                teacher_instance.linkedin = instance.linkedin
             
             # Save the teacher instance
             teacher_instance.save()

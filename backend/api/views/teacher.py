@@ -1017,6 +1017,20 @@ class TeacherProfileUpdateAPIView(APIView):
                     setattr(teacher, field, request.data[field])
             
             teacher.save()
+            
+            # ✨ Synchronize with userauths Profile to prevent data divergence
+            try:
+                from userauths.models import Profile
+                user_profile = Profile.objects.filter(user=user).first()
+                if user_profile:
+                    user_profile._syncing = True
+                    for field in teacher_fields:
+                        if field in request.data:
+                            setattr(user_profile, field, request.data[field])
+                    user_profile.save()
+            except Exception as pe:
+                print(f"Error syncing Teacher update to Profile: {pe}")
+            
             teacher_data = api_serializer.BasicTeacherSerializer(teacher).data
             
             return Response({

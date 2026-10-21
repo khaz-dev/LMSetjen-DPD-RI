@@ -200,6 +200,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     jenis_jabatan = serializers.CharField(source='user.jenis_jabatan', read_only=True, allow_null=True)
     # ✨ PHASE 7.20: Include user_id for instructor badge comparison in forums
     user_id = serializers.IntegerField(source='user.id', read_only=True)
+    last_login = serializers.DateTimeField(source='user.last_login', read_only=True)
     
     # ✨ PHASE 11.5: CRITICAL FIX - Uses FileField NOT SerializerMethodField
     # SerializerMethodField is read-only (GET only), but we need to support write (PATCH)
@@ -509,9 +510,10 @@ class BasicTeacherSerializer(serializers.ModelSerializer):
     image = serializers.FileField(required=False, allow_null=True)
     full_name = serializers.SerializerMethodField()  # ✨ PHASE 4.39: Ensure full_name returns teacher name or user full_name fallback
     user_id = serializers.IntegerField(source='user.id', read_only=True)  # ✨ PHASE 7.20: Include user_id for instructor badge comparison
+    last_login = serializers.DateTimeField(source='user.last_login', read_only=True)
 
     class Meta:
-        fields = ["id", "user_id", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "about", "country"]
+        fields = ["id", "user_id", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "about", "country", "last_login"]
         model = api_models.Teacher
     
     def get_full_name(self, obj):
