@@ -78,9 +78,19 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
     }
   }, [isDropdownOpen]);
 
+  const normalizeRole = (role) => {
+    if (!role) return '';
+    const r = role.toLowerCase().trim();
+    return (r === 'teacher') ? 'instructor' : r;
+  };
+
+  const isRoleActive = (role) => {
+    return normalizeRole(role) === normalizeRole(currentRole);
+  };
+
   // Handle role switch
   const handleRoleSwitch = async (role) => {
-    if (role === currentRole) {
+    if (isRoleActive(role)) {
       setIsDropdownOpen(false);
       return;
     }
@@ -89,12 +99,11 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
     try {
       // Determine destination dashboard URL based on role
       const getRoleDashboardUrl = (switchedRole) => {
-        const normalizedRole = switchedRole?.toLowerCase().trim();
+        const normalizedRole = normalizeRole(switchedRole);
         
         switch (normalizedRole) {
           case 'student':
             return '/student/dashboard/';
-          case 'teacher':
           case 'instructor':
             return '/instructor/dashboard/';
           case 'admin':
@@ -106,15 +115,15 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
 
       // Callback to navigate to role-specific dashboard after role switch
       const onRoleSwitchCallback = (newRole, newAvailableRoles) => {
-        console.log('PHASE 4.19: Role switch callback triggered, new role:', newRole);
+        console.log('Role switch callback triggered, new role:', newRole);
         // Delay to ensure RolesContext updates before navigation
         setTimeout(() => {
           const dashboardUrl = getRoleDashboardUrl(newRole);
-          console.log(`PHASE 4.19: Navigating to ${dashboardUrl} for role: ${newRole}`);
+          console.log(`Navigating to ${dashboardUrl} for role: ${newRole}`);
           navigate(dashboardUrl);
           // Trigger a full refresh of available roles
           fetchAvailableRoles();
-        }, 500);
+        }, 300);
         return Promise.resolve();
       };
 
@@ -125,8 +134,8 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
         Toast().fire({
           icon: 'success',
           title: 'Peran Berhasil Beralih',
-          html: `Anda sekarang dalam mode <strong>${roleLabels[newRole] || newRole}</strong>`,
-          timer: 5174
+          html: `Anda sekarang dalam mode <strong>${roleLabels[normalizeRole(newRole)] || newRole}</strong>`,
+          timer: 3000
         });
         
         // Close dropdown after successful switch
@@ -194,7 +203,7 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
             {availableRoles?.map((role) => (
               <button
                 key={role}
-                className={`${isAdmin ? "admin-role-dropdown-item" : "role-dropdown-item"} ${role === currentRole ? 'active' : ''} ${isSwitching ? 'disabled' : ''}`}
+                className={`${isAdmin ? "admin-role-dropdown-item" : "role-dropdown-item"} ${isRoleActive(role) ? 'active' : ''} ${isSwitching ? 'disabled' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRoleSwitch(role);
@@ -203,8 +212,8 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
               >
                 <i className={`${roleIcons[role?.toLowerCase()] || 'fas fa-user'} me-2`}></i>
                 <span className={isAdmin ? "admin-role-label" : "role-label"}>{roleLabels[role?.toLowerCase()] || role}</span>
-                {role === currentRole && (
-                  <i className="fas fa-check-circle ms-auto text-success"></i>
+                {isRoleActive(role) && (
+                  <i className="fas fa-check-circle ms-auto text-success role-active-check"></i>
                 )}
               </button>
             ))}
@@ -244,7 +253,7 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
             {availableRoles?.map((role) => (
               <button
                 key={role}
-                className={`role-dropdown-item ${role === currentRole ? 'active' : ''} ${isSwitching ? 'disabled' : ''}`}
+                className={`role-dropdown-item ${isRoleActive(role) ? 'active' : ''} ${isSwitching ? 'disabled' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRoleSwitch(role);
@@ -254,10 +263,10 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
                 <i className={`${roleIcons[role?.toLowerCase()] || 'fas fa-user'} me-2`}></i>
                 <span className="role-label">{roleLabels[role?.toLowerCase()] || role}</span>
                 <span className="role-description">
-                  {role === currentRole ? 'Currently selected' : `Switch to ${roleLabels[role?.toLowerCase()]}`}
+                  {isRoleActive(role) ? 'Peran sedang aktif' : `Beralih ke peran ${roleLabels[role?.toLowerCase()] || role}`}
                 </span>
-                {role === currentRole && (
-                  <i className="fas fa-check-circle ms-auto text-success"></i>
+                {isRoleActive(role) && (
+                  <i className="fas fa-check-circle ms-auto text-success role-active-check"></i>
                 )}
               </button>
             ))}

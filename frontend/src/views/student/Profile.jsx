@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, { useState, useEffect, useContext, useRef, useMemo } from "react";
+import { Link } from "react-router-dom";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
@@ -11,22 +12,12 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { ProfileContext } from "../plugin/Context";
-import { getValidProfileImageUrl } from "../../utils/imageUtils";
+import { useRoles } from "../../utils/useRoles";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
+import { getValidProfileImageUrl } from "../../utils/imageUtils";
 import "./Profile.css";
 
 // Constants
-const AVATAR_SIZE = {
-    DESKTOP: {
-        width: "120px",
-        height: "120px"
-    },
-    MOBILE: {
-        width: "100px", 
-        height: "100px"
-    }
-};
-
 const IMAGE_CONFIG = {
     QUALITY: 0.8,
     FORMAT: "image/jpeg",
@@ -35,23 +26,13 @@ const IMAGE_CONFIG = {
 
 const CROP_CONFIG = {
     INITIAL: {
-        unit: "px",
-        width: 200,
-        height: 200,
-        x: 50,
-        y: 50,
+        unit: "%",
+        width: 50,
+        height: 50,
+        x: 25,
+        y: 25,
         aspect: 1
     }
-};
-
-const VALIDATION_MESSAGES = {
-    PROFILE_LOAD_ERROR: "Gagal memuat profil",
-    PROFILE_UPDATE_SUCCESS: "Profil berhasil diperbarui!",
-    PROFILE_UPDATE_ERROR: "Gagal memperbarui profil",
-    IMAGE_CROP_SUCCESS: "Gambar berhasil dipotong!",
-    IMAGE_CROP_ERROR: "Gagal memotong gambar",
-    PICTURE_REMOVED: "Foto profil berhasil dihapus!",
-    CANVAS_EMPTY: "Canvas kosong"
 };
 
 const SOCIAL_PLATFORMS = {
@@ -60,66 +41,22 @@ const SOCIAL_PLATFORMS = {
     LINKEDIN: "linkedin"
 };
 
-// Utility Functions
-const validateUrl = (url) => {
-    const urlPattern = /^https?:\/\/.+/;
-    return urlPattern.test(url);
-};
-
+// URL validation & formatting
+const validateUrl = (url) => /^https?:\/\/.+/.test(url);
 const formatUrl = (url) => {
     if (!url) return url;
     if (validateUrl(url)) return url;
     return url.startsWith("www.") || url.includes(".") ? `https://${url}` : url;
 };
 
-// ✨ PHASE 11.6: Generate unique filename based on user ID to prevent overwrites
 const generateUniqueFilename = (userId, originalFilename = "") => {
-    // Extract file extension from original filename or default to jpg
     let extension = "jpg";
     if (originalFilename && originalFilename.includes(".")) {
         extension = originalFilename.split(".").pop().toLowerCase();
-        // Validate extension to prevent abuse
         const validExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
-        if (!validExtensions.includes(extension)) {
-            extension = "jpg";
-        }
+        if (!validExtensions.includes(extension)) extension = "jpg";
     }
-    // Generate unique filename: user_{id}.{extension}
     return `user_${userId}.${extension}`;
-};
-
-const createFormData = (profileData, croppedImageBlob, fileName, originalImage) => {
-    const formdata = new FormData();
-    
-    // Handle image upload/deletion logic
-    if (profileData.image === null) {
-        formdata.append("image", "");
-    } else if (croppedImageBlob) {
-        formdata.append("image", croppedImageBlob, fileName);
-    } else if (profileData.image && profileData.image !== originalImage) {
-        formdata.append("image", profileData.image);
-    }
-
-    // Profile fields
-    formdata.append("full_name", profileData.full_name || "");
-    formdata.append("about", profileData.about || "");
-    formdata.append("country", profileData.country || "");
-    
-    // Employee information fields
-    formdata.append("nip", profileData.nip || "");
-    formdata.append("golongan", profileData.golongan || "");
-    formdata.append("kelas_jabatan", profileData.kelas_jabatan || "");
-    formdata.append("jenis_jabatan", profileData.jenis_jabatan || "");
-    formdata.append("organization_unit_name", profileData.organization_unit_name || "");
-    formdata.append("position_name", profileData.position_name || "");
-    
-    // Add social media fields
-    formdata.append("bio", profileData.bio || "");
-    formdata.append("facebook", profileData.facebook || "");
-    formdata.append("twitter", profileData.twitter || "");
-    formdata.append("linkedin", profileData.linkedin || "");
-
-    return formdata;
 };
 
 const extractFileName = (imagePath) => {
@@ -144,540 +81,416 @@ const getCroppedImage = (image, crop, fileName) => {
         0,
         0,
         crop.width,
-        crop.height,
+        crop.height
     );
 
-    return new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => {
-            if (!blob) {
-                reject(new Error(VALIDATION_MESSAGES.CANVAS_EMPTY));
-                return;
-            }
-            blob.name = fileName;
-            resolve(blob);
-        }, IMAGE_CONFIG.FORMAT, IMAGE_CONFIG.QUALITY);
-    });
-};
-
-const createImagePreview = (file) => {
-    const reader = new FileReader();
     return new Promise((resolve) => {
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(file);
+        canvas.toBlob(
+            (blob) => {
+                if (!blob) return;
+                blob.name = fileName;
+                resolve(blob);
+            },
+            IMAGE_CONFIG.FORMAT,
+            IMAGE_CONFIG.QUALITY
+        );
     });
 };
 
 function Profile() {
-    // Context and State Management
+    // Contexts & Hooks
     const profileContext = useContext(ProfileContext);
     const [profile, setProfile] = profileContext || [null, () => {}];
-    const isCollapsed = useSidebarCollapse();
-    
+    const { isCollapsed } = useSidebarCollapse();
+    const { availableRoles, currentRole } = useRoles();
+    const currentUser = UserData();
+
+    // Active Tab State: 'general', 'employee', 'roles', 'social'
+    const [activeTab, setActiveTab] = useState("general");
+
+    // Profile form state
     const [profileData, setProfileData] = useState({
-        image: "",
         full_name: "",
-        about: "",
+        email: "",
+        nip: "",
         country: "",
-        // Student social media fields
+        about: "",
         bio: "",
+        golongan: "",
+        kelas_jabatan: "",
+        jenis_jabatan: "",
+        organization_unit_name: "",
+        position_name: "",
         facebook: "",
         twitter: "",
         linkedin: "",
+        image: ""
     });
-    
-    const [uiState, setUiState] = useState({
-        loading: true,
-        imagePreview: "",
-        showCropModal: false,
-        autoSaving: false,      // ✨ PHASE 4.12.4: Track auto-save status
-        autoSaveStatus: "idle"  // ✨ PHASE 4.12.4: idle | saving | saved | error
-    });
-    
-    const [imageState, setImageState] = useState({
-        selected: null,
-        croppedBlob: null,
-        fileName: ""
-    });
-    
-    // ✨ PHASE 11.7 CRITICAL FIX: Use useRef to preserve cropped blob across state render cycles
-    // The state closure issue caused croppedBlob to be lost during the 100ms setTimeout delay
-    // useRef survives re-renders and doesn't trigger re-renders when updated
-    const croppedBlobRef = useRef(null);
-    
-    const [cropState, setCropState] = useState({
-        crop: CROP_CONFIG.INITIAL,
-        completedCrop: null
-    });
-    
-    // ✨ PHASE 4.12.3: Employee information options
+
+    // Employee options
     const [employeeOptions, setEmployeeOptions] = useState({
         organizations: [],
         positions: [],
         golongan: [],
         jenis_jabatan: []
     });
-    const [employeeOptionsLoading, setEmployeeOptionsLoading] = useState(true);  // ✨ Track loading state
-    
-    const imgRef = useRef(null);
-    
-    // ✨ PHASE 4.12.4: Auto-save debounce timer and previous data tracking
-    const autoSaveTimeoutRef = useRef(null);
-    const previousDataRef = useRef(profileData);
+    const [employeeOptionsLoading, setEmployeeOptionsLoading] = useState(true);
 
-    // API Functions
-    
-    // ✨ PHASE 4.12.4: Auto-save profile with debounce (without image upload)
-    const autoSaveProfile = async (dataToSave) => {
+    // Image & Crop State
+    const [imageState, setImageState] = useState({
+        selected: null,
+        croppedBlob: null,
+        fileName: ""
+    });
+    const [cropState, setCropState] = useState({
+        crop: CROP_CONFIG.INITIAL,
+        completedCrop: null
+    });
+    const [fileInputKey, setFileInputKey] = useState(0);
+
+    // UI state
+    const [uiState, setUiState] = useState({
+        loading: true,
+        saving: false,
+        autoSaving: false,
+        autoSaveStatus: "idle",
+        showCropModal: false,
+        imagePreview: ""
+    });
+
+    const imgRef = useRef(null);
+    const croppedBlobRef = useRef(null);
+    const autoSaveTimeoutRef = useRef(null);
+    const previousDataRef = useRef({});
+
+    // Profile Completeness Calculation
+    const completenessScore = useMemo(() => {
+        let score = 0;
+        if (uiState.imagePreview) score += 20;
+        if (profileData.full_name?.trim()) score += 15;
+        if (profileData.about?.trim()) score += 15;
+        if (profileData.country?.trim()) score += 10;
+        if (profileData.nip?.trim() || profileData.golongan?.trim() || profileData.organization_unit_name?.trim()) score += 20;
+        if (profileData.bio?.trim()) score += 10;
+        if (profileData.linkedin?.trim() || profileData.twitter?.trim() || profileData.facebook?.trim()) score += 10;
+        return Math.min(score, 100);
+    }, [profileData, uiState.imagePreview]);
+
+    // Role Capabilities
+    const hasStudentRole = availableRoles?.includes("student") || currentUser?.roles?.includes("student") || currentUser?.is_student;
+    const hasInstructorRole = availableRoles?.includes("teacher") || availableRoles?.includes("instructor") || currentUser?.is_instructor;
+
+    // Fetch initial profile
+    const fetchProfile = async () => {
+        setUiState((prev) => ({ ...prev, loading: true }));
         try {
-            setUiState(prev => ({ ...prev, autoSaving: true, autoSaveStatus: "saving" }));
-            
-            const userId = UserData()?.user_id;
-            if (!userId) throw new Error("User ID not found");
-            
-            // Create a simple form data with only changed fields (no images)
+            const userId = currentUser?.user_id;
+            if (!userId) return;
+
+            const profileRes = await useAxios.get(`user/profile/${userId}/`);
+            const pData = profileRes.data || {};
+
+            let tData = null;
+            try {
+                const teacherRes = await useAxios.get(`teacher/profile/${userId}/`);
+                if (teacherRes.data) tData = teacherRes.data;
+            } catch (e) {
+                // Not a blocker
+            }
+
+            const merged = {
+                ...pData,
+                email: pData.email || currentUser?.email || "",
+                full_name: pData.full_name || currentUser?.full_name || "",
+                nip: pData.nip || "",
+                golongan: pData.golongan || "",
+                kelas_jabatan: pData.kelas_jabatan || "",
+                jenis_jabatan: pData.jenis_jabatan || "",
+                organization_unit_name: pData.organization_unit_name || "",
+                position_name: pData.position_name || "",
+                bio: tData?.bio || pData.bio || "",
+                facebook: tData?.facebook || pData.facebook || "",
+                twitter: tData?.twitter || pData.twitter || "",
+                linkedin: tData?.linkedin || pData.linkedin || "",
+                about: pData.about || "",
+                country: pData.country || ""
+            };
+
+            setProfile(pData);
+            setProfileData(merged);
+            previousDataRef.current = merged;
+
+            const validImageUrl = getValidProfileImageUrl(pData.image, "");
+            setUiState((prev) => ({ ...prev, imagePreview: validImageUrl }));
+            setImageState((prev) => ({
+                ...prev,
+                fileName: extractFileName(pData.image)
+            }));
+        } catch (error) {
+            console.error("Error fetching student profile:", error);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal memuat profil siswa"
+            });
+        } finally {
+            setUiState((prev) => ({ ...prev, loading: false }));
+        }
+    };
+
+    // Fetch Employee Options
+    const fetchEmployeeOptions = async () => {
+        try {
+            setEmployeeOptionsLoading(true);
+            const res = await useAxios.get("employee/options/");
+            if (res.data) {
+                const { organizations = [], positions = [], golongan = [], jenis_jabatan = [] } = res.data;
+                setEmployeeOptions({
+                    organizations: Array.isArray(organizations) ? organizations : [],
+                    positions: Array.isArray(positions) ? positions : [],
+                    golongan: Array.isArray(golongan) ? golongan : [],
+                    jenis_jabatan: Array.isArray(jenis_jabatan) ? jenis_jabatan : []
+                });
+            }
+        } catch (err) {
+            console.warn("Could not load employee options:", err);
+        } finally {
+            setEmployeeOptionsLoading(false);
+        }
+    };
+
+    // Save profile method (unified)
+    const saveProfileData = async (dataToSave, isManual = false) => {
+        try {
+            if (isManual) {
+                setUiState((prev) => ({ ...prev, saving: true }));
+            } else {
+                setUiState((prev) => ({ ...prev, autoSaving: true, autoSaveStatus: "saving" }));
+            }
+
+            const userId = currentUser?.user_id;
+            if (!userId) throw new Error("User ID tidak ditemukan");
+
             const formdata = new FormData();
-            Object.keys(dataToSave).forEach(key => {
+            Object.keys(dataToSave).forEach((key) => {
                 if (dataToSave[key] !== null && dataToSave[key] !== undefined) {
-                    // Skip image files in auto-save (only button click with manual image cropping does images)
-                    if (key !== 'image' && !(dataToSave[key] instanceof File || dataToSave[key] instanceof Blob)) {
+                    if (key !== "image" && !(dataToSave[key] instanceof File || dataToSave[key] instanceof Blob)) {
                         formdata.append(key, dataToSave[key]);
                     }
                 }
             });
-            
-const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
-            
-            // Update local state with server response
-            setProfileData(updateRes.data);
-            previousDataRef.current = updateRes.data;
-            
-            setUiState(prev => ({ ...prev, autoSaving: false, autoSaveStatus: "saved" }));
-            
-            // ✨ PHASE 4.12.5: Show Toast notification on top-right
-            Toast().fire({
-                icon: "success",
-                title: "Perubahan Tersimpan",
-                text: "Profil Anda telah diperbarui",
-                timer: 3000,
-                showConfirmButton: false
-            });
-            
-            // Clear "saved" status after 2 seconds
+
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
+
+            // Sync teacher fields if present
+            const teacherFields = ["bio", "facebook", "twitter", "linkedin"];
+            const hasTeacherFields = Object.keys(dataToSave).some((k) => teacherFields.includes(k));
+            if (hasTeacherFields && hasInstructorRole) {
+                try {
+                    await useAxios.patch(`teacher/profile-update/${userId}/`, {
+                        bio: dataToSave.bio ?? profileData.bio ?? "",
+                        facebook: dataToSave.facebook ?? profileData.facebook ?? "",
+                        twitter: dataToSave.twitter ?? profileData.twitter ?? "",
+                        linkedin: dataToSave.linkedin ?? profileData.linkedin ?? ""
+                    });
+                } catch (tErr) {
+                    console.warn("Sinkronisasi instruktur:", tErr);
+                }
+            }
+
+            setProfile(updateRes.data);
+            setProfileData((prev) => ({ ...prev, ...updateRes.data }));
+            previousDataRef.current = { ...profileData, ...updateRes.data };
+
+            if (isManual) {
+                setUiState((prev) => ({ ...prev, saving: false, autoSaveStatus: "saved" }));
+                Toast().fire({
+                    icon: "success",
+                    title: "Profil Berhasil Disimpan",
+                    text: "Data profil telah disinkronkan di akun Anda",
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            } else {
+                setUiState((prev) => ({ ...prev, autoSaving: false, autoSaveStatus: "saved" }));
+            }
+
             setTimeout(() => {
-                setUiState(prev => ({ ...prev, autoSaveStatus: "idle" }));
-            }, 2000);
-            
+                setUiState((prev) => ({ ...prev, autoSaveStatus: "idle" }));
+            }, 2500);
         } catch (error) {
-            console.error("❌ Error auto-saving profile:", error);
-            setUiState(prev => ({ ...prev, autoSaving: false, autoSaveStatus: "error" }));
-            
-            // ✨ PHASE 4.12.5: Show Toast error notification on top-right
-            Toast().fire({
-                icon: "error",
-                title: "Gagal Menyimpan",
-                text: error.response?.data?.detail || "Terjadi kesalahan saat menyimpan profil",
-                timer: 4000,
-                showConfirmButton: false
-            });
-            
-            // Clear "error" status after 3 seconds
+            console.error("Error saving profile:", error);
+            setUiState((prev) => ({
+                ...prev,
+                saving: false,
+                autoSaving: false,
+                autoSaveStatus: "error"
+            }));
+            if (isManual) {
+                Toast().fire({
+                    icon: "error",
+                    title: "Gagal Menyimpan",
+                    text: error.response?.data?.detail || "Terjadi kesalahan saat menyimpan profil",
+                    timer: 3500,
+                    showConfirmButton: false
+                });
+            }
             setTimeout(() => {
-                setUiState(prev => ({ ...prev, autoSaveStatus: "idle" }));
+                setUiState((prev) => ({ ...prev, autoSaveStatus: "idle" }));
             }, 3000);
         }
     };
 
-    const fetchProfile = async () => {
-        setUiState(prev => ({ ...prev, loading: true }));
-
-        
-        try {
-            const profileRes = await useAxios.get(`user/profile/${UserData()?.user_id}/`);
-            
-            // ✨ PHASE 4.12.5: Ensure jenis_jabatan is string, not null/undefined
-            const processedData = {
-                ...profileRes.data,
-                jenis_jabatan: profileRes.data.jenis_jabatan || ""  // Convert null/undefined to empty string
-            };
-            
-            setProfile(profileRes.data);
-            setProfileData(processedData);
-            
-            // ✅ FIX: Validate image URL before setting (handles null, invalid strings)
-            const validImageUrl = getValidProfileImageUrl(profileRes.data.image, "");
-            setUiState(prev => ({ ...prev, imagePreview: validImageUrl }));
-            
-            setImageState(prev => ({
-                ...prev,
-                fileName: extractFileName(profileRes.data.image)
-            }));
-        } catch (error) {
-            Toast().fire({
-                icon: "error",
-                title: VALIDATION_MESSAGES.PROFILE_LOAD_ERROR
-            });
-        } finally {
-            setUiState(prev => ({ ...prev, loading: false }));
-        }
-    };
-
-    // ✨ PHASE 11.4: Auto-submit image after crop completes
-    const submitImageOnly = async () => {
-        try {
-            setUiState(prev => ({ ...prev, loading: true }));
-            
-            const userId = UserData()?.user_id;
-            if (!userId) throw new Error("User ID not found");
-            
-            // Get current profile to pass existing image
-            const res = await useAxios.get(`user/profile/${userId}/`);
-            
-            // ✨ PHASE 11.6: Generate unique filename to prevent overwrites between users
-            const uniqueFilename = generateUniqueFilename(userId, imageState.fileName);
-            
-            // ✨ PHASE 11.7: Use REF instead of STATE to avoid closure issues
-            const blobToUse = croppedBlobRef.current || imageState.croppedBlob;
-            
-            // Create form data using the proven createFormData function with unique filename
-            const formdata = createFormData(
-                profileData,
-                blobToUse,  // ← Use REF-backed blob to survive closure
-                uniqueFilename,  // ✨ Use unique filename instead of original
-                res.data.image
-            );
-
-            // ✨ PHASE 11.5: FIX - Do NOT set Content-Type header for FormData!
-            // useAxios interceptor will handle it correctly by removing it and letting browser add boundary
-            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
-            
-            // ✨ PHASE 11.8: Cache-bust image URL to force browser reload (fixes BOTH navbar AND profile form avatars)
-            // Problem: Same filename means same URL, browser won't fetch new image from cache
-            // Solution: Add timestamp parameter to force fresh fetch
-            const cacheBustedImageUrl = updateRes.data.image 
-                ? `${updateRes.data.image}?v=${Date.now()}` 
-                : updateRes.data.image;
-            
-            // ✅ Update context immediately with cache-busted image URL
-            const dataToUpdateContext = { ...updateRes.data, image: cacheBustedImageUrl };
-            setProfile(dataToUpdateContext);
-            
-            // ✅ Update local state with fresh data
-            setProfileData(updateRes.data);
-            
-            // ✅ Update image preview with the CACHE-BUSTED image URL (fixes profile form avatar!)
-            const validImageUrl = getValidProfileImageUrl(cacheBustedImageUrl, "");
-            setUiState(prev => ({ ...prev, imagePreview: validImageUrl }));
-            
-            // ✅ Update filename and clear cropped blob
-            setImageState(prev => ({
-                ...prev,
-                fileName: extractFileName(updateRes.data.image),
-                croppedBlob: null,
-                selected: null  // ✨ Also clear selected to allow new file selection
-            }));
-            
-            Toast().fire({
-                icon: "success",
-                title: "Foto Profil Berhasil Disimpan",
-                text: "Avatar Anda telah diperbarui"
-            });
-            
-            // ✨ PHASE 11.6 FIX: Reset file input to allow re-selecting new avatar
-            // This fixes the issue where crop modal doesn't reappear after successful upload
-            const fileInput = document.getElementById("profileImage");
-            if (fileInput) {
-                fileInput.value = "";
-            }
-            
-        } catch (error) {
-            Toast().fire({
-                icon: "error",
-                title: "Gagal Menyimpan Foto",
-                text: error.response?.data?.message || "Terjadi kesalahan saat menyimpan foto profil"
-            });
-        } finally {
-            setUiState(prev => ({ ...prev, loading: false }));
-        }
-    };
-
-    const submitProfile = async (e) => {
-        e.preventDefault();
-        setUiState(prev => ({ ...prev, loading: true }));
-
-        try {
-            const userId = UserData()?.user_id;
-            if (!userId) throw new Error("User ID not found");
-            
-            // ✨ PHASE 11.6 CRITICAL CHECK: Prevent submitting uncropped image
-            // If user selected a NEW image but hasn't clicked "Apply Crop", warn them
-            if (imageState.selected && !imageState.croppedBlob) {
-                console.warn('⚠️  User selected image but did not crop it!');
-                Toast().fire({
-                    icon: "warning",
-                    title: "Gambar Belum Dipotong",
-                    text: "Silakan klik 'Apply Crop' di modal pemotongan sebelum menyimpan"
-                });
-                setUiState(prev => ({ ...prev, loading: false }));
-                return;  // Prevent submission
-            }
-            
-            const res = await useAxios.get(`user/profile/${userId}/`);
-            
-            // ✨ PHASE 11.6 CRITICAL FIX: Generate unique filename in manual submission too!
-            // Without this, submitProfile would use the original filename when user clicks Simpan
-            const uniqueFilename = imageState.fileName ? generateUniqueFilename(userId, imageState.fileName) : imageState.fileName;
-            
-            const formdata = createFormData(
-                profileData, 
-                imageState.croppedBlob, 
-                uniqueFilename,  // ✨ Use unique filename instead of original
-                res.data.image
-            );
-
-            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
-            
-            // ✨ PHASE 11.8: Cache-bust image URL to force browser reload (fixes BOTH navbar AND profile form avatars)
-            // Problem: Same filename means same URL, browser won't fetch new image from cache
-            // Solution: Add timestamp parameter to force fresh fetch
-            const cacheBustedImageUrl = updateRes.data.image 
-                ? `${updateRes.data.image}?v=${Date.now()}` 
-                : updateRes.data.image;
-            console.log('🔄 Cache-busting: Added timestamp to image URL:', cacheBustedImageUrl);
-            
-            // ✅ CRITICAL: Update context IMMEDIATELY with cache-busted image URL
-            const dataToUpdateContext = { ...updateRes.data, image: cacheBustedImageUrl };
-            setProfile(dataToUpdateContext);
-            
-            // ✅ Update local state with fresh data
-            setProfileData(updateRes.data);
-            
-            // ✅ Update image preview with the CACHE-BUSTED image URL (fixes profile form avatar!)
-            const validImageUrl = getValidProfileImageUrl(cacheBustedImageUrl, "");
-            setUiState(prev => ({ ...prev, imagePreview: validImageUrl }));
-            
-            // ✅ Update filename
-            setImageState(prev => ({
-                ...prev,
-                fileName: extractFileName(updateRes.data.image),
-                croppedBlob: null // Clear cropped blob after successful upload
-            }));
-            
-            Toast().fire({
-                icon: "success",
-                title: VALIDATION_MESSAGES.PROFILE_UPDATE_SUCCESS
-            });
-
-            // Note: fetchProfile() call removed - we already have fresh data from updateRes
-            
-        } catch (error) {
-            console.error("Error updating profile:", error);
-            Toast().fire({
-                icon: "error",
-                title: error.response?.data?.message || VALIDATION_MESSAGES.PROFILE_UPDATE_ERROR
-            });
-        } finally {
-            setUiState(prev => ({ ...prev, loading: false }));
-        }
-    };
-
-    // Event Handlers
+    // Generic change handler with debounce
     const handleProfileChange = (event) => {
         const { name, value } = event.target;
-        
-        // Validate URL fields for social media
+        let processedValue = value;
+
         if (Object.values(SOCIAL_PLATFORMS).includes(name) && value) {
-            const formattedValue = formatUrl(value);
-            setProfileData(prev => ({
-                ...prev,
-                [name]: formattedValue,
-            }));
-            
-            // ✨ PHASE 4.12.4: Trigger auto-save with debounce
-            if (autoSaveTimeoutRef.current) {
-                clearTimeout(autoSaveTimeoutRef.current);
-            }
-            autoSaveTimeoutRef.current = setTimeout(() => {
-                autoSaveProfile({
-                    [name]: formattedValue
-                });
-            }, 1000); // 1 second debounce
-            return;
+            processedValue = formatUrl(value);
         }
 
-        setProfileData(prev => ({
+        setProfileData((prev) => ({
             ...prev,
-            [name]: value,
+            [name]: processedValue
         }));
-        
-        // ✨ PHASE 4.12.4: Trigger auto-save with debounce for regular fields
+
         if (autoSaveTimeoutRef.current) {
             clearTimeout(autoSaveTimeoutRef.current);
         }
+
         autoSaveTimeoutRef.current = setTimeout(() => {
-            autoSaveProfile({
-                [name]: value
-            });
-        }, 1000); // 1 second debounce
+            saveProfileData({ [name]: processedValue }, false);
+        }, 1200);
     };
 
+    const handleSubmitManual = (e) => {
+        if (e) e.preventDefault();
+        if (autoSaveTimeoutRef.current) {
+            clearTimeout(autoSaveTimeoutRef.current);
+        }
+        saveProfileData(profileData, true);
+    };
+
+    // Avatar handlers
     const handleFileChange = (event) => {
         const selectedFile = event.target.files[0];
         if (!selectedFile) return;
-        
-        // Clean up previous object URL to prevent memory leaks
+
         if (imageState.selected) {
             URL.revokeObjectURL(imageState.selected);
         }
-        
+
         const newImageUrl = URL.createObjectURL(selectedFile);
-        
-        setProfileData(prev => ({
+        setProfileData((prev) => ({
             ...prev,
-            [event.target.name]: selectedFile,
+            [event.target.name]: selectedFile
         }));
 
-        setImageState(prev => ({
+        setImageState((prev) => ({
             ...prev,
             fileName: selectedFile.name,
             selected: newImageUrl
         }));
-        
-        // Reset crop state for new image
+
         setCropState({
             crop: CROP_CONFIG.INITIAL,
             completedCrop: null
         });
-        
-        setUiState(prev => ({ ...prev, showCropModal: true }));
+
+        setUiState((prev) => ({ ...prev, showCropModal: true }));
+    };
+
+    const submitImageOnly = async () => {
+        try {
+            setUiState((prev) => ({ ...prev, loading: true }));
+            const userId = currentUser?.user_id;
+            if (!userId) throw new Error("User ID not found");
+
+            const res = await useAxios.get(`user/profile/${userId}/`);
+            const uniqueFilename = generateUniqueFilename(userId, imageState.fileName);
+            const blobToUse = croppedBlobRef.current || imageState.croppedBlob;
+
+            const formdata = new FormData();
+            if (blobToUse) {
+                formdata.append("image", blobToUse, uniqueFilename);
+            }
+            formdata.append("full_name", profileData.full_name || "");
+            formdata.append("about", profileData.about || "");
+            formdata.append("country", profileData.country || "");
+
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
+
+            const cacheBustedImageUrl = updateRes.data.image
+                ? `${updateRes.data.image}?v=${Date.now()}`
+                : updateRes.data.image;
+
+            setProfile({ ...updateRes.data, image: cacheBustedImageUrl });
+            setProfileData((prev) => ({ ...prev, ...updateRes.data }));
+
+            const validImageUrl = getValidProfileImageUrl(cacheBustedImageUrl, "");
+            setUiState((prev) => ({ ...prev, imagePreview: validImageUrl }));
+            setImageState((prev) => ({
+                ...prev,
+                fileName: extractFileName(updateRes.data.image),
+                croppedBlob: null,
+                selected: null
+            }));
+
+            Toast().fire({
+                icon: "success",
+                title: "Foto Profil Berhasil Diperbarui"
+            });
+            setFileInputKey((prev) => prev + 1);
+        } catch (error) {
+            console.error("Error saving image:", error);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal Mengunggah Foto"
+            });
+        } finally {
+            setUiState((prev) => ({ ...prev, loading: false }));
+        }
     };
 
     const handleCropComplete = async () => {
-        console.log('🎬 handleCropComplete CALLED');
-        console.log('   Current cropState:', cropState);
-        console.log('   imgRef.current exists?:', !!imgRef.current);
-        console.log('   imageState before crop:', { fileName: imageState.fileName, selected: !!imageState.selected, croppedBlob: !!imageState.croppedBlob });
-        
-        if (!cropState.completedCrop || !imgRef.current) {
-            console.warn('⚠️ Early return: completedCrop missing or no imgRef');
-            return;
-        }
+        if (!cropState.completedCrop || !imgRef.current) return;
 
         try {
-            console.log('🔄 Starting crop process...');
             const croppedBlob = await getCroppedImage(
                 imgRef.current,
                 cropState.completedCrop,
                 imageState.fileName
             );
-            
-            console.log('✅ CROP COMPLETED! Blob received:', { size: croppedBlob.size, sizeKB: (croppedBlob.size / 1024).toFixed(2) });
-            
-            // ✨ STORE BLOB IN REF IMMEDIATELY - survives state closure issues
+
             croppedBlobRef.current = croppedBlob;
-            console.log('🔗 croppedBlobRef.current SET to blob:', { size: croppedBlob.size, refHasData: !!croppedBlobRef.current });
-            
-            setImageState(prev => ({
-                ...prev,
-                croppedBlob,  // ← THE CROPPED IMAGE IS NOW STORED HERE
-            }));
-            console.log('✅ Updated imageState.croppedBlob - cropped image is now ready to be submitted!');
-            
-            console.log('🖼️ Creating preview from cropped blob...');
+            setImageState((prev) => ({ ...prev, croppedBlob }));
+
             const previewUrl = URL.createObjectURL(croppedBlob);
-            console.log('✅ Preview URL created:', previewUrl);
-            
-            setUiState(prev => ({ 
-                ...prev, 
-                imagePreview: previewUrl,  // ← Shows the CROPPED preview
-                showCropModal: false 
-            }));
-            
-            setProfileData(prev => ({
+            setUiState((prev) => ({
                 ...prev,
-                image: croppedBlob,
+                imagePreview: previewUrl,
+                showCropModal: false
             }));
-            
-            console.log('📢 Showing success toast...');
-            Toast().fire({
-                icon: "success",
-                title: VALIDATION_MESSAGES.IMAGE_CROP_SUCCESS
-            });
-            
-            // ✨ PHASE 11.4: Auto-save image immediately after successful crop
-            // Schedule the submit to run after state updates are complete
-            console.log('⏰ Setting setTimeout for submitImageOnly...');
+
+            setProfileData((prev) => ({ ...prev, image: croppedBlob }));
+
             setTimeout(async () => {
-                console.log('⏰ setTimeout fired! Calling submitImageOnly()...');
-                console.log('   imageState.croppedBlob before submit:', { exists: !!imageState.croppedBlob, size: imageState.croppedBlob ? imageState.croppedBlob.size : 'NOT SET' });
                 await submitImageOnly();
             }, 100);
-            
         } catch (error) {
-            console.error("❌ Error cropping image:", error);
+            console.error("Error cropping image:", error);
             Toast().fire({
                 icon: "error",
-                title: VALIDATION_MESSAGES.IMAGE_CROP_ERROR
+                title: "Gagal memotong gambar"
             });
-        }
-    };
-
-    const handleDeleteProfilePicture = async () => {
-        try {
-            setUiState(prev => ({ ...prev, loading: true }));
-            
-            const userId = UserData()?.user_id;
-            if (!userId) throw new Error("User ID not found");
-            
-            console.log('🗑️ Deleting profile picture...');
-            
-            // ✨ PHASE 11.6 FIX: Submit image deletion to backend to clean up orphaned files
-            const formdata = new FormData();
-            formdata.append("image", "");  // Empty string signals deletion
-            formdata.append("full_name", profileData.full_name || "");
-            
-            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
-            console.log('✅ Image deleted from server');
-            
-            // Update frontend state with response from server
-            setProfile(updateRes.data);
-            setProfileData(updateRes.data);
-            setUiState(prev => ({ ...prev, imagePreview: "" }));
-            setImageState({
-                selected: null,
-                croppedBlob: null,
-                fileName: ""
-            });
-            
-            // Reset file input
-            const fileInput = document.getElementById("profileImage");
-            if (fileInput) {
-                fileInput.value = "";
-            }
-            
-            Toast().fire({
-                icon: "success",
-                title: VALIDATION_MESSAGES.PICTURE_REMOVED
-            });
-        } catch (error) {
-            console.error("❌ Error deleting image:", error);
-            Toast().fire({
-                icon: "error",
-                title: "Gagal Menghapus Foto",
-                text: error.response?.data?.message || "Terjadi kesalahan saat menghapus foto profil"
-            });
-        } finally {
-            setUiState(prev => ({ ...prev, loading: false }));
         }
     };
 
     const handleCropCancel = () => {
-        // Clean up object URL to prevent memory leaks
         if (imageState.selected) {
             URL.revokeObjectURL(imageState.selected);
         }
-        
-        // Reset all crop-related states
-        setUiState(prev => ({ ...prev, showCropModal: false }));
+        setUiState((prev) => ({ ...prev, showCropModal: false }));
         setImageState({
             selected: null,
             croppedBlob: null,
@@ -687,493 +500,81 @@ const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
             crop: CROP_CONFIG.INITIAL,
             completedCrop: null
         });
-        
-        // Reset file input to allow selecting the same file again
-        const fileInput = document.getElementById("profileImage");
-        if (fileInput) {
-            fileInput.value = "";
+        setFileInputKey((prev) => prev + 1);
+    };
+
+    const handleDeleteProfilePicture = async () => {
+        try {
+            setUiState((prev) => ({ ...prev, loading: true }));
+            const userId = currentUser?.user_id;
+            if (!userId) throw new Error("User ID not found");
+
+            const formdata = new FormData();
+            formdata.append("image", "");
+            formdata.append("full_name", profileData.full_name || "");
+
+            const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
+
+            setProfile(updateRes.data);
+            setProfileData((prev) => ({ ...prev, ...updateRes.data }));
+            setUiState((prev) => ({ ...prev, imagePreview: "" }));
+            setImageState({
+                selected: null,
+                croppedBlob: null,
+                fileName: ""
+            });
+
+            const fileInput = document.getElementById("profileImage");
+            if (fileInput) fileInput.value = "";
+
+            Toast().fire({
+                icon: "success",
+                title: "Foto profil dihapus"
+            });
+        } catch (error) {
+            console.error("Error deleting image:", error);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal menghapus foto profil"
+            });
+        } finally {
+            setUiState((prev) => ({ ...prev, loading: false }));
         }
     };
 
-    // ✨ PHASE 4.12.3: Fetch employee information options
-    const fetchEmployeeOptions = async () => {
-        try {
-            setEmployeeOptionsLoading(true);  // ✨ Set loading state
-            console.log('🔄 Fetching employee options from /api/v1/employee/options/...');
-            const res = await useAxios.get('employee/options/');
-            console.log('✅ Employee options loaded successfully:', res.data);
-            
-            // Validate response has required fields
-            if (!res.data) {
-                throw new Error('Empty response from employee options API');
-            }
-            
-            const { organizations = [], positions = [], golongan = [], jenis_jabatan = [] } = res.data;
-            
-            console.log(`📊 Options loaded: ${organizations.length} organizations, ${positions.length} positions, ${golongan.length} golongan, ${jenis_jabatan.length} jenis_jabatan`);
-            
-            setEmployeeOptions({
-                organizations: Array.isArray(organizations) ? organizations : [],
-                positions: Array.isArray(positions) ? positions : [],
-                golongan: Array.isArray(golongan) ? golongan : [],
-                jenis_jabatan: Array.isArray(jenis_jabatan) ? jenis_jabatan : []
-            });
-        } catch (error) {
-            console.error('❌ Error fetching employee options:');
-            console.error('   Status:', error.response?.status);
-            console.error('   URL:', error.config?.url);
-            console.error('   Message:', error.response?.data?.detail || error.message);
-            console.error('   Full error:', error);
-            
-            // Set default empty lists if fetch fails
-            setEmployeeOptions({
-                organizations: [],
-                positions: [],
-                golongan: [],
-                jenis_jabatan: []
-            });
-        } finally {
-            setEmployeeOptionsLoading(false);  // ✨ Loading complete
-        }
-    };
-    
-    // Effects
+    // Lifecycle
     useEffect(() => {
         fetchProfile();
-        fetchEmployeeOptions();  // ✨ PHASE 4.12.3: Load employee options on mount
-        
-        // ✨ PHASE 4.12.5: Cleanup on unmount
+        fetchEmployeeOptions();
+
         return () => {
             if (autoSaveTimeoutRef.current) {
                 clearTimeout(autoSaveTimeoutRef.current);
             }
         };
     }, []);
-    
-    // ✨ PHASE 4.12.5: Log when employee options are updated
-    useEffect(() => {
-        console.log('📋 Employee options state updated:', {
-            organizations: employeeOptions.organizations.length,
-            positions: employeeOptions.positions.length,
-            golongan: employeeOptions.golongan.length,
-            jenis_jabatan: employeeOptions.jenis_jabatan.length,
-            data: employeeOptions
-        });
-    }, [employeeOptions]);
-    
-    // ✨ PHASE 4.12.5: Log when profileData.jenis_jabatan changes
-    useEffect(() => {
-        console.log('👤 ProfileData.jenis_jabatan updated:', {
-            value: profileData.jenis_jabatan,
-            type: typeof profileData.jenis_jabatan,
-            isEmpty: !profileData.jenis_jabatan || profileData.jenis_jabatan === ""
-        });
-    }, [profileData.jenis_jabatan]);
 
-    // Component Rendering Functions
-    const renderLoadingAvatar = () => (
-        <div className="loading-avatar">
-            <div className="spinner-border text-info" role="status" style={{color: 'var(--theme-primary)'}}>
-                <span className="visually-hidden">Memuat...</span>
-            </div>
-            <small className="loading-text">Memuat...</small>
-        </div>
-    );
-
-    const renderDefaultAvatar = () => (
-        <div className="default-avatar-modern">
-            <i className="fas fa-user default-avatar-icon"></i>
-        </div>
-    );
-
-    const renderProfileAvatar = () => (
-        <div style={{ position: "relative" }}>
-            <img
-                src={uiState.imagePreview}
-                className="modern-avatar"
-                alt="Profile"
-                onError={(e) => {
-                    e.target.style.display = "none";
-                    setUiState(prev => ({ ...prev, imagePreview: "" }));
-                }}
-            />
-            <div className="avatar-badge">
-                <i className="fas fa-check avatar-badge-icon"></i>
-            </div>
-        </div>
-    );
-
-    const renderAvatarSection = () => (
-        <div className="modern-form-section">
-            <h4 className="form-section-title">
-                <i className="fas fa-camera form-section-icon"></i>
-                Foto Profil
-            </h4>
-            
-            <div className="d-flex align-items-center">
-                <div className="modern-avatar-container">
-                    {uiState.loading ? renderLoadingAvatar() : 
-                     uiState.imagePreview ? renderProfileAvatar() : renderDefaultAvatar()}
-                </div>
-                
-                <div className="avatar-content-section">
-                    <h5 className="avatar-section-title">Pilih Avatar Anda</h5>
-                    <p className="avatar-section-description">
-                        Unggah foto profesional untuk profil siswa Anda
-                    </p>
-                    <div className="modern-file-upload">
-                        <input 
-                            type="file" 
-                            className="form-control modern-file-input" 
-                            name="image" 
-                            id="profileImage"
-                            onChange={handleFileChange} 
-                            accept="image/*"
-                            disabled={uiState.loading}
-                        />
-                        <small className="file-help-text">PNG atau JPG, maks {IMAGE_CONFIG.MAX_SIZE}</small>
-                    </div>
-                    
-                    {uiState.imagePreview && (
-                        <div className="profile-picture-actions">
-                            <button 
-                                type="button"
-                                className="btn btn-delete-picture"
-                                onClick={handleDeleteProfilePicture}
-                                disabled={uiState.loading}
-                            >
-                                <i className="fas fa-trash-alt me-1"></i>
-                                Hapus Foto
-                            </button>
-                            <small className="picture-action-text">
-                                Ini akan menghapus foto profil Anda saat ini
-                            </small>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-
-    const renderFormField = (name, label, icon, type = "text", placeholder = "", rows = null, required = true, disabled = false) => (
-        <div className="col-12">
-            <label className="form-label modern-label" htmlFor={name}>
-                <i className={`${icon} form-label-icon`}></i>
-                {label} {required && <span className="required-asterisk">*</span>}
-            </label>
-            {type === "textarea" ? (
-                <textarea 
-                    id={name}
-                    name={name} 
-                    className="form-control modern-input modern-textarea" 
-                    rows={rows || 4} 
-                    value={profileData[name] || ""}
-                    placeholder={placeholder}
-                    onChange={handleProfileChange}
-                    disabled={uiState.loading || disabled}
-                />
-            ) : (
-                <input 
-                    type={type} 
-                    id={name} 
-                    name={name}
-                    className="form-control modern-input" 
-                    placeholder={placeholder} 
-                    required={required}
-                    value={profileData[name] || ""} 
-                    onChange={handleProfileChange} 
-                    disabled={uiState.loading || disabled}
-                />
-            )}
-        </div>
-    );
-
-    const renderSocialField = (name, label, icon, placeholder, platform) => (
-        <div className="col-md-4 col-12">
-            <label className="form-label modern-label" htmlFor={name}>
-                <i className={`${icon} social-icon-${platform}`}></i> {label}
-            </label>
-            <input 
-                type="url" 
-                id={name} 
-                name={name}
-                className={`form-control modern-input social-input-${platform}`}
-                placeholder={placeholder} 
-                value={profileData[name] || ""} 
-                onChange={handleProfileChange} 
-                disabled={uiState.loading}
-            />
-        </div>
-    );
-
-    const renderPersonalDetails = () => (
-        <div className="modern-form-section">
-            <h4 className="form-section-title">
-                <i className="fas fa-info-circle form-section-icon"></i>
-                Informasi Pribadi
-            </h4>
-            
-            <div className="row g-3">
-                {renderFormField("full_name", "Nama Lengkap", "fas fa-user", "text", "Masukkan nama lengkap Anda")}
-                {renderFormField("about", "Tentang Saya", "fas fa-edit", "textarea", "Ceritakan tentang diri Anda dan latar belakang Anda...", 4)}
-                
-                {/* Country Selector with Search */}
-                <div className="col-12 form-field-container">
-                    <CountrySelector
-                        value={profileData.country || ""}
-                        onChange={handleProfileChange}
-                        onBlur={handleProfileChange}
-                        name="country"
-                        id="country"
-                        required={true}
-                        disabled={uiState.loading}
-                        placeholder="Cari negara Anda..."
-                        label="Negara"
-                        icon="fas fa-globe"
-                    />
-                </div>
-            </div>
-        </div>
-    );
-
-    const renderEmployeeSection = () => (
-        <div className="modern-form-section">
-            <h4 className="form-section-title">
-                <i className="fas fa-briefcase form-section-icon"></i>
-                Informasi Karyawan
-                <small className="text-muted ms-2">(Detail Organisasi)</small>
-            </h4>
-            
-            {/* ✨ PHASE 4.12.3: Warning alert for temporary edits */}
-            <div style={{
-                padding: "12px 16px",
-                backgroundColor: "#fff3cd",
-                border: "1px solid #ffc107",
-                borderRadius: "8px",
-                marginBottom: "20px",
-                color: "#856404",
-                fontSize: "0.9rem",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "10px"
-            }}>
-                <i className="fas fa-exclamation-triangle" style={{ marginTop: "2px", flexShrink: 0 }}></i>
-                <div>
-                    <strong>⚠️ Perubahan Sementara</strong>
-                    <p style={{ marginBottom: 0, marginTop: "4px" }}>Perubahan di sini bersifat sementara dan hanya tersimpan di profil lokal Anda. Perubahan akan dihapus setelah "Sync Data Pegawai" dilakukan. Untuk perubahan permanen, perbarui data di sistem Kepegawaian Setjen DPD RI.</p>
-                </div>
-            </div>
-            
-            <div className="row g-3">
-                <div className="col-md-6">
-                    {renderFormField("nip", "NIP (ID Karyawan)", "fas fa-id-card", "text", "Masukkan NIP Anda", null, false, true)}
-                </div>
-                
-                {/* ✨ PHASE 4.12.3: Golongan Selector */}
-                <div className="col-md-6">
-                    <OptionSelector
-                        value={profileData.golongan || ""}
-                        onChange={handleProfileChange}
-                        onBlur={handleProfileChange}
-                        options={employeeOptions.golongan.map((g) => ({ id: g, name: g }))}
-                        name="golongan"
-                        id="golongan"
-                        label="Golongan"
-                        icon="fas fa-layer-group"
-                        placeholder="Pilih golongan..."
-                        required={false}
-                        disabled={uiState.loading}
-                        displayKey="name"
-                        valueKey="id"
-                        isLoading={employeeOptionsLoading}
-                    />
-                </div>
-                
-                {/* ✨ PHASE 4.12.4: Jenis Jabatan Selector */}
-                <div className="col-md-6">
-                    <OptionSelector
-                        value={profileData.jenis_jabatan || ""}
-                        onChange={(event) => {
-                            const newValue = event.target.value || "";
-                            setProfileData(prev => ({
-                                ...prev,
-                                jenis_jabatan: newValue
-                            }));
-                            
-                            // Trigger auto-save with debounce
-                            if (autoSaveTimeoutRef.current) {
-                                clearTimeout(autoSaveTimeoutRef.current);
-                            }
-                            autoSaveTimeoutRef.current = setTimeout(() => {
-                                autoSaveProfile({
-                                    jenis_jabatan: newValue
-                                });
-                            }, 1000);
-                        }}
-                        onBlur={handleProfileChange}
-                        options={employeeOptions.jenis_jabatan.map((j) => ({ id: j, name: j }))}
-                        name="jenis_jabatan_selector"
-                        id="jenis_jabatan"
-                        label="Jenis Jabatan"
-                        icon="fas fa-tags"
-                        placeholder="Pilih jenis jabatan..."
-                        required={false}
-                        disabled={uiState.loading || uiState.autoSaving}
-                        displayKey="name"
-                        valueKey="id"
-                        isLoading={employeeOptionsLoading}
-                    />
-                </div>
-                
-                {/* ✨ PHASE 4.12.3: Unit Organisasi Selector */}
-                <div className="col-md-6">
-                    <OptionSelector
-                        value={profileData.organization_unit_name || ""}
-                        onChange={(event) => {
-                            handleProfileChange({
-                                target: {
-                                    name: "organization_unit_name",
-                                    value: event.target.value || ""
-                                }
-                            });
-                        }}
-                        onBlur={handleProfileChange}
-                        options={employeeOptions.organizations}
-                        name="organization_unit_name"
-                        id="organization_unit_name"
-                        label="Unit Organisasi"
-                        icon="fas fa-building"
-                        placeholder="Pilih unit organisasi..."
-                        required={false}
-                        disabled={uiState.loading}
-                        displayKey="name"
-                        valueKey="name"
-                        isLoading={employeeOptionsLoading}
-                    />
-                </div>
-                
-                {/* ✨ PHASE 4.12.3: Posisi Selector */}
-                <div className="col-md-6">
-                    <OptionSelector
-                        value={profileData.position_name || ""}
-                        onChange={(event) => {
-                            handleProfileChange({
-                                target: {
-                                    name: "position_name",
-                                    value: event.target.value || ""
-                                }
-                            });
-                        }}
-                        onBlur={handleProfileChange}
-                        options={employeeOptions.positions}
-                        name="position_name"
-                        id="position_name"
-                        label="Posisi"
-                        icon="fas fa-user-tie"
-                        placeholder="Pilih posisi..."
-                        required={false}
-                        disabled={uiState.loading}
-                        displayKey="name"
-                        valueKey="name"
-                        isLoading={employeeOptionsLoading}
-                    />
-                </div>
-            </div>
-            <small className="field-help-text">
-                <i className="fas fa-info-circle me-1"></i>
-                Informasi karyawan disinkronkan dari sistem organisasi. Perubahan sementara Anda akan ditimpa saat sinkronisasi berikutnya.
-            </small>
-        </div>
-    );
-
-    const renderStudentDetails = () => (
-        <div className="modern-form-section">
-            <h4 className="form-section-title">
-                <i className="fas fa-graduation-cap form-section-icon"></i>
-                Profil Siswa
-            </h4>
-            
-            <div className="row g-3">
-                {renderFormField("bio", "Bio", false, "textarea", "Bagikan tujuan pembelajaran, minat, dan latar belakang akademik Anda...", 4)}
-            </div>
-            <small className="field-help-text">Bantu instruktur memahami perjalanan belajar dan tujuan Anda</small>
-        </div>
-    );
-
-    const renderSocialMediaSection = () => (
-        <div className="modern-form-section">
-            <h4 className="form-section-title">
-                <i className="fas fa-share-alt form-section-icon"></i>
-                Tautan Media Sosial
-                <small className="text-muted ms-2">(Opsional)</small>
-            </h4>
-            
-            <div className="row g-3">
-                {renderSocialField("facebook", "Facebook", "fab fa-facebook", "https://facebook.com/yourprofile", "facebook")}
-                {renderSocialField("twitter", "Twitter", "fab fa-twitter", "https://twitter.com/yourhandle", "twitter")}
-                {renderSocialField("linkedin", "LinkedIn", "fab fa-linkedin", "https://linkedin.com/in/yourprofile", "linkedin")}
-            </div>
-        </div>
-    );
-
-    const renderSubmitButton = () => (
-        <div className="form-actions">
-            {/* ✨ PHASE 4.12.5: Minimal status indicator - main notifications now via Toast (top-right) */}
-            <div style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-                padding: "8px 16px",
-                minHeight: "36px",
-                borderRadius: "8px",
-                backgroundColor: uiState.autoSaveStatus === "saved" ? "#d4edda" : 
-                                 uiState.autoSaveStatus === "error" ? "#f8d7da" : "#f8f9fa",
-                border: uiState.autoSaveStatus === "saved" ? "1px solid #28a745" :
-                        uiState.autoSaveStatus === "error" ? "1px solid #dc3545" : "1px solid #dee2e6",
-                transition: "all 0.3s ease",
-                fontSize: "0.9rem"
-            }}>
-                {uiState.autoSaveStatus === "saving" || uiState.autoSaving ? (
-                    <>
-                        <span className="spinner-border spinner-border-sm" role="status" style={{ width: "14px", height: "14px", borderWidth: "2px" }}></span>
-                        <span style={{ color: "#0d9488", fontWeight: "500" }}>Menyimpan...</span>
-                    </>
-                ) : uiState.autoSaveStatus === "saved" ? (
-                    <>
-                        <i className="fas fa-check-circle" style={{ color: "#28a745", fontSize: "1rem" }}></i>
-                        <span style={{ color: "#28a745", fontWeight: "500" }}>Tersimpan</span>
-                    </>
-                ) : uiState.autoSaveStatus === "error" ? (
-                    <>
-                        <i className="fas fa-exclamation-circle" style={{ color: "#dc3545", fontSize: "1rem" }}></i>
-                        <span style={{ color: "#dc3545", fontWeight: "500" }}>Gagal</span>
-                    </>
-                ) : (
-                    <>
-                        <i className="fas fa-check" style={{ color: "#6c757d", fontSize: "0.9rem" }}></i>
-                        <span style={{ color: "#6c757d", fontWeight: "500" }}>Otomatis tersimpan</span>
-                    </>
-                )}
-            </div>
-        </div>
-    );
-
-    if (uiState.loading && (!profile || !profile.full_name)) {
+    // Full-page spinner on initial load
+    if (uiState.loading && !profile) {
         return (
             <>
                 <BaseHeader />
-                <section className="student-profile-page" style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center" }}>
-                    <div className="container" style={{ flex: 1 }}>
+                <section className="student-profile-page modern-profile-page pt-4 pb-4">
+                    <div className="container">
                         <Header />
-                        <div className="row mt-0">
+                        <div className="row">
                             <Sidebar />
-                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+                            <div
+                                className={`col-lg-9 col-md-8 col-12 ${
+                                    isCollapsed ? "sidebar-collapsed-adapted" : ""
+                                }`}
+                                style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "50vh" }}
+                            >
                                 <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
+                                    <div className="spinner-border text-teal-dpd" role="status" style={{ width: "2.8rem", height: "2.8rem" }}>
                                         <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Memuat Profil...</p>
+                                    <p className="mt-3 text-muted fw-semibold">Memuat Pengaturan Profil Siswa...</p>
                                 </div>
                             </div>
                         </div>
@@ -1191,101 +592,778 @@ const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
             <section className="student-profile-page modern-profile-page">
                 <div className="container">
                     <Header />
-                    <div className="row mt-0">
+
+                    <div className="row">
                         <Sidebar />
+
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
-                            {/* Modern Header Section */}
-                            <div className="modern-header-section mb-4" style={{
-                                background: "rgba(255, 255, 255, 0.95)",
-                                backdropFilter: "blur(10px)",
-                                borderRadius: "20px",
-                                padding: "20px",
-                                border: "1px solid rgba(255, 255, 255, 0.2)",
-                                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-                                position: "relative",
-                                overflow: "hidden"
-                            }}>
-                                <div style={{
-                                    position: "absolute",
-                                    top: "-50%",
-                                    right: "-20%",
-                                    width: "300px",
-                                    height: "300px",
-                                    background: "linear-gradient(45deg, #0d948820, #0f766e20)",
-                                    borderRadius: "50%",
-                                    zIndex: 1
-                                }}></div>
-                                <div className="d-flex align-items-center justify-content-between position-relative" style={{ zIndex: 2 }}>
-                                    <div>
-                                        <h1 className="mb-2" style={{
-                                            background: "linear-gradient(135deg, #0d9488, #0f766e)",
-                                            WebkitBackgroundClip: "text",
-                                            WebkitTextFillColor: "transparent",
-                                            fontSize: "2.5rem",
-                                            fontWeight: "bold"
-                                        }}>
-                                            <i className="fas fa-user-edit me-3"></i>Pengaturan Profil
-                                        </h1>
-                                        <p className="mb-0 text-muted" style={{ fontSize: "1.1rem" }}>
-                                            Kelola informasi akun dan profil siswa Anda
-                                        </p>
+                            
+                            {/* ========================================================
+                                COMPACT EXECUTIVE IDENTITY HERO
+                                ======================================================== */}
+                            <div className="profile-hero-card">
+                                <div className="profile-hero-accent-strip student-strip"></div>
+                                <div className="profile-hero-body">
+                                    {/* Left: Avatar with camera trigger */}
+                                    <div className="profile-avatar-wrapper">
+                                        <div className="profile-avatar-circle student-avatar-circle">
+                                            {uiState.imagePreview ? (
+                                                <img
+                                                    src={uiState.imagePreview}
+                                                    alt={profileData.full_name || "Profile"}
+                                                    className="profile-avatar-img"
+                                                    onError={(e) => {
+                                                        e.target.style.display = "none";
+                                                        setUiState((prev) => ({ ...prev, imagePreview: "" }));
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="profile-avatar-placeholder">
+                                                    <i className="fas fa-graduation-cap"></i>
+                                                </div>
+                                            )}
+                                            
+                                            <label htmlFor="profileImage" className="avatar-edit-badge" title="Ubah Foto Profil">
+                                                <i className="fas fa-camera"></i>
+                                                <input
+                                                    key={fileInputKey}
+                                                    type="file"
+                                                    id="profileImage"
+                                                    name="image"
+                                                    onChange={handleFileChange}
+                                                    accept="image/*"
+                                                    style={{ display: "none" }}
+                                                    disabled={uiState.loading}
+                                                />
+                                            </label>
+                                        </div>
+
+                                        {uiState.imagePreview && (
+                                            <button
+                                                type="button"
+                                                className="btn-delete-avatar-mini"
+                                                onClick={handleDeleteProfilePicture}
+                                                title="Hapus foto profil"
+                                                disabled={uiState.loading}
+                                            >
+                                                <i className="fas fa-trash-can"></i> Hapus
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Middle: Identity & Roles */}
+                                    <div className="profile-hero-info">
+                                        <div className="hero-title-row">
+                                            <h2 className="hero-full-name">
+                                                {profileData.full_name || currentUser?.full_name || "Peserta Setjen DPD RI"}
+                                            </h2>
+                                            <span className="badge-verified" title="Akun Terverifikasi Setjen DPD RI">
+                                                <i className="fas fa-circle-check"></i> Terverifikasi
+                                            </span>
+                                        </div>
+
+                                        <div className="hero-meta-row">
+                                            <span className="hero-meta-item" title="Email Pengguna">
+                                                <i className="fas fa-envelope text-teal"></i>
+                                                {profileData.email || currentUser?.email || "email@dpd.go.id"}
+                                            </span>
+                                            {profileData.nip && (
+                                                <span className="hero-meta-item" title="Nomor Induk Pegawai">
+                                                    <i className="fas fa-id-card text-teal"></i>
+                                                    NIP: {profileData.nip}
+                                                </span>
+                                            )}
+                                            {profileData.organization_unit_name && (
+                                                <span className="hero-meta-item" title="Unit Kerja">
+                                                    <i className="fas fa-building text-teal"></i>
+                                                    {profileData.organization_unit_name}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Multi-Role Badges Connection */}
+                                        <div className="hero-roles-bar">
+                                            <span className="role-tag-pill role-student-active" title="Peran Aktif: Peserta">
+                                                <i className="fas fa-graduation-cap"></i> Peserta Pelatihan DPD RI
+                                            </span>
+
+                                            {hasInstructorRole && (
+                                                <Link 
+                                                    to="/instructor/profile/" 
+                                                    className="role-tag-pill role-instructor-link"
+                                                    title="Terhubung dengan Peran Instruktur / Pengajar. Klik untuk beralih ke profil instruktur"
+                                                >
+                                                    <i className="fas fa-chalkboard-user"></i> Terhubung: Instruktur Setjen
+                                                    <i className="fas fa-arrow-up-right-from-square role-link-icon"></i>
+                                                </Link>
+                                            )}
+
+                                            {profileData.golongan && (
+                                                <span className="role-tag-pill role-gov" title="Golongan / Pangkat">
+                                                    <i className="fas fa-layer-group"></i> Gol: {profileData.golongan}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Completeness & Quick Actions */}
+                                    <div className="profile-hero-actions">
+                                        <div className="completeness-box">
+                                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                                <span className="completeness-label">Kelengkapan</span>
+                                                <span className="completeness-pct">{completenessScore}%</span>
+                                            </div>
+                                            <div className="completeness-progress-track">
+                                                <div
+                                                    className="completeness-progress-bar"
+                                                    style={{ width: `${completenessScore}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+
+                                        <div className="hero-btn-group">
+                                            <Link
+                                                to="/student/sertifikat/"
+                                                className="btn-hero-outline"
+                                                title="Lihat sertifikat pelatihan yang telah diperoleh"
+                                            >
+                                                <i className="fas fa-award"></i> Sertifikat Saya
+                                            </Link>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleSubmitManual}
+                                                disabled={uiState.saving || uiState.loading}
+                                                className="btn-hero-primary"
+                                                title="Simpan semua perubahan profil sekarang"
+                                            >
+                                                {uiState.saving ? (
+                                                    <>
+                                                        <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                                                        Menyimpan...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-floppy-disk me-1"></i> Simpan
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+
+                                        {/* Auto-save Status Chip */}
+                                        <div className={`autosave-chip autosave-${uiState.autoSaveStatus}`}>
+                                            {uiState.autoSaveStatus === "saving" ? (
+                                                <>
+                                                    <span className="spinner-grow spinner-grow-sm me-1" role="status"></span>
+                                                    <span>Menyimpan otomatis...</span>
+                                                </>
+                                            ) : uiState.autoSaveStatus === "saved" ? (
+                                                <>
+                                                    <i className="fas fa-check-circle me-1 text-success"></i>
+                                                    <span>Tersimpan</span>
+                                                </>
+                                            ) : uiState.autoSaveStatus === "error" ? (
+                                                <>
+                                                    <i className="fas fa-circle-exclamation me-1 text-danger"></i>
+                                                    <span>Gagal simpan</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-cloud-arrow-up me-1"></i>
+                                                    <span>Auto-sync aktif</span>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Modern Profile Form - Changed from form to div to prevent button submission */}
-                            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                                {/* Avatar Section */}
-                                {renderAvatarSection()}
+                            {/* ========================================================
+                                COMPACT SEGMENTED NAVIGATION TABS
+                                ======================================================== */}
+                            <div className="profile-tabs-nav">
+                                <button
+                                    type="button"
+                                    className={`profile-tab-btn ${activeTab === "general" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("general")}
+                                >
+                                    <i className="fas fa-user-circle"></i>
+                                    <span>Data Utama & Akun</span>
+                                </button>
 
-                                {/* Personal Details Section */}
-                                {renderPersonalDetails()}
+                                <button
+                                    type="button"
+                                    className={`profile-tab-btn ${activeTab === "employee" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("employee")}
+                                >
+                                    <i className="fas fa-building-columns"></i>
+                                    <span>Kepegawaian DPD RI</span>
+                                </button>
 
-                                {/* Employee Information Section */}
-                                {renderEmployeeSection()}
+                                <button
+                                    type="button"
+                                    className={`profile-tab-btn ${activeTab === "roles" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("roles")}
+                                >
+                                    <i className="fas fa-user-graduate"></i>
+                                    <span>Profil Peran (Peserta & Instruktur)</span>
+                                    <span className="tab-pill-role-badge">Terpadu</span>
+                                </button>
 
-                                {/* Student Details Section */}
-                                {renderStudentDetails()}
-
-                                {/* Social Media Section */}
-                                {renderSocialMediaSection()}
-
-                                {/* Auto-save Status Section */}
-                                {renderSubmitButton()}
+                                <button
+                                    type="button"
+                                    className={`profile-tab-btn ${activeTab === "social" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("social")}
+                                >
+                                    <i className="fas fa-share-nodes"></i>
+                                    <span>Media Sosial & Tautan</span>
+                                </button>
                             </div>
+
+                            {/* ========================================================
+                                TAB CONTENT PANELS
+                                ======================================================== */}
+                            <div className="profile-tab-content-card">
+                                <form onSubmit={handleSubmitManual}>
+                                    
+                                    {/* TAB 1: DATA UTAMA & AKUN */}
+                                    {activeTab === "general" && (
+                                        <div className="tab-pane-content fade-in">
+                                            <div className="section-intro-bar">
+                                                <div>
+                                                    <h4 className="section-heading">
+                                                        <i className="fas fa-user-shield me-2 text-teal"></i>
+                                                        Informasi Identitas & Akun Peserta
+                                                    </h4>
+                                                    <p className="section-subtext">
+                                                        Identitas ini diselaraskan otomatis antara peran Peserta dan Instruktur Anda di LMS Setjen DPD RI.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="row g-3">
+                                                <div className="col-md-6 col-12">
+                                                    <label className="compact-label" htmlFor="full_name">
+                                                        Nama Lengkap <span className="text-danger">*</span>
+                                                    </label>
+                                                    <div className="input-group-compact">
+                                                        <span className="input-group-icon"><i className="fas fa-user"></i></span>
+                                                        <input
+                                                            type="text"
+                                                            id="full_name"
+                                                            name="full_name"
+                                                            className="form-control compact-input"
+                                                            placeholder="Nama lengkap beserta gelar..."
+                                                            value={profileData.full_name || ""}
+                                                            onChange={handleProfileChange}
+                                                            required
+                                                            disabled={uiState.loading}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-md-6 col-12">
+                                                    <label className="compact-label" htmlFor="email">
+                                                        Email Akun (SSO Terpadu)
+                                                    </label>
+                                                    <div className="input-group-compact input-readonly">
+                                                        <span className="input-group-icon"><i className="fas fa-envelope"></i></span>
+                                                        <input
+                                                            type="email"
+                                                            id="email"
+                                                            name="email"
+                                                            className="form-control compact-input"
+                                                            value={profileData.email || currentUser?.email || ""}
+                                                            readOnly
+                                                            disabled
+                                                        />
+                                                        <span className="input-badge-verified" title="Email terdaftar di SSO Setjen DPD RI">
+                                                            <i className="fas fa-lock"></i> SSO
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-md-6 col-12">
+                                                    <CountrySelector
+                                                        value={profileData.country || ""}
+                                                        onChange={handleProfileChange}
+                                                        onBlur={handleProfileChange}
+                                                        name="country"
+                                                        id="country"
+                                                        required={true}
+                                                        disabled={uiState.loading}
+                                                        placeholder="Pilih atau cari negara..."
+                                                        label="Negara / Domisili"
+                                                        icon="fas fa-globe-asia"
+                                                    />
+                                                </div>
+
+                                                <div className="col-md-6 col-12">
+                                                    <label className="compact-label">
+                                                        Status Hak Akses Multi-Peran
+                                                    </label>
+                                                    <div className="roles-status-card">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <span className="badge-linked-role">
+                                                                <i className="fas fa-graduation-cap me-1"></i> Peserta Pelatihan Aktif
+                                                            </span>
+                                                            {hasInstructorRole && (
+                                                                <span className="badge-active-role">
+                                                                    <i className="fas fa-chalkboard-user me-1"></i> Instruktur Terhubung
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <small className="roles-status-hint">
+                                                            Data identitas dan kepegawaian otomatis terhubung tanpa duplikasi formulir.
+                                                        </small>
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-12">
+                                                    <label className="compact-label" htmlFor="about">
+                                                        Tentang Diri Saya (Ringkasan Profil Umum)
+                                                    </label>
+                                                    <textarea
+                                                        id="about"
+                                                        name="about"
+                                                        className="form-control compact-textarea"
+                                                        rows="3"
+                                                        placeholder="Ceritakan latar belakang, fokus tugas, atau minat pengembangan kompetensi Anda..."
+                                                        value={profileData.about || ""}
+                                                        onChange={handleProfileChange}
+                                                        disabled={uiState.loading}
+                                                    ></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* TAB 2: DATA KEPEGAWAIAN SETJEN DPD RI */}
+                                    {activeTab === "employee" && (
+                                        <div className="tab-pane-content fade-in">
+                                            <div className="section-intro-bar">
+                                                <div>
+                                                    <h4 className="section-heading">
+                                                        <i className="fas fa-landmark me-2 text-teal"></i>
+                                                        Data Kepegawaian Setjen DPD RI
+                                                    </h4>
+                                                    <p className="section-subtext">
+                                                        Data resmi pegawai digunakan untuk pencatatan JP pelatihan, sertifikat ASN, dan penugasan kediklatan.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="employee-sync-notice">
+                                                <i className="fas fa-circle-info notice-icon"></i>
+                                                <div className="notice-body">
+                                                    <strong>Sinkronisasi Terpadu Kepegawaian</strong>
+                                                    <p>
+                                                        Data kepegawaian ini digunakan bersama untuk peran Anda sebagai Peserta maupun Instruktur.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="row g-3">
+                                                <div className="col-md-6 col-12">
+                                                    <label className="compact-label" htmlFor="nip">
+                                                        NIP (Nomor Induk Pegawai)
+                                                    </label>
+                                                    <div className="input-group-compact input-readonly">
+                                                        <span className="input-group-icon"><i className="fas fa-id-badge"></i></span>
+                                                        <input
+                                                            type="text"
+                                                            id="nip"
+                                                            name="nip"
+                                                            className="form-control compact-input"
+                                                            placeholder="NIP Pegawai DPD RI..."
+                                                            value={profileData.nip || ""}
+                                                            readOnly
+                                                            disabled
+                                                        />
+                                                        <span className="input-badge-verified">
+                                                            <i className="fas fa-shield"></i> Terdaftar
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-md-6 col-12">
+                                                    <OptionSelector
+                                                        value={profileData.golongan || ""}
+                                                        onChange={handleProfileChange}
+                                                        onBlur={handleProfileChange}
+                                                        options={employeeOptions.golongan.map((g) => ({ id: g, name: g }))}
+                                                        name="golongan"
+                                                        id="golongan"
+                                                        label="Pangkat / Golongan Ruang"
+                                                        icon="fas fa-layer-group"
+                                                        placeholder="Pilih golongan ruang..."
+                                                        required={false}
+                                                        disabled={uiState.loading}
+                                                        displayKey="name"
+                                                        valueKey="id"
+                                                        isLoading={employeeOptionsLoading}
+                                                    />
+                                                </div>
+
+                                                <div className="col-md-6 col-12">
+                                                    <OptionSelector
+                                                        value={profileData.jenis_jabatan || ""}
+                                                        onChange={(event) => {
+                                                            const newValue = event.target.value || "";
+                                                            setProfileData((prev) => ({ ...prev, jenis_jabatan: newValue }));
+                                                            if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                            autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                saveProfileData({ jenis_jabatan: newValue }, false);
+                                                            }, 1200);
+                                                        }}
+                                                        onBlur={handleProfileChange}
+                                                        options={employeeOptions.jenis_jabatan.map((j) => ({ id: j, name: j }))}
+                                                        name="jenis_jabatan"
+                                                        id="jenis_jabatan"
+                                                        label="Jenis Jabatan"
+                                                        icon="fas fa-tags"
+                                                        placeholder="Pilih jenis jabatan ASN..."
+                                                        required={false}
+                                                        disabled={uiState.loading}
+                                                        displayKey="name"
+                                                        valueKey="id"
+                                                        isLoading={employeeOptionsLoading}
+                                                    />
+                                                </div>
+
+                                                <div className="col-md-6 col-12">
+                                                    <OptionSelector
+                                                        value={profileData.organization_unit_name || ""}
+                                                        onChange={(event) => {
+                                                            const newValue = event.target.value || "";
+                                                            setProfileData((prev) => ({ ...prev, organization_unit_name: newValue }));
+                                                            if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                            autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                saveProfileData({ organization_unit_name: newValue }, false);
+                                                            }, 1200);
+                                                        }}
+                                                        onBlur={handleProfileChange}
+                                                        options={employeeOptions.organizations}
+                                                        name="organization_unit_name"
+                                                        id="organization_unit_name"
+                                                        label="Unit Organisasi / Biro / Bagian"
+                                                        icon="fas fa-sitemap"
+                                                        placeholder="Pilih unit kerja Setjen DPD RI..."
+                                                        required={false}
+                                                        disabled={uiState.loading}
+                                                        displayKey="name"
+                                                        valueKey="name"
+                                                        isLoading={employeeOptionsLoading}
+                                                    />
+                                                </div>
+
+                                                <div className="col-12">
+                                                    <OptionSelector
+                                                        value={profileData.position_name || ""}
+                                                        onChange={(event) => {
+                                                            const newValue = event.target.value || "";
+                                                            setProfileData((prev) => ({ ...prev, position_name: newValue }));
+                                                            if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                            autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                saveProfileData({ position_name: newValue }, false);
+                                                            }, 1200);
+                                                        }}
+                                                        onBlur={handleProfileChange}
+                                                        options={employeeOptions.positions}
+                                                        name="position_name"
+                                                        id="position_name"
+                                                        label="Nama Jabatan / Posisi"
+                                                        icon="fas fa-briefcase"
+                                                        placeholder="Pilih atau cari jabatan Anda..."
+                                                        required={false}
+                                                        disabled={uiState.loading}
+                                                        displayKey="name"
+                                                        valueKey="name"
+                                                        isLoading={employeeOptionsLoading}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* TAB 3: PROFIL PERAN (PESERTA & INSTRUKTUR) */}
+                                    {activeTab === "roles" && (
+                                        <div className="tab-pane-content fade-in">
+                                            <div className="section-intro-bar">
+                                                <div>
+                                                    <h4 className="section-heading">
+                                                        <i className="fas fa-users-gear me-2 text-teal"></i>
+                                                        Profil Peran Terintegrasi (Peserta & Instruktur)
+                                                    </h4>
+                                                    <p className="section-subtext">
+                                                        Kedua peran saling terhubung tanpa duplikasi data. Anda dapat mengelola tujuan belajar sekaligus aspek kepakaran pengajar.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="roles-dual-grid">
+                                                
+                                                {/* Role Card: Siswa / Peserta Pelatihan */}
+                                                <div className="role-subcard student-card">
+                                                    <div className="role-subcard-header">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <div className="role-icon-box student-icon-box">
+                                                                <i className="fas fa-graduation-cap"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h5 className="role-subcard-title">Peran Siswa / Peserta</h5>
+                                                                <span className="role-subcard-subtitle">Pengembangan Kompetensi ASN DPD RI</span>
+                                                            </div>
+                                                        </div>
+                                                        <span className="role-badge-pill-stud">Aktif</span>
+                                                    </div>
+
+                                                    <div className="role-subcard-body">
+                                                        <div className="mb-3">
+                                                            <label className="compact-label" htmlFor="student_bio">
+                                                                Bio / Minat Pengembangan Belajar
+                                                            </label>
+                                                            <textarea
+                                                                id="student_bio"
+                                                                name="bio"
+                                                                className="form-control compact-textarea"
+                                                                rows="3"
+                                                                placeholder="Tuliskan target kompetensi atau bidang diklat yang ingin Anda pelajari..."
+                                                                value={profileData.bio || ""}
+                                                                onChange={handleProfileChange}
+                                                                disabled={uiState.loading}
+                                                            ></textarea>
+                                                        </div>
+
+                                                        <div className="role-quick-shortcuts">
+                                                            <span className="shortcuts-label">Akses Cepat Peserta:</span>
+                                                            <div className="shortcuts-links-row">
+                                                                <Link to="/student/courses/" className="shortcut-chip">
+                                                                    <i className="fas fa-play-circle"></i> Kursus Saya
+                                                                </Link>
+                                                                <Link to="/student/sertifikat/" className="shortcut-chip">
+                                                                    <i className="fas fa-award text-amber"></i> Sertifikat
+                                                                </Link>
+                                                                <Link to="/student/activities/" className="shortcut-chip">
+                                                                    <i className="fas fa-clock-rotate-left"></i> Riwayat Belajar
+                                                                </Link>
+                                                                <Link to="/student/dashboard/" className="shortcut-chip">
+                                                                    <i className="fas fa-gauge-high"></i> Dasbor
+                                                                </Link>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Role Card: Instruktur / Widyaiswara */}
+                                                <div className="role-subcard instructor-card">
+                                                    <div className="role-subcard-header">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <div className="role-icon-box instructor-icon-box">
+                                                                <i className="fas fa-chalkboard-user"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h5 className="role-subcard-title">Peran Instruktur / Pengajar</h5>
+                                                                <span className="role-subcard-subtitle">Pemateri Kursus & Widyaiswara</span>
+                                                            </div>
+                                                        </div>
+                                                        <span className="role-badge-pill-inst">
+                                                            {hasInstructorRole ? "Terhubung" : "Tersedia"}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="role-subcard-body">
+                                                        <div className="mb-3">
+                                                            <label className="compact-label">
+                                                                Status Instruktur Terhubung
+                                                            </label>
+                                                            <div className="student-profile-sync-box">
+                                                                <div className="d-flex align-items-center gap-2 mb-2">
+                                                                    <i className="fas fa-circle-check text-teal"></i>
+                                                                    <span className="fw-semibold text-dark">Data Pengajar Terintegrasi</span>
+                                                                </div>
+                                                                <p className="student-sync-desc mb-2">
+                                                                    Jika Anda mengajar kursus, data profil dan biografi kepakaran otomatis terhubung dengan kartu instruktur publik tanpa perlu mengisi ulang data dasar.
+                                                                </p>
+                                                                {hasInstructorRole ? (
+                                                                    <Link to="/instructor/profile/" className="btn-switch-role-view">
+                                                                        <i className="fas fa-arrow-right-arrow-left me-1"></i> Buka Pengaturan Profil Instruktur
+                                                                    </Link>
+                                                                ) : (
+                                                                    <span className="text-muted small">Hubungi admin untuk aktivasi peran pengajar.</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {hasInstructorRole && (
+                                                            <div className="role-quick-shortcuts">
+                                                                <span className="shortcuts-label">Akses Cepat Instruktur:</span>
+                                                                <div className="shortcuts-links-row">
+                                                                    <Link to="/instructor/courses/" className="shortcut-chip">
+                                                                        <i className="fas fa-book-open"></i> Kursus Diajar
+                                                                    </Link>
+                                                                    <Link to="/instructor/reviews/" className="shortcut-chip">
+                                                                        <i className="fas fa-star text-warning"></i> Ulasan
+                                                                    </Link>
+                                                                    <Link to="/instructor/dashboard/" className="shortcut-chip">
+                                                                        <i className="fas fa-chalkboard"></i> Dasbor Instruktur
+                                                                    </Link>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* TAB 4: MEDIA SOSIAL & TAUTAN PUBLIK */}
+                                    {activeTab === "social" && (
+                                        <div className="tab-pane-content fade-in">
+                                            <div className="section-intro-bar">
+                                                <div>
+                                                    <h4 className="section-heading">
+                                                        <i className="fas fa-globe me-2 text-teal"></i>
+                                                        Tautan Media Sosial & Jejaring Profesional
+                                                    </h4>
+                                                    <p className="section-subtext">
+                                                        Tautan ini memudahkan instruktur dan rekan kerja di lingkungan DPD RI untuk terhubung.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="row g-3">
+                                                <div className="col-md-4 col-12">
+                                                    <label className="compact-label" htmlFor="linkedin">
+                                                        <i className="fab fa-linkedin text-primary me-1"></i> LinkedIn
+                                                    </label>
+                                                    <div className="input-group-compact">
+                                                        <span className="input-group-icon text-primary"><i className="fab fa-linkedin-in"></i></span>
+                                                        <input
+                                                            type="url"
+                                                            id="linkedin"
+                                                            name="linkedin"
+                                                            className="form-control compact-input"
+                                                            placeholder="https://linkedin.com/in/profil"
+                                                            value={profileData.linkedin || ""}
+                                                            onChange={handleProfileChange}
+                                                            disabled={uiState.loading}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-md-4 col-12">
+                                                    <label className="compact-label" htmlFor="twitter">
+                                                        <i className="fab fa-x-twitter text-dark me-1"></i> Twitter / X
+                                                    </label>
+                                                    <div className="input-group-compact">
+                                                        <span className="input-group-icon text-dark"><i className="fab fa-x-twitter"></i></span>
+                                                        <input
+                                                            type="url"
+                                                            id="twitter"
+                                                            name="twitter"
+                                                            className="form-control compact-input"
+                                                            placeholder="https://x.com/username"
+                                                            value={profileData.twitter || ""}
+                                                            onChange={handleProfileChange}
+                                                            disabled={uiState.loading}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-md-4 col-12">
+                                                    <label className="compact-label" htmlFor="facebook">
+                                                        <i className="fab fa-facebook text-primary me-1"></i> Facebook
+                                                    </label>
+                                                    <div className="input-group-compact">
+                                                        <span className="input-group-icon text-primary"><i className="fab fa-facebook-f"></i></span>
+                                                        <input
+                                                            type="url"
+                                                            id="facebook"
+                                                            name="facebook"
+                                                            className="form-control compact-input"
+                                                            placeholder="https://facebook.com/profil"
+                                                            value={profileData.facebook || ""}
+                                                            onChange={handleProfileChange}
+                                                            disabled={uiState.loading}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Bottom Sticky Action Bar */}
+                                    <div className="profile-form-footer">
+                                        <div className="footer-status-indicator">
+                                            <i className="fas fa-shield-halved text-teal me-1"></i>
+                                            <span>Semua perubahan tersinkronisasi aman ke profil LMS Setjen DPD RI</span>
+                                        </div>
+
+                                        <div className="footer-buttons">
+                                            <button
+                                                type="button"
+                                                onClick={fetchProfile}
+                                                className="btn-footer-reset"
+                                                disabled={uiState.loading || uiState.saving}
+                                            >
+                                                <i className="fas fa-rotate-left me-1"></i> Reset
+                                            </button>
+
+                                            <button
+                                                type="submit"
+                                                className="btn-footer-save"
+                                                disabled={uiState.loading || uiState.saving}
+                                            >
+                                                {uiState.saving ? (
+                                                    <>
+                                                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                        Menyimpan...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-check-double me-2"></i> Simpan Perubahan
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Image Cropping Modal - Reusable Component */}
+            {/* Image Cropping Modal */}
             <ProfilePictureCropModal
                 show={uiState.showCropModal}
                 imageSrc={imageState.selected}
                 crop={cropState.crop}
                 completedCrop={cropState.completedCrop}
-                onCropChange={(c) => setCropState(prev => ({ ...prev, crop: c }))}
-                onCropComplete={(c) => setCropState(prev => ({ ...prev, completedCrop: c }))}
+                onCropChange={(c) => setCropState((prev) => ({ ...prev, crop: c }))}
+                onCropComplete={(c) => setCropState((prev) => ({ ...prev, completedCrop: c }))}
                 onApplyCrop={handleCropComplete}
                 onCancel={handleCropCancel}
                 imgRef={imgRef}
                 onImageLoad={(e) => {
-                    // Calculate centered crop area based on actual rendered dimensions
                     const img = e.currentTarget;
                     const { width, height } = img;
                     const size = Math.min(width, height);
                     const cropSize = size * 0.7;
                     const x = (width - cropSize) / 2;
                     const y = (height - cropSize) / 2;
-                    
+
                     const initialCrop = {
                         unit: "px",
                         width: cropSize,
                         height: cropSize,
-                        x: x,
-                        y: y
+                        x,
+                        y
                     };
-                    
+
                     setCropState({
                         crop: initialCrop,
                         completedCrop: initialCrop

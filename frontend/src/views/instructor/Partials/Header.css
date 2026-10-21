@@ -408,13 +408,17 @@
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     margin-left: -1rem;
     margin-right: -1rem;
+    padding-top: 0.85rem !important;
+    overflow: visible !important;
 }
 
-/* Remove column padding from details wrapper - details row should not have gutters */
+/* Remove column padding from details wrapper and ensure hover transform is never clipped */
 .instructor-header-details-row .col-md-12 {
     padding-left: 0 !important;
     padding-right: 0 !important;
-    overflow: hidden !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    overflow: visible !important;
 }
 
 /* ✨ PHASE 8.9: Fix nested row overflow - remove Bootstrap's negative margins on row inside col-md-12 */
@@ -422,6 +426,7 @@
 .instructor-header-details-row .col-md-12 .row:not(.instructor-header-details-items-row) {
     margin-left: 0 !important;
     margin-right: 0 !important;
+    overflow: visible !important;
 }
 
 .instructor-header-details-items-row {
@@ -429,6 +434,7 @@
     margin-left: 0 !important;
     margin-right: 0 !important;
     width: 100% !important;
+    overflow: visible !important;
 }
 
 /* Remove bottom margin from last column in details row */
@@ -498,99 +504,106 @@
     top: calc(100% + 8px);
     left: 0;
     right: auto;
-    width: 220px;
-    background: linear-gradient(135deg, rgba(15, 118, 110, 0.95) 0%, rgba(17, 94, 89, 0.95) 100%);
-    border-radius: 12px;
-    box-shadow: 0 15px 35px rgba(15, 118, 110, 0.35), 0 5px 15px rgba(0, 0, 0, 0.2);
-    z-index: 2002;
-    padding: 0.5rem 0;
+    width: 225px;
+    background: #ffffff !important;
+    border: 1px solid #ccfbf1 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(13, 148, 136, 0.15) !important;
+    z-index: 2100 !important;
+    padding: 6px 4px !important;
     margin: 0;
     list-style: none;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
+    backdrop-filter: none !important;
 }
 
 .instructor-header-card .role-indicator.compact .role-dropdown-header {
-    padding: 0.75rem 1rem;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.95);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(15, 118, 110, 0.3);
+    padding: 8px 12px 6px !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    color: #0f766e !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    border-bottom: 1px solid #f0fdfa !important;
+    background: transparent !important;
 }
 
 .instructor-header-card .role-indicator.compact .role-dropdown-divider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.15);
-    margin: 0.5rem 0;
+    height: 1px !important;
+    background: #f1f5f9 !important;
+    margin: 4px 6px !important;
 }
 
 .instructor-header-card .role-indicator.compact .role-dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    border: none;
-    background: none;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: left;
-    width: 100%;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    width: calc(100% - 8px) !important;
+    margin: 2px 4px !important;
+    padding: 8px 12px !important;
+    border: none !important;
+    background: transparent !important;
+    border-radius: 8px !important;
+    color: #1e293b !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+    text-align: left !important;
 }
 
 .instructor-header-card .role-indicator.compact .role-dropdown-item:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.15);
-    padding-left: 1.25rem;
-    color: white;
-    border-radius: 8px;
+    background: #f0fdfa !important;
+    padding-left: 14px !important;
+    color: #0f766e !important;
 }
 
-.instructor-header-card .role-indicator.compact .role-dropdown-item i:first-child {
-    font-size: 1rem;
-    width: 20px;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.7);
-    transition: color 0.2s ease;
+.instructor-header-card .role-indicator.compact .role-dropdown-item:hover:not(:disabled) .role-label {
+    color: #0f766e !important;
+    font-weight: 600 !important;
 }
 
 .instructor-header-card .role-indicator.compact .role-dropdown-item:hover:not(:disabled) i:first-child {
-    color: white;
+    color: #0d9488 !important;
+}
+
+.instructor-header-card .role-indicator.compact .role-dropdown-item i:first-child {
+    font-size: 0.95rem !important;
+    width: 20px !important;
+    text-align: center !important;
+    color: #0d9488 !important;
+    transition: color 0.18s ease !important;
+}
+
+.instructor-header-card .role-indicator.compact .role-dropdown-item .role-label {
+    flex-grow: 1 !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    transition: color 0.18s ease !important;
 }
 
 .instructor-header-card .role-indicator.compact .role-dropdown-item.active {
-    background: rgba(255, 255, 255, 0.35) !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
     color: #ffffff !important;
-    font-weight: 800 !important;
-    border-radius: 8px !important;
-    margin: 0 0.5rem !important;
-    padding-left: 1.25rem !important;
-    border-left: 3px solid #ffffff !important;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.28) !important;
+    padding-left: 12px !important;
+    border-left: none !important;
+    margin: 2px 4px !important;
+    text-shadow: none !important;
 }
 
-.instructor-header-card .role-indicator.compact .role-dropdown-item.active i:first-child {
+.instructor-header-card .role-indicator.compact .role-dropdown-item.active i:first-child,
+.instructor-header-card .role-indicator.compact .role-dropdown-item.active .role-label,
+.instructor-header-card .role-indicator.compact .role-dropdown-item.active i.fa-check-circle,
+.instructor-header-card .role-indicator.compact .role-dropdown-item.active .role-active-check {
     color: #ffffff !important;
-    font-weight: 800 !important;
-}
-
-/* ✨ PHASE 4.39: Override RoleIndicator.css global active state with instructor header colors */
-.instructor-header-card .role-indicator.compact .role-dropdown-item.active .role-label {
-    color: #ffffff !important;
-    font-weight: 800 !important;
-}
-
-.instructor-header-card .role-indicator.compact .role-dropdown-item.active * {
-    color: #ffffff !important;
+    font-weight: 600 !important;
     background-color: transparent !important;
 }
 
 .instructor-header-card .role-indicator.compact .role-dropdown-item:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.55;
 }
 
 /* ✨ PHASE 11.2: Scoped badge styles for instructor header - match student header pattern */
@@ -646,32 +659,48 @@
     justify-content: center;
 }
 
-/* Social Links */
-.social-links {
-    display: flex;
-    gap: 0.8rem;
-    margin: 0;
+/* Social Links - Strictly scoped to instructor-header-card to prevent BaseFooter.css override */
+.instructor-header-card .instructor-social-links,
+.instructor-header-card .social-links {
+    display: inline-flex !important;
+    gap: 0.65rem !important;
+    margin: 0 !important;
+    align-items: center !important;
 }
 
-.social-link {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    font-size: 0.85rem;
+.instructor-header-card .instructor-social-link,
+.instructor-header-card .social-link {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    transition: all 0.25s ease !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    font-size: 0.85rem !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+    flex-shrink: 0 !important;
 }
 
-.social-link:hover {
-    background: rgba(255, 255, 255, 0.3);
-    color: white;
-    transform: translateY(-3px);
+.instructor-header-card .instructor-social-link:hover,
+.instructor-header-card .social-link:hover {
+    background: rgba(255, 255, 255, 0.32) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) scale(1.08) !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+}
+
+.instructor-header-card .instructor-social-link i,
+.instructor-header-card .social-link i {
+    color: #ffffff !important;
+    font-size: 0.85rem !important;
+    line-height: 1 !important;
 }
 
 /* Instructor Buttons */

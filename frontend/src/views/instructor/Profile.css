@@ -1,51 +1,35 @@
-/* ========================================
-   INSTRUCTOR PROFILE STYLES
-   ======================================== */
+/* ==========================================================================
+   LMSetjen DPD RI - Instructor Profile Redesign (Compact & Modern)
+   ========================================================================== */
 
-/* Main Page Layout */
+:root {
+    --dpd-teal: #0f766e;
+    --dpd-teal-hover: #115e59;
+    --dpd-teal-light: #ccfbf1;
+    --dpd-teal-subtle: rgba(15, 118, 110, 0.06);
+    --dpd-emerald: #059669;
+    --dpd-amber: #d97706;
+    --dpd-amber-light: #fef3c7;
+    --dpd-blue: #2563eb;
+    --dpd-blue-light: #dbeafe;
+    --dpd-slate: #0f172a;
+    --dpd-gray-dark: #334155;
+    --dpd-gray-muted: #64748b;
+    --dpd-border: #e2e8f0;
+    --dpd-card-bg: rgba(255, 255, 255, 0.98);
+}
+
+/* Page Spacing - Tightened to eliminate vast blank space */
 .instructor-profile-page.modern-profile-page {
     background: transparent;
     min-height: 100vh;
-    padding: var(--page-top-spacing) 0;
-    padding-top: var(--page-top-spacing) !important;
-    padding-bottom: var(--page-bottom-spacing) !important;
-    margin-bottom: 8rem;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
+    margin-bottom: 2rem !important; /* Fixed: was 8rem */
     overflow-x: hidden;
-    overflow-y: visible;
-    /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
 }
 
-/* CRITICAL: Force instructor-profile-page padding to be overridable by pt-5 and pb-5 classes */
-/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
-/* ✨ PHASE 6.5: Move pt-5 overrides AFTER main class definition to ensure proper CSS cascade */
-.instructor-profile-page.pt-5 {
-    padding-top: 50px !important;
-}
-
-.instructor-profile-page.pb-5 {
-    padding-bottom: 3rem !important;
-}
-
-/* More specific override for modern-profile-page variant */
-.instructor-profile-page.modern-profile-page.pt-5 {
-    padding-top: 50px !important;
-}
-
-.instructor-profile-page.modern-profile-page.pb-5 {
-    padding-bottom: 3rem !important;
-}
-
-/* Ensure proper scroll context for sticky sidebar */
-.instructor-profile-page .container {
-    position: relative;
-}
-
-/* ========================================
-   CRITICAL LAYOUT FIX - Row & Column Structure
-   ======================================== */
-
-/* ✨ PHASE X: Main layout row (direct child of container) - matches Testimonials pattern */
-/* Keep container rows at 100% width to prevent overflow of sidebar + content */
+/* Sidebar & Layout Compatibility */
 .instructor-profile-page > .container > .row {
     flex-wrap: nowrap;
     width: 100%;
@@ -54,773 +38,436 @@
     display: flex !important;
     flex-direction: row !important;
     gap: 0 !important;
-    overflow: visible;
 }
 
-/* Consistent vertical spacing for INNER form/dashboard sections */
-.instructor-profile-page .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(.sidebar-content-row):not(.sidebar-content-row-loading):not(:has(.instructor-sidebar-column)) {
-    margin-bottom: 0;
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0;
-    width: calc(100% + var(--bs-gutter-x, 24px));
-}
-
-.instructor-profile-page .row > [class*="col-"] {
-    margin-bottom: 0;
-    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
-    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
-    display: flex;
-    flex-direction: column;
-}
-
-/* Protect Header on profile page from row CSS rules */
-.instructor-profile-page .row.instructor-header-row {
-    margin-left: auto !important;
-    margin-right: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-/* Ensure Header card maintains full width and removes right gap */
-.instructor-profile-page .row.instructor-header-row > .col-xl-12,
-.instructor-profile-page .row.instructor-header-row > .col-lg-12,
-.instructor-profile-page .row.instructor-header-row > .col-md-12,
-.instructor-profile-page .row.instructor-header-row > .col-12 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-/* ✨ PHASE 4.21: Sidebar-content rows - Proper layout without conflicts */
-.instructor-profile-page .row.sidebar-content-row,
-.instructor-profile-page .row.sidebar-content-row-loading {
-    flex-wrap: nowrap;
-    width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
-
-/* Desktop: col-lg-9 content wrapper (inside sidebar row) */
 .instructor-profile-page .row:has(.instructor-sidebar-column) > .col-lg-9 {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
 }
 
-/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
-.instructor-profile-page .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
-}
-
-/* Tablet: col-md-8 content wrapper (inside sidebar row) */
-.instructor-profile-page .row:has(.instructor-sidebar-column) > .col-md-8 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
-    flex: 1 1 auto !important;
-}
-
-/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
-.instructor-profile-page .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
-}
-
-/* Override for specific spacing needs */
-.instructor-profile-page .row.mb-3 {
-    margin-bottom: 1rem !important;
-}
-
-/* ============================== */
-/* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
-/* Ensure sticky positioning works on Profile page */
-/* ============================== */
-.instructor-profile-page .row > .instructor-sidebar-column {
-  display: flex;
-  flex-direction: column;
-  overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
-}
-
-/* Sidebar: sticky positioning defined in global performance.css */
-/* This ensures the sidebar sticks to the viewport when scrolling */
-/* Position: sticky is already set in Sidebar.css & performance.css */
-/* NO override or conflicting properties here */
-
-/* ========================================
-   HEADER SECTION
-   ======================================== */
-.instructor-profile-page .modern-header-section {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 20px 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+/* ==========================================================================
+   1. HERO IDENTITY CARD
+   ========================================================================== */
+.profile-hero-card {
+    background: var(--dpd-card-bg);
+    border-radius: 16px;
+    border: 1px solid rgba(15, 118, 110, 0.16);
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
     position: relative;
     overflow: hidden;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
+    backdrop-filter: blur(8px);
 }
 
-.instructor-profile-page .header-decoration {
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 300px;
-    height: 300px;
-    background: linear-gradient(45deg, #0f766e20, #115e5920);
-    border-radius: 50%;
-    z-index: 1;
-}
-
-.instructor-profile-page .instructor-header-content {
-    position: relative;
-    z-index: 2;
-}
-
-.instructor-profile-page .page-header-title {
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-
-.instructor-profile-page .page-header-title-icon {
-    margin-right: 1rem;
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.instructor-profile-page .page-header-subtitle {
-    margin-bottom: 0;
-    color: #6c757d;
-    font-size: 1.1rem;
-}
-
-/* ========================================
-   FORM SECTIONS
-   ======================================== */
-.instructor-profile-page .modern-form-section {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 20px 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1.5rem;
-    position: relative; /* Create positioning context */
-    z-index: 1; /* Base z-index for form sections */
-}
-
-/* Ensure form section with dropdowns appears above other sections */
-.instructor-profile-page .modern-form-section:has(.country-selector-wrapper) {
-    z-index: 10; /* Higher z-index for section containing CountrySelector */
-    overflow: visible; /* Ensure dropdown isn't clipped */
-}
-
-.instructor-profile-page .modern-form-section .d-flex {
-    gap: 1.5rem;
-    align-items: flex-start; /* Prevent vertical compression */
-}
-
-.instructor-profile-page .modern-form-section .d-flex.align-items-center {
-    gap: 2rem;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
-}
-
-/* Ensure avatar section children don't compress */
-.instructor-profile-page .modern-form-section .d-flex.align-items-center > * {
-    flex-shrink: 0;
-}
-
-.instructor-profile-page .form-section-title {
-    color: #2c3e50;
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
-
-.instructor-profile-page .form-section-icon {
-    color: #0f766e;
-    margin-right: 0.5rem;
-}
-
-/* ========================================
-   AVATAR SECTION
-   ======================================== */
-.instructor-profile-page .modern-avatar-container {
-    position: relative;
-    flex-shrink: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.instructor-profile-page .modern-avatar {
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid white;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-}
-
-.instructor-profile-page .modern-avatar:hover {
-    transform: scale(1.05);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
-}
-
-.instructor-profile-page .default-avatar-modern {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 4px solid white;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-}
-
-.instructor-profile-page .default-avatar-modern:hover {
-    transform: scale(1.05);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
-}
-
-.instructor-profile-page .default-avatar-icon {
-    font-size: 40px;
-    color: white;
-}
-
-.instructor-profile-page .loading-avatar {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 4px solid white;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    flex-direction: column;
-    gap: 0.5rem; /* Space between spinner and text */
-    padding: 1rem; /* Prevent edge compression */
-    flex-shrink: 0; /* Prevent parent flex compression */
-}
-
-/* Loading Spinner - Perfectly Round */
-.instructor-profile-page .loading-spinner {
-    width: 3rem !important;
-    height: 3rem !important;
-    flex-shrink: 0 !important;
-    aspect-ratio: 1 / 1 !important;
-    border-width: 0.3rem;
-    min-width: 3rem !important; /* Prevent shrinking below this */
-    min-height: 3rem !important; /* Prevent shrinking below this */
-    max-width: 3rem !important; /* Prevent growing above this */
-    max-height: 3rem !important; /* Prevent growing above this */
-}
-
-/* CUSTOM SPINNER - GUARANTEED PERFECT CIRCLE */
-.instructor-profile-page .custom-spinner-wrapper {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
-    max-width: 48px;
-    max-height: 48px;
-    position: relative;
-    flex-shrink: 0;
-}
-
-.instructor-profile-page .custom-spinner {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
-    max-width: 48px;
-    max-height: 48px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #0f766e;
-    border-radius: 50%;
-    animation: custom-spin 1s linear infinite;
-    position: absolute;
-    top: 0;
-    left: 0;
-    box-sizing: border-box;
-}
-
-@keyframes custom-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.instructor-profile-page .loading-text {
-    font-size: 10px;
-    color: #6c757d;
-    margin-top: 0.5rem;
-}
-
-.instructor-profile-page .avatar-badge {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    width: 30px;
-    height: 30px;
-    background: linear-gradient(135deg, #28a745, #20c997);
-    border-radius: 50%;
-    border: 3px solid white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.instructor-profile-page .avatar-badge-icon {
-    font-size: 12px;
-    color: white;
-}
-
-.instructor-profile-page .avatar-section-title {
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.instructor-profile-page .avatar-section-description {
-    color: #6c757d;
-    margin-bottom: 1rem;
-    line-height: 1.5;
-}
-
-.instructor-profile-page .avatar-content-section {
-    flex: 0 1 auto;
-    max-width: 450px;
-}
-
-.instructor-profile-page .modern-file-upload {
-    position: relative;
-}
-
-.instructor-profile-page .modern-file-input {
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    padding: 12px;
-    transition: all 0.3s ease;
-    font-size: 1rem;
-}
-
-.instructor-profile-page .modern-file-input:focus {
-    border-color: #0f766e;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-    outline: none;
-}
-
-.instructor-profile-page .file-help-text {
-    color: #6c757d;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
-
-/* ========================================
-   FORM INPUTS
-   ======================================== */
-.instructor-profile-page .modern-label {
-    font-weight: 600;
-    color: #343a40;
-    margin-bottom: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.instructor-profile-page .form-field-container:last-child {
-    margin-bottom: 0.5rem !important;
-}
-
-.instructor-profile-page .form-label-icon {
-    color: #0f766e;
-    margin-right: 0.25rem;
-}
-
-.instructor-profile-page .modern-input {
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    padding: 15px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background: #fafafa;
-}
-
-.instructor-profile-page .modern-input:hover:not(:disabled):not(:focus) {
-    border-color: #adb5bd;
-    background-color: #f0f1f3;
-}
-
-.instructor-profile-page .modern-input:focus {
-    border-color: #0f766e;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-    background: white;
-    outline: none;
-}
-
-.instructor-profile-page .modern-input:disabled {
-    background-color: #f8f9fa;
-    border-color: #dee2e6;
-    color: #6c757d;
-    cursor: not-allowed;
-}
-
-.instructor-profile-page .modern-textarea {
-    resize: vertical;
-    min-height: 120px;
-}
-
-.instructor-profile-page .required-asterisk {
-    color: #dc3545;
-}
-
-.instructor-profile-page .field-help-text {
-    color: #6c757d;
-    font-size: 0.875rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0;
-    text-align: right;
-    display: block;
+.profile-hero-accent-strip {
+    height: 4px;
+    background: linear-gradient(90deg, #0f766e 0%, #0d9488 45%, #d97706 100%);
     width: 100%;
 }
 
-/* ========================================
-   SOCIAL MEDIA INPUTS
-   ======================================== */
-.instructor-profile-page .social-input-facebook:focus {
-    border-color: #1877f2 !important;
-    box-shadow: 0 0 0 0.2rem rgba(24, 119, 242, 0.25) !important;
-}
-
-.instructor-profile-page .social-input-twitter:focus {
-    border-color: #1da1f2 !important;
-    box-shadow: 0 0 0 0.2rem rgba(29, 161, 242, 0.25) !important;
-}
-
-.instructor-profile-page .social-input-linkedin:focus {
-    border-color: #0077b5 !important;
-    box-shadow: 0 0 0 0.2rem rgba(0, 119, 181, 0.25) !important;
-}
-
-.instructor-profile-page .social-icon-facebook {
-    color: #1877f2;
-}
-
-.instructor-profile-page .social-icon-twitter {
-    color: #1da1f2;
-}
-
-.instructor-profile-page .social-icon-linkedin {
-    color: #0077b5;
-}
-
-/* ========================================
-   SUBMIT BUTTON
-   ======================================== */
-.instructor-profile-page .modern-submit-btn {
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    border: none;
-    color: white;
-    border-radius: 12px;
-    padding: 15px 40px;
-    font-size: 1rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.instructor-profile-page .modern-submit-btn:hover {
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
-}
-
-.instructor-profile-page .modern-submit-btn:disabled {
-    opacity: 0.7;
-    transform: none;
-    box-shadow: none;
-}
-
-.instructor-profile-page .btn-modern {
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    border: none;
-    border-radius: 12px;
-    padding: 0.875rem 2rem;
-    color: white;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.instructor-profile-page .btn-modern:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
-    color: white;
-}
-
-.instructor-profile-page .btn-modern:disabled {
-    opacity: 0.7;
-    transform: none;
-    box-shadow: none;
-}
-
-.instructor-profile-page .submit-icon {
-    margin-right: 0.5rem;
-}
-
-/* Small Loading Spinner - Perfectly Round */
-.instructor-profile-page .loading-spinner-sm {
-    width: 1rem !important;
-    height: 1rem !important;
-    margin-right: 0.5rem;
-    flex-shrink: 0 !important;
-    aspect-ratio: 1 / 1 !important;
-    border-width: 0.15rem !important;
-}
-
-/* ========================================
-   FILE UPLOAD FEATURES
-   ======================================== */
-.instructor-profile-page .file-info {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    margin-top: 0.5rem;
-    border-left: 4px solid #0f766e;
-}
-
-.instructor-profile-page .file-info-text {
-    margin: 0;
-    font-size: 0.875rem;
-    color: #495057;
-}
-
-.instructor-profile-page .file-info-icon {
-    margin-right: 0.5rem;
-    color: #0f766e;
-}
-
-.instructor-profile-page .profile-picture-actions {
+.profile-hero-body {
+    padding: 1.25rem 1.5rem;
     display: flex;
-    gap: 0.75rem;
     align-items: center;
-    margin-top: 1rem;
+    gap: 1.5rem;
+    flex-wrap: wrap;
 }
 
-.instructor-profile-page .btn-delete-picture {
-    background: #dc3545;
+/* Avatar Section */
+.profile-avatar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.profile-avatar-circle {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    position: relative;
+    background: linear-gradient(135deg, #0f766e, #115e59);
+    border: 3px solid #ffffff;
+    box-shadow: 0 6px 16px rgba(15, 118, 110, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile-avatar-placeholder {
+    font-size: 2.2rem;
+    color: #ffffff;
+}
+
+.avatar-edit-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #0f766e;
+    color: #ffffff;
+    border: 2.5px solid #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.avatar-edit-badge:hover {
+    background: #115e59;
+    transform: scale(1.1);
+}
+
+.btn-delete-avatar-mini {
+    background: none;
     border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    color: white;
-    font-size: 0.875rem;
+    font-size: 0.72rem;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.2s;
     font-weight: 500;
-    transition: all 0.3s ease;
 }
 
-.instructor-profile-page .btn-delete-picture:hover {
-    background: #c82333;
-    color: white;
+.btn-delete-avatar-mini:hover {
+    background: #fee2e2;
+}
+
+/* Info Section */
+.profile-hero-info {
+    flex: 1 1 320px;
+}
+
+.hero-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.35rem;
+}
+
+.hero-full-name {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.badge-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: var(--dpd-teal-light);
+    color: var(--dpd-teal);
+    border: 1px solid rgba(15, 118, 110, 0.2);
+}
+
+.hero-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.82rem;
+    color: var(--dpd-gray-muted);
+    margin-bottom: 0.65rem;
+}
+
+.hero-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.hero-meta-item i {
+    color: var(--dpd-teal);
+    font-size: 0.85rem;
+}
+
+/* Multi-Role Badges Connection */
+.hero-roles-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.role-tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.role-tag-pill.role-instructor {
+    background: #0f766e;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+}
+
+.role-tag-pill.role-student-link {
+    background: var(--dpd-blue-light);
+    color: var(--dpd-blue);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.role-tag-pill.role-student-link:hover {
+    background: #bfdbfe;
+    color: #1d4ed8;
     transform: translateY(-1px);
 }
 
-.instructor-profile-page .picture-action-text {
-    font-size: 0.875rem;
-    color: #6c757d;
+.role-link-icon {
+    font-size: 0.65rem;
+    margin-left: 2px;
 }
 
-/* ========================================
-   FORM LAYOUT
-   ======================================== */
-.instructor-profile-page .form-row {
+.role-tag-pill.role-gov {
+    background: #f1f5f9;
+    color: var(--dpd-gray-dark);
+    border: 1px solid #cbd5e1;
+}
+
+/* Actions Section */
+.profile-hero-actions {
     display: flex;
-    flex-wrap: wrap;
-    margin: 0 -0.75rem;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    flex-shrink: 0;
 }
 
-.instructor-profile-page .form-col {
-    padding: 0 0.75rem;
-    margin-bottom: 1.5rem;
-}
-
-.instructor-profile-page .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 0.5rem;
-}
-
-/* ========================================
-   UTILITY CLASSES
-   ======================================== */
-.instructor-profile-page .text-instructor-primary {
-    color: #0f766e;
-}
-
-.instructor-profile-page .text-instructor-secondary {
-    color: #115e59;
-}
-
-.instructor-profile-page .bg-instructor-gradient {
-    background: linear-gradient(135deg, #0f766e, #115e59);
-}
-
-.instructor-profile-page .border-instructor-primary {
-    border-color: #0f766e;
-}
-
-/* ========================================
-   RESPONSIVE DESIGN
-   ======================================== */
 @media (max-width: 768px) {
-    .instructor-profile-page .modern-header-section {
-        padding: 20px;
-    }
-    
-    .instructor-profile-page .page-header-title {
-        font-size: 2rem;
-    }
-    
-    .instructor-profile-page .page-header-subtitle {
-        font-size: 1rem;
-    }
-    
-    .instructor-profile-page .modern-form-section {
-        padding: 20px;
-        margin-bottom: 1.25rem;
-    }
-    
-    .instructor-profile-page .modern-avatar,
-    .instructor-profile-page .default-avatar-modern,
-    .instructor-profile-page .loading-avatar {
-        width: 100px;
-        height: 100px;
-    }
-    
-    /* Adjust spinner size for mobile */
-    .instructor-profile-page .loading-spinner {
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-        min-width: 2.5rem !important;
-        min-height: 2.5rem !important;
-        max-width: 2.5rem !important;
-        max-height: 2.5rem !important;
-    }
-    
-    /* Custom spinner mobile size */
-    .instructor-profile-page .custom-spinner-wrapper {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-        max-width: 40px;
-        max-height: 40px;
-    }
-    
-    .instructor-profile-page .custom-spinner {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-        max-width: 40px;
-        max-height: 40px;
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #0f766e;
-    }
-    
-    .instructor-profile-page .default-avatar-icon {
-        font-size: 35px;
-    }
-    
-    .instructor-profile-page .modern-avatar-container {
-        margin-right: 15px;
-        margin-bottom: 1rem;
-    }
-    
-    .instructor-profile-page .avatar-section-mobile {
-        text-align: center;
-    }
-    
-    .instructor-profile-page .form-actions {
-        flex-direction: column;
-    }
-    
-    .instructor-profile-page .modern-submit-btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .instructor-profile-page .profile-picture-actions {
-        flex-direction: column;
+    .profile-hero-actions {
         align-items: flex-start;
-        gap: 0.5rem;
+        width: 100%;
     }
 }
 
-@media (max-width: 576px) {
-    .instructor-profile-page .page-header-title {
-        font-size: 1.75rem;
-    }
-    
-    .instructor-profile-page .modern-form-section {
-        margin-bottom: 1rem;
-    }
-    
-    .instructor-profile-page .modern-input {
-        padding: 12px;
-    }
-    
-    .instructor-profile-page .modern-submit-btn {
-        padding: 12px 30px;
-        font-size: 0.95rem;
-    }
-    
-    .instructor-profile-page .header-decoration {
-        width: 200px;
-        height: 200px;
-    }
+.completeness-box {
+    width: 175px;
 }
 
-/* ========================================
-   ANIMATIONS
-   ======================================== */
-@keyframes fadeIn {
+.completeness-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--dpd-gray-muted);
+}
+
+.completeness-pct {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--dpd-teal);
+}
+
+.completeness-progress-track {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.completeness-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #0f766e, #10b981);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.hero-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-hero-outline {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--dpd-teal);
+    background: #ffffff;
+    border: 1.5px solid var(--dpd-teal);
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.2s ease;
+}
+
+.btn-hero-outline:hover {
+    background: var(--dpd-teal);
+    color: #ffffff;
+}
+
+.btn-hero-primary {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0f766e, #115e59);
+    border: none;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-hero-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.35);
+}
+
+.btn-hero-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Auto-save Chip */
+.autosave-chip {
+    font-size: 0.74rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.autosave-idle {
+    color: var(--dpd-gray-muted);
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.autosave-saving {
+    color: var(--dpd-teal);
+    background: var(--dpd-teal-light);
+    border: 1px solid rgba(15, 118, 110, 0.2);
+}
+
+.autosave-saved {
+    color: #15803d;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+}
+
+.autosave-error {
+    color: #b91c1c;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+}
+
+/* ==========================================================================
+   2. COMPACT SEGMENTED NAVIGATION TABS
+   ========================================================================== */
+.profile-tabs-nav {
+    display: flex;
+    gap: 0.35rem;
+    padding: 4px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.profile-tabs-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.profile-tab-btn {
+    flex: 1 1 auto;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--dpd-gray-dark);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-tab-btn:hover:not(.active) {
+    background: rgba(15, 118, 110, 0.08);
+    color: var(--dpd-teal);
+}
+
+.profile-tab-btn.active {
+    background: #0f766e;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.25);
+}
+
+.profile-tab-btn i {
+    font-size: 0.9rem;
+}
+
+.tab-pill-role-badge {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--dpd-amber);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   3. TAB CONTENT CARD & FORM CONTROLS
+   ========================================================================== */
+.profile-tab-content-card {
+    background: var(--dpd-card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--dpd-border);
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+    padding: 1.5rem;
+    position: relative;
+    backdrop-filter: blur(8px);
+}
+
+.tab-pane-content {
+    animation: tabFadeIn 0.25s ease-out;
+}
+
+@keyframes tabFadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(4px);
     }
     to {
         opacity: 1;
@@ -828,218 +475,469 @@
     }
 }
 
-@keyframes slideIn {
-    from {
-        transform: translateX(-100%);
-    }
-    to {
-        transform: translateX(0);
-    }
+.section-intro-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.7;
-    }
+.section-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    margin: 0 0 0.25rem 0;
+    display: flex;
+    align-items: center;
 }
 
-.instructor-profile-page .fade-in {
-    animation: fadeIn 0.6s ease-out;
+.section-subtext {
+    font-size: 0.82rem;
+    color: var(--dpd-gray-muted);
+    margin: 0;
 }
 
-.instructor-profile-page .slide-in {
-    animation: slideIn 0.5s ease-out;
+/* Compact Labels & Inputs */
+.compact-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--dpd-gray-dark);
+    margin-bottom: 0.35rem;
+    display: block;
 }
 
-.instructor-profile-page .pulse-animation {
-    animation: pulse 2s infinite;
-}
-
-/* ========================================
-   FOCUS MANAGEMENT
-   ======================================== */
-.instructor-profile-page .focus-ring:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
-}
-
-/* ========================================
-   ACCESSIBILITY IMPROVEMENTS
-   ======================================== */
-.instructor-profile-page .sr-only {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    padding: 0 !important;
-    margin: -1px !important;
-    overflow: hidden !important;
-    clip: rect(0, 0, 0, 0) !important;
-    white-space: nowrap !important;
-    border: 0 !important;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .instructor-profile-page .modern-input,
-    .instructor-profile-page .modern-file-input {
-        border-width: 3px;
-    }
-    
-    .instructor-profile-page .modern-submit-btn {
-        border: 2px solid #000;
-    }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-    .instructor-profile-page .modern-avatar,
-    .instructor-profile-page .default-avatar-modern,
-    .instructor-profile-page .modern-submit-btn,
-    .instructor-profile-page .modern-input {
-        transition: none;
-    }
-    
-    .instructor-profile-page .fade-in,
-    .instructor-profile-page .slide-in,
-    .instructor-profile-page .pulse-animation {
-        animation: none;
-    }
-}
-
-/* ========================================
-   GLOBAL SPINNER FIX - PERFECTLY ROUND
-   ======================================== */
-/* Apply to all spinners in this page to prevent oval distortion */
-.instructor-profile-page .spinner-border,
-.instructor-profile-page .spinner-border-sm {
-    flex-shrink: 0 !important;
-    aspect-ratio: 1 / 1 !important;
-    min-width: fit-content !important;
-    min-height: fit-content !important;
-}
-
-/* Ensure specific sizes stay round with min/max constraints */
-.instructor-profile-page .spinner-border {
-    width: 2rem !important;
-    height: 2rem !important;
-    min-width: 2rem !important;
-    min-height: 2rem !important;
-    max-width: 2rem !important;
-    max-height: 2rem !important;
-}
-
-.instructor-profile-page .spinner-border-sm {
-    width: 1rem !important;
-    height: 1rem !important;
-    min-width: 1rem !important;
-    min-height: 1rem !important;
-    max-width: 1rem !important;
-    max-height: 1rem !important;
-}
-
-/* Extra protection: Prevent any parent flex container from compressing spinners */
-.instructor-profile-page .spinner-border::before,
-.instructor-profile-page .spinner-border::after,
-.instructor-profile-page .spinner-border-sm::before,
-.instructor-profile-page .spinner-border-sm::after {
-    flex-shrink: 0 !important;
-}
-
-/* Ensure spinner stays round in all contexts */
-.instructor-profile-page div:has(> .spinner-border),
-.instructor-profile-page div:has(> .spinner-border-sm),
-.instructor-profile-page span:has(> .spinner-border),
-.instructor-profile-page span:has(> .spinner-border-sm) {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* ========================================
-   RESPONSIVE LAYOUT - Content Column Sizing
-   ======================================== */
-
-/* Base: Desktop Large (lg breakpoint and up) */
-/* col-lg-3 sidebar + col-lg-9 content = 12 columns */
-  .instructor-profile-page .row > .instructor-sidebar-column {
-    flex-basis: auto;
-    flex-grow: 0;
-    flex-shrink: 0;
-    /* Sidebar now spans full column width without Bootstrap padding */
-    width: auto;
-  }
-
-  /* Content column - expands to fill remaining space */
-  .instructor-profile-page .row > .col-lg-9 {
-    flex: 1 1 auto;
-    min-width: 0;
-    width: auto;
-    max-width: 100%;
-  }
-
-  /* Ensure content doesn't wrap under sidebar */
-  .instructor-profile-page .row > .col-lg-9 {
-    min-width: 500px;
-  }
-
-  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
-    /* Fallback for browsers that don't support :has() */
-    .instructor-profile-page .row > .col-lg-9 {
-      flex: 1;
-      width: auto;
-      max-width: 100%;
-    }
-  }
-}
-
-/* Tablet (md breakpoint) */
-/* col-md-4 sidebar + col-md-8 content = 12 columns */
-@media (min-width: 768px) and (max-width: 991px) {
-  /* Sidebar column - maintains fixed width or collapses */
-  .instructor-profile-page .row > .instructor-sidebar-column {
-    flex-basis: auto;
-    flex-grow: 0;
-    flex-shrink: 0;
-    /* Sidebar now spans full column width without Bootstrap padding */
-    width: auto;
-  }
-
-  /* Content column - expands to fill remaining space */
-  .instructor-profile-page .row > .col-md-8 {
-    flex: 1 1 auto;
-    min-width: 0;
-    width: auto;
-    max-width: 100%;
-  }
-
-  /* Ensure content doesn't wrap under sidebar */
-  .instructor-profile-page .row > .col-md-8 {
-    min-width: 400px;
-  }
-
-  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
-    /* Fallback for browsers that don't support :has() */
-    .instructor-profile-page .row > .col-md-8 {
-      flex: 1;
-      width: auto;
-      max-width: 100%;
-    }
-  }
-}
-
-/* Mobile: Full width stacked */
-@media (max-width: 767px) {
-  .instructor-profile-page .row {
-    flex-direction: column;
-  }
-
-  .instructor-profile-page .row > [class*="col-"],
-  .instructor-profile-page .row > .instructor-sidebar-column {
-    flex: 0 0 100%;
+.input-group-compact {
+    position: relative;
+    display: flex;
+    align-items: center;
     width: 100%;
-    max-width: 100%;
-  }
+}
+
+.input-group-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--dpd-gray-muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.compact-input {
+    height: 40px !important;
+    border-radius: 8px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    padding: 8px 12px 8px 36px !important;
+    font-size: 0.88rem !important;
+    color: var(--dpd-slate) !important;
+    background: #ffffff !important;
+    transition: all 0.2s ease !important;
+}
+
+.compact-input:focus {
+    border-color: var(--dpd-teal) !important;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15) !important;
+    outline: none !important;
+}
+
+.input-readonly .compact-input {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    cursor: default;
+}
+
+.input-badge-verified {
+    position: absolute;
+    right: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #0f766e;
+    background: #ccfbf1;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.compact-textarea {
+    border-radius: 8px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    padding: 10px 12px !important;
+    font-size: 0.88rem !important;
+    color: var(--dpd-slate) !important;
+    background: #ffffff !important;
+    resize: vertical;
+    transition: all 0.2s ease !important;
+}
+
+.compact-textarea:focus {
+    border-color: var(--dpd-teal) !important;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15) !important;
+    outline: none !important;
+}
+
+.field-hint {
+    font-size: 0.74rem;
+    color: var(--dpd-gray-muted);
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* Status Cards */
+.roles-status-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.badge-active-role {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #0f766e;
+    background: #ccfbf1;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(15, 118, 110, 0.2);
+}
+
+.badge-linked-role {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1d4ed8;
+    background: #dbeafe;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.roles-status-hint {
+    font-size: 0.72rem;
+    color: var(--dpd-gray-muted);
+    display: block;
+    margin-top: 4px;
+}
+
+/* Employee Sync Notice */
+.employee-sync-notice {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 1.25rem;
+}
+
+.employee-sync-notice .notice-icon {
+    color: var(--dpd-amber);
+    margin-top: 3px;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.employee-sync-notice .notice-body strong {
+    font-size: 0.82rem;
+    color: #92400e;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.employee-sync-notice .notice-body p {
+    font-size: 0.76rem;
+    color: #78350f;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   4. DUAL ROLES CONNECTED GRID (The Core Bridge)
+   ========================================================================== */
+.roles-dual-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+@media (max-width: 820px) {
+    .roles-dual-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.role-subcard {
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.role-subcard.instructor-card {
+    border-top: 3px solid #0f766e;
+}
+
+.role-subcard.student-card {
+    border-top: 3px solid #2563eb;
+}
+
+.role-subcard-header {
+    padding: 10px 14px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.role-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.instructor-icon-box {
+    background: #ccfbf1;
+    color: #0f766e;
+}
+
+.student-icon-box {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.role-subcard-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.role-subcard-subtitle {
+    font-size: 0.72rem;
+    color: var(--dpd-gray-muted);
+}
+
+.role-badge-pill-inst {
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: #ccfbf1;
+    color: #0f766e;
+    padding: 2px 7px;
+    border-radius: 12px;
+}
+
+.role-badge-pill-stud {
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: #dbeafe;
+    color: #2563eb;
+    padding: 2px 7px;
+    border-radius: 12px;
+}
+
+.role-subcard-body {
+    padding: 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.student-profile-sync-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.student-sync-desc {
+    font-size: 0.78rem;
+    color: var(--dpd-gray-dark);
+    line-height: 1.45;
+}
+
+.btn-switch-role-view {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #2563eb;
+    background: #ffffff;
+    border: 1px solid #bfdbfe;
+    padding: 5px 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-switch-role-view:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.role-quick-shortcuts {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.shortcuts-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--dpd-gray-muted);
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+.shortcuts-links-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.shortcut-chip {
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--dpd-gray-dark);
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.15s ease;
+}
+
+.shortcut-chip:hover {
+    background: #e2e8f0;
+    color: var(--dpd-slate);
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   5. SOCIAL MEDIA LIVE PREVIEW
+   ========================================================================== */
+.social-live-preview {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.preview-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--dpd-gray-dark);
+}
+
+.social-preview-chip {
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    text-decoration: none;
+    color: var(--dpd-gray-dark);
+}
+
+a.social-preview-chip:hover {
+    border-color: var(--dpd-teal);
+    color: var(--dpd-teal);
+}
+
+/* ==========================================================================
+   6. FOOTER ACTION BAR
+   ========================================================================== */
+.profile-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1.25rem;
+    margin-top: 1.5rem;
+    border-top: 1px solid #f1f5f9;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.footer-status-indicator {
+    font-size: 0.78rem;
+    color: var(--dpd-gray-muted);
+    display: flex;
+    align-items: center;
+}
+
+.footer-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-footer-reset {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--dpd-gray-muted);
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-footer-reset:hover:not(:disabled) {
+    background: #f1f5f9;
+    color: var(--dpd-slate);
+}
+
+.btn-footer-save {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0f766e, #115e59);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.25);
+    transition: all 0.2s;
+}
+
+.btn-footer-save:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(15, 118, 110, 0.35);
+}
+
+.btn-footer-save:disabled,
+.btn-footer-reset:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Helper Utilities */
+.text-teal {
+    color: var(--dpd-teal) !important;
+}
+
+.text-amber {
+    color: var(--dpd-amber) !important;
+}
+
+.text-teal-dpd {
+    color: var(--dpd-teal) !important;
 }

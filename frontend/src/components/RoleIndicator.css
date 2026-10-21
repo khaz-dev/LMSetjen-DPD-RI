@@ -108,88 +108,129 @@
   top: calc(100% + 8px);
   left: 0;
   right: auto;
-  width: 220px;
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  z-index: 1050;
-  padding: 0.5rem 0;
+  width: 225px;
+  background: #ffffff;
+  border: 1px solid #ccfbf1;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.14), 0 6px 14px -2px rgba(13, 148, 136, 0.12);
+  z-index: 2100 !important;
+  padding: 6px 4px;
   margin: 0;
   list-style: none;
-  animation: compactDropdownFadeIn 0.2s ease-out;
+  animation: compactDropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Align right when placed in navbar or user-menu */
+.user-menu .role-dropdown-menu.compact,
+.navbar .role-dropdown-menu.compact {
+  left: auto;
+  right: 0;
 }
 
 @keyframes compactDropdownFadeIn {
   0% {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-8px) scale(0.98);
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .role-dropdown-header {
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #6c757d;
+  padding: 8px 12px 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f766e;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
+  background: transparent;
+  border-bottom: 1px solid #f0fdfa;
+  user-select: none;
 }
 
 .role-dropdown-divider {
   height: 1px;
-  background: #e9ecef;
-  margin: 0.5rem 0;
+  background: #f1f5f9;
+  margin: 4px 6px;
 }
 
 .role-dropdown-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  width: calc(100% - 8px);
+  margin: 2px 4px;
+  padding: 8px 12px;
   border: none;
-  background: none;
-  color: #2c3e50;
-  font-size: 0.9rem;
+  background: transparent;
+  border-radius: 8px;
+  color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   text-align: left;
-  width: 100%;
+  white-space: nowrap;
+  user-select: none;
 
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    padding-left: 1.25rem;
-    color: #1a1a2e;
+    background-color: #f0fdfa;
+    color: #0f766e;
+    padding-left: 14px;
+
+    i:first-child {
+      color: #0d9488;
+    }
+
+    .role-label {
+      color: #0f766e;
+      font-weight: 600;
+    }
   }
 
   i:first-child {
-    font-size: 1rem;
+    font-size: 0.95rem;
     width: 20px;
+    min-width: 20px;
     text-align: center;
-    color: #f39c12;
+    color: #0d9488;
+    transition: color 0.18s ease;
   }
 
   .role-label {
     flex-grow: 1;
     font-weight: 500;
+    color: #1e293b;
+    transition: color 0.18s ease;
   }
 
   &.active {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-    color: white;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+    color: #ffffff !important;
     font-weight: 600;
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.28);
+    padding-left: 12px;
 
     i:first-child {
-      color: white;
+      color: #ffffff !important;
+    }
+
+    .role-label {
+      color: #ffffff !important;
+      font-weight: 600;
+    }
+
+    i.fa-check-circle,
+    .role-active-check {
+      color: #ffffff !important;
     }
   }
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.55;
   }
 }
 
@@ -317,22 +358,18 @@
    DROPDOWN MENU
    =========================================================================== */
 
-.role-dropdown-menu {
+.role-dropdown-menu.expanded {
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
   background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 0.5rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  border: 1px solid #ccfbf1;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.14), 0 6px 14px -2px rgba(13, 148, 136, 0.12);
   overflow: hidden;
-  z-index: 1000;
-  min-width: 200px;
+  z-index: 2100;
+  min-width: 280px;
   animation: slideDown 0.2s ease-out;
-
-  &.expanded {
-    min-width: 280px;
-  }
 }
 
 @keyframes slideDown {
@@ -346,54 +383,60 @@
   }
 }
 
-.role-dropdown-header {
+.role-dropdown-menu.expanded .role-dropdown-header {
   padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #495057;
-  background-color: #f8f9fa;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0f766e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: #f0fdfa;
+  border-bottom: 1px solid #ccfbf1;
 }
 
-.role-dropdown-divider {
+.role-dropdown-menu.expanded .role-dropdown-divider {
   height: 1px;
-  background-color: #dee2e6;
+  background-color: #e2e8f0;
 }
 
-.role-dropdown-item {
+.role-dropdown-menu.expanded .role-dropdown-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  width: 100%;
+  width: calc(100% - 8px);
+  margin: 2px 4px;
   padding: 0.75rem 1rem;
   border: none;
   background: none;
+  border-radius: 8px;
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.875rem;
-  color: #212529;
+  color: #1e293b;
   white-space: nowrap;
 
   i {
     font-size: 1rem;
     min-width: 1rem;
+    color: #0d9488;
   }
 
   .role-label {
-    font-weight: 500;
+    font-weight: 600;
+    color: #1e293b;
   }
 
   .role-description {
     font-size: 0.75rem;
-    color: #6c757d;
+    color: #64748b;
     margin-left: auto;
     text-align: right;
-    display: none;
   }
 
   &:hover:not(:disabled),
   &:focus:not(:disabled) {
-    background-color: #f8f9fa;
+    background-color: #f0fdfa;
     color: #0f766e;
 
     .role-label {
@@ -406,20 +449,26 @@
   }
 
   &.active {
-    background-color: #e7f1ff;
-    color: #0f766e;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
 
     .role-label {
-      color: #0f766e;
-      font-weight: 600;
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+
+    .role-description {
+      color: rgba(255, 255, 255, 0.85) !important;
     }
 
     i:first-child {
-      color: #0f766e;
+      color: #ffffff !important;
     }
 
-    i.fa-check-circle {
-      color: #198754;
+    i.fa-check-circle,
+    .role-active-check {
+      color: #ffffff !important;
     }
   }
 
@@ -558,36 +607,3 @@
   }
 }
 
-/* ============================================================================
-   DARK MODE SUPPORT (if using Bootstrap dark mode)
-   =========================================================================== */
-
-@media (prefers-color-scheme: dark) {
-  .role-dropdown-menu {
-    background: #212529;
-    border-color: #495057;
-  }
-
-  .role-dropdown-header {
-    background-color: #343a40;
-    color: #adb5bd;
-  }
-
-  .role-dropdown-divider {
-    background-color: #495057;
-  }
-
-  .role-dropdown-item {
-    color: #e9ecef;
-
-    &:hover:not(:disabled) {
-      background-color: #343a40;
-      color: #0f766e;
-    }
-
-    &.active {
-      background-color: #1e3a5f;
-      color: #0f766e;
-    }
-  }
-}

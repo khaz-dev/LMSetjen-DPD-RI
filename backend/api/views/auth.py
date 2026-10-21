@@ -584,6 +584,34 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
         
         user.save()
         
+        # Link organization unit and position if provided
+        from userauths.models import OrganizationUnit, Position
+        profile_needs_save = False
+        if 'organization_unit_name' in self.request.data:
+            org_name = self.request.data['organization_unit_name']
+            if org_name:
+                org = OrganizationUnit.objects.filter(name=org_name).first()
+                if org and profile.organization_unit != org:
+                    profile.organization_unit = org
+                    profile_needs_save = True
+            elif profile.organization_unit is not None:
+                profile.organization_unit = None
+                profile_needs_save = True
+
+        if 'position_name' in self.request.data:
+            pos_name = self.request.data['position_name']
+            if pos_name:
+                pos = Position.objects.filter(name=pos_name).first()
+                if pos and profile.position != pos:
+                    profile.position = pos
+                    profile_needs_save = True
+            elif profile.position is not None:
+                profile.position = None
+                profile_needs_save = True
+
+        if profile_needs_save:
+            profile.save()
+        
         return profile
 
 

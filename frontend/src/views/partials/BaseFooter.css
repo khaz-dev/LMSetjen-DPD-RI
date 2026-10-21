@@ -68,12 +68,12 @@
    SOCIAL MEDIA ICONS
    ======================================== */
 
-.social-links {
+.modern-footer .social-links {
   display: flex;
   gap: 0.75rem;
 }
 
-.social-link {
+.modern-footer .social-link {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,43 +88,43 @@
   flex-shrink: 0;
 }
 
-.social-link:hover {
+.modern-footer .social-link:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
-.social-link svg {
+.modern-footer .social-link svg {
   width: 18px;
   height: 18px;
   fill: currentColor;
 }
 
 /* Facebook */
-.social-link.facebook {
+.modern-footer .social-link.facebook {
   color: #1877f2;
 }
 
-.social-link.facebook:hover {
+.modern-footer .social-link.facebook:hover {
   border-color: #1877f2;
   box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);
 }
 
 /* Twitter */
-.social-link.twitter {
+.modern-footer .social-link.twitter {
   color: #1da1f2;
 }
 
-.social-link.twitter:hover {
+.modern-footer .social-link.twitter:hover {
   border-color: #1da1f2;
   box-shadow: 0 4px 15px rgba(29, 161, 242, 0.3);
 }
 
 /* GitHub */
-.social-link.github {
+.modern-footer .social-link.github {
   color: #333;
 }
 
-.social-link.github:hover {
+.modern-footer .social-link.github:hover {
   border-color: #333;
   box-shadow: 0 4px 15px rgba(51, 51, 51, 0.3);
 }
@@ -275,11 +275,11 @@
     align-items: center;
   }
 
-  .social-links {
+  .modern-footer .social-links {
     gap: 0.5rem;
   }
 
-  .social-link {
+  .modern-footer .social-link {
     width: 36px;
     height: 36px;
   }

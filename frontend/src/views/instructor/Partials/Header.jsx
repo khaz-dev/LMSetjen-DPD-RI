@@ -1,9 +1,10 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { moment } from "../../../utils/dayjs";
 import { ProfileContext } from "../../plugin/Context";
 import UserData from "../../plugin/UserData";
 import RoleIndicator from "../../../components/RoleIndicator";
+import useAxios from "../../../utils/useAxios";
 import "./Header.css";
 
 function Header() {
@@ -18,6 +19,27 @@ function Header() {
   const [isAnimating, setIsAnimating] = useState(false); // ✨ Only animate on user interaction, not on re-render
   const userData = UserData();
   const location = useLocation();
+
+  // ✨ Real data sync: Fetch teacher profile from backend to ensure all instructor details are up-to-date
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTeacherProfile = async () => {
+      const userId = userData?.user_id;
+      if (!userId) return;
+      try {
+        const res = await useAxios.get(`teacher/profile/${userId}/`);
+        if (isMounted && res.data) {
+          setTeacher(res.data);
+        }
+      } catch (err) {
+        // Ignored if teacher profile not yet created or loading
+      }
+    };
+    fetchTeacherProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, [userData?.user_id]);
 
   // Toggle collapse state and save to localStorage - INDEPENDENT from sidebar
   const toggleCollapse = () => {
@@ -54,24 +76,82 @@ function Header() {
     return `Mengajar ${Math.floor(days/365)} tahun`;
   };
 
+  // Format real last active time based on user's actual last login / session
+  const getLastActiveText = () => {
+    const lastLoginTime = profile?.last_login || teacher?.last_login || userData?.last_login;
+    if (!lastLoginTime) {
+      return "Hari ini";
+    }
+
+    const now = moment();
+    const loginMoment = moment(lastLoginTime);
+    if (!loginMoment.isValid()) {
+      return "Hari ini";
+    }
+
+    const diffMinutes = now.diff(loginMoment, "minutes");
+    const diffHours = now.diff(loginMoment, "hours");
+    const diffDays = now.diff(loginMoment, "days");
+
+    if (diffMinutes < 5) return "Baru saja";
+    if (diffMinutes < 60) return `${diffMinutes} mnt lalu`;
+    if (diffHours < 24 && now.isSame(loginMoment, "day")) {
+      return `Hari ini (${loginMoment.format("HH:mm")})`;
+    }
+    if (diffDays === 1 || (diffHours < 48 && now.clone().subtract(1, "day").isSame(loginMoment, "day"))) {
+      return `Kemarin (${loginMoment.format("HH:mm")})`;
+    }
+    if (diffDays < 7) {
+      return `${diffDays} hari lalu`;
+    }
+    return loginMoment.format("DD MMM YYYY");
+  };
+
+  // Calculate real profile completeness based on filled system fields
+  const getProfileCompleteness = () => {
+    const fullName = teacher?.full_name || profile?.full_name || userData?.full_name;
+    const hasImage = Boolean(teacher?.image || profile?.image);
+    const hasBio = Boolean((teacher?.bio && teacher?.bio.trim()) || (profile?.bio && profile?.bio.trim()) || (teacher?.about && teacher?.about.trim()) || (profile?.about && profile?.about.trim()));
+    const hasCountry = Boolean((teacher?.country && teacher?.country.trim()) || (profile?.country && profile?.country.trim()));
+    const hasSocial = Boolean(teacher?.facebook || teacher?.twitter || teacher?.linkedin || profile?.facebook || profile?.twitter || profile?.linkedin);
+
+    let completed = 0;
+    const total = 5;
+    if (fullName && fullName.trim()) completed++;
+    if (hasImage) completed++;
+    if (hasBio) completed++;
+    if (hasCountry) completed++;
+    if (hasSocial) completed++;
+
+    const percentage = Math.round((completed / total) * 100);
+    return {
+      percentage,
+      isComplete: percentage >= 80,
+      label: percentage === 100 ? "Profil Lengkap" : percentage >= 80 ? `Lengkap (${percentage}%)` : `Belum Lengkap (${percentage}%)`
+    };
+  };
+
   // Render social links
   const renderSocialLinks = () => {
-    if (!teacher?.facebook && !teacher?.twitter && !teacher?.linkedin) return null;
+    const fb = profile?.facebook || teacher?.facebook;
+    const tw = profile?.twitter || teacher?.twitter;
+    const li = profile?.linkedin || teacher?.linkedin;
+    if (!fb && !tw && !li) return null;
 
     return (
-      <div className="social-links">
-        {teacher?.facebook && (
-          <a href={teacher.facebook} target="_blank" rel="noopener noreferrer" className="social-link" title="Facebook">
+      <div className="instructor-social-links social-links">
+        {fb && (
+          <a href={fb} target="_blank" rel="noopener noreferrer" className="instructor-social-link social-link facebook" title="Facebook">
             <i className="fab fa-facebook-f"></i>
           </a>
         )}
-        {teacher?.twitter && (
-          <a href={teacher.twitter} target="_blank" rel="noopener noreferrer" className="social-link" title="Twitter">
+        {tw && (
+          <a href={tw} target="_blank" rel="noopener noreferrer" className="instructor-social-link social-link twitter" title="Twitter">
             <i className="fab fa-twitter"></i>
           </a>
         )}
-        {teacher?.linkedin && (
-          <a href={teacher.linkedin} target="_blank" rel="noopener noreferrer" className="social-link" title="LinkedIn">
+        {li && (
+          <a href={li} target="_blank" rel="noopener noreferrer" className="instructor-social-link social-link linkedin" title="LinkedIn">
             <i className="fab fa-linkedin-in"></i>
           </a>
         )}
@@ -80,43 +160,56 @@ function Header() {
   };
 
   // Render instructor details
-  const renderInstructorDetails = () => (
-    <div className="row mt-3 pt-3 instructor-header-details-row">
-      <div className="col-md-12">
-        <div className="row instructor-header-details-items-row">
-          <div className="col-md-4">
-            <div className="instructor-detail-item">
-              <div className="instructor-meta">
-                <i className="fas fa-check-circle"></i>
-                <span>Status: {teacher ? "Instruktur Aktif" : "Pengaturan Profil Diperlukan"}</span>
+  const renderInstructorDetails = () => {
+    const isInstructorActive = Boolean(
+      userData?.teacher_id || 
+      teacher?.id || 
+      userData?.is_instructor || 
+      profile?.is_instructor ||
+      userData?.current_role === 'teacher' ||
+      userData?.role === 'teacher'
+    );
+    const lastActiveText = getLastActiveText();
+    const profileCompleteness = getProfileCompleteness();
+
+    return (
+      <div className="row mt-3 pt-3 instructor-header-details-row">
+        <div className="col-md-12">
+          <div className="row instructor-header-details-items-row">
+            <div className="col-md-4">
+              <div className="instructor-detail-item">
+                <div className="instructor-meta">
+                  <i className={`fas ${isInstructorActive ? "fa-check-circle text-success" : "fa-exclamation-circle text-warning"}`}></i>
+                  <span>Status: {isInstructorActive ? "Instruktur Aktif" : "Pengaturan Profil Diperlukan"}</span>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="col-md-4">
-            <div className="instructor-detail-item">
-              <div className="instructor-meta">
-                <i className="fas fa-clock"></i>
-                <span>Aktif terakhir: Hari ini</span>
+            
+            <div className="col-md-4">
+              <div className="instructor-detail-item">
+                <div className="instructor-meta">
+                  <i className="fas fa-clock text-info"></i>
+                  <span>Aktif terakhir: {lastActiveText}</span>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="col-md-4">
-            <div className="instructor-detail-item">
-              <div className="instructor-meta">
-                <i className="fas fa-user-graduate"></i>
-                <span>Status Profil: {teacher && teacher.bio ? "Profil Lengkap" : "Profil Belum Lengkap"}</span>
+            
+            <div className="col-md-4">
+              <div className="instructor-detail-item">
+                <div className="instructor-meta">
+                  <i className={`fas ${profileCompleteness.isComplete ? "fa-user-check text-success" : "fa-user-edit text-warning"}`}></i>
+                  <span>Status Profil: {profileCompleteness.label}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
-    <div className="row align-items-center instructor-header-row">
+    <div className="row instructor-header-row">
       <div className="col-xl-12 col-lg-12 col-md-12 col-12">
         <div className={`instructor-header-card ${isCollapsed ? "collapsed" : ""} ${isAnimating ? "animating" : ""}`}>
           {/* Collapse Toggle Button */}
