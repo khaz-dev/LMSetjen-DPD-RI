@@ -352,75 +352,85 @@ def award_points_on_quiz_completion(sender, instance, created, **kwargs):
     Points awarded: 0-100 points based on quiz score (0-100%)
     Example: 85% score = 85 points
     
-    ✨ PHASE 10.5: Only award points once for the highest score on each quiz per student
-    Triggered when: New QuizAttempt is created and is_passed=True
+    Anti-redundancy:
+    - Hanya 1 skor tertinggi yang dihitung per kuis (berdasarkan quiz_id atau judul kuis).
+    - Jika siswa retake kuis dengan skor lebih rendah, poin tidak berubah.
+    - Jika siswa retake kuis dengan skor lebih tinggi, entri log lama diperbarui ke nilai tertinggi
+      dan total poin disinkronkan tanpa menduplikasi perolehan.
     """
     try:
         # Only award points if quiz is passed
-        if not instance.is_passed:
+        if not instance.is_passed or not instance.user or not instance.quiz:
             return
         
-        # Check if points already awarded for this attempt
+        # Check if points already awarded for this specific attempt
         if instance._points_awarded:
             return
-        
-        # ✨ PHASE 10.5: Check if this student has a better score already awarded for this quiz
-        better_attempts = api_models.QuizAttempt.objects.filter(
-            user=instance.user,
-            quiz=instance.quiz,
-            is_passed=True,
-            _points_awarded=True,
-            score__gt=instance.score  # Find attempts with higher score that were already awarded
-        ).exists()
-        
-        if better_attempts:
-            # This is not the best score, don't award points
-            instance._points_awarded = True  # Mark as "processed" but points not awarded
-            instance.save(update_fields=['_points_awarded'])
-            return
-        
-        # ✨ PHASE 10.5: If a better score exists but wasn't awarded yet, skip those too
-        better_future_attempts = api_models.QuizAttempt.objects.filter(
-            user=instance.user,
-            quiz=instance.quiz,
-            is_passed=True,
-            score__gt=instance.score
-        ).exists()
-        
-        if better_future_attempts:
-            # Better attempt exists, don't award points yet
-            instance._points_awarded = True  # Mark as processed
-            instance.save(update_fields=['_points_awarded'])
-            return
-        
-        # This IS the best score - award points
-        # Get the score as integer (0-100)
-        score_points = int(instance.score) if instance.score else 0
-        
-        # Ensure points don't exceed 100
-        score_points = min(score_points, 100)
-        
-        if score_points > 0:
-            # Get or create StudentPoints
-            student_points, _ = api_models.StudentPoints.objects.get_or_create(
-                user=instance.user
-            )
             
-            # Award points based on quiz score
-            # ✨ PHASE 10.4: Include audit information
-            student_points.add_points(
-                instance.user, 
-                score_points, 
-                'quiz_score',
-                quiz_id=instance.quiz.id,
-                course_id=instance.quiz.course.id if instance.quiz.course else None,
-                description=f"Quiz score {score_points}% on: {instance.quiz.title}"
-            )
+        score_points = int(instance.score) if instance.score else 0
+        score_points = min(max(score_points, 0), 100)
         
-        # Mark points as awarded
-        instance._points_awarded = True
-        instance.save(update_fields=['_points_awarded'])
+        quiz_title = instance.quiz.title.strip() if instance.quiz.title else ""
+        norm_title = quiz_title.lower()
         
+        # Cari log kuis yang sudah ada untuk kuis ini (by quiz_id atau normalized title)
+        existing_logs = api_models.PointsAuditLog.objects.filter(
+            user=instance.user,
+            points_type='student',
+            activity_type='quiz_score'
+        )
+        matching_logs = []
+        for l in existing_logs:
+            if l.quiz_id == instance.quiz.id:
+                matching_logs.append(l)
+            elif norm_title and ('on: ' + norm_title) in (l.description or '').strip().lower():
+                matching_logs.append(l)
+                
+        if matching_logs:
+            # Urutkan berdasarkan skor tertinggi yang sudah dicatat
+            matching_logs.sort(key=lambda x: (x.points_awarded, x.awarded_at), reverse=True)
+            prev_max = matching_logs[0].points_awarded
+            
+            if score_points <= prev_max:
+                # Siswa sudah memiliki skor lebih baik atau sama, tidak ada penambahan poin
+                instance._points_awarded = True
+                instance.save(update_fields=['_points_awarded'])
+                return
+            else:
+                # Skor baru LEBIH TINGGI dari skor sebelumnya!
+                # Perbarui log terbaik ke nilai baru yang lebih tinggi
+                primary_log = matching_logs[0]
+                primary_log.points_awarded = score_points
+                primary_log.quiz_id = instance.quiz.id
+                primary_log.course_id = instance.quiz.course.id if instance.quiz.course else None
+                primary_log.description = f"Quiz score {score_points}% on: {quiz_title}"
+                primary_log.save()
+                
+                # Hapus log lain yang redundan jika ada
+                for other_log in matching_logs[1:]:
+                    other_log.delete()
+                    
+                # Rekonsiliasi total poin siswa
+                api_models.StudentPoints.reconcile_points(instance.user)
+                instance._points_awarded = True
+                instance.save(update_fields=['_points_awarded'])
+                return
+        else:
+            # Belum ada log kuis untuk kuis ini, tambahkan poin baru jika > 0
+            if score_points > 0:
+                api_models.StudentPoints.add_points(
+                    instance.user,
+                    score_points,
+                    'quiz_score',
+                    quiz_id=instance.quiz.id,
+                    course_id=instance.quiz.course.id if instance.quiz.course else None,
+                    description=f"Quiz score {score_points}% on: {quiz_title}"
+                )
+                api_models.StudentPoints.reconcile_points(instance.user)
+                
+            instance._points_awarded = True
+            instance.save(update_fields=['_points_awarded'])
+            
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
@@ -1219,7 +1229,72 @@ def log_review_deletion(sender, instance, **kwargs):
                 'is_testimonial': is_testimonial
             }
         )
+        
+        # Hapus audit log perolehan poin yang berkaitan dengan review/testimoni ini
+        api_models.PointsAuditLog.objects.filter(review_id=instance.id).delete()
+        
+        # Rekonsiliasi poin siswa
+        if role == 'student' or not hasattr(user, 'teacher'):
+            api_models.StudentPoints.reconcile_points(user)
+            
+        # Rekonsiliasi poin instruktur jika ulasan kursus dihapus
+        if instance.course and instance.course.teacher and instance.course.teacher.user:
+            t_user = instance.course.teacher.user
+            inst_pts = api_models.InstructorPoints.objects.filter(user=t_user).first()
+            if inst_pts:
+                from django.utils import timezone
+                now = timezone.now()
+                inst_logs = api_models.PointsAuditLog.objects.filter(user=t_user, points_type='instructor')
+                inst_pts.lifetime_points = sum(l.points_awarded for l in inst_logs)
+                inst_pts.yearly_points = sum(l.points_awarded for l in inst_logs.filter(awarded_at__year=now.year))
+                inst_pts.monthly_points = sum(l.points_awarded for l in inst_logs.filter(awarded_at__year=now.year, awarded_at__month=now.month))
+                inst_pts.save()
     except Exception as e:
         import logging
         logging.getLogger(__name__).error(f"Error logging review deletion: {str(e)}")
+
+
+@receiver(post_delete, sender=api_models.QuizAttempt)
+def handle_quiz_attempt_deletion(sender, instance, **kwargs):
+    """
+    Antisipasi penghapusan QuizAttempt:
+    Ketika attempt kuis dihapus, lakukan rekonsiliasi poin siswa agar perolehan poin
+    hanya mencerminkan attempt terbaik yang tersisa.
+    """
+    try:
+        if not instance.user:
+            return
+        api_models.StudentPoints.reconcile_points(instance.user)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error handling quiz attempt deletion: {str(e)}")
+
+
+@receiver(post_delete, sender=api_models.Certificate)
+def handle_certificate_deletion(sender, instance, **kwargs):
+    """
+    Antisipasi penghapusan/pembatalan sertifikat:
+    Jika sertifikat dihapus dan siswa tidak lagi memiliki bukti kelulusan yang valid untuk kursus tersebut,
+    hapus log penyelesaian kursus dan rekonsiliasi poin siswa.
+    """
+    try:
+        if not instance.user or not instance.course_id:
+            return
+        has_other_cert = api_models.Certificate.objects.filter(
+            user=instance.user,
+            course_id=instance.course_id,
+            is_valid=True
+        ).exists()
+        if not has_other_cert:
+            api_models.PointsAuditLog.objects.filter(
+                user=instance.user,
+                points_type='student',
+                activity_type='course_completion',
+                course_id=instance.course_id
+            ).delete()
+            api_models.StudentPoints.reconcile_points(instance.user)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error handling certificate deletion: {str(e)}")
+
 

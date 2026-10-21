@@ -3232,6 +3232,7 @@ class RankedInstructorSerializer(serializers.Serializer):
     """
     id = serializers.SerializerMethodField()
     user_id = serializers.SerializerMethodField()
+    teacher_id = serializers.SerializerMethodField()
     full_name = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
     position_name = serializers.SerializerMethodField()
@@ -3242,6 +3243,13 @@ class RankedInstructorSerializer(serializers.Serializer):
     monthly_points = serializers.SerializerMethodField()
     rank = serializers.SerializerMethodField()
     rank_position = serializers.SerializerMethodField()
+    
+    def get_teacher_id(self, obj):
+        if getattr(obj, 'teacher', None):
+            return obj.teacher.id
+        if obj.user and hasattr(obj.user, 'teacher') and obj.user.teacher:
+            return obj.user.teacher.id
+        return None
     
     def get_yearly_points(self, obj):
         from django.utils import timezone

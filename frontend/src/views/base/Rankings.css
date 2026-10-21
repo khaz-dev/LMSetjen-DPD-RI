@@ -1,0 +1,160 @@
+/* Rankings Page Styling */
+.rankings-page-wrapper {
+  background-color: #f8fafc;
+  min-height: calc(100vh - 120px);
+}
+
+/* Compact & Eye-Catching Hero Section */
+.rankings-hero-section {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.rankings-hero-section::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.badge-rankings-pill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  padding: 0.35rem 1rem;
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* High-Contrast Frosted Pill Tab Switch */
+.rankings-tab-switch {
+  background: rgba(4, 47, 46, 0.5) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+  gap: 4px;
+}
+
+.btn-white-active {
+  background: #ffffff !important;
+  color: #0f766e !important;
+  font-weight: 700 !important;
+  font-size: 0.88rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18) !important;
+  border: none !important;
+  transition: all 0.2s ease;
+}
+
+.btn-tab-inactive {
+  background: transparent !important;
+  color: #ffffff !important;
+  opacity: 0.95 !important;
+  font-weight: 600 !important;
+  font-size: 0.88rem !important;
+  border: none !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+  transition: all 0.2s ease;
+}
+
+.btn-tab-inactive:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Column cards */
+.rankings-column-card {
+  transition: transform 0.2s ease;
+}
+
+/* Compact Gamification Rule Cards */
+.point-rule-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.point-rule-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.rule-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bg-emerald-light {
+  background: rgba(13, 148, 136, 0.12);
+}
+
+.bg-amber-light {
+  background: rgba(245, 158, 11, 0.12);
+}
+
+/* High-Contrast Action Buttons */
+.btn-rankings-action-teal {
+  background: #f0fdfa !important;
+  color: #0f766e !important;
+  border: 1.5px solid #0d9488 !important;
+  font-weight: 700 !important;
+  padding: 0.45rem 1rem !important;
+  border-radius: 10px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.12) !important;
+}
+
+.btn-rankings-action-teal:hover {
+  background: #0d9488 !important;
+  color: #ffffff !important;
+  border-color: #0d9488 !important;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3) !important;
+  transform: translateY(-1px);
+}
+
+.btn-rankings-action-gold {
+  background: #fffbeb !important;
+  color: #92400e !important;
+  border: 1.5px solid #f59e0b !important;
+  font-weight: 700 !important;
+  padding: 0.45rem 1rem !important;
+  border-radius: 10px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15) !important;
+}
+
+.btn-rankings-action-gold:hover {
+  background: #f59e0b !important;
+  color: #ffffff !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35) !important;
+  transform: translateY(-1px);
+}

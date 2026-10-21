@@ -1,10 +1,12 @@
 /**
  * ✨ PHASE 10.1: RankedStudents Component
- * Displays top 10 students ranked by points with filtering by period (lifetime, yearly, monthly)
- * Shown on homepage CTA section
+ * Displays top students ranked by points with filtering by period (lifetime, yearly, monthly)
+ * and interactive detailed Points Breakdown modal.
+ * Shown on homepage CTA section & rankings page
  */
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import apiInstance from '../../utils/axios';
 import Toast from '../../views/plugin/Toast';
 import './Rankings.css';
@@ -14,6 +16,13 @@ const RankedStudents = ({ maxResults = 5 }) => {
   const [loading, setLoading] = useState(false);
   const [period, setPeriod] = useState('lifetime');
   const [brokenImages, setBrokenImages] = useState({});
+
+  // Modal State for Rincian Poin Siswa
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [breakdownData, setBreakdownData] = useState(null);
+  const [loadingBreakdown, setLoadingBreakdown] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalPeriod, setModalPeriod] = useState('lifetime');
 
   /**
    * Fetch ranked students from API
@@ -47,6 +56,47 @@ const RankedStudents = ({ maxResults = 5 }) => {
   };
 
   /**
+   * Fetch breakdown data for a student with a specific period filter
+   */
+  const fetchBreakdown = async (student, targetPeriod) => {
+    setLoadingBreakdown(true);
+    try {
+      const userId = student.user_id || student.user?.id || '';
+      const studentId = student.id || student.student_id || '';
+      const response = await apiInstance.get(
+        `/student/points-breakdown/?user_id=${userId}&student_id=${studentId}&period=${targetPeriod}`
+      );
+      if (response.data) {
+        setBreakdownData(response.data);
+      }
+    } catch (err) {
+      console.error('Error fetching student breakdown:', err);
+    } finally {
+      setLoadingBreakdown(false);
+    }
+  };
+
+  /**
+   * Handle opening breakdown modal for a student
+   */
+  const handleOpenBreakdown = (student) => {
+    setSelectedStudent(student);
+    setModalPeriod(period);
+    setShowModal(true);
+    fetchBreakdown(student, period);
+  };
+
+  /**
+   * Handle changing period filter inside breakdown modal
+   */
+  const handleModalPeriodChange = (newPeriod) => {
+    setModalPeriod(newPeriod);
+    if (selectedStudent) {
+      fetchBreakdown(selectedStudent, newPeriod);
+    }
+  };
+
+  /**
    * Effect hook to fetch data when period changes
    */
   useEffect(() => {
@@ -70,12 +120,14 @@ const RankedStudents = ({ maxResults = 5 }) => {
   /**
    * Get points value based on current period or API returned points
    */
-  const getPoints = (student) => {
+  const getPoints = (student, targetPeriod = period) => {
+    if (!student) return 0;
+    if (targetPeriod === 'monthly') return student?.monthly_points ?? 0;
+    if (targetPeriod === 'yearly') return student?.yearly_points ?? 0;
+    if (targetPeriod === 'lifetime') return student?.lifetime_points ?? 0;
     if (student?.points !== undefined && student?.points !== null) {
       return student.points;
     }
-    if (period === 'monthly') return student?.monthly_points ?? 0;
-    if (period === 'yearly') return student?.yearly_points ?? 0;
     return student?.lifetime_points ?? 0;
   };
 
@@ -181,17 +233,25 @@ const RankedStudents = ({ maxResults = 5 }) => {
                 <h6 className="mb-0 text-truncate" title={student.full_name}>
                   {student.full_name}
                 </h6>
-                <small className="text-muted">
+                <small className="text-muted d-block text-truncate">
                   {student.position_name || student.organization_unit_name || student.country || '—'}
                 </small>
               </div>
 
-              {/* Points Display */}
-              <div className="ranking-points text-end">
-                <div className="points-value">
-                  {getPoints(student)}
+              {/* Points Display - Interactive with Click to View Breakdown */}
+              <div 
+                className="ranking-points text-end"
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleOpenBreakdown(student)}
+                title="Klik untuk melihat darimana poin ini diperoleh"
+              >
+                <div className="points-value d-flex align-items-center justify-content-end gap-1">
+                  <span>{getPoints(student)}</span>
+                  <i className="fas fa-circle-info text-primary ms-1" style={{ fontSize: '0.85rem' }}></i>
                 </div>
-                <small className="points-label text-muted">poin</small>
+                <small className="points-label text-muted d-block" style={{ fontSize: '0.72rem' }}>
+                  poin • <span className="text-primary fw-bold">rincian</span>
+                </small>
               </div>
             </div>
           ))}
@@ -205,11 +265,158 @@ const RankedStudents = ({ maxResults = 5 }) => {
 
       {/* Footer */}
       <div className="card-footer bg-light p-3 text-center">
-        <small className="text-muted">
+        <small className="text-muted d-block">
           <i className="fas fa-info-circle me-1"></i>
-          Dapatkan poin dengan menyelesaikan kursus dan mengerjakan kuis
+          Poin diperoleh dari penyelesaian kursus, kelulusan kuis & ulasan rating
         </small>
       </div>
+
+      {/* Modal Rincian Perolehan Poin Siswa (Portaled to document.body to center on viewport) */}
+      {showModal && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="modal fade show d-block modal-student-points-breakdown" 
+          tabIndex="-1" 
+          style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', zIndex: 10050 }}
+          onClick={() => setShowModal(false)}
+        >
+          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-md" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content rounded-4 shadow-lg border-0 overflow-hidden">
+              <div className="modal-header py-3">
+                <h5 className="modal-title fw-bold fs-6 mb-0">
+                  <i className="fas fa-trophy me-2"></i>
+                  Rincian Poin Siswa
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button>
+              </div>
+              <div className="modal-body p-3 p-md-4">
+                {/* Period Filter Tabs inside Modal - High Contrast */}
+                <div className="d-flex justify-content-center mb-3">
+                  <div className="modal-period-filter-pill d-inline-flex rounded-pill" role="group">
+                    <button
+                      type="button"
+                      className={`btn btn-sm rounded-pill px-3 py-1 ${modalPeriod === 'lifetime' ? 'modal-filter-btn-active student-filter-active' : 'modal-filter-btn-inactive'}`}
+                      onClick={() => handleModalPeriodChange('lifetime')}
+                    >
+                      Sepanjang Masa
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-sm rounded-pill px-3 py-1 ${modalPeriod === 'yearly' ? 'modal-filter-btn-active student-filter-active' : 'modal-filter-btn-inactive'}`}
+                      onClick={() => handleModalPeriodChange('yearly')}
+                    >
+                      Tahun Ini
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-sm rounded-pill px-3 py-1 ${modalPeriod === 'monthly' ? 'modal-filter-btn-active student-filter-active' : 'modal-filter-btn-inactive'}`}
+                      onClick={() => handleModalPeriodChange('monthly')}
+                    >
+                      Bulan Ini
+                    </button>
+                  </div>
+                </div>
+
+                {/* Student Card Header */}
+                <div className="d-flex align-items-center gap-3 p-3 bg-light rounded-3 mb-3 border">
+                  <img
+                    src={selectedStudent?.image || '/images/placeholders/default-avatar.svg'}
+                    alt={selectedStudent?.full_name}
+                    className="rounded-circle border"
+                    width="48"
+                    height="48"
+                    style={{ objectFit: 'cover' }}
+                  />
+                  <div>
+                    <h6 className="fw-bold mb-0 text-dark">{selectedStudent?.full_name}</h6>
+                    <small className="text-muted">{selectedStudent?.position_name || selectedStudent?.organization_unit_name || 'Siswa LMS'}</small>
+                  </div>
+                  <div className="ms-auto text-end">
+                    <span className="badge fs-6 px-3 py-2" style={{ backgroundColor: '#1d4ed8', color: '#ffffff', fontWeight: 700 }}>
+                      {breakdownData?.period_points !== undefined ? breakdownData.period_points : getPoints(selectedStudent, modalPeriod)} Poin
+                    </span>
+                    <small className="d-block text-muted mt-1" style={{ fontSize: '0.72rem' }}>
+                      {modalPeriod === 'monthly' ? 'Bulan Ini' : modalPeriod === 'yearly' ? 'Tahun Ini' : 'Sepanjang Masa'}
+                    </small>
+                  </div>
+                </div>
+
+                {loadingBreakdown ? (
+                  <div className="text-center py-4">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Memuat rincian...</span>
+                    </div>
+                    <p className="mt-2 text-muted small">Memuat data periode {modalPeriod === 'monthly' ? 'bulan ini' : modalPeriod === 'yearly' ? 'tahun ini' : 'sepanjang masa'}...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Summary category badges */}
+                    <div className="p-3 bg-light rounded-3 border mb-3">
+                      <small className="fw-bold text-muted d-block mb-2 text-uppercase" style={{ fontSize: '0.72rem' }}>
+                        Sumber Perolehan Poin ({modalPeriod === 'monthly' ? 'Bulan Ini' : modalPeriod === 'yearly' ? 'Tahun Ini' : 'Sepanjang Masa'}):
+                      </small>
+                      <div className="d-flex flex-wrap gap-2">
+                        <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1 shadow-xs">
+                          <i className="fas fa-graduation-cap text-primary"></i>
+                          <span>Penyelesaian Kursus: <strong>{breakdownData?.summary?.course_completion?.count || 0}</strong> ({breakdownData?.summary?.course_completion?.points || 0} pt)</span>
+                        </div>
+                        <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1 shadow-xs">
+                          <i className="fas fa-clipboard-check text-success"></i>
+                          <span>Kuis & Ujian: <strong>{breakdownData?.summary?.quiz_score?.count || 0}</strong> ({breakdownData?.summary?.quiz_score?.points || 0} pt)</span>
+                        </div>
+                        <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1 shadow-xs">
+                          <i className="fas fa-star text-warning"></i>
+                          <span>Ulasan & Rating: <strong>{breakdownData?.summary?.rating_given?.count || 0}</strong> ({breakdownData?.summary?.rating_given?.points || 0} pt)</span>
+                        </div>
+                        {breakdownData?.summary?.platform_testimonial?.count > 0 && (
+                          <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1 shadow-xs">
+                            <i className="fas fa-heart text-danger"></i>
+                            <span>Testimoni Platform: <strong>{breakdownData?.summary?.platform_testimonial?.count || 0}</strong> ({breakdownData?.summary?.platform_testimonial?.points || 0} pt)</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Points History / Audit Trail */}
+                    <h6 className="fw-bold mb-2 small text-dark">
+                      <i className="fas fa-history text-primary me-2"></i>
+                      Riwayat Aktivitas Perolehan Poin:
+                    </h6>
+
+                    {breakdownData?.history && breakdownData.history.length > 0 ? (
+                      <div className="list-group list-group-flush mb-2 border rounded-3 points-history-scroll-container student-scroll" style={{ maxHeight: '240px', overflowY: 'auto', overflowX: 'hidden' }}>
+                        {breakdownData.history.map((item) => (
+                          <div key={item.id} className="list-group-item d-flex align-items-center justify-content-between p-2 px-3">
+                            <div className="me-2">
+                              <div className="fw-semibold text-dark small">{item.description}</div>
+                              <small className="text-muted" style={{ fontSize: '0.72rem' }}>
+                                {new Date(item.awarded_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </small>
+                            </div>
+                            <span className="badge bg-primary text-white fw-bold px-2 py-1 ms-2 flex-shrink-0">
+                              +{item.points_awarded} pt
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="alert alert-light border small text-muted mb-2 text-center py-3">
+                        <i className="fas fa-info-circle me-1 text-primary"></i>
+                        Belum ada aktivitas perolehan poin pada periode {modalPeriod === 'monthly' ? 'bulan ini' : modalPeriod === 'yearly' ? 'tahun ini' : 'sepanjang masa'}.
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              <div className="modal-footer bg-light py-2">
+                <button type="button" className="btn btn-secondary btn-sm rounded-3 px-3" onClick={() => setShowModal(false)}>
+                  Tutup
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

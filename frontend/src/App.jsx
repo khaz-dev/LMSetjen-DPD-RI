@@ -45,6 +45,7 @@ const PrivacyPolicy = lazy(() => import("./views/base/PrivacyPolicy"));
 const TermsAndConditions = lazy(() => import("./views/base/TermsAndConditions"));
 const CookiePolicy = lazy(() => import("./views/base/CookiePolicy"));
 const NotFound = lazy(() => import("./views/base/NotFound"));
+const Rankings = lazy(() => import("./views/base/Rankings"));
 
 // Student Routes
 const StudentDashboard = lazy(() => import("./views/student/Dashboard"));
@@ -241,6 +242,7 @@ function App() {
                                 <Route path="/course-detail/:slug/" element={<CourseDetail />} />
                                 <Route path="/instructor-profile/:teacher_id/" element={<InstructorProfilePage />} />
                                 <Route path="/search/" element={<Search />} />
+                                <Route path="/rankings/" element={<Rankings />} />
                                 <Route path="/user-guide/" element={<UserGuide />} />
                                 <Route path="/contact/" element={<Contact />} />
                                 <Route path="/tentang/" element={<Tentang />} />

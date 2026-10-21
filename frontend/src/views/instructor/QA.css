@@ -2552,9 +2552,10 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
 }
 
-/* ✨ PHASE 7.18+: Make modal wider on larger screens for horizontal card layout */
+/* ✨ PHASE 7.18+: Make abuse report modal wider on larger screens */
 @media (min-width: 1024px) {
-  .modal-dialog.modal-dialog-centered {
+  .abuse-report-modal .modal-dialog.modal-dialog-centered,
+  .modal-dialog.abuse-report-modal-dialog {
     max-width: 1000px;
   }
 }

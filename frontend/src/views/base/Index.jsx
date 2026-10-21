@@ -1928,14 +1928,15 @@ function Index() {
                     }}>
                         <div className="container">
                             <div className="row align-items-stretch gap-3 gap-lg-0">
-                                {/* Left Column: Ranked Students */}
-                                <div className="col-lg-4">
-                                    <RankedStudents maxResults={5} />
-                                </div>
 
-                                {/* Right Column: Ranked Instructors */}
+                                {/* Left Column: Ranked Instructors */}
                                 <div className="col-lg-4">
                                     <RankedInstructors maxResults={5} />
+                                </div>
+
+                                {/* Right Column: Ranked Students */}
+                                <div className="col-lg-4">
+                                    <RankedStudents maxResults={5} />
                                 </div>
 
                                 {/* Center Column: CTA Content */}
@@ -1947,28 +1948,51 @@ function Index() {
                                         Bergabunglah dengan ribuan pegawai Setjen DPD RI yang telah meningkatkan kompetensi mereka
                                         melalui platform LMSetjen DPD RI. Daftar sekarang dan akses seluruh kursus secara gratis!
                                     </p>
-                                    <button
-                                        onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
-                                        className="btn btn-lg px-4 py-3 cta-register-btn align-self-start"
-                                        style={{
-                                            background: "white",
-                                            color: "#0d9488",
-                                            border: "none",
-                                            borderRadius: "15px",
-                                            fontWeight: "700",
-                                            boxShadow: "0 8px 25px rgba(255, 255, 255, 0.2)",
-                                            cursor: "pointer",
-                                            pointerEvents: "auto",
-                                            position: "relative",
-                                            zIndex: 10,
-                                            textDecoration: "none",
-                                            display: "inline-block",
-                                            transition: "all 0.3s ease"
-                                        }}
-                                    >
-                                        <i className="fas fa-search me-2"></i>
-                                        Jelajahi Kursus Kami
-                                    </button>
+                                    <div className="d-flex flex-wrap gap-3 align-items-center">
+                                        <button
+                                            onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
+                                            className="btn btn-lg px-4 py-3 cta-register-btn"
+                                            style={{
+                                                background: "white",
+                                                color: "#0d9488",
+                                                border: "none",
+                                                borderRadius: "15px",
+                                                fontWeight: "700",
+                                                boxShadow: "0 8px 25px rgba(255, 255, 255, 0.2)",
+                                                cursor: "pointer",
+                                                pointerEvents: "auto",
+                                                position: "relative",
+                                                zIndex: 10,
+                                                textDecoration: "none",
+                                                display: "inline-block",
+                                                transition: "all 0.3s ease"
+                                            }}
+                                        >
+                                            <i className="fas fa-search me-2"></i>
+                                            Jelajahi Kursus
+                                        </button>
+                                        <Link
+                                            to="/rankings/"
+                                            className="btn btn-lg px-4 py-3"
+                                            style={{
+                                                background: "rgba(255, 255, 255, 0.18)",
+                                                backdropFilter: "blur(8px)",
+                                                color: "white",
+                                                border: "1.5px solid rgba(255, 255, 255, 0.5)",
+                                                borderRadius: "15px",
+                                                fontWeight: "700",
+                                                boxShadow: "0 8px 25px rgba(0, 0, 0, 0.1)",
+                                                cursor: "pointer",
+                                                textDecoration: "none",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                transition: "all 0.3s ease"
+                                            }}
+                                        >
+                                            <i className="fas fa-trophy me-2 text-warning"></i>
+                                            Lihat Semua Peringkat
+                                        </Link>
+                                    </div>
                                 </div>
 
                             </div>

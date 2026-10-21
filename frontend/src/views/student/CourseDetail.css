@@ -6795,8 +6795,9 @@ html, body, #root {
 
 /* ✨ PHASE 7.16+: Stack cards horizontally - adjust responsive breakpoint */
 @media (min-width: 1024px) {
-    /* Make modal wider on larger screens */
-    .modal-dialog.modal-dialog-centered {
+    /* Make abuse report modal wider on larger screens */
+    .abuse-report-modal .modal-dialog.modal-dialog-centered,
+    .modal-dialog.abuse-report-modal-dialog {
         max-width: 1000px;
     }
 }

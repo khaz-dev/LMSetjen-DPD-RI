@@ -185,21 +185,19 @@ function TestimonialSection() {
                 }}
               >
                 <div className="card-body text-center p-4">
-                  {/* Avatar */}
+                  {/* Avatar with gradient ring */}
                   <div 
-                    className="mx-auto mb-3"
+                    className="preview-avatar-wrap mx-auto mb-3"
                     style={{
-                      width: '70px',
-                      height: '70px',
+                      width: '68px',
+                      height: '68px',
                       borderRadius: '50%',
-                      background: getGradientColor(index),
+                      padding: '2.5px',
+                      background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'white',
-                      fontSize: '24px',
-                      fontWeight: 'bold',
-                      overflow: 'hidden'
+                      boxShadow: '0 4px 14px rgba(13, 148, 136, 0.22)'
                     }}
                   >
                     {testimonial.image ? (
@@ -213,32 +211,53 @@ function TestimonialSection() {
                         style={{
                           width: '100%',
                           height: '100%',
-                          objectFit: 'cover'
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                          background: '#f1f5f9'
                         }}
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
                       />
                     ) : (
-                      getAvatarInitial(testimonial.full_name)
+                      <div 
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
+                          color: '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '700',
+                          fontSize: '1.4rem'
+                        }}
+                      >
+                        {getAvatarInitial(testimonial.full_name)}
+                      </div>
                     )}
                   </div>
                   
-                  {/* Quote */}
-                  <p className="mb-3 fst-italic" style={{ lineHeight: '1.7', color: '#6c757d', fontSize: '0.95rem', minHeight: '80px' }}>
-                    "{testimonial.review}"
-                  </p>
+                  {/* Quote with opening & closing marks */}
+                  <div className="preview-quote-box mb-3" style={{ position: 'relative', padding: '0 0.8rem', minHeight: '80px' }}>
+                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem', lineHeight: '1', color: 'rgba(13, 148, 136, 0.35)', fontWeight: 'bold', userSelect: 'none' }}>“</span>
+                    <p className="preview-quote-text fst-italic mb-0" style={{ color: '#475569', fontSize: '0.92rem', lineHeight: '1.65' }}>
+                      {testimonial.review}
+                    </p>
+                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem', lineHeight: '1', color: 'rgba(13, 148, 136, 0.35)', fontWeight: 'bold', userSelect: 'none' }}>”</span>
+                  </div>
                   
-                  {/* Rating */}
-                  <div className="mb-3">
+                  {/* Rating Stars with score */}
+                  <div className="preview-rating-row mb-3 d-flex align-items-center justify-content-center">
                     {[...Array(5)].map((_, i) => (
                       <i 
                         key={i}
                         className={`fas fa-star ${i < testimonial.rating ? 'text-warning' : 'text-secondary'}`}
-                        style={{ fontSize: '0.9rem' }}
+                        style={{ fontSize: '0.92rem', margin: '0 1.5px', color: i < testimonial.rating ? '#f59e0b' : '#e2e8f0' }}
                       ></i>
                     ))}
-                    <span className="text-warning fw-medium ms-2" style={{ fontSize: '0.95rem' }}>
+                    <span className="preview-rating-number ms-2 fw-bold text-warning" style={{ fontSize: '0.95rem' }}>
                       {testimonial.rating}.0
                     </span>
                   </div>

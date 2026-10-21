@@ -797,3 +797,139 @@
     page-break-inside: avoid;
   }
 }
+
+/* ============= ISOLATED INSTRUCTOR POINTS BREAKDOWN MODAL ============= */
+.modal-instructor-points-breakdown .modal-dialog {
+  max-width: 580px !important;
+  width: 95% !important;
+  margin: 1.75rem auto !important;
+}
+
+.modal-instructor-points-breakdown .modal-content {
+  border-radius: 1.25rem !important;
+  border: none !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  background: #ffffff !important;
+  overflow: hidden !important;
+}
+
+.modal-instructor-points-breakdown .modal-header {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+  color: #ffffff !important;
+  padding: 1.1rem 1.5rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.modal-instructor-points-breakdown .modal-title {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.25px !important;
+  font-size: 1.05rem !important;
+}
+
+.modal-instructor-points-breakdown .modal-title i {
+  color: #facc15 !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+/* Modal Period Filter Pills - High Contrast & Crisp */
+.modal-period-filter-pill {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 4px !important;
+  gap: 4px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.modal-filter-btn-active {
+  background: #0f766e !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  border: none !important;
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+
+.modal-filter-btn-inactive {
+  background: transparent !important;
+  color: #1e293b !important; /* High-contrast dark slate */
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.modal-filter-btn-inactive:hover {
+  background: rgba(15, 118, 110, 0.1) !important;
+  color: #0f766e !important;
+}
+
+.points-history-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: #0d9488 #f1f5f9;
+}
+
+.points-history-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.points-history-scroll-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.points-history-scroll-container::-webkit-scrollbar-thumb {
+  background: #0d9488;
+  border-radius: 4px;
+}
+
+/* ============= ISOLATED STUDENT POINTS BREAKDOWN MODAL ============= */
+.modal-student-points-breakdown .modal-dialog {
+  max-width: 580px !important;
+  width: 95% !important;
+  margin: 1.75rem auto !important;
+}
+
+.modal-student-points-breakdown .modal-content {
+  border-radius: 1.25rem !important;
+  border: none !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  background: #ffffff !important;
+  overflow: hidden !important;
+}
+
+.modal-student-points-breakdown .modal-header {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  color: #ffffff !important;
+  padding: 1.1rem 1.5rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.modal-student-points-breakdown .modal-title {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.25px !important;
+  font-size: 1.05rem !important;
+}
+
+.modal-student-points-breakdown .modal-title i {
+  color: #facc15 !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+.student-filter-active {
+  background: #1d4ed8 !important;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.35) !important;
+}
+
+.points-history-scroll-container.student-scroll {
+  scrollbar-color: #1d4ed8 #f1f5f9;
+}
+
+.points-history-scroll-container.student-scroll::-webkit-scrollbar-thumb {
+  background: #1d4ed8;
+}
+
+
+

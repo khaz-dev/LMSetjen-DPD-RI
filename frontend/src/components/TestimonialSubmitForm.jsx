@@ -9,7 +9,7 @@ import UserData from '../views/plugin/UserData';
  * Supports multiple testimonials per user based on role
  * ✨ PHASE 4.11: Multi-role testimonial support
  */
-function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student' }) {
+function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student', compact = false, onFormChange = null }) {
   const userData = UserData();
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -37,10 +37,14 @@ function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student'
           // Check if we got actual data (not null/undefined)
           if (response.data && response.data.id) {
             setExistingTestimonial(response.data);
-            setFormData({
+            const initialValues = {
               rating: response.data.rating || 5,
               review: response.data.review || '',
-            });
+            };
+            setFormData(initialValues);
+            if (onFormChange) {
+              onFormChange(initialValues);
+            }
           } else {
             // No testimonial found (data is null or empty)
             setExistingTestimonial(null);
@@ -64,11 +68,19 @@ function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student'
   }, [role]); // ✨ PHASE 4.11: Re-fetch when role changes
 
   const handleRatingChange = (star) => {
-    setFormData({ ...formData, rating: star });
+    const updated = { ...formData, rating: star };
+    setFormData(updated);
+    if (onFormChange) {
+      onFormChange(updated);
+    }
   };
 
   const handleReviewChange = (e) => {
-    setFormData({ ...formData, review: e.target.value });
+    const updated = { ...formData, review: e.target.value };
+    setFormData(updated);
+    if (onFormChange) {
+      onFormChange(updated);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -153,7 +165,11 @@ function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student'
       const response = await apiInstance.delete(`student/testimonial/?role=${role}`);
       
       setExistingTestimonial(null);
-      setFormData({ rating: 5, review: '' });
+      const resetValues = { rating: 5, review: '' };
+      setFormData(resetValues);
+      if (onFormChange) {
+        onFormChange(resetValues);
+      }
 
       Toast().fire({
         icon: 'success',
@@ -182,9 +198,9 @@ function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student'
 
   if (!hasLoaded) {
     return (
-      <div className="testimonial-submit-form">
-        <div className="form-card">
-          <div className="text-center py-5">
+      <div className={`testimonial-submit-form ${compact ? 'is-compact' : ''}`}>
+        <div className={`form-card ${compact ? 'p-3 shadow-none border-0 bg-transparent' : ''}`}>
+          <div className="text-center py-4">
             <div className="spinner-border text-primary" role="status">
               <span className="visually-hidden">Loading...</span>
             </div>
@@ -207,12 +223,14 @@ function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student'
   const submitButtonIcon = isEditing ? 'fa-save' : 'fa-paper-plane';
 
   return (
-    <div className="testimonial-submit-form">
-      <div className="form-card">
-        <h3 className="form-title mb-3">
-          <i className={`fas ${submitButtonIcon} text-primary me-2`}></i>
-          {formTitle}
-        </h3>
+    <div className={`testimonial-submit-form ${compact ? 'is-compact' : ''}`}>
+      <div className={`form-card ${compact ? 'p-0 shadow-none border-0 bg-transparent' : ''}`}>
+        {!compact && (
+          <h3 className="form-title mb-3">
+            <i className={`fas ${submitButtonIcon} text-primary me-2`}></i>
+            {formTitle}
+          </h3>
+        )}
         
         <form onSubmit={handleSubmit}>
           {/* Rating Section */}

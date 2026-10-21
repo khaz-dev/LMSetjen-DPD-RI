@@ -1156,21 +1156,26 @@ class RankedInstructorsAPIView(generics.ListAPIView):
         from django.utils import timezone
         now = timezone.now()
         
+        try:
+            limit = int(self.request.query_params.get('limit', 25))
+        except (TypeError, ValueError):
+            limit = 25
+
         if period == 'yearly':
             queryset = api_models.InstructorPoints.objects.filter(
                 yearly_year=now.year,
                 yearly_points__gt=0
-            ).order_by('-yearly_points')[:10]
+            ).order_by('-yearly_points')[:limit]
         elif period == 'monthly':
             queryset = api_models.InstructorPoints.objects.filter(
                 monthly_year=now.year,
                 monthly_month=now.month,
                 monthly_points__gt=0
-            ).order_by('-monthly_points')[:10]
+            ).order_by('-monthly_points')[:limit]
         else:  # lifetime
             queryset = api_models.InstructorPoints.objects.filter(
                 lifetime_points__gt=0
-            ).order_by('-lifetime_points')[:10]
+            ).order_by('-lifetime_points')[:limit]
         
         return queryset
     
@@ -1438,15 +1443,23 @@ class InstructorPointsBreakdownAPIView(APIView):
         target_user = None
         target_teacher = None
         
-        if teacher_id:
-            target_teacher = api_models.Teacher.objects.filter(id=teacher_id).first()
-            if target_teacher:
-                target_user = target_teacher.user
-        elif user_id:
+        # Resolve target_user: check user_id first, then teacher_id (Teacher or InstructorPoints id), then request.user
+        if user_id:
             target_user = api_models.User.objects.filter(id=user_id).first()
             if target_user:
                 target_teacher = api_models.Teacher.objects.filter(user=target_user).first()
-        elif user:
+                
+        if not target_user and teacher_id:
+            target_teacher = api_models.Teacher.objects.filter(id=teacher_id).first()
+            if target_teacher:
+                target_user = target_teacher.user
+            else:
+                ip_rec = api_models.InstructorPoints.objects.filter(id=teacher_id).first()
+                if ip_rec and ip_rec.user:
+                    target_user = ip_rec.user
+                    target_teacher = api_models.Teacher.objects.filter(user=target_user).first()
+                    
+        if not target_user and user:
             target_user = user
             target_teacher = api_models.Teacher.objects.filter(user=user).first()
             
@@ -1481,11 +1494,72 @@ class InstructorPointsBreakdownAPIView(APIView):
                     
         points_record = api_models.InstructorPoints.objects.filter(user=target_user).first()
         
-        # Get audit logs for this instructor
-        audit_logs = api_models.PointsAuditLog.objects.filter(
+        # Valid instructor point activity types in accordance with platform gamification rules
+        VALID_INSTRUCTOR_ACTIVITIES = [
+            'course_published',
+            'student_enrollment',
+            'student_rating',
+            'platform_testimonial'
+        ]
+        
+        from django.utils import timezone
+        now = timezone.now()
+        
+        # Base queryset for valid instructor logs
+        instructor_logs_qs = api_models.PointsAuditLog.objects.filter(
             user=target_user,
-            points_type='instructor'
-        ).order_by('-awarded_at')[:40]
+            points_type='instructor',
+            activity_type__in=VALID_INSTRUCTOR_ACTIVITIES
+        )
+        
+        # Self-healing synchronization: compute actual totals from audit logs
+        lifetime_points_actual = sum(
+            l.points_awarded for l in instructor_logs_qs
+        )
+        yearly_points_actual = sum(
+            l.points_awarded for l in instructor_logs_qs.filter(awarded_at__year=now.year)
+        )
+        monthly_points_actual = sum(
+            l.points_awarded for l in instructor_logs_qs.filter(
+                awarded_at__year=now.year,
+                awarded_at__month=now.month
+            )
+        )
+        
+        if points_record:
+            if (points_record.lifetime_points != lifetime_points_actual or 
+                points_record.yearly_points != yearly_points_actual or 
+                points_record.monthly_points != monthly_points_actual):
+                points_record.lifetime_points = lifetime_points_actual
+                points_record.yearly_points = yearly_points_actual
+                points_record.yearly_year = now.year
+                points_record.monthly_points = monthly_points_actual
+                points_record.monthly_year = now.year
+                points_record.monthly_month = now.month
+                points_record.save()
+        
+        # Filter audit logs and points based on period (lifetime, yearly, monthly)
+        period = request.query_params.get('period', 'lifetime')
+        
+        if period == 'monthly':
+            period_logs_qs = instructor_logs_qs.filter(
+                awarded_at__year=now.year,
+                awarded_at__month=now.month
+            ).order_by('-awarded_at')
+            current_period_points = monthly_points_actual
+        elif period == 'yearly':
+            period_logs_qs = instructor_logs_qs.filter(
+                awarded_at__year=now.year
+            ).order_by('-awarded_at')
+            current_period_points = yearly_points_actual
+        else:
+            period = 'lifetime'
+            period_logs_qs = instructor_logs_qs.order_by('-awarded_at')
+            current_period_points = lifetime_points_actual
+        
+        # Get logs for the selected period
+        all_logs = list(period_logs_qs)
+        audit_logs = all_logs[:50]
         
         history = []
         for log in audit_logs:
@@ -1495,44 +1569,48 @@ class InstructorPointsBreakdownAPIView(APIView):
                 disp = "Testimoni Platform"
             elif log.activity_type == 'platform_testimonial':
                 disp = "Testimoni Platform"
+                
+            clean_desc = (log.description or '').strip()
+            if not clean_desc:
+                clean_desc = f"{disp}: Perolehan Poin"
 
             history.append({
                 'id': log.id,
                 'activity_type': log.activity_type,
                 'activity_type_display': disp,
                 'points_awarded': log.points_awarded,
-                'description': log.description,
+                'description': clean_desc,
                 'course_id': log.course_id,
                 'quiz_id': log.quiz_id,
                 'review_id': log.review_id,
                 'awarded_at': log.awarded_at,
             })
             
-        # Summary counts by activity_type
+        # Summary counts by activity_type computed over audit logs of the selected period
         summary = {
             'course_published': {
-                'points': sum(l.points_awarded for l in audit_logs if l.activity_type == 'course_published'),
-                'count': sum(1 for l in audit_logs if l.activity_type == 'course_published')
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'course_published'),
+                'count': sum(1 for l in all_logs if l.activity_type == 'course_published')
             },
             'student_enrollment': {
-                'points': sum(l.points_awarded for l in audit_logs if l.activity_type == 'student_enrollment'),
-                'count': sum(1 for l in audit_logs if l.activity_type == 'student_enrollment')
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'student_enrollment'),
+                'count': sum(1 for l in all_logs if l.activity_type == 'student_enrollment')
             },
             'student_rating': {
-                'points': sum(l.points_awarded for l in audit_logs if l.activity_type in ['student_rating', 'platform_testimonial']),
-                'count': sum(1 for l in audit_logs if l.activity_type in ['student_rating', 'platform_testimonial'])
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'student_rating' and 'testimonial' not in (l.description or '').lower()),
+                'count': sum(1 for l in all_logs if l.activity_type == 'student_rating' and 'testimonial' not in (l.description or '').lower())
             },
             'platform_testimonial': {
-                'points': sum(l.points_awarded for l in audit_logs if l.activity_type == 'platform_testimonial' or (l.activity_type == 'student_rating' and 'testimonial' in (l.description or '').lower())),
-                'count': sum(1 for l in audit_logs if l.activity_type == 'platform_testimonial' or (l.activity_type == 'student_rating' and 'testimonial' in (l.description or '').lower()))
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'platform_testimonial' or (l.activity_type == 'student_rating' and 'testimonial' in (l.description or '').lower())),
+                'count': sum(1 for l in all_logs if l.activity_type == 'platform_testimonial' or (l.activity_type == 'student_rating' and 'testimonial' in (l.description or '').lower()))
             }
         }
         
         # Rank position in rankings
         rank_pos = None
-        if points_record and points_record.lifetime_points > 0:
+        if lifetime_points_actual > 0:
             rank_pos = api_models.InstructorPoints.objects.filter(
-                lifetime_points__gt=points_record.lifetime_points
+                lifetime_points__gt=lifetime_points_actual
             ).count() + 1
             
         rules = [
@@ -1565,9 +1643,11 @@ class InstructorPointsBreakdownAPIView(APIView):
         return Response({
             'user_id': target_user.id,
             'teacher_name': target_user.get_full_name() or target_user.username,
-            'lifetime_points': points_record.lifetime_points if points_record else 0,
-            'yearly_points': points_record.yearly_points if points_record else 0,
-            'monthly_points': points_record.monthly_points if points_record else 0,
+            'period': period,
+            'period_points': current_period_points,
+            'lifetime_points': lifetime_points_actual,
+            'yearly_points': yearly_points_actual,
+            'monthly_points': monthly_points_actual,
             'rank_position': rank_pos,
             'summary': summary,
             'history': history,

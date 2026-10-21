@@ -2858,21 +2858,26 @@ class RankedStudentsAPIView(generics.ListAPIView):
         from django.utils import timezone
         now = timezone.now()
         
+        try:
+            limit = int(self.request.query_params.get('limit', 25))
+        except (TypeError, ValueError):
+            limit = 25
+
         if period == 'yearly':
             queryset = api_models.StudentPoints.objects.filter(
                 yearly_year=now.year,
                 yearly_points__gt=0
-            ).order_by('-yearly_points')[:10]
+            ).order_by('-yearly_points')[:limit]
         elif period == 'monthly':
             queryset = api_models.StudentPoints.objects.filter(
                 monthly_year=now.year,
                 monthly_month=now.month,
                 monthly_points__gt=0
-            ).order_by('-monthly_points')[:10]
+            ).order_by('-monthly_points')[:limit]
         else:  # lifetime
             queryset = api_models.StudentPoints.objects.filter(
                 lifetime_points__gt=0
-            ).order_by('-lifetime_points')[:10]
+            ).order_by('-lifetime_points')[:limit]
         
         return queryset
     
@@ -2907,6 +2912,199 @@ class RankedStudentsAPIView(generics.ListAPIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class StudentPointsBreakdownAPIView(APIView):
+    """
+    GET /api/v1/student/points-breakdown/
+    GET /api/v1/student/points-breakdown/?student_id=<id>&user_id=<id>&period=<lifetime|yearly|monthly>
+    
+    Provides comprehensive breakdown of how a student earned points:
+    - Lifetime, Yearly, and Monthly points
+    - Categorized summary (completed courses, quiz passed/scores, student ratings/reviews given)
+    - Full chronological history from PointsAuditLog
+    - Clear rules explaining student point awards
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request, *args, **kwargs):
+        user = request.user if request.user.is_authenticated else None
+        
+        student_id = request.query_params.get('student_id')
+        user_id = request.query_params.get('user_id')
+        period = request.query_params.get('period', 'lifetime')
+        
+        target_user = None
+        
+        # 1. Resolve by user_id
+        if user_id:
+            target_user = api_models.User.objects.filter(id=user_id).first()
+            
+        # 2. Resolve by student_id (StudentPoints.id or User.id)
+        if not target_user and student_id:
+            sp_rec = api_models.StudentPoints.objects.filter(id=student_id).first()
+            if sp_rec and sp_rec.user:
+                target_user = sp_rec.user
+            else:
+                target_user = api_models.User.objects.filter(id=student_id).first()
+                
+        # 3. Fallback to logged-in user
+        if not target_user and user:
+            target_user = user
+            
+        if not target_user:
+            return Response(
+                {"detail": "Siswa / Pengguna tidak ditemukan"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        # Valid student point activity types in accordance with platform gamification rules
+        VALID_STUDENT_ACTIVITIES = [
+            'course_completion',
+            'quiz_score',
+            'rating_given',
+            'platform_testimonial'
+        ]
+        
+        from django.utils import timezone
+        now = timezone.now()
+        
+        # Self-healing synchronization: Check if student completed courses not yet in PointsAuditLog
+        certificates = api_models.Certificate.objects.filter(user=target_user, is_valid=True).select_related('course')
+        for cert in certificates:
+            if cert.course:
+                has_audit = api_models.PointsAuditLog.objects.filter(
+                    user=target_user,
+                    points_type='student',
+                    activity_type='course_completion',
+                    course_id=cert.course_id
+                ).exists()
+                if not has_audit:
+                    api_models.StudentPoints.add_points(
+                        target_user,
+                        100,
+                        'course_completion',
+                        course_id=cert.course_id,
+                        description=f"Menyelesaikan Kursus: {cert.course.title}"
+                    )
+                
+        # Menjalankan rekonsiliasi komprehensif & anti-redundansi (hanya skor kuis tertinggi, hapus duplikasi)
+        points_record = api_models.StudentPoints.reconcile_points(target_user)
+        
+        # Base queryset for valid student logs after reconciliation
+        student_logs_qs = api_models.PointsAuditLog.objects.filter(
+            user=target_user,
+            points_type='student',
+            activity_type__in=VALID_STUDENT_ACTIVITIES
+        )
+        
+        lifetime_points_actual = points_record.lifetime_points
+        yearly_points_actual = points_record.yearly_points
+        monthly_points_actual = points_record.monthly_points
+        
+        # Filter audit logs and points based on period (lifetime, yearly, monthly)
+        if period == 'monthly':
+            period_logs_qs = student_logs_qs.filter(
+                awarded_at__year=now.year,
+                awarded_at__month=now.month
+            ).order_by('-awarded_at')
+            current_period_points = monthly_points_actual
+        elif period == 'yearly':
+            period_logs_qs = student_logs_qs.filter(
+                awarded_at__year=now.year
+            ).order_by('-awarded_at')
+            current_period_points = yearly_points_actual
+        else:
+            period = 'lifetime'
+            period_logs_qs = student_logs_qs.order_by('-awarded_at')
+            current_period_points = lifetime_points_actual
+            
+        all_logs = list(period_logs_qs)
+        audit_logs = all_logs[:50]
+        
+        history = []
+        for log in audit_logs:
+            disp = log.get_activity_type_display()
+            if log.activity_type == 'course_completion':
+                disp = "Penyelesaian Kursus"
+            elif log.activity_type == 'quiz_score':
+                disp = "Kuis & Ujian"
+            elif log.activity_type == 'rating_given':
+                disp = "Ulasan & Rating Kursus"
+            elif log.activity_type == 'platform_testimonial':
+                disp = "Testimoni Platform"
+                
+            clean_desc = (log.description or '').strip()
+            if not clean_desc:
+                clean_desc = f"{disp}: Perolehan Poin Siswa"
+                
+            history.append({
+                'id': log.id,
+                'activity_type': log.activity_type,
+                'activity_type_display': disp,
+                'points_awarded': log.points_awarded,
+                'description': clean_desc,
+                'course_id': log.course_id,
+                'quiz_id': log.quiz_id,
+                'review_id': log.review_id,
+                'awarded_at': log.awarded_at,
+            })
+            
+        # Summary counts by activity_type for students
+        summary = {
+            'course_completion': {
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'course_completion'),
+                'count': sum(1 for l in all_logs if l.activity_type == 'course_completion')
+            },
+            'quiz_score': {
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'quiz_score'),
+                'count': sum(1 for l in all_logs if l.activity_type == 'quiz_score')
+            },
+            'rating_given': {
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type in ['rating_given', 'platform_testimonial']),
+                'count': sum(1 for l in all_logs if l.activity_type in ['rating_given', 'platform_testimonial'])
+            }
+        }
+        
+        # Rank position in student rankings
+        rank_pos = None
+        if lifetime_points_actual > 0:
+            rank_pos = api_models.StudentPoints.objects.filter(
+                lifetime_points__gt=lifetime_points_actual
+            ).count() + 1
+            
+        rules = [
+            {
+                'key': 'course_completion',
+                'title': 'Menyelesaikan Kursus Penuh',
+                'points_text': '+100 Poin',
+                'description': 'Diberikan otomatis setelah menyelesaikan seluruh modul dan materi pada kursus.'
+            },
+            {
+                'key': 'quiz_score',
+                'title': 'Kelulusan Kuis & Ujian',
+                'points_text': '+25 s/d +100 Poin',
+                'description': 'Diberikan berdasarkan pencapaian skor nilai kuis dan tes kompetensi.'
+            },
+            {
+                'key': 'rating_given',
+                'title': 'Memberikan Ulasan & Rating',
+                'points_text': '+50 Poin',
+                'description': 'Diberikan saat Anda memberikan ulasan serta rating bintang terhadap kursus yang diikuti.'
+            }
+        ]
+        
+        return Response({
+            'user_id': target_user.id,
+            'student_name': target_user.get_full_name() or target_user.username,
+            'period': period,
+            'period_points': current_period_points,
+            'lifetime_points': lifetime_points_actual,
+            'yearly_points': yearly_points_actual,
+            'monthly_points': monthly_points_actual,
+            'rank_position': rank_pos,
+            'summary': summary,
+            'history': history,
+            'rules': rules
+        }, status=status.HTTP_200_OK)
 
 
 # ==================== PHASE 53: ACTIVITY LOG API VIEWS ====================

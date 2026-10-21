@@ -3806,6 +3806,136 @@ class StudentPoints(models.Model):
         
         return obj
 
+    @classmethod
+    def reconcile_points(cls, user):
+        """
+        Anti-redundansi & Rekonsiliasi Komprehensif Poin Siswa:
+        1. Kuis & Ujian (quiz_score):
+           - Hanya mengambil skor TERTINGGI untuk setiap kuis (berdasarkan normalized quiz title atau quiz_id).
+           - Mengeliminasi/menghapus entri log audit yang redundan atau memiliki skor lebih rendah.
+        2. Penyelesaian Kursus (course_completion):
+           - Maksimal 1 penghargaan (+100 pt) per kursus (berdasarkan course_id atau course title).
+           - Menghapus perolehan duplikat.
+        3. Ulasan & Rating (rating_given):
+           - Maksimal 1 perolehan (+50 pt) per kursus.
+           - Memverifikasi apakah review masih aktif atau tidak dihapus.
+        4. Testimoni Platform (platform_testimonial):
+           - Maksimal 1 perolehan (+50 pt) per siswa.
+        5. Rekalkulasi total lifetime, yearly, dan monthly points siswa secara akurat.
+        """
+        from collections import defaultdict
+        now = timezone.now()
+        current_year = now.year
+        current_month = now.month
+
+        # 1. Kuis: deduplikasi dan pertahankan hanya skor tertinggi
+        quiz_logs = PointsAuditLog.objects.filter(
+            user=user,
+            points_type='student',
+            activity_type='quiz_score'
+        ).order_by('-points_awarded', '-awarded_at')
+
+        quizzes_by_key = defaultdict(list)
+        for q_log in quiz_logs:
+            title = None
+            if q_log.quiz_id:
+                try:
+                    q_obj = Quiz.objects.filter(id=q_log.quiz_id).first()
+                    if q_obj:
+                        title = q_obj.title
+                except Exception:
+                    pass
+            if not title and q_log.description:
+                if 'on:' in q_log.description:
+                    title = q_log.description.split('on:')[-1].strip()
+                else:
+                    title = q_log.description.strip()
+            norm_key = (title or f"quiz_{q_log.quiz_id or 'unknown'}").strip().lower()
+            quizzes_by_key[norm_key].append(q_log)
+
+        for norm_key, group in quizzes_by_key.items():
+            if len(group) > 1:
+                # group is already sorted by -points_awarded, -awarded_at
+                # Keep the first (highest score), delete lower/redundant ones
+                best = group[0]
+                for redundant in group[1:]:
+                    redundant.delete()
+
+        # 2. Kursus: deduplikasi dan pastikan maksimal 1 per kursus
+        course_logs = PointsAuditLog.objects.filter(
+            user=user,
+            points_type='student',
+            activity_type='course_completion'
+        ).order_by('-awarded_at')
+
+        courses_by_key = defaultdict(list)
+        for c_log in course_logs:
+            c_key = c_log.course_id
+            if not c_key and c_log.description:
+                c_key = c_log.description.strip().lower()
+            courses_by_key[c_key].append(c_log)
+
+        for c_key, group in courses_by_key.items():
+            if len(group) > 1:
+                for redundant in group[1:]:
+                    redundant.delete()
+
+        # 3. Ulasan/Rating: deduplikasi per course_id dan verifikasi apakah review masih aktif
+        rating_logs = PointsAuditLog.objects.filter(
+            user=user,
+            points_type='student',
+            activity_type='rating_given'
+        )
+        ratings_by_course = defaultdict(list)
+        for r_log in rating_logs:
+            if r_log.review_id:
+                rev = Review.objects.filter(id=r_log.review_id, active=True).first()
+                if not rev:
+                    r_log.delete()
+                    continue
+            ratings_by_course[r_log.course_id or r_log.description].append(r_log)
+
+        for c_key, group in ratings_by_course.items():
+            if len(group) > 1:
+                for redundant in group[1:]:
+                    redundant.delete()
+
+        # 4. Testimoni Platform: maksimal 1 per siswa
+        testi_logs = PointsAuditLog.objects.filter(
+            user=user,
+            points_type='student',
+            activity_type='platform_testimonial'
+        )
+        if testi_logs.count() > 1:
+            kept = testi_logs.first()
+            testi_logs.exclude(id=kept.id).delete()
+
+        # 5. Hitung total aktual dari log audit yang sudah bersih & terverifikasi
+        valid_activities = ['course_completion', 'quiz_score', 'rating_given', 'platform_testimonial']
+        valid_logs = PointsAuditLog.objects.filter(
+            user=user,
+            points_type='student',
+            activity_type__in=valid_activities
+        )
+
+        lifetime_total = sum(l.points_awarded for l in valid_logs)
+        yearly_total = sum(l.points_awarded for l in valid_logs.filter(awarded_at__year=current_year))
+        monthly_total = sum(l.points_awarded for l in valid_logs.filter(
+            awarded_at__year=current_year,
+            awarded_at__month=current_month
+        ))
+
+        obj, _ = cls.objects.get_or_create(user=user)
+        obj.lifetime_points = lifetime_total
+        obj.yearly_points = yearly_total
+        obj.yearly_year = current_year
+        obj.monthly_points = monthly_total
+        obj.monthly_year = current_year
+        obj.monthly_month = current_month
+        obj.save()
+
+        return obj
+
 
 class InstructorPoints(models.Model):
     """
