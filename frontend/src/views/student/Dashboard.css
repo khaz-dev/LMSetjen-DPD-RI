@@ -155,8 +155,9 @@
   justify-content: flex-end;
 }
 
-/* ✨ PHASE 4.X: Stat Icon - Consistent styling to prevent overrides */
-.stat-icon {
+/* ✨ PHASE 4.X: Stat Icon - Strictly scoped to student dashboard stat cards */
+.dashboard-page .dashboard-stat-card .stat-icon,
+.dashboard-stat-card .stat-icon {
   width: 45px !important;
   height: 45px !important;
   background: rgba(255, 255, 255, 0.25) !important;
@@ -170,23 +171,21 @@
   min-width: 45px !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
   transition: all 0.3s ease !important;
-}
-
-.dashboard-stat-card .stat-icon {
   margin-right: 1.5rem !important;
 }
 
-.stat-icon i {
+.dashboard-page .dashboard-stat-card .stat-icon i,
+.dashboard-stat-card .stat-icon i {
   font-size: 1.5rem !important;
   color: white !important;
   user-select: none !important;
   pointer-events: none !important;
 }
 
-/* ✨ SCOPED: Dashboard stat label - only apply on dashboard page */
-.dashboard-stat-card .stat-label,
-.modern-dashboard .stat-label {
-  font-size: 1rem;
+/* ✨ SCOPED: Dashboard stat label - strictly scoped to student dashboard */
+.dashboard-page .dashboard-stat-card .stat-label,
+.dashboard-stat-card .stat-label {
+  font-size: 1rem !important;
   margin-left: 0.1rem;
   margin-top: 0.5rem;
   color: rgba(255, 255, 255, 0.95) !important;
@@ -198,15 +197,10 @@
   letter-spacing: 0.3px;
 }
 
-/* Additional specificity for stat labels */
-.dashboard-stat-card .stat-label {
-    font-size: 1rem !important;
-    color: rgba(255, 255, 255, 0.95) !important;
-}
-
+.dashboard-page .dashboard-stat-card .stat-label.text-end,
 .dashboard-stat-card .stat-label.text-end {
-    font-size: 1rem !important;
-    color: rgba(255, 255, 255, 0.95) !important;
+  font-size: 1rem !important;
+  color: rgba(255, 255, 255, 0.95) !important;
 }
 
 /* Progress Circle */

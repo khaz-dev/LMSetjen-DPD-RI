@@ -89,6 +89,9 @@ class Teacher(models.Model):
     facebook = models.URLField(null=True, blank=True)
     twitter = models.URLField(null=True, blank=True)
     linkedin = models.URLField(null=True, blank=True)
+    youtube = models.URLField(null=True, blank=True)
+    instagram = models.URLField(null=True, blank=True)
+    tiktok = models.URLField(null=True, blank=True)
     about = models.TextField(null=True, blank=True)
     country = models.CharField(max_length=100, null=True, blank=True)
 

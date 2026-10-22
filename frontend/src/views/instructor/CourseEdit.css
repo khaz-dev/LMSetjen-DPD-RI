@@ -23,13 +23,14 @@
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
-    min-height: 100vh;
+    min-height: calc(100vh - 200px);
     background: transparent;
-    padding: var(--page-top-spacing) 0 var(--page-bottom-spacing) 0;
-    padding-top: var(--page-top-spacing) !important;
-    padding-bottom: var(--page-bottom-spacing) !important;
-    margin-bottom: 8rem;
-    overflow-x: hidden; /* ✨ PHASE 11.170: Prevent horizontal scroll */
+    padding: var(--page-top-spacing, 20px) 0 1.5rem 0;
+    padding-top: var(--page-top-spacing, 20px) !important;
+    padding-bottom: 1.5rem !important;
+    margin-bottom: 2rem !important;
+    overflow: visible !important;
+    overflow-x: clip; /* Clip horizontal overflow without creating a scroll container that breaks position: sticky */
 }
 
 /* Ensure proper scroll context for sticky sidebar */
@@ -339,29 +340,36 @@ button div,
    ================================ */
 /* SCOPED: Only apply to course edit form, not global card-body */
 .instructor-course-edit-page .card-body {
-    padding: var(--space-2xl) !important;
+    padding: 1rem !important;
 }
 
-.form-section {
-    margin-bottom: var(--space-2xl);
-    padding-bottom: var(--space-xl);
-    border-bottom: 1px solid var(--neutral-200);
+.instructor-course-edit-page .form-section {
+    margin-bottom: 1.15rem !important;
+    padding-bottom: 1.15rem !important;
+    border-bottom: 1px solid #f1f5f9 !important;
     position: relative;
 }
 
-.form-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
+.instructor-course-edit-page .form-section:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
 }
 
-.section-title {
-    color: var(--neutral-700);
-    font-weight: 700;
-    font-size: 1.5rem;
-    margin-bottom: var(--space-lg);
-    padding-bottom: var(--space-sm);
-    position: relative;
-    display: inline-block;
+.instructor-course-edit-page .section-title {
+    color: #1e293b !important;
+    font-weight: 700 !important;
+    font-size: 1.05rem !important;
+    margin-bottom: 0.75rem !important;
+    padding-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    letter-spacing: -0.01em;
+}
+
+.instructor-course-edit-page .section-title i {
+    color: #0f766e !important;
 }
 
 /* ================================
@@ -550,21 +558,33 @@ button div,
    ================================ */
 .image-preview-container {
     position: relative;
-    margin-bottom: var(--space-lg);
+    margin-bottom: var(--space-md);
+    margin-left: auto !important;
+    margin-right: auto !important;
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-md);
+    max-width: 640px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid var(--neutral-200);
 }
 
 .image-preview {
-    width: 100%;
-    height: 280px;
-    object-fit: cover;
+    width: auto;
+    max-width: 100%;
+    height: 100%;
+    max-height: 320px;
+    object-fit: contain;
     border-radius: var(--radius-lg);
-    border: 3px solid var(--neutral-200);
+    border: 2px solid var(--neutral-200);
     transition: all var(--transition-normal);
     background: var(--neutral-100);
     display: block;
+    margin: 0 auto;
 }
 
 .image-preview.valid {
@@ -1185,28 +1205,49 @@ button div,
    MODERN DESIGN UPGRADE - MATCHING HEADER & SIDEBAR
    ================================ */
 
-/* Modern Header Design */
-.create-header-modern {
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #34495e 100%);
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.5rem;
-    border-radius: 15px;
-    /* position: sticky; */
-    /* top: 90px; */
-    z-index: 10;
+/* Modern Compact Header Design */
+.course-edit-header-card {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 12px;
+    padding: 0.85rem 1.15rem;
+    border: 1px solid rgba(15, 118, 110, 0.16);
+    box-shadow: 0 4px 16px rgba(15, 118, 110, 0.05);
+    position: relative;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(52, 152, 219, 0.3);
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    margin-bottom: 0.75rem;
+}
+
+.course-edit-header-card .header-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+}
+
+.course-edit-header-card .header-subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.create-header-modern {
+    background: rgba(255, 255, 255, 0.96) !important;
+    backdrop-filter: blur(12px) !important;
+    border-radius: 12px !important;
+    padding: 0.85rem 1.15rem !important;
+    border: 1px solid rgba(15, 118, 110, 0.16) !important;
+    box-shadow: 0 4px 16px rgba(15, 118, 110, 0.05) !important;
+    margin-bottom: 0.75rem !important;
+    transform: none !important;
 }
 
 .create-header-modern:hover {
-    box-shadow: 0 15px 40px rgba(52, 152, 219, 0.4);
-    transform: translateY(-2px);
-}
-
-.create-header-modern > * {
-    position: relative;
-    z-index: 1;
+    box-shadow: 0 6px 20px rgba(15, 118, 110, 0.08) !important;
+    transform: none !important;
 }
 
 /* Modern Form Card */
@@ -2064,4 +2105,248 @@ div.form-check.modern-form-check {
 
 .instructor-course-edit-page .form-control::placeholder {
   color: #94a3b8 !important;
+}
+
+/* ==========================================================================
+   SEGMENTED CONTROL: Pilihan Cara Menambahkan Gambar (Dari URL vs Unggah File)
+   ========================================================================== */
+.image-method-segmented-group {
+    display: flex;
+    width: 100%;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    gap: 4px;
+    margin-bottom: 0.75rem;
+}
+
+.method-segment-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.method-segment-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.85);
+    color: #0f172a;
+}
+
+.method-segment-btn.active {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+}
+
+.method-segment-btn.active i {
+    color: #ffffff !important;
+}
+
+.method-segment-btn i {
+    font-size: 0.85rem;
+    margin-right: 2px;
+}
+
+/* ==========================================================================
+   COMPACT & EYE-CATCHING OVERRIDES FOR COURSE EDIT PAGE
+   LMSetjen DPD RI Design System
+   ========================================================================== */
+
+/* Scoped Workflow Stepper Spacing */
+.instructor-course-edit-page .workflow-stepper-container {
+    padding: 8px 16px !important;
+    margin-bottom: 10px !important;
+    border-radius: 10px !important;
+}
+
+.instructor-course-edit-page .step-circle {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 13px !important;
+    margin-bottom: 3px !important;
+}
+
+.instructor-course-edit-page .step-name {
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+}
+
+.instructor-course-edit-page .step-desc {
+    display: none !important;
+}
+
+.instructor-course-edit-page .step-link {
+    padding: 4px 8px !important;
+}
+
+/* Scoped Form Body & Sections */
+.instructor-course-edit-page .form-body-modern {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+    padding: 16px 20px !important;
+    margin-bottom: 1.25rem !important;
+}
+
+.instructor-course-edit-page .form-section {
+    margin-bottom: 1rem !important;
+    padding-bottom: 1rem !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.instructor-course-edit-page .form-section:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.instructor-course-edit-page .section-title {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin-bottom: 0.75rem !important;
+    padding-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.instructor-course-edit-page .section-title i {
+    color: #0f766e !important;
+}
+
+/* Form Controls & Labels */
+.instructor-course-edit-page .form-control,
+.instructor-course-edit-page .form-select {
+    height: 36px !important;
+    padding: 6px 12px !important;
+    font-size: 0.82rem !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    background-color: #f8fafc !important;
+    color: #334155 !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.instructor-course-edit-page textarea.form-control {
+    height: auto !important;
+    min-height: 80px !important;
+}
+
+.instructor-course-edit-page .form-label {
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    margin-bottom: 3px !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+.instructor-course-edit-page .form-group {
+    margin-bottom: 0.75rem !important;
+}
+
+.instructor-course-edit-page .form-text,
+.instructor-course-edit-page small.text-muted {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+    margin-top: 2px !important;
+}
+
+/* Nested Forms (Features, Requirements, Outcomes) */
+.instructor-course-edit-page .card {
+    border-radius: 10px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+    padding: 10px 14px !important;
+    margin-bottom: 10px !important;
+    box-shadow: none !important;
+}
+
+.instructor-course-edit-page .list-group-item {
+    padding: 6px 10px !important;
+    font-size: 0.82rem !important;
+    border-color: #e2e8f0 !important;
+    background: #ffffff !important;
+}
+
+.instructor-course-edit-page .btn-group .btn-sm {
+    padding: 3px 8px !important;
+    font-size: 0.75rem !important;
+    border-radius: 6px !important;
+}
+
+/* Status Pill in Edit page */
+.status-badge.published {
+    background: rgba(16, 185, 129, 0.12) !important;
+    color: #059669 !important;
+    border: 1px solid rgba(16, 185, 129, 0.25) !important;
+}
+
+.status-badge.review {
+    background: rgba(15, 118, 110, 0.12) !important;
+    color: #0f766e !important;
+    border: 1px solid rgba(15, 118, 110, 0.25) !important;
+}
+
+.status-badge.draft {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: #d97706 !important;
+    border: 1px solid rgba(245, 158, 11, 0.25) !important;
+}
+
+.status-badge.rejected {
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #dc2626 !important;
+    border: 1px solid rgba(239, 68, 68, 0.25) !important;
+}
+
+/* Action Buttons & Bottom Controls */
+.instructor-course-edit-page .action-buttons {
+    padding-top: 0.75rem !important;
+    margin-top: 0.5rem !important;
+    border-top: 1px solid #f1f5f9 !important;
+}
+
+.instructor-course-edit-page .btn-update-course {
+    font-size: 0.8rem !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    min-height: 34px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.instructor-course-edit-page .btn-publish-course {
+    font-size: 0.85rem !important;
+    padding: 7px 18px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.2) !important;
+}
+
+/* Alerts inside form */
+.instructor-course-edit-page .alert {
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    font-size: 0.82rem !important;
+    margin-bottom: 0.75rem !important;
+}
+
+.instructor-course-edit-page .alert h6 {
+    font-size: 0.88rem !important;
 }

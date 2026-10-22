@@ -35,10 +35,70 @@ const CROP_CONFIG = {
     }
 };
 
+const SOCIAL_PLATFORMS_CONFIG = [
+    {
+        id: "youtube",
+        name: "YouTube",
+        icon: "fab fa-youtube",
+        color: "#ff0000",
+        bgLight: "rgba(255, 0, 0, 0.08)",
+        placeholder: "https://youtube.com/@channel",
+        helper: "Tautan channel atau video YouTube resmi Anda"
+    },
+    {
+        id: "instagram",
+        name: "Instagram",
+        icon: "fab fa-instagram",
+        color: "#e1306c",
+        bgLight: "rgba(225, 48, 108, 0.08)",
+        placeholder: "https://instagram.com/username",
+        helper: "Tautan akun Instagram resmi Anda"
+    },
+    {
+        id: "tiktok",
+        name: "TikTok",
+        icon: "fab fa-tiktok",
+        color: "#0f172a",
+        bgLight: "rgba(15, 23, 42, 0.08)",
+        placeholder: "https://tiktok.com/@username",
+        helper: "Tautan profil TikTok edukatif Anda"
+    },
+    {
+        id: "linkedin",
+        name: "LinkedIn",
+        icon: "fab fa-linkedin-in",
+        color: "#0a66c2",
+        bgLight: "rgba(10, 102, 194, 0.08)",
+        placeholder: "https://linkedin.com/in/username",
+        helper: "Tautan profil profesional LinkedIn Anda"
+    },
+    {
+        id: "twitter",
+        name: "Twitter / X",
+        icon: "fab fa-x-twitter",
+        color: "#0f172a",
+        bgLight: "rgba(15, 23, 42, 0.08)",
+        placeholder: "https://x.com/username",
+        helper: "Tautan akun Twitter / X Anda"
+    },
+    {
+        id: "facebook",
+        name: "Facebook",
+        icon: "fab fa-facebook-f",
+        color: "#1877f2",
+        bgLight: "rgba(24, 119, 242, 0.08)",
+        placeholder: "https://facebook.com/username",
+        helper: "Tautan profil atau halaman Facebook Anda"
+    }
+];
+
 const SOCIAL_PLATFORMS = {
     FACEBOOK: "facebook",
     TWITTER: "twitter",
-    LINKEDIN: "linkedin"
+    LINKEDIN: "linkedin",
+    YOUTUBE: "youtube",
+    INSTAGRAM: "instagram",
+    TIKTOK: "tiktok"
 };
 
 // URL validation & formatting
@@ -124,6 +184,9 @@ function Profile() {
         facebook: "",
         twitter: "",
         linkedin: "",
+        youtube: "",
+        instagram: "",
+        tiktok: "",
         image: ""
     });
 
@@ -158,10 +221,27 @@ function Profile() {
         imagePreview: ""
     });
 
+    // Dynamic Social Media Form State
+    const [socialForm, setSocialForm] = useState({
+        isOpen: false,
+        platform: "youtube",
+        url: "",
+        isEditing: false
+    });
+
     const imgRef = useRef(null);
     const croppedBlobRef = useRef(null);
     const autoSaveTimeoutRef = useRef(null);
     const previousDataRef = useRef({});
+
+    // Filter Active Social Media & Available to Add
+    const activeSocialList = useMemo(() => {
+        return SOCIAL_PLATFORMS_CONFIG.filter((platform) => Boolean(profileData[platform.id]?.trim()));
+    }, [profileData]);
+
+    const availablePlatformsToAdd = useMemo(() => {
+        return SOCIAL_PLATFORMS_CONFIG.filter((platform) => !profileData[platform.id]?.trim());
+    }, [profileData]);
 
     // Profile Completeness Calculation
     const completenessScore = useMemo(() => {
@@ -172,7 +252,14 @@ function Profile() {
         if (profileData.country?.trim()) score += 10;
         if (profileData.nip?.trim() || profileData.golongan?.trim() || profileData.organization_unit_name?.trim()) score += 20;
         if (profileData.bio?.trim()) score += 10;
-        if (profileData.linkedin?.trim() || profileData.twitter?.trim() || profileData.facebook?.trim()) score += 10;
+        if (
+            profileData.linkedin?.trim() ||
+            profileData.twitter?.trim() ||
+            profileData.facebook?.trim() ||
+            profileData.youtube?.trim() ||
+            profileData.instagram?.trim() ||
+            profileData.tiktok?.trim()
+        ) score += 10;
         return Math.min(score, 100);
     }, [profileData, uiState.imagePreview]);
 
@@ -212,6 +299,9 @@ function Profile() {
                 facebook: tData?.facebook || pData.facebook || "",
                 twitter: tData?.twitter || pData.twitter || "",
                 linkedin: tData?.linkedin || pData.linkedin || "",
+                youtube: tData?.youtube || pData.youtube || "",
+                instagram: tData?.instagram || pData.instagram || "",
+                tiktok: tData?.tiktok || pData.tiktok || "",
                 about: pData.about || "",
                 country: pData.country || ""
             };
@@ -282,7 +372,7 @@ function Profile() {
             const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
 
             // Sync teacher fields if present
-            const teacherFields = ["bio", "facebook", "twitter", "linkedin"];
+            const teacherFields = ["bio", "facebook", "twitter", "linkedin", "youtube", "instagram", "tiktok"];
             const hasTeacherFields = Object.keys(dataToSave).some((k) => teacherFields.includes(k));
             if (hasTeacherFields && hasInstructorRole) {
                 try {
@@ -290,7 +380,10 @@ function Profile() {
                         bio: dataToSave.bio ?? profileData.bio ?? "",
                         facebook: dataToSave.facebook ?? profileData.facebook ?? "",
                         twitter: dataToSave.twitter ?? profileData.twitter ?? "",
-                        linkedin: dataToSave.linkedin ?? profileData.linkedin ?? ""
+                        linkedin: dataToSave.linkedin ?? profileData.linkedin ?? "",
+                        youtube: dataToSave.youtube ?? profileData.youtube ?? "",
+                        instagram: dataToSave.instagram ?? profileData.instagram ?? "",
+                        tiktok: dataToSave.tiktok ?? profileData.tiktok ?? ""
                     });
                 } catch (tErr) {
                     console.warn("Sinkronisasi instruktur:", tErr);
@@ -361,6 +454,81 @@ function Profile() {
         autoSaveTimeoutRef.current = setTimeout(() => {
             saveProfileData({ [name]: processedValue }, false);
         }, 1200);
+    };
+
+    // Dynamic Social Media Handlers
+    const handleOpenAddSocial = () => {
+        const defaultPlatform = availablePlatformsToAdd[0]?.id || "youtube";
+        setSocialForm({
+            isOpen: true,
+            platform: defaultPlatform,
+            url: "",
+            isEditing: false
+        });
+    };
+
+    const handleEditSocial = (platformId) => {
+        setSocialForm({
+            isOpen: true,
+            platform: platformId,
+            url: profileData[platformId] || "",
+            isEditing: true
+        });
+    };
+
+    const handleDeleteSocial = (platformId) => {
+        const platformConfig = SOCIAL_PLATFORMS_CONFIG.find((p) => p.id === platformId);
+        const platformName = platformConfig?.name || "Media Sosial";
+        setProfileData((prev) => ({
+            ...prev,
+            [platformId]: ""
+        }));
+        saveProfileData({ [platformId]: "" }, false);
+        if (socialForm.isEditing && socialForm.platform === platformId) {
+            setSocialForm({ isOpen: false, platform: "youtube", url: "", isEditing: false });
+        }
+        Toast().fire({
+            icon: "success",
+            title: `Tautan ${platformName} Dihapus`,
+            timer: 1800,
+            showConfirmButton: false
+        });
+    };
+
+    const handleSaveSocial = (e) => {
+        if (e) e.preventDefault();
+        if (!socialForm.url?.trim()) {
+            Toast().fire({
+                icon: "warning",
+                title: "Tautan Belum Diisi",
+                text: "Silakan masukkan URL / tautan profil media sosial Anda."
+            });
+            return;
+        }
+
+        const formatted = formatUrl(socialForm.url.trim());
+        const platformConfig = SOCIAL_PLATFORMS_CONFIG.find((p) => p.id === socialForm.platform);
+        const platformName = platformConfig?.name || "Media Sosial";
+
+        setProfileData((prev) => ({
+            ...prev,
+            [socialForm.platform]: formatted
+        }));
+        saveProfileData({ [socialForm.platform]: formatted }, false);
+
+        setSocialForm({
+            isOpen: false,
+            platform: "youtube",
+            url: "",
+            isEditing: false
+        });
+
+        Toast().fire({
+            icon: "success",
+            title: `Tautan ${platformName} Berhasil ${socialForm.isEditing ? "Diperbarui" : "Ditambahkan"}`,
+            timer: 2000,
+            showConfirmButton: false
+        });
     };
 
     const handleSubmitManual = (e) => {
@@ -1228,68 +1396,183 @@ function Profile() {
                                                         Tautan Media Sosial & Jejaring Profesional
                                                     </h4>
                                                     <p className="section-subtext">
-                                                        Tautan ini memudahkan instruktur dan rekan kerja di lingkungan DPD RI untuk terhubung.
+                                                        Kelola tautan media sosial Anda (YouTube, Instagram, TikTok, LinkedIn, Twitter/X, Facebook) agar instruktur dan kolega di lingkungan DPD RI dapat terhubung.
                                                     </p>
                                                 </div>
+                                                {!socialForm.isOpen && availablePlatformsToAdd.length > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleOpenAddSocial}
+                                                        className="btn-add-social-trigger"
+                                                        title="Tambah tautan media sosial baru"
+                                                    >
+                                                        <i className="fas fa-plus"></i> Tambah Media Sosial
+                                                    </button>
+                                                )}
                                             </div>
 
-                                            <div className="row g-3">
-                                                <div className="col-md-4 col-12">
-                                                    <label className="compact-label" htmlFor="linkedin">
-                                                        <i className="fab fa-linkedin text-primary me-1"></i> LinkedIn
-                                                    </label>
-                                                    <div className="input-group-compact">
-                                                        <span className="input-group-icon text-primary"><i className="fab fa-linkedin-in"></i></span>
-                                                        <input
-                                                            type="url"
-                                                            id="linkedin"
-                                                            name="linkedin"
-                                                            className="form-control compact-input"
-                                                            placeholder="https://linkedin.com/in/profil"
-                                                            value={profileData.linkedin || ""}
-                                                            onChange={handleProfileChange}
-                                                            disabled={uiState.loading}
-                                                        />
-                                                    </div>
-                                                </div>
+                                            <div className="social-manager-wrapper">
+                                                {/* Inline Add / Edit Social Form */}
+                                                {socialForm.isOpen && (
+                                                    <div className={`social-add-card ${socialForm.isEditing ? "editing-mode" : ""}`}>
+                                                        <div className="d-flex align-items-center justify-content-between mb-3">
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                <span className="badge bg-teal-subtle text-teal fw-semibold px-2 py-1 rounded">
+                                                                    <i className={`fas ${socialForm.isEditing ? "fa-pen" : "fa-plus"} me-1`}></i>
+                                                                    {socialForm.isEditing ? "Edit Tautan Media Sosial" : "Tambah Media Sosial Baru"}
+                                                                </span>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                className="btn-close"
+                                                                onClick={() => setSocialForm((prev) => ({ ...prev, isOpen: false, isEditing: false }))}
+                                                                aria-label="Tutup formulir"
+                                                            ></button>
+                                                        </div>
 
-                                                <div className="col-md-4 col-12">
-                                                    <label className="compact-label" htmlFor="twitter">
-                                                        <i className="fab fa-x-twitter text-dark me-1"></i> Twitter / X
-                                                    </label>
-                                                    <div className="input-group-compact">
-                                                        <span className="input-group-icon text-dark"><i className="fab fa-x-twitter"></i></span>
-                                                        <input
-                                                            type="url"
-                                                            id="twitter"
-                                                            name="twitter"
-                                                            className="form-control compact-input"
-                                                            placeholder="https://x.com/username"
-                                                            value={profileData.twitter || ""}
-                                                            onChange={handleProfileChange}
-                                                            disabled={uiState.loading}
-                                                        />
-                                                    </div>
-                                                </div>
+                                                        {/* Platform Selector */}
+                                                        <div className="mb-3">
+                                                            <label className="compact-label mb-2">Pilih Platform Media Sosial</label>
+                                                            <div className="social-platform-pill-selector">
+                                                                {(socialForm.isEditing
+                                                                    ? SOCIAL_PLATFORMS_CONFIG.filter((p) => p.id === socialForm.platform)
+                                                                    : availablePlatformsToAdd
+                                                                ).map((p) => {
+                                                                    const isSelected = socialForm.platform === p.id;
+                                                                    return (
+                                                                        <button
+                                                                            key={p.id}
+                                                                            type="button"
+                                                                            onClick={() => setSocialForm((prev) => ({ ...prev, platform: p.id }))}
+                                                                            className={`social-platform-pill ${isSelected ? "selected" : ""}`}
+                                                                        >
+                                                                            <i className={p.icon} style={{ color: isSelected ? "#ffffff" : p.color }}></i>
+                                                                            {p.name}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
 
-                                                <div className="col-md-4 col-12">
-                                                    <label className="compact-label" htmlFor="facebook">
-                                                        <i className="fab fa-facebook text-primary me-1"></i> Facebook
-                                                    </label>
-                                                    <div className="input-group-compact">
-                                                        <span className="input-group-icon text-primary"><i className="fab fa-facebook-f"></i></span>
-                                                        <input
-                                                            type="url"
-                                                            id="facebook"
-                                                            name="facebook"
-                                                            className="form-control compact-input"
-                                                            placeholder="https://facebook.com/profil"
-                                                            value={profileData.facebook || ""}
-                                                            onChange={handleProfileChange}
-                                                            disabled={uiState.loading}
-                                                        />
+                                                        {/* URL Input */}
+                                                        <div className="mb-3">
+                                                            {(() => {
+                                                                const currentPlatform = SOCIAL_PLATFORMS_CONFIG.find((p) => p.id === socialForm.platform) || SOCIAL_PLATFORMS_CONFIG[0];
+                                                                return (
+                                                                    <>
+                                                                        <label className="compact-label" htmlFor="student_social_url_input">
+                                                                            URL / Tautan {currentPlatform.name}
+                                                                        </label>
+                                                                        <div className="input-group-compact">
+                                                                            <span className="input-group-icon" style={{ color: currentPlatform.color }}>
+                                                                                <i className={currentPlatform.icon}></i>
+                                                                            </span>
+                                                                            <input
+                                                                                type="url"
+                                                                                id="student_social_url_input"
+                                                                                className="form-control compact-input"
+                                                                                placeholder={currentPlatform.placeholder}
+                                                                                value={socialForm.url}
+                                                                                onChange={(e) => setSocialForm((prev) => ({ ...prev, url: e.target.value }))}
+                                                                                autoFocus
+                                                                            />
+                                                                        </div>
+                                                                        <small className="field-hint text-muted mt-1 d-block">
+                                                                            {currentPlatform.helper}
+                                                                        </small>
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </div>
+
+                                                        {/* Form Buttons */}
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleSaveSocial}
+                                                                className="btn-hero-primary py-2 px-3"
+                                                            >
+                                                                <i className="fas fa-check me-1"></i>
+                                                                {socialForm.isEditing ? "Perbarui Tautan" : "Tambah Tautan"}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSocialForm((prev) => ({ ...prev, isOpen: false, isEditing: false }))}
+                                                                className="btn btn-outline-secondary btn-sm py-2 px-3 rounded-3"
+                                                            >
+                                                                Batal
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
+
+                                                {/* List of Active Social Cards */}
+                                                {activeSocialList.length > 0 ? (
+                                                    <div className="social-cards-grid">
+                                                        {activeSocialList.map((platform) => {
+                                                            const url = profileData[platform.id];
+                                                            return (
+                                                                <div key={platform.id} className="social-card-item">
+                                                                    <div className="social-card-left">
+                                                                        <div className="social-card-icon-box" style={{ background: platform.bgLight, color: platform.color }}>
+                                                                            <i className={platform.icon}></i>
+                                                                        </div>
+                                                                        <div className="social-card-info">
+                                                                            <h6 className="social-card-name">
+                                                                                {platform.name}
+                                                                                <i className="fas fa-circle-check text-teal" style={{ fontSize: "0.75rem" }}></i>
+                                                                            </h6>
+                                                                            <a
+                                                                                href={url}
+                                                                                target="_blank"
+                                                                                rel="noreferrer"
+                                                                                className="social-card-link"
+                                                                                title={`Buka ${url}`}
+                                                                            >
+                                                                                {url}
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="social-card-actions">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleEditSocial(platform.id)}
+                                                                            className="btn-social-mini"
+                                                                            title={`Ubah tautan ${platform.name}`}
+                                                                        >
+                                                                            <i className="fas fa-pen"></i>
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleDeleteSocial(platform.id)}
+                                                                            className="btn-social-mini btn-delete"
+                                                                            title={`Hapus tautan ${platform.name}`}
+                                                                        >
+                                                                            <i className="fas fa-trash-can"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : !socialForm.isOpen ? (
+                                                    <div className="social-empty-state">
+                                                        <div className="empty-social-icon">
+                                                            <i className="fas fa-share-nodes"></i>
+                                                        </div>
+                                                        <h5 className="empty-social-title">Belum Ada Media Sosial Ditambahkan</h5>
+                                                        <p className="empty-social-desc">
+                                                            Hubungkan akun media sosial profesional Anda seperti YouTube, Instagram, TikTok, LinkedIn, Twitter/X, atau Facebook agar rekan kerja dan pengajar di DPD RI dapat terhubung dengan Anda.
+                                                        </p>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleOpenAddSocial}
+                                                            className="btn-hero-primary py-2 px-3"
+                                                        >
+                                                            <i className="fas fa-plus me-1"></i> Tambah Media Sosial Sekarang
+                                                        </button>
+                                                    </div>
+                                                ) : null}
                                             </div>
                                         </div>
                                     )}

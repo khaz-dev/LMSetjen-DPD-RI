@@ -115,10 +115,8 @@
     padding: var(--page-top-spacing) 0 var(--page-bottom-spacing) 0;
     padding-top: var(--page-top-spacing) !important;
     padding-bottom: var(--page-bottom-spacing) !important;
-    margin-bottom: 8rem;
-    overflow-x: hidden;
-    overflow-y: visible;
-    /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
+    overflow: visible !important;
+    overflow-x: clip; /* Clip horizontal overflow without creating a scroll container that breaks position: sticky */
 }
 
 /* ================================
@@ -138,7 +136,8 @@
     padding-top: var(--page-top-spacing) !important;
     padding-bottom: var(--page-bottom-spacing) !important;
     margin-bottom: 8rem;
-    overflow-x: hidden !important;
+    overflow: visible !important;
+    overflow-x: clip !important;
 }
 
 /* Ensure proper scroll context for sticky sidebar */

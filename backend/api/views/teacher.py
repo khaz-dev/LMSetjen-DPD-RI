@@ -606,67 +606,82 @@ class TeacherStudentsListAPIView(viewsets.ViewSet):
             
             teacher = api_models.Teacher.objects.get(id=teacher_id)
 
-            enrolled_courses = api_models.EnrolledCourse.objects.filter(teacher=teacher)
-            unique_student_ids = set()
-            students = []
+            enrolled_courses = (
+                api_models.EnrolledCourse.objects
+                .filter(Q(teacher=teacher) | Q(course__teacher=teacher))
+                .select_related('course', 'user', 'user__profile', 'user__profile__organization_unit', 'user__profile__position')
+                .order_by('-date')
+            )
+            
+            students_map = {}
+            for ec in enrolled_courses:
+                if not ec.user_id:
+                    continue
+                user = ec.user
+                if not user:
+                    continue
+                
+                uid = user.id
+                if uid not in students_map:
+                    # Resolve full name
+                    full_name = None
+                    image_url = None
+                    country = None
+                    unit_kerja = None
+                    position_name = None
+                    
+                    profile = getattr(user, 'profile', None)
+                    if profile:
+                        full_name = profile.full_name or None
+                        country = profile.country or None
+                        if profile.image:
+                            try:
+                                image_url = str(profile.image)
+                            except Exception:
+                                image_url = None
+                        if getattr(profile, 'organization_unit', None):
+                            unit_kerja = profile.organization_unit.name
+                        if getattr(profile, 'position', None):
+                            position_name = profile.position.name
+                    
+                    if not full_name:
+                        if getattr(user, 'full_name', None):
+                            full_name = user.full_name
+                        elif getattr(user, 'username', None):
+                            full_name = user.username
+                        elif user.first_name or user.last_name:
+                            full_name = f"{user.first_name} {user.last_name}".strip()
+                        elif user.email:
+                            full_name = user.email.split('@')[0]
+                        else:
+                            full_name = f"Student {user.id}"
+                    
+                    students_map[uid] = {
+                        "user_id": user.id,
+                        "full_name": full_name,
+                        "image": image_url,
+                        "country": country,
+                        "unit_kerja": unit_kerja or country,
+                        "position": position_name,
+                        "nip": getattr(user, 'nip', None),
+                        "date": ec.date,
+                        "email": user.email if getattr(user, 'email', None) else None,
+                        "courses": []
+                    }
+                
+                # Append course if not already added
+                if ec.course:
+                    if not any(c.get('id') == ec.course.id for c in students_map[uid]['courses']):
+                        students_map[uid]['courses'].append({
+                            "id": ec.course.id,
+                            "title": ec.course.title,
+                            "date": ec.date,
+                            "enrollment_id": ec.enrollment_id
+                        })
 
-            for course in enrolled_courses:
-                if course.user_id not in unique_student_ids:
-                    try:
-                        user = User.objects.get(id=course.user_id)
-                        
-                        # Safely get profile data with fallbacks
-                        full_name = None
-                        image_url = None
-                        country = None
-                        
-                        # Try to get profile, handle if it doesn't exist
-                        if hasattr(user, 'profile'):
-                            profile = user.profile
-                            full_name = profile.full_name if profile.full_name else None
-                            country = profile.country if profile.country else None
-                            
-                            # Safely get image path (not .url to avoid double /media/ prefix)
-                            if profile.image:
-                                try:
-                                    # Return just the path (e.g., 'user_folder/pic.jpg')
-                                    # Frontend's getMediaUrl() will add /media/ prefix
-                                    image_url = str(profile.image)
-                                except:
-                                    image_url = None
-                        
-                        # Fallback to User model fields if profile doesn't have data
-                        if not full_name:
-                            if hasattr(user, 'full_name') and user.full_name:
-                                full_name = user.full_name
-                            elif hasattr(user, 'username') and user.username:
-                                full_name = user.username
-                            else:
-                                # Last resort: use first name + last name or email
-                                if user.first_name or user.last_name:
-                                    full_name = f"{user.first_name} {user.last_name}".strip()
-                                elif user.email:
-                                    full_name = user.email.split('@')[0]
-                                else:
-                                    full_name = f"Student {user.id}"
-                        
-                        student = {
-                            "user_id": user.id,
-                            "full_name": full_name,
-                            "image": image_url,
-                            "country": country,
-                            "date": course.date,
-                            "email": user.email if hasattr(user, 'email') else None
-                        }
-
-                        students.append(student)
-                        unique_student_ids.add(course.user_id)
-                    except User.DoesNotExist:
-                        print(f"User with ID {course.user_id} not found")
-                        continue
-                    except Exception as e:
-                        print(f"Error processing student {course.user_id}: {str(e)}")
-                        continue
+            students = list(students_map.values())
+            for s in students:
+                s['courses_count'] = len(s['courses'])
 
             return Response(students)
         except api_models.Teacher.DoesNotExist:
@@ -1011,7 +1026,7 @@ class TeacherProfileUpdateAPIView(APIView):
             )
             
             # Update teacher fields
-            teacher_fields = ['bio', 'facebook', 'twitter', 'linkedin']
+            teacher_fields = ['bio', 'facebook', 'twitter', 'linkedin', 'youtube', 'instagram', 'tiktok']
             for field in teacher_fields:
                 if field in request.data:
                     setattr(teacher, field, request.data[field])

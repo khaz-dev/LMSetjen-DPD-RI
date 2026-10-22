@@ -7,8 +7,8 @@
     padding-top: var(--page-top-spacing, 1.5rem) !important;
     padding-bottom: var(--page-bottom-spacing, 2rem) !important;
     margin-top: 0 !important;
-    margin-bottom: 2.5rem !important; /* Compact bottom margin to eliminate huge blank space */
-    overflow-x: hidden;
+    overflow: visible !important;
+    overflow-x: clip; /* Clip horizontal overflow without creating a scroll container that breaks position: sticky */
 }
 
 /* Adaptive Layout for Sidebar Collapse - MUST match Profile.css structure */

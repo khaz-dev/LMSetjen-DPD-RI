@@ -1,34 +1,36 @@
-/* QA Component Styles */
+/* ==========================================================================
+   LMSetjen DPD RI - Instructor Course Q&A (Tanya Jawab Kursus)
+   Compact, Modern, High-Density & Eye-Catching Redesign
+   ========================================================================== */
 
-/* ================================
-   GAP BETWEEN HEADER AND DASHBOARD
-   ================================ */
+:root {
+    --dpd-teal-dark: #064e3b;
+    --dpd-teal: #0f766e;
+    --dpd-teal-hover: #115e59;
+    --dpd-teal-light: #ccfbf1;
+    --dpd-teal-subtle: rgba(15, 118, 110, 0.08);
+    --dpd-emerald: #059669;
+    --dpd-amber: #d97706;
+    --dpd-amber-light: #fef3c7;
+    --dpd-blue: #2563eb;
+    --dpd-blue-light: #dbeafe;
+    --dpd-rose: #e11d48;
+    --dpd-rose-light: #ffe4e6;
+    --dpd-slate: #0f172a;
+    --dpd-gray-dark: #334155;
+    --dpd-gray-muted: #64748b;
+    --dpd-border: #e2e8f0;
+    --dpd-card-bg: #ffffff;
+}
 
-/* ✨ PHASEQ.X: Scope header margin to QA page to avoid cascading to other pages */
+/* ==========================================================================
+   LAYOUT, CONTAINER & STICKY SIDEBAR PRESERVATION
+   ========================================================================== */
+
 .qa-bg-section .instructor-header-card {
     margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
-    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
+    margin-bottom: 1.25rem !important;
 }
-
-/* Protect header card gap from parent overrides */
-.modern-dashboard .row > .col-12 > .instructor-header-card,
-.modern-dashboard .instructor-header-card {
-    margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
-    /* ✨ PHASE 40.8: Added 1.5rem bottom margin for consistent gap */
-}
-
-/* CRITICAL: Force qa-bg-section padding to be overridable by pt-5 and pb-5 classes */
-/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
-
-.qa-bg-section.pb-5 {
-    padding-bottom: 3rem !important;
-}
-
-/* ========================================
-   CRITICAL LAYOUT FIX - Row & Column Structure
-   ======================================== */
 
 .qa-bg-section {
     margin-left: 0 !important;
@@ -36,38 +38,33 @@
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
-    margin-bottom: 8rem;
+    margin-bottom: 2rem !important; /* Eliminated vast 8rem empty bottom space */
     min-height: 100vh;
     background: transparent;
-    /* padding: 3rem 0; */
-    /* padding-top: calc(70px + 3rem) !important; */
-    padding-bottom: 3rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    overflow-x: hidden;
-    overflow-y: visible;
-    /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
-    /* ✨ PHASE 7.3: Add overflow-x: hidden to prevent horizontal scroll */
+    overflow: visible !important;
 }
 
-/* Ensure proper scroll context for sticky sidebar */
 .qa-bg-section .container {
-    position: relative;
+    overflow: visible !important;
 }
 
-/* ✨ Main layout row (direct child of container) - matches Testimonials pattern */
-.qa-bg-section > .container > .row {
+/* Main layout row (direct child of container, excluding header row) */
+.qa-bg-section > .container > .row:not(.instructor-header-row) {
     flex-wrap: nowrap;
-    width: 100%;
+    width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
     display: flex !important;
     flex-direction: row !important;
     gap: 0 !important;
-    overflow: visible;
+    overflow: visible !important;
 }
 
-/* Consistent vertical spacing for INNER dashboard sections (form rows, etc.) */
+/* Consistent vertical spacing for INNER dashboard sections */
 .qa-bg-section .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(:has(.instructor-sidebar-column)) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -86,7 +83,7 @@
     flex-direction: column;
 }
 
-/* Protect Header on QA page from row CSS rules */
+/* Header card protection */
 .qa-bg-section .row.instructor-header-row {
     margin-left: auto !important;
     margin-right: auto !important;
@@ -94,11 +91,7 @@
     max-width: 100% !important;
 }
 
-/* Ensure Header card maintains full width and removes right gap */
-.qa-bg-section .row.instructor-header-row > .col-xl-12,
-.qa-bg-section .row.instructor-header-row > .col-lg-12,
-.qa-bg-section .row.instructor-header-row > .col-md-12,
-.qa-bg-section .row.instructor-header-row > .col-12 {
+.qa-bg-section .row.instructor-header-row > [class*="col-"] {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
@@ -107,369 +100,201 @@
     max-width: 100% !important;
 }
 
-/* ✨ PHASE 4.21: Sidebar-content rows - Proper layout without conflicts */
-.qa-bg-section .row.sidebar-content-row,
-.qa-bg-section .row.sidebar-content-row-loading {
-    flex-wrap: nowrap;
-    width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+/* Sidebar sticky support */
+.qa-bg-section .row > .instructor-sidebar-column {
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: stretch !important;
+    height: auto !important;
+    position: static !important;
+    overflow: visible !important;
 }
 
-/* Desktop: col-lg-9 content wrapper (inside sidebar row) */
+.qa-bg-section .instructor-sidebar {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: calc(var(--navbar-height, 70px) + 18px) !important;
+    z-index: 99 !important;
+    align-self: flex-start !important;
+}
+
 .qa-bg-section .row:has(.instructor-sidebar-column) > .col-lg-9 {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
+    min-width: 0 !important;
 }
 
-/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
-.qa-bg-section .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
-}
-
-/* Tablet: col-md-8 content wrapper (inside sidebar row) */
-.qa-bg-section .row:has(.instructor-sidebar-column) > .col-md-8 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
-    flex: 1 1 auto !important;
-}
-
-/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
-.qa-bg-section .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
-}
-
-/* Override for specific spacing needs */
-.qa-bg-section .row.mb-3 {
-    margin-bottom: 1rem !important;
-}
-
-/* ============================== */
-/* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
-/* Ensure sticky positioning works on QA page */
-/* ============================== */
-.qa-bg-section .row > .instructor-sidebar-column {
-  display: flex;
-  flex-direction: column;
-  overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
-}
-
-/* Sidebar: sticky positioning defined in global performance.css */
-/* This ensures the sidebar sticks to the viewport when scrolling */
-/* Position: sticky is already set in Sidebar.css & performance.css */
-/* NO override or conflicting properties here */
-
-/* Background Section */
-.qa-bg-section {
-    min-height: 100vh;
-    background: transparent;
-    /* padding: 3rem 0; */
-    /* padding-top: calc(70px + 3rem) !important; */
-    padding-bottom: 3rem !important;
-    margin-bottom: 8rem;
-}
-
-/* Header Section */
+/* ==========================================================================
+   1. HERO HEADER SECTION (Compact & Eye-Catching)
+   ========================================================================== */
 .qa-header-section {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #064e3b 0%, #0f766e 55%, #14b8a6 100%);
+    border-radius: 16px;
+    padding: 1.15rem 1.4rem;
+    margin-bottom: 1.25rem;
+    color: #ffffff;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.25), 0 4px 10px -2px rgba(15, 118, 110, 0.15);
 }
 
 .qa-header-bg {
     position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 300px;
-    height: 300px;
-    background: linear-gradient(45deg, #0f766e20, #115e5920);
+    top: -40%;
+    right: -10%;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 70%);
     border-radius: 50%;
+    pointer-events: none;
     z-index: 1;
 }
 
 .qa-header-content {
+    position: relative;
     z-index: 2;
 }
 
+.qa-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.725rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.35rem;
+    backdrop-filter: blur(4px);
+    color: #e6fffa;
+}
+
 .qa-header-title {
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-    font-size: 2.5rem;
-    font-weight: bold;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    color: #ffffff !important;
+    display: flex;
+    align-items: center;
+    letter-spacing: -0.2px;
+}
+
+.qa-header-title i {
+    color: #a7f3d0;
+    font-size: 1.25rem;
 }
 
 .qa-header-desc {
-    font-size: 1.1rem;
-}
-
-/* ========================================
-   COURSE HEADER BACK BUTTON & TITLE SECTION
-   ======================================== */
-
-/* Back Button + Course Title Container */
-.qa-course-header {
-    /* ✨ PHASE 4.16: Fixed header styling for course selection view */
-    /* ✨ PHASE 4.17: Now positioned inside qa-search-section */
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;  /* Reduced from 1.5rem for internal spacing within search section */
-    padding-bottom: 1rem;  /* Add internal padding to separate from search input */
-    border-bottom: 1px solid #e9ecef;  /* Visual divider between header and search */
-}
-
-/* Back Button - Fixed Sizing */
-.qa-course-header .btn.btn-light.rounded-circle {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 !important;
-    flex-shrink: 0;  /* Prevent button from shrinking */
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-}
-
-.qa-course-header .btn.btn-light.rounded-circle:hover {
-    background-color: #e8e9ea !important;
-    border-color: #dee2e6;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
-}
-
-.qa-course-header .btn.btn-light.rounded-circle:active {
-    transform: translateY(0);
-}
-
-.qa-course-header .btn.btn-light.rounded-circle i {
-    font-size: 1.1rem;
-    color: #495057;
-    transition: color 0.3s ease;
-}
-
-.qa-course-header .btn.btn-light.rounded-circle:hover i {
-    color: #2c3e50;
-}
-
-/* Course Title & Info Container */
-.qa-course-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    min-width: 0;  /* Allow text to wrap properly */
-    flex: 1;
-    padding: 0.25rem 0;  /* Subtle padding for better vertical alignment */
-}
-
-.qa-course-info h3 {
+    font-size: 0.825rem;
+    color: rgba(255, 255, 255, 0.88);
     margin: 0;
-    padding: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #2c3e50;
-    line-height: 1.3;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-.qa-course-info small {
-    font-size: 0.875rem;
-    color: #6c757d;
-    font-weight: 500;
-    margin-top: 0.1rem;
     line-height: 1.4;
 }
 
-/* Responsive: Tablet and Below */
-@media (max-width: 768px) {
-    .qa-course-header {
-        gap: 0.75rem;
-        margin-bottom: 0.75rem;  /* Reduced for tighter spacing */
-        padding-bottom: 0.75rem;
-    }
-
-    .qa-course-header .btn.btn-light.rounded-circle {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-    }
-
-    .qa-course-info h3 {
-        font-size: 1.25rem;
-    }
-
-    .qa-course-info small {
-        font-size: 0.8rem;
-    }
-}
-
-/* Responsive: Mobile */
-@media (max-width: 480px) {
-    .qa-course-header {
-        gap: 0.75rem;
-        margin-bottom: 0.75rem;  /* Reduced for mobile spacing */
-        padding-bottom: 0.75rem;
-    }
-
-    .qa-course-header .btn.btn-light.rounded-circle {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
-        min-height: 36px;
-    }
-
-    .qa-course-header .btn.btn-light.rounded-circle i {
-        font-size: 1rem;
-    }
-
-    .qa-course-info h3 {
-        font-size: 1.1rem;
-    }
-
-    .qa-course-info small {
-        font-size: 0.75rem;
-    }
-}
-
 .qa-stat-badge {
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 15px;
-    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    padding: 0.45rem 0.85rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
     font-weight: 600;
-}
-
-/* Search Section */
-.qa-search-section {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    backdrop-filter: blur(6px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.25s ease;
+    white-space: nowrap;
 }
 
-.modern-questions-container {
-  margin-top: 1rem;
+.qa-stat-badge i {
+    color: #a7f3d0;
+    font-size: 0.85rem;
 }
 
-/* ========================================
-   COURSE SELECTION & CARD STYLES
-   ======================================== */
+.qa-stat-badge-secondary {
+    background: rgba(255, 255, 255, 0.22);
+}
 
-.course-selection-card,
-.qa-discussion-card {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e9ecef;
+/* ==========================================================================
+   2. COURSE SELECTION VIEW (High-Density Cards)
+   ========================================================================== */
+
+.course-selection-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--dpd-border);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
     overflow: hidden;
 }
 
 .form-section-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 1rem 1rem;
-    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid var(--dpd-border);
+}
+
+.form-section-header h4 {
+    font-size: 1.05rem;
+    margin: 0;
 }
 
 .search-card {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-    border-radius: 15px;
-    margin-bottom: 1rem;
+    background: #ffffff;
+    border-radius: 12px;
 }
 
 .form-control-modern {
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    padding: 0.875rem 2.75rem 0.875rem 2.5rem !important;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background: #f8f9fa;
+    border: 1.5px solid var(--dpd-border);
+    border-radius: 10px;
+    padding: 0.55rem 1rem 0.55rem 2.4rem !important;
+    font-size: 0.875rem;
+    transition: all 0.25s ease;
+    background: #f8fafc;
     width: 100%;
+    color: var(--dpd-slate);
+    height: 40px;
 }
 
 .form-control-modern:focus {
-    border-color: #0d9488;
-    box-shadow: 0 0 0 0.2rem rgba(155, 89, 182, 0.25);
-    background: white;
+    border-color: var(--dpd-teal);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    background: #ffffff;
     outline: none;
-}
-
-/* Position relative container for search icon */
-.search-card > .position-relative {
-    width: 100%;
-}
-
-.search-card .btn-secondary {
-    margin-top: 0.75rem;
-    font-size: 0.85rem;
 }
 
 .search-icon {
     position: absolute;
-    left: 1rem;
+    left: 0.85rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #0d9488;
+    color: var(--dpd-teal);
+    font-size: 0.85rem;
     z-index: 3;
     pointer-events: none;
 }
 
-/* ===== COURSE CARD STYLES ===== */
+/* Compact Course Card */
 .student-qa-course-card {
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-    border: 1px solid #e9ecef;
-    border-radius: 16px;
+    background: #ffffff;
+    border: 1.5px solid var(--dpd-border);
+    border-radius: 14px;
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    animation: fadeInUp 0.6s ease-out;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
     display: flex;
     flex-direction: row;
-    align-items: center;
-    height: auto;
-    min-height: 140px;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    align-items: stretch;
+    height: 100%;
+    min-height: 100px;
 }
 
 .student-qa-course-card::before {
@@ -479,11 +304,11 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #0d9488 0%, #0f766e 50%, #e74c3c 100%);
+    background: linear-gradient(90deg, #0f766e 0%, #14b8a6 50%, #f59e0b 100%);
     transform: scaleX(0);
-    transition: transform 0.4s ease;
+    transition: transform 0.3s ease;
     transform-origin: left;
-    z-index: 1;
+    z-index: 2;
 }
 
 .student-qa-course-card:hover::before {
@@ -491,2240 +316,1052 @@
 }
 
 .student-qa-course-card:hover {
-    border-color: #0d9488;
-    box-shadow: 0 12px 28px rgba(155, 89, 182, 0.15);
-    transform: translateY(-4px);
+    border-color: var(--dpd-teal);
+    box-shadow: 0 8px 22px rgba(15, 118, 110, 0.12);
+    transform: translateY(-2px);
 }
 
-/* PHASE 73+: Scope to .student-qa-course-card to prevent style pollution on Courses page */
 .student-qa-course-card .course-image-container {
-    width: 160px;
-    min-width: 160px;
-    height: 140px;
+    width: 115px;
+    min-width: 115px;
+    height: auto;
     overflow: hidden;
-    background: #f8f9fa;
+    background: #f1f5f9;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    border-radius: 15px;
+    border-radius: 12px 0 0 12px;
 }
 
-/* PHASE 73+: Scope to .student-qa-course-card to prevent style pollution on Courses page */
 .student-qa-course-card .course-image {
-    width: 160px;
-    height: 140px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     transition: transform 0.4s ease;
-    border-radius: 15px;
 }
 
 .student-qa-course-card:hover .course-image {
-    transform: scale(1.08);
+    transform: scale(1.06);
 }
 
 .course-placeholder {
     width: 100%;
     height: 100%;
-    background: #e9ecef;
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6c757d;
-    font-size: 3rem;
-    position: relative;
-    border-radius: 15px;
+    color: #64748b;
+    font-size: 1.75rem;
 }
 
-.course-placeholder::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-    border-radius: 15px;
-}
-
-.course-placeholder i {
-    position: relative;
-    z-index: 1;
-}
-
-/* PHASE 73+: Scope to .student-qa-course-card to prevent style pollution on Courses page */
-.student-qa-course-card .course-image-placeholder {
-    display: flex;
-}
-
-.question-profile-placeholder {
-    display: flex;
-}
-
-/* Course Info Section */
-/* ✨ PHASE 73: SCOPED to .qa-bg-section to prevent CSS leaks to other pages (e.g., Review page) */
 .qa-bg-section .course-info {
-    padding: 1rem;
+    padding: 0.75rem 0.95rem;
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 140px;
+    min-width: 0;
 }
 
 .student-qa-course-title {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: var(--dpd-slate);
     margin: 0 0 0.35rem 0;
-    line-height: 1.3;
+    line-height: 1.35;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    transition: color 0.3s ease;
-    flex: 1;
     word-break: break-word;
+    transition: color 0.2s ease;
 }
 
 .student-qa-course-card:hover .student-qa-course-title {
-    color: #0d9488;
+    color: var(--dpd-teal);
 }
 
-.course-instructor {
-    color: #6c757d !important;
-    font-size: 0.8rem !important;
-    font-weight: 500 !important;
-    margin-bottom: 0.75rem !important;
-    margin-top: 0 !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    transition: color 0.3s ease !important;
-    flex-direction: row !important;
-    line-height: 1.5 !important;
+.course-level-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: var(--dpd-gray-dark);
+    border: 1px solid #e2e8f0;
 }
 
-.student-qa-course-card:hover .course-instructor {
-    color: #0d9488 !important;
+.course-card-arrow {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.student-qa-course-card:hover .course-card-arrow {
+    color: var(--dpd-teal);
+    transform: translateX(3px);
 }
 
 .student-qa-course-meta {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    grid-template-rows: auto 1fr auto;
-    gap: 0.4rem;
-    margin-bottom: 0;
-    margin-top: 0;
-    width: 100%;
-    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    margin-top: 0.35rem;
 }
 
 .qa-stats-badge {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    color: white;
-    padding: 0.4rem 1rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.3);
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-    grid-column: 2;
-    grid-row: 1;
-}
-
-.qa-stats-badge i {
-    font-size: 0.75rem;
-}
-
-.student-qa-course-card:hover .qa-stats-badge {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.35);
-}
-
-.discussion-activity {
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-    color: white;
-    padding: 0.35rem 0.8rem;
+    background: var(--dpd-teal-subtle);
+    color: var(--dpd-teal);
+    border: 1px solid rgba(15, 118, 110, 0.2);
+    padding: 0.22rem 0.6rem;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.25);
-    transition: all 0.3s ease;
     white-space: nowrap;
-    flex-shrink: 0;
-    grid-column: 3;
-    grid-row: 1;
+    transition: all 0.2s ease;
 }
 
-.discussion-activity i {
-    font-size: 0.75rem;
+.qa-stats-badge i {
+    font-size: 0.7rem;
 }
 
-.student-qa-course-card:hover .discussion-activity {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.35);
+.student-qa-course-card:hover .qa-stats-badge {
+    background: var(--dpd-teal);
+    color: #ffffff;
 }
 
-/* Course Action Area - DEPRECATED */
-.course-action-area {
-    display: none;
-}
-
-.join-discussion-btn {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    color: white;
-    border: none;
-    padding: 0.55rem 1.5rem;
-    border-radius: 25px;
+.discussion-activity {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 0.22rem 0.55rem;
+    border-radius: 20px;
+    font-size: 0.725rem;
     font-weight: 600;
-    font-size: 0.85rem;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
-    transform: translateX(0);
-    width: auto;
+    gap: 0.35rem;
     white-space: nowrap;
-    text-decoration: none;
-    flex-shrink: 0;
-    align-self: flex-end;
-    margin-top: auto;
-    grid-column: 2 / 4;
-    grid-row: 3;
 }
 
-.student-qa-course-card:hover .join-discussion-btn {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 16px rgba(231, 76, 60, 0.4);
-    color: white;
-    text-decoration: none;
+.active-dot {
+    font-size: 0.45rem;
+    color: #10b981;
+    animation: pulseActive 2s infinite;
 }
 
-.join-discussion-arrow {
-    font-size: 0.85rem;
-    transition: transform 0.3s ease;
+@keyframes pulseActive {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
 }
 
-.student-qa-course-card:hover .join-discussion-arrow {
-    transform: translateX(3px);
+/* ==========================================================================
+   3. COURSE QUESTIONS VIEW & FILTER TOOLBAR
+   ========================================================================== */
+
+.qa-search-section {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--dpd-border);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 }
 
-/* ===== BUTTON STYLES ===== */
-.btn-qa {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    border: none;
-    border-radius: 12px;
-    padding: 0.875rem 2rem;
-    color: white;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-qa:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(155, 89, 182, 0.4);
-    color: white;
-}
-
-.btn-qa:disabled {
-    opacity: 0.7;
-    transform: none;
-    box-shadow: none;
-}
-
-/* ===== EMPTY STATE ===== */
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: #6c757d;
-}
-
-.empty-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    color: #0d9488;
-    opacity: 0.7;
-}
-
-/* ================================
-   SHARED INSTRUCTOR PAGE STYLES
-   ================================ */
-.instructor-review-page,
-.instructor-notification-page,
-.instructor-qa-detail-page {
-    background: transparent;
-    min-height: 100vh;
-    padding: 2rem 0;
-    /* ✨ PHASE 5: Remove padding-top override to maintain consistent navbar gap */
-    /* Previously: padding-top: 85px; This was causing gap inconsistency when header collapsed */
-}
-
-.qa-search-container {
-    position: relative;
+.qa-course-header {
     display: flex;
     align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--dpd-border);
+}
+
+.qa-back-circle-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1.5px solid var(--dpd-border);
+    background: #ffffff;
+    color: var(--dpd-slate);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.qa-back-circle-btn:hover {
+    background: #f1f5f9;
+    border-color: var(--dpd-teal);
+    color: var(--dpd-teal);
+    transform: translateX(-2px);
+}
+
+.qa-course-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.qa-course-title-text {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    line-height: 1.3;
+}
+
+.qa-course-meta-tags {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.2rem;
+    flex-wrap: wrap;
+}
+
+.qa-meta-pill {
+    font-size: 0.75rem;
+    color: var(--dpd-gray-muted);
+    font-weight: 500;
+}
+
+/* Compact Filter Toolbar */
+.qa-filter-toolbar {
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+    flex-wrap: nowrap;
     width: 100%;
 }
 
-.qa-search-icon {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #0f766e;
-    z-index: 2;
-    font-size: 1rem;
-    pointer-events: none;
+.qa-filter-search-box {
+    flex: 2 1 300px;
+    position: relative;
+    min-width: 180px;
 }
 
-.qa-search-input {
-    padding-left: 50px;
-    padding-right: 16px;
-    height: 48px;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.9);
+.qa-filter-search-input {
     width: 100%;
+    height: 38px;
+    border: 1.5px solid var(--dpd-border);
+    border-radius: 9px;
+    padding: 0.4rem 0.85rem 0.4rem 2.2rem;
+    font-size: 0.85rem;
+    background: #f8fafc;
+    color: var(--dpd-slate);
+    transition: all 0.2s ease;
 }
 
-.qa-search-input::placeholder {
-    color: #adb5bd;
-}
-
-.qa-search-input:focus {
-    border-color: #0f766e;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.15);
-    background: white;
+.qa-filter-search-input:focus {
+    border-color: var(--dpd-teal);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    background: #ffffff;
     outline: none;
 }
 
-.qa-search-input:focus::placeholder {
-    color: #ccc;
+.qa-filter-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dpd-teal);
+    font-size: 0.8rem;
+    pointer-events: none;
 }
 
-/* Question Cards */
-/* ✨ PHASE 7.16: Modern question card styling - matches student QA card exactly */
+.qa-filter-select-box {
+    flex: 1 1 160px;
+    min-width: 130px;
+}
+
+.qa-filter-select {
+    width: 100%;
+    height: 38px;
+    border: 1.5px solid var(--dpd-border);
+    border-radius: 9px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.825rem;
+    background: #ffffff;
+    color: var(--dpd-slate);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.qa-filter-select:focus {
+    border-color: var(--dpd-teal);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.qa-filter-select:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
+
+.qa-clear-filters-btn {
+    height: 38px;
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+    padding: 0 0.85rem;
+    border-radius: 9px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.qa-clear-filters-btn:hover {
+    background: #fecaca;
+    color: #b91c1c;
+    border-color: #f87171;
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   4. MODERN QUESTION CARDS (High-Density, Minimal Blank Space)
+   ========================================================================== */
+
+.modern-questions-container {
+    margin-top: 1rem;
+}
+
 .modern-question-card {
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-    border: 2px solid #e9ecef;
-    border-radius: 20px;
-    padding: 1.5rem 2rem;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #ffffff;
+    border: 1.5px solid var(--dpd-border);
+    border-radius: 12px;
+    padding: 0.85rem 1.15rem;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
 }
 
-/* ✨ PHASE 7.16: Top gradient border animation */
 .modern-question-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #0f766e 0%, #0d9488 50%, #e74c3c 100%);
+    height: 3px;
+    background: linear-gradient(90deg, #0f766e 0%, #14b8a6 50%, #f59e0b 100%);
     transform: scaleX(0);
-    transition: transform 0.4s ease;
+    transition: transform 0.3s ease;
     transform-origin: left;
 }
 
-/* ✨ PHASE 7.16: Hover effects - apply to card directly */
 .qa-card-hover:hover::before {
     transform: scaleX(1);
 }
 
 .qa-card-hover:hover {
-    border-color: #0f766e;
-    box-shadow: 0 12px 30px rgba(52, 152, 219, 0.15);
-    transform: translateY(-3px);
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-}
-
-/* ✨ PHASE 7.16: Avatar styling - simple and clean */
-.qa-avatar-gradient {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: #f8f9fa;
-    border: 2px solid #e9ecef;
-    overflow: hidden;
-}
-
-.qa-avatar-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-}
-
-/* ✨ PHASE 7.16: Avatar placeholder fallback */
-.qa-avatar-gradient:has(img[style*="display: none"]) {
-    background: linear-gradient(135deg, #0f766e20, #115e5920);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.qa-avatar-status {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 18px;
-    height: 18px;
-    background: #28a745;
-    border-radius: 50%;
-    border: 2px solid white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.qa-avatar-status-icon {
-    font-size: 10px;
-    color: white;
-}
-
-/* ✨ PHASE 7.16: User name styling - matches student version */
-.qa-user-name {
-    color: #2c3e50;
-    font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-    line-height: 1.3;
-}
-
-/* ✨ PHASE 7.16: Replies badge - exact student styling */
-.qa-replies-badge {
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-    color: white;
-    padding: 0.4rem 1rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
-    transition: all 0.3s ease;
-    white-space: nowrap;
-}
-
-.qa-card-hover:hover .qa-replies-badge {
+    border-color: var(--dpd-teal);
+    box-shadow: 0 6px 18px rgba(15, 118, 110, 0.1);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+    background: #fafbfc;
 }
 
-/* ✨ PHASE 7.16: Question title styling */
-.qa-question-title {
-    color: #2c3e50;
+.qa-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.qa-card-user-group {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.qa-card-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.qa-avatar-placeholder-compact {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--dpd-teal-light);
+    color: var(--dpd-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.qa-card-user-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.qa-user-name {
+    color: var(--dpd-slate);
     font-weight: 700;
-    font-size: 1.25rem;
-    margin-bottom: 0.75rem;
-    line-height: 1.4;
-    transition: color 0.3s ease;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.qa-time-meta {
+    font-size: 0.75rem;
+    color: var(--dpd-gray-muted);
+}
+
+.qa-card-badges-wrap {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+.qa-topic-badge {
+    padding: 0.18rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.725rem;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.qa-topic-variant {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.qa-topic-item {
+    background: #f3e8ff;
+    color: #7e22ce;
+    border: 1px solid #e9d5ff;
+}
+
+.qa-question-title {
+    color: var(--dpd-slate);
+    font-weight: 700;
+    font-size: 0.975rem;
+    margin: 0.25rem 0 0.2rem 0;
+    line-height: 1.35;
+    transition: color 0.2s ease;
 }
 
 .qa-card-hover:hover .qa-question-title {
-    color: #0f766e;
+    color: var(--dpd-teal);
 }
 
-/* ✨ PHASE 7.16: Question message body */
-.qa-question-message {
-    line-height: 1.6;
-    font-size: 0.95rem;
-    color: #6c757d;
+.question-message-preview {
+    color: var(--dpd-gray-dark);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    margin: 0.25rem 0 0.55rem 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
 }
 
-/* ✨ PHASE 7.16: Metadata styling - matches student version exactly */
 .question-meta {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f1f5f9;
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: 0;
-    font-size: 0.9rem;
-    color: #6c757d;
 }
 
-.question-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.question-meta-icon {
-    width: 16px;
-    height: 16px;
-    color: #0d9488;
-}
-
-/* ✨ PHASE 7.16: Draft badge */
-.qa-draft-badge {
-    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-    color: white;
-    padding: 0.4rem 1rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
+.replies-badge {
+    background: var(--dpd-teal-subtle);
+    color: var(--dpd-teal);
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.775rem;
     font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
-}
-
-/* ✨ PHASE 7.16: Reply button - matches student join-discussion-primary */
-.qa-reply-btn {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    color: white;
-    border: none;
-    padding: 0.75rem 2rem;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
-    transform: translateX(0);
-    cursor: pointer;
-}
-
-.qa-card-hover:hover .qa-reply-btn {
-    transform: translateX(8px) translateY(-2px);
-    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-    color: white;
-}
-
-/* ✨ PHASE 7.17: Like and Report button styling - matches student CourseDetail */
-.forum-like-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #fff;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    color: #6c757d;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-    font-weight: 500;
+    gap: 0.35rem;
+    border: 1px solid rgba(15, 118, 110, 0.18);
+    transition: all 0.2s ease;
 }
 
-.forum-like-btn:hover {
-    border-color: #e9366d;
-    color: #e9366d;
-    background: #fff5f8;
+.qa-card-hover:hover .replies-badge {
+    background: var(--dpd-teal);
+    color: #ffffff;
 }
 
-.forum-like-btn i {
-    font-size: 0.95rem;
-}
-
-.forum-like-btn .like-count {
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-/* ✨ PHASE 7.17: Report button styling */
+.forum-like-btn,
 .forum-report-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.5rem 0.75rem;
-    background: #fff;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    color: #6c757d;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    background: #ffffff;
+    border: 1px solid var(--dpd-border);
+    border-radius: 8px;
+    color: var(--dpd-gray-muted);
     cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
     font-weight: 500;
+    height: 30px;
+}
+
+.forum-like-btn:hover {
+    border-color: #f43f5e;
+    color: #f43f5e;
+    background: #fff1f2;
 }
 
 .forum-report-btn:hover {
-    border-color: #dc3545;
-    color: #dc3545;
-    background: #fff5f6;
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
 }
 
-.forum-report-btn i {
-    font-size: 0.95rem;
-}
-
-/* Empty State */
-.qa-empty-state {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 60px 40px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.qa-empty-state-icon {
-    width: 100px;
-    height: 100px;
-    background: linear-gradient(135deg, #0f766e20, #115e5920);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-.qa-empty-state-icon-i {
-    font-size: 2.5rem;
-    color: #0f766e;
-}
-
-.qa-empty-title {
-    color: #2c3e50;
-}
-
-.qa-empty-desc {
-    font-size: 1.1rem;
-}
-
-/* Modal Styles */
-/* ===== CONVERSATION MODAL STYLES ===== */
-.conversation-modal-qa .modal-content {
-    border: none;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-    margin: 0;
-    padding: 0;
-    max-width: 700px;
-    width: 100%;
-    height: 80vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.conversation-modal-qa .modal-dialog {
-    /* ✨ PHASE 4.17: Center modal both vertically and horizontally */
-    max-width: 700px;
-    margin: auto;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-
-.qa-modal-header {
-    background: var(--theme-gradient) !important;
-    color: white;
-    border: none;
-    border-radius: 15px 15px 0 0;
-    padding: 20px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.modal-header-modern {
-    background: var(--theme-gradient) !important;
-    color: white;
-    padding: 1.5rem 2rem;
-    border: none;
-    position: relative;
-    overflow: hidden;
-    border-radius: 20px 20px 0 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.modal-header-modern::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
-    pointer-events: none;
-}
-
-.modal-header-content {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 1rem;
-    position: relative;
-    z-index: 1;
-}
-
-.modal-header-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.modal-icon-wrapper {
-    width: 45px;
-    height: 45px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.modal-title-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.modal-title-section h4 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: white;
-}
-
-.modal-subtitle {
-    margin: 0.5rem 0 0 0;
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 400;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.btn-close-modern {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    backdrop-filter: blur(10px);
-    flex-shrink: 0;
-    z-index: 3;
-}
-
-.btn-close-modern:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.modal-body-modern {
-    padding: 2rem;
-    background: white;
-    border-radius: 0;
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.messages-container-qa {
-    background: white;
-    border-radius: 15px;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    flex: 1;
-    overflow-y: auto;
-    border: 1px solid #e9ecef;
-    position: relative;
-}
-
-.messages-container-qa::-webkit-scrollbar {
-    width: 6px;
-}
-
-.messages-container-qa::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.messages-container-qa::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
-    border-radius: 3px;
-}
-
-.qa-message-avatar {
-    position: relative;
-    padding: 2px;
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.qa-message-avatar-img {
-    width: 45px;
-    height: 45px;
-    object-fit: cover;
-    border: 2px solid white;
-}
-
-.qa-message-bubble {
-    background: white;
-    padding: 18px;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    position: relative;
-}
-
-.qa-message-user {
-    color: #2c3e50;
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-
-.qa-message-date {
-    font-size: 0.8rem;
-}
-
-/* ===== MESSAGE ITEM STYLES ===== */
-.message-item-qa {
-    margin-bottom: 1.5rem;
-    animation: fadeInMessage 0.4s ease-out;
-}
-
-@keyframes fadeInMessage {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.message-item-qa-current-user {
-    text-align: right;
-}
-
-.message-item-qa-current-user .message-author-qa {
-    justify-content: flex-end;
-    text-align: right;
-}
-
-.message-item-qa-current-user .message-time-qa {
-    flex-direction: row-reverse;
-}
-
-/* Avatar styles */
-.message-avatar-qa {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: transform 0.3s ease;
-}
-
-.message-avatar-qa:hover {
-    transform: scale(1.05);
-}
-
-.message-avatar-qa.current-user {
-    border: 3px solid white;
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-}
-
-/* Message content bubble */
-.message-content-qa {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-    border: 2px solid #e9ecef;
-    border-radius: 15px;
-    padding: 1.25rem;
-    position: relative;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.message-content-qa-current-user {
-    background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-    border: 2px solid #81c784;
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.15);
-}
-
-.message-item-qa-current-user .message-content-qa:hover {
-    border-color: #66bb6a;
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.25);
-    transform: translateY(-2px);
-}
-
-.message-item-qa-current-user .message-author-qa {
-    color: #2e7d32;
-    font-weight: 700;
-}
-
-.message-item-qa-current-user .message-text-qa {
-    color: #1b5e20;
-}
-
-.message-content-qa:hover {
-    border-color: #0f766e;
-    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.15);
-    transform: translateY(-2px);
-}
-
-.message-author-qa {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.message-time-qa {
-    font-size: 0.85rem;
-    color: #6c757d;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.message-text-qa {
-    color: #495057;
-    line-height: 1.6;
-    margin-top: 0.75rem;
-    font-size: 1rem;
-}
-
-/* Empty conversation state */
-.empty-conversation-qa {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 40px;
-    text-align: center;
-    color: #95a5a6;
-    gap: 1rem;
-}
-
-.empty-conversation-qa i {
-    font-size: 3rem;
-    color: #bdc3c7;
-    opacity: 0.5;
-}
-
-.empty-conversation-qa h5 {
-    color: #636e72;
-    font-weight: 600;
-    margin: 0;
-}
-
-.empty-conversation-qa p {
-    color: #95a5a6;
-    margin: 0;
-    font-size: 0.9rem;
-}
-
-.qa-message-text {
-    color: #2c3e50;
-    line-height: 1.6;
-    font-size: 0.95rem;
-}
-
-.qa-empty-messages-icon {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, #0f766e20, #115e5920);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-.qa-empty-messages-icon-i {
-    font-size: 2rem;
-    color: #0f766e;
-}
-
-/* Message Form */
-.message-form-qa {
-    display: flex;
-    gap: 1rem;
-    align-items: flex-end;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-    padding: 1rem;
-    border-radius: 15px;
-    border: 2px solid #e9ecef;
-    transition: border-color 0.3s ease;
-}
-
-.message-form-qa:focus-within {
-    border-color: #0f766e;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-}
-
-.message-textarea-qa {
-    flex: 1;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    padding: 0.875rem 1rem;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #2c3e50;
-    background: white;
-    transition: all 0.3s ease;
-    resize: none;
-    min-height: 50px;
-    font-family: inherit;
-    line-height: 1.4;
-}
-
-.message-textarea-qa:focus {
-    border-color: #0f766e;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    outline: none;
-}
-
-.qa-send-btn {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    color: white;
-    border: none;
-    padding: 0.875rem 1.5rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-    min-width: 100px;
-    justify-content: center;
-}
-
-.qa-send-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-}
-
-.qa-send-btn:disabled {
-    background: linear-gradient(135deg, #d8b3e8 0%, #c9a0d9 100%);
-    color: #6c4a7d;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: 0 2px 8px rgba(108, 74, 125, 0.2);
-    opacity: 1;
-}
-
-/* Message count and draft badges */
-.message-count-badge {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
+.like-count {
+    font-size: 0.75rem;
     font-weight: 600;
 }
 
-.qa-draft-badge {
-    background: linear-gradient(135deg, #ffc107, #fd7e14);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.draft-indicator {
-    background: linear-gradient(135deg, #ffc107, #fd7e14);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.badge-draft-qa {
-    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
-}
-
-/* ========================================
-   MODAL RESPONSIVE CENTERING
-   ======================================== */
-
-/* Tablet: Adjust modal padding */
-@media (max-width: 991px) {
-    .conversation-modal-qa .modal-dialog {
-        height: auto;
-        padding: 1rem;
-    }
-
-    .conversation-modal-qa .modal-content {
-        max-height: 85vh;
-    }
-
-    .modal-header-modern {
-        padding: 1rem 1.5rem;
-    }
-
-    .modal-body-modern {
-        padding: 1.5rem;
-    }
-
-    .messages-container-qa {
-        max-height: 300px;
-        padding: 0.75rem;
-    }
-
-    .message-form-qa {
-        padding: 0.75rem;
-    }
-}
-
-/* Mobile: Full responsive modal */
-@media (max-width: 768px) {
-    .conversation-modal-qa .modal-dialog {
-        height: auto;
-        padding: 1rem;
-    }
-
-    .conversation-modal-qa .modal-content {
-        max-height: 90vh;
-        border-radius: 15px;
-    }
-
-    .modal-header-modern {
-        padding: 1rem 1.5rem;
-    }
-
-    .modal-body-modern {
-        padding: 1.5rem;
-    }
-
-    .modal-header-content {
-        gap: 0.75rem;
-    }
-
-    .modal-header-info {
-        gap: 0.75rem;
-    }
-
-    .modal-icon-wrapper {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-    }
-
-    .modal-title-section h4 {
-        font-size: 1.1rem;
-    }
-
-    .btn-close-modern {
-        width: 30px;
-        height: 30px;
-        font-size: 0.8rem;
-        top: 1rem;
-        right: 1.5rem;
-    }
-
-    .messages-container-qa {
-        max-height: 300px;
-        padding: 0.75rem;
-    }
-
-    .message-form-qa {
-        flex-direction: column;
-        gap: 0.75rem;
-        padding: 0.75rem;
-    }
-
-    .message-send-btn-qa {
-        width: 100%;
-        justify-content: center;
-        padding: 1rem;
-    }
-
-    .message-avatar-qa {
-        width: 40px;
-        height: 40px;
-    }
-}
-
-/* Small mobile: Extra tight spacing */
-@media (max-width: 480px) {
-    .conversation-modal-qa .modal-dialog {
-        height: auto;
-        padding: 0.5rem;
-    }
-
-    .conversation-modal-qa .modal-content {
-        max-height: 95vh;
-        border-radius: 12px;
-    }
-
-    .modal-header-modern {
-        padding: 0.75rem 1rem;
-    }
-
-    .modal-body-modern {
-        padding: 1rem;
-    }
-
-    .message-textarea-qa {
-        font-size: 0.9rem;
-        rows: 2;
-    }
-
-    .message-form-qa {
-        gap: 0.5rem;
-        padding: 0.5rem;
-    }
-
-    .empty-conversation-qa {
-        padding: 2rem 1rem;
-    }
-}
-
-/* ========================================
-   RESPONSIVE LAYOUT - Content Column Sizing
-   ======================================== */
-
-/* Base: Desktop Large (lg breakpoint and up) */
-/* col-lg-3 sidebar + col-lg-9 content = 12 columns */
-@media (min-width: 992px) {
-  /* Sidebar column - maintains fixed width or collapses */
-  .qa-bg-section .row > .instructor-sidebar-column {
-    flex-basis: auto;
-    flex-grow: 0;
-    flex-shrink: 0;
-    /* Sidebar now spans full column width without Bootstrap padding */
-    width: auto;
-  }
-
-  /* Content column - expands to fill remaining space */
-  .qa-bg-section .row > .col-lg-9 {
-    flex: 1 1 auto;
-    min-width: 0;
-    width: auto;
-    max-width: 100%;
-  }
-
-  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
-  /* Removed min-width: 500px to prevent gap shift when sidebar-collapsed-adapted is applied */
-
-  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
-    /* Fallback for browsers that don't support :has() */
-    .qa-bg-section .row > .col-lg-9 {
-      flex: 1;
-      width: auto;
-      max-width: 100%;
-    }
-  }
-}
-
-/* Tablet (md breakpoint) */
-/* col-md-4 sidebar + col-md-8 content = 12 columns */
-@media (min-width: 768px) and (max-width: 991px) {
-  .qa-bg-section .row > .instructor-sidebar-column {
-    flex-basis: auto;
-    flex-grow: 0;
-    flex-shrink: 0;
-    /* Sidebar now spans full column width without Bootstrap padding */
-    width: auto;
-  }
-
-  /* Content column - expands to fill remaining space */
-  .qa-bg-section .row > .col-md-8 {
-    flex: 1 1 auto;
-    min-width: 0;
-    width: auto;
-    max-width: 100%;
-  }
-
-  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
-  /* Removed min-width: 400px to prevent gap shift when sidebar-collapsed-adapted is applied */
-
-  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
-    /* Fallback for browsers that don't support :has() */
-    .qa-bg-section .row > .col-md-8 {
-      flex: 1;
-      width: auto;
-      max-width: 100%;
-    }
-  }
-}
-
-/* ===== FORUM THREAD VIEW STYLES (INSTRUCTOR QA) ===== */
-/* ✨ PHASE 4+ : Inline forum thread display for instructor */
+/* ==========================================================================
+   5. FORUM THREAD VIEW (Tight Padding, Zero Wasted Margin)
+   ========================================================================== */
 
 .forum-thread-container-instructor {
-  background: white;
-  border-radius: 12px;
-  padding: 0;
-  animation: fadeInContainer 0.4s ease-out;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--dpd-border);
+    padding: 1rem 1.25rem;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    animation: fadeInContainer 0.3s ease-out;
 }
 
 @keyframes fadeInContainer {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== Thread Header with Title & Meta ===== */
 .forum-thread-header {
-  padding: 1rem 2rem;
-  border-radius: 12px 12px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+    padding: 0 0 0.85rem 0;
+    border-bottom: 1px solid var(--dpd-border);
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
-.forum-thread-title-area {
-  display: flex;
-  align-items: flex-start;
-  gap: 2rem;
-  justify-content: flex-start;
-  width: fit-content;
+.forum-thread-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.forum-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.85rem;
+    border: 1.5px solid var(--dpd-border);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--dpd-slate);
+    font-size: 0.825rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 34px;
+}
+
+.forum-back-btn:hover {
+    background: #f1f5f9;
+    border-color: var(--dpd-teal);
+    color: var(--dpd-teal);
+    transform: translateX(-2px);
 }
 
 .forum-thread-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0;
-  line-height: 1.3;
-  letter-spacing: -0.5px;
-  flex: 1;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    margin: 0.25rem 0 0 0;
+    line-height: 1.35;
 }
 
-.forum-breadcrumb {
-  font-size: 0.95rem;
-  color: #6c757d;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-  flex: 1;
-  justify-content: flex-start;
-  white-space: nowrap;
-}
-
-.forum-breadcrumb i {
-  font-size: 0.85rem;
-}
-
-/* ✨ Header footer with breadcrumb and meta inline */
-.forum-header-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin: 0 2rem;
-}
-
-.forum-thread-meta {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  align-items: center;
+.forum-thread-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--dpd-gray-muted);
 }
 
 .forum-meta-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  font-size: 0.9rem;
-  color: #495057;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.forum-meta-badge:hover {
-  border-color: #dee2e6;
-  background: #f8f9fa;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid var(--dpd-border);
+    font-size: 0.75rem;
+    color: var(--dpd-gray-dark);
+    font-weight: 500;
 }
 
 .forum-meta-badge i {
-  font-size: 0.85rem;
-  color: #0f766e;
+    color: var(--dpd-teal);
 }
 
-/* ✨ Button wrapper in forum title area */
-.forum-thread-title-area .d-flex {
-  align-items: center;
-  gap: 1rem;
-  min-width: 0;
+.forum-breadcrumb-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--dpd-gray-muted);
 }
 
-.forum-thread-title-area .btn {
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-/* ===== Post Card Styles ===== */
+/* Post Cards */
 .forum-post-card {
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 1.75rem;
-  margin-bottom: 1.5rem;
-  transition: all 0.3s ease;
-  animation: slideIn 0.4s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.forum-post-card:hover {
-  border-color: #dee2e6;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+    border: 1px solid var(--dpd-border);
+    border-radius: 12px;
+    padding: 0.95rem 1.15rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease;
 }
 
 .forum-original-post {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  border: 2px solid #dee2e6;
-  padding: 1.5rem 2rem;
-  margin-left: 2rem;
-  margin-right: 2rem;
-}
-
-.forum-original-post:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  border-color: #cfe4e7;
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.03) 0%, #ffffff 100%);
+    border: 1.5px solid rgba(15, 118, 110, 0.25);
+    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.05);
 }
 
 .forum-reply-post {
-  border-left: 4px solid #e9ecef;
-  transition: border-color 0.3s ease;
-  padding: 1.5rem 2rem;
-  margin-left: 2rem;
-  margin-right: 2rem;
+    border-left: 3.5px solid var(--dpd-teal);
+    background: #fafbfc;
 }
 
 .forum-reply-post:hover {
-  border-left-color: #0d9488;
+    border-color: var(--dpd-teal);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
 }
 
-/* Post Header (Author Info) */
 .forum-post-header {
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #f1f3f5;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 0.65rem;
 }
 
 .forum-user-info {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
 }
 
 .forum-user-avatar-wrapper {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  overflow: hidden;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
 }
 
 .forum-user-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  transition: transform 0.3s ease;
-}
-
-.forum-user-avatar:hover {
-  transform: scale(1.05);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .forum-user-avatar-placeholder {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #f0e8f4 0%, #e8d0f0 100%);
-  color: #0d9488;
-  font-size: 1.5rem;
-  border: 3px solid white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--dpd-teal-light);
+    color: var(--dpd-teal);
+    font-size: 1rem;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .forum-user-details {
-  flex: 1;
+    flex: 1;
+    min-width: 0;
 }
 
 .forum-user-name {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 0.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    margin-bottom: 0.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
 }
 
-/* ✨ PHASE 7.16: Badge Styling */
 .forum-user-badge-asker {
-  display: inline-flex;
-  padding: 0.25rem 0.75rem;
-  background: #fff3cd;
-  color: #8a6d3b;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid #ffeaa7;
+    display: inline-flex;
+    padding: 0.15rem 0.5rem;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 999px;
+    font-size: 0.675rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border: 1px solid #fde68a;
 }
 
-.forum-user-badge-current {
-  display: inline-flex;
-  padding: 0.25rem 0.75rem;
-  background: #d4edda;
-  color: #155724;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid #c3e6cb;
-}
-
-.forum-user-badge-reported {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.75rem;
-  background: #f8d7da;
-  color: #721c24;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid #f5c6cb;
-  margin-left: 0.5rem;
-}
-
-/* ✨ Instructor Badge - Shows course creator/instructor */
 .forum-user-badge-instructor {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.75rem;
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  color: #1565c0;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid #90caf9;
-  margin-left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.5rem;
+    background: var(--dpd-teal-light);
+    color: var(--dpd-teal-dark);
+    border-radius: 999px;
+    font-size: 0.675rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border: 1px solid #99f6e4;
 }
 
 .forum-user-badge-instructor i {
-  font-size: 0.65rem;
-  color: #1565c0;
+    font-size: 0.65rem;
+    color: var(--dpd-teal);
+}
+
+.forum-user-badge-current {
+    display: inline-flex;
+    padding: 0.15rem 0.5rem;
+    background: #dcfce7;
+    color: #166534;
+    border-radius: 999px;
+    font-size: 0.675rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border: 1px solid #bbf7d0;
 }
 
 .forum-user-timestamp {
-  font-size: 0.9rem;
-  color: #6c757d;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin: 0;
+    font-size: 0.75rem;
+    color: var(--dpd-gray-muted);
 }
 
-/* Post Content */
 .forum-post-content {
-  font-size: 1.05rem;
-  color: #495057;
-  line-height: 1.8;
-  margin-bottom: 1rem;
-  word-break: break-word;
-  white-space: pre-wrap;
+    font-size: 0.875rem;
+    color: var(--dpd-gray-dark);
+    line-height: 1.55;
+    margin-bottom: 0.65rem;
+    word-break: break-word;
+    white-space: pre-wrap;
 }
 
-.forum-post-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
-}
-
-.forum-post-text {
-  margin: 0;
-}
-
-/* Post Footer (Stats & Actions) */
 .forum-post-footer {
-  border-top: 1px solid #f1f3f5;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 0.45rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.forum-post-tags {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.forum-tag {
-  display: inline-flex;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: all 0.3s ease;
-  align-items: center;
-  gap: 0.4rem;
-  cursor: default;
-}
-
-.forum-tag i {
-  font-size: 0.8rem;
-}
-
-.forum-post-actions {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  margin-left: auto;
-}
-
-/* ✨ PHASE 7.16: Like button styling */
-.forum-like-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: #fff;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  color: #6c757d;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-
-.forum-like-btn:hover {
-  border-color: #e9366d;
-  color: #e9366d;
-  background: #fff5f8;
-}
-
-.forum-like-btn i {
-  font-size: 0.95rem;
-}
-
-.forum-like-btn .like-count {
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-/* ✨ PHASE 7.16: Report button styling */
-.forum-report-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.75rem;
-  background: #fff;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  color: #6c757d;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-
-.forum-report-btn:hover {
-  border-color: #dc3545;
-  color: #dc3545;
-  background: #fff5f6;
-}
-
-.forum-report-btn i {
-  font-size: 0.95rem;
-}
-
-.forum-post-stat {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #6c757d;
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-.forum-post-stat i {
-  color: #e9366d;
-}
-
-/* ===== Replies Section ===== */
+/* Replies Section */
 .forum-replies-section {
-  margin-bottom: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 .forum-replies-header {
-  padding: 1.5rem 2rem;
-  background: #f8f9fa;
-  border-bottom: 2px solid #e9ecef;
-  border-radius: 8px 8px 0 0;
+    padding: 0.55rem 0;
+    margin-bottom: 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .forum-replies-title {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #2c3e50;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
 }
 
 .forum-replies-title i {
-  color: #0f766e;
-  font-size: 1rem;
+    color: var(--dpd-teal);
 }
 
-.forum-replies-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.forum-replies-list .forum-reply-post:last-child {
-  margin-bottom: 0;
-}
-
-/* ===== No Replies State ===== */
-.forum-no-replies {
-  padding: 3rem 2rem;
-  text-align: center;
-}
-
-.forum-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.forum-empty-state i {
-  font-size: 3.5rem;
-  color: #cfe4e7;
-  opacity: 0.6;
-}
-
-.forum-empty-state h4 {
-  margin: 0;
-  color: #6c757d;
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.forum-empty-state p {
-  margin: 0;
-  color: #adb5bd;
-  font-size: 0.95rem;
-}
-}
-
-.forum-replies-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-/* Reply Form Section */
+/* Reply Input Section */
 .forum-reply-form-section {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin: 1.5rem 2rem;
+    background: #f8fafc;
+    border: 1.5px solid var(--dpd-border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    margin-top: 1rem;
 }
 
 .forum-reply-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 1rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    margin-bottom: 0.5rem;
 }
 
-/* Message textarea and button styles reuse from existing QA styles */
 .message-textarea-qa {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-family: inherit;
-  resize: vertical;
-  transition: all 0.3s ease;
-  color: #495057;
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1.5px solid var(--dpd-border);
+    border-radius: 9px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.2s ease;
+    color: var(--dpd-slate);
+    background: #ffffff;
+    min-height: 75px;
+    line-height: 1.45;
 }
 
 .message-textarea-qa:focus {
-  outline: none;
-  border-color: #0d9488;
-  box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.1);
+    outline: none;
+    border-color: var(--dpd-teal);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
 .message-textarea-qa:disabled {
-  background-color: #f5f5f5;
-  cursor: not-allowed;
-}
-
-.message-form-qa {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 1rem;
+    background-color: #f1f5f9;
+    cursor: not-allowed;
 }
 
 .qa-send-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.75rem;
-  background: #0d9488;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  align-self: flex-end;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.45rem 1.15rem;
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.25);
+    height: 36px;
 }
 
 .qa-send-btn:hover:not(:disabled) {
-  background: #8e4db0;
-  box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
+    background: linear-gradient(135deg, #115e59 0%, #064e3b 100%);
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.35);
+    transform: translateY(-1px);
 }
 
 .qa-send-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  opacity: 0.6;
+    background: #cbd5e1;
+    color: #64748b;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
-/* Responsive adjustments for forum thread */
-@media (max-width: 768px) {
-  .forum-post-card {
-    padding: 1.5rem 1rem;
-  }
-
-  .forum-post-content {
-    font-size: 0.95rem;
-  }
-
-  .forum-post-title {
-    font-size: 1.15rem;
-  }
-
-  .forum-thread-header {
-    flex-wrap: wrap;
-  }
-
-  .forum-thread-title {
-    font-size: 1.5rem;
-  }
-
-  .forum-post-footer {
-    gap: 1rem;
-  }
+/* Empty States */
+.qa-empty-state,
+.empty-state {
+    text-align: center;
+    padding: 2.25rem 1.5rem;
+    color: var(--dpd-gray-muted);
 }
 
-/* Mobile: Full width stacked */
-/* Responsive adjustments for horizontal course cards */
-@media (max-width: 768px) {
-  .student-qa-course-card {
-    flex-direction: column;
-    min-height: auto;
-  }
-
-  /* PHASE 73+: Scope to .student-qa-course-card to prevent style pollution on Courses page */
-  .student-qa-course-card .course-image-container {
-    width: 100%;
-    height: 140px;
-    border-radius: 15px 15px 0 0;
-  }
-
-  .student-qa-course-card .course-image {
-    width: 100%;
-  }
-
-  /* ✨ PHASE 73: SCOPED to .qa-bg-section.course-info to prevent CSS leaks to other pages */
-  .qa-bg-section .course-info {
-    min-height: auto;
-    padding: 1rem;
-  }
-
-  .student-qa-course-meta {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: 0.75rem;
-  }
-
-  .qa-stats-badge, .discussion-activity {
-    grid-column: auto;
-    grid-row: auto;
-  }
-
-  .join-discussion-btn {
-    width: 100%;
-    max-width: none;
-    grid-column: auto;
-    grid-row: auto;
-    margin-top: 0.75rem;
-  }
+.qa-empty-state-icon,
+.empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.65rem;
+    color: var(--dpd-teal);
+    opacity: 0.8;
 }
 
-/* Mobile: Full width stacked */
-@media (max-width: 767px) {
-  .qa-bg-section .row {
-    flex-direction: column;
-  }
-
-  .qa-bg-section .row > [class*="col-"],
-  .qa-bg-section .row > .instructor-sidebar-column {
-    flex: 0 0 100%;
-    width: 100%;
-    max-width: 100%;
-  }
+.qa-empty-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    margin-bottom: 0.35rem;
 }
 
-/* ✨ PHASE 7.18: Question Card Styling - Matches Student Version */
-
-/* Question header with avatar and title side-by-side */
-.question-header {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
+.qa-empty-desc {
+    font-size: 0.85rem;
+    color: var(--dpd-gray-muted);
 }
 
-.avatar-modern {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 3px solid white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: transform 0.3s ease;
-}
+/* ==========================================================================
+   6. REPORT MODAL STYLES
+   ========================================================================== */
 
-.avatar-modern:hover {
-  transform: scale(1.05);
-}
-
-.question-content {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Question title styling */
-.question-title {
-  color: #2c3e50;
-  font-weight: 700;
-  font-size: 1.15rem;
-  margin-bottom: 0.25rem;
-  line-height: 1.4;
-  transition: color 0.3s ease;
-}
-
-.qa-card-hover:hover .question-title {
-  color: #0f766e;
-}
-
-/* Message preview in card - truncated to 2 lines */
-.question-message-preview {
-  color: #6c757d;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin: 1rem 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  word-break: break-word;
-}
-
-/* Replies badge styling */
-.replies-badge {
-  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-  color: white;
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
-  transition: all 0.3s ease;
-}
-
-/* ✨ PHASE 7.17: Report Modal Dialog Styling */
 .abuse-report-modal {
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-}
-
-/* ✨ PHASE 7.18+: Make abuse report modal wider on larger screens */
-@media (min-width: 1024px) {
-  .abuse-report-modal .modal-dialog.modal-dialog-centered,
-  .modal-dialog.abuse-report-modal-dialog {
-    max-width: 1000px;
-  }
+    border: 1px solid var(--dpd-border);
+    border-radius: 14px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
 }
 
 .abuse-modal-header {
-  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-  color: white;
-  border-radius: 12px 12px 0 0;
-  border: none;
-  padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #064e3b 0%, #0f766e 100%);
+    color: #ffffff;
+    border: none;
+    padding: 0.85rem 1.25rem;
 }
 
 .abuse-modal-header h5 {
-  color: white;
-  margin: 0;
-  font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+    font-weight: 600;
+    font-size: 1rem;
 }
 
 .abuse-modal-header .btn-close {
-  filter: brightness(0) invert(1);
-  opacity: 0.8;
+    filter: brightness(0) invert(1);
+    opacity: 0.85;
 }
 
 .abuse-modal-header .btn-close:hover {
-  opacity: 1;
-}
-
-.modal-body.abuse-report-modal {
-  padding: 1.5rem;
-}
-
-.abuse-modal-text {
-  color: #495057;
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-.form-select-modern {
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-}
-
-.form-select-modern:focus {
-  border-color: #0d9488;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.modal-body textarea {
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-}
-
-.modal-body textarea:focus {
-  border-color: #0d9488;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.modal-body .alert {
-  border-radius: 8px;
-  border-left: 4px solid #0d9488;
-  background-color: #f0f4ff;
-  color: #495057;
-}
-
-.modal-body .alert i {
-  color: #0d9488;
+    opacity: 1;
 }
 
 .abuse-modal-footer {
-  background-color: #f8f9fa;
-  border-top: 1px solid #e9ecef;
-  border-radius: 0 0 12px 12px;
-  padding: 1rem 1.5rem;
+    background-color: #f8fafc;
+    border-top: 1px solid var(--dpd-border);
+    padding: 0.75rem 1.25rem;
 }
 
-.abuse-modal-footer .btn {
-  border-radius: 8px;
-  font-weight: 500;
-  padding: 0.6rem 1.5rem;
-  transition: all 0.3s ease;
+.form-select-modern {
+    border: 1.5px solid var(--dpd-border);
+    border-radius: 8px;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
 }
 
-.abuse-modal-footer .btn-outline-secondary {
-  border-color: #dee2e6;
-  color: #495057;
+.form-select-modern:focus {
+    border-color: var(--dpd-teal);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
-.abuse-modal-footer .btn-outline-secondary:hover {
-  background-color: transparent;
-  border-color: #adb5bd;
-  color: #212529;
+/* ==========================================================================
+   7. RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 991px) {
+    .qa-filter-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .qa-filter-search-box {
+        flex: 1 1 100%;
+    }
+
+    .qa-filter-select-box {
+        flex: 1 1 calc(50% - 0.5rem);
+    }
+
+    .qa-clear-filters-btn {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
 }
 
-.abuse-modal-footer .btn-danger {
-  background: linear-gradient(135deg, #f5576c 0%, #ff6b6b 100%);
-  border: none;
-  color: white;
+@media (max-width: 768px) {
+    .student-qa-course-card {
+        flex-direction: row;
+        min-height: 90px;
+    }
+
+    .student-qa-course-card .course-image-container {
+        width: 95px;
+        min-width: 95px;
+    }
+
+    .qa-card-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+    }
+
+    .qa-card-badges-wrap {
+        justify-content: flex-start;
+    }
+
+    .qa-header-section {
+        padding: 1rem;
+    }
+
+    .qa-header-title {
+        font-size: 1.2rem;
+    }
 }
 
-.abuse-modal-footer .btn-danger:hover {
-  background: linear-gradient(135deg, #f03f5d 0%, #ff5555 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(245, 87, 108, 0.3);
-}
+@media (max-width: 576px) {
+    .student-qa-course-card {
+        flex-direction: column;
+    }
 
-.abuse-modal-footer .btn-danger:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Spinner styling in modal button */
-.abuse-modal-footer .spinner-border-sm {
-  width: 14px;
-  height: 14px;
-  border-width: 2px;
-}
-
-/* ✨ PHASE 7.18: Horizontal layout for report details with values right-aligned */
-.abuse-report-modal .card-body > .d-flex.justify-content-between {
-  gap: 1rem;
-  border-bottom: 1px solid #e9ecef;
-  padding-bottom: 0.75rem;
-}
-
-.abuse-report-modal .card-body > .d-flex.justify-content-between:last-child {
-  border-bottom: none;
-}
-
-.abuse-report-modal .card-body > .d-flex.justify-content-between label {
-  flex-shrink: 0;
-  white-space: nowrap;
-  padding-top: 0.25rem;
-}
-
-.abuse-report-modal .card-body > .d-flex.justify-content-between p {
-  flex-grow: 1;
-  max-width: 50%;
-  word-break: break-word;
-}
-
-/* ✨ PHASE 7.18+: Make cards display side by side - Report Details and Admin Feedback */
-.abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-
-/* Report Detail and Admin Feedback cards - equal width side by side */
-.abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) > .card {
-  flex: 1 1 calc(50% - 0.75rem);
-  min-width: 280px;
-  margin-bottom: 0;
-}
-
-/* ✨ PHASE 7.18+: Stack cards vertically on smaller screens (tablets/phones) */
-@media (max-width: 900px) {
-  .abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) {
-    flex-direction: column;
-  }
-
-  .abuse-report-modal .modal-body > .mb-0 > div:nth-child(2) > .card {
-    flex: 1 1 100%;
-  }
+    .student-qa-course-card .course-image-container {
+        width: 100%;
+        height: 100px;
+        border-radius: 12px 12px 0 0;
+    }
 }

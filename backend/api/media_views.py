@@ -12,14 +12,25 @@ from django.utils.http import http_date
 from django.views.decorators.cache import cache_control
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import condition
+from django.views.decorators.clickjacking import xframe_options_exempt
 import stat
 from email.utils import parsedate_to_datetime
 
 
+@method_decorator(xframe_options_exempt, name='dispatch')
 class EnhancedMediaView(View):
     """
-    Enhanced media serving with range request support for better video seeking
+    Enhanced media serving with range request support for better video streaming
+    and iframe embedding for SCORM / H5P interactive learning modules.
     """
+
+    def options(self, request, *args, **kwargs):
+        """Handle CORS preflight requests"""
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
+        response['Access-Control-Allow-Headers'] = '*'
+        return response
     
     @method_decorator(cache_control(max_age=3600, public=True))
     def get(self, request, path):
@@ -40,6 +51,34 @@ class EnhancedMediaView(View):
                 if os.path.exists(cand_path) and os.path.isfile(cand_path):
                     full_path = cand_path
                     break
+
+        # Fallback & self-healing for extracted SCORM / H5P learning modules
+        if not os.path.exists(full_path) or not os.path.isfile(full_path):
+            norm_path = path.replace('\\', '/')
+            if 'learning_modules' in norm_path and 'extracted_' in norm_path:
+                match = re.search(r'extracted_(\d+)', norm_path)
+                if match:
+                    lm_id = int(match.group(1))
+                    try:
+                        from api.models import LearningModule
+                        lm = LearningModule.objects.filter(pk=lm_id).first()
+                        if lm:
+                            lm.extract_package()
+                            # Re-check candidate directory/file
+                            if os.path.isdir(full_path):
+                                for candidate in ['index.html', 'index.htm']:
+                                    cand_path = os.path.join(full_path, candidate)
+                                    if os.path.exists(cand_path) and os.path.isfile(cand_path):
+                                        full_path = cand_path
+                                        break
+                            elif not os.path.exists(full_path):
+                                extract_dir = os.path.join(settings.MEDIA_ROOT, 'learning_modules', f'extracted_{lm_id}')
+                                if lm.entry_file and os.path.exists(os.path.join(extract_dir, lm.entry_file)):
+                                    full_path = os.path.join(extract_dir, lm.entry_file)
+                                elif os.path.exists(os.path.join(extract_dir, 'index.html')):
+                                    full_path = os.path.join(extract_dir, 'index.html')
+                    except Exception as e:
+                        print(f"[EnhancedMediaView] Error auto-extracting module {lm_id}: {e}")
 
         # Check if file exists
         if not os.path.exists(full_path) or not os.path.isfile(full_path):
@@ -119,6 +158,11 @@ class EnhancedMediaView(View):
         # Add caching headers
         response['Cache-Control'] = 'public, max-age=3600'
         response['ETag'] = f'"{file_size}-{os.path.getmtime(file_path)}"'
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
+        response['Access-Control-Allow-Headers'] = '*'
+        response['Content-Security-Policy'] = "frame-ancestors *"
+        response.headers.pop('X-Frame-Options', None)
         
         return response
     
@@ -139,6 +183,11 @@ class EnhancedMediaView(View):
         # Add caching headers
         response['Cache-Control'] = 'public, max-age=3600'
         response['ETag'] = f'"{file_size}-{os.path.getmtime(file_path)}"'
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
+        response['Access-Control-Allow-Headers'] = '*'
+        response['Content-Security-Policy'] = "frame-ancestors *"
+        response.headers.pop('X-Frame-Options', None)
         
         return response
 

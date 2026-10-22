@@ -183,217 +183,372 @@
     --transition-slow: 0.5s ease-out;
 }
 
+/* ==========================================================================
+   THEME TOKENS & UTILITIES
+   LMSetjen DPD RI Design System
+   ========================================================================== */
+.text-teal {
+    color: #0f766e !important;
+}
+
+.bg-teal-subtle {
+    background: rgba(15, 118, 110, 0.1) !important;
+}
+
+.text-emerald {
+    color: #059669 !important;
+}
+
+.bg-emerald-subtle {
+    background: rgba(16, 185, 129, 0.12) !important;
+}
+
+.text-amber {
+    color: #d97706 !important;
+}
+
+.bg-amber-subtle {
+    background: rgba(245, 158, 11, 0.12) !important;
+}
+
 /* ================================
    CONTAINER & LAYOUT
    ================================ */
 
-/* Main page container */
+/* Main page container - Compact bottom margin to eliminate dead whitespace */
 .instructor-course-create-page {
-    min-height: 100vh;
+    min-height: calc(100vh - 200px);
     background: transparent;
-    padding: var(--page-top-spacing) 0;
-    padding-top: var(--page-top-spacing) !important;
-    padding-bottom: var(--page-bottom-spacing) !important;
-    margin-bottom: 8rem;
+    padding: var(--page-top-spacing, 20px) 0;
+    padding-top: var(--page-top-spacing, 20px) !important;
+    padding-bottom: 2rem !important;
+    margin-bottom: 2rem !important;
 }
 
 /* Deprecated: old class name (kept for compatibility) */
 .course-create-container {
-    min-height: 100vh;
+    min-height: calc(100vh - 200px);
     background: transparent;
-    padding: var(--page-top-spacing) 0;
-    padding-top: var(--page-top-spacing) !important;
-    padding-bottom: var(--page-bottom-spacing) !important;
+    padding: var(--page-top-spacing, 20px) 0;
+    padding-top: var(--page-top-spacing, 20px) !important;
+    padding-bottom: 2rem !important;
+    margin-bottom: 2rem !important;
 }
 
-/* Modern Header Design */
+/* ================================
+   1. HEADER CARD (COMPACT & MODERN)
+   ================================ */
+.course-create-header-card {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 12px;
+    padding: 0.85rem 1.15rem;
+    border: 1px solid rgba(15, 118, 110, 0.16);
+    box-shadow: 0 4px 16px rgba(15, 118, 110, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.course-create-header-card .header-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+}
+
+.course-create-header-card .header-subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* Backward compatibility for create-header-modern */
 .create-header-modern {
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #34495e 100%);
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 15px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(52, 152, 219, 0.3);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    padding: 0.85rem 1.15rem;
+    border: 1px solid rgba(15, 118, 110, 0.16);
+    box-shadow: 0 4px 16px rgba(15, 118, 110, 0.05);
+    margin-bottom: 1rem;
 }
 
-.create-header-modern::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
-    z-index: 0;
+/* ================================
+   2. WORKFLOW STEP TRACKER (COMPACT)
+   ================================ */
+.course-create-workflow-card {
+    background: linear-gradient(135deg, #f0fdfa 0%, #ffffff 100%);
+    border: 1px solid rgba(15, 118, 110, 0.16);
+    border-radius: 10px;
+    padding: 0.55rem 0.95rem;
+    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.04);
 }
 
-.create-header-modern > * {
-    position: relative;
-    z-index: 1;
+.workflow-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
 }
 
-/* Modern Form Card */
-.form-card-modern {
-    background: white;
-    border-radius: var(--radius-xl);
-    border: none;
-    box-shadow: var(--shadow-xl);
-    overflow: hidden;
-    position: relative;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    margin-bottom: 2rem;
+.workflow-step.active {
+    color: #0f766e;
+    font-weight: 700;
 }
 
-.form-card-modern::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #0f766e, #115e59, #0f766e);
-    background-size: 200% 100%;
-    animation: shimmer 3s ease-in-out infinite;
+.workflow-step .step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    background: #e2e8f0;
+    color: #64748b;
+    transition: all 0.2s ease;
 }
 
-@keyframes shimmer {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+.workflow-step.active .step-num {
+    background: #0f766e;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.3);
 }
 
-/* Modern Form Body */
+.step-arrow {
+    font-size: 9px;
+    color: #94a3b8;
+    margin: 0 3px;
+}
+
+/* Draft Banner */
+.course-create-draft-banner {
+    transition: all 0.2s ease;
+}
+
+/* ================================
+   3. FORM BODY & SECTION STYLES
+   ================================ */
 .form-body-modern {
     padding: 0 !important;
     margin: 0 !important;
 }
 
-/* Enhanced Section Styling */
+/* Compact Form Section */
 .form-section {
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 15px;
-    padding: 1.5rem !important;
-    margin-bottom: 1.5rem;
-    border: 1px solid rgba(52, 152, 219, 0.1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1rem 1.15rem !important;
+    margin-bottom: 0.9rem !important;
+    border: 1px solid rgba(15, 118, 110, 0.12);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    transition: all 0.25s ease;
     position: relative;
 }
 
 .form-section:hover {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-    border-color: rgba(52, 152, 219, 0.2);
+    border-color: rgba(15, 118, 110, 0.25);
+    box-shadow: 0 4px 16px rgba(15, 118, 110, 0.06);
 }
 
-.form-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(52, 152, 219, 0.3), transparent);
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-}
-
-.form-section:hover::before {
-    transform: scaleX(1);
-}
-
-/* Enhanced Section Titles - SCOPED TO FORM SECTIONS ONLY (NOT SIDEBAR) */
+/* Compact Section Titles - Clean & Proportional */
 .form-section .section-title {
-    color: var(--neutral-700);
+    color: #0f172a;
     font-weight: 700;
-    font-size: 1.5rem;
-    margin-bottom: var(--space-lg);
-    padding-bottom: var(--space-sm);
-    position: relative;
-    display: inline-block;
+    font-size: 0.95rem;
+    margin-bottom: 0;
+    display: inline-flex;
+    align-items: center;
 }
 
 .form-section .section-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    border-radius: 2px;
+    display: none !important; /* Remove giant 60px thick line */
 }
 
 .form-section .section-title i {
-    color: var(--instructor-primary);
-    font-size: 1.2rem;
+    color: #0f766e;
+    font-size: 1rem;
 }
 
 /* ================================
-   FORM ELEMENTS
+   4. MEDIA STUDIO GRID & SUB-CARDS
+   ================================ */
+.media-box-container {
+    background: #f8fafc;
+    border: 1px dashed rgba(15, 118, 110, 0.25);
+    border-radius: 10px;
+    padding: 0.75rem;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.media-box-container:hover {
+    border-color: #0f766e;
+    background: rgba(240, 253, 250, 0.35);
+}
+
+.media-box-title {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.media-box-title i {
+    font-size: 0.95rem;
+    margin-right: 2px;
+}
+
+/* ==========================================================================
+   SEGMENTED CONTROL: Pilihan Cara Menambahkan Gambar (Dari URL vs Unggah File)
+   ========================================================================== */
+.image-method-segmented-group {
+    display: flex;
+    width: 100%;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    gap: 4px;
+    margin-bottom: 0.75rem;
+}
+
+.method-segment-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.method-segment-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.85);
+    color: #0f172a;
+}
+
+.method-segment-btn.active {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+}
+
+.method-segment-btn.active i {
+    color: #ffffff !important;
+}
+
+.method-segment-btn i {
+    font-size: 0.85rem;
+    margin-right: 2px;
+}
+
+/* Streamlined inner components inside media box */
+.media-box-container .form-label {
+    font-size: 0.76rem !important;
+    margin-bottom: 4px !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.media-box-container .bg-light.rounded {
+    padding: 0.45rem 0.65rem !important;
+    margin-top: 0.35rem !important;
+    font-size: 0.74rem !important;
+    border-radius: 7px !important;
+    border: 1px solid #e2e8f0;
+    background: #ffffff !important;
+}
+
+.media-box-container .bg-light.rounded ul {
+    margin-bottom: 0 !important;
+    padding-left: 1rem !important;
+}
+
+.media-box-container .current-value-display {
+    padding: 0.5rem 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+    font-size: 0.78rem !important;
+    border-radius: 7px !important;
+}
+
+.media-box-container .alert {
+    padding: 0.5rem 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+    font-size: 0.78rem !important;
+}
+
+/* ================================
+   5. FORM ELEMENTS (COMPACT & SLEEK)
    ================================ */
 .instructor-course-create-page .form-label {
     font-weight: 600;
-    color: var(--neutral-700);
-    margin-bottom: var(--space-sm);
-    font-size: 0.95rem;
+    color: #334155;
+    margin-bottom: 4px;
+    font-size: 0.78rem;
     text-transform: uppercase;
-    letter-spacing: 0.025em;
+    letter-spacing: 0.03em;
     display: flex;
     align-items: center;
-    gap: var(--space-xs);
+    gap: 4px;
 }
 
 .form-control,
 .form-select {
-    border: 2px solid var(--neutral-200);
-    border-radius: var(--radius-md);
-    padding: var(--space-md) var(--space-lg);
-    font-size: 1rem;
-    line-height: 1.5;
-    transition: all var(--transition-normal);
-    background: white;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 7px;
+    padding: 0.42rem 0.75rem;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    transition: all 0.2s ease;
+    background: #ffffff;
     font-weight: 500;
-    color: var(--neutral-700);
+    color: #1e293b;
 }
 
 .form-control:focus,
 .form-select:focus {
-    border-color: var(--instructor-primary);
-    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
-    background: rgba(255, 255, 255, 1);
+    border-color: #0f766e;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    background: #ffffff;
 }
 
-/* ✨ PHASE 4.25: Improved select option styling for better visibility */
+/* Compact Select Options */
 .form-select option {
-    background: white !important;
-    color: var(--neutral-700) !important;
-    padding: 0.5rem 1rem;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    padding: 0.4rem 0.75rem;
     font-weight: 500;
 }
 
 .form-select option:checked {
-    background: linear-gradient(rgba(52, 152, 219, 0.15), rgba(52, 152, 219, 0.15)), white !important;
-    background-color: #e7f5ff !important;
-    color: #094af3 !important;
+    background-color: #f0fdfa !important;
+    color: #0f766e !important;
     font-weight: 600;
-    box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.3);
-}
-
-.form-select option:hover {
-    background: #f0f7ff !important;
-    color: var(--neutral-700) !important;
-}
-
-.form-select option:disabled {
-    background: #f8f9fa !important;
-    color: #6c757d !important;
-    opacity: 0.5;
 }
 
 .form-control::placeholder {
-    color: var(--neutral-400);
+    color: #94a3b8;
     font-weight: 400;
+    font-size: 0.84rem;
 }
 
 /* Validation States */
@@ -461,28 +616,31 @@
 }
 
 /* ================================
-   IMAGE & MEDIA COMPONENTS
+   IMAGE & MEDIA COMPONENTS (COMPACT)
    ================================ */
 .image-preview-container {
     position: relative;
-    margin-bottom: var(--space-lg);
-    border-radius: var(--radius-lg);
+    margin-bottom: 0.65rem;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: var(--shadow-md);
-    background: var(--neutral-100);
+    background: #f1f5f9;
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid #e2e8f0;
+    aspect-ratio: 16 / 9;
+    max-height: 165px;
 }
 
 .image-preview {
     width: 100%;
-    height: 280px;
+    height: 100%;
+    max-height: 165px;
     object-fit: cover;
-    border-radius: var(--radius-lg);
-    border: 3px solid var(--neutral-200);
+    border-radius: 7px;
+    border: none;
     transition: all var(--transition-normal);
-    background: var(--neutral-100);
+    background: #f1f5f9;
     display: block;
 }
 
@@ -490,83 +648,56 @@
 .image-preview-container .image-preview.valid,
 .image-preview-container img[alt*="Cropped"] {
     object-fit: contain;
-    background: #000;
-    animation: fadeIn 0.5s ease-in-out;
+    background: #0f172a;
+    animation: fadeIn 0.4s ease-in-out;
 }
 
 .image-preview.valid {
-    border-color: var(--success-color);
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    border: 1.5px solid var(--success-color);
 }
 
 .image-preview.invalid {
-    border-color: var(--error-color);
-    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    border: 1.5px solid var(--error-color);
 }
 
 .image-preview.warning {
-    border-color: var(--warning-color);
-    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+    border: 1.5px solid var(--warning-color);
 }
 
 /* File Upload Area */
 .file-upload-area {
-    border: 2px dashed var(--neutral-300);
-    border-radius: var(--radius-lg);
-    padding: var(--space-2xl);
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 1.25rem;
     text-align: center;
-    background: var(--neutral-50);
+    background: #f8fafc;
     transition: all var(--transition-normal);
     cursor: pointer;
     position: relative;
     overflow: hidden;
 }
 
-.file-upload-area::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(52, 152, 219, 0.1), transparent);
-    transition: left 0.6s ease;
-}
-
 .file-upload-area:hover {
-    border-color: var(--instructor-primary);
-    background: rgba(52, 152, 219, 0.05);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
-.file-upload-area:hover::before {
-    left: 100%;
+    border-color: #0f766e;
+    background: rgba(15, 118, 110, 0.04);
 }
 
 .file-upload-area.dragover {
-    border-color: var(--instructor-primary);
-    background: rgba(52, 152, 219, 0.1);
-    transform: scale(1.02);
-}
-
-.file-upload-area.uploading {
-    border-color: var(--info-color);
-    background: rgba(59, 130, 246, 0.05);
-    cursor: not-allowed;
+    border-color: #0f766e;
+    background: rgba(15, 118, 110, 0.08);
 }
 
 .file-upload-area.has-file {
-    border-color: var(--success-color);
-    background: rgba(16, 185, 129, 0.05);
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.04);
 }
 
 /* ================================
-   CKEDITOR STYLING
+   CKEDITOR STYLING (COMPACT)
    ================================ */
 .ckeditor-container {
-    border: 2px solid var(--neutral-200);
-    border-radius: var(--radius-md);
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
     overflow: visible !important;
     transition: all var(--transition-normal);
     background: white;
@@ -575,9 +706,8 @@
 }
 
 .ckeditor-container.focused {
-    border-color: var(--instructor-primary);
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    transform: translateY(-1px);
+    border-color: #0f766e;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
 .ckeditor-container.invalid {
@@ -592,10 +722,9 @@
 
 .ckeditor-container.valid {
     border-color: var(--success-color);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
-/* Fix CKEditor cursor and pointer issues - ENHANCED */
+/* Fix CKEditor cursor and pointer issues */
 .ckeditor-container * {
     pointer-events: auto !important;
 }
@@ -607,187 +736,133 @@
 }
 
 .ckeditor-container .ck-editor__editable {
-    min-height: 200px;
-    max-height: 500px;
+    min-height: 140px;
+    max-height: 360px;
     overflow-y: auto !important;
     cursor: text !important;
     pointer-events: auto !important;
     position: relative;
     z-index: auto;
+    font-size: 0.88rem;
+    padding: 0.75rem 1rem !important;
 }
 
 .ckeditor-container .ck-editor__editable * {
     cursor: text !important;
     pointer-events: auto !important;
-}
-
-.ckeditor-container .ck-editor__editable:not(.ck-focused) {
-    cursor: text !important;
 }
 
 .ckeditor-container .ck-editor__editable.ck-focused {
     border: none !important;
     box-shadow: none !important;
-    cursor: text !important;
     outline: none !important;
-}
-
-/* Make sure the editing area is always interactive */
-.ckeditor-container .ck-editor__editable.ck-editor__editable_inline {
-    cursor: text !important;
-    pointer-events: auto !important;
 }
 
 .ckeditor-container .ck-toolbar {
     pointer-events: auto !important;
     border: none !important;
-    background: var(--neutral-50) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+    padding: 4px 8px !important;
     z-index: 2;
 }
 
-.ckeditor-container .ck-toolbar * {
-    pointer-events: auto !important;
+.ckeditor-container .ck-toolbar .ck-button {
+    font-size: 0.82rem;
+    padding: 3px 6px;
+    border-radius: 5px;
 }
 
-.ckeditor-container .ck-toolbar__items {
-    pointer-events: auto !important;
-}
-
-.ckeditor-container .ck-button {
-    cursor: pointer !important;
-    pointer-events: auto !important;
-}
-
-.ckeditor-container .ck-button:not(.ck-disabled) {
-    cursor: pointer !important;
-}
-
-/* Ensure proper text selection and cursor visibility */
-.ckeditor-container .ck-content,
-.ckeditor-container .ck-content *,
-.ckeditor-container .ck-content p,
-.ckeditor-container .ck-content h1,
-.ckeditor-container .ck-content h2,
-.ckeditor-container .ck-content h3,
-.ckeditor-container .ck-content h4,
-.ckeditor-container .ck-content h5,
-.ckeditor-container .ck-content h6,
-.ckeditor-container .ck-content ul,
-.ckeditor-container .ck-content ol,
-.ckeditor-container .ck-content li,
-.ckeditor-container .ck-content span,
-.ckeditor-container .ck-content strong,
-.ckeditor-container .ck-content em,
-.ckeditor-container .ck-content a {
-    cursor: text !important;
-    user-select: text !important;
-    -webkit-user-select: text !important;
-    -moz-user-select: text !important;
-    -ms-user-select: text !important;
-    pointer-events: auto !important;
-}
-
-/* Improve caret visibility - ENHANCED */
 .ckeditor-container .ck-editor__editable.ck-focused,
-.ckeditor-container .ck-editor__editable.ck-focused *,
 .ckeditor-container .ck-editor__editable {
     caret-color: #0f766e !important;
 }
 
-/* Force caret to be visible */
-.ckeditor-container .ck-editor__editable::selection {
-    background: rgba(52, 152, 219, 0.3);
-}
-
-.ckeditor-container .ck-editor__editable::-moz-selection {
-    background: rgba(52, 152, 219, 0.3);
-}
-
-/* Ensure placeholder doesn't interfere */
-.ckeditor-container .ck-editor__editable.ck-placeholder::before {
-    cursor: text !important;
-    pointer-events: none !important;
-}
-
-/* Remove any transforms that might affect cursor position */
-.ckeditor-container .ck-editor__editable,
-.ckeditor-container .ck-editor__editable * {
-    transform: none !important;
-    will-change: auto !important;
-}
-
-/* Ensure content is editable */
-.ckeditor-container .ck-editor__editable[contenteditable="true"] {
-    -webkit-user-modify: read-write !important;
-}
-
 /* ================================
-   BUTTONS
+   ACTION BAR & BUTTONS
    ================================ */
-.btn-create-course {
-    background: var(--instructor-gradient);
-    border: none;
-    padding: var(--space-md) var(--space-2xl);
-    font-weight: 700;
-    font-size: 1.1rem;
-    border-radius: var(--radius-full);
-    transition: all var(--transition-normal);
-    box-shadow: var(--shadow-instructor);
-    color: white;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-    position: relative;
-    overflow: hidden;
+.course-create-action-bar {
+    background: #ffffff;
+    border: 1px solid rgba(15, 118, 110, 0.14);
+    border-radius: 12px;
+    padding: 0.75rem 1.15rem;
+    box-shadow: 0 3px 12px rgba(15, 118, 110, 0.05);
 }
 
-.btn-create-course::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.6s ease;
+.btn-teal {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    font-size: 0.84rem !important;
+    border-radius: 7px !important;
+    transition: all 0.2s ease !important;
 }
 
-.btn-create-course:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 35px rgba(52, 152, 219, 0.4);
-    background: var(--instructor-gradient-hover);
-    color: white;
-}
-
-.btn-create-course:hover::before {
-    left: 100%;
-}
-
-.btn-create-course:active {
+.btn-teal:hover:not(:disabled) {
+    background: linear-gradient(135deg, #115e59 0%, #134e4a 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25) !important;
     transform: translateY(-1px);
 }
 
-.btn-create-course:disabled {
-    opacity: 0.6;
-    transform: none;
-    box-shadow: var(--shadow-md);
-    cursor: not-allowed;
+.btn-outline-teal {
+    color: #0f766e !important;
+    border: 1.5px solid #0f766e !important;
+    background: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.82rem !important;
+    padding: 0.35rem 0.85rem !important;
+    border-radius: 7px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    transition: all 0.2s ease !important;
 }
 
-.btn-outline-primary {
-    border: 2px solid var(--instructor-primary);
-    color: var(--instructor-primary);
-    background: transparent;
-    padding: var(--space-md) var(--space-xl);
-    border-radius: var(--radius-full);
+.btn-outline-teal:hover:not(:disabled) {
+    background: #0f766e !important;
+    color: #ffffff !important;
+    border-color: #0f766e !important;
+    box-shadow: 0 3px 10px rgba(15, 118, 110, 0.2) !important;
+    transform: translateY(-1px);
+}
+
+.btn-outline-secondary {
+    color: #334155 !important;
+    border: 1.5px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.82rem !important;
+    padding: 0.35rem 0.85rem !important;
+    border-radius: 7px !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-outline-secondary:hover:not(:disabled) {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+}
+
+/* Backward compatibility for btn-create-course */
+.btn-create-course {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    border: none;
+    padding: 0.45rem 1.25rem;
     font-weight: 600;
-    transition: all var(--transition-normal);
+    font-size: 0.88rem;
+    border-radius: 7px;
+    transition: all 0.2s ease;
+    box-shadow: 0 3px 10px rgba(15, 118, 110, 0.25);
+    color: white;
 }
 
-.btn-outline-primary:hover {
-    background: var(--instructor-primary);
+.btn-create-course:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15, 118, 110, 0.35);
     color: white;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
 }
 
 /* ================================
@@ -866,9 +941,14 @@
    RESPONSIVE DESIGN
    ================================ */
 @media (max-width: 768px) {
+    .course-create-header-card,
     .create-header-modern {
-        padding: 1.5rem;
-        margin-bottom: 1rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .course-create-workflow-card {
+        padding: 0.5rem 0.75rem;
     }
     
     .form-body-modern {
@@ -877,28 +957,28 @@
     }
     
     .form-section {
-        padding: 1rem;
-        margin-bottom: 1rem;
+        padding: 0.85rem !important;
+        margin-bottom: 0.75rem !important;
     }
     
     .image-preview {
-        height: 200px;
+        max-height: 150px;
     }
     
     .file-upload-area {
-        padding: 1.5rem;
-    }
-    
-    .btn-create-course {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
+        padding: 1rem;
     }
 }
 
 @media (max-width: 576px) {
+    .course-create-header-card,
     .create-header-modern {
-        padding: 1rem;
-        margin-bottom: 1rem;
+        padding: 0.65rem 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .course-create-header-card .header-title {
+        font-size: 1.1rem;
     }
     
     .form-body-modern {
@@ -907,25 +987,20 @@
     }
     
     .form-section {
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .btn-create-course {
-        padding: 0.625rem 1.25rem;
-        font-size: 0.9rem;
+        padding: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
     }
     
     .image-preview {
-        height: 180px;
+        max-height: 140px;
     }
     
     .file-upload-area {
-        padding: 1rem;
+        padding: 0.75rem;
     }
     
     .form-section .section-title {
-        font-size: 1.25rem;
+        font-size: 0.9rem;
     }
 }
 

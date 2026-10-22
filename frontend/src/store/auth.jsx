@@ -28,6 +28,7 @@ const useAuthStore = create((set, get) => ({
 
 if (import.meta.env.DEV) {
   mountStoreDevtool("Store", useAuthStore);
+  window.useAuthStore = useAuthStore;
 }
 
 export { useAuthStore };

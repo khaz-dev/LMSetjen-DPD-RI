@@ -439,7 +439,7 @@ class GoogleOAuthAPIView(APIView):
         access_token = request.data.get('access_token') or request.data.get('token')
         token_type = request.data.get('token_type', 'access_token')
         
-        logger.info("🔐 Google OAuth Verification Started")
+        logger.info("[AUTH] Google OAuth Verification Started")
         logger.info(f"Token type: {token_type}")
         logger.info(f"Token received: {access_token[:20] if access_token else 'MISSING'}...")
         
@@ -451,7 +451,7 @@ class GoogleOAuthAPIView(APIView):
             )
         
         try:
-            logger.info("📤 Verifying Google token...")
+            logger.info("[AUTH] Verifying Google token...")
             
             # Verify token with Google
             if token_type == 'id_token':

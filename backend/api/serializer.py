@@ -513,7 +513,7 @@ class BasicTeacherSerializer(serializers.ModelSerializer):
     last_login = serializers.DateTimeField(source='user.last_login', read_only=True)
 
     class Meta:
-        fields = ["id", "user_id", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "about", "country", "last_login"]
+        fields = ["id", "user_id", "image", "full_name", "bio", "facebook", "twitter", "linkedin", "youtube", "instagram", "tiktok", "about", "country", "last_login"]
         model = api_models.Teacher
     
     def get_full_name(self, obj):
@@ -3425,7 +3425,7 @@ class ActivityLogListSerializer(serializers.ModelSerializer):
             'id', 'user', 'user_name', 'activity_type', 'activity_type_display',
             'title', 'description', 'course', 'course_title',
             'points_awarded', 'success', 'activity_score',
-            'activity_date', 'created_at'
+            'activity_date', 'created_at', 'role_at_time'
         ]
 
 

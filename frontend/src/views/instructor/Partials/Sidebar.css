@@ -1,5 +1,5 @@
-/* Instructor Sidebar Styles */
-/* ============================== */
+/* Instructor Sidebar Styles - Compact & Modern LMSetjen DPD RI Theme */
+/* ========================================================================== */
 
 /* ============================== */
 /* Toast & Dialog Styles */
@@ -13,14 +13,14 @@
     font-family: 'Inter', sans-serif !important;
 }
 
-/* ✨ PHASE 4.82: Modal dialog variant of modern-toast with proper centering */
+/* Modal dialog variant of modern-toast with proper centering */
 .modern-toast-dialog {
-    padding-right: 0 !important;  /* Remove padding-right used for toast close buttons */
+    padding-right: 0 !important;
     text-align: center !important;
 }
 
 .modern-toast-dialog .swal2-icon {
-    margin: 0 auto 1rem auto !important;  /* Center the icon */
+    margin: 0 auto 1rem auto !important;
 }
 
 .modern-swal-title {
@@ -57,15 +57,15 @@
     color: white !important;
     transition: all 0.3s ease !important;
     margin: 0 8px !important;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+    box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3) !important;
     user-select: none !important;
     cursor: pointer !important;
 }
 
 .modern-confirm-btn:hover {
     transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
+    box-shadow: 0 8px 25px rgba(13, 148, 136, 0.4) !important;
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%) !important;
 }
 
 .modern-cancel-btn {
@@ -90,64 +90,100 @@
 }
 
 /* ============================== */
-/* Sidebar Container */
+/* Sidebar Column Wrapper */
 /* ============================== */
 
 .instructor-sidebar-column {
     padding-top: 0 !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
-    margin-left: 0 !important; /* Remove Bootstrap gutter left padding */
-    margin-right: 0 !important; /* Remove Bootstrap gutter right padding */
-    padding-left: 0 !important; /* Remove Bootstrap column padding-left */
-    padding-right: 0 !important; /* Remove Bootstrap column padding-right */
-    display: flex;
-    flex-direction: column;
-    overflow: visible !important; /* ✅ Ensure sticky works - no scroll context on column */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: stretch !important; /* CRITICAL: Stretch full row height so inner sticky sidebar has a vertical travel track */
+    height: auto !important;
+    position: static !important;
+    overflow: visible !important;
     flex: 0 0 auto !important;
     width: auto !important;
     min-width: 0 !important;
     max-width: none !important;
 }
 
+/* Desktop & Tablet: Column stretches full height to act as sticky track */
+@media (min-width: 768px) {
+    .instructor-sidebar-column,
+    .row > .instructor-sidebar-column,
+    .instructor-dashboard .row > .instructor-sidebar-column,
+    .instructor-notifications-page .row > .instructor-sidebar-column {
+        position: static !important;
+        align-self: stretch !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+}
+
+/* Mobile: Column stacks and scrolls naturally */
+@media (max-width: 767px) {
+    .instructor-sidebar-column,
+    .row > .instructor-sidebar-column {
+        position: static !important;
+        top: auto !important;
+        align-self: stretch !important;
+        height: auto !important;
+        width: 100% !important;
+    }
+}
+
 /* ============================== */
-/* Main Sidebar */
+/* Main Sidebar Container */
 /* ============================== */
 
-.instructor-sidebar {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 30px rgba(52, 152, 219, 0.12);
-    border: 1px solid rgba(52, 152, 219, 0.08);
-    overflow: visible !important;
+.instructor-sidebar,
+.instructor-sidebar-column .instructor-sidebar {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px -2px rgba(15, 118, 110, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.05);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    position: -webkit-sticky !important;
     position: sticky !important;
-    top: calc(60px + 1rem + 1rem) !important;  /* BaseHeader (60px) + Header margin-top (1rem) + gap (1rem) */
-    z-index: 100;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
-    max-height: calc(100vh - 60px - 1rem);
-    align-self: flex-start;
-    display: flex;
-    flex-direction: column;
+    top: calc(var(--navbar-height, 70px) + 18px) !important; /* ~88px: Clean breathing gap below base-header */
+    z-index: 99 !important;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s ease;
+    height: fit-content !important; /* Eliminates tall blank dead space */
+    max-height: calc(100vh - 108px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    align-self: flex-start !important;
+    display: flex !important;
+    flex-direction: column !important;
     margin-top: 0 !important;
-    margin-right: 1rem; /* ✅ CONSISTENT right margin - applies to both expanded and collapsed states */
+    margin-right: 1.15rem; /* Clean gap to content column */
     padding-top: 0 !important;
     user-select: none;
 }
 
 .instructor-sidebar:hover {
-    box-shadow: 0 12px 40px rgba(52, 152, 219, 0.18);
+    box-shadow: 0 8px 25px -4px rgba(15, 118, 110, 0.18), 0 3px 8px -1px rgba(15, 23, 42, 0.06);
 }
 
-/* Expanded state (default) */
+/* Expanded state (default) - Compact 262px width eliminates empty horizontal void */
 .instructor-sidebar:not(.collapsed) {
-    width: 305px !important;
-    min-width: 305px !important;
+    width: 262px !important;
+    min-width: 262px !important;
+    max-width: 262px !important;
 }
 
+/* Collapsed state - Streamlined 72px icon dock */
 .instructor-sidebar.collapsed {
-    /* margin-right is inherited from .instructor-sidebar (1rem) */
-    width: 85px !important;
-    min-width: 85px;
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
 }
 
 /* ============================== */
@@ -155,17 +191,18 @@
 /* ============================== */
 
 .instructor-sidebar-header {
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #34495e 100%);
-    color: white;
-    padding: 1.5rem;
+    background: linear-gradient(135deg, #063c37 0%, #0f766e 60%, #115e59 100%);
+    color: #ffffff;
+    padding: 0.75rem 0.95rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.65rem;
     position: relative;
     overflow: hidden;
     z-index: 1;
-    border-radius: 16px 16px 0 0;
+    border-radius: 14px 14px 0 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     user-select: none;
 }
 
@@ -176,39 +213,82 @@
     right: -20%;
     width: 60%;
     height: 200%;
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.08), transparent);
     transform: rotate(-15deg);
+    pointer-events: none;
 }
 
-.instructor-sidebar-header h5,
-.instructor-sidebar-header p {
-    user-select: none;
-    cursor: default;
-    position: relative;
-    z-index: 2;
+.sidebar-header-brand-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.sidebar-header-icon-box {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.sidebar-header-text {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.sidebar-header-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #ffffff;
     margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+.sidebar-header-badge {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: #ccfbf1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+    line-height: 1.1;
+    margin-top: 1px;
+}
+
+/* Collapsed Header */
 .instructor-sidebar-header-collapsed {
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #34495e 100%);
-    padding: 1rem;
+    background: linear-gradient(135deg, #063c37 0%, #0f766e 100%);
+    padding: 0.75rem 0.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    overflow: hidden;
-    border-radius: 16px 16px 0 0;
+    border-radius: 14px 14px 0 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ============================== */
-/* Sidebar Content */
+/* Sidebar Content & Navigation */
 /* ============================== */
 
 .sidebar-content {
-    padding: 1rem 1.25rem 1.25rem 1.25rem;
+    padding: 0.55rem 0.65rem 0.65rem 0.65rem;
     position: relative;
     z-index: 1;
     overflow-y: auto;
@@ -217,92 +297,72 @@
     min-height: 0;
 }
 
+/* Thin modern scrollbar for sidebar */
+.sidebar-content::-webkit-scrollbar {
+    width: 4px;
+}
+.sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: #0f766e;
+}
+
 .instructor-sidebar.collapsed .sidebar-content {
-    padding: 0.5rem 0.25rem;
+    padding: 0.5rem 0.35rem 0.65rem 0.35rem;
 }
 
 /* ============================== */
-/* Navigation Sections */
+/* Section Headings */
 /* ============================== */
 
 .nav-section-title {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #34495e;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    line-height: 1;
-    height: auto;
-    margin-bottom: 0.75rem;
-    margin-top: 1.25rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    padding-top: 0;
-    padding-bottom: 0;
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    color: #94a3b8 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    line-height: 1 !important;
+    height: auto !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+    padding-left: 0.45rem !important;
+    padding-right: 0.45rem !important;
     user-select: none;
     cursor: default;
-    display: block;
+    display: block !important;
     overflow: hidden;
     text-overflow: clip;
     white-space: nowrap;
     visibility: visible;
     opacity: 1;
-    transition: opacity 0.3s ease, visibility 0.3s ease, height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+    transition: opacity 0.2s ease;
 }
 
 .nav-section-title:first-child {
-    margin-top: 0;
+    margin-top: 0.15rem !important;
 }
 
 .instructor-divider + .nav-section-title {
-    margin-top: 0.5rem;
+    margin-top: 0.4rem !important;
 }
 
-/* When nav-section-title and section-title are combined, nav takes precedence */
-.nav-section-title.section-title {
-    /* Override .section-title styling to maintain nav-section-title appearance */
-    font-size: 0.75rem !important;
-    font-weight: 600 !important;
-    color: #34495e !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.8px !important;
-    line-height: 1 !important;
-    height: auto !important;
-    margin-bottom: 0.75rem !important;
-    margin-top: 1.25rem !important;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    display: block !important;
-}
-
-/* Remove ::after underline from section-title when used in sidebar nav */
 .nav-section-title.section-title::after {
     display: none !important;
     content: none !important;
 }
 
-/* Collapsed state: hide section titles completely - remove all space */
-.instructor-sidebar.collapsed .nav-section-title,
-.instructor-sidebar.collapsed .nav-section-title.section-title {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    max-height: 0 !important;
-    margin: 0 !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    padding: 0 !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    font-size: 0 !important;
-    line-height: 0 !important;
-    border: 0 !important;
-    overflow: hidden !important;
+/* Collapsed state: hide section titles completely */
+.instructor-sidebar.collapsed .nav-section-title {
     display: none !important;
-    pointer-events: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 0 !important;
 }
 
 /* ============================== */
@@ -312,98 +372,71 @@
 .instructor-nav-link {
     display: flex;
     align-items: center;
-    padding: 0.875rem 1rem;
-    color: #4a5568;
+    gap: 0.55rem;
+    padding: 0.42rem 0.55rem;
+    color: #475569;
     text-decoration: none;
-    border-radius: 10px;
-    margin-bottom: 0.25rem;
-    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-weight: 500;
     position: relative;
-    font-size: 0.9rem;
-    overflow: hidden;
+    font-size: 0.81rem;
+    overflow: visible;
     user-select: none;
     cursor: pointer;
-}
-
-.instructor-nav-link::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 100%;
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 0;
-}
-
-.instructor-nav-link > * {
-    position: relative;
-    z-index: 1;
+    background: transparent;
 }
 
 .instructor-nav-link:hover {
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-    color: white;
-    transform: translateX(4px);
-    box-shadow: 0 6px 18px rgba(52, 152, 219, 0.5);
+    background: #f0fdfa;
+    color: #0f766e;
+    transform: translateX(2px);
     text-decoration: none;
 }
 
-.instructor-nav-link:hover::before {
-    width: 100%;
+.instructor-nav-link:hover .instructor-nav-icon {
+    background: #ccfbf1;
+    color: #0f766e;
+    transform: scale(1.05);
 }
 
 .instructor-nav-link.active {
     background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-    color: white;
-    transform: translateX(4px);
-    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+    color: #ffffff !important;
+    font-weight: 600;
+    box-shadow: 0 3px 10px rgba(15, 118, 110, 0.25);
+    transform: translateX(2px);
 }
 
-.instructor-nav-link.active::before {
-    width: 100%;
+.instructor-nav-link.active .instructor-nav-icon {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff !important;
 }
 
-/* Collapsed State */
+/* Collapsed State for Links */
 .instructor-sidebar.collapsed .instructor-nav-link {
-    padding: 0.875rem 0.5rem;
+    padding: 0.45rem 0;
     justify-content: center;
     text-align: center;
+    margin-bottom: 4px;
 }
 
 .instructor-sidebar.collapsed .nav-text {
-    display: none;
+    display: none !important;
 }
 
-.instructor-sidebar.collapsed .nav-icon {
+.instructor-sidebar.collapsed .instructor-nav-icon {
     margin: 0 auto;
-    font-size: 1.25rem;
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+    border-radius: 8px;
 }
 
-.instructor-sidebar.collapsed .instructor-nav-link:hover {
-    color: white;
-}
-
-.instructor-sidebar.collapsed .instructor-nav-link:hover .nav-icon i,
-.instructor-sidebar.collapsed .instructor-nav-link:hover .instructor-nav-icon i {
-    color: #f8fafc !important;
-}
-
-.instructor-sidebar.collapsed .instructor-nav-link .nav-icon,
-.instructor-sidebar.collapsed .instructor-nav-link .instructor-nav-icon {
-    color: inherit;
-}
-
-.instructor-sidebar.collapsed .instructor-nav-link .nav-icon i,
-.instructor-sidebar.collapsed .instructor-nav-link .instructor-nav-icon i {
-    color: #4a5568;
-}
-
-.instructor-sidebar.collapsed .instructor-nav-link.active .nav-icon i,
-.instructor-sidebar.collapsed .instructor-nav-link.active .instructor-nav-icon i {
-    color: white !important;
+.instructor-sidebar.collapsed .instructor-nav-link:hover .instructor-nav-icon {
+    background: #0f766e;
+    color: #ffffff !important;
 }
 
 /* Tooltip for collapsed items */
@@ -414,18 +447,19 @@
     top: 50%;
     transform: translateY(-50%);
     margin-left: 10px;
-    padding: 8px 12px;
-    background: #2d3748;
-    color: white;
-    border-radius: 8px;
+    padding: 5px 9px;
+    background: #0f172a;
+    color: #f8fafc;
+    border-radius: 6px;
     white-space: nowrap;
-    font-size: 0.85rem;
+    font-size: 0.74rem;
     font-weight: 500;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.15s ease;
     z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .instructor-sidebar.collapsed .instructor-nav-link::before {
@@ -436,9 +470,11 @@
     transform: translateY(-50%);
     margin-left: 5px;
     border: 5px solid transparent;
-    border-right-color: #2d3748;
+    border-right-color: #0f172a;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 1000;
 }
 
 .instructor-sidebar.collapsed .instructor-nav-link:hover::after,
@@ -451,20 +487,41 @@
 /* ============================== */
 
 .instructor-nav-icon {
-    width: 18px;
-    height: 18px;
-    margin-right: 0.75rem;
+    width: 25px;
+    height: 25px;
+    min-width: 25px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.76rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    user-select: none;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
-.instructor-nav-link:hover .instructor-nav-icon,
-.instructor-nav-link.active .instructor-nav-icon {
-    transform: scale(1.1);
+.nav-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+/* ============================== */
+/* Divider */
+/* ============================== */
+
+.instructor-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 0.35rem 0.25rem;
+    user-select: none;
+    pointer-events: none;
+}
+
+.instructor-sidebar.collapsed .instructor-divider {
+    display: none;
 }
 
 /* ============================== */
@@ -472,58 +529,129 @@
 /* ============================== */
 
 .instructor-logout-btn {
-    background: transparent;
-    border: 1.5px solid #e74c3c;
-    color: #e74c3c;
+    background: #fff5f5;
+    border: 1px solid #fee2e2;
+    color: #dc2626;
     width: 100%;
-    margin-top: 1rem;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 10px;
-    padding: 0.875rem 1rem;
-    font-weight: 500;
-    font-size: 0.9rem;
+    margin-top: 0.45rem;
+    border-radius: 8px;
+    padding: 0.42rem 0.55rem;
+    font-weight: 600;
+    font-size: 0.81rem;
     display: flex;
     align-items: center;
+    gap: 0.55rem;
     cursor: pointer;
     position: relative;
-    overflow: hidden;
     user-select: none;
+    transition: all 0.2s ease;
 }
 
-.instructor-logout-btn::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 0;
-    height: 100%;
-    background: #e74c3c;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 0;
-}
-
-.instructor-logout-btn > * {
-    position: relative;
-    z-index: 1;
+.instructor-logout-btn .logout-icon {
+    background: #fee2e2;
+    color: #dc2626;
 }
 
 .instructor-logout-btn:hover {
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+    background: #dc2626;
+    color: #ffffff !important;
+    border-color: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.22);
 }
 
-.instructor-logout-btn:hover::before {
-    width: 100%;
+.instructor-logout-btn:hover .logout-icon {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff !important;
 }
 
 .instructor-logout-btn.collapsed {
-    padding: 0.875rem 0.5rem;
+    padding: 0.45rem 0;
     justify-content: center;
+    margin-top: 0.5rem;
 }
 
 .instructor-logout-btn.collapsed .nav-text {
-    display: none;
+    display: none !important;
+}
+
+.instructor-logout-btn.collapsed .logout-icon {
+    margin: 0 auto;
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+}
+
+.instructor-sidebar.collapsed .instructor-logout-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 10px;
+    padding: 5px 9px;
+    background: #991b1b;
+    color: #ffffff;
+    border-radius: 6px;
+    white-space: nowrap;
+    font-size: 0.74rem;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 14px rgba(153, 27, 27, 0.3);
+}
+
+.instructor-sidebar.collapsed .instructor-logout-btn::before {
+    content: '';
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 5px;
+    border: 5px solid transparent;
+    border-right-color: #991b1b;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 1000;
+}
+
+.instructor-sidebar.collapsed .instructor-logout-btn:hover::after,
+.instructor-sidebar.collapsed .instructor-logout-btn:hover::before {
+    opacity: 1;
+}
+
+/* ============================== */
+/* Footer Branding Pill */
+/* ============================== */
+
+.sidebar-footer-brand {
+    margin-top: 0.5rem;
+    padding-top: 0.45rem;
+    border-top: 1px dashed #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    user-select: none;
+}
+
+.sidebar-brand-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+.sidebar-brand-text {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
 }
 
 /* ============================== */
@@ -534,121 +662,122 @@
     background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
     border: none;
     color: white;
-    border-radius: 10px;
-    padding: 0.875rem;
-    margin: 1rem;
-    transition: all 0.25s ease;
-    font-weight: 500;
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    margin: 0.65rem;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    font-size: 0.82rem;
     user-select: none;
     cursor: pointer;
 }
 
 .instructor-mobile-toggle:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3);
 }
 
 .instructor-mobile-toggle:focus {
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.25);
     outline: none;
 }
 
 /* ============================== */
-/* Divider */
-/* ============================== */
-
-.instructor-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent 0%, rgba(52, 152, 219, 0.15) 50%, transparent 100%);
-    margin: 0.5rem 0;
-    user-select: none;
-    pointer-events: none;
-}
-
-.instructor-sidebar.collapsed .instructor-divider {
-    display: none;
-}
-
-/* ============================== */
-/* Toggle Buttons */
+/* Toggle Buttons (Collapse / Expand) - Circular Design matching instructor-header-toggle-btn-inline */
 /* ============================== */
 
 .sidebar-toggle-btn,
 .sidebar-expand-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1.5px solid rgba(255, 255, 255, 0.4);
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    z-index: 10;
-    backdrop-filter: blur(10px);
-    flex-shrink: 0;
-    user-select: none;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    font-size: 0.75rem !important;
+    flex-shrink: 0 !important;
+    z-index: 10 !important;
+    user-select: none !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
 }
 
 .sidebar-toggle-btn:hover,
 .sidebar-expand-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.6);
-    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.35) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    transform: scale(1.08) !important;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+.sidebar-toggle-btn:active,
+.sidebar-expand-btn:active {
+    transform: scale(0.95) !important;
 }
 
 .sidebar-expand-btn {
-    margin: 0 auto;
+    margin: 0 auto !important;
 }
 
 .sidebar-toggle-btn i,
 .sidebar-expand-btn i {
-    font-size: 1rem;
-    transition: transform 0.3s ease;
-    color: white;
+    font-size: 0.75rem !important;
+    line-height: 1 !important;
+    transition: transform 0.25s ease;
+    color: #ffffff !important;
     user-select: none;
-}
-
-.instructor-sidebar.collapsed .sidebar-toggle-btn i {
-    transform: rotate(180deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* ============================== */
 /* Responsive Design */
 /* ============================== */
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .sidebar-toggle-btn {
         display: none;
     }
 
     .instructor-sidebar {
+        position: static !important;
+        max-height: none !important;
         border-radius: 12px;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         margin-top: 0;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     .instructor-sidebar.collapsed {
         width: 100% !important;
+        max-width: 100% !important;
     }
 
     .instructor-sidebar-header {
-        padding: 1.25rem;
+        padding: 0.75rem 1rem;
         border-radius: 12px 12px 0 0;
     }
 
     .sidebar-content {
-        padding: 1rem;
+        padding: 0.65rem 0.85rem;
     }
 
     .instructor-nav-link {
-        padding: 0.75rem 0.875rem;
+        padding: 0.5rem 0.75rem;
     }
 }
 
-/* Remove top gaps only on mobile - allow mt-md-4 to work on larger screens */
+/* Remove top gaps only on mobile */
 @media (max-width: 767px) {
     .modern-dashboard .row:has(.instructor-sidebar),
     .instructor-course-edit-curriculum-page .row:has(.instructor-sidebar),
@@ -666,34 +795,39 @@
 
 /* Desktop: Large screens (lg >= 992px) */
 @media (min-width: 992px) {
-    /* REMOVED: Fixed width rules that conflicted with Dashboard.css flex properties */
-    /* Layout is now handled by Dashboard.css which has proper flex properties */
-    /* Sidebar collapse is controlled by Dashboard.css media queries and flex rules */
-    
-    /* Direct sidebar width control */
     .col-lg-3.instructor-sidebar-column .instructor-sidebar {
-        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
+    .col-lg-3.instructor-sidebar-column .instructor-sidebar:not(.collapsed) {
+        width: 262px !important;
+        min-width: 262px !important;
+        max-width: 262px !important;
+    }
+
     .col-lg-3.instructor-sidebar-column .instructor-sidebar.collapsed {
-        width: 85px !important;
+        width: 72px !important;
+        min-width: 72px !important;
+        max-width: 72px !important;
     }
-    
 }
 
 /* Tablet: Medium screens (md: 768px - 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
-    /* REMOVED: Fixed width rules that conflicted with Dashboard.css flex properties */
-    /* Layout is now handled by Dashboard.css which has proper flex properties */
-    /* Sidebar collapse is controlled by Dashboard.css media queries and flex rules */
-    
-    /* Direct sidebar width control */
     .col-md-4.instructor-sidebar-column .instructor-sidebar {
-        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
+    .col-md-4.instructor-sidebar-column .instructor-sidebar:not(.collapsed) {
+        width: 262px !important;
+        min-width: 262px !important;
+        max-width: 262px !important;
+    }
+
     .col-md-4.instructor-sidebar-column .instructor-sidebar.collapsed {
-        width: 85px !important;
+        width: 72px !important;
+        min-width: 72px !important;
+        max-width: 72px !important;
     }
 }
 
@@ -735,35 +869,33 @@
 
 /* Desktop: col-lg-9 adapts when sidebar collapses */
 @media (min-width: 992px) {
-    /* Target content columns in all instructor pages with CHILD COMBINATOR for higher specificity */
     .instructor-dashboard-page > .container > .row > .col-lg-9,
     .instructor-courses-page > .container > .row > .col-lg-9,
     .instructor-profile-page > .container > .row > .col-lg-9,
     .instructor-password-page > .container > .row > .col-lg-9,
     .instructor-notifications-page > .container > .row > .col-lg-9,
     .instructor-testimonials-page > .container > .row > .col-lg-9 {
-        flex: 1 1 auto !important; /* Flex-grow fills available space */
-        max-width: 100% !important; /* Remove Bootstrap's max-width constraint */
-        transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                    max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                    width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        flex: 1 1 auto !important;
+        max-width: 100% !important;
+        transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                    max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                    width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 }
 
 /* Tablet: col-md-8 adapts when sidebar collapses */
 @media (min-width: 768px) and (max-width: 991px) {
-    /* Target content columns in all instructor pages with CHILD COMBINATOR for higher specificity */
     .instructor-dashboard-page > .container > .row > .col-md-8,
     .instructor-courses-page > .container > .row > .col-md-8,
     .instructor-profile-page > .container > .row > .col-md-8,
     .instructor-password-page > .container > .row > .col-md-8,
     .instructor-notifications-page > .container > .row > .col-md-8,
     .instructor-testimonials-page > .container > .row > .col-md-8 {
-        flex: 1 1 auto !important; /* Flex-grow fills available space */
-        max-width: 100% !important; /* Remove Bootstrap's max-width constraint */
-        transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                    max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                    width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        flex: 1 1 auto !important;
+        max-width: 100% !important;
+        transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                    max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                    width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 }
 
@@ -776,7 +908,46 @@
     }
 }
 
-/* Keep the utility class for backward compatibility and smooth transitions */
+/* Transition helper */
 .sidebar-collapsed-adapted {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ==========================================================================
+   STICKY SCROLL CONTEXT GUARD
+   Ensures page containers allow window-level scroll tracking for sticky sidebar
+   ========================================================================== */
+.modern-dashboard,
+.instructor-dashboard,
+.instructor-dashboard-page,
+.instructor-notifications-page,
+.instructor-courses-page,
+.courses-container,
+.instructor-course-edit-curriculum-page,
+.course-edit-container,
+.instructor-course-create-page,
+.course-create-container,
+.course-quiz-container,
+.instructor-review-page,
+.modern-students,
+.instructor-students-page,
+.instructor-profile-page,
+.instructor-password-page,
+.qa-bg-section,
+.instructor-qa-detail-page,
+.instructor-testimonials-page {
+    overflow: visible !important;
+}
+
+.modern-dashboard > .container,
+.instructor-notifications-page > .container,
+.instructor-courses-page > .container,
+.instructor-review-page > .container,
+.modern-students > .container,
+.instructor-profile-page > .container,
+.instructor-password-page > .container,
+.qa-bg-section > .container,
+.instructor-testimonials-page > .container {
+    overflow: visible !important;
+}
+

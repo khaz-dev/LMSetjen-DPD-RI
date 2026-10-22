@@ -20,7 +20,22 @@ function Sidebar() {
         triggerInstructorSidebarCollapseEvent();
     };
     
-    const isActive = (path) => location.pathname === path || location.pathname.startsWith(path);
+    // Accurate active path checking
+    const isActive = (path) => {
+        const current = location.pathname;
+        if (path === "/instructor/dashboard/" || path === "/instructor/dashboard") {
+            return current === "/instructor/dashboard/" || current === "/instructor/dashboard";
+        }
+        if (path === "/instructor/courses/" || path === "/instructor/courses") {
+            return (
+                current === "/instructor/courses/" ||
+                current === "/instructor/courses" ||
+                current.startsWith("/instructor/course-edit/") ||
+                current.startsWith("/instructor/course-quiz/")
+            );
+        }
+        return current === path || current.startsWith(path);
+    };
 
     const handleLogout = () => {
         LogoutConfirmation().then((result) => {
@@ -42,8 +57,15 @@ function Sidebar() {
                 {/* Mobile Header */}
                 <div className="d-md-none">
                     <div className="instructor-sidebar-header">
-                        <h6 className="mb-0 fw-bold">Panel Instruktur</h6>
-                        <p className="mb-0 opacity-90 small">Kelola kursus Anda</p>
+                        <div className="sidebar-header-brand-wrap">
+                            <div className="sidebar-header-icon-box">
+                                <i className="fas fa-chalkboard-user"></i>
+                            </div>
+                            <div className="sidebar-header-text">
+                                <h6 className="sidebar-header-title">Panel Instruktur</h6>
+                                <span className="sidebar-header-badge">LMSetjen DPD RI</span>
+                            </div>
+                        </div>
                     </div>
                     <button
                         className="instructor-mobile-toggle w-100"
@@ -54,21 +76,27 @@ function Sidebar() {
                         aria-expanded="false"
                         aria-label="Toggle navigation"
                     >
-                        <i className="bi bi-grid me-2"></i>Menu
+                        <i className="bi bi-grid me-2"></i>Menu Navigasi
                     </button>
                 </div>
 
                 {/* Desktop Header - Expanded State */}
                 {!isCollapsed && (
                     <div className="d-none d-md-flex instructor-sidebar-header">
-                        <div style={{ flex: 1 }}>
-                            <h5 className="mb-1 fw-bold">Dasbor Instruktur</h5>
-                            <p className="mb-0 opacity-90 small">Kelola kursus & siswa</p>
+                        <div className="sidebar-header-brand-wrap">
+                            <div className="sidebar-header-icon-box">
+                                <i className="fas fa-chalkboard-user"></i>
+                            </div>
+                            <div className="sidebar-header-text">
+                                <h6 className="sidebar-header-title">Menu Instruktur</h6>
+                                <span className="sidebar-header-badge">DPD RI LMS</span>
+                            </div>
                         </div>
                         <button 
                             className="sidebar-toggle-btn d-flex"
                             onClick={toggleSidebarCollapse}
                             title="Tutup bilah sisi"
+                            aria-label="Tutup bilah sisi"
                         >
                             <i className="bi bi-chevron-left"></i>
                         </button>
@@ -82,6 +110,7 @@ function Sidebar() {
                             className="sidebar-expand-btn d-flex"
                             onClick={toggleSidebarCollapse}
                             title="Perluas bilah sisi"
+                            aria-label="Perluas bilah sisi"
                         >
                             <i className="bi bi-chevron-right"></i>
                         </button>
@@ -92,7 +121,7 @@ function Sidebar() {
                     <div className="sidebar-content">
                         {/* Main Navigation */}
                         <div className="nav-section-title section-title">Manajemen Kursus</div>
-                        <div className="d-flex flex-column">
+                        <div className="d-flex flex-column nav-items-group">
                             <Link 
                                 className={`instructor-nav-link ${isActive("/instructor/dashboard") ? "active" : ""}`} 
                                 to="/instructor/dashboard/"
@@ -121,7 +150,7 @@ function Sidebar() {
                                 data-tooltip="Buat Kursus"
                             >
                                 <div className="instructor-nav-icon nav-icon">
-                                    <i className="fas fa-plus-circle"></i>
+                                    <i className="fas fa-circle-plus"></i>
                                 </div>
                                 <span className="nav-text">Buat Kursus</span>
                             </Link>
@@ -175,14 +204,14 @@ function Sidebar() {
 
                         {/* Account Settings */}
                         <div className="nav-section-title section-title">Pengaturan Akun</div>
-                        <div className="d-flex flex-column">
+                        <div className="d-flex flex-column nav-items-group">
                             <Link 
                                 className={`instructor-nav-link ${isActive("/instructor/profile") ? "active" : ""}`} 
                                 to="/instructor/profile/"
                                 data-tooltip="Edit Profil"
                             >
                                 <div className="instructor-nav-icon nav-icon">
-                                    <i className="fas fa-user-edit"></i>
+                                    <i className="fas fa-user-gear"></i>
                                 </div>
                                 <span className="nav-text">Edit Profil</span>
                             </Link>
@@ -204,12 +233,21 @@ function Sidebar() {
                             onClick={handleLogout}
                             className={`instructor-logout-btn ${isCollapsed ? "collapsed" : ""}`}
                             data-tooltip="Keluar"
+                            type="button"
                         >
-                            <div className="instructor-nav-icon nav-icon">
-                                <i className="fas fa-sign-out-alt"></i>
+                            <div className="instructor-nav-icon nav-icon logout-icon">
+                                <i className="fas fa-right-from-bracket"></i>
                             </div>
-                            <span className="nav-text">Keluar</span>
+                            <span className="nav-text">Keluar Akun</span>
                         </button>
+
+                        {/* Compact Branding Pill */}
+                        {!isCollapsed && (
+                            <div className="sidebar-footer-brand">
+                                <span className="sidebar-brand-dot"></span>
+                                <span className="sidebar-brand-text">Setjen DPD RI</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </nav>

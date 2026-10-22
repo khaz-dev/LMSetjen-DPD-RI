@@ -5,6 +5,7 @@ import { ProfileContext } from "../../plugin/Context";
 import UserData from "../../plugin/UserData";
 import RoleIndicator from "../../../components/RoleIndicator";
 import useAxios from "../../../utils/useAxios";
+import { getValidProfileImageUrl } from "../../../utils/imageUtils";
 import "./Header.css";
 
 function Header() {
@@ -16,7 +17,7 @@ function Header() {
     const saved = localStorage.getItem("instructorHeaderCollapsed");
     return saved === "true";
   });
-  const [isAnimating, setIsAnimating] = useState(false); // ✨ Only animate on user interaction, not on re-render
+  const [isAnimating, setIsAnimating] = useState(false); // ✨ Only animate on user interaction
   const userData = UserData();
   const location = useLocation();
 
@@ -41,16 +42,15 @@ function Header() {
     };
   }, [userData?.user_id]);
 
-  // Toggle collapse state and save to localStorage - INDEPENDENT from sidebar
+  // Toggle collapse state and save to localStorage
   const toggleCollapse = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
-    setIsAnimating(true); // ✨ Enable animation only when user clicks toggle
+    setIsAnimating(true);
     localStorage.setItem("instructorHeaderCollapsed", newState.toString());
-    // Reset animation state after it completes (600ms to match CSS animation duration)
     setTimeout(() => {
       setIsAnimating(false);
-    }, 600);
+    }, 500);
   };
 
   // Function to check if current page is active
@@ -67,13 +67,13 @@ function Header() {
 
   const getJoinedDaysAgo = () => {
     const joinDate = profile?.date || userData?.date_joined;
-    if (!joinDate) return "Baru saja bergabung";
+    if (!joinDate) return "Baru bergabung";
     
     const days = moment().diff(moment(joinDate), "days");
-    if (days < 1) return "Mengajar hari ini";
-    if (days < 30) return `Mengajar ${days} hari`;
-    if (days < 365) return `Mengajar ${Math.floor(days/30)} bulan`;
-    return `Mengajar ${Math.floor(days/365)} tahun`;
+    if (days < 1) return "Hari ini";
+    if (days < 30) return `${days} hari`;
+    if (days < 365) return `${Math.floor(days/30)} bulan`;
+    return `${Math.floor(days/365)} tahun`;
   };
 
   // Format real last active time based on user's actual last login / session
@@ -102,7 +102,7 @@ function Header() {
       return `Kemarin (${loginMoment.format("HH:mm")})`;
     }
     if (diffDays < 7) {
-      return `${diffDays} hari lalu`;
+      return `${diffDays} hr lalu`;
     }
     return loginMoment.format("DD MMM YYYY");
   };
@@ -113,7 +113,7 @@ function Header() {
     const hasImage = Boolean(teacher?.image || profile?.image);
     const hasBio = Boolean((teacher?.bio && teacher?.bio.trim()) || (profile?.bio && profile?.bio.trim()) || (teacher?.about && teacher?.about.trim()) || (profile?.about && profile?.about.trim()));
     const hasCountry = Boolean((teacher?.country && teacher?.country.trim()) || (profile?.country && profile?.country.trim()));
-    const hasSocial = Boolean(teacher?.facebook || teacher?.twitter || teacher?.linkedin || profile?.facebook || profile?.twitter || profile?.linkedin);
+    const hasSocial = Boolean(teacher?.facebook || teacher?.twitter || teacher?.linkedin || profile?.facebook || profile?.twitter || profile?.linkedin || teacher?.instagram || teacher?.youtube);
 
     let completed = 0;
     const total = 5;
@@ -131,12 +131,27 @@ function Header() {
     };
   };
 
+  // Get Initials for Avatar Fallback
+  const getInitials = (name) => {
+    if (!name) return "IN";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const fullName = teacher?.full_name || profile?.full_name || userData?.full_name || "Instruktur";
+  const bio = teacher?.bio || teacher?.about || profile?.about || "Kelola materi pelatihan, pantau partisipasi peserta, dan evaluasi hasil belajar di platform LMSetjen DPD RI.";
+  const country = teacher?.country || profile?.country;
+  const avatarUrl = getValidProfileImageUrl(teacher?.image || profile?.image || userData?.image);
+
   // Render social links
   const renderSocialLinks = () => {
     const fb = profile?.facebook || teacher?.facebook;
     const tw = profile?.twitter || teacher?.twitter;
     const li = profile?.linkedin || teacher?.linkedin;
-    if (!fb && !tw && !li) return null;
+    const ig = profile?.instagram || teacher?.instagram;
+    const yt = profile?.youtube || teacher?.youtube;
+    if (!fb && !tw && !li && !ig && !yt) return null;
 
     return (
       <div className="instructor-social-links social-links">
@@ -155,11 +170,21 @@ function Header() {
             <i className="fab fa-linkedin-in"></i>
           </a>
         )}
+        {ig && (
+          <a href={ig} target="_blank" rel="noopener noreferrer" className="instructor-social-link social-link instagram" title="Instagram">
+            <i className="fab fa-instagram"></i>
+          </a>
+        )}
+        {yt && (
+          <a href={yt} target="_blank" rel="noopener noreferrer" className="instructor-social-link social-link youtube" title="YouTube">
+            <i className="fab fa-youtube"></i>
+          </a>
+        )}
       </div>
     );
   };
 
-  // Render instructor details
+  // Render instructor details & chips
   const renderInstructorDetails = () => {
     const isInstructorActive = Boolean(
       userData?.teacher_id || 
@@ -173,35 +198,48 @@ function Header() {
     const profileCompleteness = getProfileCompleteness();
 
     return (
-      <div className="row mt-3 pt-3 instructor-header-details-row">
-        <div className="col-md-12">
-          <div className="row instructor-header-details-items-row">
-            <div className="col-md-4">
-              <div className="instructor-detail-item">
-                <div className="instructor-meta">
-                  <i className={`fas ${isInstructorActive ? "fa-check-circle text-success" : "fa-exclamation-circle text-warning"}`}></i>
-                  <span>Status: {isInstructorActive ? "Instruktur Aktif" : "Pengaturan Profil Diperlukan"}</span>
-                </div>
-              </div>
-            </div>
+      <div className="row instructor-header-details-row">
+        <div className="col-12">
+          <div className="instructor-header-details-items-row d-flex flex-wrap align-items-center justify-content-between gap-2">
             
-            <div className="col-md-4">
-              <div className="instructor-detail-item">
-                <div className="instructor-meta">
-                  <i className="fas fa-clock text-info"></i>
-                  <span>Aktif terakhir: {lastActiveText}</span>
-                </div>
+            {/* Left side: Interactive / Informative Status Chips */}
+            <div className="d-flex flex-wrap align-items-center gap-2 instructor-chips-group">
+              
+              {/* Active Status Chip */}
+              <div className="instructor-chip" title="Status Akun Instruktur">
+                <i className={`fas ${isInstructorActive ? "fa-circle-check text-success-bright" : "fa-circle-exclamation text-warning-bright"}`}></i>
+                <span>{isInstructorActive ? "Instruktur Aktif" : "Perlu Pengaturan"}</span>
               </div>
-            </div>
-            
-            <div className="col-md-4">
-              <div className="instructor-detail-item">
-                <div className="instructor-meta">
-                  <i className={`fas ${profileCompleteness.isComplete ? "fa-user-check text-success" : "fa-user-edit text-warning"}`}></i>
-                  <span>Status Profil: {profileCompleteness.label}</span>
-                </div>
+
+              {/* Profile Completeness Chip */}
+              <div className="instructor-chip" title="Kelengkapan Profil Instruktur">
+                <i className={`fas ${profileCompleteness.isComplete ? "fa-user-check text-success-bright" : "fa-user-edit text-warning-bright"}`}></i>
+                <span>{profileCompleteness.label}</span>
               </div>
+
+              {/* Last Active Chip */}
+              <div className="instructor-chip" title="Waktu Aktif Terakhir">
+                <i className="fas fa-clock text-info-bright"></i>
+                <span>Aktif: {lastActiveText}</span>
+              </div>
+
+              {/* Member Since Chip */}
+              <div className="instructor-chip" title="Terdaftar Mengajar Sejak">
+                <i className="fas fa-calendar-alt text-teal-bright"></i>
+                <span>Sejak {getMemberSince()}</span>
+              </div>
+
+              {/* Country / Location Chip if exists */}
+              {country && (
+                <div className="instructor-chip" title={`Lokasi: ${country}`}>
+                  <i className="fas fa-map-marker-alt text-amber-bright"></i>
+                  <span>{country}</span>
+                </div>
+              )}
             </div>
+
+            {/* Right side: Social Links if any */}
+            {renderSocialLinks()}
           </div>
         </div>
       </div>
@@ -212,12 +250,13 @@ function Header() {
     <div className="row instructor-header-row">
       <div className="col-xl-12 col-lg-12 col-md-12 col-12">
         <div className={`instructor-header-card ${isCollapsed ? "collapsed" : ""} ${isAnimating ? "animating" : ""}`}>
+          
           {/* Collapse Toggle Button */}
           <button
             className="instructor-header-toggle-btn"
             onClick={toggleCollapse}
-            title={isCollapsed ? "Perluas Header" : "Tutup Header"}
-            aria-label={isCollapsed ? "Perluas Header" : "Tutup Header"}
+            title={isCollapsed ? "Perluas Header" : "Ciutkan Header"}
+            aria-label={isCollapsed ? "Perluas Header" : "Ciutkan Header"}
           >
             <i className={`fas fa-chevron-${isCollapsed ? "down" : "up"}`}></i>
           </button>
@@ -225,30 +264,35 @@ function Header() {
           {/* Collapsed Mini Header */}
           {isCollapsed && (
             <div className="instructor-header-collapsed">
-              <div className="d-flex align-items-center justify-content-between">
-                <div className="d-flex align-items-center gap-2">
-                  <div className="d-flex align-items-center justify-content-between w-100 gap-2">
-                    <h5 className="mb-0 text-white">
-                      {teacher?.full_name || profile?.full_name || userData?.full_name || "Dasbor Instruktur"}
+              <div className="d-flex align-items-center justify-content-between gap-3">
+                <div className="d-flex align-items-center gap-2 min-w-0">
+                  <div className="instructor-avatar-mini">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={fullName} />
+                    ) : (
+                      <span className="instructor-avatar-mini-initials">{getInitials(fullName)}</span>
+                    )}
+                  </div>
+                  <div className="d-flex align-items-center gap-2 flex-wrap">
+                    <h5 className="mb-0 text-white instructor-collapsed-name">
+                      {fullName}
                     </h5>
-                    <div style={{marginTop: '-2px', flexShrink: 0}}>
-                      <RoleIndicator compact={true} />
-                    </div>
+                    <RoleIndicator compact={true} />
                   </div>
                 </div>
-                <div className="d-flex gap-2">
+                <div className="d-flex align-items-center gap-2 flex-shrink-0">
                   <Link
                     to="/instructor/create-course/"
-                    className={`btn btn-sm btn-outline-light ${isActivePage("/instructor/create-course/") ? "active" : ""}`}
+                    className={`btn btn-sm btn-instructor-cta ${isActivePage("/instructor/create-course/") ? "active" : ""}`}
                     title="Buat Kursus"
                   >
                     <i className="fas fa-plus me-1"></i>
-                    Buat
+                    <span>Buat Kursus</span>
                   </Link>
                   <Link
                     to="/instructor/profile/"
-                    className={`btn btn-sm btn-outline-light ${isActivePage("/instructor/profile/") ? "active" : ""}`}
-                    title="Profil"
+                    className={`btn btn-sm btn-instructor-ghost ${isActivePage("/instructor/profile/") ? "active" : ""}`}
+                    title="Pengaturan Profil"
                   >
                     <i className="fas fa-user-cog"></i>
                   </Link>
@@ -266,75 +310,75 @@ function Header() {
           )}
 
           {/* Full Header Content */}
-          <div className={`instructor-header-content p-4 ${isAnimating ? (isCollapsed ? "collapsed-state" : "expanded-state") : (isCollapsed ? "collapsed-visual" : "expanded-visual")}`}>
-              <div className="row align-items-center instructor-header-main-row">
-                {/* Profile Information Section */}
-                <div className="col-lg-9 col-md-8 mb-4 mb-lg-0 d-flex align-items-center">
-                  <div>
-                    <h1 className="instructor-name">
-                      {teacher?.full_name || profile?.full_name || userData?.full_name || "Selamat Datang Instruktur!"}
-                    </h1>
-                    <p className="instructor-bio">
-                      {teacher?.bio || teacher?.about || profile?.about || "Selamat datang di dasbor instruktur Anda! Buat dan kelola kursus Anda untuk mendidik siswa di seluruh dunia."}
-                    </p>
-
-                    {(teacher?.country || profile?.country) ? (
-                      <div className="instructor-meta instructor-location-meta d-flex align-items-center gap-2 mt-3">
-                        <div>
-                          <i className="fas fa-map-marker-alt"></i>
-                          <span>Berbasis di {teacher?.country || profile?.country}</span>
-                        </div>
-                        {renderSocialLinks()}
-                      </div>
+          <div className={`instructor-header-content ${isAnimating ? (isCollapsed ? "collapsed-state" : "expanded-state") : (isCollapsed ? "collapsed-visual" : "expanded-visual")}`}>
+            
+            {/* Primary Top Row: Identity & CTA buttons */}
+            <div className="row align-items-center instructor-header-main-row">
+              
+              {/* Left: Avatar + Identity */}
+              <div className="col-lg-8 col-md-7 mb-3 mb-md-0">
+                <div className="d-flex align-items-center gap-3">
+                  
+                  {/* Avatar with status indicator */}
+                  <div className="instructor-header-avatar-wrap flex-shrink-0">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={fullName} className="instructor-header-avatar-img" />
                     ) : (
-                      <div className="instructor-meta d-flex justify-content-end mt-3">
-                        {renderSocialLinks()}
+                      <div className="instructor-header-avatar-placeholder">
+                        <span>{getInitials(fullName)}</span>
                       </div>
                     )}
-                    
-                    <div className="d-flex flex-wrap gap-3 badges-container">
-                      <div className="badge-instructor">
-                        <i className="fas fa-calendar-alt"></i>
-                        Mengajar sejak {getMemberSince()}
-                      </div>
-                      <div className="badge-instructor">
-                        <i className="fas fa-clock"></i>
-                        {getJoinedDaysAgo()}
-                      </div>
+                    <span className="instructor-online-badge" title="Status Aktif"></span>
+                  </div>
+
+                  {/* Name, Tag, and Bio */}
+                  <div className="instructor-header-info min-w-0">
+                    <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
+                      <span className="instructor-portal-badge">
+                        <i className="fas fa-graduation-cap me-1"></i>
+                        Portal Instruktur
+                      </span>
                       <RoleIndicator compact={true} />
                     </div>
-                  </div>
-                </div>
 
-                {/* Action Buttons Section */}
-                <div className="col-lg-3 col-md-4">
-                  <div className="text-center text-lg-end">
-                    <div className="d-flex flex-column flex-md-row flex-lg-column gap-3 justify-content-center justify-content-lg-end">
-                      <Link
-                        to="/instructor/create-course/"
-                        className={`btn-instructor-primary ${isActivePage("/instructor/create-course/") ? "active" : ""}`}
-                        title="Buat kursus baru"
-                      >
-                        <i className="fas fa-plus"></i>
-                        Buat Kursus
-                      </Link>
-                      
-                      <Link
-                        to="/instructor/profile/"
-                        className={`btn-instructor-outline ${isActivePage("/instructor/profile/") ? "active" : ""}`}
-                        title="Kelola profil instruktur Anda"
-                      >
-                        <i className="fas fa-user-cog"></i>
-                        Pengaturan Profil
-                      </Link>
-                    </div>
+                    <h1 className="instructor-name mb-1">
+                      {fullName}
+                    </h1>
+
+                    <p className="instructor-bio mb-0" title={bio}>
+                      {bio}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Additional Instructor Details */}
-              {renderInstructorDetails()}
+              {/* Right: Quick Action CTAs */}
+              <div className="col-lg-4 col-md-5">
+                <div className="d-flex align-items-center justify-content-md-end gap-2 flex-wrap instructor-actions-wrap">
+                  <Link
+                    to="/instructor/create-course/"
+                    className={`btn-instructor-primary ${isActivePage("/instructor/create-course/") ? "active" : ""}`}
+                    title="Buat kursus baru"
+                  >
+                    <i className="fas fa-plus"></i>
+                    <span>Buat Kursus</span>
+                  </Link>
+                  
+                  <Link
+                    to="/instructor/profile/"
+                    className={`btn-instructor-outline ${isActivePage("/instructor/profile/") ? "active" : ""}`}
+                    title="Kelola profil instruktur Anda"
+                  >
+                    <i className="fas fa-user-cog"></i>
+                    <span>Pengaturan Profil</span>
+                  </Link>
+                </div>
+              </div>
             </div>
+
+            {/* Bottom Meta & Details Strip */}
+            {renderInstructorDetails()}
+          </div>
         </div>
       </div>
     </div>

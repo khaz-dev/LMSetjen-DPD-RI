@@ -1,15 +1,15 @@
 /* ========================================
-   INSTRUCTOR REVIEW STYLES
+   INSTRUCTOR REVIEW STYLES - COMPACT & EYE-CATCHING
+   LMSetjen DPD RI Design System
    ======================================== */
 
-/* CRITICAL: Force instructor-review-page padding to be overridable by pt-5 and pb-5 classes */
-/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+/* Force instructor-review-page padding to be overridable by pt-5 and pb-5 */
 .instructor-review-page.pt-5 {
     padding-top: 50px !important;
 }
 
 .instructor-review-page.pb-5 {
-    padding-bottom: 3rem !important;
+    padding-bottom: 2rem !important;
 }
 
 /* Main Page Layout */
@@ -19,42 +19,31 @@
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
-    margin-bottom: 8rem;
-    min-height: 100vh;
+    margin-bottom: 2.5rem !important;
+    min-height: calc(100vh - 200px);
     background: transparent;
-    padding: var(--page-top-spacing) 0;
-    padding-top: var(--page-top-spacing) !important;
-    padding-bottom: var(--page-bottom-spacing) !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    overflow-x: hidden;
-    overflow-y: visible;
-    /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
-    /* ✨ PHASE 7.3: Add overflow-x: hidden to prevent horizontal scroll */
+    padding: var(--page-top-spacing, 20px) 0;
+    overflow: visible !important;
 }
 
-/* Ensure proper scroll context for sticky sidebar */
 .instructor-review-page .container {
-    position: relative;
+    overflow: visible !important;
 }
 
 /* ========================================
    CRITICAL LAYOUT FIX - Row & Column Structure
    ======================================== */
-
-/* ✨ Main layout row (direct child of container) - matches Testimonials pattern */
-.instructor-review-page > .container > .row {
+.instructor-review-page > .container > .row:not(.instructor-header-row) {
     flex-wrap: nowrap;
-    width: 100%;
+    width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
     display: flex !important;
     flex-direction: row !important;
     gap: 0 !important;
-    overflow: visible;
+    overflow: visible !important;
 }
 
-/* Consistent vertical spacing for INNER dashboard sections (form rows, etc.) */
 .instructor-review-page .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(:has(.instructor-sidebar-column)) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -65,7 +54,6 @@
     width: calc(100% + var(--bs-gutter-x, 24px));
 }
 
-/* CRITICAL: Sidebar + Content row should NOT wrap - keep them side by side */
 .instructor-review-page .row:has(.instructor-sidebar-column) {
     flex-wrap: nowrap;
     width: 100%;
@@ -81,7 +69,6 @@
     flex-direction: column;
 }
 
-/* Protect Header on review page from row CSS rules */
 .instructor-review-page .row.instructor-header-row {
     margin-left: auto !important;
     margin-right: auto !important;
@@ -89,7 +76,6 @@
     max-width: 100% !important;
 }
 
-/* Ensure Header card maintains full width and removes right gap */
 .instructor-review-page .row.instructor-header-row > .col-xl-12,
 .instructor-review-page .row.instructor-header-row > .col-lg-12,
 .instructor-review-page .row.instructor-header-row > .col-md-12,
@@ -102,18 +88,6 @@
     max-width: 100% !important;
 }
 
-/* ✨ PHASE 4.21: Sidebar-content rows - Proper layout without conflicts */
-.instructor-review-page .row.sidebar-content-row,
-.instructor-review-page .row.sidebar-content-row-loading {
-    flex-wrap: nowrap;
-    width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
-
-/* Desktop: col-lg-9 content wrapper (inside sidebar row) */
 .instructor-review-page .row:has(.instructor-sidebar-column) > .col-lg-9 {
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -123,14 +97,6 @@
     flex: 1 1 auto !important;
 }
 
-/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
-.instructor-review-page .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
-}
-
-/* Tablet: col-md-8 content wrapper (inside sidebar row) */
 .instructor-review-page .row:has(.instructor-sidebar-column) > .col-md-8 {
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -140,1195 +106,966 @@
     flex: 1 1 auto !important;
 }
 
-/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
-.instructor-review-page .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
-}
-
-/* Override for specific spacing needs */
-.instructor-review-page .row.mb-3 {
-    margin-bottom: 1rem !important;
-}
-
-/* ============================== */
-/* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
-/* Ensure sticky positioning works on Review page */
-/* ============================== */
+/* Sticky Sidebar Settings */
 .instructor-review-page .row > .instructor-sidebar-column {
-  display: flex;
-  flex-direction: column;
-  overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: stretch !important;
+    height: auto !important;
+    position: static !important;
+    overflow: visible !important;
 }
 
-/* Sidebar: sticky positioning defined in global performance.css */
-/* This ensures the sidebar sticks to the viewport when scrolling */
-/* Position: sticky is already set in Sidebar.css & performance.css */
-/* NO override or conflicting properties here */
+.instructor-review-page .instructor-sidebar {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: calc(var(--navbar-height, 70px) + 18px) !important;
+    z-index: 99 !important;
+    align-self: flex-start !important;
+}
 
 /* ========================================
-   HEADER SECTION
+   THEME COLORS & COMMON TOKENS
    ======================================== */
-.instructor-review-page .modern-header-section {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+.text-teal {
+    color: #0f766e !important;
+}
+
+.bg-teal-subtle {
+    background: rgba(15, 118, 110, 0.1) !important;
+}
+
+.text-amber {
+    color: #d97706 !important;
+}
+
+.bg-amber-subtle {
+    background: rgba(245, 158, 11, 0.12) !important;
+}
+
+.text-emerald {
+    color: #059669 !important;
+}
+
+.bg-emerald-subtle {
+    background: rgba(16, 185, 129, 0.12) !important;
+}
+
+.text-coral {
+    color: #ea580c !important;
+}
+
+.bg-coral-subtle {
+    background: rgba(234, 88, 12, 0.12) !important;
+}
+
+.btn-teal {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    color: #ffffff;
+    border: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-teal:hover:not(:disabled) {
+    background: linear-gradient(135deg, #115e59 0%, #134e4a 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
+    transform: translateY(-1px);
+}
+
+.btn-teal:disabled {
+    opacity: 0.65;
+    color: #ffffff;
+}
+
+.btn-outline-teal {
+    color: #0f766e;
+    border: 1px solid rgba(15, 118, 110, 0.35);
+    background: rgba(15, 118, 110, 0.04);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-teal:hover:not(:disabled) {
+    background: #0f766e;
+    color: #ffffff;
+    border-color: #0f766e;
+    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.2);
+}
+
+/* ========================================
+   1. PAGE HEADER BAR (COMPACT)
+   ======================================== */
+.instructor-review-page .reviews-header-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 18px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    margin-bottom: 12px;
     position: relative;
-    overflow: hidden;
-    margin-bottom: 1.5rem;
 }
 
-.instructor-review-page .header-decoration {
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 300px;
-    height: 300px;
-    background: linear-gradient(45deg, #0f766e20, #115e5920);
-    border-radius: 50%;
-    z-index: 1;
+.instructor-review-page .reviews-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    letter-spacing: -0.01em;
 }
 
-.instructor-review-page .header-content {
-    position: relative;
-    z-index: 2;
+.instructor-review-page .reviews-subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
 }
 
-.instructor-review-page .page-title {
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-
-.instructor-review-page .page-title-icon {
-    margin-right: 1rem;
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.instructor-review-page .page-subtitle {
-    margin-bottom: 0;
-    color: #6c757d;
-    font-size: 1.1rem;
-}
-
-.instructor-review-page .stat-badge {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 15px;
-    font-size: 0.9rem;
-    font-weight: 600;
+.instructor-review-page .reviews-counter-pill {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-}
-
-.instructor-review-page .stat-badge-icon {
-    margin-right: 0.5rem;
+    background: rgba(15, 118, 110, 0.08);
+    color: #0f766e;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    border: 1px solid rgba(15, 118, 110, 0.18);
 }
 
 /* ========================================
-   FILTER SECTION
+   2. KPI METRICS STRIP (4 COMPACT CARDS)
    ======================================== */
-.instructor-review-page .modern-filter-section {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+.instructor-review-page .reviews-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
 }
 
-.instructor-review-page .modern-search-container {
+.instructor-review-page .review-metric-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.2s ease;
     position: relative;
+    overflow: hidden;
+}
+
+.instructor-review-page .review-metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: rgba(15, 118, 110, 0.25);
+}
+
+.instructor-review-page .metric-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.instructor-review-page .metric-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.instructor-review-page .metric-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.instructor-review-page .metric-label {
+    font-size: 0.76rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.instructor-review-page .metric-badge {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.01em;
+}
+
+/* ========================================
+   3. COMPACT FILTER & SEARCH TOOLBAR
+   ======================================== */
+.instructor-review-page .reviews-toolbar-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.instructor-review-page .toolbar-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Status Filter Pills */
+.instructor-review-page .status-filter-pills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.instructor-review-page .status-pill {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.instructor-review-page .status-pill:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+.instructor-review-page .status-pill.active {
+    background: #0f766e;
+    color: #ffffff;
+    border-color: #0f766e;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+}
+
+.instructor-review-page .status-pill.active i {
+    color: #ffffff !important;
+}
+
+/* Rating Filter Pills */
+.instructor-review-page .rating-filter-pills {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.instructor-review-page .filter-label {
+    font-size: 0.76rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.instructor-review-page .rating-pill {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.instructor-review-page .rating-pill:hover {
+    border-color: #f59e0b;
+    color: #d97706;
+}
+
+.instructor-review-page .rating-pill.active {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #b45309;
+}
+
+/* Bottom Row of Toolbar */
+.instructor-review-page .toolbar-bottom-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.instructor-review-page .search-input-wrapper {
+    position: relative;
+    flex: 1 1 240px;
 }
 
 .instructor-review-page .search-icon {
     position: absolute;
-    left: 15px;
+    left: 11px;
     top: 50%;
     transform: translateY(-50%);
-    color: #0f766e;
-    z-index: 2;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    pointer-events: none;
 }
 
-.instructor-review-page .modern-input {
-    padding-left: 45px;
-    height: 50px;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
+.instructor-review-page .compact-input {
+    height: 38px;
+    font-size: 0.82rem;
+    padding-left: 32px;
+    padding-right: 28px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    transition: all 0.2s ease;
 }
 
-.instructor-review-page .modern-input:focus {
+.instructor-review-page .compact-input:focus {
     border-color: #0f766e;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
     outline: none;
 }
 
-.instructor-review-page .modern-select {
-    height: 50px;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    background: white;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 0.75rem center !important;
-    background-size: 16px 12px !important;
-    transition: all 0.3s ease;
-    padding: 0.5rem 1rem;
-    padding-right: 2.25rem;
+.instructor-review-page .btn-clear-search {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.instructor-review-page .modern-select:focus {
-    border-color: #0f766e;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+.instructor-review-page .btn-clear-search:hover {
+    color: #475569;
+}
+
+.instructor-review-page .select-input-wrapper {
+    flex: 0 0 auto;
+}
+
+.instructor-review-page .course-select {
+    max-width: 200px;
+}
+
+.instructor-review-page .sort-select {
+    min-width: 140px;
+}
+
+.instructor-review-page .compact-select {
+    height: 38px;
+    font-size: 0.82rem;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    padding: 4px 26px 4px 10px;
+    color: #334155;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
     background-repeat: no-repeat !important;
-    background-position: right 0.75rem center !important;
-    background-size: 16px 12px !important;
+    background-position: right 0.6rem center !important;
+    background-size: 12px 10px !important;
+}
+
+.instructor-review-page .compact-select:focus {
+    border-color: #0f766e;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
     outline: none;
 }
 
-.instructor-review-page .modern-select:hover:not(:disabled):not(:focus) {
-    border-color: #adb5bd;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 0.75rem center !important;
-    background-size: 16px 12px !important;
+.instructor-review-page .btn-reset-filters {
+    height: 38px;
+    padding: 0 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
 }
 
-.instructor-review-page .modern-select option {
-    padding: 0.5rem;
-    margin: 0.5rem 0;
-    border-radius: 4px;
-    background: white;
-    color: #2c3e50;
-    font-size: 0.95rem;
-}
-
-.instructor-review-page .modern-select option:hover {
-    background: #0f766e;
-    color: white;
-}
-
-/* ========================================
-   FILTER SECTION
-   ======================================== */
-.instructor-review-page .modern-filter-section {
-    background: white;
-    padding: 1rem;
-    border-radius: 15px;
-    border: 1px solid #e9ecef;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.instructor-review-page .btn-reset-filters:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fca5a5;
 }
 
 /* ========================================
-   REVIEWS CONTAINER
+   4. REVIEWS LIST & COMPACT CARDS
    ======================================== */
-.instructor-review-page .modern-reviews-container {
+.instructor-review-page .reviews-cards-stack {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 10px;
 }
 
-/* ========================================
-   REVIEW CARD
-   ======================================== */
-.instructor-review-page .modern-review-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+.instructor-review-page .compact-review-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+    border-left: 4px solid #0f766e;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.instructor-review-page .modern-review-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+.instructor-review-page .compact-review-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    border-color: rgba(15, 118, 110, 0.3);
+    border-left-color: #0d9488;
 }
 
-/* ========================================
-   AVATAR STYLES
-   ======================================== */
-.instructor-review-page .modern-avatar-container {
-    position: relative;
-    padding: 4px;
-    background: linear-gradient(135deg, #0f766e, #115e59);
+.instructor-review-page .compact-review-card.no-reply {
+    border-left-color: #f59e0b;
+}
+
+/* Card Topbar */
+.instructor-review-page .review-card-topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.instructor-review-page .reviewer-main-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 260px;
+}
+
+.instructor-review-page .reviewer-avatar-box {
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.2);
 }
 
-.instructor-review-page .reviewer-avatar {
-    width: 70px;
-    height: 70px;
+.instructor-review-page .reviewer-img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border: 3px solid white;
     border-radius: 50%;
 }
 
-.instructor-review-page .default-avatar {
-    width: 70px;
-    height: 70px;
-    background: #0f766e;
-    border-radius: 50%;
+.instructor-review-page .reviewer-initial-fallback {
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 28px;
-    border: 3px solid white;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1.05rem;
 }
 
-.instructor-review-page .avatar-status-badge {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 20px;
-    height: 20px;
-    background: #28a745;
-    border-radius: 50%;
-    border: 2px solid white;
+.instructor-review-page .reviewer-details {
     display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.instructor-review-page .avatar-status-icon {
-    font-size: 8px;
-    color: white;
-}
-
-/* ========================================
-   REVIEW HEADER
-   ======================================== */
-.instructor-review-page .review-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.6rem;
-}
-
-.instructor-review-page .reviewer-info {
-    flex: 1;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .instructor-review-page .reviewer-name {
-    color: #2c3e50;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.instructor-review-page .user-role-badge {
+    font-size: 0.68rem;
     font-weight: 600;
-    margin-bottom: 0.2rem;
-    font-size: 0.95rem;
+    padding: 1px 7px;
+    border-radius: 9999px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
 }
 
-.instructor-review-page .review-date {
-    font-size: 0.75rem;
-    color: #6c757d;
-}
-
-.instructor-review-page .review-date-icon {
-    margin-right: 0.3rem;
-}
-
-.instructor-review-page .report-btn {
-    border: none;
-    background: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 0.75rem;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-}
-
-.instructor-review-page .report-btn:hover {
-    background: rgba(220, 53, 69, 0.15);
-    color: #dc3545;
-}
-
-/* ✨ PHASE 4.210: Report Status Badge Styling */
-.instructor-review-page .report-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-}
-
-.instructor-review-page .report-status-badge.pending {
-    background: rgba(255, 193, 7, 0.15);
-    color: #ff9800;
-    border-left: 3px solid #ff9800;
-}
-
-.instructor-review-page .report-status-badge.reviewed {
-    background: rgba(13, 110, 253, 0.15);
-    color: #0f766e;
-    border-left: 3px solid #0f766e;
-}
-
-.instructor-review-page .report-status-badge.dismissed {
-    background: rgba(220, 53, 69, 0.15);
-    color: #dc3545;
-    border-left: 3px solid #dc3545;
-}
-
-.instructor-review-page .report-status-badge.action_taken {
-    background: rgba(25, 135, 84, 0.15);
-    color: #198754;
-    border-left: 3px solid #198754;
-}
-
-/* ✨ PHASE 4.210: Report Status Badge Button (Clickable) */
-.instructor-review-page .report-status-badge-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-    border: none;
-    background: none;
-    cursor: pointer;
-}
-
-.instructor-review-page .report-status-badge-btn.pending {
-    background: rgba(255, 193, 7, 0.15);
-    color: #ff9800;
-    border-left: 3px solid #ff9800;
-}
-
-.instructor-review-page .report-status-badge-btn.pending:hover {
-    background: rgba(255, 193, 7, 0.25);
-    transform: translateY(-2px);
-}
-
-.instructor-review-page .report-status-badge-btn.reviewed {
-    background: rgba(13, 110, 253, 0.15);
-    color: #0f766e;
-    border-left: 3px solid #0f766e;
-}
-
-.instructor-review-page .report-status-badge-btn.reviewed:hover {
-    background: rgba(13, 110, 253, 0.25);
-    transform: translateY(-2px);
-}
-
-.instructor-review-page .report-status-badge-btn.dismissed {
-    background: rgba(220, 53, 69, 0.15);
-    color: #dc3545;
-    border-left: 3px solid #dc3545;
-}
-
-.instructor-review-page .report-status-badge-btn.dismissed:hover {
-    background: rgba(220, 53, 69, 0.25);
-    transform: translateY(-2px);
-}
-
-.instructor-review-page .report-status-badge-btn.action_taken {
-    background: rgba(25, 135, 84, 0.15);
-    color: #198754;
-    border-left: 3px solid #198754;
-}
-
-.instructor-review-page .report-status-badge-btn.action_taken:hover {
-    background: rgba(25, 135, 84, 0.25);
-    transform: translateY(-2px);
-}
-
-/* ✨ PHASE 4.210: Review Report Section */
-.instructor-review-page .review-report-section {
+.instructor-review-page .reviewer-submeta {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-}
-
-/* ========================================
-   RATING DISPLAY
-   ======================================== */
-.instructor-review-page .rating-section {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.4rem;
-    gap: 0.2rem;
-}
-
-.instructor-review-page .course-info {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.6rem;
-    gap: 0.3rem;
+    gap: 6px;
+    font-size: 0.74rem;
+    color: #64748b;
     flex-wrap: wrap;
 }
 
-.instructor-review-page .rating-label {
-    color: #6c757d;
-    font-size: 0.8rem;
+.instructor-review-page .meta-separator {
+    color: #cbd5e1;
 }
 
-/* ✨ PHASE 8c: Scoped course-title for InstructorReviewPage - properly namespaced to avoid conflicts
-   Base .course-title styles are consolidated in CourseCard.css
-*/
-.instructor-review-page .course-title {
-    font-weight: bold;
+.instructor-review-page .review-course-name {
+    font-weight: 600;
     color: #0f766e;
-    font-size: 0.85rem;
-    word-break: break-word;
+    max-width: 240px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* ========================================
-   REVIEW CONTENT
-   ======================================== */
-.instructor-review-page .review-content {
-    background: rgba(102, 126, 234, 0.05);
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    margin-bottom: 0.6rem;
-}
-
-.instructor-review-page .review-content-label {
+/* Card Actions & Rating */
+.instructor-review-page .review-card-actions-meta {
     display: flex;
-    align-items: start;
-    margin-bottom: 0.4rem;
-}
-
-.instructor-review-page .review-quote-icon {
-    color: #0d9488;
-    font-size: 0.8rem;
-    margin-right: 6px;
-    margin-top: 0px;
-    flex-shrink: 0;
-}
-
-.instructor-review-page .review-label-text {
-    font-weight: bold;
-    color: #2c3e50;
-    font-size: 0.8rem;
-}
-
-.instructor-review-page .review-text {
-    font-size: 0.85rem;
-    line-height: 1.4;
-    color: #2c3e50;
-    margin: 0;
-}
-
-/* ========================================
-   RESPONSE SECTION
-   ======================================== */
-.instructor-review-page .response-content {
-    background: rgba(40, 167, 69, 0.05);
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(40, 167, 69, 0.1);
-    margin-bottom: 0.6rem;
-    margin-left: auto;
-    margin-right: 0;
-    max-width: 90%;
-    text-align: right;
-}
-
-.instructor-review-page .response-content-label {
-    display: flex;
-    align-items: start;
-    margin-bottom: 0.4rem;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
     justify-content: flex-end;
 }
 
-.instructor-review-page .response-icon {
-    color: #28a745;
-    font-size: 0.8rem;
-    margin-left: 6px;
-    margin-right: 0;
-    margin-top: 0px;
-    flex-shrink: 0;
-    order: 2;
-}
-
-.instructor-review-page .response-label-text {
-    font-weight: bold;
-    color: #2c3e50;
-    font-size: 0.8rem;
-    order: 1;
-}
-
-.instructor-review-page .response-text {
-    font-size: 0.85rem;
-    line-height: 1.4;
-    color: #2c3e50;
-    margin: 0;
-    text-align: right;
-}
-
-/* ========================================
-   REPLY BUTTON
-   ======================================== */
-.instructor-review-page .modern-reply-btn {
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    border: none;
-    color: white;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.instructor-review-page .modern-reply-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-    color: white;
-}
-
-.instructor-review-page .modern-reply-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.instructor-review-page .reply-icon {
-    margin-right: 0.3rem;
-}
-
-/* ========================================
-   RESPONSE FORM
-   ======================================== */
-.instructor-review-page .modern-response-form {
-    background: rgba(248, 249, 250, 0.8);
-    border-radius: 8px;
-    padding: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    margin-top: 0.6rem;
-}
-
-.instructor-review-page .form-label {
-    font-weight: 600;
-    color: #2c3e50;
-    font-size: 0.8rem;
-    margin-bottom: 0.5rem;
+.instructor-review-page .rating-display-group {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-}
-
-.instructor-review-page .form-label-icon {
-    color: #0f766e;
-}
-
-.instructor-review-page .modern-textarea {
-    resize: vertical;
-    min-height: 80px;
-    font-size: 0.85rem;
-    border: 2px solid #e9ecef;
+    gap: 4px;
+    background: #fefce8;
+    padding: 3px 8px;
     border-radius: 6px;
-    padding: 8px;
-    transition: all 0.3s ease;
-    background: white;
+    border: 1px solid #fef08a;
 }
 
-.instructor-review-page .modern-textarea:focus {
-    border-color: #0f766e;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-    outline: none;
+.instructor-review-page .rating-numeric-tag {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #b45309;
 }
 
-.instructor-review-page .modern-textarea:disabled {
-    background-color: #f8f9fa;
-    cursor: not-allowed;
-}
-
-.instructor-review-page .form-text {
-    margin-top: 0.3rem;
-    display: block;
-    font-size: 0.7rem;
-}
-
-.instructor-review-page .form-text-icon {
-    margin-right: 0.25rem;
-}
-
-/* ========================================
-   FORM BUTTONS
-   ======================================== */
-.instructor-review-page .form-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-}
-
-.instructor-review-page .cancel-btn {
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-weight: 500;
-    font-size: 0.8rem;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.instructor-review-page .cancel-icon {
-    margin-right: 0.3rem;
-    font-size: 0.75rem;
-}
-
-.instructor-review-page .submit-btn {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    border: none;
-    border-radius: 6px;
-    padding: 6px 10px;
+.instructor-review-page .status-tag {
+    font-size: 0.72rem;
     font-weight: 600;
-    color: white;
-    font-size: 0.8rem;
-    transition: all 0.3s ease;
+    padding: 3px 9px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
 }
 
-.instructor-review-page .submit-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
-    color: white;
+.instructor-review-page .status-tag.replied {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
 }
 
-.instructor-review-page .submit-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.instructor-review-page .status-tag.unreplied {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
 }
 
-.instructor-review-page .submit-icon {
-    margin-right: 0.3rem;
-}
-
-/* ========================================
-   LOADING SPINNER
-   ======================================== */
-.instructor-review-page .submit-spinner {
-    width: 1rem;
-    height: 1rem;
-    margin-right: 0.5rem;
-}
-
-/* ========================================
-   EMPTY STATE
-   ======================================== */
-.instructor-review-page .modern-empty-state {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 60px 40px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.instructor-review-page .empty-state-icon {
-    width: 100px;
-    height: 100px;
-    background: linear-gradient(135deg, #0d948820, #0f766e20);
-    border-radius: 50%;
+/* Flag Abuse Button */
+.instructor-review-page .btn-flag-abuse {
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    color: #94a3b8;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.5rem;
+    font-size: 0.76rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.instructor-review-page .empty-state-icon-inner {
-    font-size: 2.5rem;
-    color: #0d9488;
+.instructor-review-page .btn-flag-abuse:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fca5a5;
 }
 
-.instructor-review-page .empty-state-title {
-    color: #2c3e50;
-    font-weight: 600;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.instructor-review-page .empty-state-text {
-    color: #6c757d;
-    font-size: 1.1rem;
-    margin: 0;
-}
-
-/* ========================================
-   RESPONSIVE DESIGN
-   ======================================== */
-@media (max-width: 768px) {
-    .instructor-review-page .modern-header-section {
-        padding: 20px;
-        margin-bottom: 1.25rem;
-    }
-
-    .instructor-review-page .page-title {
-        font-size: 2rem;
-    }
-
-    .instructor-review-page .page-subtitle {
-        font-size: 1rem;
-    }
-
-    .instructor-review-page .modern-filter-section {
-        padding: 20px;
-        margin-bottom: 1.25rem;
-    }
-
-    .instructor-review-page .modern-review-card {
-        padding: 20px;
-    }
-
-    .instructor-review-page .reviewer-avatar,
-    .instructor-review-page .default-avatar {
-        width: 60px;
-        height: 60px;
-        font-size: 24px;
-    }
-
-    .instructor-review-page .review-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-
-    .instructor-review-page .report-btn {
-        width: 100%;
-    }
-
-    .instructor-review-page .report-status-badge {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .instructor-review-page .modern-input,
-    .instructor-review-page .modern-select {
-        height: 45px;
-    }
-
-    .instructor-review-page .modern-textarea {
-        min-height: 100px;
-    }
-
-    .instructor-review-page .form-buttons {
-        flex-direction: column;
-    }
-
-    .instructor-review-page .cancel-btn,
-    .instructor-review-page .submit-btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .instructor-review-page .modern-empty-state {
-        padding: 40px 20px;
-    }
-}
-
-@media (max-width: 576px) {
-    .instructor-review-page .page-title {
-        font-size: 1.75rem;
-    }
-
-    .instructor-review-page .page-subtitle {
-        font-size: 0.95rem;
-    }
-
-    .instructor-review-page .modern-header-section,
-    .instructor-review-page .modern-review-card {
-        padding: 15px;
-        border-radius: 15px;
-    }
-
-    .instructor-review-page .modern-filter-section {
-        padding: 15px;
-    }
-
-    .instructor-review-page .stat-badge {
-        padding: 10px 15px;
-        font-size: 0.85rem;
-    }
-
-    .instructor-review-page .reviewer-name {
-        font-size: 1rem;
-    }
-
-    .instructor-review-page .review-text,
-    .instructor-review-page .response-text {
-        font-size: 0.95rem;
-    }
-
-    .instructor-review-page .modern-input,
-    .instructor-review-page .modern-select,
-    .instructor-review-page .modern-textarea {
-        font-size: 0.9rem;
-    }
-
-    .instructor-review-page .modern-reply-btn {
-        padding: 10px 18px;
-        font-size: 0.85rem;
-    }
-
-    .instructor-review-page .modern-empty-state {
-        padding: 30px 15px;
-    }
-
-    .instructor-review-page .empty-state-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 1rem;
-    }
-
-    .instructor-review-page .empty-state-icon-inner {
-        font-size: 2rem;
-    }
-
-    .instructor-review-page .empty-state-title {
-        font-size: 1.25rem;
-    }
-}
-
-/* ========================================
-   ANIMATIONS
-   ======================================== */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideInUp {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.instructor-review-page .fade-in {
-    animation: fadeIn 0.6s ease-out;
-}
-
-.instructor-review-page .slide-in-up {
-    animation: slideInUp 0.5s ease-out;
-}
-
-/* ========================================
-   ACCESSIBILITY IMPROVEMENTS
-   ======================================== */
-@media (prefers-reduced-motion: reduce) {
-    .instructor-review-page .modern-review-card,
-    .instructor-review-page .modern-reply-btn,
-    .instructor-review-page .modern-input,
-    .instructor-review-page .modern-select,
-    .instructor-review-page .modern-textarea,
-    .instructor-review-page .submit-btn {
-        transition: none;
-    }
-
-    .instructor-review-page .fade-in,
-    .instructor-review-page .slide-in-up {
-        animation: none;
-    }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .instructor-review-page .modern-input,
-    .instructor-review-page .modern-select,
-    .instructor-review-page .modern-textarea {
-        border-width: 3px;
-    }
-
-    .instructor-review-page .modern-reply-btn,
-    .instructor-review-page .submit-btn {
-        border: 2px solid #000;
-    }
-}
-
-/* ========================================
-   RESPONSIVE LAYOUT - Content Column Sizing
-   ======================================== */
-
-/* Base: Desktop Large (lg breakpoint and up) */
-/* col-lg-3 sidebar + col-lg-9 content = 12 columns */
-@media (min-width: 992px) {
-  /* Sidebar column - maintains fixed width or collapses */
-  .instructor-review-page .row > .instructor-sidebar-column {
-    flex-basis: auto;
-    flex-grow: 0;
-    flex-shrink: 0;
-    /* Sidebar now spans full column width without Bootstrap padding */
-    width: auto;
-  }
-
-  /* Content column - expands to fill remaining space */
-  .instructor-review-page .row > .col-lg-9 {
-    flex: 1 1 auto;
-    min-width: 0;
-    width: auto;
-    max-width: 100%;
-  }
-
-  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
-  /* Removed min-width: 500px to prevent gap shift when sidebar-collapsed-adapted is applied */
-
-  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
-    /* Fallback for browsers that don't support :has() */
-    .instructor-review-page .row > .col-lg-9 {
-      flex: 1;
-      width: auto;
-      max-width: 100%;
-    }
-  }
-}
-
-/* Tablet (md breakpoint) */
-/* col-md-4 sidebar + col-md-8 content = 12 columns */
-@media (min-width: 768px) and (max-width: 991px) {
-  .instructor-review-page .row > .instructor-sidebar-column {
-    flex-basis: auto;
-    flex-grow: 0;
-    flex-shrink: 0;
-    /* Sidebar now spans full column width without Bootstrap padding */
-    width: auto;
-  }
-
-  /* Content column - expands to fill remaining space */
-  .instructor-review-page .row > .col-md-8 {
-    flex: 1 1 auto;
-    min-width: 0;
-    width: auto;
-    max-width: 100%;
-  }
-
-  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
-  /* Removed min-width: 400px to prevent gap shift when sidebar-collapsed-adapted is applied */
-
-  @supports not (selector(:has(.instructor-sidebar.collapsed))) {
-    /* Fallback for browsers that don't support :has() */
-    .instructor-review-page .row > .col-md-8 {
-      flex: 1;
-      width: auto;
-      max-width: 100%;
-    }
-  }
-}
-
-/* Mobile: Full width stacked */
-@media (max-width: 767px) {
-  .instructor-review-page .row {
-    flex-direction: column;
-  }
-
-  .instructor-review-page .row > [class*="col-"],
-  .instructor-review-page .row > .instructor-sidebar-column {
-    flex: 0 0 100%;
-    width: 100%;
-    max-width: 100%;
-  }
-}
-/* ========================================
-   ABUSE REPORT MODAL STYLES - PHASE 4.210
-   ======================================== */
-.abuse-report-modal {
+.instructor-review-page .btn-report-status {
     border: none;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    animation: slideIn 0.3s ease;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-@keyframes slideIn {
+.instructor-review-page .btn-report-status.pending {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.instructor-review-page .btn-report-status.reviewed {
+    background: #e0f2fe;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+}
+
+.instructor-review-page .btn-report-status.action_taken {
+    background: #dcfce7;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.instructor-review-page .btn-report-status.dismissed {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+/* Student Comment Content */
+.instructor-review-page .review-body-content {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 10px 14px;
+    border: 1px solid #f1f5f9;
+}
+
+.instructor-review-page .student-comment-text {
+    font-size: 0.86rem;
+    color: #334155;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+/* Instructor Reply Bubble */
+.instructor-review-page .instructor-reply-box {
+    background: #f0fdf4;
+    border-radius: 8px;
+    padding: 10px 14px;
+    border: 1px solid #bbf7d0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.instructor-review-page .reply-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.instructor-review-page .reply-author-badge {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #15803d;
+    display: inline-flex;
+    align-items: center;
+}
+
+.instructor-review-page .btn-edit-reply-link {
+    background: none;
+    border: none;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #0f766e;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease;
+}
+
+.instructor-review-page .btn-edit-reply-link:hover {
+    color: #115e59;
+    text-decoration: underline;
+}
+
+.instructor-review-page .instructor-reply-text {
+    font-size: 0.84rem;
+    color: #166534;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+
+/* Reply CTA Row */
+.instructor-review-page .reply-cta-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.instructor-review-page .btn-quick-reply {
+    background: rgba(15, 118, 110, 0.08);
+    border: 1px solid rgba(15, 118, 110, 0.25);
+    color: #0f766e;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.instructor-review-page .btn-quick-reply:hover {
+    background: #0f766e;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.25);
+}
+
+/* Inline Reply Editor */
+.instructor-review-page .inline-reply-editor {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeInSlide 0.2s ease-out;
+}
+
+@keyframes fadeInSlide {
     from {
-        transform: translateY(-50px);
         opacity: 0;
+        transform: translateY(-6px);
     }
     to {
-        transform: translateY(0);
         opacity: 1;
+        transform: translateY(0);
     }
+}
+
+.instructor-review-page .editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.instructor-review-page .editor-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.instructor-review-page .editor-hint {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.instructor-review-page .reply-textarea {
+    font-size: 0.84rem;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    padding: 8px 10px;
+    resize: vertical;
+    min-height: 70px;
+}
+
+.instructor-review-page .reply-textarea:focus {
+    border-color: #0f766e;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+    outline: none;
+}
+
+.instructor-review-page .editor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* ========================================
+   5. LOADING & EMPTY STATES
+   ======================================== */
+.instructor-review-page .reviews-loading-state {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    font-size: 0.88rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.instructor-review-page .reviews-empty-box {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 36px 20px;
+    text-align: center;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.instructor-review-page .empty-icon-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(15, 118, 110, 0.1);
+    color: #0f766e;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+}
+
+.instructor-review-page .empty-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.instructor-review-page .empty-desc {
+    font-size: 0.84rem;
+    color: #64748b;
+    max-width: 440px;
+    margin: 0 auto;
+}
+
+/* ========================================
+   6. ABUSE MODAL STYLES (COMPACT)
+   ======================================== */
+.modal-compact-dialog {
+    max-width: 480px;
+}
+
+.abuse-report-modal {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
 }
 
 .abuse-modal-header {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    color: white;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #ffffff;
     border: none;
-    border-radius: 15px 15px 0 0;
-    padding: 1.5rem;
+    padding: 12px 16px;
 }
 
 .abuse-modal-header .modal-title {
+    color: #ffffff;
     font-weight: 700;
-    font-size: 1.1rem;
-    color: white;
-}
-
-.abuse-modal-header .modal-title i {
-    color: white;
+    font-size: 0.96rem;
 }
 
 .abuse-modal-header .btn-close {
     filter: brightness(0) invert(1);
+    opacity: 0.8;
 }
 
-.abuse-modal-text {
-    color: #6c757d;
-    font-size: 0.95rem;
-    margin-bottom: 1.5rem;
+.abuse-modal-header .btn-close:hover {
+    opacity: 1;
 }
 
-.form-select-modern {
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
-    padding: 0.75rem 2.5rem 0.75rem 1rem;
-    font-size: 0.95rem;
-    background-color: white !important;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 0.75rem center !important;
-    background-size: 16px 12px !important;
-    transition: all 0.3s ease;
+/* ========================================
+   7. RESPONSIVE BREAKPOINTS
+   ======================================== */
+@media (min-width: 992px) {
+    .instructor-review-page .row > .instructor-sidebar-column {
+        flex-basis: auto;
+        flex-grow: 0;
+        flex-shrink: 0;
+        width: auto;
+    }
+
+    .instructor-review-page .row > .col-lg-9 {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        max-width: 100%;
+    }
 }
 
-.form-select-modern:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 0.75rem center !important;
-    background-size: 16px 12px !important;
+@media (min-width: 768px) and (max-width: 991px) {
+    .instructor-review-page .row > .instructor-sidebar-column {
+        flex-basis: auto;
+        flex-grow: 0;
+        flex-shrink: 0;
+        width: auto;
+    }
+
+    .instructor-review-page .row > .col-md-8 {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        max-width: 100%;
+    }
+
+    .instructor-review-page .reviews-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
-.form-select-modern:hover:not(:disabled):not(:focus) {
-    border-color: #adb5bd;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 0.75rem center !important;
-    background-size: 16px 12px !important;
+@media (max-width: 767px) {
+    .instructor-review-page .row {
+        flex-direction: column;
+    }
+
+    .instructor-review-page .row > [class*="col-"],
+    .instructor-review-page .row > .instructor-sidebar-column {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .instructor-review-page .reviews-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .instructor-review-page .toolbar-top-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .instructor-review-page .toolbar-bottom-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .instructor-review-page .course-select,
+    .instructor-review-page .sort-select {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .instructor-review-page .review-card-topbar {
+        flex-direction: column;
+    }
+
+    .instructor-review-page .review-card-actions-meta {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
-.modal-body {
-    padding: 1.5rem;
-}
-
-.modal-body .form-label {
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-}
-
-.modal-body .form-control,
-.modal-body .form-select {
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-}
-
-.modal-body .form-select {
-    padding: 0.75rem 2.5rem 0.75rem 1rem;
-    background-color: white !important;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 0.75rem center !important;
-    background-size: 16px 12px !important;
-}
-
-.modal-body .form-control:focus,
-.modal-body .form-select:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
-}
-
-.modal-body .form-select:focus {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 0.75rem center !important;
-    background-size: 16px 12px !important;
-}
-
-.modal-body .form-select:hover:not(:disabled):not(:focus) {
-    border-color: #adb5bd;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 0.75rem center !important;
-    background-size: 16px 12px !important;
-}
-
-.modal-body .alert {
-    border-radius: 8px;
-    border: 1px solid rgba(23, 162, 184, 0.2);
-    background: rgba(23, 162, 184, 0.05);
-    color: #155c7a;
-}
-
-.abuse-modal-footer {
-    background: #f8f9fa;
-    border: none;
-    border-radius: 0 0 15px 15px;
-    padding: 1.5rem;
-}
-
-.abuse-modal-footer .btn {
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.abuse-modal-footer .btn-outline-secondary {
-    border: 2px solid #e9ecef;
-    color: #6c757d;
-}
-
-.abuse-modal-footer .btn-outline-secondary:hover {
-    background: #f8f9fa;
-    border-color: #dee2e6;
-    color: #495057;
-}
-
-.abuse-modal-footer .btn-danger {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    border: none;
-    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-}
-
-.abuse-modal-footer .btn-danger:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
-    background: linear-gradient(135deg, #d63841 0%, #b91d2d 100%);
-}
-
-.abuse-modal-footer .btn-danger:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+@media (max-width: 480px) {
+    .instructor-review-page .reviews-metrics-grid {
+        grid-template-columns: 1fr;
+    }
 }

@@ -1,37 +1,48 @@
-/* Students Page Styles */
+/* ==========================================================================
+   INSTRUCTOR STUDENTS STYLES - COMPACT & EYE-CATCHING
+   LMSetjen DPD RI Design System
+   ========================================================================== */
 
-/* CRITICAL: Force modern-students padding to be overridable by pt-5 and pb-5 classes */
-/* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+/* Main Page Container & Layout Overrides */
+.modern-students {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    margin-bottom: 2.5rem !important;
+    min-height: calc(100vh - 200px);
+    background: transparent;
+    padding: var(--page-top-spacing, 20px) 0;
+    overflow: visible !important;
+}
+
 .modern-students.pt-5 {
     padding-top: 50px !important;
 }
 
 .modern-students.pb-5 {
-    padding-bottom: 3rem !important;
+    padding-bottom: 2rem !important;
+}
+
+.modern-students .container {
+    overflow: visible !important;
 }
 
 /* ========================================
-   CRITICAL LAYOUT FIX - Row & Column Structure
+   CRITICAL LAYOUT FIX - Row & Column Alignment
    ======================================== */
-
-/* Ensure proper scroll context for sticky sidebar */
-.modern-students .container {
-    position: relative;
-}
-
-/* ✨ Main layout row (direct child of container) - matches Testimonials pattern */
-.modern-students > .container > .row {
+.modern-students > .container > .row:not(.instructor-header-row) {
     flex-wrap: nowrap;
-    width: 100%;
+    width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
     display: flex !important;
     flex-direction: row !important;
     gap: 0 !important;
-    overflow: visible;
+    overflow: visible !important;
 }
 
-/* Consistent vertical spacing for INNER dashboard sections (form rows, etc.) */
 .modern-students .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(:has(.instructor-sidebar-column)) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -42,7 +53,21 @@
     width: calc(100% + var(--bs-gutter-x, 24px));
 }
 
-/* Protect Header on students page from row CSS rules */
+.modern-students .row:has(.instructor-sidebar-column) {
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.modern-students .row > [class*="col-"] {
+    margin-bottom: 0;
+    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
+    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+    display: flex;
+    flex-direction: column;
+}
+
 .modern-students .row.instructor-header-row {
     margin-left: auto !important;
     margin-right: auto !important;
@@ -50,7 +75,6 @@
     max-width: 100% !important;
 }
 
-/* Ensure Header card maintains full width and removes right gap */
 .modern-students .row.instructor-header-row > .col-xl-12,
 .modern-students .row.instructor-header-row > .col-lg-12,
 .modern-students .row.instructor-header-row > .col-md-12,
@@ -63,15 +87,6 @@
     max-width: 100% !important;
 }
 
-.modern-students .row > [class*="col-"] {
-    margin-bottom: 0;
-    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
-    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
-    display: flex;
-    flex-direction: column;
-}
-
-/* Desktop: col-lg-9 content wrapper (inside sidebar row) */
 .modern-students .row:has(.instructor-sidebar-column) > .col-lg-9 {
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -81,14 +96,6 @@
     flex: 1 1 auto !important;
 }
 
-/* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
-.modern-students .row:has(.instructor-sidebar-column) > .col-lg-9 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
-}
-
-/* Tablet: col-md-8 content wrapper (inside sidebar row) */
 .modern-students .row:has(.instructor-sidebar-column) > .col-md-8 {
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -98,342 +105,936 @@
     flex: 1 1 auto !important;
 }
 
-/* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
-.modern-students .row:has(.instructor-sidebar-column) > .col-md-8 > .row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
-}
-
-/* Override for specific spacing needs */
-.modern-students .row.mb-3 {
-    margin-bottom: 1rem !important;
-}
-
-/* ============================== */
-/* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
-/* Ensure sticky positioning works on Students page */
-/* ============================== */
+/* Sticky Sidebar Settings */
 .modern-students .row > .instructor-sidebar-column {
-  display: flex;
-  flex-direction: column;
-  overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: stretch !important;
+    height: auto !important;
+    position: static !important;
+    overflow: visible !important;
 }
 
-/* Sidebar: sticky positioning defined in global performance.css */
-/* This ensures the sidebar sticks to the viewport when scrolling */
-/* Position: sticky is already set in Sidebar.css & performance.css */
-/* NO override or conflicting properties here */
-
-.modern-students {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block !important;
-    margin-bottom: 8rem;
-    min-height: 100vh;
-    background: transparent;
-    padding: var(--page-top-spacing) 0;
-    padding-top: var(--page-top-spacing) !important;
-    padding-bottom: var(--page-bottom-spacing) !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    overflow-x: hidden;
-    /* ✨ PHASE 7.3: Add overflow-x: hidden to prevent horizontal scroll */
+.modern-students .instructor-sidebar {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: calc(var(--navbar-height, 70px) + 18px) !important;
+    z-index: 99 !important;
+    align-self: flex-start !important;
 }
 
-.students-header {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+/* ========================================
+   THEME TOKENS & UTILITIES
+   ======================================== */
+.text-teal {
+    color: #0f766e !important;
+}
+
+.bg-teal-subtle {
+    background: rgba(15, 118, 110, 0.1) !important;
+}
+
+.text-emerald {
+    color: #059669 !important;
+}
+
+.bg-emerald-subtle {
+    background: rgba(16, 185, 129, 0.12) !important;
+}
+
+.text-amber {
+    color: #d97706 !important;
+}
+
+.bg-amber-subtle {
+    background: rgba(245, 158, 11, 0.12) !important;
+}
+
+.text-purple {
+    color: #7c3aed !important;
+}
+
+.bg-purple-subtle {
+    background: rgba(124, 58, 237, 0.1) !important;
+}
+
+/* High-contrast, explicitly readable buttons in modern-students */
+.modern-students .btn-teal,
+.btn-teal {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease;
+}
+
+.modern-students .btn-teal:hover:not(:disabled),
+.btn-teal:hover:not(:disabled) {
+    background: linear-gradient(135deg, #115e59 0%, #134e4a 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25) !important;
+    transform: translateY(-1px);
+}
+
+.modern-students .btn-outline-teal,
+.btn-outline-teal {
+    color: #0f766e !important;
+    border: 1.5px solid #0f766e !important;
+    background: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.82rem !important;
+    line-height: 1.4 !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    box-shadow: 0 1px 3px rgba(15, 118, 110, 0.08) !important;
+    transition: all 0.2s ease !important;
+}
+
+.modern-students .btn-outline-teal:hover:not(:disabled),
+.btn-outline-teal:hover:not(:disabled) {
+    background: #0f766e !important;
+    color: #ffffff !important;
+    border-color: #0f766e !important;
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25) !important;
+    transform: translateY(-1px);
+}
+
+.modern-students .btn-outline-teal:disabled,
+.btn-outline-teal:disabled {
+    opacity: 0.65 !important;
+    color: #0f766e !important;
+    cursor: not-allowed !important;
+}
+
+.modern-students .btn-outline-secondary,
+.btn-outline-secondary {
+    color: #334155 !important;
+    border: 1.5px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.82rem !important;
+    line-height: 1.4 !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.2s ease !important;
+}
+
+.modern-students .btn-outline-secondary:hover:not(:disabled),
+.btn-outline-secondary:hover:not(:disabled) {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.modern-students .btn-xs {
+    padding: 3px 8px !important;
+    font-size: 0.75rem !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+}
+
+/* ========================================
+   1. PAGE HEADER CARD (COMPACT)
+   ======================================== */
+.modern-students .students-header-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 18px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.modern-students .students-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    letter-spacing: -0.01em;
+}
+
+.modern-students .students-subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+.modern-students .students-counter-pill {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(15, 118, 110, 0.08);
+    color: #0f766e;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    border: 1px solid rgba(15, 118, 110, 0.18);
+}
+
+/* ========================================
+   2. KPI METRICS STRIP (4 COMPACT CARDS)
+   ======================================== */
+.modern-students .students-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.modern-students .student-metric-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
 }
 
-.students-header-bg {
+.modern-students .student-metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    border-color: rgba(15, 118, 110, 0.3);
+}
+
+.modern-students .metric-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.modern-students .metric-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.modern-students .metric-value {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+.modern-students .metric-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.modern-students .metric-badge {
+    align-self: flex-start;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* ========================================
+   3. TOOLBAR & FILTER CARD
+   ======================================== */
+.modern-students .students-toolbar-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px 16px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    margin-bottom: 14px;
+}
+
+.modern-students .students-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.modern-students .students-search-box .search-icon {
     position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 300px;
-    height: 300px;
-    background: linear-gradient(45deg, #0f766e20, #115e5920);
-    border-radius: 50%;
+    left: 14px;
+    color: #64748b;
+    font-size: 0.9rem;
+    pointer-events: none;
+    z-index: 10 !important; /* CRITICAL: Must be above Bootstrap's .form-control:focus z-index */
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.modern-students .students-search-box:focus-within .search-icon {
+    color: #0f766e !important;
+    transform: scale(1.08);
+}
+
+.modern-students .students-search-box .search-input {
+    padding-left: 38px !important;
+    padding-right: 36px !important;
+    height: 38px !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    transition: all 0.2s ease !important;
+    position: relative;
     z-index: 1;
 }
 
-.students-header-title {
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-    font-size: 2.5rem;
-    font-weight: bold;
+.modern-students .students-search-box .search-input:focus {
+    border-color: #0f766e !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: 0 0 0 3.5px rgba(15, 118, 110, 0.15) !important;
+    outline: none !important;
+    z-index: 2 !important;
 }
 
-.students-header-desc {
-    font-size: 1.1rem;
-}
-
-.students-stat-badge {
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 15px;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.student-card {
-    background: white;
-    border-radius: 20px;
+.modern-students .search-clear-btn {
+    position: absolute;
+    right: 10px;
+    background: none;
     border: none;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    overflow: hidden;
-    position: relative;
+    color: #94a3b8;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    border-radius: 50%;
+    z-index: 10 !important; /* Above focused input */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.modern-students .search-clear-btn:hover {
+    color: #ef4444;
+}
+
+.modern-students .students-filter-group .form-select-sm {
+    height: 38px !important;
+    font-size: 0.84rem;
+    border-radius: 8px;
+    border: 1.5px solid #cbd5e1;
+    font-weight: 500;
+}
+
+.modern-students .students-filter-group .form-select-sm:focus {
+    border-color: #0f766e;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.modern-students .view-mode-group {
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1.5px solid #cbd5e1;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.modern-students .view-mode-group .btn {
+    padding: 5px 12px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    border-radius: 7px !important;
+    border: none !important;
+    background: transparent !important;
+    color: #475569 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+    line-height: 1.4 !important;
+    min-height: auto !important;
+    min-width: auto !important;
+}
+
+.modern-students .view-mode-group .btn:hover:not(.active) {
+    color: #0f766e !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.modern-students .view-mode-group .btn.active {
+    background: #0f766e !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.3) !important;
+}
+
+/* ========================================
+   4. GRID VIEW - COMPACT STUDENT CARDS
+   ======================================== */
+.modern-students .student-compact-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    padding: 12px 14px;
     height: 100%;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.student-card .card-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 1rem !important;
+.modern-students .student-compact-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+    border-color: rgba(15, 118, 110, 0.35);
 }
 
-.student-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-}
-
-.student-card::before {
+.modern-students .student-compact-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
-    background: var(--theme-gradient) !important;
+    height: 3px;
+    background: linear-gradient(90deg, #0f766e, #14b8a6);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.2s ease;
 }
 
-.student-card:hover::before {
+.modern-students .student-compact-card:hover::before {
     opacity: 1;
 }
 
-.student-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid #e2e8f0;
-    transition: all 0.3s ease;
-    margin: 1rem auto 1rem auto;
-    display: block;
+.modern-students .student-card-ribbon {
+    margin-bottom: 8px;
 }
 
-.student-card:hover .student-avatar {
-    border-color: var(--theme-primary) !important;
+.modern-students .badge-new {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 6px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.modern-students .badge-courses {
+    background: rgba(15, 118, 110, 0.08);
+    color: #0f766e;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(15, 118, 110, 0.18);
+}
+
+.modern-students .quick-email-btn {
+    color: #94a3b8;
+    background: rgba(241, 245, 249, 0.8);
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.modern-students .quick-email-btn:hover {
+    color: #0f766e;
+    background: rgba(15, 118, 110, 0.12);
+}
+
+.modern-students .student-card-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 0 10px 0;
+}
+
+.modern-students .student-avatar-wrap {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.modern-students .student-avatar-img {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e2e8f0;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.modern-students .student-compact-card:hover .student-avatar-img {
+    border-color: #0f766e;
     transform: scale(1.05);
 }
 
-.student-name {
-    font-size: 1.25rem;
+.modern-students .student-card-name {
+    font-size: 0.95rem;
     font-weight: 700;
-    color: #2d3748;
-    margin-bottom: 0.5rem;
+    color: #1e293b;
+    margin-bottom: 2px;
+    line-height: 1.3;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.student-location {
-    color: #718096;
-    font-size: 0.875rem;
-    display: flex;
+.modern-students .student-card-nip {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.modern-students .student-card-unit {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.student-info {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 0 0 20px 20px;
-    margin-top: auto;
-    border-top: 1px solid #e9ecef;
-}
-
-.student-date {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.875rem;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    border: 2px dashed #e2e8f0;
-}
-
-.empty-state i {
-    font-size: 4rem;
-    color: #cbd5e0;
-    margin-bottom: 1.5rem;
-}
-
-.stat-item {
-    background: white;
-    padding: 1rem !important;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    text-align: center;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.74rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
+    max-width: 100%;
 }
 
-.stat-icon {
-    width: 50px;
-    height: 50px;
+.modern-students .student-card-unit span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.modern-students .student-courses-preview {
+    width: 100%;
+    max-width: 100%;
+}
+
+.modern-students .course-pill-preview {
+    background: rgba(15, 118, 110, 0.04);
+    border: 1px dashed rgba(15, 118, 110, 0.25);
+    color: #0f766e;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 6px;
+    max-width: 100%;
+}
+
+.modern-students .course-more-pill {
+    font-size: 0.68rem;
+    color: #64748b;
+    display: block;
+    margin-top: 2px;
+}
+
+.modern-students .student-card-footer {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 8px;
+    margin-top: auto;
+}
+
+.modern-students .student-joined-date {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.modern-students .btn-detail-trigger {
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    color: #0f766e;
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.modern-students .btn-detail-trigger:hover {
+    background: #0f766e;
+    color: #ffffff;
+    border-color: #0f766e;
+}
+
+/* ========================================
+   5. TABLE VIEW - ULTRA COMPACT
+   ======================================== */
+.modern-students .students-table-card {
+    background: #ffffff;
     border-radius: 12px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+}
+
+.modern-students .students-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modern-students .students-table tbody td {
+    padding: 10px 14px;
+    font-size: 0.83rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.modern-students .students-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.modern-students .table-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.modern-students .table-student-name {
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.modern-students .table-student-sub {
+    font-size: 0.72rem;
+    margin-top: 1px;
+}
+
+.modern-students .table-unit-text {
+    font-weight: 500;
+    color: #334155;
+    display: block;
+    line-height: 1.2;
+}
+
+.modern-students .table-courses-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.modern-students .table-course-title {
+    font-size: 0.78rem;
+    color: #475569;
+    max-width: 180px;
+}
+
+.modern-students .table-date {
+    font-size: 0.78rem;
+}
+
+/* ========================================
+   6. PAGINATION & FOOTER TOOLBAR
+   ======================================== */
+.modern-students .students-pagination-bar {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 10px 16px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.modern-students .per-page-select {
+    width: auto;
+    display: inline-block;
+    padding: 2px 24px 2px 8px;
+    height: 28px;
+    font-size: 0.78rem;
+}
+
+.modern-students .pagination .page-item .page-link {
+    color: #475569;
+    border-color: #e2e8f0;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    border-radius: 6px;
+    margin: 0 2px;
+}
+
+.modern-students .pagination .page-item.active .page-link {
+    background: #0f766e;
+    border-color: #0f766e;
+    color: #ffffff;
+}
+
+.modern-students .pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+    background: #f1f5f9;
+    color: #0f766e;
+}
+
+/* ========================================
+   7. STUDENT DETAIL MODAL
+   ======================================== */
+.student-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem auto;
-    font-size: 1.25rem;
-    color: white;
-    background: var(--theme-gradient) !important;
+    padding: 16px;
+    animation: studentModalFadeIn 0.2s ease-out;
 }
 
-.error-state {
+@keyframes studentModalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.student-modal-content {
+    background: #ffffff;
+    border-radius: 16px;
+    max-width: 580px;
+    width: 100%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    animation: studentModalSlideUp 0.25s ease-out;
+}
+
+@keyframes studentModalSlideUp {
+    from {
+        transform: translateY(16px);
+        opacity: 0.8;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.student-modal-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #ffffff;
+}
+
+.student-modal-header .modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.student-modal-header .btn-close-modal {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.2s;
+}
+
+.student-modal-header .btn-close-modal:hover {
+    color: #0f172a;
+}
+
+.student-modal-body {
+    padding: 16px 18px;
+    overflow-y: auto;
+}
+
+.modal-profile-header {
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.06) 0%, rgba(20, 184, 166, 0.08) 100%);
+    border: 1px solid rgba(15, 118, 110, 0.15);
+}
+
+.modal-profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.modal-profile-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.modal-info-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.info-box-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 2px;
+}
+
+.info-box-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.modal-courses-section .section-title {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+.modal-courses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-course-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    transition: all 0.2s;
+}
+
+.modal-course-item:hover {
+    border-color: #0f766e;
+    background: rgba(15, 118, 110, 0.02);
+}
+
+.course-item-title {
+    font-size: 0.85rem;
+    color: #1e293b;
+}
+
+.course-item-enrollment-id {
+    display: block;
+    margin-top: 1px;
+}
+
+.student-modal-footer {
+    padding: 12px 18px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+}
+
+/* ========================================
+   8. LOADING & EMPTY STATES
+   ======================================== */
+.students-loading-card,
+.students-empty-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    padding: 2.5rem 1.5rem;
     text-align: center;
-    padding: 3rem 2rem;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
-/* Loading State */
-.students-loading {
-    text-align: center;
-    padding: 5rem 2rem;
+.empty-icon-wrap {
+    width: 60px;
+    height: 60px;
+    background: rgba(15, 118, 110, 0.08);
+    color: #0f766e;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    margin: 0 auto;
 }
 
-.students-loading .spinner-border {
-    width: 3rem;
-    height: 3rem;
+.error-card {
+    border-color: rgba(239, 68, 68, 0.3);
+    background: #fffafa;
 }
 
-/* Responsive Design */
+.error-card i {
+    font-size: 2.2rem;
+}
+
+/* ========================================
+   9. RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 991px) {
+    .modern-students .students-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
-    .students-header {
-        padding: 1.5rem;
+    .modern-students .students-header-card {
+        padding: 12px 14px;
     }
-    
-    .students-header .d-flex {
+
+    .modern-students .students-header-card .d-flex {
         flex-direction: column;
-        align-items: center !important;
-        text-align: center;
+        align-items: flex-start !important;
     }
-    
-    .stat-item {
-        margin-top: 1rem;
-        min-width: auto !important;
+
+    .modern-students .students-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
     }
-    
-    .student-card {
-        margin-bottom: 1.5rem;
-    }
-    
-    .empty-state {
-        padding: 3rem 1.5rem;
-    }
-    
-    .error-state {
-        padding: 2rem 1.5rem;
+
+    .modern-students .metric-value {
+        font-size: 1.25rem;
     }
 }
 
 @media (max-width: 576px) {
-    .students-header {
-        padding: 1rem;
-        margin-bottom: 1.5rem;
+    .modern-students .students-metrics-grid {
+        grid-template-columns: 1fr;
     }
-    
-    .students-header h3 {
-        font-size: 1.5rem;
+
+    .modern-students .students-toolbar-card {
+        padding: 10px 12px;
     }
-    
-    .student-avatar {
-        width: 60px;
-        height: 60px;
-        margin: 0 auto 1rem auto;
-        display: block;
-    }
-    
-    .student-name {
-        font-size: 1.1rem;
-    }
-    
-    .empty-state {
-        padding: 2rem 1rem;
-    }
-    
-    .empty-state i {
-        font-size: 3rem;
-    }
-}
-
-/* ========================================
-   RESPONSIVE LAYOUT - Content Column Sizing
-   ======================================== */
-
-@media (min-width: 992px) {
-  /* Sidebar column - maintains fixed width or collapses */
-  .modern-students .row > .instructor-sidebar-column {
-    flex-basis: auto;
-    flex-grow: 0;
-    flex-shrink: 0;
-    width: auto;
-  }
-
-  /* Content column - expands to fill remaining space */
-  .modern-students .row > .col-lg-9 {
-    flex: 1 1 auto;
-    min-width: 0;
-    width: auto;
-    max-width: 100%;
-  }
-
-  /* ✨ PHASE 5: Allow content to shrink during sidebar collapse for consistent gap */
-  /* Removed min-width: 500px to prevent gap shift when sidebar-collapsed-adapted is applied */
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-  .modern-students .row > .col-md-8 {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-}
-
-@media (max-width: 767px) {
-  .modern-students .row {
-    flex-direction: column;
-  }
-
-  .modern-students .row > [class*="col-"],
-  .modern-students .row > .instructor-sidebar-column {
-    flex: 0 0 100%;
-    width: 100%;
-    max-width: 100%;
-  }
 }

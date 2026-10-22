@@ -4,11 +4,9 @@
    Main layout, progress card, and tabs
    ============================================ */
 
-/* ✨ PHASE 4.103: Prevent horizontal scrolling on the page */
-html, body, #root {
-    overflow-x: hidden;
-    width: 100%;
-    max-width: 100vw;
+/* ✨ Prevent horizontal scrolling on the page without breaking position: sticky */
+body.modern-course-active {
+    overflow-x: clip;
 }
 
 .modern-student-course {

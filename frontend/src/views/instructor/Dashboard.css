@@ -15,10 +15,7 @@
   padding-bottom: var(--page-bottom-spacing) !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
-  overflow-x: hidden;
-  overflow-y: visible;
-  /* ✨ PHASE 40.8: Added overflow-y to prevent margin collapse and ensure 1.5rem gap is visible */
-  /* ✨ PHASE 7.3: Add overflow-x: hidden to prevent horizontal scroll from row width calc */
+  overflow: visible !important;
 }
 
 /* CRITICAL: Force modern-dashboard padding to be overridable by pt-5 and pb-5 classes */
@@ -35,6 +32,7 @@
 /* Ensure proper scroll context for sticky sidebar */
 .modern-dashboard .container {
   position: relative;
+  overflow: visible !important;
 }
 
 /* ✨ PHASE 65: Protect Header on Dashboard from row CSS rules - CRITICAL FIX */
@@ -91,6 +89,17 @@
   flex-direction: column;
 }
 
+@media (min-width: 768px) {
+  .instructor-dashboard .row > .instructor-sidebar-column {
+    position: static !important;
+    align-self: stretch !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
 /* ============================== */
 /* CRITICAL FIX: Content column wrappers need negative margins */
 /* to counteract their own padding and allow child content to */
@@ -142,15 +151,20 @@
 /* ============================== */
 /* Sidebar column: flex container that holds sticky sidebar */
 .instructor-dashboard .row > .instructor-sidebar-column {
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
+  align-self: stretch !important;
+  height: auto !important;
   overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
 }
 
-/* Sidebar: sticky positioning defined in global performance.css */
-/* This ensures the sidebar sticks to the viewport when scrolling */
-/* Position: sticky is already set in Sidebar.css & performance.css */
-/* NO override or conflicting properties here */
+.instructor-dashboard .instructor-sidebar {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: calc(var(--navbar-height, 70px) + 18px) !important; /* ~88px: Clean breathing gap below base-header */
+  z-index: 99 !important;
+  align-self: flex-start !important;
+}
 
 /* Reduced padding for card bodies */
 .modern-dashboard .card-body {
@@ -502,25 +516,42 @@
   box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25);
 }
 
+.stat-card-compact .stat-info-wrapper,
 .stat-info-wrapper {
   flex: 1;
+  min-width: 0;
 }
 
+.stat-card-compact .stat-number,
+.instructor-dashboard .stat-card-compact .stat-number,
 .stat-number {
-  font-size: 1.85rem;
-  font-weight: 800;
-  color: #1e293b;
-  line-height: 1;
-  letter-spacing: -0.5px;
+  font-size: 1.85rem !important;
+  font-weight: 800 !important;
+  color: #1e293b !important;
+  line-height: 1 !important;
+  letter-spacing: -0.5px !important;
+  text-align: left !important;
 }
 
+.stat-card-compact .stat-label,
+.instructor-dashboard .stat-card-compact .stat-label,
+.stat-card-compact.theme-amber .stat-label,
 .stat-label {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #64748b;
-  margin-top: 0.25rem;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  margin-top: 0.25rem !important;
+  margin-left: 0 !important;
+  text-align: left !important;
+  text-shadow: none !important;
+  letter-spacing: normal !important;
+  white-space: normal !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
+.stat-card-compact .stat-footer,
 .stat-footer {
   margin-top: 0.85rem;
   padding-top: 0.65rem;
@@ -530,6 +561,7 @@
   justify-content: space-between;
 }
 
+.stat-card-compact .stat-badge,
 .stat-badge {
   font-size: 0.72rem;
   font-weight: 600;

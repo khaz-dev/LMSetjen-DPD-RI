@@ -35,10 +35,70 @@ const CROP_CONFIG = {
     }
 };
 
+const SOCIAL_PLATFORMS_CONFIG = [
+    {
+        id: "youtube",
+        name: "YouTube",
+        icon: "fab fa-youtube",
+        color: "#ff0000",
+        bgLight: "rgba(255, 0, 0, 0.08)",
+        placeholder: "https://youtube.com/@channel",
+        helper: "Tautan channel atau video YouTube resmi Anda"
+    },
+    {
+        id: "instagram",
+        name: "Instagram",
+        icon: "fab fa-instagram",
+        color: "#e1306c",
+        bgLight: "rgba(225, 48, 108, 0.08)",
+        placeholder: "https://instagram.com/username",
+        helper: "Tautan akun Instagram resmi Anda"
+    },
+    {
+        id: "tiktok",
+        name: "TikTok",
+        icon: "fab fa-tiktok",
+        color: "#0f172a",
+        bgLight: "rgba(15, 23, 42, 0.08)",
+        placeholder: "https://tiktok.com/@username",
+        helper: "Tautan profil TikTok edukatif Anda"
+    },
+    {
+        id: "linkedin",
+        name: "LinkedIn",
+        icon: "fab fa-linkedin-in",
+        color: "#0a66c2",
+        bgLight: "rgba(10, 102, 194, 0.08)",
+        placeholder: "https://linkedin.com/in/username",
+        helper: "Tautan profil profesional LinkedIn Anda"
+    },
+    {
+        id: "twitter",
+        name: "Twitter / X",
+        icon: "fab fa-x-twitter",
+        color: "#0f172a",
+        bgLight: "rgba(15, 23, 42, 0.08)",
+        placeholder: "https://x.com/username",
+        helper: "Tautan akun Twitter / X Anda"
+    },
+    {
+        id: "facebook",
+        name: "Facebook",
+        icon: "fab fa-facebook-f",
+        color: "#1877f2",
+        bgLight: "rgba(24, 119, 242, 0.08)",
+        placeholder: "https://facebook.com/username",
+        helper: "Tautan profil atau halaman Facebook Anda"
+    }
+];
+
 const SOCIAL_PLATFORMS = {
     FACEBOOK: "facebook",
     TWITTER: "twitter",
-    LINKEDIN: "linkedin"
+    LINKEDIN: "linkedin",
+    YOUTUBE: "youtube",
+    INSTAGRAM: "instagram",
+    TIKTOK: "tiktok"
 };
 
 // URL validation & formatting
@@ -125,6 +185,9 @@ function Profile() {
         facebook: "",
         twitter: "",
         linkedin: "",
+        youtube: "",
+        instagram: "",
+        tiktok: "",
         image: ""
     });
 
@@ -159,10 +222,35 @@ function Profile() {
         imagePreview: ""
     });
 
+    // Public Card Pop Up Modal state
+    const [showPublicCardModal, setShowPublicCardModal] = useState(false);
+    const [teacherStats, setTeacherStats] = useState({
+        total_courses: 0,
+        total_students: 0,
+        total_rating: "5.0"
+    });
+
+    // Dynamic Social Media Form State
+    const [socialForm, setSocialForm] = useState({
+        isOpen: false,
+        platform: "youtube",
+        url: "",
+        isEditing: false
+    });
+
     const imgRef = useRef(null);
     const croppedBlobRef = useRef(null);
     const autoSaveTimeoutRef = useRef(null);
     const previousDataRef = useRef({});
+
+    // Filter Active Social Media & Available to Add
+    const activeSocialList = useMemo(() => {
+        return SOCIAL_PLATFORMS_CONFIG.filter((platform) => Boolean(profileData[platform.id]?.trim()));
+    }, [profileData]);
+
+    const availablePlatformsToAdd = useMemo(() => {
+        return SOCIAL_PLATFORMS_CONFIG.filter((platform) => !profileData[platform.id]?.trim());
+    }, [profileData]);
 
     // Profile Completeness Calculation
     const completenessScore = useMemo(() => {
@@ -173,7 +261,14 @@ function Profile() {
         if (profileData.country?.trim()) score += 10;
         if (profileData.nip?.trim() || profileData.golongan?.trim() || profileData.organization_unit_name?.trim()) score += 20;
         if (profileData.bio?.trim()) score += 10;
-        if (profileData.linkedin?.trim() || profileData.twitter?.trim() || profileData.facebook?.trim()) score += 10;
+        if (
+            profileData.linkedin?.trim() ||
+            profileData.twitter?.trim() ||
+            profileData.facebook?.trim() ||
+            profileData.youtube?.trim() ||
+            profileData.instagram?.trim() ||
+            profileData.tiktok?.trim()
+        ) score += 10;
         return Math.min(score, 100);
     }, [profileData, uiState.imagePreview]);
 
@@ -194,7 +289,23 @@ function Profile() {
             let tData = null;
             try {
                 const teacherRes = await useAxios.get(`teacher/profile/${userId}/`);
-                if (teacherRes.data) tData = teacherRes.data;
+                if (teacherRes.data) {
+                    tData = teacherRes.data;
+                    const teacherId = teacherRes.data.id || userId;
+                    try {
+                        const summaryRes = await useAxios.get(`teacher/summary/${teacherId}/`);
+                        const sData = Array.isArray(summaryRes.data) ? summaryRes.data[0] : summaryRes.data;
+                        if (sData) {
+                            setTeacherStats({
+                                total_courses: sData.total_courses || 0,
+                                total_students: sData.total_students || 0,
+                                total_rating: sData.total_rating || "5.0"
+                            });
+                        }
+                    } catch (sumErr) {
+                        // Summary stats fallback
+                    }
+                }
             } catch (e) {
                 // Teacher profile optional fallback
             }
@@ -213,6 +324,9 @@ function Profile() {
                 facebook: tData?.facebook || pData.facebook || "",
                 twitter: tData?.twitter || pData.twitter || "",
                 linkedin: tData?.linkedin || pData.linkedin || "",
+                youtube: tData?.youtube || pData.youtube || "",
+                instagram: tData?.instagram || pData.instagram || "",
+                tiktok: tData?.tiktok || pData.tiktok || "",
                 about: pData.about || "",
                 country: pData.country || ""
             };
@@ -284,7 +398,7 @@ function Profile() {
             const updateRes = await useAxios.patch(`user/profile/${userId}/`, formdata);
 
             // Sync teacher fields explicitly
-            const teacherFields = ["bio", "facebook", "twitter", "linkedin"];
+            const teacherFields = ["bio", "facebook", "twitter", "linkedin", "youtube", "instagram", "tiktok"];
             const hasTeacherFields = Object.keys(dataToSave).some((k) => teacherFields.includes(k));
             if (hasTeacherFields) {
                 try {
@@ -292,7 +406,10 @@ function Profile() {
                         bio: dataToSave.bio ?? profileData.bio ?? "",
                         facebook: dataToSave.facebook ?? profileData.facebook ?? "",
                         twitter: dataToSave.twitter ?? profileData.twitter ?? "",
-                        linkedin: dataToSave.linkedin ?? profileData.linkedin ?? ""
+                        linkedin: dataToSave.linkedin ?? profileData.linkedin ?? "",
+                        youtube: dataToSave.youtube ?? profileData.youtube ?? "",
+                        instagram: dataToSave.instagram ?? profileData.instagram ?? "",
+                        tiktok: dataToSave.tiktok ?? profileData.tiktok ?? ""
                     });
                 } catch (tErr) {
                     console.warn("Catatan sinkronisasi instruktur:", tErr);
@@ -343,6 +460,12 @@ function Profile() {
         }
     };
 
+    // Manual form submit handler
+    const handleSubmitManual = async (e) => {
+        if (e) e.preventDefault();
+        await saveProfileData(profileData, true);
+    };
+
     // Generic change handler with debounce
     const handleProfileChange = (event) => {
         const { name, value } = event.target;
@@ -366,13 +489,79 @@ function Profile() {
         }, 1200);
     };
 
-    // Handle Manual Submit Button
-    const handleSubmitManual = (e) => {
-        if (e) e.preventDefault();
-        if (autoSaveTimeoutRef.current) {
-            clearTimeout(autoSaveTimeoutRef.current);
+    // Dynamic Social Media Handlers
+    const handleOpenAddSocial = () => {
+        const defaultPlatform = availablePlatformsToAdd[0]?.id || "youtube";
+        setSocialForm({
+            isOpen: true,
+            platform: defaultPlatform,
+            url: "",
+            isEditing: false
+        });
+    };
+
+    const handleEditSocial = (platformId) => {
+        setSocialForm({
+            isOpen: true,
+            platform: platformId,
+            url: profileData[platformId] || "",
+            isEditing: true
+        });
+    };
+
+    const handleDeleteSocial = (platformId) => {
+        const platformConfig = SOCIAL_PLATFORMS_CONFIG.find((p) => p.id === platformId);
+        const platformName = platformConfig?.name || "Media Sosial";
+        setProfileData((prev) => ({
+            ...prev,
+            [platformId]: ""
+        }));
+        saveProfileData({ [platformId]: "" }, false);
+        if (socialForm.isEditing && socialForm.platform === platformId) {
+            setSocialForm({ isOpen: false, platform: "youtube", url: "", isEditing: false });
         }
-        saveProfileData(profileData, true);
+        Toast().fire({
+            icon: "success",
+            title: `Tautan ${platformName} Dihapus`,
+            timer: 1800,
+            showConfirmButton: false
+        });
+    };
+
+    const handleSaveSocial = (e) => {
+        if (e) e.preventDefault();
+        if (!socialForm.url?.trim()) {
+            Toast().fire({
+                icon: "warning",
+                title: "Tautan Belum Diisi",
+                text: "Silakan masukkan URL / tautan profil media sosial Anda."
+            });
+            return;
+        }
+
+        const formatted = formatUrl(socialForm.url.trim());
+        const platformConfig = SOCIAL_PLATFORMS_CONFIG.find((p) => p.id === socialForm.platform);
+        const platformName = platformConfig?.name || "Media Sosial";
+
+        setProfileData((prev) => ({
+            ...prev,
+            [socialForm.platform]: formatted
+        }));
+        saveProfileData({ [socialForm.platform]: formatted }, false);
+
+        setSocialForm({
+            isOpen: false,
+            platform: "youtube",
+            url: "",
+            isEditing: false
+        });
+
+        Toast().fire({
+            icon: "success",
+            title: `Tautan ${platformName} Berhasil ${socialForm.isEditing ? "Diperbarui" : "Ditambahkan"}`,
+            timer: 2000,
+            showConfirmButton: false
+        });
     };
 
     // Avatar handlers
@@ -558,6 +747,17 @@ function Profile() {
         };
     }, []);
 
+    // Close Public Card Modal on Escape key
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape" && showPublicCardModal) {
+                setShowPublicCardModal(false);
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [showPublicCardModal]);
+
     // Full-page spinner on initial load
     if (uiState.loading && !profile) {
         return (
@@ -726,15 +926,14 @@ function Profile() {
                                         </div>
 
                                         <div className="hero-btn-group">
-                                            <Link
-                                                to={`/instructor-profile/${currentUser?.user_id}/`}
-                                                target="_blank"
-                                                rel="noreferrer"
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPublicCardModal(true)}
                                                 className="btn-hero-outline"
-                                                title="Lihat profil publik yang dilihat oleh siswa"
+                                                title="Lihat pop-up kartu profil publik Anda"
                                             >
-                                                <i className="fas fa-eye"></i> Profil Publik
-                                            </Link>
+                                                <i className="fas fa-id-card"></i> Profil Publik
+                                            </button>
 
                                             <button
                                                 type="button"
@@ -1166,14 +1365,14 @@ function Profile() {
                                                                 <Link to="/instructor/testimonials/" className="shortcut-chip">
                                                                     <i className="fas fa-quote-left"></i> Testimoni
                                                                 </Link>
-                                                                <Link
-                                                                    to={`/instructor-profile/${currentUser?.user_id}/`}
-                                                                    target="_blank"
-                                                                    rel="noreferrer"
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowPublicCardModal(true)}
                                                                     className="shortcut-chip"
+                                                                    title="Buka pop-up kartu publik instruktur"
                                                                 >
-                                                                    <i className="fas fa-arrow-up-right-from-square"></i> Kartu Publik
-                                                                </Link>
+                                                                    <i className="fas fa-id-card text-teal"></i> Kartu Publik
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1251,98 +1450,183 @@ function Profile() {
                                                         Tautan Media Sosial & Jejaring Profesional
                                                     </h4>
                                                     <p className="section-subtext">
-                                                        Tautan ini memudahkan siswa dan kolega di lingkungan parlemen untuk terhubung dengan Anda.
+                                                        Kelola tautan media sosial Anda (YouTube, Instagram, TikTok, LinkedIn, Twitter/X, Facebook) agar peserta dan kolega dapat terhubung.
                                                     </p>
                                                 </div>
+                                                {!socialForm.isOpen && availablePlatformsToAdd.length > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleOpenAddSocial}
+                                                        className="btn-add-social-trigger"
+                                                        title="Tambah tautan media sosial baru"
+                                                    >
+                                                        <i className="fas fa-plus"></i> Tambah Media Sosial
+                                                    </button>
+                                                )}
                                             </div>
 
-                                            <div className="row g-3">
-                                                <div className="col-md-4 col-12">
-                                                    <label className="compact-label" htmlFor="linkedin">
-                                                        <i className="fab fa-linkedin text-primary me-1"></i> LinkedIn
-                                                    </label>
-                                                    <div className="input-group-compact">
-                                                        <span className="input-group-icon text-primary"><i className="fab fa-linkedin-in"></i></span>
-                                                        <input
-                                                            type="url"
-                                                            id="linkedin"
-                                                            name="linkedin"
-                                                            className="form-control compact-input"
-                                                            placeholder="https://linkedin.com/in/profil"
-                                                            value={profileData.linkedin || ""}
-                                                            onChange={handleProfileChange}
-                                                            disabled={uiState.loading}
-                                                        />
+                                            <div className="social-manager-wrapper">
+                                                {/* Inline Add / Edit Social Form */}
+                                                {socialForm.isOpen && (
+                                                    <div className={`social-add-card ${socialForm.isEditing ? "editing-mode" : ""}`}>
+                                                        <div className="d-flex align-items-center justify-content-between mb-3">
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                <span className="badge bg-teal-subtle text-teal fw-semibold px-2 py-1 rounded">
+                                                                    <i className={`fas ${socialForm.isEditing ? "fa-pen" : "fa-plus"} me-1`}></i>
+                                                                    {socialForm.isEditing ? "Edit Tautan Media Sosial" : "Tambah Media Sosial Baru"}
+                                                                </span>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                className="btn-close"
+                                                                onClick={() => setSocialForm((prev) => ({ ...prev, isOpen: false, isEditing: false }))}
+                                                                aria-label="Tutup formulir"
+                                                            ></button>
+                                                        </div>
+
+                                                        {/* Platform Selector */}
+                                                        <div className="mb-3">
+                                                            <label className="compact-label mb-2">Pilih Platform Media Sosial</label>
+                                                            <div className="social-platform-pill-selector">
+                                                                {(socialForm.isEditing
+                                                                    ? SOCIAL_PLATFORMS_CONFIG.filter((p) => p.id === socialForm.platform)
+                                                                    : availablePlatformsToAdd
+                                                                ).map((p) => {
+                                                                    const isSelected = socialForm.platform === p.id;
+                                                                    return (
+                                                                        <button
+                                                                            key={p.id}
+                                                                            type="button"
+                                                                            onClick={() => setSocialForm((prev) => ({ ...prev, platform: p.id }))}
+                                                                            className={`social-platform-pill ${isSelected ? "selected" : ""}`}
+                                                                        >
+                                                                            <i className={p.icon} style={{ color: isSelected ? "#ffffff" : p.color }}></i>
+                                                                            {p.name}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* URL Input */}
+                                                        <div className="mb-3">
+                                                            {(() => {
+                                                                const currentPlatform = SOCIAL_PLATFORMS_CONFIG.find((p) => p.id === socialForm.platform) || SOCIAL_PLATFORMS_CONFIG[0];
+                                                                return (
+                                                                    <>
+                                                                        <label className="compact-label" htmlFor="social_url_input">
+                                                                            URL / Tautan {currentPlatform.name}
+                                                                        </label>
+                                                                        <div className="input-group-compact">
+                                                                            <span className="input-group-icon" style={{ color: currentPlatform.color }}>
+                                                                                <i className={currentPlatform.icon}></i>
+                                                                            </span>
+                                                                            <input
+                                                                                type="url"
+                                                                                id="social_url_input"
+                                                                                className="form-control compact-input"
+                                                                                placeholder={currentPlatform.placeholder}
+                                                                                value={socialForm.url}
+                                                                                onChange={(e) => setSocialForm((prev) => ({ ...prev, url: e.target.value }))}
+                                                                                autoFocus
+                                                                            />
+                                                                        </div>
+                                                                        <small className="field-hint text-muted mt-1 d-block">
+                                                                            {currentPlatform.helper}
+                                                                        </small>
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </div>
+
+                                                        {/* Form Buttons */}
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleSaveSocial}
+                                                                className="btn-hero-primary py-2 px-3"
+                                                            >
+                                                                <i className="fas fa-check me-1"></i>
+                                                                {socialForm.isEditing ? "Perbarui Tautan" : "Tambah Tautan"}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSocialForm((prev) => ({ ...prev, isOpen: false, isEditing: false }))}
+                                                                className="btn btn-outline-secondary btn-sm py-2 px-3 rounded-3"
+                                                            >
+                                                                Batal
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
 
-                                                <div className="col-md-4 col-12">
-                                                    <label className="compact-label" htmlFor="twitter">
-                                                        <i className="fab fa-x-twitter text-dark me-1"></i> Twitter / X
-                                                    </label>
-                                                    <div className="input-group-compact">
-                                                        <span className="input-group-icon text-dark"><i className="fab fa-x-twitter"></i></span>
-                                                        <input
-                                                            type="url"
-                                                            id="twitter"
-                                                            name="twitter"
-                                                            className="form-control compact-input"
-                                                            placeholder="https://x.com/username"
-                                                            value={profileData.twitter || ""}
-                                                            onChange={handleProfileChange}
-                                                            disabled={uiState.loading}
-                                                        />
+                                                {/* List of Active Social Cards */}
+                                                {activeSocialList.length > 0 ? (
+                                                    <div className="social-cards-grid">
+                                                        {activeSocialList.map((platform) => {
+                                                            const url = profileData[platform.id];
+                                                            return (
+                                                                <div key={platform.id} className="social-card-item">
+                                                                    <div className="social-card-left">
+                                                                        <div className="social-card-icon-box" style={{ background: platform.bgLight, color: platform.color }}>
+                                                                            <i className={platform.icon}></i>
+                                                                        </div>
+                                                                        <div className="social-card-info">
+                                                                            <h6 className="social-card-name">
+                                                                                {platform.name}
+                                                                                <i className="fas fa-circle-check text-teal" style={{ fontSize: "0.75rem" }}></i>
+                                                                            </h6>
+                                                                            <a
+                                                                                href={url}
+                                                                                target="_blank"
+                                                                                rel="noreferrer"
+                                                                                className="social-card-link"
+                                                                                title={`Buka ${url}`}
+                                                                            >
+                                                                                {url}
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="social-card-actions">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleEditSocial(platform.id)}
+                                                                            className="btn-social-mini"
+                                                                            title={`Ubah tautan ${platform.name}`}
+                                                                        >
+                                                                            <i className="fas fa-pen"></i>
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleDeleteSocial(platform.id)}
+                                                                            className="btn-social-mini btn-delete"
+                                                                            title={`Hapus tautan ${platform.name}`}
+                                                                        >
+                                                                            <i className="fas fa-trash-can"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
-                                                </div>
-
-                                                <div className="col-md-4 col-12">
-                                                    <label className="compact-label" htmlFor="facebook">
-                                                        <i className="fab fa-facebook text-primary me-1"></i> Facebook
-                                                    </label>
-                                                    <div className="input-group-compact">
-                                                        <span className="input-group-icon text-primary"><i className="fab fa-facebook-f"></i></span>
-                                                        <input
-                                                            type="url"
-                                                            id="facebook"
-                                                            name="facebook"
-                                                            className="form-control compact-input"
-                                                            placeholder="https://facebook.com/profil"
-                                                            value={profileData.facebook || ""}
-                                                            onChange={handleProfileChange}
-                                                            disabled={uiState.loading}
-                                                        />
+                                                ) : !socialForm.isOpen ? (
+                                                    <div className="social-empty-state">
+                                                        <div className="empty-social-icon">
+                                                            <i className="fas fa-share-nodes"></i>
+                                                        </div>
+                                                        <h5 className="empty-social-title">Belum Ada Media Sosial Ditambahkan</h5>
+                                                        <p className="empty-social-desc">
+                                                            Hubungkan akun media sosial profesional Anda seperti YouTube, Instagram, TikTok, LinkedIn, Twitter/X, atau Facebook agar siswa dan kolega dapat terhubung dengan Anda.
+                                                        </p>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleOpenAddSocial}
+                                                            className="btn-hero-primary py-2 px-3"
+                                                        >
+                                                            <i className="fas fa-plus me-1"></i> Tambah Media Sosial Sekarang
+                                                        </button>
                                                     </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Preview Live Links */}
-                                            <div className="social-live-preview mt-4">
-                                                <span className="preview-label">Pratinjau Tautan Publik:</span>
-                                                <div className="d-flex align-items-center gap-3 flex-wrap mt-2">
-                                                    {profileData.linkedin ? (
-                                                        <a href={profileData.linkedin} target="_blank" rel="noreferrer" className="social-preview-chip">
-                                                            <i className="fab fa-linkedin text-primary"></i> LinkedIn Terhubung
-                                                        </a>
-                                                    ) : (
-                                                        <span className="social-preview-chip text-muted">LinkedIn belum diisi</span>
-                                                    )}
-
-                                                    {profileData.twitter ? (
-                                                        <a href={profileData.twitter} target="_blank" rel="noreferrer" className="social-preview-chip">
-                                                            <i className="fab fa-x-twitter text-dark"></i> X Terhubung
-                                                        </a>
-                                                    ) : (
-                                                        <span className="social-preview-chip text-muted">Twitter/X belum diisi</span>
-                                                    )}
-
-                                                    {profileData.facebook ? (
-                                                        <a href={profileData.facebook} target="_blank" rel="noreferrer" className="social-preview-chip">
-                                                            <i className="fab fa-facebook text-primary"></i> Facebook Terhubung
-                                                        </a>
-                                                    ) : (
-                                                        <span className="social-preview-chip text-muted">Facebook belum diisi</span>
-                                                    )}
-                                                </div>
+                                                ) : null}
                                             </div>
                                         </div>
                                     )}
@@ -1389,6 +1673,229 @@ function Profile() {
                     </div>
                 </div>
             </section>
+
+            {/* ========================================================
+                PUBLIC PROFILE POP-UP CARD MODAL
+                ======================================================== */}
+            {showPublicCardModal && (
+                <div
+                    className="public-card-modal-backdrop"
+                    onClick={() => setShowPublicCardModal(false)}
+                    role="dialog"
+                    aria-modal="true"
+                >
+                    <div
+                        className="public-card-modal-dialog"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Modal Header Banner */}
+                        <div className="public-card-banner">
+                            <div className="banner-badge-preview">
+                                <i className="fas fa-eye me-1"></i> Pratinjau Kartu Publik Instruktur
+                            </div>
+                            <button
+                                type="button"
+                                className="btn-modal-close"
+                                onClick={() => setShowPublicCardModal(false)}
+                                aria-label="Tutup"
+                                title="Tutup pratinjau"
+                            >
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        {/* Modal Card Content */}
+                        <div className="public-card-content">
+                            {/* Avatar with Verified Ring */}
+                            <div className="public-card-avatar-wrapper">
+                                <div className="public-card-avatar">
+                                    {uiState.imagePreview ? (
+                                        <img
+                                            src={uiState.imagePreview}
+                                            alt={profileData.full_name || "Instruktur"}
+                                            className="public-avatar-img"
+                                        />
+                                    ) : (
+                                        <div className="public-avatar-placeholder">
+                                            <i className="fas fa-user-tie"></i>
+                                        </div>
+                                    )}
+                                    <span className="public-avatar-badge" title="Instruktur Terverifikasi Setjen DPD RI">
+                                        <i className="fas fa-check"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Name & Titles */}
+                            <div className="text-center mt-2 mb-3">
+                                <h3 className="public-card-name">
+                                    {profileData.full_name || currentUser?.full_name || "Instruktur Setjen DPD RI"}
+                                </h3>
+                                <div className="public-card-roles">
+                                    <span className="badge-role-pill">
+                                        <i className="fas fa-chalkboard-user me-1"></i> Instruktur Resmi Setjen DPD RI
+                                    </span>
+                                    {hasStudentRole && (
+                                        <span className="badge-role-pill-sub">
+                                            <i className="fas fa-graduation-cap me-1"></i> Peserta Pelatihan
+                                        </span>
+                                    )}
+                                </div>
+                                {profileData.position_name && (
+                                    <p className="public-card-position mb-1">
+                                        <i className="fas fa-briefcase text-teal me-1"></i>
+                                        {profileData.position_name}
+                                    </p>
+                                )}
+                                {profileData.organization_unit_name && (
+                                    <p className="public-card-org text-muted mb-0">
+                                        <i className="fas fa-building me-1"></i>
+                                        {profileData.organization_unit_name} &bull; Setjen DPD RI
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* NIP & Location Strip */}
+                            <div className="public-card-info-strip">
+                                {profileData.nip && (
+                                    <div className="info-strip-item">
+                                        <span className="strip-label">NIP</span>
+                                        <span className="strip-value">{profileData.nip}</span>
+                                    </div>
+                                )}
+                                {profileData.golongan && (
+                                    <div className="info-strip-item">
+                                        <span className="strip-label">Golongan</span>
+                                        <span className="strip-value">{profileData.golongan}</span>
+                                    </div>
+                                )}
+                                <div className="info-strip-item">
+                                    <span className="strip-label">Domisili</span>
+                                    <span className="strip-value">{profileData.country || "Indonesia"}</span>
+                                </div>
+                            </div>
+
+                            {/* Teaching Stats Tiles */}
+                            <div className="public-card-stats-grid">
+                                <div className="public-stat-tile">
+                                    <span className="stat-number">{teacherStats?.total_courses ?? 0}</span>
+                                    <span className="stat-label"><i className="fas fa-book-open me-1 text-teal"></i> Kursus</span>
+                                </div>
+                                <div className="public-stat-tile">
+                                    <span className="stat-number">{teacherStats?.total_students ?? 0}</span>
+                                    <span className="stat-label"><i className="fas fa-users me-1 text-teal"></i> Peserta</span>
+                                </div>
+                                <div className="public-stat-tile">
+                                    <span className="stat-number">
+                                        {teacherStats?.total_rating ? Number(teacherStats.total_rating).toFixed(1) : "5.0"}
+                                    </span>
+                                    <span className="stat-label"><i className="fas fa-star me-1 text-warning"></i> Rating</span>
+                                </div>
+                            </div>
+
+                            {/* Biografi / Kepakaran Mengajar */}
+                            <div className="public-card-bio-section">
+                                <h6 className="bio-section-title">
+                                    <i className="fas fa-quote-left text-teal me-2"></i>
+                                    Kepakaran & Biografi Pengajar
+                                </h6>
+                                <p className="bio-section-text">
+                                    {profileData.bio || profileData.about || (
+                                        <span className="text-muted fst-italic">
+                                            Belum ada biografi pengajar. Anda dapat melengkapi kepakaran Anda di Tab "Profil Peran (Instruktur & Peserta)".
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+
+                            {/* Social & Contact Strip */}
+                            {(profileData.linkedin || profileData.twitter || profileData.facebook || profileData.youtube || profileData.instagram || profileData.tiktok || profileData.email) && (
+                                <div className="public-card-social-strip">
+                                    <span className="social-strip-label">Tautan Terverifikasi:</span>
+                                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                                        {profileData.youtube && (
+                                            <a
+                                                href={profileData.youtube}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="public-social-chip youtube"
+                                            >
+                                                <i className="fab fa-youtube text-danger"></i> YouTube
+                                            </a>
+                                        )}
+                                        {profileData.instagram && (
+                                            <a
+                                                href={profileData.instagram}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="public-social-chip instagram"
+                                            >
+                                                <i className="fab fa-instagram" style={{ color: "#e1306c" }}></i> Instagram
+                                            </a>
+                                        )}
+                                        {profileData.tiktok && (
+                                            <a
+                                                href={profileData.tiktok}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="public-social-chip tiktok"
+                                            >
+                                                <i className="fab fa-tiktok text-dark"></i> TikTok
+                                            </a>
+                                        )}
+                                        {profileData.linkedin && (
+                                            <a
+                                                href={profileData.linkedin}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="public-social-chip linkedin"
+                                            >
+                                                <i className="fab fa-linkedin text-primary"></i> LinkedIn
+                                            </a>
+                                        )}
+                                        {profileData.twitter && (
+                                            <a
+                                                href={profileData.twitter}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="public-social-chip twitter"
+                                            >
+                                                <i className="fab fa-x-twitter text-dark"></i> Twitter/X
+                                            </a>
+                                        )}
+                                        {profileData.facebook && (
+                                            <a
+                                                href={profileData.facebook}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="public-social-chip facebook"
+                                            >
+                                                <i className="fab fa-facebook text-primary"></i> Facebook
+                                            </a>
+                                        )}
+                                        {profileData.email && (
+                                            <span className="public-social-chip email">
+                                                <i className="fas fa-envelope text-teal"></i> {profileData.email}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="public-card-footer">
+                            <button
+                                type="button"
+                                className="btn-modal-dismiss"
+                                onClick={() => setShowPublicCardModal(false)}
+                            >
+                                <i className="fas fa-xmark me-1"></i> Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Image Cropping Modal */}
             <ProfilePictureCropModal

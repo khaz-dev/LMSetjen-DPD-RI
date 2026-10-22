@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
-import dayjs, { moment } from "../../utils/dayjs";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { moment } from "../../utils/dayjs";
 import { Rating } from "react-simple-star-rating";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
-import LoadingSpinner from "./Partials/LoadingSpinner";
-import MinimalLoader from "./Partials/MinimalLoader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 
@@ -13,107 +11,202 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
-import { usePageCache } from "../../utils/usePageCache"; // ✨ PHASE 11.12+: Fix page reload issue
+import { usePageCache } from "../../utils/usePageCache";
 import "./Review.css";
 
 function Review() {
-    const [displayedReviews, setDisplayedReviews] = useState([]);
-    const [replies, setReplies] = useState({});
-    const [loadingReply, setLoadingReply] = useState({});
-    const [reportingAbuseReviewId, setReportingAbuseReviewId] = useState(null);
-    const [showAbuseModal, setShowAbuseModal] = useState(false);
-    const [abuseReason, setAbuseReason] = useState('');
-    const [abuseDescription, setAbuseDescription] = useState('');
-    const [reportingAbuse, setReportingAbuse] = useState(false);
-    const [abuseReports, setAbuseReports] = useState([]);  // ✨ PHASE 4.210: Track submitted abuse reports
-    const [loadingAbuseReports, setLoadingAbuseReports] = useState(false);
-    const [showExistingReportModal, setShowExistingReportModal] = useState(false);  // ✨ PHASE 4.210: Modal for viewing existing reports
-    const [selectedExistingReport, setSelectedExistingReport] = useState(null);  // ✨ PHASE 4.210: Currently viewed report
-    const [isEditingReport, setIsEditingReport] = useState(false);  // ✨ PHASE 4.210: Edit mode for existing report
-    const [editReason, setEditReason] = useState('');  // ✨ PHASE 4.210: Edited reason
-    const [editDescription, setEditDescription] = useState('');  // ✨ PHASE 4.210: Edited description
-    const [updatingExistingReport, setUpdatingExistingReport] = useState(false);  // ✨ PHASE 4.210: Loading state for updating
-    const [closingReport, setClosingReport] = useState(false);  // ✨ PHASE 4.210: Loading state for closing
     const isCollapsed = useInstructorSidebarCollapse();
 
-    // ✨ PHASE 11.12+: Wrap fetch logic for usePageCache
+    // Replies and UI states
+    const [replies, setReplies] = useState({});
+    const [loadingReply, setLoadingReply] = useState({});
+    const [openReplyId, setOpenReplyId] = useState(null);
+
+    // Filters and Search states
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'unanswered' | 'answered'
+    const [selectedRating, setSelectedRating] = useState(0); // 0 = all
+    const [selectedCourseId, setSelectedCourseId] = useState("all");
+    const [sortBy, setSortBy] = useState("newest"); // 'newest' | 'oldest' | 'highest' | 'lowest'
+
+    // Abuse reporting states
+    const [reportingAbuseReviewId, setReportingAbuseReviewId] = useState(null);
+    const [showAbuseModal, setShowAbuseModal] = useState(false);
+    const [abuseReason, setAbuseReason] = useState("");
+    const [abuseDescription, setAbuseDescription] = useState("");
+    const [reportingAbuse, setReportingAbuse] = useState(false);
+    const [abuseReports, setAbuseReports] = useState([]);
+    const [showExistingReportModal, setShowExistingReportModal] = useState(false);
+    const [selectedExistingReport, setSelectedExistingReport] = useState(null);
+    const [isEditingReport, setIsEditingReport] = useState(false);
+    const [editReason, setEditReason] = useState("");
+    const [editDescription, setEditDescription] = useState("");
+    const [updatingExistingReport, setUpdatingExistingReport] = useState(false);
+    const [closingReport, setClosingReport] = useState(false);
+
+    // Fetch review data for page cache
     const fetchReviewsData = useCallback(async () => {
         const userData = UserData();
         if (!userData?.teacher_id) {
             throw new Error("Teacher ID not found");
         }
         const res = await useAxios.get(`teacher/review-lists/${userData.teacher_id}/`);
-        // Extract results from paginated response
         const reviewsData = res.data.results || res.data;
-        return reviewsData;
+        return Array.isArray(reviewsData) ? reviewsData : [];
     }, []);
 
-    // ✨ PHASE 11.12+: Use page cache to prevent reloads on navigation
     const { data: reviews = [], loading, refetch: refetchReviews } = usePageCache(
-        'instructor-reviews',
+        "instructor-reviews",
         fetchReviewsData,
         { showLoadingOnStale: false }
     );
 
-    // Update displayed reviews when data changes
-    useEffect(() => {
-        setDisplayedReviews(reviews);
-    }, [reviews]);
-
-    // ✨ PHASE 4.210: Fetch abuse reports submitted by this teacher
+    // Fetch abuse reports submitted by this teacher
     const fetchAbuseReports = async () => {
         try {
             const userData = UserData();
             if (!userData?.teacher_id) return;
-            
             const res = await useAxios.get(`teacher/abuse-reports/${userData.teacher_id}/`);
             const reports = res.data.results || res.data;
-            console.log("[Review] Fetched abuse reports:", reports);
-            reports.forEach(r => {
-                console.log(`[Review] Report ${r.id}: review.id = ${r.review?.id}, status = ${r.status}`);
-            });
-            setAbuseReports(reports);
+            setAbuseReports(Array.isArray(reports) ? reports : []);
         } catch (error) {
             console.error("Error fetching abuse reports:", error);
         }
     };
 
-    // Fetch abuse reports on mount
     useEffect(() => {
         fetchAbuseReports();
     }, []);
 
+    // Extract unique courses for dropdown filter
+    const uniqueCourses = useMemo(() => {
+        if (!reviews || !Array.isArray(reviews)) return [];
+        const courseMap = new Map();
+        reviews.forEach((r) => {
+            if (r.course?.id && r.course?.title) {
+                courseMap.set(String(r.course.id), r.course.title);
+            }
+        });
+        return Array.from(courseMap.entries()).map(([id, title]) => ({ id, title }));
+    }, [reviews]);
+
+    // KPI Metrics calculation
+    const metrics = useMemo(() => {
+        const total = reviews?.length || 0;
+        if (total === 0) {
+            return { total: 0, average: "0.0", answered: 0, unanswered: 0, responseRate: 0, fiveStars: 0 };
+        }
+        const answered = reviews.filter((r) => r.reply && r.reply.trim() !== "").length;
+        const unanswered = total - answered;
+        const sumRating = reviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+        const average = (sumRating / total).toFixed(1);
+        const responseRate = Math.round((answered / total) * 100);
+        const fiveStars = reviews.filter((r) => Number(r.rating) === 5).length;
+
+        return { total, average, answered, unanswered, responseRate, fiveStars };
+    }, [reviews]);
+
+    // Filter and sort reviews
+    const filteredReviews = useMemo(() => {
+        if (!reviews || !Array.isArray(reviews)) return [];
+
+        return reviews
+            .filter((r) => {
+                // Status Filter
+                const hasReply = Boolean(r.reply && r.reply.trim() !== "");
+                if (statusFilter === "answered" && !hasReply) return false;
+                if (statusFilter === "unanswered" && hasReply) return false;
+
+                // Rating Filter
+                if (selectedRating !== 0 && Number(r.rating) !== Number(selectedRating)) return false;
+
+                // Course Filter
+                if (selectedCourseId !== "all" && String(r.course?.id) !== String(selectedCourseId)) return false;
+
+                // Search Query Filter
+                if (searchQuery.trim() !== "") {
+                    const q = searchQuery.toLowerCase().trim();
+                    const courseTitle = (r.course?.title || "").toLowerCase();
+                    const studentName = (r.user?.full_name || "").toLowerCase();
+                    const reviewText = (r.review || "").toLowerCase();
+                    if (!courseTitle.includes(q) && !studentName.includes(q) && !reviewText.includes(q)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            })
+            .sort((a, b) => {
+                if (sortBy === "newest") {
+                    return new Date(b.date) - new Date(a.date);
+                }
+                if (sortBy === "oldest") {
+                    return new Date(a.date) - new Date(b.date);
+                }
+                if (sortBy === "highest") {
+                    return (Number(b.rating) || 0) - (Number(a.rating) || 0);
+                }
+                if (sortBy === "lowest") {
+                    return (Number(a.rating) || 0) - (Number(b.rating) || 0);
+                }
+                return 0;
+            });
+    }, [reviews, statusFilter, selectedRating, selectedCourseId, searchQuery, sortBy]);
+
+    // Check if any filter is active
+    const hasActiveFilters = useMemo(() => {
+        return (
+            searchQuery.trim() !== "" ||
+            statusFilter !== "all" ||
+            selectedRating !== 0 ||
+            selectedCourseId !== "all" ||
+            sortBy !== "newest"
+        );
+    }, [searchQuery, statusFilter, selectedRating, selectedCourseId, sortBy]);
+
+    const handleResetFilters = () => {
+        setSearchQuery("");
+        setStatusFilter("all");
+        setSelectedRating(0);
+        setSelectedCourseId("all");
+        setSortBy("newest");
+    };
+
+    // Toggle reply form accordion
+    const handleToggleReply = (review) => {
+        if (openReplyId === review.id) {
+            setOpenReplyId(null);
+        } else {
+            setOpenReplyId(review.id);
+            if (replies[review.id] === undefined) {
+                setReplies((prev) => ({ ...prev, [review.id]: review.reply || "" }));
+            }
+        }
+    };
+
+    // Submit or update response
     const handleSubmitReply = async (reviewId) => {
         const replyText = replies[reviewId];
         if (!replyText?.trim()) return;
-        
-        setLoadingReply({...loadingReply, [reviewId]: true});
-        
+
+        setLoadingReply((prev) => ({ ...prev, [reviewId]: true }));
+
         try {
             const userData = UserData();
             if (!userData?.teacher_id) {
                 throw new Error("Teacher ID not found");
             }
             await useAxios.patch(`teacher/review-detail/${userData.teacher_id}/${reviewId}/`, {
-                reply: replyText,
+                reply: replyText.trim(),
             });
-            
-            refetchReviews();
+
+            await refetchReviews();
             Toast().fire({
                 icon: "success",
-                title: "Balasan terkirim berhasil!",
+                title: "Balasan berhasil dikirim!",
             });
-            
-            // Clear only the specific reply
-            setReplies({...replies, [reviewId]: ""});
-            
-            // Close the collapse
-            const collapseElement = document.getElementById(`collapse${reviewId}`);
-            if (collapseElement) {
-                const bsCollapse = new window.bootstrap.Collapse(collapseElement);
-                bsCollapse.hide();
-            }
-            
+
+            setOpenReplyId(null);
         } catch (error) {
             console.error("Error sending reply:", error);
             Toast().fire({
@@ -121,94 +214,48 @@ function Review() {
                 title: "Gagal mengirim balasan. Silakan coba lagi.",
             });
         } finally {
-            setLoadingReply({...loadingReply, [reviewId]: false});
+            setLoadingReply((prev) => ({ ...prev, [reviewId]: false }));
         }
     };
 
-    const handleSortByDate = (e) => {
-        const sortValue = e.target.value;
-        const sortedReview = [...displayedReviews];
-        if (sortValue === "Newest") {
-            sortedReview.sort((a, b) => new Date(b.date) - new Date(a.date));
-        } else {
-            sortedReview.sort((a, b) => new Date(a.date) - new Date(b.date));
-        }
-
-        setDisplayedReviews(sortedReview);
-    };
-
-    const handleSortByRatingChange = (e) => {
-        const rating = parseInt(e.target.value);
-        if (rating === 0) {
-            setDisplayedReviews(reviews);
-        } else {
-            const filtered = reviews.filter((review) => review.rating === rating);
-            setDisplayedReviews(filtered);
-        }
-    };
-
-    const handleFilterByCourse = (e) => {
-        const query = e.target.value.toLowerCase();
-        if (query === "") {
-            setDisplayedReviews(reviews);
-        } else {
-            const filtered = reviews.filter((review) => {
-                return review.course.title.toLowerCase().includes(query);
-            });
-            setDisplayedReviews(filtered);
-        }
-    };
-
-    // ✨ PHASE 4.210: Abuse Report Handlers
+    // Abuse Report Handlers
     const handleOpenAbuseModal = (reviewId) => {
-        console.log(`[Review] Looking for existing reports for review ${reviewId}`);
-        console.log("[Review] Available reports:", abuseReports);
-        
-        // Check if already reported
-        const existingReport = abuseReports.find(r => r.review?.id === reviewId);
-        
-        console.log(`[Review] Found existing report:`, existingReport);
-        
+        const existingReport = abuseReports.find((r) => r.review?.id === reviewId);
         if (existingReport) {
-            // Open the existing report details modal instead
-            console.log("[Review] Showing existing report modal");
             setSelectedExistingReport(existingReport);
             setShowExistingReportModal(true);
             return;
         }
-        
-        console.log("[Review] Showing new report modal");
+
         setReportingAbuseReviewId(reviewId);
         setShowAbuseModal(true);
-        setAbuseReason('');
-        setAbuseDescription('');
+        setAbuseReason("");
+        setAbuseDescription("");
     };
 
     const handleCloseAbuseModal = () => {
         setShowAbuseModal(false);
         setReportingAbuseReviewId(null);
-        setAbuseReason('');
-        setAbuseDescription('');
+        setAbuseReason("");
+        setAbuseDescription("");
     };
 
     const handleCloseExistingReportModal = () => {
         setShowExistingReportModal(false);
         setSelectedExistingReport(null);
         setIsEditingReport(false);
-        setEditReason('');
-        setEditDescription('');
+        setEditReason("");
+        setEditDescription("");
     };
 
-    // ✨ PHASE 4.210: Enter edit mode for existing report
     const handleEditExistingReport = () => {
         if (selectedExistingReport) {
-            setEditReason(selectedExistingReport.reason || '');
-            setEditDescription(selectedExistingReport.description || '');
+            setEditReason(selectedExistingReport.reason || "");
+            setEditDescription(selectedExistingReport.description || "");
             setIsEditingReport(true);
         }
     };
 
-    // ✨ PHASE 4.210: Submit updated report
     const handleUpdateExistingReport = async () => {
         if (!editReason.trim()) {
             Toast().fire({
@@ -219,11 +266,7 @@ function Review() {
         }
 
         setUpdatingExistingReport(true);
-
         try {
-            const userData = UserData();
-            
-            // Send updated data to backend
             const response = await useAxios.put(
                 `teacher/abuse-reports/${selectedExistingReport.id}/update/`,
                 {
@@ -238,16 +281,8 @@ function Review() {
                 text: "Laporan Anda telah diperbarui dan dikirim kembali untuk ditinjau admin.",
             });
 
-            console.log("[Review] Updated report response:", response.data);
-            
-            // Update local state
-            const updatedReport = response.data;
-            setSelectedExistingReport(updatedReport);
-            
-            // Refresh abuse reports
+            setSelectedExistingReport(response.data);
             fetchAbuseReports();
-            
-            // Exit edit mode
             setIsEditingReport(false);
         } catch (error) {
             console.error("Error updating report:", error);
@@ -261,10 +296,8 @@ function Review() {
         }
     };
 
-    // ✨ PHASE 4.210: Close/Resolve the abuse report
     const handleCloseReport = async () => {
         setClosingReport(true);
-
         try {
             const response = await useAxios.put(
                 `teacher/abuse-reports/${selectedExistingReport.id}/close/`
@@ -276,13 +309,7 @@ function Review() {
                 text: "Laporan ditandai sebagai selesai. Admin telah diberitahu.",
             });
 
-            console.log("[Review] Close report response:", response.data);
-            
-            // Update local state
-            const closedReport = response.data;
-            setSelectedExistingReport(closedReport);
-            
-            // Refresh abuse reports
+            setSelectedExistingReport(response.data);
             fetchAbuseReports();
         } catch (error) {
             console.error("Error closing report:", error);
@@ -306,7 +333,6 @@ function Review() {
         }
 
         setReportingAbuse(true);
-
         try {
             const userData = UserData();
             if (!userData?.id) {
@@ -325,7 +351,6 @@ function Review() {
                 text: "Admin akan meninjau laporan Anda dalam waktu singkat.",
             });
 
-            // Refresh abuse reports list
             fetchAbuseReports();
             handleCloseAbuseModal();
         } catch (error) {
@@ -346,297 +371,482 @@ function Review() {
         }
     };
 
-    // Show full-page loading spinner on initial load
-    if (loading) {
-        return (
-            <>
-                <BaseHeader />
-                <section className="instructor-review-page" style={{ display: "flex", alignItems: "center" }}>
-                    <div className="container" style={{ flex: 1 }}>
-                        <Header />
-                        <div className="row">
-                            <Sidebar />
-                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-                                <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
-                                        <span className="visually-hidden">Memuat...</span>
-                                    </div>
-                                    <p className="mt-3 text-muted">Memuat Ulasan...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <Footer />
-            </>
-        );
-    }
-
     return (
         <>
             <BaseHeader />
 
             <section className="instructor-review-page">
                 <div className="container">
-                    {/* Header Here */}
                     <Header />
+
                     <div className="row">
-                        {/* Sidebar Here */}
                         <Sidebar />
+
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
-                            {/* Modern Header Section */}
-                            <div className="modern-header-section mb-4">
-                                <div className="header-decoration"></div>
-                                <div className="d-flex align-items-center justify-content-between header-content">
+                            {/* Page Header Bar */}
+                            <div className="reviews-header-card">
+                                <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
                                     <div>
-                                        <h1 className="mb-2 page-title">
-                                            <i className="fas fa-star-half-alt me-3 page-title-icon"></i>Ulasan Kursus
-                                        </h1>
-                                        <p className="mb-0 text-muted page-subtitle">
-                                            Pantau umpan balik dan berkomunikasi dengan siswa Anda
+                                        <h2 className="reviews-title mb-1">
+                                            <i className="fas fa-star-half-alt text-teal me-2"></i>
+                                            Ulasan Kursus
+                                        </h2>
+                                        <p className="reviews-subtitle mb-0">
+                                            Pantau kepuasan siswa, respon umpan balik, dan tingkatkan mutu pembelajaran
                                         </p>
                                     </div>
-                                    <div className="text-end">
-                                        <div className="d-flex align-items-center gap-3">
-                                            <div className="stat-badge">
-                                                <i className="fas fa-comments stat-badge-icon"></i>
-                                                {displayedReviews?.length || 0} Ulasan
-                                            </div>
-                                        </div>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-teal"
+                                            onClick={() => refetchReviews()}
+                                            title="Segarkan data ulasan"
+                                            disabled={loading}
+                                        >
+                                            <i className={`fas fa-sync-alt me-1 ${loading ? "fa-spin" : ""}`}></i>
+                                            Segarkan
+                                        </button>
+                                        <span className="reviews-counter-pill">
+                                            <i className="fas fa-comments me-1"></i>
+                                            {metrics.total} Total
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Modern Filter Section */}
-                            <div className="modern-filter-section">
-                                <div className="row g-3">
-                                    <div className="col-xl-7 col-lg-6 col-md-4 col-12">
-                                        <div className="modern-search-container">
-                                            <i className="fas fa-search search-icon"></i>
-                                            <input 
-                                                type="text" 
-                                                className="form-control modern-input" 
-                                                placeholder="Cari berdasarkan nama kursus..." 
-                                                onChange={handleFilterByCourse}
-                                            />
+                            {/* KPI Metrics Strip */}
+                            <div className="reviews-metrics-grid">
+                                <div className="review-metric-card">
+                                    <div className="metric-icon-box bg-teal-subtle text-teal">
+                                        <i className="fas fa-comment-dots"></i>
+                                    </div>
+                                    <div className="metric-content">
+                                        <span className="metric-value">{metrics.total}</span>
+                                        <span className="metric-label">Total Ulasan</span>
+                                    </div>
+                                    <span className="metric-badge bg-light text-muted">Semua kursus</span>
+                                </div>
+
+                                <div className="review-metric-card">
+                                    <div className="metric-icon-box bg-amber-subtle text-amber">
+                                        <i className="fas fa-star"></i>
+                                    </div>
+                                    <div className="metric-content">
+                                        <div className="d-flex align-items-baseline gap-1">
+                                            <span className="metric-value">{metrics.average}</span>
+                                            <small className="text-muted fw-normal">/ 5.0</small>
                                         </div>
+                                        <span className="metric-label">Rata-rata Rating</span>
                                     </div>
-                                    <div className="col-xl-2 col-lg-2 col-md-4 col-12">
-                                        <select 
-                                            className="form-select modern-select" 
-                                            onChange={handleSortByRatingChange}
-                                        >
-                                            <option value={0}>Semua Rating</option>
-                                            <option value={5}>5 Bintang</option>
-                                            <option value={4}>4 Bintang</option>
-                                            <option value={3}>3 Bintang</option>
-                                            <option value={2}>2 Bintang</option>
-                                            <option value={1}>1 Bintang</option>
-                                        </select>
+                                    <span className="metric-badge bg-amber-subtle text-amber">
+                                        ★ {metrics.fiveStars} Bintang 5
+                                    </span>
+                                </div>
+
+                                <div className="review-metric-card">
+                                    <div className="metric-icon-box bg-emerald-subtle text-emerald">
+                                        <i className="fas fa-check-circle"></i>
                                     </div>
-                                    <div className="col-xl-3 col-lg-3 col-md-4 col-12">
-                                        <select 
-                                            className="form-select modern-select" 
-                                            onChange={handleSortByDate}
-                                        >
-                                            <option value="">Urutkan Berdasarkan Tanggal</option>
-                                            <option value="Newest">Terbaru Dulu</option>
-                                            <option value="Oldest">Tertua Dulu</option>
-                                        </select>
+                                    <div className="metric-content">
+                                        <span className="metric-value">{metrics.answered}</span>
+                                        <span className="metric-label">Sudah Dibalas</span>
                                     </div>
+                                    <span className="metric-badge bg-emerald-subtle text-emerald">
+                                        {metrics.responseRate}% Terjawab
+                                    </span>
+                                </div>
+
+                                <div className="review-metric-card">
+                                    <div className="metric-icon-box bg-coral-subtle text-coral">
+                                        <i className="fas fa-reply"></i>
+                                    </div>
+                                    <div className="metric-content">
+                                        <span className="metric-value">{metrics.unanswered}</span>
+                                        <span className="metric-label">Belum Dibalas</span>
+                                    </div>
+                                    <span className={`metric-badge ${metrics.unanswered > 0 ? "bg-coral-subtle text-coral fw-bold" : "bg-light text-muted"}`}>
+                                        {metrics.unanswered > 0 ? "Perlu Respons" : "Semua Selesai"}
+                                    </span>
                                 </div>
                             </div>
-                            {/* Modern Reviews List */}
-                            <div className="modern-reviews-container">
-                                {displayedReviews?.length > 0 ? (
-                                    <div className="row g-4">
-                                        {displayedReviews.map((r, index) => (
-                                            <div key={r.id || index} className="col-12">
-                                                <div className="modern-review-card">
-                                                    <div className="row g-3">
-                                                        <div className="col-auto">
-                                                            <div className="modern-avatar-container">
+
+                            {/* Filter & Search Toolbar */}
+                            <div className="reviews-toolbar-card">
+                                {/* Top Row: Status Tabs & Rating Pills */}
+                                <div className="toolbar-top-row">
+                                    {/* Status Filter Tabs */}
+                                    <div className="status-filter-pills">
+                                        <button
+                                            type="button"
+                                            className={`status-pill ${statusFilter === "all" ? "active" : ""}`}
+                                            onClick={() => setStatusFilter("all")}
+                                        >
+                                            Semua ({metrics.total})
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`status-pill ${statusFilter === "unanswered" ? "active" : ""}`}
+                                            onClick={() => setStatusFilter("unanswered")}
+                                        >
+                                            <i className="fas fa-clock me-1 text-coral"></i>
+                                            Belum Dibalas ({metrics.unanswered})
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`status-pill ${statusFilter === "answered" ? "active" : ""}`}
+                                            onClick={() => setStatusFilter("answered")}
+                                        >
+                                            <i className="fas fa-check-circle me-1 text-emerald"></i>
+                                            Sudah Dibalas ({metrics.answered})
+                                        </button>
+                                    </div>
+
+                                    {/* Star Rating Pills */}
+                                    <div className="rating-filter-pills">
+                                        <span className="filter-label d-none d-sm-inline">Rating:</span>
+                                        <button
+                                            type="button"
+                                            className={`rating-pill ${selectedRating === 0 ? "active" : ""}`}
+                                            onClick={() => setSelectedRating(0)}
+                                        >
+                                            Semua
+                                        </button>
+                                        {[5, 4, 3, 2, 1].map((star) => (
+                                            <button
+                                                key={star}
+                                                type="button"
+                                                className={`rating-pill ${selectedRating === star ? "active" : ""}`}
+                                                onClick={() => setSelectedRating(selectedRating === star ? 0 : star)}
+                                                title={`Filter ${star} Bintang`}
+                                            >
+                                                ★ {star}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Bottom Row: Search, Course Filter, Sort */}
+                                <div className="toolbar-bottom-row">
+                                    <div className="search-input-wrapper">
+                                        <i className="fas fa-search search-icon"></i>
+                                        <input
+                                            type="text"
+                                            className="form-control compact-input"
+                                            placeholder="Cari kursus, nama siswa, atau kata kunci ulasan..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                type="button"
+                                                className="btn-clear-search"
+                                                onClick={() => setSearchQuery("")}
+                                                title="Hapus pencarian"
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Course Select Dropdown */}
+                                    {uniqueCourses.length > 1 && (
+                                        <div className="select-input-wrapper course-select">
+                                            <select
+                                                className="form-select compact-select"
+                                                value={selectedCourseId}
+                                                onChange={(e) => setSelectedCourseId(e.target.value)}
+                                            >
+                                                <option value="all">Semua Kursus ({uniqueCourses.length})</option>
+                                                {uniqueCourses.map((c) => (
+                                                    <option key={c.id} value={c.id}>
+                                                        {c.title}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    {/* Sort Dropdown */}
+                                    <div className="select-input-wrapper sort-select">
+                                        <select
+                                            className="form-select compact-select"
+                                            value={sortBy}
+                                            onChange={(e) => setSortBy(e.target.value)}
+                                        >
+                                            <option value="newest">Terbaru</option>
+                                            <option value="oldest">Terlama</option>
+                                            <option value="highest">Rating Tertinggi</option>
+                                            <option value="lowest">Rating Terendah</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Reset Filters Button */}
+                                    {hasActiveFilters && (
+                                        <button
+                                            type="button"
+                                            className="btn-reset-filters"
+                                            onClick={handleResetFilters}
+                                            title="Reset semua filter"
+                                        >
+                                            <i className="fas fa-undo-alt me-1"></i>
+                                            Reset
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Reviews List Container */}
+                            <div className="reviews-list-wrapper">
+                                {loading ? (
+                                    <div className="reviews-loading-state">
+                                        <div className="spinner-border text-teal spinner-border-sm me-2" role="status">
+                                            <span className="visually-hidden">Memuat...</span>
+                                        </div>
+                                        <span>Memuat data ulasan siswa...</span>
+                                    </div>
+                                ) : filteredReviews.length > 0 ? (
+                                    <div className="reviews-cards-stack">
+                                        {filteredReviews.map((r, index) => {
+                                            const existingReport = abuseReports.find((rpt) => rpt.review?.id === r.id);
+                                            const hasReply = Boolean(r.reply && r.reply.trim() !== "");
+                                            const isReplyFormOpen = openReplyId === r.id;
+                                            const ratingScore = Number(r.rating) || 0;
+
+                                            return (
+                                                <div
+                                                    key={r.id || index}
+                                                    className={`compact-review-card ${hasReply ? "has-reply" : "no-reply"}`}
+                                                >
+                                                    {/* Card Header */}
+                                                    <div className="review-card-topbar">
+                                                        {/* Left: Avatar & User / Course Info */}
+                                                        <div className="reviewer-main-meta">
+                                                            <div className="reviewer-avatar-box">
                                                                 {r.user?.image ? (
                                                                     <img
                                                                         src={r.user.image}
-                                                                        alt="avatar"
-                                                                        className="reviewer-avatar rounded-circle"
+                                                                        alt={r.user.full_name || "Siswa"}
+                                                                        className="reviewer-img"
                                                                         onError={(e) => {
                                                                             e.target.style.display = "none";
-                                                                            e.target.parentElement.innerHTML = '<div class="default-avatar"><i class="fas fa-user"></i></div>';
+                                                                            if (e.target.nextSibling) {
+                                                                                e.target.nextSibling.style.display = "flex";
+                                                                            }
                                                                         }}
                                                                     />
-                                                                ) : (
-                                                                    <div className="default-avatar">
-                                                                        <i className="fas fa-user"></i>
-                                                                    </div>
-                                                                )}
-                                                                <div className="avatar-status-badge">
-                                                                    <i className="fas fa-check avatar-status-icon"></i>
+                                                                ) : null}
+                                                                <div
+                                                                    className="reviewer-initial-fallback"
+                                                                    style={{ display: r.user?.image ? "none" : "flex" }}
+                                                                >
+                                                                    {r.user?.full_name
+                                                                        ? r.user.full_name.charAt(0).toUpperCase()
+                                                                        : <i className="fas fa-user"></i>}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="reviewer-details">
+                                                                <div className="d-flex align-items-center flex-wrap gap-2">
+                                                                    <h5 className="reviewer-name mb-0">
+                                                                        {r.user?.full_name || "Siswa Anonymous"}
+                                                                    </h5>
+                                                                    {r.user?.jenis_jabatan && (
+                                                                        <span className="user-role-badge">
+                                                                            {r.user.jenis_jabatan}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="reviewer-submeta">
+                                                                    <span className="review-timestamp">
+                                                                        <i className="far fa-calendar-alt me-1"></i>
+                                                                        {moment(r.date).format("DD MMM YYYY")}
+                                                                    </span>
+                                                                    <span className="meta-separator">•</span>
+                                                                    <span className="review-course-name" title={r.course?.title || "Kursus"}>
+                                                                        <i className="fas fa-book-reader me-1 text-teal"></i>
+                                                                        {r.course?.title || "Kursus Tidak Tersedia"}
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="col">
-                                                            <div className="review-header">
-                                                                <div className="reviewer-info">
-                                                                    <h4 className="reviewer-name">
-                                                                        {r.user?.full_name || 'Anonymous'}
-                                                                    </h4>
-                                                                    <span className="review-date">
-                                                                        <i className="fas fa-calendar-alt review-date-icon"></i>
-                                                                        {moment(r.date).format("DD MMM, YYYY")}
-                                                                    </span>
-                                                                </div>
-                                                                {/* ✨ PHASE 4.210: Report button with status */}
-                                                                <div className="review-report-section">
-                                                                    {abuseReports.find(rpt => rpt.review?.id === r.id) ? (
-                                                                        <button 
-                                                                            className={`report-status-badge-btn ${abuseReports.find(rpt => rpt.review?.id === r.id)?.status}`}
-                                                                            onClick={() => handleOpenAbuseModal(r.id)}
-                                                                            title="Klik untuk melihat detail laporan"
-                                                                        >
-                                                                            <i className="fas fa-flag-checkered me-1"></i>
-                                                                            <span>{abuseReports.find(rpt => rpt.review?.id === r.id)?.status || 'reported'}</span>
-                                                                        </button>
-                                                                    ) : (
-                                                                        <button 
-                                                                            className="btn report-btn" 
-                                                                            data-bs-toggle="tooltip" 
-                                                                            data-placement="top" 
-                                                                            title="Report Abuse"
-                                                                            onClick={() => handleOpenAbuseModal(r.id)}
-                                                                        >
-                                                                            <i className="fas fa-flag" />
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div className="rating-section">
+
+                                                        {/* Right: Rating Stars & Status Badges */}
+                                                        <div className="review-card-actions-meta">
+                                                            <div className="rating-display-group">
                                                                 <Rating
-                                                                    initialValue={r.rating || 0}
+                                                                    initialValue={ratingScore}
                                                                     readonly={true}
-                                                                    size={18}
-                                                                    fillColor="#ffc107"
-                                                                    emptyColor="#e4e5e9"
+                                                                    size={15}
+                                                                    fillColor="#f59e0b"
+                                                                    emptyColor="#e2e8f0"
+                                                                    SVGstyle={{ display: "inline-block" }}
                                                                 />
-                                                            </div>
-                                                            <div className="course-info">
-                                                                <span className="rating-label">untuk</span>
-                                                                <span className="course-title">
-                                                                    {r.course?.title || 'Kursus Tidak Tersedia'}
+                                                                <span className="rating-numeric-tag">
+                                                                    {ratingScore.toFixed(1)}
                                                                 </span>
                                                             </div>
 
-                                                            <div className="review-content">
-                                                                <div className="review-content-label">
-                                                                    <i className="fas fa-quote-left review-quote-icon"></i>
-                                                                    <span className="review-label-text">Ulasan Siswa</span>
-                                                                </div>
-                                                                <p className="review-text">
-                                                                    {r.review}
-                                                                </p>
-                                                            </div>
-
-                                                            {r.reply && (
-                                                                <div className="response-content">
-                                                                    <div className="response-content-label">
-                                                                        <i className="fas fa-reply response-icon"></i>
-                                                                        <span className="response-label-text">Respons Anda</span>
-                                                                    </div>
-                                                                    <p className="response-text">
-                                                                        {r.reply}
-                                                                    </p>
-                                                                </div>
+                                                            {/* Reply Status Tag */}
+                                                            {hasReply ? (
+                                                                <span className="status-tag replied" title="Ulasan sudah memiliki balasan instuktur">
+                                                                    <i className="fas fa-check-circle me-1"></i>
+                                                                    Dibalas
+                                                                </span>
+                                                            ) : (
+                                                                <span className="status-tag unreplied" title="Menunggu tanggapan dari instruktur">
+                                                                    <i className="fas fa-clock me-1"></i>
+                                                                    Belum Dibalas
+                                                                </span>
                                                             )}
 
-                                                            <div className="d-flex justify-content-end">
-                                                                <button 
-                                                                    className="btn modern-reply-btn" 
-                                                                    type="button" 
-                                                                    data-bs-toggle="collapse" 
-                                                                    data-bs-target={`#collapse${r.id}`} 
-                                                                    aria-expanded="false" 
-                                                                    aria-controls={`collapse${r.id}`}
+                                                            {/* Abuse Report Button / Status */}
+                                                            {existingReport ? (
+                                                                <button
+                                                                    type="button"
+                                                                    className={`btn-report-status ${existingReport.status || "reported"}`}
+                                                                    onClick={() => handleOpenAbuseModal(r.id)}
+                                                                    title="Klik untuk melihat detail laporan pelanggaran"
                                                                 >
-                                                                    <i className="fas fa-reply reply-icon"></i>
-                                                                    {r.reply ? "Perbarui Respons" : "Kirim Respons"}
+                                                                    <i className="fas fa-flag me-1"></i>
+                                                                    <span>{existingReport.status || "Dilaporkan"}</span>
                                                                 </button>
-                                                            </div>
-                                                            
-                                                            {/* Modern Collapse Section */}
-                                                            <div className="collapse mt-4" id={`collapse${r.id}`}>
-                                                                <div className="modern-response-form">
-                                                                    <div className="mb-3">
-                                                                        <label htmlFor={`response-${r.id}`} className="form-label">
-                                                                            <i className="fas fa-pen-fancy form-label-icon"></i>
-                                                                            Tulis Respons Anda
-                                                                        </label>
-                                                                        <textarea 
-                                                                            id={`response-${r.id}`}
-                                                                            className="form-control modern-textarea" 
-                                                                            rows="4" 
-                                                                            value={replies[r.id] || ""}
-                                                                            onChange={(e) => setReplies({...replies, [r.id]: e.target.value})}
-                                                                            placeholder="Bagikan pemikiran dan apresiasi Anda untuk ulasan ini..."
-                                                                            disabled={loadingReply[r.id]}
-                                                                        ></textarea>
-                                                                        <div className="form-text">
-                                                                            <small className="text-muted">
-                                                                                <i className="fas fa-info-circle form-text-icon"></i>
-                                                                                Respons Anda akan terlihat oleh siswa dan membantu membangun hubungan yang lebih baik.
-                                                                            </small>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="form-buttons">
-                                                                        <button 
-                                                                            type="button" 
-                                                                            className="btn btn-outline-secondary cancel-btn" 
-                                                                            data-bs-toggle="collapse" 
-                                                                            data-bs-target={`#collapse${r.id}`}
-                                                                            disabled={loadingReply[r.id]}
-                                                                        >
-                                                                            <i className="fas fa-times cancel-icon"></i>
-                                                                            Batal
-                                                                        </button>
-                                                                        
-                                                                        <button 
-                                                                            type="button" 
-                                                                            className="btn submit-btn" 
-                                                                            onClick={() => handleSubmitReply(r.id)}
-                                                                            disabled={!replies[r.id]?.trim() || loadingReply[r.id]}
-                                                                        >
-                                                                            {loadingReply[r.id] ? (
-                                                                                <>
-                                                                                    <span className="spinner-border spinner-border-sm submit-spinner" role="status" aria-hidden="true"></span>
-                                                                                    <strong>Mengirim...</strong>
-                                                                                </>
-                                                                            ) : (
-                                                                                <>
-                                                                                    <i className="fas fa-paper-plane submit-icon"></i>
-                                                                                    Kirim Respons
-                                                                                </>
-                                                                            )}
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                            ) : (
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn-flag-abuse"
+                                                                    onClick={() => handleOpenAbuseModal(r.id)}
+                                                                    title="Laporkan ulasan yang melanggar aturan"
+                                                                >
+                                                                    <i className="far fa-flag"></i>
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
+
+                                                    {/* Review Comment Text */}
+                                                    <div className="review-body-content">
+                                                        <p className="student-comment-text mb-0">
+                                                            {r.review}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Existing Instructor Reply Section */}
+                                                    {hasReply && (
+                                                        <div className="instructor-reply-box">
+                                                            <div className="reply-header-row">
+                                                                <div className="d-flex align-items-center gap-2">
+                                                                    <span className="reply-author-badge">
+                                                                        <i className="fas fa-reply me-1"></i>
+                                                                        Respons Instruktur
+                                                                    </span>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn-edit-reply-link"
+                                                                    onClick={() => handleToggleReply(r)}
+                                                                >
+                                                                    <i className="fas fa-pencil-alt me-1"></i>
+                                                                    {isReplyFormOpen ? "Tutup Editor" : "Edit Respons"}
+                                                                </button>
+                                                            </div>
+                                                            <p className="instructor-reply-text mb-0">
+                                                                {r.reply}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Reply CTA button when no reply yet */}
+                                                    {!hasReply && !isReplyFormOpen && (
+                                                        <div className="reply-cta-row">
+                                                            <button
+                                                                type="button"
+                                                                className="btn-quick-reply"
+                                                                onClick={() => handleToggleReply(r)}
+                                                            >
+                                                                <i className="fas fa-reply me-1"></i>
+                                                                Beri Tanggapan / Respons
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Inline Reply Accordion Form */}
+                                                    {isReplyFormOpen && (
+                                                        <div className="inline-reply-editor">
+                                                            <div className="editor-header">
+                                                                <span className="editor-title">
+                                                                    <i className="fas fa-pen-alt me-1 text-teal"></i>
+                                                                    {hasReply ? "Edit Tanggapan Anda" : "Tulis Tanggapan untuk Siswa"}
+                                                                </span>
+                                                                <span className="editor-hint">
+                                                                    Tanggapan Anda akan tampil di halaman kursus
+                                                                </span>
+                                                            </div>
+                                                            <textarea
+                                                                className="form-control reply-textarea"
+                                                                rows="3"
+                                                                value={replies[r.id] ?? r.reply ?? ""}
+                                                                onChange={(e) => setReplies({ ...replies, [r.id]: e.target.value })}
+                                                                placeholder="Tuliskan ucapan terima kasih atau jawaban atas masukan siswa..."
+                                                                disabled={loadingReply[r.id]}
+                                                            />
+                                                            <div className="editor-footer">
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-light text-muted"
+                                                                    onClick={() => setOpenReplyId(null)}
+                                                                    disabled={loadingReply[r.id]}
+                                                                >
+                                                                    Batal
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-teal"
+                                                                    onClick={() => handleSubmitReply(r.id)}
+                                                                    disabled={!replies[r.id]?.trim() || loadingReply[r.id]}
+                                                                >
+                                                                    {loadingReply[r.id] ? (
+                                                                        <>
+                                                                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                                                            Mengirim...
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <i className="fas fa-paper-plane me-1"></i>
+                                                                            {hasReply ? "Simpan Perubahan" : "Kirim Tanggapan"}
+                                                                        </>
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 ) : (
-                                    <div className="modern-empty-state">
-                                        <div className="empty-state-icon">
-                                            <i className="fas fa-star empty-state-icon-inner"></i>
+                                    /* Empty State */
+                                    <div className="reviews-empty-box">
+                                        <div className="empty-icon-circle">
+                                            <i className="fas fa-star-half-alt"></i>
                                         </div>
-                                        <h4 className="empty-state-title">Tidak Ada Ulasan Ditemukan</h4>
-                                        <p className="empty-state-text">
-                                            Ketika siswa memberi ulasan pada kursus Anda, mereka akan muncul di sini untuk Anda respons.
+                                        <h5 className="empty-title mb-1">
+                                            {hasActiveFilters ? "Tidak Ada Ulasan yang Cocok" : "Belum Ada Ulasan Kursus"}
+                                        </h5>
+                                        <p className="empty-desc mb-3">
+                                            {hasActiveFilters
+                                                ? "Coba ubah kriteria pencarian, rating, atau filter status ulasan Anda."
+                                                : "Ketika siswa menyelesaikan kursus dan memberikan ulasan, umpan balik mereka akan muncul di sini."}
                                         </p>
+                                        {hasActiveFilters && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-teal"
+                                                onClick={handleResetFilters}
+                                            >
+                                                <i className="fas fa-undo-alt me-1"></i>
+                                                Reset Filter Pencarian
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -645,88 +855,91 @@ function Review() {
                 </div>
             </section>
 
-            {/* ✨ PHASE 4.210: Abuse Report Modal */}
+            {/* Abuse Report Modal */}
             {showAbuseModal && (
-                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <div className="modal-dialog modal-dialog-centered">
+                <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+                    <div className="modal-dialog modal-dialog-centered modal-compact-dialog">
                         <div className="modal-content abuse-report-modal">
                             <div className="modal-header abuse-modal-header">
-                                <h5 className="modal-title">
+                                <h6 className="modal-title mb-0">
                                     <i className="fas fa-exclamation-triangle me-2"></i>
-                                    Laporkan Ulasan Penyalahgunaan
-                                </h5>
-                                <button 
-                                    type="button" 
-                                    className="btn-close" 
+                                    Laporkan Ulasan Bermasalah
+                                </h6>
+                                <button
+                                    type="button"
+                                    className="btn-close"
                                     onClick={handleCloseAbuseModal}
                                     disabled={reportingAbuse}
                                 ></button>
                             </div>
-                            <div className="modal-body">
-                                <p className="abuse-modal-text">
-                                    Bantu kami menjaga kualitas komunitas dengan melaporkan ulasan yang tidak sesuai.
+                            <div className="modal-body p-3">
+                                <p className="text-muted small mb-3">
+                                    Bantu kami menjaga komunitas tetap santun dan kondusif dengan melaporkan ulasan yang tidak pantas.
                                 </p>
-                                
+
                                 <div className="mb-3">
-                                    <label className="form-label fw-semibold">Alasan Laporan <span className="text-danger">*</span></label>
-                                    <select 
-                                        className="form-select form-select-modern"
+                                    <label className="form-label small fw-semibold">
+                                        Alasan Pelaporan <span className="text-danger">*</span>
+                                    </label>
+                                    <select
+                                        className="form-select compact-select"
                                         value={abuseReason}
                                         onChange={(e) => setAbuseReason(e.target.value)}
                                         disabled={reportingAbuse}
                                     >
                                         <option value="">-- Pilih Alasan --</option>
                                         <option value="inappropriate_content">Konten Tidak Pantas</option>
-                                        <option value="spam">Spam</option>
-                                        <option value="offensive_language">Bahasa Kasar/Menyinggung</option>
-                                        <option value="false_information">Informasi Palsu</option>
+                                        <option value="spam">Spam / Iklan</option>
+                                        <option value="offensive_language">Bahasa Kasar / Menghina</option>
+                                        <option value="false_information">Informasi Palsu / Menyesatkan</option>
                                         <option value="harassment">Pelecehan</option>
                                         <option value="other">Lainnya</option>
                                     </select>
                                 </div>
 
                                 <div className="mb-3">
-                                    <label className="form-label fw-semibold">Penjelasan Tambahan (Opsional)</label>
-                                    <textarea 
-                                        className="form-control"
+                                    <label className="form-label small fw-semibold">Penjelasan Tambahan (Opsional)</label>
+                                    <textarea
+                                        className="form-control compact-input"
                                         rows="3"
-                                        placeholder="Berikan rincian untuk membantu Admin memahami masalah ini..."
+                                        placeholder="Berikan detail tambahan untuk membantu Admin menindaklanjuti..."
                                         value={abuseDescription}
                                         onChange={(e) => setAbuseDescription(e.target.value)}
                                         disabled={reportingAbuse}
+                                        maxLength={500}
                                     ></textarea>
                                     <small className="text-muted">Maksimal 500 karakter</small>
                                 </div>
 
-                                <div className="alert alert-info">
-                                    <i className="fas fa-info-circle me-2"></i>
-                                    Tim Admin kami akan meninjau laporan ini dan mengambil tindakan yang sesuai.
+                                <div className="alert alert-light border small p-2 mb-0 text-muted">
+                                    <i className="fas fa-info-circle text-teal me-1"></i>
+                                    Laporan ini akan ditinjau langsung oleh tim Administrator sistem.
                                 </div>
                             </div>
-                            <div className="modal-footer abuse-modal-footer">
-                                <button 
-                                    type="button" 
-                                    className="btn btn-outline-secondary"
+                            <div className="modal-footer p-2 bg-light">
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
                                     onClick={handleCloseAbuseModal}
                                     disabled={reportingAbuse}
                                 >
                                     Batal
                                 </button>
-                                <button 
-                                    type="button" 
-                                    className="btn btn-danger"
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-danger"
                                     onClick={handleSubmitAbuseReport}
                                     disabled={reportingAbuse || !abuseReason.trim()}
                                 >
                                     {reportingAbuse ? (
                                         <>
-                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                                             Mengirim...
                                         </>
                                     ) : (
                                         <>
-                                            <i className="fas fa-paper-plane me-2"></i>
-                                            Laporkan
+                                            <i className="fas fa-paper-plane me-1"></i>
+                                            Kirim Laporan
                                         </>
                                     )}
                                 </button>
@@ -736,43 +949,63 @@ function Review() {
                 </div>
             )}
 
-            {/* ✨ PHASE 4.210: Existing Report Details Modal */}
+            {/* Existing Report Details Modal */}
             {showExistingReportModal && selectedExistingReport && (
-                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <div className="modal-dialog modal-dialog-centered">
+                <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+                    <div className="modal-dialog modal-dialog-centered modal-compact-dialog">
                         <div className="modal-content abuse-report-modal">
                             <div className="modal-header abuse-modal-header">
-                                <h5 className="modal-title">
+                                <h6 className="modal-title mb-0">
                                     <i className="fas fa-file-alt me-2"></i>
-                                    Detail Laporan Penyalahgunaan
-                                </h5>
-                                <button 
-                                    type="button" 
-                                    className="btn-close" 
+                                    Status Laporan Pelanggaran
+                                </h6>
+                                <button
+                                    type="button"
+                                    className="btn-close"
                                     onClick={handleCloseExistingReportModal}
                                 ></button>
                             </div>
-                            <div className="modal-body">
+                            <div className="modal-body p-3">
                                 {/* Report Status */}
-                                <div className="mb-4">
-                                    <label className="form-label fw-semibold">Status Laporan</label>
-                                    <div className={`alert alert-${selectedExistingReport.status === 'pending' ? 'warning' : selectedExistingReport.status === 'reviewed' ? 'info' : selectedExistingReport.status === 'action_taken' ? 'success' : 'danger'}`}>
-                                        <i className={`fas ${selectedExistingReport.status === 'pending' ? 'fa-clock' : selectedExistingReport.status === 'reviewed' ? 'fa-eye' : selectedExistingReport.status === 'action_taken' ? 'fa-check-circle' : 'fa-times-circle'} me-2`}></i>
+                                <div className="mb-3">
+                                    <label className="form-label small fw-semibold">Status Saat Ini</label>
+                                    <div
+                                        className={`alert p-2 small mb-0 alert-${
+                                            selectedExistingReport.status === "pending"
+                                                ? "warning"
+                                                : selectedExistingReport.status === "reviewed"
+                                                ? "info"
+                                                : selectedExistingReport.status === "action_taken"
+                                                ? "success"
+                                                : "danger"
+                                        }`}
+                                    >
+                                        <i
+                                            className={`fas ${
+                                                selectedExistingReport.status === "pending"
+                                                    ? "fa-clock"
+                                                    : selectedExistingReport.status === "reviewed"
+                                                    ? "fa-eye"
+                                                    : selectedExistingReport.status === "action_taken"
+                                                    ? "fa-check-circle"
+                                                    : "fa-times-circle"
+                                            } me-2`}
+                                        ></i>
                                         <strong>
-                                            {selectedExistingReport.status === 'pending' && 'Menunggu Review'}
-                                            {selectedExistingReport.status === 'reviewed' && 'Sudah Direviu'}
-                                            {selectedExistingReport.status === 'action_taken' && 'Tindakan Telah Diambil'}
-                                            {selectedExistingReport.status === 'dismissed' && 'Laporan Ditolak'}
+                                            {selectedExistingReport.status === "pending" && "Menunggu Review Admin"}
+                                            {selectedExistingReport.status === "reviewed" && "Sudah Ditinjau"}
+                                            {selectedExistingReport.status === "action_taken" && "Tindakan Telah Diambil"}
+                                            {selectedExistingReport.status === "dismissed" && "Laporan Ditolak"}
                                         </strong>
                                     </div>
                                 </div>
 
                                 {/* Reason */}
                                 <div className="mb-3">
-                                    <label className="form-label fw-semibold">Alasan Laporan</label>
+                                    <label className="form-label small fw-semibold">Alasan Laporan</label>
                                     {isEditingReport ? (
-                                        <select 
-                                            className="form-select"
+                                        <select
+                                            className="form-select compact-select"
                                             value={editReason}
                                             onChange={(e) => setEditReason(e.target.value)}
                                             disabled={updatingExistingReport}
@@ -786,136 +1019,109 @@ function Review() {
                                             <option value="other">Lainnya</option>
                                         </select>
                                     ) : (
-                                        <p className="text-muted">{selectedExistingReport.reason || '-'}</p>
+                                        <p className="text-muted small mb-0">{selectedExistingReport.reason || "-"}</p>
                                     )}
                                 </div>
 
-                                {/* Your Description */}
+                                {/* Description */}
                                 <div className="mb-3">
-                                    <label className="form-label fw-semibold">Deskripsi Anda</label>
+                                    <label className="form-label small fw-semibold">Deskripsi</label>
                                     {isEditingReport ? (
-                                        <textarea 
-                                            className="form-control"
+                                        <textarea
+                                            className="form-control compact-input"
                                             rows="3"
-                                            placeholder="Berikan rincian untuk membantu Admin memahami masalah ini..."
                                             value={editDescription}
                                             onChange={(e) => setEditDescription(e.target.value)}
                                             disabled={updatingExistingReport}
                                             maxLength={500}
-                                        ></textarea>
+                                        />
                                     ) : (
-                                        <p className="text-muted" style={{ whiteSpace: 'pre-wrap' }}>{selectedExistingReport.description || '-'}</p>
-                                    )}
-                                    {isEditingReport && (
-                                        <small className="text-muted">Maksimal 500 karakter ({editDescription.length}/500)</small>
+                                        <p className="text-muted small mb-0" style={{ whiteSpace: "pre-wrap" }}>
+                                            {selectedExistingReport.description || "-"}
+                                        </p>
                                     )}
                                 </div>
 
                                 {/* Admin Notes */}
                                 {selectedExistingReport.review_notes && (
                                     <div className="mb-3">
-                                        <label className="form-label fw-semibold">Catatan dari Admin</label>
-                                        <div className="alert alert-light border">
-                                            <p style={{ whiteSpace: 'pre-wrap' }}>{selectedExistingReport.review_notes}</p>
+                                        <label className="form-label small fw-semibold">Catatan dari Admin</label>
+                                        <div className="alert alert-light border small p-2 mb-0">
+                                            <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>
+                                                {selectedExistingReport.review_notes}
+                                            </p>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Reported Date */}
-                                <div className="mb-3">
-                                    <label className="form-label fw-semibold">Tanggal Laporan</label>
-                                    <p className="text-muted">{moment(selectedExistingReport.reported_at).format("DD MMM YYYY HH:mm")}</p>
+                                <div className="d-flex justify-content-between text-muted small mt-2">
+                                    <span>
+                                        Dilaporkan: {moment(selectedExistingReport.reported_at).format("DD MMM YYYY HH:mm")}
+                                    </span>
+                                    {selectedExistingReport.reviewed_at && (
+                                        <span>
+                                            Ditinjau: {moment(selectedExistingReport.reviewed_at).format("DD MMM YYYY HH:mm")}
+                                        </span>
+                                    )}
                                 </div>
-
-                                {/* Reviewed Date */}
-                                {selectedExistingReport.reviewed_at && (
-                                    <div className="mb-3">
-                                        <label className="form-label fw-semibold">Tanggal Review</label>
-                                        <p className="text-muted">{moment(selectedExistingReport.reviewed_at).format("DD MMM YYYY HH:mm")}</p>
-                                    </div>
-                                )}
-
-                                {!isEditingReport && (
-                                    <div className="alert alert-info mt-4">
-                                        <i className="fas fa-info-circle me-2"></i>
-                                        Terima kasih telah membantu kami menjaga komunitas yang sehat. Admin kami telah meninjau laporan Anda.
-                                    </div>
-                                )}
                             </div>
-                            <div className="modal-footer abuse-modal-footer">
+                            <div className="modal-footer p-2 bg-light">
                                 {selectedExistingReport.closed_by_reporter ? (
-                                    // Report is closed - show only close button
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-primary"
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-primary"
                                         onClick={handleCloseExistingReportModal}
                                     >
                                         Tutup
                                     </button>
                                 ) : isEditingReport ? (
-                                    // Editing mode - show cancel and update
                                     <>
-                                        <button 
-                                            type="button" 
-                                            className="btn btn-outline-secondary"
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-secondary"
                                             onClick={() => setIsEditingReport(false)}
                                             disabled={updatingExistingReport}
                                         >
                                             Batal
                                         </button>
-                                        <button 
-                                            type="button" 
-                                            className="btn btn-danger"
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-danger"
                                             onClick={handleUpdateExistingReport}
                                             disabled={updatingExistingReport || !editReason.trim()}
                                         >
-                                            {updatingExistingReport ? (
-                                                <>
-                                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                    Mengirim...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <i className="fas fa-paper-plane me-2"></i>
-                                                    Perbarui Laporan
-                                                </>
-                                            )}
+                                            {updatingExistingReport ? "Memperbarui..." : "Perbarui Laporan"}
                                         </button>
                                     </>
                                 ) : (
-                                    // View mode - show edit and resolve buttons
                                     <>
-                                        <button 
-                                            type="button" 
-                                            className="btn btn-outline-secondary"
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-secondary"
                                             onClick={handleEditExistingReport}
-                                            // ✨ PHASE 4.210: Only allow re-reporting if status is pending
-                                            disabled={selectedExistingReport.status !== 'pending'}
+                                            disabled={selectedExistingReport.status !== "pending"}
                                         >
-                                            <i className="fas fa-edit me-2"></i>
+                                            <i className="fas fa-edit me-1"></i>
                                             Laporkan Ulang
                                         </button>
-                                        {/* ✨ PHASE 4.210: Show "Masalah Selesai" button only after status is reviewed/dismissed/action_taken */}
-                                        {selectedExistingReport.status !== 'pending' && (
-                                            <button 
-                                                type="button" 
-                                                className="btn btn-success"
+                                        {selectedExistingReport.status !== "pending" && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-success"
                                                 onClick={handleCloseReport}
                                                 disabled={closingReport}
                                             >
-                                                {closingReport ? (
-                                                    <>
-                                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                        Memproses...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <i className="fas fa-check-circle me-2"></i>
-                                                        Masalah Selesai
-                                                    </>
-                                                )}
+                                                <i className="fas fa-check-circle me-1"></i>
+                                                Masalah Selesai
                                             </button>
                                         )}
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-secondary ms-auto"
+                                            onClick={handleCloseExistingReportModal}
+                                        >
+                                            Tutup
+                                        </button>
                                     </>
                                 )}
                             </div>

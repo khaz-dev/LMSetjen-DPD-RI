@@ -76,7 +76,8 @@ html {
 }
 
 body {
-  overflow-y: auto;
+  overflow-x: clip;
+  overflow-y: visible;
   height: auto;
   max-height: none;
   /* Removed scrollbar-gutter: stable from body to prevent unwanted gap on pages where scrollbar is hidden */

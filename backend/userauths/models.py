@@ -269,6 +269,9 @@ class Profile(models.Model):
     facebook = models.URLField(null=True, blank=True)
     twitter = models.URLField(null=True, blank=True)
     linkedin = models.URLField(null=True, blank=True)
+    youtube = models.URLField(null=True, blank=True)
+    instagram = models.URLField(null=True, blank=True)
+    tiktok = models.URLField(null=True, blank=True)
 
     def __str__(self):
         if self.full_name:
@@ -382,6 +385,12 @@ def sync_profile_with_teacher(sender, instance, created, **kwargs):
                 teacher_instance.twitter = instance.twitter
             if instance.linkedin is not None:
                 teacher_instance.linkedin = instance.linkedin
+            if hasattr(instance, 'youtube') and instance.youtube is not None:
+                teacher_instance.youtube = instance.youtube
+            if hasattr(instance, 'instagram') and instance.instagram is not None:
+                teacher_instance.instagram = instance.instagram
+            if hasattr(instance, 'tiktok') and instance.tiktok is not None:
+                teacher_instance.tiktok = instance.tiktok
             
             # Save the teacher instance
             teacher_instance.save()

@@ -341,8 +341,8 @@ class GoogleOAuthVerifier:
         logger = logging.getLogger(__name__)
         
         try:
-            logger.info(f"🔐 Verifying ID token with Google")
-            logger.info(f"Client ID from config: {client_id[:20]}..." if client_id else "❌ Client ID is EMPTY!")
+            logger.info("[AUTH] Verifying ID token with Google")
+            logger.info(f"Client ID from config: {client_id[:20]}..." if client_id else "[FAIL] Client ID is EMPTY!")
             logger.info(f"Token length: {len(id_token)}")
             
             # Verify ID token with Google
@@ -355,7 +355,7 @@ class GoogleOAuthVerifier:
             
             if response.status_code != 200:
                 error_msg = response.json().get('error_description', 'Unknown error')
-                logger.error(f"❌ Google API error: {error_msg}")
+                logger.error(f"[FAIL] Google API error: {error_msg}")
                 raise ValueError(f"Invalid ID token: {error_msg}")
             
             token_data = response.json()
@@ -378,7 +378,7 @@ class GoogleOAuthVerifier:
             logger.error(f"[ERROR] Network error during ID token verification: {str(e)}")
             raise ValueError(f"ID token verification failed: {str(e)}")
         except Exception as e:
-            logger.error(f"❌ Unexpected error in verify_id_token: {str(e)}")
+            logger.error(f"[FAIL] Unexpected error in verify_id_token: {str(e)}")
             raise
     
     @staticmethod

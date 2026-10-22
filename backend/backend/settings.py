@@ -574,9 +574,16 @@ if DEBUG:
     gzip_index = MIDDLEWARE.index('django.middleware.gzip.GZipMiddleware')
     MIDDLEWARE.insert(gzip_index + 1, 'debug_toolbar.middleware.DebugToolbarMiddleware')
     
-    # Debug toolbar configuration
+    # Debug toolbar configuration (exclude media files and API endpoints to prevent toolbar injection into iframes/JSON)
+    def _show_debug_toolbar(request):
+        if not DEBUG:
+            return False
+        if request.path.startswith('/media/') or request.path.startswith('/api/'):
+            return False
+        return True
+
     DEBUG_TOOLBAR_CONFIG = {
-        'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG,
+        'SHOW_TOOLBAR_CALLBACK': _show_debug_toolbar,
         'SHOW_TEMPLATE_CONTEXT': True,
     }
     

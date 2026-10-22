@@ -124,7 +124,7 @@ function CourseEdit() {
 
     // ✨ Log courseData changes after auto-save completes
     useEffect(() => {
-        console.log('[CourseEdit.courseDataMonitor] Current courseData state updated:', {
+        console.log("[CourseEdit.courseDataMonitor] Current courseData state updated:", {
             id: courseData?.id,
             has_published_version: !!courseData?.published_version,
             platform_status: courseData?.platform_status,
@@ -196,7 +196,7 @@ function CourseEdit() {
         // Compare using normalized data
         const hasRealChanges = JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedInitial);
 
-        console.log('[CourseEdit.isDirty] Checking dirty state:', {
+        console.log("[CourseEdit.isDirty] Checking dirty state:", {
             hasRealChanges,
             currentTags: courseData?.tags?.map(t => t?.id || t),
             initialTags: initialCourseData?.tags?.map(t => t?.id || t)
@@ -214,13 +214,13 @@ function CourseEdit() {
         // - Course data is not loaded
         // - Still loading course data
         if (!isDirty || submitStatus === "submitting" || !courseData?.id || !initialCourseData) {
-            console.log('[CourseEdit.debouncedAutoSave] Skipping auto-save:', { isDirty, submitting: submitStatus === "submitting", hasId: !!courseData?.id, hasInitial: !!initialCourseData });
+            console.log("[CourseEdit.debouncedAutoSave] Skipping auto-save:", { isDirty, submitting: submitStatus === "submitting", hasId: !!courseData?.id, hasInitial: !!initialCourseData });
             return;
         }
 
         try {
-            console.log('[CourseEdit.debouncedAutoSave] 🚀 Auto-saving course...');
-            console.log('[CourseEdit.debouncedAutoSave] Tags being saved:', courseData?.tags?.map(t => ({ id: t?.id, title: t?.title })));
+            console.log("[CourseEdit.debouncedAutoSave] 🚀 Auto-saving course...");
+            console.log("[CourseEdit.debouncedAutoSave] Tags being saved:", courseData?.tags?.map(t => ({ id: t?.id, title: t?.title })));
             setAutoSaveStatus("saving");
 
             // Use existing submit logic but silently
@@ -229,8 +229,8 @@ function CourseEdit() {
                 param?.course_id,
                 (data) => {
                     // Success
-                    console.log('[CourseEdit.debouncedAutoSave] ✅ Auto-save successful');
-                    console.log('[CourseEdit.debouncedAutoSave] Response tags:', data?.tags?.map(t => ({ id: t?.id, title: t?.title })));
+                    console.log("[CourseEdit.debouncedAutoSave] ✅ Auto-save successful");
+                    console.log("[CourseEdit.debouncedAutoSave] Response tags:", data?.tags?.map(t => ({ id: t?.id, title: t?.title })));
                     setCourseData(data);
                     setInitialCourseData(JSON.parse(JSON.stringify(data)));
                     setIsDirty(false);
@@ -240,7 +240,7 @@ function CourseEdit() {
                 }
             );
         } catch (error) {
-            console.error('[CourseEdit.debouncedAutoSave] ❌ Error:', error);
+            console.error("[CourseEdit.debouncedAutoSave] ❌ Error:", error);
             setAutoSaveStatus("error");
         }
     }, 2000, [isDirty, submitStatus, courseData, initialCourseData, submitCourse, param?.course_id, setCourseData]);
@@ -319,10 +319,10 @@ function CourseEdit() {
         event.preventDefault();
 
         // 🎯 PHASE 4.57: Debug log - Check current state when form is submitted
-        console.log('[CourseEdit.handleCourseSubmit] Form submitted');
-        console.log('[CourseEdit.handleCourseSubmit] Current isDirty state:', isDirty);
-        console.log('[CourseEdit.handleCourseSubmit] Current hasRelatedChanges state:', hasRelatedChanges);
-        console.log('[CourseEdit.handleCourseSubmit] Current courseData:', courseData);
+        console.log("[CourseEdit.handleCourseSubmit] Form submitted");
+        console.log("[CourseEdit.handleCourseSubmit] Current isDirty state:", isDirty);
+        console.log("[CourseEdit.handleCourseSubmit] Current hasRelatedChanges state:", hasRelatedChanges);
+        console.log("[CourseEdit.handleCourseSubmit] Current courseData:", courseData);
 
         // Set submitting state immediately
         setSubmitStatus("submitting");
@@ -374,13 +374,13 @@ function CourseEdit() {
             // Update submit message for actual submission
             setSubmitMessage("Menyimpan pembaruan kursus Anda...");
 
-            console.log('[CourseEdit] Submitting course with hasRelatedChanges:', hasRelatedChanges);
+            console.log("[CourseEdit] Submitting course with hasRelatedChanges:", hasRelatedChanges);
             await submitCourse(
                 courseData,
                 param?.course_id,
                 (data) => {
                     // Enhanced success callback
-                    console.log('[CourseEdit] Success callback - resetting hasRelatedChanges');
+                    console.log("[CourseEdit] Success callback - resetting hasRelatedChanges");
                     setSubmitStatus("success");
                     setSubmitMessage("Kursus berhasil diperbarui!");
                     setIsDirty(false);
@@ -480,14 +480,14 @@ function CourseEdit() {
     // ✨ PHASE 4.176: Wrap autoSaveCourse in useCallback to prevent unnecessary re-renders of child components
     const autoSaveCourse = useCallback(async () => {
         try {
-            console.log('[CourseEdit] Auto-saving course after video deletion...');
+            console.log("[CourseEdit] Auto-saving course after video deletion...");
             setSubmitMessage("Menyimpan pembaruan kursus...");
 
             await submitCourse(
                 courseData,
                 param?.course_id,
                 (data) => {
-                    console.log('[CourseEdit] Auto-save successful');
+                    console.log("[CourseEdit] Auto-save successful");
                     setCourseData(data);
                     setInitialCourseData(JSON.parse(JSON.stringify(data)));
                     setIsDirty(false);
@@ -503,7 +503,7 @@ function CourseEdit() {
                 }
             );
         } catch (error) {
-            console.error('[CourseEdit] Error in auto-save:', error);
+            console.error("[CourseEdit] Error in auto-save:", error);
             Toast().fire({
                 icon: "warning",
                 title: "Gagal Menyimpan Otomatis",
@@ -780,7 +780,7 @@ function CourseEdit() {
 
             if (response.data.success) {
                 // Update local course data with restored content
-                console.log('[CourseEdit.handleRestoreCourse] 📥 API Response received:', {
+                console.log("[CourseEdit.handleRestoreCourse] 📥 API Response received:", {
                     success: response.data.success,
                     restored_tags: response.data.course?.tags,
                     restored_title: response.data.course?.title,
@@ -793,7 +793,7 @@ function CourseEdit() {
                     platform_status: response.data.course.platform_status || "Published"
                 });
 
-                console.log('[CourseEdit.handleRestoreCourse] ✅ Course data updated with restored content including tags');
+                console.log("[CourseEdit.handleRestoreCourse] ✅ Course data updated with restored content including tags");
 
                 await Swal.fire({
                     title: "Kursus Berhasil Dikembalikan!",
@@ -952,31 +952,75 @@ function CourseEdit() {
                                 courseData={courseData}
                             />
 
-                            <div className="create-header-modern">
-                                <div className="d-lg-flex align-items-center justify-content-between">
-                                    <div className="mb-4 mb-lg-0">
-                                        <h1 className="text-white mb-2 fw-bold">
-                                            <i className="fas fa-edit me-2"></i>
-                                            Edit Kursus
-                                        </h1>
-                                        <p className="mb-0 text-white opacity-90">
-                                            Perbarui informasi dan konten kursus Anda untuk memberikan pengalaman belajar terbaik
+                            {/* 1. Header Card (Compact & Modern) */}
+                            <div className="course-edit-header-card mb-2">
+                                <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                    <div>
+                                        <div className="d-flex align-items-center gap-2 mb-1">
+                                            <span className={`badge ${
+                                                courseData?.platform_status === "Published" ? "bg-emerald-subtle text-emerald" :
+                                                courseData?.platform_status === "Review" ? "bg-teal-subtle text-teal" :
+                                                courseData?.platform_status === "Rejected" ? "bg-danger-subtle text-danger" :
+                                                "bg-amber-subtle text-amber"
+                                            } fw-semibold px-2 py-0.5`} style={{ fontSize: "11px" }}>
+                                                <i className={`fas ${
+                                                    courseData?.platform_status === "Published" ? "fa-check-circle" :
+                                                    courseData?.platform_status === "Review" ? "fa-hourglass-half" :
+                                                    courseData?.platform_status === "Rejected" ? "fa-times-circle" : "fa-pen-nib"
+                                                } me-1`}></i>
+                                                {courseData?.platform_status === "Published" ? "Dipublikasikan" :
+                                                 courseData?.platform_status === "Review" ? "Menunggu Review" :
+                                                 courseData?.platform_status === "Rejected" ? "Ditolak" : "Mode Draf"}
+                                            </span>
+                                            <span className="text-muted small">
+                                                ID: #{courseData?.id || param?.course_id}
+                                            </span>
+                                        </div>
+                                        <h2 className="header-title mb-0">
+                                            <i className="fas fa-edit text-teal me-2"></i>
+                                            Edit Kursus{courseData?.title ? `: ${courseData.title.length > 35 ? courseData.title.substring(0, 35) + "..." : courseData.title}` : ""}
+                                        </h2>
+                                        <p className="header-subtitle mb-0">
+                                            Perbarui informasi dasar, media pengantar, silabus, dan kuis kursus
                                         </p>
                                     </div>
-                                    <div className="d-flex flex-column gap-3">
+
+                                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                                        <Link 
+                                            to="/instructor/courses/" 
+                                            className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5"
+                                            title="Kembali ke Daftar Kursus"
+                                        >
+                                            <i className="fas fa-arrow-left"></i>
+                                            <span>Kembali</span>
+                                        </Link>
+
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/curriculum/`}
-                                            className="btn btn-outline-light border border-2 border-light"
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1.5"
+                                            title="Kelola Kurikulum & Materi"
                                         >
-                                            <i className="fas fa-list me-2"></i>
-                                            Kelola Kurikulum
+                                            <i className="fas fa-list"></i>
+                                            <span>Kurikulum</span>
                                         </Link>
+
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/quiz/`}
-                                            className="btn btn-outline-light border border-2 border-light"
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1.5"
+                                            title="Kelola Kuis Kursus"
                                         >
-                                            <i className="fas fa-question-circle me-2"></i>
-                                            Kelola Kuis
+                                            <i className="fas fa-question-circle"></i>
+                                            <span>Kuis</span>
+                                        </Link>
+
+                                        <Link
+                                            to={`/instructor/preview-course/${param?.course_id}/`}
+                                            target="_blank"
+                                            className="btn btn-sm btn-teal d-inline-flex align-items-center gap-1.5"
+                                            title="Pratinjau Kursus"
+                                        >
+                                            <i className="fas fa-eye"></i>
+                                            <span>Pratinjau</span>
                                         </Link>
                                     </div>
                                 </div>
@@ -1099,9 +1143,9 @@ function CourseEdit() {
                                                     selectedTags={Array.isArray(courseData?.tags) ? courseData.tags : []}
                                                     onChange={(selectedTags) => {
                                                         // ✨ PHASE X.1 FIX: Use correct syntax with object
-                                                        console.log('[CourseEdit.TagSelector] onChange called with tags:', selectedTags?.map(t => ({ id: t.id, title: t.title })));
+                                                        console.log("[CourseEdit.TagSelector] onChange called with tags:", selectedTags?.map(t => ({ id: t.id, title: t.title })));
                                                         updateCourseData({ tags: selectedTags });
-                                                        console.log('[CourseEdit.TagSelector] After updateCourseData, isDirty should trigger');
+                                                        console.log("[CourseEdit.TagSelector] After updateCourseData, isDirty should trigger");
                                                     }}
                                                     placeholder="Cari atau pilih tag kursus..."
                                                     helpText="Tag membantu siswa menemukan kursus dengan lebih mudah. Pilih 1 atau lebih tag yang relevan dengan konten kursus."
@@ -1182,7 +1226,7 @@ function CourseEdit() {
                                         // This ensures the save button is visible when features are added/edited/deleted
                                         setIsDirty(true);
                                         // ✨ PHASE 4.56: Mark that related models were updated for status reset detection
-                                        console.log('[CourseEdit] Feature updated - setting hasRelatedChanges to true');
+                                        console.log("[CourseEdit] Feature updated - setting hasRelatedChanges to true");
                                         setHasRelatedChanges(true);
                                     }}
                                 />
@@ -1194,7 +1238,7 @@ function CourseEdit() {
                                         // Requirements are saved via API immediately, but we need to mark course as modified
                                         setIsDirty(true);
                                         // ✨ PHASE 4.56: Mark that related models were updated for status reset detection
-                                        console.log('[CourseEdit] Requirement updated - setting hasRelatedChanges to true');
+                                        console.log("[CourseEdit] Requirement updated - setting hasRelatedChanges to true");
                                         setHasRelatedChanges(true);
                                     }}
                                 />
@@ -1206,7 +1250,7 @@ function CourseEdit() {
                                         // Learning outcomes are saved via API immediately, but we need to mark course as modified
                                         setIsDirty(true);
                                         // ✨ PHASE 4.56: Mark that related models were updated for status reset detection
-                                        console.log('[CourseEdit] Learning outcome updated - setting hasRelatedChanges to true');
+                                        console.log("[CourseEdit] Learning outcome updated - setting hasRelatedChanges to true");
                                         setHasRelatedChanges(true);
                                     }}
                                 />
@@ -1327,12 +1371,12 @@ function CourseEdit() {
                                                 {/* ✨ PHASE 4.168: Auto-save status indicator */}
                                                 {autoSaveStatus === "saving" ? (
                                                     <div className="text-info small d-flex align-items-center">
-                                                        <span className="spinner-border spinner-border-sm me-1.5" style={{ width: '13px', height: '13px', display: 'inline-block' }}></span>
+                                                        <span className="spinner-border spinner-border-sm me-1.5" style={{ width: "13px", height: "13px", display: "inline-block" }}></span>
                                                         <span>Menyimpan perubahan otomatis...</span>
                                                     </div>
                                                 ) : isDirty ? (
                                                     <div className="text-secondary small d-flex align-items-center">
-                                                        <span className="spinner-border spinner-border-sm text-warning me-1.5" style={{ width: '13px', height: '13px', display: 'inline-block' }}></span>
+                                                        <span className="spinner-border spinner-border-sm text-warning me-1.5" style={{ width: "13px", height: "13px", display: "inline-block" }}></span>
                                                         <span>Menyimpan perubahan...</span>
                                                     </div>
                                                 ) : autoSaveStatus === "error" ? (
@@ -1344,7 +1388,7 @@ function CourseEdit() {
                                                     <div className="text-muted small d-flex align-items-center">
                                                         <i className="fas fa-check-circle text-success me-1.5 gap-2"></i>
                                                         <span>
-                                                            Perubahan tersimpan pada {lastAutoSaveTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/:/g, '.')}
+                                                            Perubahan tersimpan pada {lastAutoSaveTime.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(/:/g, ".")}
                                                         </span>
                                                     </div>
                                                 ) : (
@@ -1439,7 +1483,7 @@ function CourseEdit() {
                                         // 1. Course has published_version (was published before) OR platform_status is Published
                                         // 2. AND course is not awaiting admin review
                                         const shouldShowBothButtons = (hasPublishedVersion || platformStatus === "Published") && !isReview;
-                                        console.log('[CourseEdit.ButtonRender] Button visibility check:', {
+                                        console.log("[CourseEdit.ButtonRender] Button visibility check:", {
                                             hasPublishedVersion,
                                             platformStatus,
                                             isReview,
@@ -1574,7 +1618,7 @@ function CourseEdit() {
                                         const isDraft = courseData?.platform_status === "Draft";
                                         const isRejected = courseData?.platform_status === "Rejected";
                                         const shouldShowSingleButton = (isDraft || isRejected);
-                                        console.log('[CourseEdit.ButtonRender] Draft/Rejected button check:', {
+                                        console.log("[CourseEdit.ButtonRender] Draft/Rejected button check:", {
                                             isDraft,
                                             isRejected,
                                             shouldShowSingleButton,

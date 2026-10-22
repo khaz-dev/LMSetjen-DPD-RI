@@ -459,27 +459,30 @@
    This fixes sticky sidebar not working on first page load */
 
 .instructor-sidebar-column {
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
+  align-self: stretch !important;
+  height: auto !important;
+  position: static !important;
   overflow: visible !important;
 }
 
 .instructor-sidebar {
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(52, 152, 219, 0.12);
-  border: 1px solid rgba(52, 152, 219, 0.08);
-  overflow: visible !important;
+  border-radius: 14px;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  position: -webkit-sticky !important;
   position: sticky !important;
-  top: calc(60px + 1rem + 1rem) !important;  /* BaseHeader (60px) + Header margin-top (1rem) + gap (1rem) */
-  z-index: 100;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
-  max-height: calc(100vh - 60px - 1rem);
-  align-self: flex-start;
-  display: flex;
-  flex-direction: column;
+  top: calc(var(--navbar-height, 70px) + 18px) !important;  /* ~88px: Clean breathing gap below base-header */
+  z-index: 99 !important;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+  max-height: calc(100vh - 108px) !important;
+  align-self: flex-start !important;
+  display: flex !important;
+  flex-direction: column !important;
   margin-top: 0 !important;
-  margin-right: 1rem;
+  margin-right: 1.15rem;
   padding-top: 0 !important;
   user-select: none;
 }
@@ -676,15 +679,21 @@
   }
 }
 
-/* RESPONSIVE: Show toggle and collapse on medium screens */
+/* RESPONSIVE: Show toggle on medium screens */
 @media (max-width: 991px) {
   .instructor-sidebar-toggle {
     display: flex;
   }
+}
 
+/* RESPONSIVE: Full width and static on mobile */
+@media (max-width: 767px) {
   .instructor-sidebar {
-    position: static;
-    max-height: none;
+    position: static !important;
+    max-height: none !important;
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 1rem;
   }
 
   .instructor-sidebar.collapsed {
@@ -699,14 +708,6 @@
   .instructor-sidebar.collapsed .instructor-sidebar-footer {
     display: none;
   }
-}
-
-/* RESPONSIVE: Full width on mobile */
-@media (max-width: 767px) {
-  .instructor-sidebar {
-    width: 100%;
-    margin-right: 0;
-    margin-bottom: 1rem;
   }
 
   .instructor-sidebar-header {

@@ -1033,30 +1033,40 @@ function QA() {
     return (
         <>
             <BaseHeader />
-            <section className="qa-bg-section pt-4 pb-5">
+            <section className="qa-bg-section pt-3 pb-4">
                 <div className="container">
                     <Header />
                     <div className="row">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
-                            {/* Modern Header Section */}
-                            <div className="qa-header-section mb-4">
+                            {/* Modern Compact Hero Section */}
+                            <div className="qa-header-section mb-3">
                                 <div className="qa-header-bg"></div>
-                                <div className="qa-header-content d-flex align-items-center justify-content-between">
+                                <div className="qa-header-content d-flex align-items-center justify-content-between flex-wrap gap-2">
                                     <div>
-                                        <h1 className="qa-header-title mb-2">
-                                            <i className="fas fa-question-circle me-3"></i>T&J Kursus
+                                        <div className="qa-hero-badge">
+                                            <i className="fas fa-comments"></i>
+                                            <span>Forum Diskusi Instruktur</span>
+                                        </div>
+                                        <h1 className="qa-header-title">
+                                            <i className="fas fa-question-circle me-2"></i>Tanya Jawab Kursus
                                         </h1>
-                                        <p className="qa-header-desc mb-0 text-muted">
-                                            Terhubung dengan siswa dan jawab pertanyaan mereka
+                                        <p className="qa-header-desc">
+                                            Jawab pertanyaan peserta dan pantau interaksi belajar kursus Anda
                                         </p>
                                     </div>
                                     <div className="text-end">
-                                        <div className="d-flex align-items-center gap-3">
+                                        <div className="d-flex align-items-center gap-2">
                                             <div className="qa-stat-badge">
-                                                <i className="fas fa-book me-2"></i>
-                                                {teacherCourses.length || 0} Kursus
+                                                <i className="fas fa-book"></i>
+                                                <span>{teacherCourses.length || 0} Kursus</span>
                                             </div>
+                                            {selectedCourse && (
+                                                <div className="qa-stat-badge qa-stat-badge-secondary">
+                                                    <i className="fas fa-comments"></i>
+                                                    <span>{selectedCourse?.qa_count || questions.length || 0} Diskusi</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1065,14 +1075,22 @@ function QA() {
                             {!selectedCourse ? (
                                 /* Course Selection View */
                                 <div className="course-selection-card">
-                                    <div className="form-section-header">
-                                        <h3 className="mb-2 fw-bold text-dark">Pilih Kursus</h3>
-                                        <p className="mb-0 text-muted">Pilih kursus untuk melihat diskusi dan kelola pertanyaan siswa</p>
+                                    <div className="form-section-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <div>
+                                            <h4 className="fw-bold text-dark d-flex align-items-center gap-2 mb-0">
+                                                <i className="fas fa-layer-group text-teal" style={{ color: "#0f766e" }}></i>
+                                                Pilih Kursus
+                                            </h4>
+                                            <small className="text-muted">Pilih kursus untuk melihat diskusi dan menjawab pertanyaan siswa</small>
+                                        </div>
+                                        <span className="badge bg-white text-muted border px-2.5 py-1.5 rounded-pill small">
+                                            Total: {filteredCourses.length} Kursus
+                                        </span>
                                     </div>
                                     
-                                    <div className="p-4">
+                                    <div className="p-3">
                                         {/* Search Bar */}
-                                        <div className="search-card">
+                                        <div className="search-card mb-3">
                                             <div className="position-relative">
                                                 <input 
                                                     className="form-control form-control-modern" 
@@ -1084,10 +1102,16 @@ function QA() {
                                                 <i className="fas fa-search search-icon"></i>
                                             </div>
                                             {courseSearchQuery && (
-                                                <div className="d-flex justify-content-between align-items-center">
-                                                    <small className="text-muted ms-3 mt-3 mb-3">
-                                                        Ditemukan {filteredCourses.length} kursus{filteredCourses.length !== 1 ? "" : ""}
+                                                <div className="d-flex justify-content-between align-items-center mt-2 px-1">
+                                                    <small className="text-muted">
+                                                        Ditemukan {filteredCourses.length} kursus untuk "{courseSearchQuery}"
                                                     </small>
+                                                    <button 
+                                                        className="btn btn-sm btn-link text-decoration-none p-0 text-muted"
+                                                        onClick={clearCourseSearch}
+                                                    >
+                                                        Reset
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
@@ -1096,16 +1120,16 @@ function QA() {
                                         {filteredCourses.length === 0 ? (
                                             <div className="empty-state">
                                                 <i className="fas fa-search empty-icon"></i>
-                                                <h4 className="mb-3">Tidak Ada Kursus Ditemukan</h4>
-                                                <p className="mb-3">
+                                                <h4 className="qa-empty-title">Tidak Ada Kursus Ditemukan</h4>
+                                                <p className="qa-empty-desc mb-3">
                                                     {courseSearchQuery 
                                                         ? `Tidak ada kursus yang sesuai "${courseSearchQuery}"`
-                                                        : "Anda belum membuat kursus apa pun"
+                                                        : "Anda belum memiliki kursus yang ditugaskan."
                                                     }
                                                 </p>
                                                 {courseSearchQuery && (
                                                     <button 
-                                                        className="btn btn-qa"
+                                                        className="btn btn-sm btn-outline-secondary"
                                                         onClick={clearCourseSearch}
                                                     >
                                                         Tampilkan Semua Kursus
@@ -1113,7 +1137,7 @@ function QA() {
                                                 )}
                                             </div>
                                         ) : (
-                                            <div className="row">
+                                            <div className="row g-2.5">
                                                 {filteredCourses.map((course, index) => (
                                                     <div key={course?.id || `course-${index}`} className="col-lg-6 col-12">
                                                         <div 
@@ -1132,7 +1156,7 @@ function QA() {
                                                                         className="course-image"
                                                                         onError={(e) => {
                                                                             e.target.style.display = "none";
-                                                                            e.target.nextSibling.style.display = "flex";
+                                                                            if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
                                                                         }}
                                                                     />
                                                                 ) : null}
@@ -1146,13 +1170,20 @@ function QA() {
 
                                                             {/* Course Info */}
                                                             <div className="course-info">
-                                                                <h5 className="student-qa-course-title">
-                                                                    {course?.title || "Untitled Course"}
-                                                                </h5>
-                                                                <p className="course-instructor">
-                                                                    <i className="fas fa-graduation-cap me-2"></i>
-                                                                    {translateLevel(course?.level)}
-                                                                </p>
+                                                                <div>
+                                                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                        <span className="course-level-badge">
+                                                                            <i className="fas fa-signal me-1"></i>
+                                                                            {translateLevel(course?.level)}
+                                                                        </span>
+                                                                        <span className="course-card-arrow">
+                                                                            <i className="fas fa-arrow-right"></i>
+                                                                        </span>
+                                                                    </div>
+                                                                    <h5 className="student-qa-course-title" title={course?.title}>
+                                                                        {course?.title || "Untitled Course"}
+                                                                    </h5>
+                                                                </div>
                                                                 
                                                                 {/* Course Meta Information */}
                                                                 <div className="student-qa-course-meta">
@@ -1161,13 +1192,11 @@ function QA() {
                                                                         {course.qa_count || 0} Pertanyaan
                                                                     </span>
                                                                     <span className="discussion-activity">
-                                                                        <i className="fas fa-users"></i>
-                                                                        Diskusi Aktif
+                                                                        <i className="fas fa-circle active-dot"></i>
+                                                                        Aktif
                                                                     </span>
                                                                 </div>
                                                             </div>
-
-                                                            {/* Course Action Area - REMOVED, button moved to meta */}
                                                         </div>
                                                     </div>
                                                 ))}
@@ -1177,218 +1206,134 @@ function QA() {
                                 </div>
                             ) : !selectedConversation ? (
                                 /* Questions View for Selected Course */
-                                <>
-                                    {/* Modern Search Section with Course Header */}
-                                    <div className="qa-search-section mb-4">
-                                        {/* Back Button and Course Title */}
-                                        <div className="d-flex align-items-center mb-3 gap-3 qa-course-header">
-                                            <button 
-                                                className="btn btn-light rounded-circle"
-                                                onClick={() => setSelectedCourse(null)}
-                                                title="Kembali ke kursus"
+                                <div className="qa-search-section mb-3">
+                                    {/* Back Button and Course Title */}
+                                    <div className="qa-course-header">
+                                        <button 
+                                            className="qa-back-circle-btn"
+                                            onClick={() => setSelectedCourse(null)}
+                                            title="Kembali ke pilihan kursus"
+                                        >
+                                            <i className="fas fa-arrow-left"></i>
+                                        </button>
+                                        <div className="qa-course-info">
+                                            <h3 className="qa-course-title-text">{selectedCourse?.title || "Kursus"}</h3>
+                                            <div className="qa-course-meta-tags">
+                                                <span className="qa-meta-pill">
+                                                    <i className="fas fa-graduation-cap me-1" style={{ color: "#0f766e" }}></i>
+                                                    {translateLevel(selectedCourse?.level)}
+                                                </span>
+                                                <span className="qa-meta-pill">•</span>
+                                                <span className="qa-meta-pill fw-semibold" style={{ color: "#0f766e" }}>
+                                                    <i className="fas fa-comments me-1"></i>
+                                                    {selectedCourse?.qa_count || filteredQuestions?.length || 0} Pertanyaan
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Filter Controls Toolbar */}
+                                    <div className="qa-filter-toolbar">
+                                        {/* Search Input */}
+                                        <div className="qa-filter-search-box">
+                                            <i className="fas fa-search qa-filter-icon"></i>
+                                            <input
+                                                type="text"
+                                                className="qa-filter-search-input"
+                                                placeholder="Cari pertanyaan berdasarkan judul atau isi..."
+                                                value={discussionFilters.search}
+                                                onChange={(e) => setDiscussionFilters({ ...discussionFilters, search: e.target.value })}
+                                            />
+                                        </div>
+                                        
+                                        {/* Bagian Filter Dropdown */}
+                                        <div className="qa-filter-select-box">
+                                            <select
+                                                className="qa-filter-select"
+                                                value={discussionFilters.bagian || ''}
+                                                onChange={(e) => {
+                                                    const selectedId = e.target.value;
+                                                    setDiscussionFilters({ ...discussionFilters, bagian: selectedId || null, pelajaran: null });
+                                                }}
                                             >
-                                                <i className="fas fa-arrow-left"></i>
+                                                <option value="">Semua Bagian</option>
+                                                {selectedCourse?.curriculum?.map((variant) => (
+                                                    <option key={variant.variant_id} value={variant.variant_id}>
+                                                        {variant.title}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        
+                                        {/* Pelajaran Filter Dropdown */}
+                                        <div className="qa-filter-select-box">
+                                            <select
+                                                className="qa-filter-select"
+                                                value={discussionFilters.pelajaran || ''}
+                                                onChange={(e) => setDiscussionFilters({ ...discussionFilters, pelajaran: e.target.value || null })}
+                                                disabled={!discussionFilters.bagian}
+                                            >
+                                                <option value="">Semua Pelajaran</option>
+                                                {discussionFilters.bagian && selectedCourse?.curriculum?.find(v => String(v.variant_id) === String(discussionFilters.bagian))?.variant_items?.map((item) => (
+                                                    <option key={item.variant_item_id} value={item.variant_item_id}>
+                                                        {item.title}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        
+                                        {/* Clear Filters Button */}
+                                        {(discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran) && (
+                                            <button
+                                                onClick={() => setDiscussionFilters({ search: '', bagian: null, pelajaran: null })}
+                                                className="qa-clear-filters-btn"
+                                                title="Bersihkan filter"
+                                            >
+                                                <i className="fas fa-times"></i>
+                                                <span>Reset Filter</span>
                                             </button>
-                                            <div className="qa-course-info">
-                                                <h3 className="mb-0">{selectedCourse?.title || "Kursus"}</h3>
-                                                <small className="text-muted">{selectedCourse?.qa_count || 0} Pertanyaan</small>
-                                            </div>
-                                        </div>
+                                        )}
+                                    </div>
 
-                                        {/* ✨ PHASE 7.9-7.10: Filter controls - Search and dropdowns with proportional widths */}
-                                        <div className="mb-0" style={{ display: 'flex', gap: '1rem', flexWrap: 'nowrap', alignItems: 'flex-end' }}>
-                                            {/* Search Input - 50% */}
-                                            <div style={{ flex: '1 1 50%' }}>
-                                                <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                    <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#0f766e' }}></i>
-                                                    Cari Pertanyaan
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Cari berdasarkan judul atau isi..."
-                                                    value={discussionFilters.search}
-                                                    onChange={(e) => setDiscussionFilters({ ...discussionFilters, search: e.target.value })}
-                                                    style={{
-                                                        width: '100%',
-                                                        fontSize: '1rem',
-                                                        borderRadius: '12px',
-                                                        border: '2px solid #e9ecef',
-                                                        backgroundColor: '#ffffff',
-                                                        color: '#2c3e50',
-                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                                        padding: '0.75rem 1rem',
-                                                        transition: 'all 0.3s ease',
-                                                        outline: 'none'
-                                                    }}
-                                                    onFocus={(e) => {
-                                                        e.target.style.borderColor = '#0f766e';
-                                                        e.target.style.boxShadow = '0 0 0 3px rgba(52, 152, 219, 0.1)';
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        e.target.style.borderColor = '#e9ecef';
-                                                        e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                                                    }}
-                                                />
-                                            </div>
-                                            
-                                            {/* Bagian Filter Dropdown - 25% */}
-                                            <div style={{ flex: '1 1 25%' }}>
-                                                <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                    <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#0d9488' }}></i>
-                                                    Bagian
-                                                </label>
-                                                <select
-                                                    value={discussionFilters.bagian || ''}
-                                                    onChange={(e) => {
-                                                        const selectedId = e.target.value;
-                                                        setDiscussionFilters({ ...discussionFilters, bagian: selectedId || null, pelajaran: null });
-                                                        // ✨ PHASE 7.15: Log when bagian is selected for debugging
-                                                        if (selectedId) {
-                                                            const foundBagian = selectedCourse?.curriculum?.find(v => String(v.variant_id) === String(selectedId));
-                                                            console.log(`[Bagian Selected] ID: "${selectedId}" (type: ${typeof selectedId})`);
-                                                            console.log(`[Bagian Selected] Found bagian: ${foundBagian?.title}`);
-                                                            console.log(`[Bagian Selected] Variant items count: ${foundBagian?.variant_items?.length || 0}`);
-                                                            if (foundBagian?.variant_items?.length === 0 || !foundBagian?.variant_items) {
-                                                                console.warn(`[Bagian Selected] ⚠️ No variant_items in selected bagian!`);
-                                                                console.log(`[Curriculum Debug] Full curriculum:`, selectedCourse?.curriculum);
-                                                            }
-                                                        }
-                                                    }}
-                                                    style={{
-                                                        width: '100%',
-                                                        fontSize: '1rem',
-                                                        borderRadius: '12px',
-                                                        border: '2px solid #e9ecef',
-                                                        backgroundColor: '#ffffff',
-                                                        color: '#2c3e50',
-                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                                        padding: '0.75rem 1rem',
-                                                        transition: 'all 0.3s ease',
-                                                        outline: 'none',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                    onFocus={(e) => {
-                                                        e.target.style.borderColor = '#0d9488';
-                                                        e.target.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.1)';
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        e.target.style.borderColor = '#e9ecef';
-                                                        e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                                                    }}
-                                                >
-                                                    <option value="">Semua Bagian</option>
-                                                    {selectedCourse?.curriculum?.map((variant) => (
-                                                        <option key={variant.variant_id} value={variant.variant_id}>
-                                                            {variant.title}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            
-                                            {/* Pelajaran Filter Dropdown - 25% */}
-                                            <div style={{ flex: '1 1 25%' }}>
-                                                <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                    <i className="fas fa-book" style={{ marginRight: '0.5rem', color: '#e74c3c' }}></i>
-                                                    Pelajaran
-                                                </label>
-                                                <select
-                                                    value={discussionFilters.pelajaran || ''}
-                                                    onChange={(e) => setDiscussionFilters({ ...discussionFilters, pelajaran: e.target.value || null })}
-                                                    disabled={!discussionFilters.bagian}
-                                                    style={{
-                                                        width: '100%',
-                                                        fontSize: '1rem',
-                                                        borderRadius: '12px',
-                                                        border: '2px solid #e9ecef',
-                                                        backgroundColor: discussionFilters.bagian ? '#ffffff' : '#f8f9fa',
-                                                        color: '#2c3e50',
-                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                                        padding: '0.75rem 1rem',
-                                                        transition: 'all 0.3s ease',
-                                                        outline: 'none',
-                                                        cursor: discussionFilters.bagian ? 'pointer' : 'not-allowed',
-                                                        opacity: discussionFilters.bagian ? 1 : 0.6
-                                                    }}
-                                                    onFocus={(e) => {
-                                                        if (discussionFilters.bagian) {
-                                                            e.target.style.borderColor = '#e74c3c';
-                                                            e.target.style.boxShadow = '0 0 0 3px rgba(231, 76, 60, 0.1)';
-                                                        }
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        e.target.style.borderColor = '#e9ecef';
-                                                        e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                                                    }}
-                                                >
-                                                    <option value="">Semua Pelajaran</option>
-                                                    {/* ✨ PHASE 7.15: Convert variant_id to string to handle IDs as string or number from backend */}
-                                                    {discussionFilters.bagian && selectedCourse?.curriculum?.find(v => String(v.variant_id) === String(discussionFilters.bagian))?.variant_items?.map((item) => (
-                                                        <option key={item.variant_item_id} value={item.variant_item_id}>
-                                                            {item.title}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            
-                                            {/* Clear Filters Button - ✨ PHASE 7.14: Fixed wrapping with flex-wrap and flex-direction */}
-                                            {(discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran) && (
-                                                <button
-                                                    onClick={() => setDiscussionFilters({ search: '', bagian: null, pelajaran: null })}
-                                                    className="qa-reply-btn"
-                                                    style={{ 
-                                                        background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', 
-                                                        padding: '0.75rem 1.5rem', 
-                                                        display: 'flex', 
-                                                        alignItems: 'center', 
-                                                        justifyContent: 'center',
-                                                        gap: '0.5rem', 
-                                                        flexWrap: 'wrap',
-                                                        minWidth: 'fit-content'
-                                                    }}
-                                                >
-                                                    <i className="fas fa-times" style={{ fontSize: '0.9rem' }}></i>
-                                                    <span>Bersihkan Filter</span>
-                                                </button>
-                                            )}
-                                        </div>
-
-                                    {/* Modern Questions Container - ✨ PHASE 7.18: Moved INSIDE qa-search-section */}
+                                    {/* Questions Container */}
                                     <div className="modern-questions-container">
                                         {loading ? (
                                             <div className="qa-empty-state">
-                                                <div className="qa-empty-state-icon mb-4">
-                                                    <i className="fas fa-spinner fa-spin qa-empty-state-icon-i"></i>
+                                                <div className="qa-empty-state-icon mb-2">
+                                                    <i className="fas fa-spinner fa-spin"></i>
                                                 </div>
-                                                <h4 className="qa-empty-title mb-3">Memuat Pertanyaan...</h4>
-                                                <p className="qa-empty-desc text-muted mb-0">
-                                                    Silakan tunggu sambil kami mengambil diskusi.
+                                                <h5 className="qa-empty-title">Memuat Pertanyaan...</h5>
+                                                <p className="qa-empty-desc mb-0">
+                                                    Silakan tunggu sambil kami mengambil daftar diskusi.
                                                 </p>
                                             </div>
                                         ) : error ? (
                                             <div className="qa-empty-state">
-                                                <div className="qa-empty-state-icon mb-4">
-                                                    <i className="fas fa-exclamation-triangle qa-empty-state-icon-i" style={{color: "#dc3545"}}></i>
+                                                <div className="qa-empty-state-icon mb-2">
+                                                    <i className="fas fa-exclamation-triangle" style={{ color: "#dc3545" }}></i>
                                                 </div>
-                                                <h4 className="qa-empty-title mb-3">Kesalahan Memuat Pertanyaan</h4>
-                                                <p className="qa-empty-desc text-muted mb-0">{error}</p>
+                                                <h5 className="qa-empty-title">Kesalahan Memuat Pertanyaan</h5>
+                                                <p className="qa-empty-desc mb-2">{error}</p>
                                                 <button 
-                                                    className="btn qa-reply-btn mt-3"
+                                                    className="btn btn-sm btn-outline-teal mt-1"
                                                     onClick={() => fetchCourseQuestions(selectedCourse?.id)}
                                                 >
-                                                    <i className="fas fa-refresh me-2"></i>
+                                                    <i className="fas fa-refresh me-1"></i>
                                                     Coba Lagi
                                                 </button>
                                             </div>
                                         ) : filteredQuestions?.length > 0 ? (
-                                            <div className="row g-4">
+                                            <div className="row g-2.5">
                                                 {filteredQuestions.map((q, index) => (
                                                     <div key={q.id || q.qa_id || `question-${index}`} className="col-12">
-                                                        <div className="modern-question-card qa-card-hover" style={{ cursor: 'pointer' }} onClick={() => setSelectedConversation(q)}>
-                                                            {/* ✨ PHASE 7.18: Top section - Title with Avatar on left, Badges on right */}
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
-                                                                {/* Header with Avatar + Title Side-by-Side */}
-                                                                <div className="question-header" style={{ display: 'flex', gap: '1rem', flex: 1, minWidth: 0 }}>
-                                                                    {/* Avatar - Fixed width */}
+                                                        <div 
+                                                            className="modern-question-card qa-card-hover" 
+                                                            style={{ cursor: 'pointer' }} 
+                                                            onClick={() => setSelectedConversation(q)}
+                                                        >
+                                                            {/* Top Section */}
+                                                            <div className="qa-card-top">
+                                                                <div className="qa-card-user-group">
                                                                     {q.profile?.image ? (
                                                                         <img
                                                                             src={q.profile?.image?.startsWith("http") 
@@ -1397,111 +1342,77 @@ function QA() {
                                                                                     ? q.profile.image
                                                                                     : getMediaUrl(q.profile?.image)}
                                                                             alt={q.profile?.full_name || "User"}
-                                                                            className="avatar-modern"
+                                                                            className="qa-card-avatar"
                                                                             onError={(e) => {
                                                                                 e.target.style.display = "none";
+                                                                                if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
                                                                             }}
-                                                                            style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '3px solid white', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
                                                                         />
-                                                                    ) : (
-                                                                        <div style={{
-                                                                            width: '60px',
-                                                                            height: '60px',
-                                                                            borderRadius: '50%',
-                                                                            backgroundColor: '#e8f4f8',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'center',
-                                                                            flexShrink: 0,
-                                                                            border: '3px solid white',
-                                                                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                                                                        }}>
-                                                                            <i className="fas fa-user" style={{ color: '#016b87', fontSize: '1.5rem' }}></i>
-                                                                        </div>
-                                                                    )}
+                                                                    ) : null}
+                                                                    <div 
+                                                                        className="qa-avatar-placeholder-compact"
+                                                                        style={{ display: q.profile?.image ? "none" : "flex" }}
+                                                                    >
+                                                                        <i className="fas fa-user"></i>
+                                                                    </div>
                                                                     
-                                                                    {/* Title and User Info */}
-                                                                    <div className="question-content" style={{ flex: 1, minWidth: 0 }}>
-                                                                        <h5 className="qa-question-title mb-1" style={{ marginBottom: '0.25rem' }}>
-                                                                            {q.title || 'Tidak Ada Judul'}
-                                                                        </h5>
-                                                                        <div style={{ fontSize: '0.9rem', color: '#6c757d' }}>
-                                                                            <span>{q.profile?.full_name || 'Pengguna Anonim'}</span>
-                                                                            <span style={{ marginLeft: '0.5rem' }}>• {moment(q.date).fromNow()}</span>
-                                                                        </div>
+                                                                    <div className="qa-card-user-text">
+                                                                        <span className="qa-user-name">
+                                                                            {q.profile?.full_name || 'Pengguna Anonim'}
+                                                                        </span>
+                                                                        <span className="qa-time-meta">
+                                                                            <i className="fas fa-clock me-1"></i>
+                                                                            {moment(q.date).fromNow()}
+                                                                        </span>
                                                                     </div>
                                                                 </div>
                                                                 
-                                                                {/* ✨ PHASE 7.18: Badges on top right with FULL TEXT */}
-                                                                <div className="d-flex align-items-center gap-2" style={{ marginLeft: 'auto', flexShrink: 0, flexDirection: 'column', alignItems: 'flex-end', gap: '0.75rem' }}>
-                                                                    {/* Bagian & Pelajaran badges - FULL TEXT badges */}
-                                                                    {(q.variant || q.variant_item) && (
-                                                                        <div style={{ 
-                                                                            display: 'flex', 
-                                                                            gap: '0.75rem',
-                                                                            flexWrap: 'wrap',
-                                                                            justifyContent: 'flex-end',
-                                                                            flexShrink: 0
-                                                                        }}>
-                                                                            {q.variant && (
-                                                                                <span style={{
-                                                                                    backgroundColor: '#e8f4f8',
-                                                                                    color: '#016b87',
-                                                                                    padding: '0.4rem 0.9rem',
-                                                                                    borderRadius: '12px',
-                                                                                    fontSize: '0.85rem',
-                                                                                    fontWeight: '600',
-                                                                                    border: '1px solid #a8d8dc',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                    display: 'inline-block'
-                                                                                }}>
-                                                                                    <i className="fas fa-layer-group" style={{ marginRight: '0.4rem' }}></i>{q.variant.title}
-                                                                                </span>
-                                                                            )}
-                                                                            {q.variant_item && (
-                                                                                <span style={{
-                                                                                    backgroundColor: '#f0e8f4',
-                                                                                    color: '#662d91',
-                                                                                    padding: '0.4rem 0.9rem',
-                                                                                    borderRadius: '12px',
-                                                                                    fontSize: '0.85rem',
-                                                                                    fontWeight: '600',
-                                                                                    border: '1px solid #d4b5e0',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                    display: 'inline-block'
-                                                                                }}>
-                                                                                    <i className="fas fa-book" style={{ marginRight: '0.4rem' }}></i>{q.variant_item.title}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+                                                                {/* Badges on right */}
+                                                                {(q.variant || q.variant_item) && (
+                                                                    <div className="qa-card-badges-wrap">
+                                                                        {q.variant && (
+                                                                            <span className="qa-topic-badge qa-topic-variant" title={q.variant.title}>
+                                                                                <i className="fas fa-layer-group"></i>
+                                                                                <span>{q.variant.title}</span>
+                                                                            </span>
+                                                                        )}
+                                                                        {q.variant_item && (
+                                                                            <span className="qa-topic-badge qa-topic-item" title={q.variant_item.title}>
+                                                                                <i className="fas fa-book"></i>
+                                                                                <span>{q.variant_item.title}</span>
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                             
-                                                            {/* Message preview - MAX 2 LINES */}
+                                                            {/* Title */}
+                                                            <h5 className="qa-question-title">
+                                                                {q.title || 'Tidak Ada Judul'}
+                                                            </h5>
+
+                                                            {/* Message preview */}
                                                             {(q.message || (q.messages && q.messages[0]?.message)) && (
                                                                 <p className="question-message-preview">
-                                                                    {(q.message || q.messages?.[0]?.message || 'Tidak ada pesan').substring(0, 200)}
-                                                                    {(q.message || q.messages?.[0]?.message || '').length > 200 ? '...' : ''}
+                                                                    {(q.message || q.messages?.[0]?.message || 'Tidak ada pesan').substring(0, 180)}
+                                                                    {(q.message || q.messages?.[0]?.message || '').length > 180 ? '...' : ''}
                                                                 </p>
                                                             )}
                                                             
-                                                            {/* ✨ PHASE 7.18: Meta information at bottom - Replies badge first, like button on right */}
-                                                            <div className="question-meta" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                                                                    <span className="question-meta-item">
-                                                                        <span className="replies-badge">
-                                                                            <i className="fas fa-comments" style={{ marginRight: '0.5rem' }}></i>
-                                                                            {q.replies_count || 0} Balasan
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                {/* ✨ PHASE 7.18: Like and Report buttons on question card */}
-                                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                                    {/* ✨ PHASE 7.27: Make like button icon conditional on user_liked status and add color */}
-                                                                    <button className="forum-like-btn" title="Sukai pertanyaan ini" onClick={(e) => { e.stopPropagation(); handleLikeQuestion(q); }}
+                                                            {/* Bottom Meta */}
+                                                            <div className="question-meta">
+                                                                <span className="replies-badge">
+                                                                    <i className="fas fa-comments"></i>
+                                                                    <span>{q.replies_count || 0} Balasan</span>
+                                                                </span>
+                                                                
+                                                                <div className="d-flex align-items-center gap-1.5">
+                                                                    <button 
+                                                                        className="forum-like-btn" 
+                                                                        title="Sukai pertanyaan ini" 
+                                                                        onClick={(e) => { e.stopPropagation(); handleLikeQuestion(q); }}
                                                                         style={{
-                                                                            color: q?.user_liked ? '#e91e63' : 'inherit',
+                                                                            color: q?.user_liked ? '#e11d48' : 'inherit',
                                                                         }}
                                                                     >
                                                                         <i className={`${q?.user_liked ? 'fas' : 'far'} fa-heart`}></i>
@@ -1514,10 +1425,10 @@ function QA() {
                                                                                 className="forum-report-btn" 
                                                                                 title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
                                                                                 onClick={(e) => { e.stopPropagation(); handleOpenReportModal(q); }}
-                                                                                style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
+                                                                                style={reportStatus ? { color: '#dc2626', opacity: 0.85 } : {}}
                                                                             >
                                                                                 <i className="fas fa-flag"></i>
-                                                                                {reportStatus && <span style={{ marginLeft: '0.3rem', fontSize: '0.75rem' }}>●</span>}
+                                                                                {reportStatus && <span style={{ marginLeft: '0.2rem', fontSize: '0.65rem' }}>●</span>}
                                                                             </button>
                                                                         );
                                                                     })()}
@@ -1529,71 +1440,63 @@ function QA() {
                                             </div>
                                         ) : (
                                             <div className="qa-empty-state">
-                                                <div className="qa-empty-state-icon mb-4">
-                                                    <i className="fas fa-question-circle qa-empty-state-icon-i"></i>
+                                                <div className="qa-empty-state-icon mb-2">
+                                                    <i className="fas fa-question-circle"></i>
                                                 </div>
-                                                <h4 className="qa-empty-title mb-3">Tidak Ada Pertanyaan</h4>
-                                                <p className="qa-empty-desc text-muted mb-0">
+                                                <h5 className="qa-empty-title">Tidak Ada Pertanyaan</h5>
+                                                <p className="qa-empty-desc mb-0">
                                                     Ketika siswa mengajukan pertanyaan tentang kursus ini, mereka akan muncul di sini.
                                                 </p>
                                             </div>
                                         )}
                                     </div>
-                                    </div>
-                                </>
+                                </div>
                             ) : (
-                                /*  Forum Thread View for Selected Conversation */
+                                /* Forum Thread View for Selected Conversation */
                                 <div className="forum-thread-container-instructor">
-                                    {/* Professional Forum Header */}
+                                    {/* Header */}
                                     <div className="forum-thread-header">
-                                        <div className="forum-thread-title-area">
-                                            <div className="d-flex align-items-center gap-3">
-                                                <button
-                                                    className="btn btn-outline-primary"
-                                                    onClick={handleBackToQuestions}
-                                                    style={{ minWidth: '50px', padding: '0.5rem 1rem', flexShrink: 0 }}
-                                                >
-                                                    <i className="fas fa-arrow-left me-2"></i>
-                                                    Kembali
-                                                </button>
-                                                <h2 className="forum-thread-title">
-                                                    {selectedConversation?.title || 'Tidak Ada Judul'}
-                                                </h2>
-                                            </div>
-                                        </div>
-                                        {/* Meta Info Footer */}
-                                        <div className="forum-header-footer">
-                                            <div className="forum-thread-meta">
+                                        <div className="forum-thread-top-bar">
+                                            <button
+                                                className="forum-back-btn"
+                                                onClick={handleBackToQuestions}
+                                            >
+                                                <i className="fas fa-arrow-left"></i>
+                                                <span>Kembali</span>
+                                            </button>
+                                            <div className="d-flex align-items-center gap-2">
                                                 <span className="forum-meta-badge">
                                                     <i className="fas fa-comments"></i>
-                                                    {selectedConversation?.replies_count || 0} Balasan
+                                                    <span>{selectedConversation?.replies_count || 0} Balasan</span>
                                                 </span>
                                                 <span className="forum-meta-badge">
                                                     <i className="fas fa-clock"></i>
-                                                    {moment(selectedConversation?.date).fromNow()}
+                                                    <span>{moment(selectedConversation?.date).fromNow()}</span>
                                                 </span>
                                             </div>
-                                            <div className="forum-breadcrumb">
-                                                {selectedConversation?.variant && (
-                                                    <>
-                                                        <i className="fas fa-folder me-1" style={{ color: '#016b87' }}></i>
-                                                        <span>{selectedConversation.variant.title}</span>
-                                                        {selectedConversation.variant_item && <span className="mx-2">/</span>}
-                                                    </>
-                                                )}
-                                                {selectedConversation?.variant_item && (
-                                                    <>
-                                                        <i className="fas fa-file me-1" style={{ color: '#662d91' }}></i>
-                                                        <span>{selectedConversation.variant_item.title}</span>
-                                                    </>
-                                                )}
-                                            </div>
+                                        </div>
+                                        <h3 className="forum-thread-title">
+                                            {selectedConversation?.title || 'Tidak Ada Judul'}
+                                        </h3>
+                                        <div className="forum-thread-meta-row">
+                                            {selectedConversation?.variant && (
+                                                <div className="forum-breadcrumb-wrap">
+                                                    <i className="fas fa-layer-group" style={{ color: '#0369a1' }}></i>
+                                                    <span>{selectedConversation.variant.title}</span>
+                                                    {selectedConversation.variant_item && <span className="mx-1 text-muted">/</span>}
+                                                </div>
+                                            )}
+                                            {selectedConversation?.variant_item && (
+                                                <div className="forum-breadcrumb-wrap">
+                                                    <i className="fas fa-book" style={{ color: '#7e22ce' }}></i>
+                                                    <span>{selectedConversation.variant_item.title}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Original Question Card - Professional Style */}
+                                    {/* Original Question Card */}
                                     <div className="forum-post-card forum-original-post">
-                                        {/* Post Header */}
                                         <div className="forum-post-header">
                                             <div className="forum-user-info">
                                                 <div className="forum-user-avatar-wrapper">
@@ -1608,7 +1511,7 @@ function QA() {
                                                             className="forum-user-avatar"
                                                             onError={(e) => {
                                                                 e.target.style.display = "none";
-                                                                e.target.nextSibling.style.display = "flex";
+                                                                if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
                                                             }}
                                                         />
                                                     ) : null}
@@ -1621,9 +1524,8 @@ function QA() {
                                                 </div>
                                                 <div className="forum-user-details">
                                                     <div className="forum-user-name">
-                                                        {selectedConversation?.profile?.full_name || 'Pengguna Anonim'}
+                                                        <span>{selectedConversation?.profile?.full_name || 'Pengguna Anonim'}</span>
                                                         <span className="forum-user-badge-asker">Penanya</span>
-                                                        {/* ✨ PHASE 7.21: Check instructor badge using both user_id and profile?.user_id for robustness */}
                                                         {selectedCourse?.teacher && (
                                                             (selectedConversation?.user_id === selectedCourse.teacher.user_id) ||
                                                             (selectedConversation?.profile?.user_id === selectedCourse.teacher.user_id)
@@ -1635,7 +1537,7 @@ function QA() {
                                                         )}
                                                     </div>
                                                     <div className="forum-user-timestamp">
-                                                        <i className="fas fa-clock-o me-1"></i>
+                                                        <i className="fas fa-clock me-1"></i>
                                                         {moment(selectedConversation?.date).format("DD MMM YYYY [pada] HH:mm")}
                                                     </div>
                                                 </div>
@@ -1645,46 +1547,50 @@ function QA() {
                                         <div className="forum-post-content">
                                             {selectedConversation?.message || selectedConversation?.description || selectedConversation?.messages?.[0]?.message || 'Tidak ada pesan'}
                                         </div>
-                                        {/* Post Footer with Like and Report Button */}
+                                        {/* Post Footer */}
                                         <div className="forum-post-footer">
-                                            <div className="forum-post-actions">
-                                                <button 
-                                                    className="forum-like-btn" 
-                                                    title="Sukai pertanyaan ini"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleLikeQuestion(selectedConversation);
-                                                    }}
-                                                    style={{
-                                                        color: selectedConversation?.user_liked ? '#e91e63' : 'inherit',
-                                                    }}
-                                                >
-                                                    <i className={`${selectedConversation?.user_liked ? 'fas' : 'far'} fa-heart`}></i>
-                                                    <span className="like-count">{selectedConversation?.likes_count || 0}</span>
-                                                </button>
-                                                {(() => {
-                                                    const reportStatus = getQAReportStatus(selectedConversation?.qa_id, 'question');
-                                                    return (
-                                                        <button 
-                                                            className="forum-report-btn" 
-                                                            title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
-                                                            onClick={() => handleOpenReportModal(selectedConversation)}
-                                                            style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
-                                                        >
-                                                            <i className="fas fa-flag"></i>
-                                                            {reportStatus && (
-                                                                <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
-                                                            )}
-                                                        </button>
-                                                    );
-                                                })()}
-                                            </div>
+                                            <button 
+                                                className="forum-like-btn" 
+                                                title="Sukai pertanyaan ini"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleLikeQuestion(selectedConversation);
+                                                }}
+                                                style={{
+                                                    color: selectedConversation?.user_liked ? '#e11d48' : 'inherit',
+                                                }}
+                                            >
+                                                <i className={`${selectedConversation?.user_liked ? 'fas' : 'far'} fa-heart`}></i>
+                                                <span className="like-count">{selectedConversation?.likes_count || 0}</span>
+                                            </button>
+                                            {(() => {
+                                                const reportStatus = getQAReportStatus(selectedConversation?.qa_id, 'question');
+                                                return (
+                                                    <button 
+                                                        className="forum-report-btn" 
+                                                        title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
+                                                        onClick={() => handleOpenReportModal(selectedConversation)}
+                                                        style={reportStatus ? { color: '#dc2626', opacity: 0.85 } : {}}
+                                                    >
+                                                        <i className="fas fa-flag"></i>
+                                                        {reportStatus && (
+                                                            <span style={{ marginLeft: '0.2rem', fontSize: '0.65rem' }}>✓</span>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })()}
                                         </div>
                                     </div>
 
                                     {/* Replies Section */}
                                     {selectedConversation?.messages && selectedConversation.messages.length > 1 && (
                                         <div className="forum-replies-section">
+                                            <div className="forum-replies-header">
+                                                <h6 className="forum-replies-title">
+                                                    <i className="fas fa-comments"></i>
+                                                    Diskusi & Balasan ({selectedConversation.messages.length - 1})
+                                                </h6>
+                                            </div>
                                             <div className="forum-replies-list">
                                                 {selectedConversation.messages.slice(1).map((msg, index) => {
                                                     const currentUser = UserData();
@@ -1695,7 +1601,6 @@ function QA() {
                                                     );
                                                     return (
                                                         <div key={msg.id || `message-${index}`} className="forum-post-card forum-reply-post">
-                                                            {/* Reply Header */}
                                                             <div className="forum-post-header">
                                                                 <div className="forum-user-info">
                                                                     <div className="forum-user-avatar-wrapper">
@@ -1710,7 +1615,7 @@ function QA() {
                                                                                 className="forum-user-avatar"
                                                                                 onError={(e) => {
                                                                                     e.target.style.display = "none";
-                                                                                    e.target.nextSibling.style.display = "flex";
+                                                                                    if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
                                                                                 }}
                                                                             />
                                                                         ) : null}
@@ -1723,7 +1628,7 @@ function QA() {
                                                                     </div>
                                                                     <div className="forum-user-details">
                                                                         <div className="forum-user-name">
-                                                                            {msg.profile?.full_name || 'Pengguna Anonim'}
+                                                                            <span>{msg.profile?.full_name || 'Pengguna Anonim'}</span>
                                                                             {isInstructor && (
                                                                                 <span className="forum-user-badge-instructor" title="Instruktur Kursus">
                                                                                     <i className="fas fa-chalkboard-user"></i>
@@ -1733,7 +1638,7 @@ function QA() {
                                                                             {isCurrentUser && <span className="forum-user-badge-current">Anda</span>}
                                                                         </div>
                                                                         <div className="forum-user-timestamp">
-                                                                            <i className="fas fa-clock-o me-1"></i>
+                                                                            <i className="fas fa-clock me-1"></i>
                                                                             {moment(msg.date).format("DD MMM YYYY [pada] HH:mm")}
                                                                         </div>
                                                                     </div>
@@ -1743,40 +1648,38 @@ function QA() {
                                                             <div className="forum-post-content">
                                                                 {msg.message}
                                                             </div>
-                                                            {/* Post Footer with Like and Report Button */}
+                                                            {/* Reply Footer */}
                                                             <div className="forum-post-footer">
-                                                                <div className="forum-post-actions">
-                                                                    <button 
-                                                                        className="forum-like-btn" 
-                                                                        title="Sukai jawaban ini"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleLikeMessage(msg, selectedConversation?.qa_id);
-                                                                        }}
-                                                                        style={{
-                                                                            color: msg?.user_liked ? '#e91e63' : 'inherit',
-                                                                        }}
-                                                                    >
-                                                                        <i className={`${msg?.user_liked ? 'fas' : 'far'} fa-heart`}></i>
-                                                                        <span className="like-count">{msg.likes_count || 0}</span>
-                                                                    </button>
-                                                                    {(() => {
-                                                                        const reportStatus = getQAReportStatus(msg.qa_id, 'message');
-                                                                        return (
-                                                                            <button 
-                                                                                className="forum-report-btn" 
-                                                                                title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan jawaban ini"}
-                                                                                onClick={() => handleOpenReportModal(msg)}
-                                                                                style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
-                                                                            >
-                                                                                <i className="fas fa-flag"></i>
-                                                                                {reportStatus && (
-                                                                                    <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
-                                                                                )}
-                                                                            </button>
-                                                                        );
-                                                                    })()}
-                                                                </div>
+                                                                <button 
+                                                                    className="forum-like-btn" 
+                                                                    title="Sukai jawaban ini"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleLikeMessage(msg, selectedConversation?.qa_id);
+                                                                    }}
+                                                                    style={{
+                                                                        color: msg?.user_liked ? '#e11d48' : 'inherit',
+                                                                    }}
+                                                                >
+                                                                    <i className={`${msg?.user_liked ? 'fas' : 'far'} fa-heart`}></i>
+                                                                    <span className="like-count">{msg.likes_count || 0}</span>
+                                                                </button>
+                                                                {(() => {
+                                                                    const reportStatus = getQAReportStatus(msg.qa_id, 'message');
+                                                                    return (
+                                                                        <button 
+                                                                            className="forum-report-btn" 
+                                                                            title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan jawaban ini"}
+                                                                            onClick={() => handleOpenReportModal(msg)}
+                                                                            style={reportStatus ? { color: '#dc2626', opacity: 0.85 } : {}}
+                                                                        >
+                                                                            <i className="fas fa-flag"></i>
+                                                                            {reportStatus && (
+                                                                                <span style={{ marginLeft: '0.2rem', fontSize: '0.65rem' }}>✓</span>
+                                                                            )}
+                                                                        </button>
+                                                                    );
+                                                                })()}
                                                             </div>
                                                         </div>
                                                     );
@@ -1788,46 +1691,55 @@ function QA() {
 
                                     {/* No Replies State */}
                                     {(!selectedConversation?.messages || selectedConversation.messages.length <= 1) && (
-                                        <div className="forum-no-replies">
-                                            <div className="forum-empty-state">
+                                        <div className="qa-empty-state my-2">
+                                            <div className="qa-empty-state-icon mb-2">
                                                 <i className="fas fa-comment-dots"></i>
-                                                <h4>Belum ada balasan</h4>
-                                                <p>Jadilah yang pertama memberikan balasan untuk pertanyaan ini!</p>
                                             </div>
+                                            <h5 className="qa-empty-title">Belum ada balasan</h5>
+                                            <p className="qa-empty-desc mb-0">Jadilah yang pertama memberikan balasan atau penjelasan untuk pertanyaan ini!</p>
                                         </div>
                                     )}
 
                                     {/* Reply Input Form */}
                                     <div className="forum-reply-form-section">
-                                        <h5 className="forum-reply-title mb-3">Tambahkan Balasan</h5>
+                                        <h6 className="forum-reply-title">
+                                            <i className="fas fa-reply me-1.5" style={{ color: "#0f766e" }}></i>
+                                            Tambahkan Balasan Sebagai Instruktur
+                                        </h6>
                                         <form className="message-form-qa" onSubmit={sendNewMessage}>
                                             <textarea 
                                                 name="message" 
                                                 className="message-textarea-qa" 
-                                                rows="4" 
+                                                rows="3" 
                                                 onChange={handleMessageChange}
                                                 value={getCurrentMessage()}
-                                                placeholder="Ketik balasan Anda di sini..."
+                                                placeholder="Ketik balasan atau penjelasan Anda untuk siswa di sini..."
                                                 disabled={messageLoading}
                                                 required
                                             />
-                                            <button 
-                                                className="qa-send-btn" 
-                                                type="submit"
-                                                disabled={messageLoading || !getCurrentMessage().trim()}
-                                            >
-                                                {messageLoading ? (
-                                                    <>
-                                                        <span className="spinner-border spinner-border-sm me-2"></span>
-                                                        <strong>Mengirim...</strong>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <i className="fas fa-paper-plane"></i>
-                                                        Kirim Balasan
-                                                    </>
-                                                )}
-                                            </button>
+                                            <div className="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                                                <small className="text-muted">
+                                                    <i className="fas fa-shield-alt me-1" style={{ color: "#0f766e" }}></i>
+                                                    Tergabung sebagai instruktur kursus
+                                                </small>
+                                                <button 
+                                                    className="qa-send-btn" 
+                                                    type="submit"
+                                                    disabled={messageLoading || !getCurrentMessage().trim()}
+                                                >
+                                                    {messageLoading ? (
+                                                        <>
+                                                            <span className="spinner-border spinner-border-sm me-1.5"></span>
+                                                            <span>Mengirim...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <i className="fas fa-paper-plane me-1.5"></i>
+                                                            <span>Kirim Balasan</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
                                         </form>
                                     </div>
                                 </div>

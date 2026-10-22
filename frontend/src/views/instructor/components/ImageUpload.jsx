@@ -21,7 +21,7 @@ const ImageUpload = ({
   const [imageUrl, setImageUrl] = useState("");
   const [validationError, setValidationError] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadMethod, setUploadMethod] = useState(null); // ✨ PHASE 4.100: null | 'url' | 'file'
+  const [uploadMethod, setUploadMethod] = useState("file"); // ✨ PHASE 4.100: null | 'url' | 'file'
   const fileInputRef = useRef(null);
 
   // ✨ PHASE 4.101.5: Monitor courseData.image for debugging
@@ -475,7 +475,7 @@ const ImageUpload = ({
             </div>
           </div>
         ) : (imagePreview || courseData?.image) ? (
-          <div className="image-preview-container" style={{ height: '400px' }}>
+          <div className="image-preview-container mx-auto" style={{ maxHeight: "340px", width: "100%", maxWidth: "640px" }}>
             <img
               className={getImagePreviewClass()}
               src={convertGoogleDriveUrl(imagePreview || courseData?.image || PLACEHOLDER_SVG)}
@@ -483,9 +483,9 @@ const ImageUpload = ({
               referrerPolicy="no-referrer"
               onError={(e) => {
                 e.target.src = PLACEHOLDER_SVG;
-                e.target.style.backgroundColor = '#f0f0f0';
+                e.target.style.backgroundColor = "#f0f0f0";
               }}
-              style={{ objectFit: 'contain', height: '100%' }}
+              style={{ objectFit: "contain", maxHeight: "340px", width: "auto", maxWidth: "100%", margin: "0 auto" }}
             />
             {(imagePreview || courseData?.image) && (
               <div className="position-absolute top-0 end-0 m-2">
@@ -500,53 +500,42 @@ const ImageUpload = ({
       </div>
 
       {/* ✨ PHASE 4.100: Upload Method Selection */}
-      {/* Show method selection if no image, or if user wants to change image */}
-      <div className="mb-4">
-        <label className="form-label fw-bold">
-          <i className="fas fa-arrow-right me-2"></i>
-          {courseData?.image ? 'Ganti Gambar Kursus' : 'Pilih Cara Menambahkan Gambar'}
+      <div className="mb-2.5">
+        <label className="form-label fw-bold d-inline-flex align-items-center" style={{ gap: "6px" }}>
+          <i className="fas fa-sliders-h text-teal"></i>
+          <span>{courseData?.image ? "Ganti Gambar Kursus" : "Pilih Cara Menambahkan Gambar"}</span>
           <span className="text-danger ms-1">*</span>
         </label>
         
-        {/* Toggle Buttons */}
-        <div className="btn-group w-100" role="group">
-          <input 
-            type="radio" 
-            className="btn-check" 
-            name="uploadMethod" 
-            id="methodUrl" 
-            value="url"
-            checked={uploadMethod === 'url'}
-            onChange={() => {
-              setUploadMethod('url');
+        {/* Toggle Buttons (Clear Segmented Control) */}
+        <div className="image-method-segmented-group" role="group">
+          <button
+            type="button"
+            className={`method-segment-btn ${uploadMethod === "file" ? "active" : ""}`}
+            onClick={() => {
+              setUploadMethod("file");
+              setValidationError("");
+              setImageUrl("");
+            }}
+          >
+            <i className="fas fa-upload me-1.5"></i>
+            <span>Unggah File</span>
+          </button>
+
+          <button
+            type="button"
+            className={`method-segment-btn ${uploadMethod === "url" ? "active" : ""}`}
+            onClick={() => {
+              setUploadMethod("url");
               setValidationError("");
               if (fileInputRef.current) {
                 fileInputRef.current.value = "";
               }
             }}
-          />
-          <label className="btn btn-outline-primary" htmlFor="methodUrl" style={{ flex: 1 }}>
-            <i className="fas fa-link me-2"></i>
-            Dari URL
-          </label>
-
-          <input 
-            type="radio" 
-            className="btn-check" 
-            name="uploadMethod" 
-            id="methodFile" 
-            value="file"
-            checked={uploadMethod === 'file'}
-            onChange={() => {
-              setUploadMethod('file');
-              setValidationError("");
-              setImageUrl("");
-            }}
-          />
-          <label className="btn btn-outline-primary" htmlFor="methodFile" style={{ flex: 1 }}>
-            <i className="fas fa-upload me-2"></i>
-            Unggah File
-          </label>
+          >
+            <i className="fas fa-link me-1.5"></i>
+            <span>Dari URL</span>
+          </button>
         </div>
       </div>
 

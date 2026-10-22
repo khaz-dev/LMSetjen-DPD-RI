@@ -159,20 +159,20 @@
     flex-shrink: 0;
 }
 
-/* Soft color utility classes */
-.bg-soft-primary { background: rgba(37, 99, 235, 0.12) !important; color: #2563eb !important; }
-.bg-soft-success { background: rgba(16, 185, 129, 0.12) !important; color: #059669 !important; }
-.bg-soft-info { background: rgba(6, 182, 212, 0.12) !important; color: #0891b2 !important; }
-.bg-soft-warning { background: rgba(245, 158, 11, 0.14) !important; color: #d97706 !important; }
-.bg-soft-danger { background: rgba(239, 68, 68, 0.12) !important; color: #dc2626 !important; }
-.bg-soft-secondary { background: rgba(100, 116, 139, 0.12) !important; color: #475569 !important; }
-.bg-soft-teal { background: rgba(15, 118, 110, 0.12) !important; color: #0f766e !important; }
-.bg-soft-purple { background: rgba(124, 58, 237, 0.12) !important; color: #7c3aed !important; }
-.bg-soft-amber { background: rgba(217, 119, 6, 0.14) !important; color: #b45309 !important; }
+/* Soft color utility classes - strictly scoped to prevent overriding other pages */
+.instructor-activity-display .bg-soft-primary { background: rgba(37, 99, 235, 0.12) !important; color: #2563eb !important; }
+.instructor-activity-display .bg-soft-success { background: rgba(16, 185, 129, 0.12) !important; color: #059669 !important; }
+.instructor-activity-display .bg-soft-info { background: rgba(6, 182, 212, 0.12) !important; color: #0891b2 !important; }
+.instructor-activity-display .bg-soft-warning { background: rgba(245, 158, 11, 0.14) !important; color: #d97706 !important; }
+.instructor-activity-display .bg-soft-danger { background: rgba(239, 68, 68, 0.12) !important; color: #dc2626 !important; }
+.instructor-activity-display .bg-soft-secondary { background: rgba(100, 116, 139, 0.12) !important; color: #475569 !important; }
+.instructor-activity-display .bg-soft-teal { background: rgba(15, 118, 110, 0.12) !important; color: #0f766e !important; }
+.instructor-activity-display .bg-soft-purple { background: rgba(124, 58, 237, 0.12) !important; color: #7c3aed !important; }
+.instructor-activity-display .bg-soft-amber { background: rgba(217, 119, 6, 0.14) !important; color: #b45309 !important; }
 
-.text-teal { color: #0f766e !important; }
-.text-purple { color: #7c3aed !important; }
-.text-amber { color: #b45309 !important; }
+.instructor-activity-display .text-teal { color: #0f766e !important; }
+.instructor-activity-display .text-purple { color: #7c3aed !important; }
+.instructor-activity-display .text-amber { color: #b45309 !important; }
 
 /* Custom scrollbar for compact variant */
 .instructor-activity-display.compact::-webkit-scrollbar {
