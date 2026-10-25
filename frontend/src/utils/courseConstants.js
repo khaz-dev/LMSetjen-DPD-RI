@@ -8,16 +8,16 @@ export const COURSE_LEVELS = [
 ];
 
 export const COURSE_AUDIENCE_OPTIONS = [
-  { value: "pegawai", label: "🏢 Khusus Pegawai Setjen DPD RI", description: "Pelatihan kedinasan khusus aparatur Setjen DPD RI" },
+  { value: "pegawai", label: "🏢 Khusus Pegawai Setjen DPD RI", description: "Pelatihan khusus pegawai Setjen DPD RI" },
   { value: "umum", label: "🌐 Terbuka untuk Umum", description: "Dapat diakses oleh publik dan seluruh pegawai" },
 ];
 
 export const DEFAULT_COURSE_DATA = {
-  title: "", 
-  description: "", 
-  image: "", 
-  file: "", 
-  level: "", 
+  title: "",
+  description: "",
+  image: "",
+  file: "",
+  level: "",
   target_audience: "pegawai",
   category: ""
 };
@@ -36,13 +36,13 @@ export const ACCEPTED_FILE_TYPES = {
 
 export const CKEDITOR_CONFIG = {
   toolbar: [
-    "bold", 
-    "italic", 
-    "link", 
-    "bulletedList", 
-    "numberedList", 
-    "blockQuote", 
-    "undo", 
+    "bold",
+    "italic",
+    "link",
+    "bulletedList",
+    "numberedList",
+    "blockQuote",
+    "undo",
     "redo"
   ],
 };
