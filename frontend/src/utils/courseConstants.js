@@ -7,12 +7,18 @@ export const COURSE_LEVELS = [
   { value: "Advanced", label: "🔴 Lanjutan" },
 ];
 
+export const COURSE_AUDIENCE_OPTIONS = [
+  { value: "pegawai", label: "🏢 Khusus Pegawai Setjen DPD RI", description: "Pelatihan kedinasan khusus aparatur Setjen DPD RI" },
+  { value: "umum", label: "🌐 Terbuka untuk Umum", description: "Dapat diakses oleh publik dan seluruh pegawai" },
+];
+
 export const DEFAULT_COURSE_DATA = {
   title: "", 
   description: "", 
   image: "", 
   file: "", 
   level: "", 
+  target_audience: "pegawai",
   category: ""
 };
 

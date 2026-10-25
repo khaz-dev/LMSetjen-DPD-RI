@@ -335,13 +335,13 @@
 /* ================================
    3. FORM BODY & SECTION STYLES
    ================================ */
-.form-body-modern {
+.instructor-course-create-page .form-body-modern {
     padding: 0 !important;
     margin: 0 !important;
 }
 
 /* Compact Form Section */
-.form-section {
+.instructor-course-create-page .form-section {
     background: #ffffff;
     border-radius: 12px;
     padding: 1rem 1.15rem !important;
@@ -352,13 +352,13 @@
     position: relative;
 }
 
-.form-section:hover {
+.instructor-course-create-page .form-section:hover {
     border-color: rgba(15, 118, 110, 0.25);
     box-shadow: 0 4px 16px rgba(15, 118, 110, 0.06);
 }
 
 /* Compact Section Titles - Clean & Proportional */
-.form-section .section-title {
+.instructor-course-create-page .form-section .section-title {
     color: #0f172a;
     font-weight: 700;
     font-size: 0.95rem;
@@ -367,11 +367,11 @@
     align-items: center;
 }
 
-.form-section .section-title::after {
+.instructor-course-create-page .form-section .section-title::after {
     display: none !important; /* Remove giant 60px thick line */
 }
 
-.form-section .section-title i {
+.instructor-course-create-page .form-section .section-title i {
     color: #0f766e;
     font-size: 1rem;
 }
@@ -806,7 +806,7 @@
     transform: translateY(-1px);
 }
 
-.btn-outline-teal {
+.instructor-course-create-page .btn-outline-teal {
     color: #0f766e !important;
     border: 1.5px solid #0f766e !important;
     background: #ffffff !important;
@@ -821,7 +821,7 @@
     transition: all 0.2s ease !important;
 }
 
-.btn-outline-teal:hover:not(:disabled) {
+.instructor-course-create-page .btn-outline-teal:hover:not(:disabled) {
     background: #0f766e !important;
     color: #ffffff !important;
     border-color: #0f766e !important;
@@ -829,7 +829,7 @@
     transform: translateY(-1px);
 }
 
-.btn-outline-secondary {
+.instructor-course-create-page .btn-outline-secondary {
     color: #334155 !important;
     border: 1.5px solid #cbd5e1 !important;
     background: #ffffff !important;
@@ -840,7 +840,7 @@
     transition: all 0.2s ease !important;
 }
 
-.btn-outline-secondary:hover:not(:disabled) {
+.instructor-course-create-page .btn-outline-secondary:hover:not(:disabled) {
     background: #f1f5f9 !important;
     color: #0f172a !important;
     border-color: #94a3b8 !important;
@@ -951,12 +951,12 @@
         padding: 0.5rem 0.75rem;
     }
     
-    .form-body-modern {
+    .instructor-course-create-page .form-body-modern {
         padding: 0 !important;
         margin: 0 !important;
     }
     
-    .form-section {
+    .instructor-course-create-page .form-section {
         padding: 0.85rem !important;
         margin-bottom: 0.75rem !important;
     }
@@ -981,12 +981,12 @@
         font-size: 1.1rem;
     }
     
-    .form-body-modern {
+    .instructor-course-create-page .form-body-modern {
         padding: 0 !important;
         margin: 0 !important;
     }
     
-    .form-section {
+    .instructor-course-create-page .form-section {
         padding: 0.75rem !important;
         margin-bottom: 0.75rem !important;
     }
@@ -999,7 +999,7 @@
         padding: 0.75rem;
     }
     
-    .form-section .section-title {
+    .instructor-course-create-page .form-section .section-title {
         font-size: 0.9rem;
     }
 }
@@ -1086,15 +1086,15 @@
         flex-wrap: wrap;
     }
 
-    .create-header-modern {
+    .instructor-course-create-page .create-header-modern {
         padding: 1rem;
     }
 
-    .form-body-modern {
+    .instructor-course-create-page .form-body-modern {
         padding: 0;
     }
 
-    .form-section {
+    .instructor-course-create-page .form-section {
         padding: 1rem;
     }
 }

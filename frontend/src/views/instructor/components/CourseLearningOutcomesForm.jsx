@@ -225,24 +225,25 @@ function CourseLearningOutcomesForm({ courseId, onOutcomesUpdate }) {
                     <div className="mt-3 d-flex gap-2">
                         <button
                             type="button"
-                            className="btn btn-primary"
+                            className="btn btn-teal btn-sm d-inline-flex align-items-center gap-2"
                             onClick={handleAddOutcome}
                             disabled={loading}
+                            style={{ padding: "6px 14px", fontSize: "0.8125rem", fontWeight: "600", minHeight: "34px" }}
                         >
                             {loading ? (
                                 <>
-                                    <span className="spinner-border spinner-border-sm me-2" />
-                                    Menyimpan...
+                                    <span className="spinner-border spinner-border-sm" />
+                                    <span>Menyimpan...</span>
                                 </>
                             ) : editingId ? (
                                 <>
-                                    <i className="fas fa-save me-2"></i>
-                                    Perbarui Hasil Pembelajaran
+                                    <i className="fas fa-save"></i>
+                                    <span>Perbarui Hasil Pembelajaran</span>
                                 </>
                             ) : (
                                 <>
-                                    <i className="fas fa-plus me-2"></i>
-                                    Tambah Hasil Pembelajaran
+                                    <i className="fas fa-plus"></i>
+                                    <span>Tambah Hasil Pembelajaran</span>
                                 </>
                             )}
                         </button>
@@ -250,11 +251,12 @@ function CourseLearningOutcomesForm({ courseId, onOutcomesUpdate }) {
                         {editingId && (
                             <button
                                 type="button"
-                                className="btn btn-secondary"
+                                className="btn btn-secondary btn-sm d-inline-flex align-items-center"
                                 onClick={handleCancel}
                                 disabled={loading}
+                                style={{ padding: "6px 14px", fontSize: "0.8125rem", minHeight: "34px" }}
                             >
-                                Batal
+                                <span>Batal</span>
                             </button>
                         )}
                     </div>

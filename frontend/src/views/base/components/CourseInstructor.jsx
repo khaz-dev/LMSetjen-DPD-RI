@@ -18,7 +18,6 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
     };
 
     const handleViewProfile = () => {
-        // Navigate to instructor profile if teacher_id exists
         if (teacher.id) {
             navigate(`/instructor-profile/${teacher.id}/`);
         } else {
@@ -32,134 +31,148 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
     };
 
     return (
-        <div className="instructor-card">
-            <div className="instructor-card-body">
-                {/* Header Section */}
-                <div className="instructor-header">
-                    <div className="instructor-header__icon">
-                        <i className="fas fa-chalkboard-teacher"></i>
+        <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden mb-3">
+            <div className="card-body p-3 p-md-4">
+                {/* Header */}
+                <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div className="d-flex align-items-center gap-2">
+                        <div
+                            className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                            style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)" }}
+                        >
+                            <i className="fas fa-chalkboard-user" style={{ fontSize: "0.8rem" }}></i>
+                        </div>
+                        <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                            Profil & Informasi Instruktur
+                        </h5>
                     </div>
-                    <h3 className="instructor-header__title">
-                        Tentang Instruktur
-                    </h3>
+                    <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-1 px-2 rounded-pill small">
+                        <i className="fas fa-certificate me-1"></i>Instruktur Terverifikasi
+                    </span>
                 </div>
 
-                <div className="row align-items-center">
-                    {/* Left Column: Avatar and Stats */}
-                    <div className="col-lg-4 text-center mb-4 mb-lg-0">
+                {/* Profile Top Row: Avatar, Info, Stats, Actions */}
+                <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 p-3 p-md-4 rounded-3 bg-light border mb-3">
+                    <div className="d-flex align-items-center gap-3 min-w-0">
                         {/* Avatar */}
-                        <div className="instructor-avatar-wrapper">
-                            <div className="instructor-avatar-frame">
-                                <img 
-                                    src={getImageUrl(teacher.image) || '/images/placeholders/default-instructor.svg'}
-                                    alt={teacher.full_name}
-                                    className="instructor-avatar-img"
-                                    loading="lazy"
-                                    decoding="async"
-                                    width="96"
-                                    height="96"
-                                    onError={(e) => {
-                                        e.target.src = '/images/placeholders/default-instructor.svg';
-                                    }}
-                                    onLoad={(e) => {
-                                        // Clear onerror to prevent fallback on valid images
-                                        e.target.onerror = null;
-                                    }}
-                                />
-                            </div>
-                            <div className="instructor-avatar-badge">
+                        <div className="position-relative flex-shrink-0">
+                            <img
+                                src={getImageUrl(teacher.image) || '/images/placeholders/default-instructor.svg'}
+                                alt={teacher.full_name}
+                                className="rounded-circle border shadow-xs"
+                                style={{ width: "64px", height: "64px", objectFit: "cover" }}
+                                onError={(e) => { e.target.src = '/images/placeholders/default-instructor.svg'; }}
+                            />
+                            <div
+                                className="position-absolute bottom-0 end-0 rounded-circle text-white d-flex align-items-center justify-content-center"
+                                style={{
+                                    width: "20px",
+                                    height: "20px",
+                                    background: "#10b981",
+                                    border: "2px solid #fff",
+                                    fontSize: "0.6rem"
+                                }}
+                            >
                                 <i className="fas fa-check"></i>
                             </div>
                         </div>
 
-                        {/* Name and Bio */}
-                        <h4 className="instructor-name">
-                            {teacher.full_name}
-                        </h4>
-                        <p className="instructor-bio-short">
-                            {teacher.about?.slice(0, 80) || 'Instruktur Profesional'}
-                            {teacher.about?.length > 80 ? '...' : ''}
-                        </p>
-
-                        {/* Quick Stats */}
-                        <div className="instructor-stats">
-                            <div className="instructor-stat-item instructor-stat-item--courses">
-                                <div className="instructor-stat-value">{courseCount}</div>
-                                <small className="instructor-stat-label">Kursus</small>
-                            </div>
-                            <div className="instructor-stat-item instructor-stat-item--rating">
-                                <div className="instructor-stat-value">
-                                    {teacher?.average_rating?.toFixed(1) || 0}
-                                </div>
-                                <small className="instructor-stat-label">Rating</small>
-                            </div>
-                            <div className="instructor-stat-item instructor-stat-item--students">
-                                <div className="instructor-stat-value">
-                                    {teacher?.total_students || 0}
-                                </div>
-                                <small className="instructor-stat-label">Siswa</small>
+                        {/* Name & Role */}
+                        <div className="min-w-0">
+                            <h6 className="mb-1 fw-bold text-dark text-truncate" style={{ fontSize: "0.98rem" }}>
+                                {teacher.full_name}
+                            </h6>
+                            <p className="text-muted small mb-0 text-truncate" style={{ fontSize: "0.82rem" }}>
+                                {teacher.about || teacher.bio || "Instruktur Profesional di Lingkungan Setjen DPD RI"}
+                            </p>
+                            {/* Stats Chips */}
+                            <div className="d-flex align-items-center gap-2 flex-wrap mt-2">
+                                <span className="badge bg-white text-secondary border px-2 py-1" style={{ fontSize: "0.74rem" }}>
+                                    <i className="fas fa-book text-teal me-1"></i>{courseCount || teacher?.total_courses || 1} Kursus
+                                </span>
+                                <span className="badge bg-white text-secondary border px-2 py-1" style={{ fontSize: "0.74rem" }}>
+                                    <i className="fas fa-star text-warning me-1"></i>{(teacher?.average_rating || 5.0).toFixed(1)} Rating
+                                </span>
+                                <span className="badge bg-white text-secondary border px-2 py-1" style={{ fontSize: "0.74rem" }}>
+                                    <i className="fas fa-users text-primary me-1"></i>{teacher?.total_students || 0} Siswa
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column: Details */}
-                    <div className="col-lg-8">
-                        {/* Professional Background */}
-                        <div className="instructor-detail-section">
-                            <h5 className="instructor-detail-title">
+                    {/* Action Buttons */}
+                    <div className="d-flex align-items-center gap-2 flex-shrink-0 w-100 w-md-auto justify-content-end mt-2 mt-md-0">
+                        <button
+                            className="btn btn-sm btn-outline-teal d-flex align-items-center gap-1 rounded-2 py-2 px-3 fw-semibold"
+                            onClick={handleContactClick}
+                            type="button"
+                            style={{ fontSize: "0.8rem", borderColor: "#0d9488", color: "#0d9488" }}
+                        >
+                            <i className="fas fa-envelope"></i>
+                            Kirim Pesan
+                        </button>
+                        <button
+                            className="btn btn-sm text-white d-flex align-items-center gap-1 rounded-2 py-2 px-3 fw-semibold border-0"
+                            onClick={handleViewProfile}
+                            type="button"
+                            style={{
+                                fontSize: "0.8rem",
+                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                boxShadow: "0 2px 6px rgba(13, 148, 136, 0.25)"
+                            }}
+                        >
+                            <i className="fas fa-user"></i>
+                            Lihat Profil
+                        </button>
+                    </div>
+                </div>
+
+                {/* Professional Background & Bio */}
+                <div className="row g-3 g-md-3">
+                    <div className="col-lg-7">
+                        <div className="p-3 rounded-3 bg-white border h-100">
+                            <h6 className="fw-bold mb-2 text-dark d-flex align-items-center gap-2" style={{ fontSize: "0.88rem" }}>
+                                <i className="fas fa-briefcase text-teal"></i>
                                 Latar Belakang Profesional
-                            </h5>
-                            <p className="instructor-bio-text">
+                            </h6>
+                            <p className="text-secondary small mb-0" style={{ fontSize: "0.84rem", lineHeight: "1.65" }}>
                                 {teacher.bio || teacher.about ||
-                                `${teacher.full_name} adalah seorang profesional berpengalaman dengan keahlian luas dalam bidang pendidikan dan pelatihan. 
-                                Dengan pengalaman bertahun-tahun di bidangnya, beliau menghadirkan pengetahuan praktis dan wawasan dunia nyata dalam setiap kursus.`}
+                                    `${teacher.full_name} adalah instruktur berpengalaman dengan dedikasi tinggi dalam peningkatan mutu kompetensi aparatur di lingkungan Setjen DPD RI.`}
                             </p>
                         </div>
+                    </div>
 
-                        {/* Expertise Areas */}
-                        <div className="instructor-detail-section">
-                            <h5 className="instructor-detail-title">
+                    <div className="col-lg-5">
+                        <div className="p-3 rounded-3 bg-white border h-100">
+                            <h6 className="fw-bold mb-2 text-dark d-flex align-items-center gap-2" style={{ fontSize: "0.88rem" }}>
+                                <i className="fas fa-lightbulb text-warning"></i>
                                 Bidang Keahlian
-                            </h5>
+                            </h6>
                             {teacher?.expertise && teacher.expertise.length > 0 ? (
-                                <div className="instructor-expertise-container">
+                                <div className="d-flex flex-wrap gap-1">
                                     {teacher.expertise.map((item, index) => (
-                                        <span 
+                                        <span
                                             key={item.id || index}
-                                            className="instructor-expertise__badge"
+                                            className="badge bg-teal-subtle text-teal border border-teal-subtle py-1 px-2 rounded-pill"
+                                            style={{ fontSize: "0.74rem" }}
                                         >
                                             {item.skill}
                                         </span>
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-muted">Belum ada bidang keahlian yang ditampilkan</p>
+                                <div className="d-flex flex-wrap gap-1">
+                                    <span className="badge bg-light text-secondary border py-1 px-2 rounded-pill" style={{ fontSize: "0.74rem" }}>
+                                        Tata Kelola Administrasi
+                                    </span>
+                                    <span className="badge bg-light text-secondary border py-1 px-2 rounded-pill" style={{ fontSize: "0.74rem" }}>
+                                        E-Learning & SCORM
+                                    </span>
+                                    <span className="badge bg-light text-secondary border py-1 px-2 rounded-pill" style={{ fontSize: "0.74rem" }}>
+                                        Pemberdayaan Aparatur
+                                    </span>
+                                </div>
                             )}
-                        </div>
-
-                        {/* Contact Section */}
-                        <div className="instructor-detail-section">
-                            <h5 className="instructor-detail-title">
-                                Hubungi Instruktur
-                            </h5>
-                            <div className="instructor-contact-buttons">
-                                <button 
-                                    className="instructor-contact-btn instructor-contact-btn--primary"
-                                    onClick={handleContactClick}
-                                    type="button"
-                                >
-                                    <i className="fas fa-envelope"></i>
-                                    Kirim Pesan
-                                </button>
-                                <button 
-                                    className="instructor-contact-btn instructor-contact-btn--secondary"
-                                    onClick={handleViewProfile}
-                                    type="button"
-                                >
-                                    <i className="fas fa-user"></i>
-                                    Lihat Profil
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>

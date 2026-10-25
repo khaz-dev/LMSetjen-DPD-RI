@@ -1024,16 +1024,96 @@ section[style*="minHeight:calc(100vh - 120px)"] .row {
    ======================================== */
 
 /* ========================================
-   GLOBAL BADGES CONTAINER ALIGNMENT
-   Ensures all badges/role-indicators align to top when wrapped
+   GLOBAL TEAL BUTTONS & SUBTLE STATUS BADGES
+   Consistent design system tokens across entire application
    ======================================== */
 
-.badges-container {
-    align-items: flex-start !important;
-    align-content: flex-start !important;
+.btn-teal {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%) !important;
+    border-color: #0f766e !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-teal:hover {
+    background: linear-gradient(135deg, #115e59 0%, #0d9488 100%) !important;
+    border-color: #115e59 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
+}
+
+.btn-teal:active {
+    transform: translateY(0);
+}
+
+.btn-outline-teal {
+    color: #0f766e !important;
+    border: 1px solid #0f766e !important;
+    background-color: transparent !important;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-teal:hover {
+    color: #ffffff !important;
+    background-color: #0f766e !important;
+    border-color: #0f766e !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 118, 110, 0.25);
+}
+
+.btn-outline-teal:active {
+    transform: translateY(0);
+}
+
+.text-teal {
+    color: #0f766e !important;
+}
+
+.bg-teal {
+    background-color: #0f766e !important;
+    color: #ffffff !important;
+}
+
+.bg-teal-subtle {
+    background-color: #f0fdfa !important;
+    color: #0f766e !important;
+}
+
+.border-teal-subtle {
+    border-color: #ccfbf1 !important;
+}
+
+.bg-emerald-subtle {
+    background-color: #ecfdf5 !important;
+    color: #059669 !important;
+}
+
+.text-emerald {
+    color: #059669 !important;
+}
+
+.bg-amber-subtle {
+    background-color: #fffbeb !important;
+    color: #d97706 !important;
+}
+
+.text-amber {
+    color: #d97706 !important;
+}
+
+.bg-danger-subtle {
+    background-color: #fef2f2 !important;
+    color: #dc2626 !important;
+}
+
+.text-danger {
+    color: #dc2626 !important;
 }
 
 /* ========================================
-   END GLOBAL BADGES CONTAINER ALIGNMENT
+   END GLOBAL TEAL BUTTONS & SUBTLE STATUS BADGES
    ======================================== */
 

@@ -5,36 +5,35 @@
 /* Main Card Container */
 .instructor-card {
     border: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    border-radius: 20px;
-    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    border-radius: 14px;
+    margin-bottom: 1rem;
     background: white;
     overflow: hidden;
     transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .instructor-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
 
 .instructor-card-body {
-    padding: 2rem;
+    padding: 1.25rem 1.5rem;
 }
 
 /* Header Section */
 .instructor-header {
     display: flex;
     align-items: center;
-    margin-bottom: 2rem;
-    gap: 1rem;
+    margin-bottom: 1.25rem;
+    gap: 0.75rem;
 }
 
 .instructor-header__icon {
-    width: 50px;
-    height: 50px;
+    width: 34px;
+    height: 34px;
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    border-radius: 15px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;

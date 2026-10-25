@@ -605,29 +605,29 @@
    Buttons
    ======================================== */
 
-.btn {
+.kelola-material-page-wrapper .btn {
     border-radius: 10px;
     font-weight: 600;
     transition: all 0.3s ease;
     border: none;
 }
 
-.btn-primary {
+.kelola-material-page-wrapper .btn-primary {
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
     color: white;
 }
 
-.btn-primary:hover {
+.kelola-material-page-wrapper .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4) !important;
 }
 
-.btn-outline-secondary {
+.kelola-material-page-wrapper .btn-outline-secondary {
     color: #64748b;
     border: 1.5px solid #e2e8f0;
 }
 
-.btn-outline-secondary:hover {
+.kelola-material-page-wrapper .btn-outline-secondary:hover {
     background: #f8fafc;
     border-color: #cbd5e1;
     color: #1e293b;

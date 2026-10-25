@@ -145,67 +145,67 @@
 /* NO override or conflicting properties here */
 
 /* Ensure all interactive elements and their children have proper cursor pointer */
-button, 
-.btn, 
-.btn-update-course,
-.btn-primary,
-.btn-secondary,
-.btn-danger,
-.btn-warning,
-.btn-success,
-.btn-info,
-[role="button"],
-.file-upload-area,
-.drag-drop-area,
-.form-control:not([readonly]),
-.form-select,
-.form-check-input,
-.form-check-label,
-a[href]:not(.disabled),
-.nav-link,
-.dropdown-toggle {
+.instructor-course-edit-page button, 
+.instructor-course-edit-page .btn, 
+.instructor-course-edit-page .btn-update-course,
+.instructor-course-edit-page .btn-primary,
+.instructor-course-edit-page .btn-secondary,
+.instructor-course-edit-page .btn-danger,
+.instructor-course-edit-page .btn-warning,
+.instructor-course-edit-page .btn-success,
+.instructor-course-edit-page .btn-info,
+.instructor-course-edit-page [role="button"],
+.instructor-course-edit-page .file-upload-area,
+.instructor-course-edit-page .drag-drop-area,
+.instructor-course-edit-page .form-control:not([readonly]),
+.instructor-course-edit-page .form-select,
+.instructor-course-edit-page .form-check-input,
+.instructor-course-edit-page .form-check-label,
+.instructor-course-edit-page a[href]:not(.disabled),
+.instructor-course-edit-page .nav-link,
+.instructor-course-edit-page .dropdown-toggle {
     cursor: pointer !important;
 }
 
 /* Ensure all text elements inside clickable elements inherit pointer cursor */
-button *,
-.btn *,
-.btn-update-course *,
-[role="button"] *,
-.file-upload-area *,
-.drag-drop-area *,
-.form-check-label *,
-a[href]:not(.disabled) *,
-.nav-link *,
-.dropdown-toggle * {
+.instructor-course-edit-page button *,
+.instructor-course-edit-page .btn *,
+.instructor-course-edit-page .btn-update-course *,
+.instructor-course-edit-page [role="button"] *,
+.instructor-course-edit-page .file-upload-area *,
+.instructor-course-edit-page .drag-drop-area *,
+.instructor-course-edit-page .form-check-label *,
+.instructor-course-edit-page a[href]:not(.disabled) *,
+.instructor-course-edit-page .nav-link *,
+.instructor-course-edit-page .dropdown-toggle * {
     cursor: inherit !important;
 }
 
 /* Override text cursor on clickable text elements */
-button span,
-button i,
-button div,
-.btn span,
-.btn i,
-.btn div,
-.btn-update-course span,
-.btn-update-course i,
-.file-upload-area p,
-.file-upload-area span,
-.file-upload-area i,
-.drag-drop-area p,
-.drag-drop-area span,
-.drag-drop-area i,
-.form-check-label span,
-.nav-link span,
-.nav-link i {
+.instructor-course-edit-page button span,
+.instructor-course-edit-page button i,
+.instructor-course-edit-page button div,
+.instructor-course-edit-page .btn span,
+.instructor-course-edit-page .btn i,
+.instructor-course-edit-page .btn div,
+.instructor-course-edit-page .btn-update-course span,
+.instructor-course-edit-page .btn-update-course i,
+.instructor-course-edit-page .file-upload-area p,
+.instructor-course-edit-page .file-upload-area span,
+.instructor-course-edit-page .file-upload-area i,
+.instructor-course-edit-page .drag-drop-area p,
+.instructor-course-edit-page .drag-drop-area span,
+.instructor-course-edit-page .drag-drop-area i,
+.instructor-course-edit-page .form-check-label span,
+.instructor-course-edit-page .nav-link span,
+.instructor-course-edit-page .nav-link i {
     cursor: pointer !important;
 }
 
 /* ================================
    DESIGN SYSTEM VARIABLES
    ================================ */
-:root {
+.instructor-course-edit-page {
     /* Instructor Color Palette - Matching Header Theme */
     --instructor-primary: #0f766e;
     --instructor-primary-dark: #115e59;
@@ -436,8 +436,8 @@ button div,
     line-height: 1.4;
 }
 
-.form-control,
-.form-select {
+.instructor-course-edit-page .form-control,
+.instructor-course-edit-page .form-select {
     border: 2px solid var(--neutral-200);
     border-radius: var(--radius-md);
     padding: var(--space-md) var(--space-lg);
@@ -449,28 +449,28 @@ button div,
     color: var(--neutral-700);
 }
 
-.form-control:focus,
-.form-select:focus {
+.instructor-course-edit-page .form-control:focus,
+.instructor-course-edit-page .form-select:focus {
     border-color: var(--instructor-primary);
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
     outline: none;
     transform: translateY(-1px);
 }
 
-.form-control::placeholder {
+.instructor-course-edit-page .form-control::placeholder {
     color: var(--neutral-400);
     font-weight: 400;
 }
 
 /* ✨ PHASE 4.25: Improved select option styling for better visibility */
-.form-select option {
+.instructor-course-edit-page .form-select option {
     background: white !important;
     color: var(--neutral-700) !important;
     padding: 0.5rem 1rem;
     font-weight: 500;
 }
 
-.form-select option:checked {
+.instructor-course-edit-page .form-select option:checked {
     background: linear-gradient(rgba(52, 152, 219, 0.15), rgba(52, 152, 219, 0.15)), white !important;
     background-color: #e7f5ff !important;
     color: #094af3 !important;
@@ -478,20 +478,20 @@ button div,
     box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.3);
 }
 
-.form-select option:hover {
+.instructor-course-edit-page .form-select option:hover {
     background: #f0f7ff !important;
     color: var(--neutral-700) !important;
 }
 
-.form-select option:disabled {
+.instructor-course-edit-page .form-select option:disabled {
     background: #f8f9fa !important;
     color: #6c757d !important;
     opacity: 0.5;
 }
 
 /* Validation States */
-.form-control.is-valid,
-.form-select.is-valid {
+.instructor-course-edit-page .form-control.is-valid,
+.instructor-course-edit-page .form-select.is-valid {
     border-color: var(--success-color);
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2310b981' d='m2.3 6.73.94-.94 4.94-4.94'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
@@ -499,8 +499,8 @@ button div,
     background-size: 1rem;
 }
 
-.form-control.is-invalid,
-.form-select.is-invalid {
+.instructor-course-edit-page .form-control.is-invalid,
+.instructor-course-edit-page .form-select.is-invalid {
     border-color: var(--error-color);
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23ef4444'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m6 3v3.75'/%3e%3cpath d='m6 8.25h.007'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
@@ -509,8 +509,8 @@ button div,
     animation: shake 0.4s ease-in-out;
 }
 
-.form-control.is-warning,
-.form-select.is-warning {
+.instructor-course-edit-page .form-control.is-warning,
+.instructor-course-edit-page .form-select.is-warning {
     border-color: var(--warning-color);
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23f59e0b'%3e%3cpath d='m6 3v3.75'/%3e%3cpath d='m6 8.25h.007'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
@@ -521,7 +521,7 @@ button div,
 /* ================================
    VALIDATION FEEDBACK
    ================================ */
-.invalid-feedback {
+.instructor-course-edit-page .invalid-feedback {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
@@ -532,7 +532,7 @@ button div,
     animation: slideInDown var(--transition-fast);
 }
 
-.warning-feedback {
+.instructor-course-edit-page .warning-feedback {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
@@ -543,7 +543,7 @@ button div,
     animation: slideInDown var(--transition-fast);
 }
 
-.valid-feedback {
+.instructor-course-edit-page .valid-feedback {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
@@ -893,7 +893,7 @@ button div,
 /* ================================
    BUTTONS
    ================================ */
-.btn-update-course {
+.instructor-course-edit-page .btn-update-course {
     background: var(--instructor-gradient);
     border: none;
     padding: var(--space-md) var(--space-2xl);
@@ -909,7 +909,7 @@ button div,
     overflow: hidden;
 }
 
-.btn-update-course::before {
+.instructor-course-edit-page .btn-update-course::before {
     content: '';
     position: absolute;
     top: 0;
@@ -920,22 +920,22 @@ button div,
     transition: left 0.6s ease;
 }
 
-.btn-update-course:hover {
+.instructor-course-edit-page .btn-update-course:hover {
     transform: translateY(-3px);
     box-shadow: 0 15px 35px rgba(52, 152, 219, 0.4);
     background: var(--instructor-gradient-hover);
     color: white;
 }
 
-.btn-update-course:hover::before {
+.instructor-course-edit-page .btn-update-course:hover::before {
     left: 100%;
 }
 
-.btn-update-course:active {
+.instructor-course-edit-page .btn-update-course:active {
     transform: translateY(-1px);
 }
 
-.btn-update-course:disabled {
+.instructor-course-edit-page .btn-update-course:disabled {
     opacity: 0.6;
     transform: none;
     box-shadow: var(--shadow-md);
@@ -943,18 +943,18 @@ button div,
 }
 
 /* Enhanced Button States */
-.btn-update-course.submitting {
+.instructor-course-edit-page .btn-update-course.submitting {
     background: linear-gradient(135deg, var(--info-color) 0%, #0f766e 100%);
     cursor: wait;
     animation: pulse 2s infinite;
 }
 
-.btn-update-course.success {
+.instructor-course-edit-page .btn-update-course.success {
     background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
     animation: successPulse 0.6s ease-out;
 }
 
-.btn-update-course.error {
+.instructor-course-edit-page .btn-update-course.error {
     background: linear-gradient(135deg, var(--error-color) 0%, #dc2626 100%);
     animation: shake 0.5s ease-out;
 }
@@ -970,17 +970,28 @@ button div,
     50% { opacity: 1; }
 }
 
-.btn-outline-primary {
-    border: 2px solid var(--instructor-primary);
+.instructor-course-edit-page .btn-outline-primary {
+    border: 1.5px solid var(--instructor-primary);
     color: var(--instructor-primary);
     background: transparent;
-    padding: var(--space-md) var(--space-xl);
-    border-radius: var(--radius-full);
+    padding: 6px 14px !important;
+    font-size: 0.8125rem !important;
+    border-radius: 8px !important;
     font-weight: 600;
+    min-height: 34px !important;
     transition: all var(--transition-normal);
 }
 
-.btn-outline-primary:hover {
+.instructor-course-edit-page .preview-buttons .btn,
+.instructor-course-edit-page .btn-outline-success {
+    padding: 6px 14px !important;
+    font-size: 0.8125rem !important;
+    border-radius: 8px !important;
+    min-height: 34px !important;
+    font-weight: 600;
+}
+
+.instructor-course-edit-page .btn-outline-primary:hover {
     background: var(--instructor-primary);
     color: white;
     transform: translateY(-2px);
@@ -1105,54 +1116,54 @@ button div,
    RESPONSIVE DESIGN
    ================================ */
 @media (max-width: 768px) {
-    .course-form-header {
+    .instructor-course-edit-page .course-form-header {
         padding: var(--space-xl);
     }
     
-    .course-form-header h3 {
+    .instructor-course-edit-page .course-form-header h3 {
         font-size: 1.75rem;
     }
     
-    .card-body {
+    .instructor-course-edit-page .card-body {
         padding: var(--space-xl) !important;
     }
     
-    .image-preview {
+    .instructor-course-edit-page .image-preview {
         height: 220px;
     }
     
-    .form-section {
+    .instructor-course-edit-page .form-section {
         margin-bottom: var(--space-xl);
     }
     
-    .btn-update-course {
+    .instructor-course-edit-page .btn-update-course {
         padding: var(--space-md) var(--space-xl);
         font-size: 1rem;
     }
 }
 
 @media (max-width: 576px) {
-    .course-form-header {
+    .instructor-course-edit-page .course-form-header {
         padding: var(--space-lg);
     }
     
-    .course-form-header h3 {
+    .instructor-course-edit-page .course-form-header h3 {
         font-size: 1.5rem;
     }
     
-    .card-body {
+    .instructor-course-edit-page .card-body {
         padding: var(--space-lg) !important;
     }
     
-    .section-title {
+    .instructor-course-edit-page .section-title {
         font-size: 1.25rem;
     }
     
-    .image-preview {
+    .instructor-course-edit-page .image-preview {
         height: 200px;
     }
     
-    .file-upload-area {
+    .instructor-course-edit-page .file-upload-area {
         padding: var(--space-xl);
     }
 }
@@ -1173,9 +1184,9 @@ button div,
 }
 
 /* Focus indicators */
-.form-control:focus,
-.form-select:focus,
-.btn:focus {
+.instructor-course-edit-page .form-control:focus,
+.instructor-course-edit-page .form-select:focus,
+.instructor-course-edit-page .btn:focus {
     outline: 2px solid var(--instructor-primary);
     outline-offset: 2px;
 }
@@ -1281,74 +1292,9 @@ button div,
     50% { background-position: -200% 0; }
 }
 
-/* Modern Form Body */
-.form-body-modern {
-    padding: 0;
-    margin: 0;
-}
-
-/* Enhanced Section Styling */
-.form-section {
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 15px;
-    padding: 1.5rem !important;
-    margin-bottom: 1.5rem;
-    border: 1px solid rgba(52, 152, 219, 0.1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.form-section:hover {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-    border-color: rgba(52, 152, 219, 0.2);
-}
-
-.form-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--instructor-primary), transparent);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.form-section:hover::before {
-    opacity: 1;
-}
-
-/* Enhanced Section Titles */
-.section-title {
-    color: var(--neutral-800);
-    font-weight: 700;
-    font-size: 1.5rem;
-    margin-bottom: var(--space-lg);
-    padding-bottom: var(--space-sm);
-    position: relative;
-    display: inline-block;
-}
-
-.section-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    border-radius: 2px;
-}
-
-.section-title i {
-    color: var(--instructor-primary);
-    font-size: 1.2rem;
-}
-
 /* Modern Form Controls */
-.form-control, .form-select {
+.instructor-course-edit-page .form-control,
+.instructor-course-edit-page .form-select {
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     padding: 0.875rem 1rem;
@@ -1358,28 +1304,29 @@ button div,
     backdrop-filter: blur(5px);
 }
 
-.form-control:focus, .form-select:focus {
+.instructor-course-edit-page .form-control:focus,
+.instructor-course-edit-page .form-select:focus {
     border-color: var(--instructor-primary);
     box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
     background: rgba(255, 255, 255, 1);
 }
 
 /* Enhanced Button Styling */
-.btn-update-course {
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-    border: none;
-    border-radius: 12px;
-    padding: 0.875rem 2rem;
-    font-weight: 600;
-    font-size: 1rem;
-    color: white;
+.instructor-course-edit-page .btn-update-course {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 0.875rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    color: white !important;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 8px 20px rgba(15, 118, 110, 0.3) !important;
 }
 
-.btn-update-course::before {
+.instructor-course-edit-page .btn-update-course::before {
     content: '';
     position: absolute;
     top: 0;
@@ -1390,19 +1337,22 @@ button div,
     transition: left 0.5s ease;
 }
 
-.btn-update-course:hover::before {
+.instructor-course-edit-page .btn-update-course:hover::before {
     left: 100%;
 }
 
-.btn-update-course:hover {
+.instructor-course-edit-page .btn-update-course:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(52, 152, 219, 0.4);
+    box-shadow: 0 12px 30px rgba(15, 118, 110, 0.4) !important;
+    background: linear-gradient(135deg, #115e59 0%, #0d9488 100%) !important;
+    color: white !important;
 }
 
-.btn-update-course:disabled {
-    opacity: 0.7;
-    transform: none;
-    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+.instructor-course-edit-page .btn-update-course:disabled {
+    opacity: 0.7 !important;
+    transform: none !important;
+    box-shadow: 0 4px 15px rgba(15, 118, 110, 0.2) !important;
+    cursor: not-allowed !important;
 }
 
 /* Enhanced Status Badge */
@@ -1690,7 +1640,7 @@ button div,
 }
 
 /* Enhanced Preview Button */
-.btn-outline-primary {
+.instructor-course-edit-page .btn-outline-primary {
     border: 2px solid var(--instructor-primary);
     color: var(--instructor-primary);
     background: transparent;
@@ -1703,7 +1653,7 @@ button div,
     overflow: hidden;
 }
 
-.btn-outline-primary::before {
+.instructor-course-edit-page .btn-outline-primary::before {
     content: '';
     position: absolute;
     top: 0;
@@ -1714,11 +1664,11 @@ button div,
     transition: left 0.5s ease;
 }
 
-.btn-outline-primary:hover::before {
+.instructor-course-edit-page .btn-outline-primary:hover::before {
     left: 100%;
 }
 
-.btn-outline-primary:hover {
+.instructor-course-edit-page .btn-outline-primary:hover {
     background: var(--instructor-primary);
     color: white;
     transform: translateY(-2px);
@@ -1726,7 +1676,7 @@ button div,
     text-decoration: none;
 }
 
-.btn-outline-primary:disabled {
+.instructor-course-edit-page .btn-outline-primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
@@ -2202,9 +2152,24 @@ div.form-check.modern-form-check {
 }
 
 .instructor-course-edit-page .form-section {
-    margin-bottom: 1rem !important;
-    padding-bottom: 1rem !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin-bottom: 1.15rem !important;
+    padding: 0 !important;
+    padding-bottom: 1.15rem !important;
     border-bottom: 1px solid #f1f5f9 !important;
+    position: relative;
+}
+
+.instructor-course-edit-page .form-section:hover {
+    border-color: #f1f5f9 !important;
+    box-shadow: none !important;
+}
+
+.instructor-course-edit-page .form-section::before {
+    display: none !important;
 }
 
 .instructor-course-edit-page .form-section:last-child {
@@ -2222,6 +2187,10 @@ div.form-check.modern-form-check {
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
+}
+
+.instructor-course-edit-page .section-title::after {
+    display: none !important;
 }
 
 .instructor-course-edit-page .section-title i {
@@ -2349,4 +2318,98 @@ div.form-check.modern-form-check {
 
 .instructor-course-edit-page .alert h6 {
     font-size: 0.88rem !important;
+}
+
+/* ============================================================================
+   LOCAL ISOLATED UTILITIES FOR COURSE EDIT (Self-sufficient design)
+   ============================================================================ */
+.instructor-course-edit-page .btn-teal {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%) !important;
+    border-color: #0f766e !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 0.8125rem !important;
+    border-radius: 7px !important;
+    padding: 0.35rem 0.75rem !important;
+    transition: all 0.2s ease;
+}
+
+.instructor-course-edit-page .btn-teal:hover {
+    background: linear-gradient(135deg, #115e59 0%, #0d9488 100%) !important;
+    border-color: #115e59 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 118, 110, 0.25);
+}
+
+.instructor-course-edit-page .btn-outline-teal {
+    color: #0f766e !important;
+    border: 1px solid #0f766e !important;
+    background-color: transparent !important;
+    font-weight: 600;
+    font-size: 0.8125rem !important;
+    border-radius: 7px !important;
+    padding: 0.35rem 0.75rem !important;
+    transition: all 0.2s ease;
+}
+
+.instructor-course-edit-page .btn-outline-teal:hover {
+    color: #ffffff !important;
+    background-color: #0f766e !important;
+    border-color: #0f766e !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 118, 110, 0.25);
+}
+
+.instructor-course-edit-page .btn-outline-secondary {
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+    background-color: transparent !important;
+    font-weight: 600;
+    font-size: 0.8125rem !important;
+    border-radius: 7px !important;
+    padding: 0.35rem 0.75rem !important;
+    transition: all 0.2s ease;
+}
+
+.instructor-course-edit-page .btn-outline-secondary:hover {
+    color: #1e293b !important;
+    background-color: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+}
+
+.instructor-course-edit-page .text-teal {
+    color: #0f766e !important;
+}
+
+.instructor-course-edit-page .bg-teal-subtle {
+    background-color: #f0fdfa !important;
+    color: #0f766e !important;
+}
+
+.instructor-course-edit-page .bg-emerald-subtle {
+    background-color: #ecfdf5 !important;
+    color: #059669 !important;
+}
+
+.instructor-course-edit-page .text-emerald {
+    color: #059669 !important;
+}
+
+.instructor-course-edit-page .bg-amber-subtle {
+    background-color: #fffbeb !important;
+    color: #d97706 !important;
+}
+
+.instructor-course-edit-page .text-amber {
+    color: #d97706 !important;
+}
+
+.instructor-course-edit-page .bg-danger-subtle {
+    background-color: #fef2f2 !important;
+    color: #dc2626 !important;
+}
+
+.instructor-course-edit-page .text-danger {
+    color: #dc2626 !important;
 }

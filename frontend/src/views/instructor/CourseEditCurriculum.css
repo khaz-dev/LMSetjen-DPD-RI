@@ -883,7 +883,7 @@
    BUTTONS - Action Styling
    ============================================ */
 
-.btn-update-course {
+.instructor-course-edit-curriculum-page .btn-update-course {
     background: var(--theme-gradient) !important;
     border: none;
     color: #ffffff;
@@ -894,14 +894,14 @@
     box-shadow: 0 4px 12px var(--theme-shadow-color) !important;
 }
 
-.btn-update-course:hover {
+.instructor-course-edit-curriculum-page .btn-update-course:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px var(--theme-shadow-color) !important;
     background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary) 100%) !important;
     color: #ffffff;
 }
 
-.btn-update-course:disabled {
+.instructor-course-edit-curriculum-page .btn-update-course:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
@@ -1042,7 +1042,7 @@
    VALIDATION SUMMARY STYLING
    ============================================ */
 
-.validation-summary {
+.instructor-course-edit-curriculum-page .validation-summary {
     background: #fff5f5;
     border: 2px solid #fc8181;
     border-radius: 10px;
@@ -1050,23 +1050,23 @@
     margin-bottom: 20px;
 }
 
-.validation-errors {
+.instructor-course-edit-curriculum-page .validation-errors {
     color: #742a2a;
 }
 
-.validation-errors ul {
+.instructor-course-edit-curriculum-page .validation-errors ul {
     list-style: none;
     padding-left: 0;
     margin: 0;
 }
 
-.validation-errors ul li {
+.instructor-course-edit-curriculum-page .validation-errors ul li {
     padding: 6px 0;
     padding-left: 24px;
     position: relative;
 }
 
-.validation-errors ul li:before {
+.instructor-course-edit-curriculum-page .validation-errors ul li:before {
     content: "•";
     position: absolute;
     left: 8px;
@@ -1079,7 +1079,7 @@
    STATUS MESSAGE STYLING
    ============================================ */
 
-.status-message {
+.instructor-course-edit-curriculum-page .status-message {
     padding: 14px 20px;
     border-radius: 10px;
     margin-bottom: 20px;
@@ -1087,19 +1087,19 @@
     border: 2px solid;
 }
 
-.status-message.success {
+.instructor-course-edit-curriculum-page .status-message.success {
     background: #f0fff4;
     border-color: #48bb78;
     color: #22543d;
 }
 
-.status-message.error {
+.instructor-course-edit-curriculum-page .status-message.error {
     background: #fff5f5;
     border-color: #fc8181;
     color: #742a2a;
 }
 
-.status-message.submitting {
+.instructor-course-edit-curriculum-page .status-message.submitting {
     background: #ebf8ff;
     border-color: #0f766e;
     color: #115e59;
@@ -1243,15 +1243,15 @@
         flex-wrap: wrap;
     }
 
-    .create-header-modern {
+    .instructor-course-edit-curriculum-page .create-header-modern {
         padding: 1rem;
     }
 
-    .form-body-modern {
+    .instructor-course-edit-curriculum-page .form-body-modern {
         padding: 0;
     }
 
-    .form-section {
+    .instructor-course-edit-curriculum-page .form-section {
         padding: 1rem;
     }
 }

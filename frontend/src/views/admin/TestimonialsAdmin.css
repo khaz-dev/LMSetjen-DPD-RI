@@ -559,126 +559,68 @@
     color: white !important;
 }
 
-/* AGGRESSIVE: Override all button text content */
-.btn-success,
-button.btn-success {
+/* Scoped to Testimonials Admin Page to prevent global button pollution */
+.testimonials-admin-page .btn-success,
+.testimonials-admin-page button.btn-success {
     color: white !important;
 }
 
-.btn-success > span,
-button.btn-success > span {
+.testimonials-admin-page .btn-success > span,
+.testimonials-admin-page button.btn-success > span {
     color: white !important;
 }
 
-.btn-success i,
-button.btn-success i {
+.testimonials-admin-page .btn-success i,
+.testimonials-admin-page button.btn-success i {
     color: white !important;
 }
 
-.btn-danger,
-button.btn-danger {
+.testimonials-admin-page .btn-danger,
+.testimonials-admin-page button.btn-danger {
     color: white !important;
 }
 
-.btn-danger > span,
-button.btn-danger > span {
+.testimonials-admin-page .btn-danger > span,
+.testimonials-admin-page button.btn-danger > span {
     color: white !important;
 }
 
-.btn-danger i,
-button.btn-danger i {
+.testimonials-admin-page .btn-danger i,
+.testimonials-admin-page button.btn-danger i {
     color: white !important;
 }
 
-/* Bootstrap button element text content override */
-.btn-sm {
+.testimonials-admin-page .btn-sm {
     color: white !important;
 }
 
-.btn-sm.btn-success,
-.btn-sm.btn-danger {
+.testimonials-admin-page .btn-sm.btn-success,
+.testimonials-admin-page .btn-sm.btn-danger {
     color: white !important;
 }
 
-.testimonial-actions .btn-success,
-.testimonial-actions .btn-danger {
+.testimonials-admin-page .testimonial-actions .btn-success,
+.testimonials-admin-page .testimonial-actions .btn-danger {
     color: white !important;
 }
 
-.testimonial-actions button {
+.testimonials-admin-page .testimonial-actions button {
     color: white !important;
 }
 
-/* SUPER AGGRESSIVE: Override button text and icon colors */
-.btn-success,
-.btn-success span,
-.btn-success i,
-button.btn-success,
-button.btn-success span,
-button.btn-success i,
-.btn-danger,
-.btn-danger span,
-.btn-danger i,
-button.btn-danger,
-button.btn-danger span,
-button.btn-danger i {
+.testimonials-admin-page .btn-success *,
+.testimonials-admin-page .btn-danger * {
     color: white !important;
 }
 
-/* Ensure all button children are white */
-.btn-success *,
-.btn-danger * {
+.testimonials-admin-page button[class*="success"],
+.testimonials-admin-page button[class*="success"] * {
     color: white !important;
 }
 
-/* Testimonial action buttons - maximum specificity */
-.testimonial-actions .btn-success,
-.testimonial-actions .btn-success span,
-.testimonial-actions .btn-success i,
-.testimonial-actions .btn-sm.btn-success,
-.testimonial-actions .btn-sm.btn-success span,
-.testimonial-actions .btn-sm.btn-success i,
-.testimonial-actions .btn-danger,
-.testimonial-actions .btn-danger span,
-.testimonial-actions .btn-danger i,
-.testimonial-actions .btn-sm.btn-danger,
-.testimonial-actions .btn-sm.btn-danger span,
-.testimonial-actions .btn-sm.btn-danger i {
+.testimonials-admin-page button[class*="danger"],
+.testimonials-admin-page button[class*="danger"] * {
     color: white !important;
-}
-
-/* ABSOLUTE FINAL OVERRIDE: All buttons with success or danger class must have white text */
-button[class*="success"] {
-    color: white !important;
-}
-
-button[class*="success"] * {
-    color: white !important;
-}
-
-button[class*="danger"] {
-    color: white !important;
-}
-
-button[class*="danger"] * {
-    color: white !important;
-}
-
-/* @media query workaround: Ensure colors persist across load states */
-@supports (display: flex) {
-    .btn-success,
-    .btn-success *,
-    button.btn-success,
-    button.btn-success * {
-        color: white !important;
-    }
-    
-    .btn-danger,
-    .btn-danger *,
-    button.btn-danger,
-    button.btn-danger * {
-        color: white !important;
-    }
 }
 
 /* CRITICAL: Lock down .btn-sm styling ONLY for buttons on this page */

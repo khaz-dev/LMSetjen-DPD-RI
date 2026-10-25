@@ -899,9 +899,10 @@
     }
 }
 
-/* Mobile: col-12 stays 100% width */
+/* Mobile: col-12 stays 100% width for instructor sidebar layouts */
 @media (max-width: 767px) {
-    .col-12 {
+    .row:has(.instructor-sidebar-column) > .col-12,
+    .row:has(.instructor-sidebar) > .col-12 {
         flex: 0 0 100% !important;
         width: 100% !important;
         max-width: 100% !important;
@@ -925,6 +926,7 @@
 .courses-container,
 .instructor-course-edit-curriculum-page,
 .course-edit-container,
+.instructor-course-edit-page,
 .instructor-course-create-page,
 .course-create-container,
 .course-quiz-container,

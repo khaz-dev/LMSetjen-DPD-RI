@@ -22,17 +22,17 @@
 /* ======================
    BUTTON HOVER EFFECTS
    ====================== */
-.btn-outline-danger:hover {
+.course-detail .btn-outline-danger:hover {
     transform: scale(1.1);
     box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
 
-.btn-outline-primary:hover {
+.course-detail .btn-outline-primary:hover {
     transform: scale(1.1);
     box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
 }
 
-.btn-outline-danger.active {
+.course-detail .btn-outline-danger.active {
     background-color: #dc3545;
     border-color: #dc3545;
     color: white;
@@ -40,18 +40,18 @@
 }
 
 /* Enhanced Button Styles */
-.btn:hover {
+.course-detail .btn:hover {
     transform: translateY(-2px);
     transition: all 0.3s ease;
 }
 
-.btn-primary {
+.course-detail .btn-primary {
     background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
     border: none;
     box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
-.btn-primary:hover {
+.course-detail .btn-primary:hover {
     background: linear-gradient(135deg, #115e59 0%, #004085 100%);
     box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
 }
@@ -105,126 +105,131 @@
     gap: 0.5rem;
 }
 
-.course-detail{
-    background: rgba(255,255,255,0.50); /* 75% opaque white, adjust as needed */
-    min-height: calc(100vh - 200px);
-    margin-top: -5px;
+/* ====================================================
+   COMPACT & MODERN COURSE DETAIL PAGE (LMSetjen DPD RI)
+   ==================================================== */
+.course-detail {
+    background: #f8fafc;
+    min-height: calc(100vh - 220px);
 }
 
-/* Base Course Detail Section */
+/* Base Course Detail Content Container */
 .base-course-detail-content {
-    background: 'transparent' !important;
-    padding-bottom: 6rem !important; /* More gap on top of footer */
+    background: transparent !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: 2.5rem !important; /* Reduced from 6rem to remove blank dead space */
 }
 
-/* Course Tab Navigation - Fixed positioning removed, now flows naturally */
-.course-tab-navigation {
-    position: relative;
+/* Sticky Course Sidebar */
+.course-sidebar-sticky {
+    position: sticky;
+    top: 85px;
     z-index: 10;
-    transition: all 0.3s ease;
-    margin-bottom: 1.5rem;
-    border-radius: 20px !important;
-    background: #ffffff !important;
-    padding: 1rem !important;
+    transition: top 0.3s ease;
+}
+
+@media (max-width: 991px) {
+    .course-sidebar-sticky {
+        position: relative !important;
+        top: 0 !important;
+    }
+}
+
+/* Modern Segmented Tab Bar - Sticky beneath base-header like course-sidebar-sticky */
+.course-tab-bar {
+    position: sticky;
+    top: 85px;
+    z-index: 95;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    background: rgba(248, 250, 252, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: top 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .course-tab-bar {
+        top: 72px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+}
+
+.course-tab-scroll {
     overflow-x: auto;
     overflow-y: hidden;
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-    scrollbar-width: thin;
-    scrollbar-color: rgba(102, 126, 234, 0.3) rgba(102, 126, 234, 0.05);
-}
-
-/* Webkit browsers scrollbar styling */
-.course-tab-navigation::-webkit-scrollbar {
-    height: 6px;
-}
-
-.course-tab-navigation::-webkit-scrollbar-track {
-    background: rgba(102, 126, 234, 0.05);
-    border-radius: 10px;
-}
-
-.course-tab-navigation::-webkit-scrollbar-thumb {
-    background: rgba(102, 126, 234, 0.3);
-    border-radius: 10px;
-}
-
-.course-tab-navigation::-webkit-scrollbar-thumb:hover {
-    background: rgba(102, 126, 234, 0.5);
-}
-
-.course-tab-navigation.scrolled {
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15) !important;
-}
-
-/* Keep scrolled state styling consistent with normal state - no padding/margin changes */
-.course-tab-navigation.scrolled .nav-link {
-    /* No padding changes on scroll - keep consistent with non-scrolled state */
-}
-
-/* Enhanced Tab Navigation Styling - Force override Bootstrap defaults */
-.course-tab-navigation.card {
-    /* background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important; */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-    border: 2px solid rgba(102, 126, 234, 0.1) !important;
-    border-radius: 20px !important;
-    backdrop-filter: blur(10px);
-    overflow: hidden !important; /* Ensure corners are properly clipped */
-}
-
-/* Nav container for horizontal scrolling */
-.course-tab-navigation nav {
-    overflow-x: auto;
-    overflow-y: hidden;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
     -webkit-overflow-scrolling: touch;
 }
 
-.course-tab-navigation .nav {
-    flex-wrap: nowrap; /* Prevent wrapping, force horizontal scroll */
-    display: flex;
-    gap: 0.75rem;
+.course-tab-scroll::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for clean app feel */
 }
 
-.course-tab-navigation .card-header {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%) !important;
-    border-bottom: 2px solid rgba(102, 126, 234, 0.1) !important;
-    padding: 1rem 1rem !important;
-    border-radius: 20px 20px 0 0 !important; /* Match parent border radius */
+.course-tab-btn {
+    border-radius: 8px !important;
+    font-size: 0.82rem !important;
+    letter-spacing: -0.01em;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer;
 }
 
-/* Force remove any Bootstrap default backgrounds */
-.course-tab-navigation .card-header.bg-light {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%) !important;
+.course-tab-btn:hover:not(.active) {
+    background-color: #f1f5f9 !important;
+    color: #0d9488 !important;
 }
 
-/* Enhanced Tab Buttons */
-.course-tab-navigation .nav-link {
-    font-weight: 600 !important;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-    position: relative;
-    overflow: visible;
-    white-space: nowrap;
-    flex-shrink: 0;
-    min-width: max-content;
-    padding: 0.75rem 1rem !important;
+.course-tab-btn.active {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.35) !important;
 }
 
-.course-tab-navigation .nav-link:hover {
-    color: var(--theme-primary);
-    transform: translateY(-2px);
-    border-color: rgba(102, 126, 234, 0.2);
+.course-tab-btn.active i {
+    color: #ffffff !important;
 }
 
-.course-tab-navigation .nav-link.active {
-    background: var(--theme-gradient) !important;
-    /* color: white !important; */
-    box-shadow: 0 4px 15px var(--theme-shadow-color) !important;
-    border-color: transparent;
-    transform: scale(1.05);
+/* Teal Utilities for LMS Setjen DPD RI Theme */
+.text-teal {
+    color: #0d9488 !important;
 }
 
-.course-tab-navigation .nav-link.active i {
-    animation: bounce 0.5s ease;
+.bg-teal {
+    background-color: #0d9488 !important;
+}
+
+.bg-teal-subtle {
+    background-color: rgba(13, 148, 136, 0.1) !important;
+}
+
+.border-teal-subtle {
+    border-color: rgba(13, 148, 136, 0.25) !important;
+}
+
+.btn-outline-teal {
+    color: #0d9488 !important;
+    border: 1px solid #0d9488 !important;
+    background-color: transparent !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-outline-teal:hover {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3) !important;
+}
+
+/* Shadow utilities for refined card depth */
+.shadow-xs {
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+}
+
+/* Sidebar play button hover effect */
+.sidebar-play-btn:hover {
+    transform: scale(1.12);
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.45) !important;
 }
 
 @keyframes bounce {
@@ -316,41 +321,36 @@
 }
 
 /* Card Hover Effects */
-.card {
+.course-detail .card {
     transition: all 0.3s ease;
 }
 
-.card:hover {
+.course-detail .card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 /* Skeleton Loading Styles */
-.placeholder {
+.course-detail .placeholder {
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
     animation: loading 1.5s infinite;
 }
 
-@keyframes loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
 /* Tab Navigation Improvements */
-.nav-pills .nav-link {
+.course-detail .nav-pills .nav-link {
     border-radius: 0.5rem;
     transition: all 0.3s ease;
     margin: 0 0.25rem;
 }
 
-.nav-pills .nav-link.active {
+.course-detail .nav-pills .nav-link.active {
     background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
     color: white;
     box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
-.nav-pills .nav-link:not(.active):hover {
+.course-detail .nav-pills .nav-link:not(.active):hover {
     background-color: rgba(0, 123, 255, 0.1);
     color: #0f766e;
 }
@@ -393,17 +393,17 @@
 }
 
 /* Enhanced Accordion */
-.accordion-button {
+.course-detail .accordion-button {
     font-weight: 500;
     border-radius: 0.5rem !important;
 }
 
-.accordion-button:not(.collapsed) {
+.course-detail .accordion-button:not(.collapsed) {
     background: linear-gradient(135deg, rgba(0, 123, 255, 0.1) 0%, rgba(0, 123, 255, 0.05) 100%);
     color: #0f766e;
 }
 
-.accordion-button:focus {
+.course-detail .accordion-button:focus {
     box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
 }
 
@@ -411,39 +411,39 @@
    MOBILE RESPONSIVENESS
    ====================== */
 @media (max-width: 768px) {
-    .display-5 {
+    .course-detail .display-5 {
         font-size: 1.8rem !important;
     }
     
-    .lead {
+    .course-detail .lead {
         font-size: 1rem !important;
     }
     
-    .container {
+    .course-detail .container {
         padding-left: 15px;
         padding-right: 15px;
     }
     
-    .card-body {
+    .course-detail .card-body {
         padding: 1.5rem !important;
     }
     
-    .btn-lg {
+    .course-detail .btn-lg {
         padding: 0.75rem 1.5rem;
         font-size: 1rem;
     }
     
-    .nav-pills .nav-link {
+    .course-detail .nav-pills .nav-link {
         padding: 0.5rem 0.75rem;
         font-size: 0.875rem;
     }
     
-    .sticky-top {
+    .course-detail .sticky-top {
         position: relative !important;
         top: auto !important;
     }
     
-    .course-actions-mobile {
+    .course-detail .course-actions-mobile {
         position: sticky;
         top: 0;
         z-index: 1020;
@@ -468,11 +468,11 @@
         font-size: 0.875rem;
     }
     
-    .h4 {
+    .course-detail .h4 {
         font-size: 1.25rem;
     }
     
-    .display-4 {
+    .course-detail .display-4 {
         font-size: 2rem;
     }
 }
@@ -480,30 +480,30 @@
 /* ======================
    UTILITY CLASSES
    ====================== */
-.animate__animated {
+.course-detail .animate__animated {
     animation-duration: 0.8s;
 }
 
-.progress {
+.course-detail .progress {
     height: 10px;
     border-radius: 5px;
     overflow: hidden;
 }
 
-.progress-bar {
+.course-detail .progress-bar {
     transition: width 0.6s ease;
 }
 
-.rating-stars {
+.course-detail .rating-stars {
     color: #ffc107;
 }
 
-.badge {
+.course-detail .badge {
     font-weight: 500;
     letter-spacing: 0.025em;
 }
 
-.spinner-border-sm {
+.course-detail .spinner-border-sm {
     width: 1rem;
     height: 1rem;
 }
@@ -540,68 +540,70 @@
    FLOATING WISHLIST BUTTON
    ====================== */
 
-/* Main Container - Highest z-index to be on top of everything */
+/* Main Container - Positioned above feedback button to prevent overlapping */
 .floating-wishlist-container {
     position: fixed !important;
-    z-index: 9999 !important;
+    bottom: 92px !important;
+    right: 24px !important;
+    z-index: 1035 !important;
     pointer-events: auto !important;
 }
 
 /* Ensure button is always on top */
 .floating-wishlist-button {
     position: relative !important;
-    z-index: 9999 !important;
+    z-index: 1035 !important;
 }
 
 /* Label styling */
 .floating-wishlist-label {
-    z-index: 9999 !important;
+    z-index: 1035 !important;
 }
 
-/* Ensure it's above Bootstrap modals */
+/* Ensure it's above normal content */
 .floating-wishlist-container,
 .floating-wishlist-button,
 .floating-wishlist-label {
     isolation: isolate;
 }
 
-/* Mobile responsive adjustments */
+/* Mobile responsive adjustments - Keep stacked cleanly above feedback button */
 @media (max-width: 991px) {
     .floating-wishlist-container {
-        right: 40px !important;
+        right: 24px !important;
         top: auto !important;
-        bottom: 80px !important;
+        bottom: 92px !important;
         transform: none !important;
     }
 }
 
 @media (max-width: 768px) {
     .floating-wishlist-container {
-        right: 20px !important;
-        bottom: 70px !important;
+        right: 16px !important;
+        bottom: 78px !important;
         gap: 8px !important;
     }
     
     .floating-wishlist-button {
-        width: 50px !important;
-        height: 50px !important;
+        width: 48px !important;
+        height: 48px !important;
     }
     
     .floating-wishlist-label {
-        padding: 8px 16px !important;
-        font-size: 0.8rem !important;
+        padding: 6px 14px !important;
+        font-size: 0.78rem !important;
     }
 }
 
 @media (max-width: 576px) {
     .floating-wishlist-container {
-        right: 15px !important;
-        bottom: 60px !important;
+        right: 12px !important;
+        bottom: 70px !important;
     }
     
     .floating-wishlist-button {
-        width: 45px !important;
-        height: 45px !important;
+        width: 44px !important;
+        height: 44px !important;
         border-width: 2px !important;
     }
     

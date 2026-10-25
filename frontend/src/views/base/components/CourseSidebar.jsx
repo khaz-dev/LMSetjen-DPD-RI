@@ -5,12 +5,13 @@ import useAxios from "../../../utils/useAxios";
 import UserData from "../../plugin/UserData";
 import { getImageUrl } from "../../../utils/courseUtils";
 import { getMediaUrl } from "../../../utils/constants";
+import { calculateTotalDuration } from "../../../utils/durationUtils";
 
-const CourseSidebar = ({ 
-    course, 
-    isInWishlist: parentIsInWishlist, 
-    isLoadingWishlist: parentIsLoadingWishlist, 
-    onWishlistToggle 
+const CourseSidebar = ({
+    course,
+    isInWishlist: parentIsInWishlist,
+    isLoadingWishlist: parentIsLoadingWishlist,
+    onWishlistToggle
 }) => {
     const [activeAccordion, setActiveAccordion] = useState("");
     const [isEnrolled, setIsEnrolled] = useState(false);
@@ -84,7 +85,7 @@ const CourseSidebar = ({
             formData.append('user_id', userData.user_id);
 
             const response = await useAxios.post('course/enroll/', formData);
-            
+
             Swal.fire({
                 icon: 'success',
                 title: 'Pendaftaran Berhasil!',
@@ -93,7 +94,7 @@ const CourseSidebar = ({
             });
 
             setIsEnrolled(true);
-            
+
             // Redirect to student dashboard or course player
             setTimeout(() => {
                 navigate(`/student/courses/${response.data.enrollment_id}/`);
@@ -144,7 +145,7 @@ const CourseSidebar = ({
             formData.append('user_id', userData.user_id);
 
             await useAxios.post(`student/wishlist/${userData.user_id}/`, formData);
-            
+
             if (isInWishlist) {
                 // Was in wishlist, now removed
                 Swal.fire({
@@ -184,7 +185,7 @@ const CourseSidebar = ({
     const isInstructorCourse = userData?.teacher_id > 0 && course?.teacher?.id === userData.teacher_id;
     // Fix: Check if teacher_id is a valid positive number (students have teacher_id = 0)
     const isInstructor = userData?.teacher_id && userData.teacher_id > 0;
-    
+
     // ✨ PHASE 8d: Multi-role support - Check if user is currently in student mode
     // For multi-role users, use current_role if available, fallback to role
     const currentRole = userData?.current_role || userData?.role;
@@ -197,60 +198,87 @@ const CourseSidebar = ({
     // - course.resources (replaces downloadableResources)
     // - No more courseIncludes array - can be derived from course data
 
+    // Derive smart features if course.features is empty
+    const durationData = calculateTotalDuration(course?.lectures || []);
+    const smartFeatures = (course?.features && course.features.length > 0)
+        ? course.features
+        : [
+            { id: 'f1', icon: 'fas fa-video', text: `${course?.lectures?.length || 1} Materi Pembelajaran`, highlight: true },
+            { id: 'f2', icon: 'fas fa-clock', text: durationData?.withJP || 'Waktu Fleksibel', highlight: false },
+            { id: 'f3', icon: 'fas fa-layer-group', text: `${course?.curriculum?.length || 1} Modul Terstruktur`, highlight: false },
+            { id: 'f4', icon: 'fas fa-certificate', text: 'Sertifikat Kelulusan Resmi', highlight: true },
+            { id: 'f5', icon: 'fas fa-laptop-code', text: 'Modul Interaktif & SCORM', highlight: false },
+            { id: 'f6', icon: 'fas fa-infinity', text: 'Akses Penuh Fleksibel', highlight: false }
+        ];
+
     return (
-        <div className="sidebar-content">
-            {/* Modern Course Preview Card */}
-            <div 
-                className="card border-0 shadow-lg mb-3"
-                style={{ borderRadius: '15px' }}
-            >
-                {/* Video Preview */}
-                <div className="position-relative">
-                    <img 
+        <div className="course-sidebar-sticky">
+            {/* Unified Modern Card */}
+            <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-3">
+                {/* Media Preview Header */}
+                <div className="position-relative overflow-hidden" style={{ maxHeight: "175px" }}>
+                    <img
                         src={getImageUrl(course?.image) || '/images/placeholders/default-course.svg'}
                         alt={course?.title}
-                        className="card-img-top"
+                        className="w-100 object-fit-cover"
                         loading="lazy"
                         decoding="async"
-                        width="360"
-                        height="160"
-                        style={{ 
-                            borderRadius: '15px 15px 0 0',
-                            height: '160px',
-                            objectFit: 'cover'
-                        }}
+                        style={{ height: '175px' }}
                         onError={(e) => {
                             e.target.src = '/images/placeholders/default-course.svg';
                         }}
                     />
-                    <div className="position-absolute top-50 start-50 translate-middle">
-                        <button 
-                            className="btn rounded-circle"
-                            data-bs-toggle="modal"
-                            data-bs-target="#coursePreviewModal"
-                            style={{ 
-                                width: '50px', 
-                                height: '50px',
-                                background: 'rgba(255, 255, 255, 0.9)',
-                                boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
-                                border: 'none',
-                                display: 'flex',           // ✨ PHASE 4.77+: Center icon
-                                alignItems: 'center',      // ✨ Center vertically
-                                justifyContent: 'center'   // ✨ Center horizontally
-                            }}
-                        >
-                            <i className="fas fa-play" style={{ color: '#0d9488', fontSize: '1rem' }}></i>
-                        </button>
-                    </div>
-                    <div 
-                        className="position-absolute top-0 end-0 m-2"
+
+                    {/* Dark gradient overlay */}
+                    <div
+                        className="position-absolute top-0 start-0 w-100 h-100"
+                        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)' }}
+                    />
+
+                    {/* Play Button Overlay - Only render if course has a valid video */}
+                    {Boolean(
+                        course?.file &&
+                        course?.file_type !== 'scorm' &&
+                        typeof course?.file === 'string' &&
+                        course?.file.trim() !== '' &&
+                        !course?.file.toLowerCase().endsWith('.zip') &&
+                        !course?.file.toLowerCase().endsWith('.rar') &&
+                        !course?.file.toLowerCase().endsWith('.pdf')
+                    ) && (
+                        <div className="position-absolute top-50 start-50 translate-middle">
+                            <button
+                                className="btn rounded-circle d-flex align-items-center justify-content-center sidebar-play-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#coursePreviewModal"
+                                aria-label="Preview Video Kursus"
+                                title="Tonton Preview Kursus"
+                                style={{
+                                    width: '48px',
+                                    height: '48px',
+                                    background: 'rgba(255, 255, 255, 0.95)',
+                                    backdropFilter: 'blur(4px)',
+                                    boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+                                    border: 'none',
+                                    transition: 'all 0.25s ease'
+                                }}
+                            >
+                                <i className="fas fa-play text-teal" style={{ color: '#0d9488', fontSize: '0.95rem', marginLeft: '2px' }}></i>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Badge GRATIS */}
+                    <div
+                        className="position-absolute top-0 end-0 m-2.5 badge"
                         style={{
                             background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                             color: 'white',
-                            padding: '0.4rem 0.8rem',
-                            borderRadius: '12px',
-                            fontSize: '0.8rem',
-                            fontWeight: '600'
+                            padding: '0.35rem 0.7rem',
+                            borderRadius: '8px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            letterSpacing: '0.03em',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                         }}
                     >
                         GRATIS
@@ -258,70 +286,76 @@ const CourseSidebar = ({
                 </div>
 
                 {/* Card Body */}
-                <div className="card-body p-3">
-                    {/* Course Price */}
-                    <div className="text-center mb-3">
-                        <h3 className="fw-bold mb-1 h5" style={{ color: '#2c3e50' }}>
-                            Kursus Gratis
-                        </h3>
-                        <p className="text-muted mb-0" style={{ fontSize: '0.85rem' }}>
-                            Untuk siapa saja terkhusus untuk pegawai Setjen DPD RI
-                        </p>
+                <div className="card-body p-3.5 p-lg-4">
+                    {/* Course Access / Target Audience Info */}
+                    <div className="p-3 rounded-3 bg-light border mb-3">
+                        <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom border-light-subtle">
+                            <span className={`badge ${course?.target_audience === 'umum' ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-teal-subtle text-teal border border-teal-subtle'} rounded-pill px-2.5 py-1 fw-semibold`} style={{ fontSize: '0.74rem' }}>
+                                <i className={course?.target_audience === 'umum' ? "fas fa-globe me-1.5" : "fas fa-shield-halved me-1.5"}></i>
+                                {course?.target_audience === 'umum' ? 'Akses Publik' : 'Pelatihan Kedinasan'}
+                            </span>
+                            <span className="badge bg-emerald-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill fw-semibold" style={{ fontSize: '0.72rem' }}>
+                                <i className="fas fa-check-circle me-1"></i>100% Gratis
+                            </span>
+                        </div>
+
+                        <div className="d-flex align-items-center gap-2 pt-1">
+                            <div
+                                className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                                style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    background: course?.target_audience === 'umum' ? 'rgba(59, 130, 246, 0.12)' : 'rgba(13, 148, 136, 0.12)',
+                                    color: course?.target_audience === 'umum' ? '#2563eb' : '#0d9488'
+                                }}
+                            >
+                                <i className={course?.target_audience === 'umum' ? "fas fa-users" : "fas fa-id-card-clip"} style={{ fontSize: '1.05rem' }}></i>
+                            </div>
+                            <div className="min-w-0 ps-1">
+                                <div className="fw-bold text-dark" style={{ fontSize: '0.88rem', lineHeight: 1.35 }}>
+                                    {course?.target_audience === 'umum' ? 'Terbuka untuk Umum' : 'Khusus Pegawai Setjen DPD RI'}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="d-grid gap-2 mb-3">
-                        {/* ✨ PHASE 8d: For student mode, show enrollment buttons regardless of instructor status */}
-                        {/* Show Edit Course button if instructor owns this course AND not in student mode */}
+                    {/* Primary Action Button */}
+                    <div className="mb-3.5">
                         {isInstructorCourse && !isStudentMode ? (
-                            <button 
+                            <button
                                 onClick={() => navigate(`/instructor/edit-course/${course.course_id}/`)}
-                                className="btn"
+                                className="btn w-100 text-white fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center shadow-sm"
                                 style={{
-                                    background: 'linear-gradient(135deg, #ffc107 0%, #ff8c00 100%)',
-                                    color: 'white',
+                                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                                     border: 'none',
-                                    borderRadius: '12px',
-                                    fontWeight: '600',
-                                    padding: '0.6rem 1rem',
-                                    fontSize: '0.9rem'
+                                    fontSize: '0.92rem'
                                 }}
                             >
                                 <i className="fas fa-edit me-2"></i>
-                                Edit Kursus
+                                Edit Kursus Ini
                             </button>
                         ) : isEnrolled ? (
-                            /* Show Continue Learning if already enrolled */
-                            <button 
+                            <button
                                 onClick={() => navigate('/student/courses/')}
-                                className="btn"
+                                className="btn w-100 text-white fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center shadow-sm"
                                 style={{
-                                    background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                                    color: 'white',
+                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                                     border: 'none',
-                                    borderRadius: '12px',
-                                    fontWeight: '600',
-                                    padding: '0.6rem 1rem',
-                                    fontSize: '0.9rem'
+                                    fontSize: '0.92rem'
                                 }}
                             >
-                                <i className="fas fa-play me-2"></i>
+                                <i className="fas fa-play-circle me-2"></i>
                                 Lanjutkan Belajar
                             </button>
                         ) : (
-                            /* Show Enroll button */
-                            <button 
+                            <button
                                 onClick={handleEnrollment}
                                 disabled={loading}
-                                className="btn"
+                                className="btn w-100 text-white fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center shadow-sm"
                                 style={{
-                                    background: loading ? '#cccccc' : 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-                                    color: 'white',
+                                    background: loading ? '#94a3b8' : 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                                     border: 'none',
-                                    borderRadius: '12px',
-                                    fontWeight: '600',
-                                    padding: '0.6rem 1rem',
-                                    fontSize: '0.9rem',
+                                    fontSize: '0.92rem',
                                     cursor: loading ? 'not-allowed' : 'pointer'
                                 }}
                             >
@@ -332,261 +366,107 @@ const CourseSidebar = ({
                                     </>
                                 ) : (
                                     <>
-                                        <i className="fas fa-play me-2"></i>
-                                        Mulai Belajar
+                                        <i className="fas fa-user-plus me-2"></i>
+                                        Daftar & Mulai Belajar
                                     </>
                                 )}
                             </button>
                         )}
-                        
-                        {/* Hide wishlist button for instructors */}
+                    </div>
+
+                    {/* Secondary Action Buttons (Side by Side to save vertical space) */}
+                    <div className="row g-2.5 mb-2 mt-2 pb-1">
                         {!isInstructor && (
-                            <button 
-                                onClick={handleWishlist}
-                                disabled={isLoadingWishlist}
-                                className="btn"
-                                style={{
-                                    background: isInWishlist ? 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)' : 'transparent',
-                                    color: isInWishlist ? 'white' : '#0d9488',
-                                    border: isInWishlist ? 'none' : '2px solid #0d9488',
-                                    borderRadius: '12px',
-                                    fontWeight: '600',
-                                    padding: '0.6rem 1rem',
-                                    fontSize: '0.9rem',
-                                    cursor: isLoadingWishlist ? 'not-allowed' : 'pointer',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                {isLoadingWishlist ? (
-                                    <>
-                                        <i className="fas fa-spinner fa-spin me-2"></i>
-                                        Memproses...
-                                    </>
-                                ) : (
-                                    <>
-                                        <i className={`${isInWishlist ? 'fas fa-heart-broken' : 'far fa-heart'} me-2`}></i>
-                                        {isInWishlist ? 'Hapus dari Wishlist' : 'Tambah ke Wishlist'}
-                                    </>
-                                )}
-                            </button>
+                            <div className="col-6">
+                                <button
+                                    onClick={handleWishlist}
+                                    disabled={isLoadingWishlist}
+                                    className={`btn btn-sm w-100 py-2.5 rounded-3 fw-medium d-flex align-items-center justify-content-center gap-2 ${isInWishlist
+                                        ? 'btn-danger text-white'
+                                        : 'btn-outline-secondary'
+                                        }`}
+                                    style={{ fontSize: '0.82rem' }}
+                                    title={isInWishlist ? 'Hapus dari Wishlist' : 'Simpan ke Wishlist'}
+                                >
+                                    {isLoadingWishlist ? (
+                                        <i className="fas fa-spinner fa-spin"></i>
+                                    ) : (
+                                        <>
+                                            <i className={`${isInWishlist ? 'fas' : 'far'} fa-heart ${isInWishlist ? 'text-white' : 'text-danger'}`}></i>
+                                            <span className="text-truncate">{isInWishlist ? 'Tersimpan' : 'Wishlist'}</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         )}
-                        
-                        <button 
-                            className="btn"
-                            onClick={() => {
-                                if (navigator.share) {
-                                    navigator.share({
-                                        title: course?.title,
-                                        text: course?.description,
-                                        url: window.location.href
-                                    });
-                                } else {
-                                    // Fallback: copy to clipboard
-                                    navigator.clipboard.writeText(window.location.href);
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Link Copied!',
-                                        text: 'Course link has been copied to clipboard',
-                                        timer: 1500,
-                                        showConfirmButton: false
-                                    });
-                                }
-                            }}
-                            style={{
-                                background: 'transparent',
-                                color: '#28a745',
-                                border: '2px solid #28a745',
-                                borderRadius: '12px',
-                                fontWeight: '600',
-                                padding: '0.6rem 1rem',
-                                fontSize: '0.9rem'
-                            }}
-                        >
-                            <i className="fas fa-share me-2"></i>
-                            Bagikan Kursus
-                        </button>
-                    </div>
-                </div>
-            </div>
 
-            {/* Modern Course Includes */}
-            <div 
-                className="card border-0 shadow-sm mb-3"
-                style={{ borderRadius: '15px' }}
-            >
-                <div className="card-body p-3">
-                    <div className="d-flex align-items-center mb-3">
-                        <div 
-                            className="me-2"
-                            style={{
-                                width: '35px',
-                                height: '35px',
-                                background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-                                borderRadius: '10px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <i className="fas fa-gift text-white" style={{ fontSize: '0.9rem' }}></i>
-                        </div>
-                        <h5 className="mb-0 fw-bold" style={{ color: '#2c3e50', fontSize: '0.95rem' }}>
-                            Kursus Ini Termasuk
-                        </h5>
-                    </div>
-                    
-                    {course?.features && course.features.length > 0 ? (
-                        course.features.map((item, index) => (
-                            <div 
-                                key={item.id || index} 
-                                className="d-flex align-items-center py-2"
+                        <div className={!isInstructor ? "col-6" : "col-12"}>
+                            <button
+                                className="btn btn-sm btn-outline-secondary w-100 py-2.5 rounded-3 fw-medium d-flex align-items-center justify-content-center gap-2"
+                                style={{ fontSize: '0.82rem' }}
+                                onClick={() => {
+                                    if (navigator.share) {
+                                        navigator.share({
+                                            title: course?.title,
+                                            text: course?.description,
+                                            url: window.location.href
+                                        });
+                                    } else {
+                                        navigator.clipboard.writeText(window.location.href);
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Tautan Disalin!',
+                                            text: 'Tautan kursus berhasil disalin ke clipboard',
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        });
+                                    }
+                                }}
+                                title="Bagikan Kursus Ini"
                             >
-                                <i 
-                                    className={`${item.icon} me-3`} 
-                                    style={{ 
-                                        width: '20px',
-                                        color: item.highlight ? '#0d9488' : '#6c757d'
-                                    }}
-                                ></i>
-                                <span 
-                                    className={`small ${item.highlight ? 'fw-semibold' : ''}`}
-                                    style={{ 
-                                        color: item.highlight ? '#0d9488' : '#6c757d'
-                                    }}
-                                >
-                                    {item.text}
-                                </span>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-muted small">Tidak ada fitur yang tersedia</p>
-                    )}
-                </div>
-            </div>
-
-            {/* Modern Requirements Card */}
-            <div 
-                className="card border-0 shadow-sm mb-4"
-                style={{ borderRadius: '20px' }}
-            >
-                <div className="card-body p-4">
-                    <div className="d-flex align-items-center mb-4">
-                        <div 
-                            className="me-3"
-                            style={{
-                                width: '40px',
-                                height: '40px',
-                                background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                                borderRadius: '12px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <i className="fas fa-list-check text-white"></i>
+                                <i className="fas fa-share-nodes text-primary"></i>
+                                <span>Bagikan</span>
+                            </button>
                         </div>
-                        <h5 className="mb-0 fw-bold" style={{ color: '#2c3e50' }}>
-                            Persyaratan
-                        </h5>
                     </div>
-                    
-                    {course?.requirements && course.requirements.length > 0 ? (
-                        course.requirements.map((item, index) => (
-                            <div key={item.id || index} className="d-flex align-items-start py-2">
-                                <div 
-                                    className="me-3 mt-1"
-                                    style={{
-                                        width: '16px',
-                                        height: '16px',
-                                        background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                                        borderRadius: '50%',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        flexShrink: 0
-                                    }}
-                                >
-                                    <i className="fas fa-check text-white" style={{ fontSize: '0.6rem' }}></i>
-                                </div>
-                                <span className="small text-muted">{item.requirement}</span>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-muted small">Tidak ada persyaratan khusus</p>
-                    )}
-                </div>
-            </div>
 
-            {/* Modern Learning Outcomes Card */}
-            <div 
-                className="card border-0 shadow-sm"
-                style={{ borderRadius: '20px' }}
-            >
-                <div className="card-body p-4">
-                    <div className="d-flex align-items-center mb-4">
-                        <div 
-                            className="me-3"
-                            style={{
-                                width: '40px',
-                                height: '40px',
-                                background: 'linear-gradient(135deg, #ffc107 0%, #ff8c00 100%)',
-                                borderRadius: '12px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <i className="fas fa-graduation-cap text-white"></i>
-                        </div>
-                        <h5 className="mb-0 fw-bold" style={{ color: '#2c3e50' }}>
-                            Hasil Pembelajaran
-                        </h5>
-                    </div>
-                    
-                    {course?.learning_outcomes && course.learning_outcomes.length > 0 ? (
-                        <>
-                            {course.learning_outcomes.slice(0, 5).map((item, index) => (
-                                <div key={item.id || index} className="d-flex align-items-start py-2">
-                                    <div 
-                                        className="me-3 mt-1"
+                    {/* Course Features / Highlights */}
+                    <div className="pt-3 border-top">
+                        <h6 className="fw-bold text-dark mb-3 small d-flex align-items-center gap-1">
+                            <i className="fas fa-shield-halved text-teal" style={{ color: '#0d9488', fontSize: '0.95rem' }}></i>
+                            <span>Fasilitas & Fitur Kursus:</span>
+                        </h6>
+
+                        <div className="d-flex flex-column gap-1">
+                            {smartFeatures.map((item, index) => (
+                                <div
+                                    key={item.id || index}
+                                    className="d-flex align-items-center gap-1"
+                                    style={{ fontSize: '0.85rem' }}
+                                >
+                                    <div
+                                        className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                                         style={{
-                                            width: '16px',
-                                            height: '16px',
-                                            background: 'linear-gradient(135deg, #ffc107 0%, #ff8c00 100%)',
-                                            borderRadius: '50%',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            flexShrink: 0
+                                            width: '28px',
+                                            height: '28px',
+                                            background: item.highlight ? 'rgba(13, 148, 136, 0.12)' : '#f1f5f9'
                                         }}
                                     >
-                                        <i className="fas fa-star text-white" style={{ fontSize: '0.6rem' }}></i>
+                                        <i
+                                            className={item.icon || 'fas fa-check'}
+                                            style={{
+                                                fontSize: '0.75rem',
+                                                color: item.highlight ? '#0d9488' : '#64748b'
+                                            }}
+                                        ></i>
                                     </div>
-                                    <span className="small text-muted">{item.outcome}</span>
+                                    <span className={`ps-1 ${item.highlight ? 'fw-semibold text-dark' : 'text-secondary'}`}>
+                                        {item.text}
+                                    </span>
                                 </div>
                             ))}
-                            
-                            {course.learning_outcomes.length > 5 && (
-                                <div className="mt-3">
-                                    <button 
-                                        className="btn btn-sm"
-                                        style={{
-                                            background: 'transparent',
-                                            color: '#0d9488',
-                                            border: '1px solid #0d9488',
-                                            borderRadius: '10px',
-                                            fontWeight: '500',
-                                            fontSize: '0.8rem'
-                                        }}
-                                    >
-                                        Lihat Semua ({course.learning_outcomes.length} item)
-                                    </button>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <p className="text-muted small">Tidak ada hasil pembelajaran yang tersedia</p>
-                    )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

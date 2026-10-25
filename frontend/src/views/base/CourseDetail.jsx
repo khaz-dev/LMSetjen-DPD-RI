@@ -16,6 +16,7 @@ import CourseDetailLoading from "./components/CourseDetailLoading";
 // Import hooks and utilities
 import { useCourse } from "./hooks/useCourse";
 import { calculateTotalDuration, formatDuration, parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Duration formatting
+import { getImageUrl } from "../../utils/courseUtils";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
@@ -27,12 +28,12 @@ import "./CourseDetail.css";
 // Handles YouTube URLs for iframe embedding
 const convertGoogleDriveUrlToPreview = (url) => {
     if (!url || typeof url !== 'string') return url;
-    
+
     // ✨ PHASE 4.75 FIX: Handle YouTube URLs
     // Convert youtube.com/watch?v=ID and youtu.be/ID to embed format
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
         let videoId = null;
-        
+
         // Format: https://www.youtube.com/watch?v={VIDEO_ID}
         if (url.includes('youtube.com/watch')) {
             const match = url.match(/v=([a-zA-Z0-9_-]{11})/);
@@ -40,7 +41,7 @@ const convertGoogleDriveUrlToPreview = (url) => {
                 videoId = match[1];
             }
         }
-        
+
         // Format: https://youtu.be/{VIDEO_ID}
         if (url.includes('youtu.be/')) {
             const match = url.match(/youtu.be\/([a-zA-Z0-9_-]{11})/);
@@ -48,7 +49,7 @@ const convertGoogleDriveUrlToPreview = (url) => {
                 videoId = match[1];
             }
         }
-        
+
         // If video ID found, convert to embed format with disabled features
         if (videoId) {
             // ✨ PHASE 4.76: Disable share, info, and related videos in YouTube player
@@ -57,7 +58,7 @@ const convertGoogleDriveUrlToPreview = (url) => {
             return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
         }
     }
-    
+
     return url;
 };
 
@@ -70,7 +71,7 @@ function CourseDetail() {
     const [isLoadingWishlist, setIsLoadingWishlist] = useState(false);
     const userData = UserData();
     const isTeacher = userData?.role === "teacher" || userData?.role === "instructor";
-    
+
     // Fetch course data from backend
     const { course, isLoading } = useCourse(slug);
 
@@ -84,7 +85,7 @@ function CourseDetail() {
     const checkWishlistStatus = async () => {
         const userData = UserData();
         if (!userData || isTeacher) return;
-        
+
         try {
             const response = await useAxios.get(`student/wishlist/${userData.user_id}/`);
             // Handle paginated API response
@@ -99,7 +100,7 @@ function CourseDetail() {
 
     const handleWishlist = async () => {
         const userData = UserData();
-        
+
         if (!userData) {
             Swal.fire({
                 icon: "warning",
@@ -111,15 +112,15 @@ function CourseDetail() {
         }
 
         setIsLoadingWishlist(true);
-        
+
         try {
             // Backend uses POST for both add and remove (toggle logic)
             const formData = new FormData();
             formData.append("course_id", course.id);
             formData.append("user_id", userData.user_id);
-            
+
             const response = await useAxios.post(`student/wishlist/${userData.user_id}/`, formData);
-            
+
             if (isInWishlist) {
                 // Was in wishlist, now removed
                 Toast().fire({
@@ -153,11 +154,11 @@ function CourseDetail() {
     const handlePreviewClick = (videoItem) => {
         // Reset video first to ensure clean state
         setPreviewVideo(null);
-        
+
         // Use setTimeout to ensure state is reset before setting new video
         setTimeout(() => {
             setPreviewVideo(videoItem);
-            
+
             // Trigger modal after state is set
             setTimeout(() => {
                 const modalElement = document.getElementById("lessonPreviewModal");
@@ -181,7 +182,7 @@ function CourseDetail() {
                 video.pause();
                 video.currentTime = 0;
             });
-            
+
             // Reset preview state
             setPreviewVideo(null);
         };
@@ -198,7 +199,7 @@ function CourseDetail() {
     useEffect(() => {
         // Scroll to top immediately
         window.scrollTo(0, 0);
-        
+
         // Force page to load as new instance
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
@@ -212,23 +213,23 @@ function CourseDetail() {
     // Handle video event listeners and modal close events
     useEffect(() => {
         const videoElement = videoRef.current;
-        
+
         if (!videoElement) return;
-        
+
         const handleVideoEnd = () => {
             // You can add completion logic here if needed for preview
         };
-        
+
         const handleTimeUpdate = () => {
             const progress = (videoElement.currentTime / videoElement.duration) * 100;
             if (progress >= 95) { // Consider 95% as complete
                 handleVideoEnd();
             }
         };
-        
+
         videoElement.addEventListener("ended", handleVideoEnd);
         videoElement.addEventListener("timeupdate", handleTimeUpdate);
-        
+
         // Cleanup
         return () => {
             videoElement.removeEventListener("ended", handleVideoEnd);
@@ -244,7 +245,7 @@ function CourseDetail() {
         const setupListeners = () => {
             const coursePreviewModalElement = document.getElementById("coursePreviewModal");
             const lessonPreviewModalElement = document.getElementById("lessonPreviewModal");
-            
+
             // ✨ PHASE 4.43.9: Handlers for Course Preview Modal
             const handleCourseModalHidden = () => {
                 // Pause all videos in the modal using direct DOM query
@@ -254,13 +255,13 @@ function CourseDetail() {
                     video.currentTime = 0;
                     video.blur();
                 });
-                
+
                 // Stop iframes (Google Drive videos)
                 const iframes = document.querySelectorAll("#coursePreviewModal iframe");
                 iframes.forEach(iframe => {
                     iframe.src = "about:blank";
                 });
-                
+
                 // Also pause video via ref as backup
                 const videoElement = videoRef.current;
                 if (videoElement) {
@@ -269,7 +270,7 @@ function CourseDetail() {
                     videoElement.blur();
                 }
             };
-            
+
             // ✨ PHASE 4.43.9: Reset iframe src when course preview modal is shown again
             const handleCourseModalShown = () => {
                 // Reset iframe src to actual video URL when modal is shown
@@ -281,7 +282,7 @@ function CourseDetail() {
                     });
                 }
             };
-            
+
             const handleLessonModalHidden = () => {
                 // Pause all video elements
                 const videos = document.querySelectorAll("#lessonPreviewModal video");
@@ -290,17 +291,17 @@ function CourseDetail() {
                     video.currentTime = 0;
                     video.blur();
                 });
-                
+
                 // Stop iframes (Google Drive videos)
                 const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
                 iframes.forEach(iframe => {
                     iframe.src = "about:blank";
                 });
-                
+
                 // Reset preview video state
                 setPreviewVideo(null);
             };
-            
+
             // ✨ PHASE 4.43.9: Reset iframe src when lesson preview modal is shown again
             const handleLessonModalShown = () => {
                 // Reset iframe src to actual video URL when modal is shown
@@ -312,7 +313,7 @@ function CourseDetail() {
                     });
                 }
             };
-            
+
             // Handle backdrop clicks (clicking outside modal)
             const handleBackdropClick = (e) => {
                 // Check if click is on the modal backdrop (not the modal content)
@@ -325,14 +326,14 @@ function CourseDetail() {
                     }
                 }
             };
-            
+
             // Handle ESC key press
             const handleEscKey = (e) => {
                 if (e.key === "Escape") {
                     // Check which modal is open and pause video
                     const courseModal = document.getElementById("coursePreviewModal");
                     const lessonModal = document.getElementById("lessonPreviewModal");
-                    
+
                     if (courseModal && courseModal.classList.contains("show")) {
                         handleCourseModalHidden();
                     }
@@ -341,7 +342,7 @@ function CourseDetail() {
                     }
                 }
             };
-            
+
             // Add Bootstrap modal event listeners
             // Use 'hide.bs.modal' to pause video BEFORE the modal is hidden
             // Use 'show.bs.modal' to reset iframe src when modal is opened
@@ -351,16 +352,16 @@ function CourseDetail() {
                 coursePreviewModalElement.addEventListener("show.bs.modal", handleCourseModalShown);
                 coursePreviewModalElement.addEventListener("click", handleBackdropClick);
             }
-            
+
             if (lessonPreviewModalElement) {
                 lessonPreviewModalElement.addEventListener("hide.bs.modal", handleLessonModalHidden);
                 lessonPreviewModalElement.addEventListener("show.bs.modal", handleLessonModalShown);
                 lessonPreviewModalElement.addEventListener("click", handleBackdropClick);
             }
-            
+
             // Add ESC key listener
             document.addEventListener("keydown", handleEscKey);
-            
+
             // Return cleanup function
             return () => {
                 if (coursePreviewModalElement) {
@@ -376,10 +377,10 @@ function CourseDetail() {
                 document.removeEventListener("keydown", handleEscKey);
             };
         };
-        
+
         // Use setTimeout to ensure modals are rendered in DOM
         const timeoutId = setTimeout(setupListeners, 100);
-        
+
         // Cleanup timeout on unmount
         return () => {
             clearTimeout(timeoutId);
@@ -390,255 +391,422 @@ function CourseDetail() {
         switch (activeTab) {
             case "overview":
                 return (
-                    <>
-                    {/* Modern Course Description Card */}
-                    <div
-                        className="card border-0 shadow-sm mb-3"
-                        style={{ borderRadius: "20px" }}
-                    >
-                        <div className="card-body p-3 p-md-4">
-                            <div className="d-flex align-items-center mb-3">
-                                <div 
-                                    className="me-3"
-                                    style={{
-                                        width: "40px",
-                                        height: "40px",
-                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                        borderRadius: "12px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center"
-                                    }}
-                                >
-                                    <i className="fas fa-info-circle text-white"></i>
-                                </div>
-                                <h3 className="h5 mb-0" style={{ color: "#2c3e50" }}>
-                                    Tentang Kursus Ini
-                                </h3>
-                            </div>
-                            
-                            <div className="course-description">
-                                <div 
-                                    className="text-muted mb-3" 
-                                    style={{ lineHeight: "1.6", fontSize: "0.95rem" }}
-                                    dangerouslySetInnerHTML={{ __html: course?.description || "Deskripsi kursus tidak tersedia." }}
-                                />
-                                
-                                {/* Show curriculum overview if available */}
-                                {course?.curriculum && course.curriculum.length > 0 && (
-                                    <>
-                                        <h5 className="fw-bold mb-3 mt-3" style={{ color: "#2c3e50", fontSize: "1rem" }}>
-                                            Materi Pembelajaran:
-                                        </h5>
-                                        
-                                        <div className="row g-3">
-                                            {course.curriculum.slice(0, 6).map((variant, index) => (
-                                                <div key={variant.variant_id || index} className="col-md-6">
-                                                    <div className="d-flex align-items-start">
-                                                        <div 
-                                                            className="me-3 mt-1"
-                                                            style={{
-                                                                width: "20px",
-                                                                height: "20px",
-                                                                background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
-                                                                borderRadius: "50%",
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                justifyContent: "center",
-                                                                flexShrink: 0
-                                                            }}
-                                                        >
-                                                            <i className="fas fa-check text-white" style={{ fontSize: "0.7rem" }}></i>
-                                                        </div>
-                                                        <span className="text-muted">{variant.title}</span>
-                                                    </div>
-                                                </div>
-                                            ))}
+                    <div className="d-flex flex-column gap-2">
+                        {/* 1. Quick Highlight Cards Ribbon */}
+                        <div className="row g-2 g-md-3 mb-1">
+                            <div className="col-6 col-sm-3">
+                                <div className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-teal flex-shrink-0"
+                                        style={{ width: "36px", height: "36px", background: "rgba(13, 148, 136, 0.1)" }}
+                                    >
+                                        <i className="fas fa-cubes" style={{ fontSize: "0.95rem", color: "#0d9488" }}></i>
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Format</div>
+                                        <div className="text-dark fw-bold text-truncate" style={{ fontSize: "0.85rem" }}>
+                                            {course?.file_type === 'scorm' || course?.curriculum?.[0]?.variant_items?.[0]?.file_type === 'scorm' ? 'SCORM 1.2' : 'Video HD'}
                                         </div>
-                                        
-                                        {course.curriculum.length > 6 && (
-                                            <div className="mt-3">
-                                                <small className="text-muted">
-                                                    <i className="fas fa-plus-circle me-1"></i>
-                                                    Dan {course.curriculum.length - 6} modul lainnya...
-                                                </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col-6 col-sm-3">
+                                <div className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-success flex-shrink-0"
+                                        style={{ width: "36px", height: "36px", background: "rgba(16, 185, 129, 0.1)" }}
+                                    >
+                                        <i className="fas fa-infinity" style={{ fontSize: "0.95rem", color: "#10b981" }}></i>
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Akses</div>
+                                        <div className="text-dark fw-bold text-truncate" style={{ fontSize: "0.85rem" }}>Seumur Hidup</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col-6 col-sm-3">
+                                <div className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-amber flex-shrink-0"
+                                        style={{ width: "36px", height: "36px", background: "rgba(245, 158, 11, 0.1)" }}
+                                    >
+                                        <i className="fas fa-certificate" style={{ fontSize: "0.95rem", color: "#f59e0b" }}></i>
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Sertifikat</div>
+                                        <div className="text-dark fw-bold text-truncate" style={{ fontSize: "0.85rem" }}>Resmi DPD RI</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col-6 col-sm-3">
+                                <div className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-primary flex-shrink-0"
+                                        style={{ width: "36px", height: "36px", background: "rgba(2, 132, 199, 0.1)" }}
+                                    >
+                                        <i className="fas fa-award" style={{ fontSize: "0.95rem", color: "#0284c7" }}></i>
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Level</div>
+                                        <div className="text-dark fw-bold text-truncate" style={{ fontSize: "0.85rem" }}>{course?.level || "Semua Level"}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 2. Course Description Card */}
+                        <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden" style={{ borderLeft: "3px solid #0d9488" }}>
+                            <div className="card-body p-3 p-md-4">
+                                <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                                        style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)" }}
+                                    >
+                                        <i className="fas fa-align-left" style={{ fontSize: "0.8rem" }}></i>
+                                    </div>
+                                    <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                                        Deskripsi Kursus
+                                    </h5>
+                                </div>
+
+                                <div
+                                    className="course-description text-secondary"
+                                    style={{ lineHeight: "1.7", fontSize: "0.88rem" }}
+                                    dangerouslySetInnerHTML={{ __html: course?.description || "<p>Tidak ada deskripsi khusus untuk kursus ini.</p>" }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* 3. Target & Learning Outcomes */}
+                        <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden">
+                            <div className="card-body p-3 p-md-4">
+                                <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                                        style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)" }}
+                                    >
+                                        <i className="fas fa-graduation-cap" style={{ fontSize: "0.8rem" }}></i>
+                                    </div>
+                                    <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                                        Target & Capaian Pembelajaran
+                                    </h5>
+                                </div>
+
+                                {course?.learning_outcomes && course.learning_outcomes.length > 0 ? (
+                                    <div className="row g-2 g-md-3">
+                                        {course.learning_outcomes.map((item, index) => (
+                                            <div key={item.id || index} className="col-md-6">
+                                                <div
+                                                    className="p-3 rounded-3 h-100 d-flex align-items-start gap-2"
+                                                    style={{ background: "#f0fdf4", border: "1px solid #dcfce7" }}
+                                                >
+                                                    <i className="fas fa-circle-check text-success mt-1 flex-shrink-0" style={{ fontSize: "0.85rem", color: "#16a34a" }}></i>
+                                                    <span className="text-dark fw-medium" style={{ fontSize: "0.84rem", lineHeight: "1" }}>
+                                                        {item.outcome}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        )}
-                                    </>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="row g-2 g-md-3">
+                                        <div className="col-md-6">
+                                            <div className="p-3 rounded-3 h-100 d-flex align-items-start gap-2" style={{ background: "#f0fdf4", border: "1px solid #dcfce7" }}>
+                                                <i className="fas fa-circle-check text-success mt-1 flex-shrink-0" style={{ fontSize: "0.85rem", color: "#16a34a" }}></i>
+                                                <span className="text-dark fw-medium" style={{ fontSize: "0.84rem", lineHeight: "1" }}>
+                                                    Penguasaan materi modul secara komprehensif dan mandiri
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="p-3 rounded-3 h-100 d-flex align-items-start gap-2" style={{ background: "#f0fdf4", border: "1px solid #dcfce7" }}>
+                                                <i className="fas fa-circle-check text-success mt-1 flex-shrink-0" style={{ fontSize: "0.85rem", color: "#16a34a" }}></i>
+                                                <span className="text-dark fw-medium" style={{ fontSize: "0.84rem", lineHeight: "1" }}>
+                                                    Penyelesaian evaluasi materi SCORM / modul interaktif
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="p-3 rounded-3 h-100 d-flex align-items-start gap-2" style={{ background: "#f0fdf4", border: "1px solid #dcfce7" }}>
+                                                <i className="fas fa-circle-check text-success mt-1 flex-shrink-0" style={{ fontSize: "0.85rem", color: "#16a34a" }}></i>
+                                                <span className="text-dark fw-medium" style={{ fontSize: "0.84rem", lineHeight: "1" }}>
+                                                    Peningkatan kompetensi aparatur di lingkungan Setjen DPD RI
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="p-3 rounded-3 h-100 d-flex align-items-start gap-2" style={{ background: "#f0fdf4", border: "1px solid #dcfce7" }}>
+                                                <i className="fas fa-circle-check text-success mt-1 flex-shrink-0" style={{ fontSize: "0.85rem", color: "#16a34a" }}></i>
+                                                <span className="text-dark fw-medium" style={{ fontSize: "0.84rem", lineHeight: "1" }}>
+                                                    Perolehan sertifikat resmi setelah kelulusan seluruh materi
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>
-                    </div>
-                    </>
 
-                );
-            case "curriculum":
-                return (
-                    <div 
-                        className="card border-0 shadow-sm"
-                        style={{ borderRadius: "20px" }}
-                    >
-                        <div className="card-body p-3 p-md-4">
-                            <div className="d-flex align-items-center mb-3">
-                                <div 
-                                    className="me-3"
-                                    style={{
-                                        width: "40px",
-                                        height: "40px",
-                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                        borderRadius: "12px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center"
-                                    }}
-                                >
-                                    <i className="fas fa-list text-white"></i>
-                                </div>
-                                <h3 className="h5 mb-0" style={{ color: "#2c3e50" }}>
-                                    Kurikulum Kursus
-                                </h3>
-                            </div>
-                            
-                            <div className="row g-2 mb-3">
-                                <div className="col-md-4">
-                                    <div 
-                                        className="text-center p-2 p-md-3"
-                                        style={{
-                                            background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
-                                            borderRadius: "12px"
-                                        }}
+                        {/* 4. Requirements & Prerequisites */}
+                        <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden">
+                            <div className="card-body p-3 p-md-4">
+                                <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                                        style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)" }}
                                     >
-                                        <h6 className="fw-bold mb-1" style={{ color: "#0d9488", fontSize: "0.95rem" }}>
-                                            {course?.curriculum?.length || 0} Modul
-                                        </h6>
-                                        <small className="text-muted" style={{ fontSize: "0.8rem" }}>Materi pembelajaran</small>
+                                        <i className="fas fa-list-check" style={{ fontSize: "0.8rem" }}></i>
                                     </div>
+                                    <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                                        Persyaratan & Prasyarat
+                                    </h5>
                                 </div>
-                                <div className="col-md-4">
-                                    <div 
-                                        className="text-center p-2 p-md-3"
-                                        style={{
-                                            background: "linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.1) 100%)",
-                                            borderRadius: "12px"
-                                        }}
-                                    >
-                                        <h6 className="fw-bold mb-1" style={{ color: "#28a745", fontSize: "0.95rem" }}>
-                                            {course?.lectures?.length || 0} Video
-                                        </h6>
-                                        <small className="text-muted" style={{ fontSize: "0.8rem" }}>Video pembelajaran</small>
-                                    </div>
-                                </div>
-                                <div className="col-md-4">
-                                    <div 
-                                        className="text-center p-2 p-md-3"
-                                        style={{
-                                            background: "linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 140, 0, 0.1) 100%)",
-                                            borderRadius: "12px"
-                                        }}
-                                    >
-                                        <h6 className="fw-bold mb-1" style={{ color: "#ffc107", fontSize: "0.95rem" }}>
-                                            {calculateTotalDuration(course?.lectures || []).withJP}
-                                        </h6>
-                                        <small className="text-muted" style={{ fontSize: "0.8rem" }}>Total durasi</small>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {/* Real curriculum sections from backend */}
-                            {course?.curriculum && course.curriculum.length > 0 ? (
-                                course.curriculum.map((section, index) => (
-                                    <div key={section.variant_id || index} className="mb-3">
-                                        <div 
-                                            className="p-3"
-                                            style={{
-                                                background: "#f8f9fa",
-                                                borderRadius: "12px",
-                                                border: "1px solid #e9ecef"
-                                            }}
-                                        >
-                                            <div className="d-flex align-items-center justify-content-between">
-                                                <div className="d-flex align-items-center flex-grow-1">
-                                                    <span 
-                                                        className="badge me-3"
-                                                        style={{
-                                                            background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                                            color: "white",
-                                                            width: "30px",
-                                                            height: "30px",
-                                                            borderRadius: "50%",
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            fontWeight: "600"
-                                                        }}
-                                                    >
-                                                        {index + 1}
-                                                    </span>
-                                                    <div className="flex-grow-1">
-                                                        <h6 className="mb-1 fw-bold" style={{ color: "#2c3e50" }}>
-                                                            {section.title || `Modul ${index + 1}`}
-                                                        </h6>
-                                                        <small className="text-muted">
-                                                            <i className="fas fa-play-circle me-1"></i>
-                                                            {section.variant_items?.length || section.items?.length || 0} video
-                                                        </small>
-                                                    </div>
-                                                </div>
+
+                                {course?.requirements && course.requirements.length > 0 ? (
+                                    <div className="d-flex flex-column gap-2">
+                                        {course.requirements.map((item, index) => (
+                                            <div key={item.id || index} className="d-flex align-items-center gap-2 p-2 px-3 rounded-3 bg-light">
+                                                <i className="fas fa-check text-teal" style={{ color: "#0d9488", fontSize: "0.8rem" }}></i>
+                                                <span className="small text-secondary" style={{ fontSize: "0.84rem" }}>{item.requirement}</span>
                                             </div>
-                                            
-                                            {/* Show variant items/lectures */}
-                                            {(section.variant_items || section.items) && (section.variant_items?.length > 0 || section.items?.length > 0) && (
-                                                <div className="mt-3 ms-5">
-                                                    {(section.variant_items || section.items).map((item, itemIndex) => (
-                                                        <div key={item.variant_item_id || itemIndex} className="d-flex align-items-center py-2 border-bottom">
-                                                            <i className={`${item.file_icon || "fas fa-play-circle"} text-muted me-2`} style={{ fontSize: "0.9rem" }}></i>
-                                                            <span className="text-muted me-auto" style={{ fontSize: "0.9rem" }}>
-                                                                {item.title}
-                                                            </span>
-                                                            {item.content_duration && (
-                                                                <small className="badge bg-light text-muted">
-                                                                    <i className="fas fa-clock me-1"></i>
-                                                                    {formatDuration(parseDurationToSeconds(item.content_duration))}
-                                                                </small>
-                                                            )}
-                                                            {item.preview && (
-                                                                <small 
-                                                                    className="badge bg-primary ms-2"
-                                                                    role="button"
-                                                                    onClick={() => handlePreviewClick(item)}
-                                                                    style={{ cursor: "pointer" }}
-                                                                    title="Klik untuk menonton preview"
-                                                                >
-                                                                    <i className="fas fa-eye me-1"></i>
-                                                                    Preview
-                                                                </small>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="d-flex align-items-center gap-2 p-2 px-3 rounded-3 bg-light text-secondary small" style={{ fontSize: "0.84rem" }}>
+                                        <i className="fas fa-circle-info text-teal me-1" style={{ color: "#0d9488" }}></i>
+                                        <span>
+                                            {course?.target_audience === 'umum'
+                                                ? "Tidak ada prasyarat khusus. Kursus ini terbuka dan dapat diikuti langsung oleh masyarakat umum maupun aparatur sipil."
+                                                : "Tidak ada prasyarat khusus. Kursus ini dapat diikuti langsung oleh seluruh pegawai dan aparatur di lingkungan Setjen DPD RI."}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 5. Instructor Quick Spotlight */}
+                        {course?.teacher && (
+                            <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden">
+                                <div className="card-body p-3 p-md-4">
+                                    <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <div
+                                                className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                                                style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" }}
+                                            >
+                                                <i className="fas fa-chalkboard-user" style={{ fontSize: "0.8rem" }}></i>
+                                            </div>
+                                            <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                                                Instruktur Pengajar
+                                            </h5>
+                                        </div>
+                                        <button
+                                            onClick={() => setActiveTab("instructor")}
+                                            className="btn btn-sm btn-link text-teal text-decoration-none fw-semibold p-0 d-flex align-items-center gap-1"
+                                            style={{ color: "#0d9488", fontSize: "0.82rem" }}
+                                        >
+                                            Profil Lengkap <i className="fas fa-arrow-right" style={{ fontSize: "0.72rem" }}></i>
+                                        </button>
+                                    </div>
+
+                                    <div className="d-flex align-items-center gap-2">
+                                        <img
+                                            src={getImageUrl(course.teacher?.image) || '/images/placeholders/default-instructor.svg'}
+                                            alt={course.teacher?.full_name}
+                                            className="rounded-circle border shadow-xs flex-shrink-0"
+                                            style={{ width: "52px", height: "52px", objectFit: "cover" }}
+                                            onError={(e) => { e.target.src = '/images/placeholders/default-instructor.svg'; }}
+                                        />
+                                        <div className="flex-grow-1 min-w-0">
+                                            <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                                <h6 className="mb-0 fw-bold text-dark text-truncate" style={{ fontSize: "0.94rem" }}>{course.teacher?.full_name}</h6>
+                                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-0 px-2 rounded-pill" style={{ fontSize: "0.7rem" }}>
+                                                    <i className="fas fa-check-circle me-1"></i>Instruktur Resmi
+                                                </span>
+                                            </div>
+                                            <p className="text-muted small mb-2 text-truncate" style={{ fontSize: "0.8rem" }}>
+                                                {course.teacher?.about || course.teacher?.bio || "Instruktur Profesional di Lingkungan Setjen DPD RI"}
+                                            </p>
+                                            <div className="d-flex align-items-center gap-2 small text-secondary" style={{ fontSize: "0.78rem" }}>
+                                                <span><i className="fas fa-star text-warning me-1"></i>{(course.teacher?.average_rating || 5.0).toFixed(1)} Rating</span>
+                                                <span><i className="fas fa-users text-teal me-1" style={{ color: "#0d9488" }}></i>{course.teacher?.total_students || 0} Siswa</span>
+                                                <span><i className="fas fa-book text-muted me-1"></i>{course.teacher?.total_courses || 1} Kursus</span>
+                                            </div>
                                         </div>
                                     </div>
-                                ))
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            case "curriculum": {
+                const totalModules = course?.curriculum?.length || (course?.file_type === 'scorm' ? 1 : 0);
+                const totalLessons = course?.curriculum?.reduce((sum, sec) => sum + (sec.variant_items?.length || sec.items?.length || 0), 0) || course?.lectures?.length || 1;
+                return (
+                    <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden">
+                        <div className="card-body p-3 p-md-4">
+                            {/* Header with Curriculum Stats Ribbon */}
+                            <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                                <div className="d-flex align-items-center gap-2">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                                        style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)" }}
+                                    >
+                                        <i className="fas fa-book-bookmark" style={{ fontSize: "0.8rem" }}></i>
+                                    </div>
+                                    <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                                        Kurikulum & Materi Kursus
+                                    </h5>
+                                </div>
+                                <div className="d-flex align-items-center gap-2 flex-wrap">
+                                    <span className="badge bg-light text-secondary border px-2 py-1" style={{ fontSize: "0.75rem" }}>
+                                        <i className="fas fa-folder me-1 text-teal"></i>{totalModules} Modul
+                                    </span>
+                                    <span className="badge bg-light text-secondary border px-2 py-1" style={{ fontSize: "0.75rem" }}>
+                                        <i className="fas fa-file-lines me-1 text-teal"></i>{totalLessons} Materi
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Real curriculum sections from backend */}
+                            {course?.curriculum && course.curriculum.length > 0 ? (
+                                <div className="d-flex flex-column gap-2">
+                                    {course.curriculum.map((section, index) => {
+                                        const items = section.variant_items || section.items || [];
+                                        return (
+                                            <div key={section.variant_id || index} className="border rounded-3 overflow-hidden bg-white shadow-xs">
+                                                {/* Section Header */}
+                                                <div className="p-3 px-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <span
+                                                            className="badge rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                                                            style={{
+                                                                width: "24px",
+                                                                height: "24px",
+                                                                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                                                fontSize: "0.72rem",
+                                                                fontWeight: "700"
+                                                            }}
+                                                        >
+                                                            {index + 1}
+                                                        </span>
+                                                        <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.88rem" }}>
+                                                            {section.title || `Modul ${index + 1}`}
+                                                        </h6>
+                                                    </div>
+                                                    <span className="badge bg-white text-secondary border px-2 py-1" style={{ fontSize: "0.72rem" }}>
+                                                        {items.length} materi
+                                                    </span>
+                                                </div>
+
+                                                {/* Show variant items/lectures */}
+                                                {items.length > 0 ? (
+                                                    <div>
+                                                        {items.map((item, itemIndex) => {
+                                                            const isScorm = item.file_type === "scorm" || item.learning_module_info;
+                                                            return (
+                                                                <div
+                                                                    key={item.variant_item_id || itemIndex}
+                                                                    className={`p-3 px-3 d-flex align-items-center justify-content-between gap-2 transition-all ${itemIndex < items.length - 1 ? 'border-bottom' : ''
+                                                                        }`}
+                                                                    style={{ fontSize: "0.84rem" }}
+                                                                >
+                                                                    <div className="d-flex align-items-center gap-2 text-dark min-w-0">
+                                                                        <div
+                                                                            className="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+                                                                            style={{
+                                                                                width: "30px",
+                                                                                height: "30px",
+                                                                                background: isScorm ? "rgba(13, 148, 136, 0.12)" : "rgba(2, 132, 199, 0.1)"
+                                                                            }}
+                                                                        >
+                                                                            <i
+                                                                                className={isScorm ? "fas fa-cubes text-teal" : (item.file_icon || "fas fa-play text-primary")}
+                                                                                style={{ fontSize: "0.82rem", color: isScorm ? "#0d9488" : "#0284c7" }}
+                                                                            ></i>
+                                                                        </div>
+                                                                        <div className="min-w-0">
+                                                                            <span className="fw-semibold text-dark text-truncate d-block" style={{ fontSize: "0.85rem" }}>
+                                                                                {item.title}
+                                                                            </span>
+                                                                            {isScorm && (
+                                                                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-0 px-2 rounded mt-1" style={{ fontSize: "0.68rem" }}>
+                                                                                    Paket E-Learning SCORM
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                                                        {item.content_duration && (
+                                                                            <span className="badge bg-light text-secondary border-0 px-2 py-1" style={{ fontSize: "0.74rem" }}>
+                                                                                <i className="fas fa-clock me-1 text-muted"></i>
+                                                                                {formatDuration(parseDurationToSeconds(item.content_duration))}
+                                                                            </span>
+                                                                        )}
+                                                                        {item.preview && (
+                                                                            <button
+                                                                                type="button"
+                                                                                className="btn btn-xs py-1 px-3 rounded-pill fw-semibold d-flex align-items-center gap-1 border-0"
+                                                                                onClick={() => handlePreviewClick(item)}
+                                                                                style={{
+                                                                                    fontSize: "0.74rem",
+                                                                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                                                                    color: "#ffffff",
+                                                                                    boxShadow: "0 2px 6px rgba(13, 148, 136, 0.25)"
+                                                                                }}
+                                                                                title="Klik untuk menonton preview"
+                                                                            >
+                                                                                <i className="fas fa-play" style={{ fontSize: "0.68rem" }}></i>
+                                                                                Preview
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <div className="p-3 text-center text-muted small" style={{ fontSize: "0.82rem" }}>
+                                                        Belum ada materi dalam modul ini.
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             ) : (
-                                <div className="text-center py-5">
-                                    <i className="fas fa-book text-muted mb-3" style={{ fontSize: "3rem", opacity: "0.3" }}></i>
-                                    <p className="text-muted">Kurikulum belum tersedia untuk kursus ini.</p>
+                                /* When course has no curriculum array but has standalone SCORM package */
+                                <div className="p-4 rounded-3 bg-light border text-center">
+                                    <div
+                                        className="mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center text-teal"
+                                        style={{ width: "48px", height: "48px", background: "rgba(13, 148, 136, 0.12)" }}
+                                    >
+                                        <i className="fas fa-cubes" style={{ fontSize: "1.3rem", color: "#0d9488" }}></i>
+                                    </div>
+                                    <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: "0.95rem" }}>Modul Pembelajaran Mandiri</h6>
+                                    <p className="text-secondary small mb-3" style={{ fontSize: "0.82rem", maxWidth: "440px", margin: "0 auto", lineHeight: "1.6" }}>
+                                        Materi kursus ini dikemas dalam modul e-learning interaktif terstandar SCORM yang dapat diakses langsung setelah pendaftaran.
+                                    </p>
+                                    <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-1 px-3 rounded-pill small">
+                                        <i className="fas fa-check-circle me-1"></i>Pelacakan Progres Otomatis Aktif
+                                    </span>
                                 </div>
                             )}
                         </div>
                     </div>
                 );
+            }
             case "instructor":
                 return (
-                    <>
-                        <CourseInstructor teacher={course?.teacher} />
+                    <div className="d-flex flex-column gap-2">
+                        <CourseInstructor teacher={course?.teacher} courseCount={course?.teacher?.total_courses || 1} />
                         <CourseStatistics course={course} />
-                    </>
+                    </div>
                 );
             case "reviews":
                 return (
-                    <CourseReviews 
+                    <CourseReviews
                         reviews={course?.reviews || []}
                         averageRating={course?.average_rating || 0}
                         totalReviews={course?.rating_count || 0}
@@ -648,10 +816,10 @@ function CourseDetail() {
                 return <CourseFAQ />;
             default:
                 return (
-                    <div className="card border-0 shadow-sm">
-                        <div className="card-body p-4">
-                            <h3 className="h4 mb-3">Course Overview</h3>
-                            <p>{course?.description || "Course description not available."}</p>
+                    <div className="card border-0 shadow-xs rounded-3 bg-white">
+                        <div className="card-body p-3">
+                            <h5 className="mb-2 fw-bold">Ringkasan Kursus</h5>
+                            <p className="text-secondary small">{course?.description || "Deskripsi tidak tersedia."}</p>
                         </div>
                     </div>
                 );
@@ -667,31 +835,32 @@ function CourseDetail() {
             </>
         );
     }
-    
+
     return (
         <div className="course-detail">
             <BaseHeader />
-            
+
             <CourseHero course={course} />
-            
-            <section className="py-4 base-course-detail-content">
+
+            <section className="py-3 py-md-4 base-course-detail-content">
                 <div className="container">
-                    <div className="row g-3 g-md-4">
+                    <div className="row g-3 g-lg-4">
                         {/* Main Content */}
                         <div className="col-lg-8">
-                            <CourseTabNavigation 
-                                activeTab={activeTab} 
-                                setActiveTab={setActiveTab} 
+                            <CourseTabNavigation
+                                activeTab={activeTab}
+                                setActiveTab={setActiveTab}
+                                course={course}
                             />
-                            
+
                             <div>
                                 {getTabContent()}
                             </div>
                         </div>
-                        
+
                         {/* Sidebar */}
                         <div className="col-lg-4">
-                            <CourseSidebar 
+                            <CourseSidebar
                                 course={course}
                                 isInWishlist={isInWishlist}
                                 isLoadingWishlist={isLoadingWishlist}
@@ -701,13 +870,13 @@ function CourseDetail() {
                     </div>
                 </div>
             </section>
-            
+
             {/* Course Preview Modal - Compact Design */}
             {course?.file && (
                 <div className="modal fade" id="coursePreviewModal" tabIndex={-1} aria-labelledby="coursePreviewModalLabel" aria-hidden="true">
                     <div className="modal-dialog modal-xl modal-dialog-centered">
                         <div className="modal-content border-0" style={{ borderRadius: "20px", overflow: "hidden" }}>
-                            <div 
+                            <div
                                 className="modal-header border-0 text-white position-relative"
                                 style={{
                                     background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
@@ -720,7 +889,7 @@ function CourseDetail() {
                                 }}
                             >
                                 <div className="d-flex align-items-center flex-grow-1" style={{ zIndex: 2, position: "relative" }}>
-                                    <div 
+                                    <div
                                         className="me-2"
                                         style={{
                                             width: "32px",
@@ -743,14 +912,14 @@ function CourseDetail() {
                                         </small>
                                     </div>
                                 </div>
-                                
-                                <button 
-                                    type="button" 
+
+                                <button
+                                    type="button"
                                     className="btn btn-sm"
-                                    data-bs-dismiss="modal" 
+                                    data-bs-dismiss="modal"
                                     aria-label="Close"
-                                    style={{ 
-                                        zIndex: 3, 
+                                    style={{
+                                        zIndex: 3,
                                         position: "relative",
                                         width: "32px",
                                         height: "32px",
@@ -768,30 +937,21 @@ function CourseDetail() {
                                     }}
                                     onClick={(e) => {
                                         // ✨ PHASE 4.43.8: Stop both video and iframe content before closing
-                                        // Step 1: Remove focus from button FIRST to prevent aria-hidden warning
                                         e.currentTarget.blur();
-                                        
-                                        // Step 2: Pause all video elements immediately
                                         const videos = document.querySelectorAll("#coursePreviewModal video");
                                         videos.forEach(video => {
                                             video.pause();
                                             video.currentTime = 0;
                                         });
-                                        
-                                        // Step 3: Stop iframes (Google Drive videos) by setting src to blank
                                         const iframes = document.querySelectorAll("#coursePreviewModal iframe");
                                         iframes.forEach(iframe => {
                                             iframe.src = "about:blank";
                                         });
-                                        
-                                        // Step 4: Also pause video via ref as backup
                                         const videoElement = videoRef.current;
                                         if (videoElement) {
                                             videoElement.pause();
                                             videoElement.currentTime = 0;
                                         }
-                                        
-                                        // Step 5: Now close the modal
                                         const modalElement = document.getElementById("coursePreviewModal");
                                         if (modalElement) {
                                             const modal = window.bootstrap.Modal.getInstance(modalElement);
@@ -813,45 +973,30 @@ function CourseDetail() {
                                 </button>
                             </div>
                             <div className="modal-body p-0 bg-dark" style={{ minHeight: "400px", maxHeight: "calc(100vh - 100px)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                                {/* ✨ PHASE 4.74: Fixed video container with proper YouTube detection */}
                                 <div style={{ width: "100%", maxWidth: "100%", position: "relative" }}>
                                     {(() => {
                                         const videoUrl = convertGoogleDriveUrlToPreview(course.file);
                                         const isYouTubeEmbed = videoUrl && (videoUrl.includes('youtube.com/embed') || videoUrl.includes('youtube-nocookie.com/embed') || videoUrl.includes('youtu.be'));
-                                        
+
                                         return isYouTubeEmbed ? (
-                                            // ✨ PHASE 4.74: YouTube requires iframe
                                             <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden" }}>
                                                 <iframe
                                                     key={videoUrl}
                                                     src={videoUrl}
-                                                    style={{
-                                                        border: "none",
-                                                        borderRadius: "8px"
-                                                    }}
+                                                    style={{ border: "none", borderRadius: "8px" }}
                                                     sandbox="allow-same-origin allow-scripts allow-presentation"
                                                     allowFullScreen
                                                     title="Course Preview"
-                                                    onError={(e) => {
-                                                        console.error("Course preview iframe failed to load:", videoUrl, e);
-                                                    }}
                                                 />
                                             </div>
                                         ) : (
-                                            // Regular video tag for direct video file URLs
                                             <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden", backgroundColor: "#000" }}>
-                                                <video 
+                                                <video
                                                     key={videoUrl}
                                                     ref={videoRef}
-                                                    src={videoUrl} 
-                                                    style={{ 
-                                                        objectFit: "contain",
-                                                        backgroundColor: "#000"
-                                                    }}
-                                                    controls 
-                                                    onError={(e) => {
-                                                        console.error("Video failed to load:", videoUrl);
-                                                    }}
+                                                    src={videoUrl}
+                                                    style={{ objectFit: "contain", backgroundColor: "#000" }}
+                                                    controls
                                                 />
                                             </div>
                                         );
@@ -868,7 +1013,7 @@ function CourseDetail() {
                 <div className="modal fade" id="lessonPreviewModal" tabIndex={-1} aria-labelledby="lessonPreviewModalLabel" aria-hidden="true">
                     <div className="modal-dialog modal-xl modal-dialog-centered">
                         <div className="modal-content border-0" style={{ borderRadius: "20px", overflow: "hidden" }}>
-                            <div 
+                            <div
                                 className="modal-header border-0 text-white position-relative"
                                 style={{
                                     background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
@@ -881,7 +1026,7 @@ function CourseDetail() {
                                 }}
                             >
                                 <div className="d-flex align-items-center flex-grow-1" style={{ zIndex: 2, position: "relative" }}>
-                                    <div 
+                                    <div
                                         className="me-2"
                                         style={{
                                             width: "32px",
@@ -909,14 +1054,14 @@ function CourseDetail() {
                                         Preview
                                     </span>
                                 </div>
-                                
-                                <button 
-                                    type="button" 
+
+                                <button
+                                    type="button"
                                     className="btn btn-sm"
-                                    data-bs-dismiss="modal" 
+                                    data-bs-dismiss="modal"
                                     aria-label="Close"
-                                    style={{ 
-                                        zIndex: 3, 
+                                    style={{
+                                        zIndex: 3,
                                         position: "relative",
                                         width: "32px",
                                         height: "32px",
@@ -933,27 +1078,17 @@ function CourseDetail() {
                                         flexShrink: 0
                                     }}
                                     onClick={(e) => {
-                                        // ✨ PHASE 4.43.8: Stop both video and iframe content before closing
-                                        // Step 1: Remove focus from button FIRST to prevent aria-hidden warning
                                         e.currentTarget.blur();
-                                        
-                                        // Step 2: Pause all video elements immediately
                                         const videos = document.querySelectorAll("#lessonPreviewModal video");
                                         videos.forEach(video => {
                                             video.pause();
                                             video.currentTime = 0;
                                         });
-                                        
-                                        // Step 3: Stop iframes (Google Drive videos) by setting src to blank
                                         const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
                                         iframes.forEach(iframe => {
                                             iframe.src = "about:blank";
                                         });
-                                        
-                                        // Step 4: Reset preview state
                                         setPreviewVideo(null);
-                                        
-                                        // Step 5: Now close the modal
                                         const modalElement = document.getElementById("lessonPreviewModal");
                                         if (modalElement) {
                                             const modal = window.bootstrap.Modal.getInstance(modalElement);
@@ -975,45 +1110,50 @@ function CourseDetail() {
                                 </button>
                             </div>
                             <div className="modal-body p-0 bg-dark" style={{ minHeight: "400px", maxHeight: "calc(100vh - 150px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                {/* ✨ PHASE 4.43.3: Wrap video in aspect ratio container for proper proportional display */}
                                 <div style={{ width: "100%", maxWidth: "100%", position: "relative" }}>
-                                    {/* ✨ PHASE 4.74: Fixed YouTube embed handling - render as iframe not video tag */}
                                     {(() => {
+                                        const scormPlayerUrl = previewVideo.learning_module_info?.player_url
+                                            ? (previewVideo.learning_module_info.player_url.startsWith('http')
+                                                ? previewVideo.learning_module_info.player_url
+                                                : `http://127.0.0.1:8001${previewVideo.learning_module_info.player_url}`)
+                                            : null;
+
+                                        if (scormPlayerUrl) {
+                                            return (
+                                                <div style={{ width: "100%", height: "550px", backgroundColor: "#fff" }}>
+                                                    <iframe
+                                                        key={scormPlayerUrl}
+                                                        src={scormPlayerUrl}
+                                                        style={{ width: "100%", height: "100%", border: "none" }}
+                                                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                                                        allowFullScreen
+                                                        title="SCORM Player Preview"
+                                                    />
+                                                </div>
+                                            );
+                                        }
+
                                         const videoUrl = convertGoogleDriveUrlToPreview(previewVideo.file || previewVideo.video_url);
                                         const isYouTubeEmbed = videoUrl && (videoUrl.includes('youtube.com/embed') || videoUrl.includes('youtube-nocookie.com/embed') || videoUrl.includes('youtu.be'));
-                                        
+
                                         return isYouTubeEmbed ? (
-                                            // ✨ PHASE 4.74: YouTube requires iframe
                                             <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden" }}>
                                                 <iframe
                                                     key={videoUrl}
                                                     src={videoUrl}
-                                                    style={{
-                                                        border: "none",
-                                                        borderRadius: "8px"
-                                                    }}
+                                                    style={{ border: "none", borderRadius: "8px" }}
                                                     sandbox="allow-same-origin allow-scripts allow-presentation"
                                                     allowFullScreen
                                                     title="Lesson Preview"
-                                                    onError={(e) => {
-                                                        console.error("Iframe failed to load:", videoUrl, e);
-                                                    }}
                                                 />
                                             </div>
                                         ) : (
-                                            // Regular video tag for direct video file URLs
                                             <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden", backgroundColor: "#000" }}>
-                                                <video 
+                                                <video
                                                     key={videoUrl}
-                                                    src={videoUrl} 
-                                                    style={{ 
-                                                        objectFit: "contain",
-                                                        backgroundColor: "#000"
-                                                    }}
-                                                    controls 
-                                                    onError={(e) => {
-                                                        console.error("Video failed to load:", videoUrl);
-                                                    }}
+                                                    src={videoUrl}
+                                                    style={{ objectFit: "contain", backgroundColor: "#000" }}
+                                                    controls
                                                 />
                                             </div>
                                         );
@@ -1032,58 +1172,59 @@ function CourseDetail() {
                     </div>
                 </div>
             )}
-            
-            {/* Floating Wishlist Button - Hidden for teachers/instructors */}
+
+            {/* Floating Wishlist Button - Hidden for teachers/instructors, stacked above feedback button */}
             {course && !isLoading && !isTeacher && (
-                <div 
+                <div
                     className="floating-wishlist-container"
                     style={{
                         position: "fixed",
-                        top: "50%",
-                        right: "80px",
-                        transform: "translateY(-50%)",
-                        zIndex: 9999,
+                        bottom: "92px",
+                        right: "24px",
+                        zIndex: 1035,
                         display: "flex",
                         alignItems: "center",
-                        gap: "12px",
+                        gap: "10px",
                         pointerEvents: "auto"
                     }}
                 >
                     {/* Text label (shows when in wishlist) */}
                     {isInWishlist && (
-                        <div 
+                        <div
                             className="floating-wishlist-label"
                             style={{
                                 background: "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)",
                                 color: "white",
-                                padding: "10px 20px",
+                                padding: "8px 16px",
                                 borderRadius: "30px",
                                 fontWeight: "600",
-                                fontSize: "0.9rem",
+                                fontSize: "0.82rem",
                                 boxShadow: "0 4px 15px rgba(255, 107, 107, 0.4)",
                                 border: "2px solid rgba(255, 255, 255, 0.3)",
                                 whiteSpace: "nowrap",
                                 animation: "fadeInRight 0.3s ease",
-                                zIndex: 9999
+                                zIndex: 1035
                             }}
                         >
-                            Click to Remove
+                            Tersimpan di Wishlist
                         </div>
                     )}
-                    
+
                     <button
                         onClick={handleWishlist}
                         disabled={isLoadingWishlist}
                         className="btn floating-wishlist-button"
+                        aria-label={isInWishlist ? "Hapus dari Wishlist" : "Simpan ke Wishlist"}
+                        title={isInWishlist ? "Hapus dari Wishlist" : "Simpan ke Wishlist"}
                         style={{
-                            width: "60px",
-                            height: "60px",
+                            width: "56px",
+                            height: "56px",
                             borderRadius: "50%",
-                            background: isInWishlist 
-                                ? "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)" 
+                            background: isInWishlist
+                                ? "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)"
                                 : "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                             border: "3px solid rgba(255, 255, 255, 0.3)",
-                            boxShadow: "0 8px 25px rgba(102, 126, 234, 0.4)",
+                            boxShadow: "0 4px 16px rgba(13, 148, 136, 0.3)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -1091,13 +1232,13 @@ function CourseDetail() {
                             transition: "all 0.3s ease",
                             padding: 0,
                             flexShrink: 0,
-                            zIndex: 9999,
+                            zIndex: 1035,
                             position: "relative"
                         }}
                         onMouseEnter={(e) => {
                             if (!isLoadingWishlist) {
                                 e.currentTarget.style.transform = "scale(1.1) translateY(-3px)";
-                                e.currentTarget.style.boxShadow = "0 12px 35px rgba(102, 126, 234, 0.5)";
+                                e.currentTarget.style.boxShadow = "0 12px 35px rgba(102, 126, 234, 0)";
                             }
                         }}
                         onMouseLeave={(e) => {
@@ -1107,20 +1248,20 @@ function CourseDetail() {
                         title={isInWishlist ? "Hapus dari Wishlist" : "Tambah ke Wishlist"}
                     >
                         {isLoadingWishlist ? (
-                            <i className="fas fa-spinner fa-spin text-white" style={{ fontSize: "1.5rem" }}></i>
+                            <i className="fas fa-spinner fa-spin text-white" style={{ fontSize: "1rem" }}></i>
                         ) : (
-                            <i 
+                            <i
                                 className={`${isInWishlist ? "fas" : "far"} fa-heart text-white`}
-                                style={{ 
-                                    fontSize: "1.5rem",
-                                    animation: isInWishlist ? "heartBeat 0.5s" : "none"
+                                style={{
+                                    fontSize: "1rem",
+                                    animation: isInWishlist ? "heartBeat 0s" : "none"
                                 }}
                             ></i>
                         )}
                     </button>
                 </div>
             )}
-            
+
             <Footer />
         </div>
     );

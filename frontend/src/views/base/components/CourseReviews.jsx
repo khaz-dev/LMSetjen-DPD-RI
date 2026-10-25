@@ -54,11 +54,11 @@ const CourseReviews = ({ reviews = [], averageRating = 0, totalReviews = 0 }) =>
 
     const filterReviews = (reviews) => {
         let filtered = [...reviews];
-        
+
         if (filter !== "all") {
             filtered = filtered.filter(review => review.rating === parseInt(filter));
         }
-        
+
         // Sort reviews
         filtered.sort((a, b) => {
             switch (sortBy) {
@@ -76,335 +76,194 @@ const CourseReviews = ({ reviews = [], averageRating = 0, totalReviews = 0 }) =>
                     return 0;
             }
         });
-        
+
         return filtered;
     };
 
     const filteredReviews = filterReviews(displayReviews);
 
     return (
-        <div className="card border-0 shadow-sm mb-4">
-            <div className="card-body p-4">
+        <div className="card border-0 shadow-xs rounded-3 bg-white mb-3 overflow-hidden">
+            <div className="card-body p-3 p-md-4">
+                {/* Header */}
+                <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div className="d-flex align-items-center gap-2">
+                        <div
+                            className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                            style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" }}
+                        >
+                            <i className="fas fa-star" style={{ fontSize: "0.8rem" }}></i>
+                        </div>
+                        <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                            Ulasan & Kepuasan Peserta
+                        </h5>
+                    </div>
+                    <span className="badge bg-light text-secondary border py-1 px-2 rounded-pill small">
+                        {totalReviews} Ulasan Masuk
+                    </span>
+                </div>
+
                 {reviews.length > 0 ? (
-                    <div className="row">
-                        <div className="col-lg-4 mb-4">
-                            {/* Rating Summary */}
-                            <div className="text-center bg-light rounded-3 p-4">
-                                <div className="display-4 fw-bold text-warning mb-2">
-                                    {averageRating || 0}
+                    <div>
+                        {/* Rating Summary Strip */}
+                        <div className="row g-3 align-items-center p-3 p-md-4 rounded-3 bg-light border mb-3">
+                            <div className="col-sm-4 text-center border-sm-end">
+                                <div className="display-6 fw-bold text-dark mb-0">
+                                    {(averageRating || 5.0).toFixed(1)}
                                 </div>
-                                <Rating
-                                    initialValue={averageRating || 0}
-                                    readonly={true}
-                                    size={25}
-                                    fillColor="#ffc107"
-                                    className="mb-2"
-                                />
-                                <p className="text-muted mb-0">
-                                    {totalReviews} student reviews
-                                </p>
+                                <div className="d-flex justify-content-center my-1">
+                                    <Rating
+                                        initialValue={averageRating || 5}
+                                        readonly={true}
+                                        size={18}
+                                        fillColor="#f59e0b"
+                                    />
+                                </div>
+                                <small className="text-muted" style={{ fontSize: "0.78rem" }}>
+                                    Berdasarkan {totalReviews} ulasan peserta
+                                </small>
                             </div>
 
-                            {/* Rating Distribution */}
-                            <div className="mt-4">
-                                <h6 className="fw-semibold mb-3">Rating Breakdown</h6>
-                                {[5, 4, 3, 2, 1].map(rating => {
-                                    const count = ratingDistribution[rating];
-                                    const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-                                    
-                                    return (
-                                        <div key={rating} className="d-flex align-items-center mb-2">
-                                            <span className="me-2 fw-semibold" style={{ minWidth: '15px' }}>
-                                                {rating}
-                                            </span>
-                                            <i className="fas fa-star text-warning me-2 small"></i>
-                                            <div className="progress flex-grow-1 me-3" style={{ height: '8px' }}>
-                                                <div 
-                                                    className="progress-bar bg-warning" 
-                                                    style={{ width: `${percentage}%` }}
-                                                ></div>
+                            {/* Distribution Progress Bars */}
+                            <div className="col-sm-8">
+                                <div className="d-flex flex-column gap-1">
+                                    {[5, 4, 3, 2, 1].map(rating => {
+                                        const count = ratingDistribution[rating] || 0;
+                                        const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : (rating === 5 ? 100 : 0);
+                                        return (
+                                            <div key={rating} className="d-flex align-items-center gap-2" style={{ fontSize: "0.78rem" }}>
+                                                <span className="fw-semibold text-secondary" style={{ width: "12px" }}>{rating}</span>
+                                                <i className="fas fa-star text-warning small" style={{ fontSize: "0.68rem" }}></i>
+                                                <div className="progress flex-grow-1" style={{ height: "6px" }}>
+                                                    <div
+                                                        className="progress-bar bg-warning"
+                                                        style={{ width: `${percentage}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-muted text-end" style={{ width: "36px" }}>
+                                                    {Math.round(percentage)}%
+                                                </span>
                                             </div>
-                                            <small className="text-muted" style={{ minWidth: '40px' }}>
-                                                {Math.round(percentage)}%
-                                            </small>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
 
-                        <div className="col-lg-8">
-                            {/* Reviews Header */}
-                            <div className="d-flex justify-content-between align-items-center mb-4">
-                                <h3 className="h4 mb-0 d-flex align-items-center">
-                                    <i className="fas fa-comments text-primary me-3"></i>
-                                    Student Reviews
-                                </h3>
-                                <button className="btn btn-outline-primary btn-sm">
-                                    <i className="fas fa-plus me-2"></i>
-                                    Write a Review
-                                </button>
+                        {/* Filter Toolbar */}
+                        <div className="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+                            <div className="d-flex align-items-center gap-2">
+                                <span className="small text-muted fw-semibold">Filter:</span>
+                                <select
+                                    className="form-select form-select-sm py-1"
+                                    value={filter}
+                                    onChange={(e) => setFilter(e.target.value)}
+                                    style={{ fontSize: "0.8rem", width: "auto" }}
+                                >
+                                    <option value="all">Semua Bintang</option>
+                                    <option value="5">5 Bintang</option>
+                                    <option value="4">4 Bintang</option>
+                                    <option value="3">3 Bintang</option>
+                                </select>
                             </div>
-
-                            {/* Filters */}
-                            <div className="row g-3 mb-4">
-                                <div className="col-md-6">
-                                    <label className="form-label small fw-semibold">Filter by Rating</label>
-                                    <select 
-                                        className="form-select form-select-sm"
-                                        value={filter}
-                                        onChange={(e) => setFilter(e.target.value)}
-                                    >
-                                        <option value="all">All Ratings</option>
-                                        <option value="5">5 Stars</option>
-                                        <option value="4">4 Stars</option>
-                                        <option value="3">3 Stars</option>
-                                        <option value="2">2 Stars</option>
-                                        <option value="1">1 Star</option>
-                                    </select>
-                                </div>
-                                <div className="col-md-6">
-                                    <label className="form-label small fw-semibold">Sort by</label>
-                                    <select 
-                                        className="form-select form-select-sm"
-                                        value={sortBy}
-                                        onChange={(e) => setSortBy(e.target.value)}
-                                    >
-                                        <option value="newest">Newest First</option>
-                                        <option value="oldest">Oldest First</option>
-                                        <option value="highest">Highest Rating</option>
-                                        <option value="lowest">Lowest Rating</option>
-                                        <option value="helpful">Most Helpful</option>
-                                    </select>
-                                </div>
+                            <div className="d-flex align-items-center gap-2">
+                                <span className="small text-muted fw-semibold">Urutkan:</span>
+                                <select
+                                    className="form-select form-select-sm py-1"
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                    style={{ fontSize: "0.8rem", width: "auto" }}
+                                >
+                                    <option value="newest">Terbaru</option>
+                                    <option value="highest">Rating Tertinggi</option>
+                                    <option value="helpful">Paling Membantu</option>
+                                </select>
                             </div>
+                        </div>
 
                         {/* Reviews List */}
-                        <div className="mb-4">
-                            {filteredReviews.length === 0 ? (
-                                /* Empty State - No Reviews Yet */
-                                <div className="text-center py-5">
-                                    <div 
-                                        className="mb-4"
-                                        style={{
-                                            width: '120px',
-                                            height: '120px',
-                                            margin: '0 auto',
-                                            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-                                            borderRadius: '50%',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        <i className="fas fa-comments" style={{ fontSize: '3.5rem', color: '#0d9488', opacity: '0.6' }}></i>
-                                    </div>
-                                    
-                                    <h4 className="fw-bold mb-3" style={{ color: '#2c3e50' }}>
-                                        Belum Ada Ulasan
-                                    </h4>
-                                    
-                                    <p className="text-muted mb-4" style={{ maxWidth: '400px', margin: '0 auto', lineHeight: '1.6' }}>
-                                        Kursus ini belum memiliki ulasan dari student. Jadilah yang pertama memberikan ulasan setelah menyelesaikan kursus ini!
-                                    </p>
-                                    
-                                    <div 
-                                        className="d-inline-flex align-items-center gap-3 p-3 rounded-3"
-                                        style={{
-                                            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-                                            border: '2px dashed rgba(102, 126, 234, 0.2)'
-                                        }}
-                                    >
-                                        <i className="fas fa-info-circle text-primary" style={{ fontSize: '1.2rem' }}></i>
-                                        <span className="text-muted small">
-                                            Daftar dan selesaikan kursus untuk memberikan ulasan pertama
-                                        </span>
-                                    </div>
-                                </div>
-                            ) : (
-                                /* Show reviews when available */
-                                filteredReviews.slice(0, displayCount).map((review, index) => (
-                                <div key={review.id || index} className="border-bottom pb-4 mb-4">
-                                    <div className="d-flex align-items-start">
-                                        {/* User Avatar with fallback to initials */}
-                                        {review.user?.image && !imageErrors[review.id] ? (
-                                            <img 
-                                                src={review.user.image} 
-                                                alt={review.user?.full_name}
-                                                className="rounded-circle me-3"
-                                                loading="lazy"
-                                                decoding="async"
-                                                width="50"
-                                                height="50"
-                                                style={{ 
-                                                    width: '50px', 
-                                                    height: '50px', 
-                                                    objectFit: 'cover',
-                                                    border: '2px solid #f0f0f0'
-                                                }}
-                                                onError={() => handleImageError(review.id)}
-                                            />
-                                        ) : (
-                                            <div 
-                                                className="rounded-circle me-3 d-flex align-items-center justify-content-center"
-                                                style={{ 
-                                                    width: '50px', 
-                                                    height: '50px',
-                                                    background: getUserColor(review.user?.full_name),
-                                                    color: 'white',
-                                                    fontWeight: '600',
-                                                    fontSize: '1.1rem',
-                                                    border: '2px solid rgba(255, 255, 255, 0.5)',
-                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                                                }}
-                                            >
-                                                {getInitials(review.user?.full_name)}
-                                            </div>
-                                        )}
-                                        <div className="flex-grow-1">
-                                            <div className="d-flex justify-content-between align-items-start mb-2">
+                        <div className="d-flex flex-column gap-3">
+                            {filteredReviews.slice(0, displayCount).map((review, index) => (
+                                <div key={review.id || index} className="p-3 rounded-3 bg-white border">
+                                    <div className="d-flex align-items-start gap-3">
+                                        <div
+                                            className="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                                            style={{
+                                                width: "42px",
+                                                height: "42px",
+                                                background: getUserColor(review.user?.full_name),
+                                                fontSize: "0.95rem",
+                                                fontWeight: 700
+                                            }}
+                                        >
+                                            {getInitials(review.user?.full_name)}
+                                        </div>
+                                        <div className="flex-grow-1 min-w-0">
+                                            <div className="d-flex justify-content-between align-items-center mb-1">
                                                 <div>
-                                                    <h6 className="fw-semibold mb-1">
+                                                    <span className="fw-bold text-dark d-block" style={{ fontSize: "0.9rem" }}>
                                                         {review.user?.full_name}
-                                                    </h6>
-                                                    <div className="d-flex align-items-center">
+                                                    </span>
+                                                    <div className="d-flex align-items-center gap-2 mt-0">
                                                         <Rating
                                                             initialValue={review.rating}
                                                             readonly={true}
-                                                            size={16}
-                                                            fillColor="#ffc107"
+                                                            size={13}
+                                                            fillColor="#f59e0b"
                                                         />
-                                                        <span className="text-muted ms-2 small">
+                                                        <small className="text-muted" style={{ fontSize: "0.74rem" }}>
                                                             {moment(review.date).fromNow()}
-                                                        </span>
+                                                        </small>
                                                     </div>
                                                 </div>
-                                                <div className="dropdown">
-                                                    <button 
-                                                        className="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                        data-bs-toggle="dropdown"
-                                                    >
-                                                        <i className="fas fa-ellipsis-h"></i>
-                                                    </button>
-                                                    <ul className="dropdown-menu">
-                                                        <li>
-                                                            <a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
-                                                                <i className="fas fa-flag me-2"></i>
-                                                                Report
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>
-                                                                <i className="fas fa-share me-2"></i>
-                                                                Share
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
                                             </div>
-                                            
-                                            <p className="text-muted mb-3" style={{ lineHeight: '1.6' }}>
+                                            <p className="text-secondary mb-0" style={{ fontSize: "0.85rem", lineHeight: "1.6" }}>
                                                 {review.review}
                                             </p>
-                                            
-                                            <div className="d-flex align-items-center gap-3">
-                                                <button className="btn btn-sm btn-outline-secondary">
-                                                    <i className="fas fa-thumbs-up me-1"></i>
-                                                    Helpful ({review.helpful_count || 0})
-                                                </button>
-                                                <button className="btn btn-sm btn-outline-secondary">
-                                                    <i className="fas fa-reply me-1"></i>
-                                                    Reply
-                                                </button>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            ))
-                            )}
+                            ))}
                         </div>
 
-                        {/* Show More/Less Button */}
                         {filteredReviews.length > 3 && (
-                            <div className="text-center mt-4">
-                                <button 
-                                    className="btn btn-outline-primary"
+                            <div className="text-center mt-3">
+                                <button
+                                    className="btn btn-sm btn-outline-teal rounded-pill px-3 py-1 fw-semibold"
                                     onClick={() => setShowAll(!showAll)}
+                                    style={{ fontSize: "0.8rem" }}
                                 >
-                                    {showAll ? (
-                                        <>
-                                            <i className="fas fa-chevron-up me-2"></i>
-                                            Show Less Reviews
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i className="fas fa-chevron-down me-2"></i>
-                                            Show All {filteredReviews.length} Reviews
-                                        </>
-                                    )}
+                                    {showAll ? "Tampilkan Lebih Sedikit" : `Tampilkan Semua (${filteredReviews.length}) Ulasan`}
                                 </button>
                             </div>
                         )}
-                        </div>
                     </div>
                 ) : (
-                    /* No Reviews Empty State */
-                    <div className="text-center py-5">
-                        <div 
-                            className="mb-4"
+                    /* Compact & Eye-Catching No Reviews State */
+                    <div className="p-4 p-md-5 rounded-3 bg-light border text-center">
+                        <div
+                            className="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center"
                             style={{
-                                width: '150px',
-                                height: '150px',
-                                margin: '0 auto',
-                                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: '3px dashed rgba(102, 126, 234, 0.2)'
+                                width: "54px",
+                                height: "54px",
+                                background: "rgba(13, 148, 136, 0.12)",
+                                color: "#0d9488"
                             }}
                         >
-                            <i className="fas fa-star" style={{ fontSize: '4rem', color: '#0d9488', opacity: '0.5' }}></i>
+                            <i className="fas fa-star-half-stroke" style={{ fontSize: "1.45rem" }}></i>
                         </div>
-                        
-                        <h3 className="fw-bold mb-3" style={{ color: '#2c3e50' }}>
-                            Belum Ada Ulasan
-                        </h3>
-                        
-                        <p className="text-muted mb-4" style={{ maxWidth: '500px', margin: '0 auto 2rem', lineHeight: '1.7', fontSize: '1.05rem' }}>
-                            Kursus ini belum memiliki ulasan dari student. Jadilah yang pertama memberikan ulasan setelah menyelesaikan kursus ini!
+
+                        <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: "0.98rem" }}>
+                            Belum Ada Ulasan untuk Kursus Ini
+                        </h6>
+
+                        <p className="text-muted small mb-3 mx-auto" style={{ maxWidth: "460px", fontSize: "0.84rem", lineHeight: "1.6" }}>
+                            Kursus ini masih baru dan belum memiliki ulasan dari peserta. Jadilah yang pertama memberikan ulasan dan rating setelah menyelesaikan materi kursus.
                         </p>
-                        
-                        <div 
-                            className="d-inline-flex align-items-center gap-3 p-4 rounded-4"
-                            style={{
-                                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
-                                border: '2px dashed rgba(102, 126, 234, 0.3)',
-                                maxWidth: '600px'
-                            }}
-                        >
-                            <div 
-                                style={{
-                                    width: '50px',
-                                    height: '50px',
-                                    background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-                                    borderRadius: '15px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    flexShrink: 0
-                                }}
-                            >
-                                <i className="fas fa-info-circle text-white" style={{ fontSize: '1.5rem' }}></i>
-                            </div>
-                            <div className="text-start">
-                                <h6 className="fw-bold mb-1" style={{ color: '#2c3e50' }}>
-                                    Bagaimana Cara Memberikan Ulasan?
-                                </h6>
-                                <p className="text-muted mb-0 small">
-                                    Daftar dan selesaikan kursus ini untuk memberikan ulasan pertama dan membantu student lain dalam mengambil keputusan
-                                </p>
-                            </div>
+
+                        <div className="d-inline-flex align-items-center gap-2 py-1 px-3 rounded-pill bg-white border text-secondary small" style={{ fontSize: "0.78rem" }}>
+                            <i className="fas fa-certificate text-teal" style={{ color: "#0d9488" }}></i>
+                            <span>Ulasan resmi hanya dapat ditulis oleh aparatur yang telah menyelesaikan kursus</span>
                         </div>
                     </div>
                 )}

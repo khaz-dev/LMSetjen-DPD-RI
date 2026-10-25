@@ -881,149 +881,185 @@ function CourseQuiz() {
                                 courseData={course}
                             />
 
-                            {/* Header Section */}
-                            <div className="quiz-header-modern">
-                                <div className="d-lg-flex align-items-center justify-content-between">
-                                    <div className="mb-4 mb-lg-0">
-                                        <h3 className="text-white mb-2">
-                                            <i className="fas fa-question-circle me-3"></i>
-                                            Manajemen Kuis
-                                        </h3>
-
-                                        <h3 className="text-white mb-2 fw-bold">
-                                            {course?.title || "Course Quiz Management"}
-                                        </h3>
-
-                                        <p className="mb-0 text-white opacity-90">
-                                            Buat dan kelola kuis untuk kursus Anda
+                            {/* Sleek Compact Quiz Header Card */}
+                            <div className="quiz-header-card mb-3">
+                                <div className="d-flex flex-column flex-md-row md-align-items-center justify-content-between gap-3">
+                                    <div>
+                                        <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                            <span className="badge bg-teal-subtle text-teal border border-teal-subtle fw-semibold px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                                <i className="fas fa-question-circle me-1"></i> Manajemen Kuis
+                                            </span>
+                                            <span className="badge bg-light text-muted border px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                                ID: #{param?.course_id}
+                                            </span>
+                                            <span className={`badge px-2 py-0.5 ${course?.status === "Published" ? "bg-success text-white" : "bg-secondary text-white"}`} style={{ fontSize: "11px" }}>
+                                                {course?.status === "Published" ? "Terbit" : "Draf"}
+                                            </span>
+                                        </div>
+                                        <h4 className="quiz-header-title mb-1 text-dark fw-bold">
+                                            {course?.title || "Manajemen Kuis Kursus"}
+                                        </h4>
+                                        <p className="quiz-header-desc text-muted mb-0 small">
+                                            Kelola evaluasi materi, kuis kompetensi, dan instrumen asesmen pembelajaran.
                                         </p>
                                     </div>
-                                    <div className="d-flex flex-column gap-3">
+                                    <div className="d-flex align-items-center gap-2 flex-wrap flex-shrink-0">
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/`}
-                                            className="btn btn-outline-light border border-2 border-light"
+                                            className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2"
+                                            title="Kembali ke Pengaturan Dasar Kursus"
                                         >
-                                            <i className="fas fa-arrow-left me-2"></i>
-                                            Perbarui Kursus
+                                            <i className="fas fa-arrow-left"></i>
+                                            <span>Perbarui Kursus</span>
                                         </Link>
+                                        {activeTab === "overview" ? (
+                                            <button
+                                                type="button"
+                                                className="btn btn-update-course btn-sm d-inline-flex align-items-center gap-2"
+                                                onClick={() => setShowQuizModal(true)}
+                                            >
+                                                <i className="fas fa-plus"></i>
+                                                <span>Tambah Kuis Baru</span>
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                className="btn btn-update-course btn-sm d-inline-flex align-items-center gap-2"
+                                                onClick={handleOpenAddQuestion}
+                                            >
+                                                <i className="fas fa-plus"></i>
+                                                <span>Tambah Soal</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Integrated KPI Strip */}
+                                <div className="quiz-kpi-strip">
+                                    <div className="quiz-kpi-pill">
+                                        <div className="quiz-kpi-icon kpi-quizzes">
+                                            <i className="fas fa-clipboard-list"></i>
+                                        </div>
+                                        <div>
+                                            <div className="quiz-kpi-val">{quizzes.length}</div>
+                                            <div className="quiz-kpi-lbl">Total Kuis</div>
+                                        </div>
+                                    </div>
+                                    <div className="quiz-kpi-pill">
+                                        <div className="quiz-kpi-icon kpi-questions">
+                                            <i className="fas fa-question"></i>
+                                        </div>
+                                        <div>
+                                            <div className="quiz-kpi-val">
+                                                {quizzes.reduce((total, quiz) => total + (quiz.total_questions || 0), 0)}
+                                            </div>
+                                            <div className="quiz-kpi-lbl">Total Soal</div>
+                                        </div>
+                                    </div>
+                                    <div className="quiz-kpi-pill">
+                                        <div className="quiz-kpi-icon kpi-active">
+                                            <i className="fas fa-check-circle"></i>
+                                        </div>
+                                        <div>
+                                            <div className="quiz-kpi-val">
+                                                {quizzes.filter(quiz => quiz.is_active).length}
+                                            </div>
+                                            <div className="quiz-kpi-lbl">Kuis Aktif</div>
+                                        </div>
+                                    </div>
+                                    <div className="quiz-kpi-pill">
+                                        <div className="quiz-kpi-icon kpi-inactive">
+                                            <i className="fas fa-pause-circle"></i>
+                                        </div>
+                                        <div>
+                                            <div className="quiz-kpi-val">
+                                                {quizzes.filter(quiz => !quiz.is_active).length}
+                                            </div>
+                                            <div className="quiz-kpi-lbl">Tidak Aktif</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Stats Overview */}
-                            <div className="quiz-stats-overview mb-4">
-                                <div className="quiz-stat-card stat-total-quizzes">
-                                    <div className="stat-icon">
-                                        <i className="fas fa-list-alt"></i>
+                            {/* Unified Navigation & Filter Toolbar */}
+                            <div className="quiz-toolbar-card mb-3">
+                                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2.5">
+                                    {/* Navigation Tabs */}
+                                    <div className="quiz-segmented-tabs">
+                                        <button
+                                            type="button"
+                                            className={`segmented-tab-btn ${activeTab === "overview" ? "active" : ""}`}
+                                            onClick={() => setActiveTab("overview")}
+                                        >
+                                            <i className="fas fa-th-large me-2"></i>
+                                            Ringkasan Kuis ({quizzes.length})
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`segmented-tab-btn ${activeTab === "questions" ? "active" : ""}`}
+                                            onClick={() => setActiveTab("questions")}
+                                            disabled={!currentQuiz}
+                                            title={!currentQuiz ? "Pilih salah satu kuis terlebih dahulu untuk mengelola soal" : currentQuiz.title}
+                                        >
+                                            <i className="fas fa-list-ol me-2"></i>
+                                            {currentQuiz ? `Soal: ${currentQuiz.title}` : "Kelola Pertanyaan"}
+                                        </button>
                                     </div>
-                                    <div className="stat-content">
-                                        <div className="stat-number">{quizzes.length}</div>
-                                        <div className="stat-label">Total Kuis</div>
-                                    </div>
-                                </div>
-                                <div className="quiz-stat-card stat-total-questions">
-                                    <div className="stat-icon">
-                                        <i className="fas fa-question"></i>
-                                    </div>
-                                    <div className="stat-content">
-                                        <div className="stat-number">
-                                            {quizzes.reduce((total, quiz) => total + (quiz.total_questions || 0), 0)}
-                                        </div>
-                                        <div className="stat-label">Total Pertanyaan</div>
-                                    </div>
-                                </div>
-                                <div className="quiz-stat-card stat-active-quizzes">
-                                    <div className="stat-icon">
-                                        <i className="fas fa-check-circle"></i>
-                                    </div>
-                                    <div className="stat-content">
-                                        <div className="stat-number">
-                                            {quizzes.filter(quiz => quiz.is_active).length}
-                                        </div>
-                                        <div className="stat-label">Kuis Aktif</div>
-                                    </div>
-                                </div>
-                                <div className="quiz-stat-card stat-inactive-quizzes">
-                                    <div className="stat-icon">
-                                        <i className="fas fa-pause-circle"></i>
-                                    </div>
-                                    <div className="stat-content">
-                                        <div className="stat-number">
-                                            {quizzes.filter(quiz => !quiz.is_active).length}
-                                        </div>
-                                        <div className="stat-label">Kuis Tidak Aktif</div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Navigation Tabs */}
-                            <div className="quiz-nav-card mb-4">
-                                <div className="quiz-nav-tabs">
-                                    <button
-                                        className={`tab-btn ${activeTab === "overview" ? "active" : ""}`}
-                                        onClick={() => setActiveTab("overview")}
-                                    >
-                                        <i className="fas fa-chart-pie me-2"></i>
-                                        Ringkasan Kuis
-                                    </button>
-                                    <button
-                                        className={`tab-btn ${activeTab === "questions" ? "active" : ""}`}
-                                        onClick={() => setActiveTab("questions")}
-                                        disabled={!currentQuiz}
-                                    >
-                                        <i className="fas fa-question me-2"></i>
-                                        Pertanyaan {currentQuiz && `(${currentQuiz.title})`}
-                                    </button>
+                                    {/* Toolbar Controls Right */}
+                                    {activeTab === "overview" ? (
+                                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                                            <span className="text-muted small fw-medium d-none d-sm-inline">
+                                                <i className="fas fa-filter me-1"></i>Filter:
+                                            </span>
+                                            <div className="quiz-type-filter-group">
+                                                <button
+                                                    type="button"
+                                                    className={`quiz-filter-pill ${quizTypeFilter === "all" ? "active" : ""}`}
+                                                    onClick={() => setQuizTypeFilter("all")}
+                                                >
+                                                    Semua ({quizzes.length})
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`quiz-filter-pill ${quizTypeFilter === "quiz" ? "active" : ""}`}
+                                                    onClick={() => setQuizTypeFilter("quiz")}
+                                                >
+                                                    <i className="fas fa-clipboard-check me-1"></i>
+                                                    Kuis ({quizzes.filter(q => (q.quiz_type || "quiz") === "quiz").length})
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`quiz-filter-pill ${quizTypeFilter === "pre_post_test" ? "active" : ""}`}
+                                                    onClick={() => setQuizTypeFilter("pre_post_test")}
+                                                >
+                                                    <i className="fas fa-graduation-cap me-1"></i>
+                                                    Pre/Post-test ({quizzes.filter(q => q.quiz_type === "pre_post_test").length})
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                                            <button
+                                                type="button"
+                                                className="btn btn-light btn-sm border text-secondary d-inline-flex align-items-center gap-1.5"
+                                                onClick={() => setActiveTab("overview")}
+                                            >
+                                                <i className="fas fa-arrow-left"></i>
+                                                <span>Kembali ke Daftar Kuis</span>
+                                            </button>
+                                            <span className="badge bg-light text-dark border px-2.5 py-1.5 fw-semibold small">
+                                                <i className="fas fa-question-circle text-teal me-1"></i>
+                                                {questions.length} Soal
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Content Based on Active Tab */}
                             {activeTab === "overview" && (
                                 <div className="quiz-overview-wrapper">
-                                    {/* Action Bar */}
-                                    <div className="mb-4">
-                                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                            <div className="d-flex align-items-center gap-3 flex-wrap">
-                                                <h3 className="quiz-section-title mb-0">
-                                                    <i className="fas fa-list me-2"></i>
-                                                    Semua Kuis
-                                                </h3>
-                                                <div className="quiz-type-filter-group">
-                                                    <button
-                                                        type="button"
-                                                        className={`quiz-filter-pill ${quizTypeFilter === "all" ? "active" : ""}`}
-                                                        onClick={() => setQuizTypeFilter("all")}
-                                                    >
-                                                        Semua ({quizzes.length})
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className={`quiz-filter-pill ${quizTypeFilter === "quiz" ? "active" : ""}`}
-                                                        onClick={() => setQuizTypeFilter("quiz")}
-                                                    >
-                                                        <i className="fas fa-clipboard-check me-1"></i>
-                                                        Kuis ({quizzes.filter(q => (q.quiz_type || "quiz") === "quiz").length})
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className={`quiz-filter-pill ${quizTypeFilter === "pre_post_test" ? "active" : ""}`}
-                                                        onClick={() => setQuizTypeFilter("pre_post_test")}
-                                                    >
-                                                        <i className="fas fa-graduation-cap me-1"></i>
-                                                        Pre & Post-test ({quizzes.filter(q => q.quiz_type === "pre_post_test").length})
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <button
-                                                className="btn btn-update-course"
-                                                onClick={() => setShowQuizModal(true)}
-                                            >
-                                                <i className="fas fa-plus me-2"></i>
-                                                Tambah Kuis
-                                            </button>
-                                        </div>
-                                    </div>
-
                                     {/* Quizzes List */}
                                     <div className="quizzes-grid">
                                         {quizzes.length === 0 ? (
@@ -1115,11 +1151,11 @@ function CourseQuiz() {
                                                     </div>
                                                     <div className="quiz-card-footer">
                                                         <button
-                                                            className="btn btn-primary btn-sm w-100"
+                                                            className="btn btn-primary btn-sm w-100 d-inline-flex align-items-center justify-content-center gap-2"
                                                             onClick={() => selectQuiz(quiz)}
                                                         >
-                                                            <i className="fas fa-cog me-2"></i>
-                                                            Kelola Pertanyaan
+                                                            <i className="fas fa-cog"></i>
+                                                            <span>Kelola Pertanyaan</span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1132,11 +1168,11 @@ function CourseQuiz() {
                             {activeTab === "questions" && currentQuiz && (
                                 <div className="quiz-questions-section">
                                     {/* Questions Header */}
-                                    <div className="quiz-questions-header mb-4">
-                                        <div className="quiz-header">
+                                    <div className="quiz-questions-header mb-3">
+                                        <div className="d-flex flex-column flex-md-row md-align-items-center justify-content-between gap-3">
                                             <div className="quiz-info">
                                                 <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
-                                                    <h3 className="quiz-title mb-0">{currentQuiz.title}</h3>
+                                                    <h4 className="quiz-title mb-0 fw-bold text-dark">{currentQuiz.title}</h4>
                                                     <span className={`badge-quiz-type ${currentQuiz.quiz_type === "pre_post_test" ? "type-prepost" : "type-quiz"}`}>
                                                         <i className={`fas ${currentQuiz.quiz_type === "pre_post_test" ? "fa-graduation-cap" : "fa-clipboard-check"} me-1`}></i>
                                                         {currentQuiz.quiz_type === "pre_post_test" ? "Pre & Post-test" : "Kuis"}
@@ -1148,22 +1184,29 @@ function CourseQuiz() {
                                                         <i className={`fas ${currentQuiz.presentation_mode === "random" ? "fa-random" : "fa-sort-numeric-down"} me-1`}></i>
                                                         {currentQuiz.presentation_mode === "random" ? "Acak" : "Sesuai Urutan"}
                                                     </span>
+                                                    <span className={`status-badge ${currentQuiz.is_active ? "active" : "inactive"}`}>
+                                                        <i className={`fas ${currentQuiz.is_active ? "fa-check-circle" : "fa-pause-circle"} me-1`}></i>
+                                                        {currentQuiz.is_active ? "Aktif" : "Tidak Aktif"}
+                                                    </span>
                                                 </div>
-                                                <p className="quiz-description">{currentQuiz.description || "Kelola pertanyaan kuis untuk kursus ini"}</p>
-                                                <span className="text-muted small mt-1">
-                                                    <i className="fas fa-list-ol me-1"></i>
-                                                    Total <strong>{questions.length}</strong> pertanyaan dalam kuis ini
-                                                </span>
+                                                <p className="quiz-description text-muted small mb-0">{currentQuiz.description || "Kelola pertanyaan kuis untuk kursus ini"}</p>
                                             </div>
-                                            {!isAddingQuestion && !editingQuestion && (
-                                                <button
-                                                    className="btn btn-update-course"
-                                                    onClick={handleOpenAddQuestion}
-                                                >
-                                                    <i className="fas fa-plus me-2"></i>
-                                                    Tambah Pertanyaan
-                                                </button>
-                                            )}
+                                            <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2.5 py-1.5 fw-semibold small">
+                                                    <i className="fas fa-list-ol me-1"></i>
+                                                    Total {questions.length} Pertanyaan
+                                                </span>
+                                                {!isAddingQuestion && !editingQuestion && (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-update-course btn-sm d-inline-flex align-items-center gap-2"
+                                                        onClick={handleOpenAddQuestion}
+                                                    >
+                                                        <i className="fas fa-plus"></i>
+                                                        <span>Tambah Pertanyaan</span>
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 

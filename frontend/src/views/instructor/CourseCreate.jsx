@@ -33,6 +33,7 @@ import {
 import { 
   DEFAULT_COURSE_DATA, 
   COURSE_LEVELS, 
+  COURSE_AUDIENCE_OPTIONS,
   TOAST_MESSAGES, 
   ERROR_FOCUS_REFS 
 } from "../../utils/courseConstants";
@@ -378,6 +379,7 @@ function CourseCreate() {
             description: courseData.description,
             category: courseData.category,
             level: courseData.level,
+            target_audience: courseData.target_audience || "pegawai",
             image: courseData.image, // URL from file-upload API
             file: courseFormat === "elearning" ? null : courseData.file,   // URL from file-upload API
             intro_video_source: courseData.intro_video_source || "upload", // ✨ PHASE 4.18: Include video source type
@@ -790,7 +792,7 @@ function CourseCreate() {
                                             />
                                         </div>
 
-                                        <div className="col-md-6">
+                                        <div className="col-md-4">
                                             <FormField 
                                                 ref={categoryRef}
                                                 label="Kategori Kursus"
@@ -809,7 +811,7 @@ function CourseCreate() {
                                             />
                                         </div>
 
-                                        <div className="col-md-6">
+                                        <div className="col-md-4">
                                             <FormField 
                                                 ref={levelRef}
                                                 label="Tingkat Kesulitan"
@@ -825,6 +827,19 @@ function CourseCreate() {
                                                 ]}
                                                 required
                                                 helpText="Tingkat kompetensi sasaran peserta."
+                                            />
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <FormField 
+                                                label="Target Peserta & Akses"
+                                                name="target_audience"
+                                                type="select"
+                                                value={courseData.target_audience || "pegawai"}
+                                                onChange={handleCourseInputChange}
+                                                options={COURSE_AUDIENCE_OPTIONS}
+                                                required
+                                                helpText="Khusus pegawai DPD RI atau umum."
                                             />
                                         </div>
                                     </div>

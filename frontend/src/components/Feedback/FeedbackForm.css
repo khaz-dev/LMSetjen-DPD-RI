@@ -226,7 +226,7 @@
     margin-top: 16px;
 }
 
-.btn {
+.feedback-form .btn {
     padding: 8px 16px;
     border: none;
     border-radius: 4px;
@@ -240,25 +240,25 @@
     white-space: nowrap;
 }
 
-.btn-primary {
+.feedback-form .btn-primary {
     background-color: #0f766e;
     color: white;
 }
 
-.btn-primary:hover:not(:disabled) {
+.feedback-form .btn-primary:hover:not(:disabled) {
     background-color: #115e59;
 }
 
-.btn-secondary {
+.feedback-form .btn-secondary {
     background-color: #ddd;
     color: #333;
 }
 
-.btn-secondary:hover:not(:disabled) {
+.feedback-form .btn-secondary:hover:not(:disabled) {
     background-color: #ccc;
 }
 
-.btn:disabled {
+.feedback-form .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
@@ -317,7 +317,7 @@
         flex-direction: column;
     }
 
-    .btn {
+    .feedback-form .btn {
         width: 100%;
     }
 

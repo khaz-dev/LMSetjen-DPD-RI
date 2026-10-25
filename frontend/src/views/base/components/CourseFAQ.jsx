@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { useComingSoon } from "../../../components/ComingSoonModal";
 
 const CourseFAQ = () => {
     const [activeIndex, setActiveIndex] = useState(null);
-    const handleComingSoon = useComingSoon("Bonus Materials");
+    const [searchQuery, setSearchQuery] = useState("");
 
     const toggleFAQ = (index) => {
         setActiveIndex(activeIndex === index ? null : index);
@@ -11,85 +10,157 @@ const CourseFAQ = () => {
 
     const faqs = [
         {
-            question: "Apa prasyarat untuk kursus ini?",
-            answer: "Kursus ini dirancang untuk pemula dan tidak memerlukan pengalaman pemrograman sebelumnya. Literasi komputer dasar dan keakraban dengan peramban web akan membantu tetapi tidak diperlukan. Kami akan memandu Anda melalui segalanya langkah demi langkah."
+            question: "Apa prasyarat untuk mengikuti kursus ini?",
+            answer: "Kursus ini dirancang untuk seluruh aparatur sipil dan pegawai di lingkungan Setjen DPD RI. Tidak memerlukan keahlian teknis khusus; cukup perangkat komputer atau ponsel pintar dengan koneksi internet yang stabil."
         },
         {
-            question: "Berapa lama saya memiliki akses ke kursus?",
-            answer: "Anda mendapatkan akses seumur hidup ke kursus ini! Setelah terdaftar, Anda dapat mengakses semua materi kursus, termasuk pembaruan di masa depan, kapan saja dan di mana saja. Tidak ada batasan waktu atau tenggat waktu."
+            question: "Berapa lama akses modul pembelajaran diberikan?",
+            answer: "Anda mendapatkan akses tanpa batas waktu (seumur hidup) setelah terdaftar. Anda dapat meninjau kembali modul dan materi kapan saja untuk keperluan penguatan kompetensi tugas kedinasan."
         },
         {
-            question: "Bisakah saya mengunduh video kursus?",
-            answer: "Ya, semua video kursus dapat diunduh sehingga Anda dapat belajar secara offline. Anda juga akan mendapatkan akses ke sumber daya yang dapat diunduh termasuk kode sumber, file proyek, dan materi bacaan tambahan."
+            question: "Apakah tersedia sertifikat resmi kelulusan?",
+            answer: "Ya, sertifikat resmi kelulusan berlisensi Bagian Pengembangan Sumber Daya Manusia akan terbit secara otomatis dalam format digital (PDF) begitu seluruh materi dan evaluasi terselesaikan dengan nilai ambang batas kelulusan."
         },
         {
-            question: "Apakah ada sertifikat penyelesaian?",
-            answer: "Tentu saja! Setelah berhasil menyelesaikan kursus, Anda akan menerima sertifikat penyelesaian yang dapat Anda tambahkan ke profil LinkedIn, resume, atau portofolio Anda untuk menampilkan keterampilan baru Anda."
+            question: "Bagaimana cara kerja modul interaktif SCORM?",
+            answer: "Modul SCORM memungkinkan materi pembelajaran disajikan secara dinamis dengan interaktivitas penuh, bookmarking posisi belajar otomatis, serta kuis langsung di dalam paket modul."
         },
         {
-            question: "Bagaimana jika saya tidak puas dengan kursusnya?",
-            answer: "Kami menawarkan jaminan uang kembali 30 hari. Jika Anda tidak sepenuhnya puas dengan kursus dalam 30 hari pertama, Anda dapat meminta pengembalian dana penuh tanpa pertanyaan."
+            question: "Bisakah materi dipelajari melalui ponsel / smartphone?",
+            answer: "Tentu saja. Platform LMS Setjen DPD RI sepenuhnya responsif dan kompatibel dengan browser seluler (Android dan iOS), sehingga Anda dapat belajar secara fleksibel."
         },
         {
-            question: "Berapa banyak waktu yang harus saya dedikasikan untuk kursus ini?",
-            answer: "Kursus dapat disesuaikan dengan kecepatan Anda sendiri, tetapi kami merekomendasikan untuk mendedikasikan 3-5 jam per minggu. Sebagian besar siswa menyelesaikan kursus dalam 4-6 minggu. Anda dapat belajar lebih cepat atau lebih lambat berdasarkan jadwal dan kecepatan belajar Anda."
+            question: "Berapa jam estimasi waktu belajar per minggu?",
+            answer: "Pembelajaran bersifat mandiri (self-paced). Disarankan meluangkan waktu 2-3 jam per minggu agar pemahaman materi dapat terserap secara optimal."
         },
         {
-            question: "Apakah saya memerlukan perangkat lunak atau alat khusus?",
-            answer: "Yang Anda butuhkan adalah komputer dengan koneksi internet dan peramban web. Kami akan memandu Anda melalui penginstalan alat dan perangkat lunak gratis apa pun selama kursus. Tidak ada lisensi perangkat lunak mahal yang diperlukan."
+            question: "Bagaimana jika mengalami kendala teknis saat belajar?",
+            answer: "Anda dapat memanfaatkan fitur forum diskusi kursus atau menghubungi tim bantuan teknis Bagian Pengembangan Sumber Daya Manusia melalui menu Bantuan pada portal LMS."
         },
         {
-            question: "Apakah dukungan instruktur tersedia?",
-            answer: "Ya! Anda akan memiliki akses ke dukungan instruktur melalui forum diskusi kursus. Kami biasanya merespons pertanyaan dalam waktu 24 jam. Anda juga akan memiliki akses ke komunitas sesama siswa."
+            question: "Apakah ada ujian akhir atau kuis evaluasi?",
+            answer: "Setiap modul dapat memuat kuis pengujian pemahaman atau evaluasi akhir yang wajib diselesaikan sebagai salah satu syarat penerbitan sertifikat."
         },
         {
-            question: "Bisakah saya mengakses kursus ini di perangkat seluler?",
-            answer: "Tentu saja! Kursus ini sepenuhnya responsif untuk perangkat seluler. Anda dapat menonton video, membaca materi, dan berpartisipasi dalam diskusi dari smartphone, tablet, atau perangkat apa pun dengan akses internet."
+            question: "Apakah materi dapat diulang kembali setelah selesai?",
+            answer: "Ya, seluruh materi yang telah Anda selesaikan tetap dapat diakses dan diulang kembali sewaktu-waktu tanpa batasan kuota akses."
         }
     ];
 
+    const filteredFaqs = faqs.filter(faq =>
+        faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
-        <div className="card border-0 shadow-sm mb-4">
-            <div className="card-body p-4">
-                <div className="text-center mb-5">
-                    <h3 className="h4 fw-bold text-primary mb-3">
-                        <i className="fas fa-question-circle me-3"></i>
-                        Pertanyaan yang Sering Diajukan
-                    </h3>
-                    <p className="text-muted">
-                        Dapatkan jawaban atas pertanyaan paling umum tentang kursus ini
-                    </p>
+        <div className="card border-0 shadow-xs rounded-3 bg-white mb-3 overflow-hidden">
+            <div className="card-body p-3 p-md-4">
+                {/* Header */}
+                <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                    <div className="d-flex align-items-center gap-2">
+                        <div
+                            className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                            style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)" }}
+                        >
+                            <i className="fas fa-circle-question" style={{ fontSize: "0.8rem" }}></i>
+                        </div>
+                        <div>
+                            <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                                Pertanyaan Umum (FAQ)
+                            </h5>
+                        </div>
+                    </div>
+
+                    {/* Quick Search Box */}
+                    <div className="position-relative" style={{ maxWidth: "260px", width: "100%" }}>
+                        <i
+                            className="fas fa-search position-absolute top-50 translate-middle-y text-muted"
+                            style={{ left: "12px", fontSize: "0.78rem", pointerEvents: "none" }}
+                        ></i>
+                        <input
+                            type="text"
+                            className="form-control form-control-sm pe-3 py-1 rounded-pill bg-light border-0"
+                            placeholder="Cari FAQ..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ fontSize: "0.8rem", paddingLeft: "34px" }}
+                        />
+                    </div>
                 </div>
 
-                <div className="row">
-                    <div className="col-lg-8 mx-auto">
-                        <div className="accordion" id="courseAccordion">
-                            {faqs.map((faq, index) => (
-                                <div key={index} className="accordion-item border border-light rounded-3 mb-3 shadow-sm">
-                                    <h2 className="accordion-header">
-                                        <button
-                                            className={`accordion-button ${activeIndex !== index ? "collapsed" : ""} bg-light fw-semibold`}
-                                            type="button"
-                                            onClick={() => toggleFAQ(index)}
-                                            style={{ borderRadius: "0.375rem" }}
-                                        >
-                                            <span className="me-3 text-primary">
-                                                <i className={`fas fa-${activeIndex === index ? "minus" : "plus"}-circle`}></i>
+                {/* 2-Column Responsive FAQ List */}
+                <div className="row g-3">
+                    {filteredFaqs.map((faq, index) => {
+                        const isOpen = activeIndex === index;
+                        return (
+                            <div key={index} className="col-md-6">
+                                <div
+                                    className={`rounded-3 border transition-all h-100 ${isOpen ? 'bg-light border-teal-subtle shadow-xs' : 'bg-white'
+                                        }`}
+                                    style={{ borderColor: isOpen ? '#0d9488' : '#e2e8f0' }}
+                                >
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm w-100 text-start p-3 px-3 d-flex align-items-center justify-content-between gap-2 border-0"
+                                        onClick={() => toggleFAQ(index)}
+                                    >
+                                        <div className="d-flex align-items-center gap-2 min-w-0">
+                                            <i
+                                                className={`fas fa-circle-question flex-shrink-0 ${isOpen ? 'text-teal' : 'text-muted'}`}
+                                                style={{ fontSize: "0.85rem", color: isOpen ? '#0d9488' : '#94a3b8' }}
+                                            ></i>
+                                            <span className="fw-semibold text-dark" style={{ fontSize: "0.86rem", lineHeight: "1.45" }}>
+                                                {faq.question}
                                             </span>
-                                            {faq.question}
-                                        </button>
-                                    </h2>
-                                    <div className={`accordion-collapse collapse ${activeIndex === index ? "show" : ""}`}>
-                                        <div className="accordion-body p-4 pt-0">
-                                            <div className="text-muted" style={{ lineHeight: "1.7" }}>
+                                        </div>
+                                        <i
+                                            className={`fas fa-chevron-down flex-shrink-0 text-muted transition-all ${isOpen ? 'rotate-180 text-teal' : ''}`}
+                                            style={{
+                                                fontSize: "0.75rem",
+                                                transform: isOpen ? 'rotate(180deg)' : 'none',
+                                                transition: 'transform 0.2s ease',
+                                                color: isOpen ? '#0d9488' : '#94a3b8'
+                                            }}
+                                        ></i>
+                                    </button>
+
+                                    {isOpen && (
+                                        <div className="px-3 pb-3 pt-1">
+                                            <div
+                                                className="p-3 rounded-2 bg-white border-top text-secondary"
+                                                style={{ fontSize: "0.83rem", lineHeight: "1.65" }}
+                                            >
                                                 {faq.answer}
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {filteredFaqs.length === 0 && (
+                    <div className="text-center py-4 text-muted small">
+                        <i className="fas fa-search mb-2 text-muted" style={{ fontSize: "1.3rem" }}></i>
+                        <p className="mb-0">Tidak ada pertanyaan yang sesuai dengan kata kunci "{searchQuery}".</p>
                     </div>
+                )}
+
+                {/* Help Callout Banner */}
+                <div
+                    className="mt-3 p-3 px-3 rounded-3 d-flex align-items-center justify-content-between gap-2 flex-wrap"
+                    style={{ background: "#f0fdfa", border: "1px solid #ccfbf1" }}
+                >
+                    <div className="d-flex align-items-center gap-2">
+                        <i className="fas fa-headset text-teal" style={{ color: "#0d9488", fontSize: "1rem" }}></i>
+                        <span className="text-dark small" style={{ fontSize: "0.82rem" }}>
+                            Masih memiliki pertanyaan seputar modul pembelajaran ini?
+                        </span>
+                    </div>
+                    <span className="badge bg-teal text-white fw-medium py-1 px-3 rounded-pill small" style={{ background: "#0d9488", fontSize: "0.75rem" }}>
+                        Bagian Pengembangan Sumber Daya Manusia
+                    </span>
                 </div>
             </div>
         </div>
@@ -97,3 +168,4 @@ const CourseFAQ = () => {
 };
 
 export default CourseFAQ;
+

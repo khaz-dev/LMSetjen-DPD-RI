@@ -3,6 +3,7 @@ import apiInstance from '../../utils/axios';
 import Toast from '../plugin/Toast';
 import { SkeletonPage } from '../../components/skeletons/SkeletonComponents';
 import AdminHeader from '../partials/AdminHeader';
+import './TestimonialsAdmin.css';
 
 /**
  * Admin Testimonials Curation Page

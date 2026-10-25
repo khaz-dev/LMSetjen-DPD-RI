@@ -238,6 +238,7 @@ class CourseCreateAPIView(APIView):
             image_url = request.data.get("image")  # Now expecting URL from file-upload API
             file_url = request.data.get("file")    # Now expecting URL from file-upload API
             level = request.data.get("level")
+            target_audience = request.data.get("target_audience", "pegawai")
             category = request.data.get("category")
 
             print(f"=== Course Creation Debug ===")
@@ -248,6 +249,7 @@ class CourseCreateAPIView(APIView):
             print(f"File URL: {file_url}")
             print(f"File URL length: {len(file_url) if file_url else 0}")
             print(f"Level: {level}")
+            print(f"Target Audience: {target_audience}")
             print(f"Category: {category}")
 
             # Validate required fields
@@ -311,6 +313,7 @@ class CourseCreateAPIView(APIView):
                 title=title,
                 description=description,
                 level=level,
+                target_audience=target_audience,
                 platform_status="Draft",           # Set to Draft for admin/platform review
                 teacher_course_status="Draft",     # Set to Draft - teacher needs to complete curriculum
                 course_type=course_type,

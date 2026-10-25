@@ -378,7 +378,8 @@
     justify-content: flex-end;
 }
 
-.btn {
+.feedback-admin-dashboard .btn,
+.feedback-modal-overlay .btn {
     padding: 10px 16px;
     border: none;
     border-radius: 4px;
@@ -388,25 +389,30 @@
     transition: all 0.2s;
 }
 
-.btn-secondary {
+.feedback-admin-dashboard .btn-secondary,
+.feedback-modal-overlay .btn-secondary {
     background: #ddd;
     color: #333;
 }
 
-.btn-secondary:hover:not(:disabled) {
+.feedback-admin-dashboard .btn-secondary:hover:not(:disabled),
+.feedback-modal-overlay .btn-secondary:hover:not(:disabled) {
     background: #ccc;
 }
 
-.btn-success {
+.feedback-admin-dashboard .btn-success,
+.feedback-modal-overlay .btn-success {
     background: #28a745;
     color: white;
 }
 
-.btn-success:hover:not(:disabled) {
+.feedback-admin-dashboard .btn-success:hover:not(:disabled),
+.feedback-modal-overlay .btn-success:hover:not(:disabled) {
     background: #218838;
 }
 
-.btn:disabled {
+.feedback-admin-dashboard .btn:disabled,
+.feedback-modal-overlay .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
@@ -457,13 +463,14 @@
         flex-direction: column;
     }
 
-    .btn {
+    .feedback-admin-dashboard .btn,
+    .feedback-modal-overlay .btn {
         width: 100%;
     }
 }
 
 /* ✨ PHASE 11.2: Additional Utility Styles */
-.text-muted {
+.feedback-admin-dashboard .text-muted {
     color: #999;
     font-style: italic;
 }

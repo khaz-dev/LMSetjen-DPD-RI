@@ -204,12 +204,14 @@
         font-size: 1.1rem;
     }
 
-    .row {
+    .course-review-admin .row,
+    .course-review-container .row {
         margin-right: -15px;
         margin-left: -15px;
     }
 
-    .col-lg-6 {
+    .course-review-admin .col-lg-6,
+    .course-review-container .col-lg-6 {
         flex: 0 0 100%;
         padding-left: 15px;
         padding-right: 15px;

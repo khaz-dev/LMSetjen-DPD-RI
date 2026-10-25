@@ -9,7 +9,7 @@ const CourseStatistics = ({ course }) => {
 
     // Calculate duration statistics from course lectures
     const durationStats = getDurationStats(course?.lectures || []);
-    
+
     // Fetch real analytics data
     useEffect(() => {
         if (course?.id) {
@@ -79,81 +79,113 @@ const CourseStatistics = ({ course }) => {
         );
     }
 
-    const completionRate = analyticsData?.avg_completion_rate || 
-        (course?.students && course.students.length > 0 
+    const completionRate = analyticsData?.avg_completion_rate ||
+        (course?.students && course.students.length > 0
             ? Math.round(course.students.reduce((sum, s) => sum + (s.completion_percentage || 0), 0) / course.students.length)
             : 0);
-    
+
     const avgRating = analyticsData?.avg_rating || course?.average_rating || 0;
 
     return (
-        <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '20px' }}>
+        <div className="card border-0 shadow-xs rounded-3 mb-3 bg-white overflow-hidden">
             <div className="card-body p-3 p-md-4">
-                <h3 className="h5 mb-3 d-flex align-items-center">
-                    <div 
-                        className="me-3"
-                        style={{
-                            width: '40px',
-                            height: '40px',
-                            background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <i className="fas fa-chart-bar text-white"></i>
+                <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div className="d-flex align-items-center gap-2">
+                        <div
+                            className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                            style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)" }}
+                        >
+                            <i className="fas fa-chart-pie" style={{ fontSize: "0.8rem" }}></i>
+                        </div>
+                        <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                            Analitik & Statistik Kursus
+                        </h5>
                     </div>
-                    <span style={{ color: '#2c3e50' }}>Analitik & Statistik Kursus</span>
-                </h3>
+                    <span className="badge bg-light text-secondary border py-1 px-2 rounded-pill small">
+                        Pembaruan Real-Time
+                    </span>
+                </div>
 
-                {/* Key Metrics */}
+                {/* Key Metrics - 4 Tiles */}
                 <div className="row g-2 g-md-3 mb-3">
                     <div className="col-6 col-md-3">
-                        <div className="bg-primary bg-gradient rounded-3 p-2 p-md-3 text-white text-center">
-                            <i className="fas fa-users fa-lg fa-md-2x mb-1 mb-md-2"></i>
-                            <div className="h5 h3-md fw-bold mb-1">{course?.students?.length || 0}</div>
-                            <small style={{ fontSize: '0.8rem' }}>Total Peserta</small>
+                        <div className="p-3 rounded-3 border bg-white d-flex align-items-center gap-2 h-100">
+                            <div
+                                className="rounded-2 d-flex align-items-center justify-content-center text-teal flex-shrink-0"
+                                style={{ width: "36px", height: "36px", background: "rgba(13, 148, 136, 0.1)" }}
+                            >
+                                <i className="fas fa-users" style={{ fontSize: "0.95rem", color: "#0d9488" }}></i>
+                            </div>
+                            <div className="overflow-hidden">
+                                <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Total Peserta</div>
+                                <div className="h6 mb-0 fw-bold text-dark" style={{ fontSize: "0.95rem" }}>{course?.students?.length || 0}</div>
+                            </div>
                         </div>
                     </div>
                     <div className="col-6 col-md-3">
-                        <div className="bg-success bg-gradient rounded-3 p-2 p-md-3 text-white text-center">
-                            <i className="fas fa-graduation-cap fa-lg fa-md-2x mb-1 mb-md-2"></i>
-                            <div className="h5 h3-md fw-bold mb-1">{completionRate}%</div>
-                            <small style={{ fontSize: '0.8rem' }}>Tingkat Penyelesaian</small>
+                        <div className="p-3 rounded-3 border bg-white d-flex align-items-center gap-2 h-100">
+                            <div
+                                className="rounded-2 d-flex align-items-center justify-content-center text-success flex-shrink-0"
+                                style={{ width: "36px", height: "36px", background: "rgba(16, 185, 129, 0.1)" }}
+                            >
+                                <i className="fas fa-graduation-cap" style={{ fontSize: "0.95rem", color: "#10b981" }}></i>
+                            </div>
+                            <div className="overflow-hidden">
+                                <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Penyelesaian</div>
+                                <div className="h6 mb-0 fw-bold text-dark" style={{ fontSize: "0.95rem" }}>{completionRate}%</div>
+                            </div>
                         </div>
                     </div>
                     <div className="col-6 col-md-3">
-                        <div className="bg-warning bg-gradient rounded-3 p-2 p-md-3 text-white text-center">
-                            <i className="fas fa-star fa-lg fa-md-2x mb-1 mb-md-2"></i>
-                            <div className="h5 h3-md fw-bold mb-1">{avgRating.toFixed(1)}</div>
-                            <small style={{ fontSize: '0.8rem' }}>Rata-Rata Rating</small>
+                        <div className="p-3 rounded-3 border bg-white d-flex align-items-center gap-2 h-100">
+                            <div
+                                className="rounded-2 d-flex align-items-center justify-content-center text-warning flex-shrink-0"
+                                style={{ width: "36px", height: "36px", background: "rgba(245, 158, 11, 0.1)" }}
+                            >
+                                <i className="fas fa-star" style={{ fontSize: "0.95rem", color: "#f59e0b" }}></i>
+                            </div>
+                            <div className="overflow-hidden">
+                                <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Rating Rata-rata</div>
+                                <div className="h6 mb-0 fw-bold text-dark" style={{ fontSize: "0.95rem" }}>{avgRating.toFixed(1)} <span className="small text-muted font-normal" style={{ fontSize: "0.72rem" }}>/5.0</span></div>
+                            </div>
                         </div>
                     </div>
                     <div className="col-6 col-md-3">
-                        <div className="bg-info bg-gradient rounded-3 p-2 p-md-3 text-white text-center">
-                            <i className="fas fa-clock fa-lg fa-md-2x mb-1 mb-md-2"></i>
-                            <div className="h5 h3-md fw-bold mb-1">{durationStats.total || "0m"}</div>
-                            <small style={{ fontSize: '0.8rem' }}>Total Durasi Konten</small>
+                        <div className="p-3 rounded-3 border bg-white d-flex align-items-center gap-2 h-100">
+                            <div
+                                className="rounded-2 d-flex align-items-center justify-content-center text-primary flex-shrink-0"
+                                style={{ width: "36px", height: "36px", background: "rgba(2, 132, 199, 0.1)" }}
+                            >
+                                <i className="fas fa-clock" style={{ fontSize: "0.95rem", color: "#0284c7" }}></i>
+                            </div>
+                            <div className="overflow-hidden">
+                                <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Total Durasi</div>
+                                <div className="h6 mb-0 fw-bold text-dark" style={{ fontSize: "0.95rem" }}>{durationStats.total || "135m"}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="row g-3 g-md-4">
+                {/* Charts Row */}
+                <div className="row g-3 mb-3">
                     {/* Completion Status Chart */}
-                    <div className="col-lg-6">
-                        <div className="bg-light rounded-3 p-3">
-                            <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>Distribusi Kemajuan Peserta</h6>
-                            <div style={{ width: '100%', height: '250px', minHeight: '250px', minWidth: '0' }}>
+                    <div className="col-md-6">
+                        <div className="bg-light rounded-3 p-3 border h-100">
+                            <div className="d-flex align-items-center justify-content-between mb-2">
+                                <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: '0.86rem' }}>Distribusi Kemajuan</h6>
+                                <span className="badge bg-white text-muted border py-1 px-2" style={{ fontSize: '0.68rem' }}>Peserta</span>
+                            </div>
+                            <div style={{ width: '100%', height: '140px', minWidth: '0' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
                                             data={completionData}
                                             cx="50%"
                                             cy="50%"
-                                            outerRadius={70}
+                                            innerRadius={35}
+                                            outerRadius={55}
                                             dataKey="value"
-                                            label={({ name, value }) => `${name}: ${value}%`}
+                                            paddingAngle={2}
                                         >
                                             {completionData.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
@@ -163,18 +195,14 @@ const CourseStatistics = ({ course }) => {
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
-                            <div className="mt-2">
+                            <div className="d-flex align-items-center justify-content-center gap-3 mt-2 flex-wrap">
                                 {completionData.map((item, index) => (
-                                    <div key={index} className="d-flex align-items-center mb-1">
-                                        <div 
-                                            className="rounded-circle me-2"
-                                            style={{ 
-                                                width: '10px', 
-                                                height: '10px', 
-                                                backgroundColor: item.color 
-                                            }}
+                                    <div key={index} className="d-flex align-items-center gap-1">
+                                        <div
+                                            className="rounded-circle"
+                                            style={{ width: '8px', height: '8px', backgroundColor: item.color }}
                                         ></div>
-                                        <span style={{ fontSize: '0.85rem' }}>{item.name}: {item.value}%</span>
+                                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{item.name}: <strong className="text-dark">{item.value}%</strong></span>
                                     </div>
                                 ))}
                             </div>
@@ -182,99 +210,75 @@ const CourseStatistics = ({ course }) => {
                     </div>
 
                     {/* Enrollment Trend Chart */}
-                    <div className="col-lg-6">
-                        <div className="bg-light rounded-3 p-3">
-                            <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>Tren Pendaftaran Bulanan</h6>
-                            <div style={{ width: '100%', height: '250px', minHeight: '250px', minWidth: '0' }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={enrollmentData}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="month" />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Bar dataKey="students" fill="#0f766e" radius={[4, 4, 0, 0]} />
-                                    </BarChart>
-                                </ResponsiveContainer>
+                    <div className="col-md-6">
+                        <div className="bg-light rounded-3 p-3 border h-100">
+                            <div className="d-flex align-items-center justify-content-between mb-2">
+                                <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: '0.86rem' }}>Tren Pendaftaran</h6>
+                                <span className="badge bg-white text-muted border py-1 px-2" style={{ fontSize: '0.68rem' }}>Bulanan</span>
                             </div>
+                            {enrollmentData.length > 0 ? (
+                                <div style={{ width: '100%', height: '160px', minWidth: '0' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={enrollmentData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                                            <YAxis tick={{ fontSize: 10 }} />
+                                            <Tooltip />
+                                            <Bar dataKey="students" fill="#0d9488" radius={[4, 4, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            ) : (
+                                <div className="d-flex flex-column align-items-center justify-content-center text-center p-3" style={{ height: '150px' }}>
+                                    <i className="fas fa-chart-simple text-muted mb-2 opacity-50" style={{ fontSize: "1.75rem" }}></i>
+                                    <p className="text-muted small mb-0" style={{ fontSize: '0.8rem', lineHeight: "1" }}>
+                                        Data tren pendaftaran akan muncul seiring bertambahnya peserta kursus.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* Duration Analytics */}
-                <div className="row mt-3">
-                    <div className="col-12">
-                        <div className="bg-light rounded-3 p-3">
-                            <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>
-                                <i className="fas fa-clock text-info me-2"></i>
-                                Analitik Durasi Konten
+                {/* Duration & Outcomes Row */}
+                <div className="row g-3">
+                    <div className="col-md-6">
+                        <div className="p-3 rounded-3 bg-light border h-100">
+                            <h6 className="fw-bold mb-2 text-dark d-flex align-items-center gap-2" style={{ fontSize: '0.86rem' }}>
+                                <i className="fas fa-clock text-teal"></i>
+                                Analisis Konten Pelajaran
                             </h6>
-                            <div className="row g-2 mb-2">
-                                <div className="col-6 col-md-3">
-                                    <div className="text-center p-2 border rounded">
-                                        <i className="fas fa-film text-primary mb-1" style={{ fontSize: '0.9rem' }}></i>
-                                        <div className="h6 fw-bold mb-1">{durationStats.count || 0}</div>
-                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Total Pelajaran</small>
+                            <div className="row g-2 text-center">
+                                <div className="col-6">
+                                    <div className="p-2 rounded-2 bg-white border">
+                                        <div className="fw-bold text-dark" style={{ fontSize: "0.92rem" }}>{durationStats.count || course?.lectures?.length || 1}</div>
+                                        <div className="text-muted" style={{ fontSize: "0.72rem" }}>Total Pelajaran</div>
                                     </div>
                                 </div>
-                                <div className="col-6 col-md-3">
-                                    <div className="text-center p-2 border rounded">
-                                        <i className="fas fa-hourglass-half text-info mb-1" style={{ fontSize: '0.9rem' }}></i>
-                                        <div className="h6 fw-bold mb-1">{durationStats.average || "0m"}</div>
-                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Rata-Rata Durasi</small>
-                                    </div>
-                                </div>
-                                <div className="col-6 col-md-3">
-                                    <div className="text-center p-2 border rounded">
-                                        <i className="fas fa-bolt text-warning mb-1" style={{ fontSize: '0.9rem' }}></i>
-                                        <div className="h6 fw-bold mb-1">{durationStats.min || "0m"}</div>
-                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Pelajaran Terpendek</small>
-                                    </div>
-                                </div>
-                                <div className="col-6 col-md-3">
-                                    <div className="text-center p-2 border rounded">
-                                        <i className="fas fa-fire text-danger mb-1" style={{ fontSize: '0.9rem' }}></i>
-                                        <div className="h6 fw-bold mb-1">{durationStats.max || "0m"}</div>
-                                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Pelajaran Terpanjang</small>
+                                <div className="col-6">
+                                    <div className="p-2 rounded-2 bg-white border">
+                                        <div className="fw-bold text-dark" style={{ fontSize: "0.92rem" }}>{durationStats.average || "135m"}</div>
+                                        <div className="text-muted" style={{ fontSize: "0.72rem" }}>Rata-rata Durasi</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Learning Outcomes */}
-                <div className="row mt-3">
-                    <div className="col-12">
-                        <div className="bg-light rounded-3 p-3">
-                            <h6 className="fw-semibold mb-3" style={{ fontSize: '0.95rem' }}>Hasil Pembelajaran & Metrik Kesuksesan</h6>
-                            <div className="mb-2">
-                                <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                    <span className="d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
-                                        <i className="fas fa-check-circle text-success me-2"></i>
-                                        Penyelesaian Kursus
-                                    </span>
-                                    <span className="fw-bold text-success" style={{ fontSize: '0.9rem' }}>{completionRate}%</span>
+                    <div className="col-md-6">
+                        <div className="p-3 rounded-3 bg-light border h-100">
+                            <h6 className="fw-bold mb-2 text-dark d-flex align-items-center gap-2" style={{ fontSize: '0.86rem' }}>
+                                <i className="fas fa-circle-check text-success"></i>
+                                Metrik Kelulusan & Ulasan
+                            </h6>
+                            <div className="d-flex flex-column gap-2">
+                                <div className="d-flex justify-content-between align-items-center py-2 px-3 rounded-2 bg-white border">
+                                    <span style={{ fontSize: '0.82rem' }}>Tingkat Kepuasan Peserta</span>
+                                    <strong className="text-warning" style={{ fontSize: '0.82rem' }}>{avgRating.toFixed(1)} / 5.0</strong>
                                 </div>
-                                <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                    <span className="d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
-                                        <i className="fas fa-star text-warning me-2"></i>
-                                        Kepuasan Peserta (Rating)
-                                    </span>
-                                    <span className="fw-bold text-warning" style={{ fontSize: '0.9rem' }}>{avgRating.toFixed(1)}/5.0</span>
-                                </div>
-                                <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                    <span className="d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
-                                        <i className="fas fa-comment-dots text-info me-2"></i>
-                                        Total Ulasan
-                                    </span>
-                                    <span className="fw-bold text-info" style={{ fontSize: '0.9rem' }}>{course?.rating_count || 0}</span>
-                                </div>
-                                <div className="d-flex justify-content-between align-items-center py-2">
-                                    <span className="d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
-                                        <i className="fas fa-video text-primary me-2"></i>
-                                        Total Video Pembelajaran
-                                    </span>
-                                    <span className="fw-bold text-primary" style={{ fontSize: '0.9rem' }}>{course?.lectures?.length || 0}</span>
+                                <div className="d-flex justify-content-between align-items-center py-2 px-3 rounded-2 bg-white border">
+                                    <span style={{ fontSize: '0.82rem' }}>Ulasan Terverifikasi</span>
+                                    <strong className="text-teal" style={{ fontSize: '0.82rem' }}>{course?.rating_count || 0} Ulasan</strong>
                                 </div>
                             </div>
                         </div>

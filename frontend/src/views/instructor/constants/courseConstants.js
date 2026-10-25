@@ -11,6 +11,11 @@ export const COURSE_STATUS_OPTIONS = [
     { value: "Disabled", label: "Dinonaktifkan" }
 ];
 
+export const COURSE_AUDIENCE_OPTIONS = [
+    { value: "pegawai", label: "🏢 Khusus Pegawai Setjen DPD RI (Internal)" },
+    { value: "umum", label: "🌐 Terbuka untuk Umum (Publik)" }
+];
+
 // File Upload Constants
 export const FILE_UPLOAD_LIMITS = {
     image: {
@@ -45,6 +50,7 @@ export const DEFAULT_COURSE_DATA = {
     image: '',
     file: '',
     level: '',
+    target_audience: 'pegawai',
     category: '',
     status: 'Draft'
 };

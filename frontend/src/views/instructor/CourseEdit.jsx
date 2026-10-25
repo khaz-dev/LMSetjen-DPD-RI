@@ -40,6 +40,7 @@ import { getStatusText } from "../../utils/courseUtils";
 import {
     COURSE_LEVELS,
     COURSE_STATUS_OPTIONS,
+    COURSE_AUDIENCE_OPTIONS,
     SUCCESS_MESSAGES
 } from "./constants/courseConstants";
 
@@ -988,7 +989,7 @@ function CourseEdit() {
                                     <div className="d-flex align-items-center gap-2 flex-wrap">
                                         <Link 
                                             to="/instructor/courses/" 
-                                            className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5"
+                                            className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2"
                                             title="Kembali ke Daftar Kursus"
                                         >
                                             <i className="fas fa-arrow-left"></i>
@@ -997,7 +998,7 @@ function CourseEdit() {
 
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/curriculum/`}
-                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1.5"
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2"
                                             title="Kelola Kurikulum & Materi"
                                         >
                                             <i className="fas fa-list"></i>
@@ -1006,7 +1007,7 @@ function CourseEdit() {
 
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/quiz/`}
-                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1.5"
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2"
                                             title="Kelola Kuis Kursus"
                                         >
                                             <i className="fas fa-question-circle"></i>
@@ -1016,7 +1017,7 @@ function CourseEdit() {
                                         <Link
                                             to={`/instructor/preview-course/${param?.course_id}/`}
                                             target="_blank"
-                                            className="btn btn-sm btn-teal d-inline-flex align-items-center gap-1.5"
+                                            className="btn btn-sm btn-teal d-inline-flex align-items-center gap-2"
                                             title="Pratinjau Kursus"
                                         >
                                             <i className="fas fa-eye"></i>
@@ -1089,7 +1090,7 @@ function CourseEdit() {
                                     </div>
 
                                     <div className="row">
-                                        <div className="col-md-6">
+                                        <div className="col-md-4">
                                             <FormField
                                                 ref={categoryRef}
                                                 label="Kategori Kursus"
@@ -1109,7 +1110,7 @@ function CourseEdit() {
                                             />
                                         </div>
 
-                                        <div className="col-md-6">
+                                        <div className="col-md-4">
                                             <FormField
                                                 ref={levelRef}
                                                 label="Level Kursus"
@@ -1126,6 +1127,19 @@ function CourseEdit() {
                                                 ]}
                                                 required
                                                 helpText="Tentukan tingkat kesulitan"
+                                            />
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <FormField
+                                                label="Target Peserta & Akses"
+                                                name="target_audience"
+                                                type="select"
+                                                value={courseData?.target_audience || "pegawai"}
+                                                onChange={handleCourseInputChange}
+                                                options={COURSE_AUDIENCE_OPTIONS}
+                                                required
+                                                helpText="Khusus pegawai DPD RI atau umum"
                                             />
                                         </div>
                                     </div>
@@ -1342,12 +1356,12 @@ function CourseEdit() {
                                             <Link
                                                 to={`/instructor/preview-course/${param?.course_id}/`}
                                                 target="_blank"
-                                                className="btn btn-outline-primary"
+                                                className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2"
                                                 disabled={submitStatus === "submitting" || autoSaveStatus === "saving"}
                                                 title="Lihat pratinjau kursus dalam format read-only"
                                             >
-                                                <i className="fas fa-eye me-2"></i>
-                                                Pratinjau Draf
+                                                <i className="fas fa-eye"></i>
+                                                <span>Pratinjau Draf</span>
                                             </Link>
 
                                             {/* Preview Published Version Button - Only if published_version exists or course was published */}
@@ -1355,12 +1369,12 @@ function CourseEdit() {
                                                 <Link
                                                     to={`/instructor/preview-course/${courseData?.course_id}/?view=published`}
                                                     target="_blank"
-                                                    className="btn btn-outline-success"
+                                                    className="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-2"
                                                     disabled={submitStatus === "submitting" || autoSaveStatus === "saving"}
                                                     title="Lihat pratinjau versi kursus yang telah dipublikasikan"
                                                 >
-                                                    <i className="fas fa-eye me-2"></i>
-                                                    Pratinjau Publis
+                                                    <i className="fas fa-eye"></i>
+                                                    <span>Pratinjau Publis</span>
                                                 </Link>
                                             )}
                                         </div>
@@ -1498,18 +1512,19 @@ function CourseEdit() {
                                             <div className="position-relative d-flex flex-column align-items-center">
                                                 <button
                                                     type="button"
-                                                    className="btn btn-warning"
+                                                    className="btn btn-warning btn-sm d-inline-flex align-items-center gap-2"
                                                     onClick={handleRestoreCourse}
                                                     disabled={submitStatus === "submitting"}
                                                     style={{
                                                         background: "linear-gradient(135deg, #f39c12 0%, #e67e22 100%)",
                                                         color: "white",
                                                         border: "none",
-                                                        padding: "12px 30px",
+                                                        padding: "7px 18px",
                                                         borderRadius: "8px",
                                                         fontWeight: "600",
-                                                        fontSize: "1rem",
-                                                        boxShadow: "0 4px 15px rgba(243, 156, 18, 0.3)",
+                                                        fontSize: "0.85rem",
+                                                        boxShadow: "0 2px 8px rgba(243, 156, 18, 0.25)",
+                                                        minHeight: "34px",
                                                         transition: "all 0.3s ease",
                                                         cursor: submitStatus === "submitting" ? "not-allowed" : "pointer",
                                                         opacity: submitStatus === "submitting" ? 0.6 : 1,
@@ -1534,7 +1549,7 @@ function CourseEdit() {
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <i className="fas fa-undo me-2"></i>
+                                                            <i className="fas fa-undo"></i>
                                                             <span>Restore Kursus</span>
                                                         </>
                                                     )}
@@ -1551,7 +1566,7 @@ function CourseEdit() {
                                             <div className="position-relative d-flex flex-column align-items-center">
                                                 <button
                                                     type="button"
-                                                    className="btn btn-publish-course"
+                                                    className="btn btn-publish-course btn-sm d-inline-flex align-items-center gap-2"
                                                     onClick={handlePublishCourse}
                                                     disabled={isPublishing || submitStatus === "submitting" || !canPublish}
                                                     style={{
@@ -1560,28 +1575,29 @@ function CourseEdit() {
                                                             : "linear-gradient(135deg, #9e9e9e 0%, #757575 100%)",
                                                         color: "white",
                                                         border: "none",
-                                                        padding: "12px 30px",
+                                                        padding: "7px 18px",
                                                         borderRadius: "8px",
                                                         fontWeight: "600",
-                                                        fontSize: "1rem",
+                                                        fontSize: "0.85rem",
                                                         boxShadow: canPublish
-                                                            ? "0 4px 15px rgba(33, 150, 243, 0.3)"
+                                                            ? "0 2px 8px rgba(15, 118, 110, 0.25)"
                                                             : "0 2px 8px rgba(0, 0, 0, 0.1)",
                                                         transition: "all 0.3s ease",
                                                         cursor: canPublish ? "pointer" : "not-allowed",
                                                         opacity: canPublish ? 1 : 0.6,
-                                                        whiteSpace: "nowrap"
+                                                        whiteSpace: "nowrap",
+                                                        minHeight: "34px"
                                                     }}
                                                     onMouseOver={(e) => {
                                                         if (canPublish && !isPublishing && submitStatus !== "submitting") {
                                                             e.currentTarget.style.transform = "translateY(-2px)";
-                                                            e.currentTarget.style.boxShadow = "0 6px 20px rgba(33, 150, 243, 0.4)";
+                                                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(15, 118, 110, 0.35)";
                                                         }
                                                     }}
                                                     onMouseOut={(e) => {
                                                         if (canPublish) {
                                                             e.currentTarget.style.transform = "translateY(0)";
-                                                            e.currentTarget.style.boxShadow = "0 4px 15px rgba(33, 150, 243, 0.3)";
+                                                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(15, 118, 110, 0.25)";
                                                         }
                                                     }}
                                                     title={!canPublish ? (
@@ -1597,7 +1613,7 @@ function CourseEdit() {
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <i className={`fas ${canPublish ? "fa-paper-plane" : "fa-lock"} me-2`}></i>
+                                                            <i className={`fas ${canPublish ? "fa-paper-plane" : "fa-lock"}`}></i>
                                                             <span>
                                                                 {courseData?.platform_status === "Rejected" ? "Ajukan Ulang Publikasi Kursus" : courseData?.platform_status === "Published" ? "Ajukan Review Publikasi" : "Ajukan Publikasi Kursus"}
                                                             </span>
@@ -1631,7 +1647,7 @@ function CourseEdit() {
                                             <div className="position-relative d-flex flex-column align-items-center">
                                                 <button
                                                     type="button"
-                                                    className="btn btn-publish-course"
+                                                    className="btn btn-publish-course btn-sm d-inline-flex align-items-center gap-2"
                                                     onClick={handlePublishCourse}
                                                     disabled={isPublishing || submitStatus === "submitting" || !canPublish}
                                                     style={{
@@ -1640,27 +1656,29 @@ function CourseEdit() {
                                                             : "linear-gradient(135deg, #9e9e9e 0%, #757575 100%)",
                                                         color: "white",
                                                         border: "none",
-                                                        padding: "12px 30px",
+                                                        padding: "7px 18px",
                                                         borderRadius: "8px",
                                                         fontWeight: "600",
-                                                        fontSize: "1rem",
+                                                        fontSize: "0.85rem",
                                                         boxShadow: canPublish
-                                                            ? "0 4px 15px rgba(33, 150, 243, 0.3)"
+                                                            ? "0 2px 8px rgba(15, 118, 110, 0.25)"
                                                             : "0 2px 8px rgba(0, 0, 0, 0.1)",
                                                         transition: "all 0.3s ease",
                                                         cursor: canPublish ? "pointer" : "not-allowed",
-                                                        opacity: canPublish ? 1 : 0.6
+                                                        opacity: canPublish ? 1 : 0.6,
+                                                        whiteSpace: "nowrap",
+                                                        minHeight: "34px"
                                                     }}
                                                     onMouseOver={(e) => {
                                                         if (canPublish && !isPublishing && submitStatus !== "submitting") {
                                                             e.currentTarget.style.transform = "translateY(-2px)";
-                                                            e.currentTarget.style.boxShadow = "0 6px 20px rgba(33, 150, 243, 0.4)";
+                                                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(15, 118, 110, 0.35)";
                                                         }
                                                     }}
                                                     onMouseOut={(e) => {
                                                         if (canPublish) {
                                                             e.currentTarget.style.transform = "translateY(0)";
-                                                            e.currentTarget.style.boxShadow = "0 4px 15px rgba(33, 150, 243, 0.3)";
+                                                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(15, 118, 110, 0.25)";
                                                         }
                                                     }}
                                                     title={!canPublish ? (
@@ -1676,7 +1694,7 @@ function CourseEdit() {
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <i className={`fas ${canPublish ? "fa-paper-plane" : "fa-lock"} me-2`}></i>
+                                                            <i className={`fas ${canPublish ? "fa-paper-plane" : "fa-lock"}`}></i>
                                                             <span>
                                                                 {courseData?.platform_status === "Rejected" ? "Ajukan Ulang Publikasi" : courseData?.platform_status === "Published" ? "Ajukan Review Publikasi" : "Ajukan Publikasi"}
                                                             </span>

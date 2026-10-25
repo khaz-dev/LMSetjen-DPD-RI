@@ -32,6 +32,11 @@ LEVEL = (
     ("Advanced", "Advanced"),
 )
 
+TARGET_AUDIENCE = (
+    ("pegawai", "Khusus Pegawai Setjen DPD RI"),
+    ("umum", "Terbuka untuk Umum"),
+)
+
 
 TEACHER_STATUS = (
     ("Draft", "Draft"),
@@ -209,6 +214,7 @@ class Course(models.Model):
     title = models.CharField(max_length=200, blank=True, null=True)
     description = models.TextField(null=True, blank=True)
     level = models.CharField(choices=LEVEL, default="Beginner", max_length=100, blank=True, null=True)
+    target_audience = models.CharField(choices=TARGET_AUDIENCE, default="pegawai", max_length=50, blank=True, null=True, verbose_name="Target Peserta")
     platform_status = models.CharField(choices=PLATFORM_STATUS, default="Draft", max_length=100, blank=True, null=True)
     teacher_course_status = models.CharField(choices=TEACHER_STATUS, default="Draft", max_length=100)
     featured = models.BooleanField(default=False)
@@ -345,6 +351,7 @@ class Course(models.Model):
                 title=self.title,
                 description=self.description,
                 level=self.level,
+                target_audience=self.target_audience,
                 course_id=unique_course_id,  # Unique ID for published copy
                 
                 # Status fields
@@ -385,6 +392,7 @@ class Course(models.Model):
                 title=self.title,
                 description=self.description,
                 level=self.level,
+                target_audience=self.target_audience,
                 
                 # Status fields
                 platform_status="Review",
@@ -417,6 +425,7 @@ class Course(models.Model):
             "title": self.title,
             "description": self.description,
             "level": self.level,
+            "target_audience": self.target_audience,
             "image": self.image,
             "file": self.file,
             "featured": self.featured,

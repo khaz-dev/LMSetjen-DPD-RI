@@ -298,10 +298,11 @@ const VideoUpload = ({ courseData, setCourseData, onVideoChange, onVideoDelete }
                 disabled={videoLoading}
               />
               <button 
-                className="btn btn-success"
+                className="btn btn-success btn-sm d-inline-flex align-items-center gap-2"
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={videoLoading}
+                style={{ fontSize: "0.8125rem", padding: "6px 14px", fontWeight: "600" }}
               >
                 {videoLoading ? (
                   <>
@@ -310,8 +311,8 @@ const VideoUpload = ({ courseData, setCourseData, onVideoChange, onVideoDelete }
                   </>
                 ) : (
                   <>
-                    <i className="fas fa-folder-open me-2"></i>
-                    Pilih Video
+                    <i className="fas fa-folder-open"></i>
+                    <span>Pilih Video</span>
                   </>
                 )}
               </button>
