@@ -1,545 +1,596 @@
-/* Login Component Styles */
+/* ==========================================================================
+   LMSetjen DPD RI - Modern Compact Login Page
+   ========================================================================== */
+
 .login-section {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    background: transparent;
-    padding-top: 100px;
-    padding-bottom: 80px;
-    user-select: none;
+  min-height: calc(100vh - 140px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.75rem 1rem;
+  position: relative;
+  background: radial-gradient(circle at 50% 15%, rgba(15, 118, 110, 0.07) 0%, rgba(240, 253, 250, 0.5) 60%, transparent 100%);
+  user-select: none;
 }
 
-/* Allow text selection only for input fields and links */
-.login-input,
-.login-password-input,
-.login-register-link,
-.login-forgot-link,
+.login-container {
+  width: 100%;
+  max-width: 940px;
+  margin: 0 auto;
+}
+
+/* Main Two-Panel Card */
+.login-card-container {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 45px -12px rgba(15, 118, 110, 0.22), 0 0 0 1px rgba(15, 118, 110, 0.08);
+  overflow: hidden;
+  min-height: 480px;
+  transition: box-shadow 0.3s ease;
+}
+
+.login-card-container:hover {
+  box-shadow: 0 25px 55px -12px rgba(15, 118, 110, 0.28), 0 0 0 1px rgba(15, 118, 110, 0.12);
+}
+
+/* ==========================================================================
+   Left Panel: Institutional Brand & Highlights
+   ========================================================================== */
+.login-brand-panel {
+  position: relative;
+  background: linear-gradient(145deg, #0f766e 0%, #115e59 55%, #042f2e 100%);
+  color: #ffffff;
+  padding: 2.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Ambient glow accents */
+.login-brand-decor-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(50px);
+  opacity: 0.35;
+  z-index: -1;
+}
+
+.circle-1 {
+  width: 220px;
+  height: 220px;
+  background: #2dd4bf;
+  top: -40px;
+  right: -50px;
+}
+
+.circle-2 {
+  width: 180px;
+  height: 180px;
+  background: #0d9488;
+  bottom: -30px;
+  left: -40px;
+}
+
+.login-brand-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+/* Brand Top Section */
+.login-brand-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.login-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  padding: 0.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #ccfbf1;
+  backdrop-filter: blur(8px);
+}
+
+.login-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.login-brand-logo-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.login-brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.login-brand-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  color: #ffffff;
+}
+
+.login-brand-subtitle {
+  font-size: 0.8rem;
+  color: #ccfbf1;
+  margin: 0.2rem 0 0 0;
+  line-height: 1.35;
+  opacity: 0.9;
+}
+
+/* Feature Highlights */
+.login-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.login-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  transition: all 0.25s ease;
+}
+
+.login-feature-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateX(4px);
+}
+
+.login-feature-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: #5eead4;
+  flex-shrink: 0;
+}
+
+.login-feature-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.login-feature-text strong {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.login-feature-text span {
+  font-size: 0.73rem;
+  color: #ccfbf1;
+  line-height: 1.3;
+  opacity: 0.85;
+}
+
+/* Brand Footer */
+.login-brand-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.72rem;
+  color: #99f6e4;
+}
+
+.login-trust-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  opacity: 0.9;
+}
+
+.login-brand-copyright {
+  opacity: 0.75;
+}
+
+/* ==========================================================================
+   Right Panel: Compact Interactive Authentication
+   ========================================================================== */
+.login-auth-panel {
+  padding: 2.25rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.login-auth-header {
+  margin-bottom: 1.25rem;
+}
+
+.login-auth-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #0d9488;
+  margin-bottom: 0.25rem;
+}
+
+.login-auth-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.3rem 0;
+  letter-spacing: -0.3px;
+}
+
+.login-auth-subtitle {
+  font-size: 0.84rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Error Banner */
+.login-alert {
+  padding: 0.65rem 0.9rem;
+  font-size: 0.82rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Login Methods Container */
+.login-methods-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.login-method-group {
+  width: 100%;
+}
+
+/* Shared Interactive Card Button */
+.login-method-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  outline: none;
+  border: 1.5px solid transparent;
+  background: #ffffff;
+  text-align: left;
+  user-select: none;
+}
+
+/* Method 1: Nusa SSO */
+.login-method-card.sso-card {
+  background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%);
+  border-color: #99f6e4;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.08);
+}
+
+.login-method-card.sso-card:hover {
+  background: linear-gradient(180deg, #ccfbf1 0%, #f0fdfa 100%);
+  border-color: #0f766e;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(15, 118, 110, 0.16);
+}
+
+.login-method-card.sso-card:active {
+  transform: translateY(0);
+}
+
+/* Method 2: Google */
+.login-method-card.google-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.login-method-card.google-card:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.login-method-card.google-card:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-method-card.google-card:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Method Icon Boxes */
+.login-method-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.nusa-icon-box {
+  background: #ffffff;
+  border: 1px solid #ccfbf1;
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.1);
+}
+
+.google-icon-box {
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.login-method-card:hover .login-method-icon-box {
+  transform: scale(1.05);
+}
+
+.nusa-logo-img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.google-svg-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* Method Details */
+.login-method-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.login-method-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.login-method-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.25;
+}
+
+.sso-card .login-method-name {
+  color: #0f766e;
+}
+
+.login-badge-recommended {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  background: #0f766e;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.login-method-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+/* Arrow indicator */
+.login-method-arrow {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  margin-left: 0.25rem;
+  flex-shrink: 0;
+}
+
+.sso-card .login-method-arrow {
+  color: #0f766e;
+}
+
+.login-method-card:hover .login-method-arrow {
+  transform: translateX(4px);
+  color: #0f766e;
+}
+
+/* Compact Divider */
+.login-card-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.74rem;
+  font-weight: 500;
+  margin: 0.1rem 0;
+}
+
+.login-card-divider::before,
+.login-card-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.login-card-divider span {
+  padding: 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+}
+
+/* Footer & Security Note */
+.login-auth-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.login-security-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.74rem;
+  color: #0d9488;
+  font-weight: 500;
+}
+
+.login-security-notice i {
+  font-size: 0.85rem;
+}
+
+.login-help-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  user-select: text;
+}
+
 .login-help-link {
-    user-select: text;
-}
-
-.login-card {
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    user-select: none; /* Prevent text selection on card */
-}
-
-.login-card-body {
-    padding: 2rem;
-    user-select: none; /* Prevent text selection on body */
-}
-
-/* Login card header styling */
-.login-card-header {
-    border: none;
-    background: transparent;
-    padding: 0;
-}
-
-/* Login card footer styling */
-.login-card-footer {
-    border: none;
-    background: transparent;
-    padding: 0;
-}
-
-/* Password input container */
-.password-input-wrapper {
-    position: relative;
-    width: 100%;
-    display: flex;
-    align-items: center;
-}
-
-/* Password input field */
-.login-password-input {
-    width: 100% !important;
-    padding: 10px 45px 10px 14px !important; /* Right padding for the toggle button */
-    border-radius: 12px !important;
-    border: 2px solid #e9ecef !important;
-    font-size: 15px !important;
-    transition: all 0.2s ease-in-out !important;
-    background-color: white !important;
-    position: relative !important;
-    z-index: 1 !important; /* Lower than the toggle button */
-}
-
-.login-password-input:hover {
-    border-color: #adb5bd !important;
-    background-color: white !important; /* Keep white background on hover */
-}
-
-.login-password-input:focus {
-    border-color: var(--theme-primary) !important;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
-    background-color: white !important;
-    outline: none !important;
-}
-
-/* Password visibility toggle button */
-.password-visibility-toggle {
-    position: absolute !important;
-    right: 12px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    z-index: 100 !important; /* Always on top */
-    background: none !important;
-    border: none !important;
-    padding: 8px !important;
-    margin: 0 !important;
-    cursor: pointer !important;
-    color: #6c757d !important;
-    font-size: 1.2rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: color 0.2s ease !important;
-    pointer-events: auto !important; /* Ensure clickable */
-    opacity: 1 !important; /* Always visible */
-    width: auto !important;
-    height: auto !important;
-    min-width: 24px !important;
-    min-height: 24px !important;
-}
-
-/* Hover and focus states for the toggle button */
-.password-visibility-toggle:hover,
-.password-visibility-toggle:focus {
-    color: var(--theme-primary) !important;
-    opacity: 1 !important;
-    outline: none !important;
-}
-
-/* Ensure the toggle button stays visible even when the input has validation states */
-.login-password-input.is-invalid ~ .password-visibility-toggle,
-.login-password-input.is-valid ~ .password-visibility-toggle {
-    z-index: 100 !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-}
-
-.login-logo-container {
-    width: 100%;
-    height: 100%;
-    background: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.login-logo {
-    width: 120px;
-    height: 120px;
-    object-fit: contain;
-}
-
-.login-title {
-    font-weight: bold;
-    color: #343a40;
-    margin-bottom: 0.25rem;
-    font-size: 1.5rem;
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-.login-subtitle {
-    color: #6c757d;
-    margin-bottom: 0;
-    font-size: 0.9rem;
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-.login-register-link {
-    color: var(--theme-primary);
-    text-decoration: none;
-    font-weight: bold;
-    user-select: text; /* Allow text selection for links */
-    cursor: pointer; /* Pointer cursor for links */
-}
-
-.login-register-link:hover {
-    color: var(--theme-primary-dark);
-    text-decoration: underline;
-}
-
-.login-form-label {
-    font-weight: 500;
-    color: #343a40;
-    margin-bottom: 0.5rem;
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-.login-form-icon {
-    color: var(--theme-primary);
-    margin-right: 0.5rem;
-}
-
-/* Input styles with higher specificity to override global styles */
-.login-card input.form-control.login-input {
-    border-radius: 12px;
-    border: 2px solid #e9ecef;
-    padding: 10px 14px;
-    font-size: 15px;
-    transition: all 0.2s ease-in-out;
-    user-select: text;
-    cursor: text;
-    background-color: white;
-}
-
-.login-card input.form-control.login-input:hover:not(:disabled):not(:focus) {
-    border-color: #adb5bd;
-    background-color: #f8f9fa;
-}
-
-.login-card input.form-control.login-input:focus {
-    border-color: var(--theme-primary);
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-    background-color: white;
-    outline: none;
-}
-
-/* Prevent input hover/focus from overlapping the button */
-.login-card input.form-control.login-password-input {
-    position: relative;
-    z-index: 1;
-    background-color: white !important;
-}
-
-.login-card input.form-control.login-password-input:hover:not(:disabled):not(:focus) {
-    border-color: #adb5bd;
-    background-color: #f8f9fa;
-}
-
-.login-card input.form-control.login-password-input:focus {
-    border-color: var(--theme-primary);
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-    background-color: white;
-    outline: none;
-}
-
-/* Ensure toggle button is always above input and visible */
-.login-password-toggle {
-    position: absolute;
-    top: 50%;
-    right: 12px;
-    transform: translateY(-50%);
-    z-index: 10; /* Increase z-index so it's always above input */
-    background: transparent;
-    border: none;
-    color: #6c757d;
-    padding: 0;
-    font-size: 1.2rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
-}
-
-.login-password-toggle:hover,
-.login-password-toggle:focus {
-    color: var(--theme-primary);
-    z-index: 11;
-}
-
-.login-error-feedback {
-    color: #dc3545;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-.login-valid-feedback {
-    color: #198754;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-/* Checkbox alignment fix */
-.login-card .form-check {
-    display: flex;
-    align-items: center;
-    padding-left: 0 !important;
-    margin-left: 0 !important;
-}
-
-.login-card .form-check-input.login-checkbox {
-    border-color: var(--theme-primary) !important;
-    user-select: none; /* Prevent text selection */
-    cursor: pointer; /* Pointer cursor for checkboxes */
-    margin-top: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0.5rem;
-    flex-shrink: 0;
-    width: 1rem; /* Fixed width */
-    height: 1rem; /* Fixed height */
-    position: static;
-    float: none;
-}
-
-.login-card .form-check-input.login-checkbox:checked {
-    background-color: var(--theme-primary) !important;
-    border-color: var(--theme-primary) !important;
-}
-
-/* Checkbox label styling */
-.login-card .form-check-label {
-    user-select: none; /* Prevent text selection on labels */
-    cursor: pointer; /* Pointer cursor for labels */
-    margin-bottom: 0 !important;
-    margin-left: 0 !important;
-    padding-top: 0 !important;
-    padding-left: 0 !important;
-}
-
-.login-forgot-link {
-    color: var(--theme-primary) !important;
-    font-size: 14px;
-    text-decoration: none;
-    user-select: text; /* Allow text selection for links */
-    cursor: pointer; /* Pointer cursor for links */
-}
-
-.login-forgot-link:hover {
-    color: var(--theme-primary-dark);
-    text-decoration: underline;
-}
-
-.login-submit-btn {
-    background: var(--theme-gradient);
-    border: none;
-    border-radius: 12px;
-    color: white;
-    padding: 14px;
-    font-size: 16px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    transform: scale(1);
-    user-select: none; /* Prevent text selection */
-    cursor: pointer; /* Pointer cursor for buttons */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.login-submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-    color: white;
-}
-
-.login-submit-btn:active {
-    transform: scale(0.98);
-}
-
-.login-submit-btn:disabled {
-    transform: scale(0.98);
-    opacity: 0.8;
-    cursor: not-allowed; /* Not-allowed cursor for disabled buttons */
-}
-
-.login-help-link {
-    color: var(--theme-primary);
-    text-decoration: none;
-    user-select: text; /* Allow text selection for links */
-    cursor: pointer; /* Pointer cursor for links */
+  color: #0f766e;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .login-help-link:hover {
-    color: var(--theme-primary-dark);
-    text-decoration: underline;
+  color: #115e59;
+  text-decoration: underline;
 }
 
-.login-spinner {
-    width: 1rem;
-    height: 1rem;
-    margin-right: 0.5rem;
-    border-color: rgba(255, 255, 255, 0.95);
-    border-right-color: transparent;
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+@media (max-width: 860px) {
+  .login-card-container {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+  }
+
+  .login-brand-panel {
+    padding: 1.75rem 1.75rem 1.5rem 1.75rem;
+  }
+
+  .login-features-list {
+    display: none; /* Hide feature list on mobile/tablet to keep it ultra compact */
+  }
+
+  .login-brand-footer {
+    display: none;
+  }
+
+  .login-brand-header {
+    gap: 0.75rem;
+  }
+
+  .login-brand-title {
+    font-size: 1.2rem;
+  }
+
+  .login-brand-logo-wrap {
+    width: 46px;
+    height: 46px;
+  }
+
+  .login-auth-panel {
+    padding: 1.75rem;
+  }
+
+  .login-auth-title {
+    font-size: 1.25rem;
+  }
 }
 
-.login-submit-btn:disabled {
-    background: var(--theme-gradient);
-    opacity: 0.9;
-    cursor: not-allowed;
-}
+@media (max-width: 480px) {
+  .login-section {
+    padding: 1rem 0.75rem;
+    min-height: calc(100vh - 120px);
+  }
 
-.login-submit-btn:disabled strong {
-    color: #ffffff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    letter-spacing: 0.3px;
-}
+  .login-brand-panel {
+    padding: 1.25rem 1.25rem 1rem 1.25rem;
+  }
 
-/* Additional text selection prevention */
-.login-section .text-center {
-    user-select: none; /* Prevent text selection on centered text */
-}
+  .login-auth-panel {
+    padding: 1.25rem;
+  }
 
-.login-section .text-muted {
-    user-select: none; /* Prevent text selection on muted text */
-    cursor: default; /* Default cursor */
-}
+  .login-method-card {
+    padding: 0.75rem 0.85rem;
+  }
 
-/* Logo styling */
-.login-logo {
-    width: 180px;
-    height: 180px;
-    object-fit: contain;
-    user-select: none; /* Prevent selection of logo */
-    pointer-events: none; /* Prevent any interaction with logo */
-}
+  .login-method-icon-box {
+    width: 38px;
+    height: 38px;
+  }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .login-card-body {
-        padding: 2rem;
-    }
-    
-    .login-logo {
-        width: 120px;
-        height: 120px;
-    }
-    
-    .login-section {
-        padding-top: 20px;
-        padding-bottom: 80px;
-    }
-}
+  .nusa-logo-img {
+    width: 22px;
+    height: 22px;
+  }
 
-@media (max-width: 576px) {
-    .login-card-body {
-        padding: 1.5rem;
-    }
-    
-    .login-logo {
-        width: 100px;
-        height: 100px;
-    }
-}
-
-/* ============================== */
-/* SSO (Single Sign-On) Styles */
-/* ============================== */
-
-/* Divider between login methods */
-.login-divider {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    opacity: 0.7;
-}
-
-.login-divider::before {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #e9ecef;
-}
-
-.login-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #e9ecef;
-}
-
-.login-divider-text {
-    font-size: 0.85rem;
-    color: #6c757d;
-    font-weight: 500;
-    white-space: nowrap;
-    user-select: none;
-}
-
-/* SSO Login Button */
-.login-sso-btn {
-    background: var(--theme-gradient) !important;
-    border: none;
-    color: white;
-    font-weight: 600;
-    font-size: 1rem;
-    padding: 12px 24px;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.login-sso-btn:hover {
-    background: linear-gradient(135deg, var(--theme-primary-dark), var(--theme-primary)) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    color: white;
-    text-decoration: none;
-}
-
-.login-sso-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.2);
-}
-
-.login-sso-btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
-}
-
-.login-sso-btn i {
-    font-size: 1.1rem;
-    margin-right: 0.5rem;
-}
-
-/* Google and NUSA SSO Button text sizing */
-.sso-google-btn,
-.sso-nusa-btn {
-    font-size: 0.9rem !important;
-    transition: all 0.3s ease !important;
-}
-
-/* Google Button Hover */
-.sso-google-btn:hover {
-    background-color: #F8F9FA !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* NUSA SSO Button Hover - Reverse style to filled */
-.sso-nusa-btn:hover {
-    background-color: #0f766e !important;
-    color: #FFFFFF !important;
-    border-color: #0f766e !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.25) !important;
-}
-
-/* Active/pressed state */
-.sso-google-btn:active,
-.sso-nusa-btn:active {
-    transform: translateY(0) !important;
-}
-
-/* Responsive SSO button */
-@media (max-width: 768px) {
-    .login-sso-btn {
-        font-size: 0.95rem;
-        padding: 10px 20px;
-    }
-
-    .login-divider-text {
-        font-size: 0.8rem;
-    }
+  .google-svg-icon {
+    width: 20px;
+    height: 20px;
+  }
 }

@@ -434,7 +434,7 @@ function CourseDetail() {
                                     </div>
                                     <div className="overflow-hidden">
                                         <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Sertifikat</div>
-                                        <div className="text-dark fw-bold text-truncate" style={{ fontSize: "0.85rem" }}>Resmi DPD RI</div>
+                                        <div className="text-dark fw-bold text-truncate" style={{ fontSize: "0.85rem" }}>Resmi Setjen DPD RI</div>
                                     </div>
                                 </div>
                             </div>
@@ -703,7 +703,16 @@ function CourseDetail() {
                                                 {items.length > 0 ? (
                                                     <div>
                                                         {items.map((item, itemIndex) => {
-                                                            const isScorm = item.file_type === "scorm" || item.learning_module_info;
+                                                            const isScorm = item.file_type === "scorm" ||
+                                                                item.learning_module_info ||
+                                                                (item.title && item.title.toLowerCase().includes('scorm')) ||
+                                                                (course?.title && course?.title.toLowerCase().includes('scorm')) ||
+                                                                course?.file_type === 'scorm';
+                                                            const isPdf = item.file_type === "pdf" ||
+                                                                item.file_type === "document" ||
+                                                                (typeof item.file === 'string' && item.file.toLowerCase().endsWith('.pdf'));
+                                                            const itemDurationSec = item.duration_seconds || (item.content_duration ? parseDurationToSeconds(item.content_duration) : 0);
+
                                                             return (
                                                                 <div
                                                                     key={item.variant_item_id || itemIndex}
@@ -715,35 +724,58 @@ function CourseDetail() {
                                                                         <div
                                                                             className="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
                                                                             style={{
-                                                                                width: "30px",
-                                                                                height: "30px",
-                                                                                background: isScorm ? "rgba(13, 148, 136, 0.12)" : "rgba(2, 132, 199, 0.1)"
+                                                                                width: "32px",
+                                                                                height: "32px",
+                                                                                background: isScorm
+                                                                                    ? "rgba(13, 148, 136, 0.12)"
+                                                                                    : isPdf
+                                                                                        ? "rgba(239, 68, 68, 0.1)"
+                                                                                        : "rgba(2, 132, 199, 0.1)"
                                                                             }}
                                                                         >
                                                                             <i
-                                                                                className={isScorm ? "fas fa-cubes text-teal" : (item.file_icon || "fas fa-play text-primary")}
-                                                                                style={{ fontSize: "0.82rem", color: isScorm ? "#0d9488" : "#0284c7" }}
+                                                                                className={isScorm ? "fas fa-cubes" : isPdf ? "fas fa-file-pdf" : (item.file_icon || "fas fa-play")}
+                                                                                style={{
+                                                                                    fontSize: "0.82rem",
+                                                                                    color: isScorm ? "#0d9488" : isPdf ? "#ef4444" : "#0284c7"
+                                                                                }}
                                                                             ></i>
                                                                         </div>
                                                                         <div className="min-w-0">
                                                                             <span className="fw-semibold text-dark text-truncate d-block" style={{ fontSize: "0.85rem" }}>
                                                                                 {item.title}
                                                                             </span>
-                                                                            {isScorm && (
-                                                                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-0 px-2 rounded mt-1" style={{ fontSize: "0.68rem" }}>
-                                                                                    Paket E-Learning SCORM
-                                                                                </span>
-                                                                            )}
+                                                                            <div className="d-flex align-items-center gap-1.5 mt-0.5">
+                                                                                {isScorm && (
+                                                                                    <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-0 px-1.5 rounded" style={{ fontSize: "0.68rem" }}>
+                                                                                        Modul SCORM 1.2
+                                                                                    </span>
+                                                                                )}
+                                                                                {isPdf && (
+                                                                                    <span className="badge bg-danger-subtle text-danger border border-danger-subtle py-0 px-1.5 rounded" style={{ fontSize: "0.68rem" }}>
+                                                                                        Dokumen PDF
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
                                                                         </div>
                                                                     </div>
 
                                                                     <div className="d-flex align-items-center gap-2 flex-shrink-0">
-                                                                        {item.content_duration && (
-                                                                            <span className="badge bg-light text-secondary border-0 px-2 py-1" style={{ fontSize: "0.74rem" }}>
-                                                                                <i className="fas fa-clock me-1 text-muted"></i>
-                                                                                {formatDuration(parseDurationToSeconds(item.content_duration))}
+                                                                        {isScorm ? (
+                                                                            <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-1" style={{ fontSize: "0.74rem" }}>
+                                                                                <i className="fas fa-cubes me-1"></i>SCORM 1.2
                                                                             </span>
-                                                                        )}
+                                                                        ) : isPdf ? (
+                                                                            <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style={{ fontSize: "0.74rem" }}>
+                                                                                <i className="fas fa-file-pdf me-1"></i>Dokumen
+                                                                            </span>
+                                                                        ) : itemDurationSec > 0 ? (
+                                                                            <span className="badge bg-light text-secondary border px-2 py-1" style={{ fontSize: "0.74rem" }}>
+                                                                                <i className="fas fa-clock me-1 text-muted"></i>
+                                                                                {formatDuration(itemDurationSec)}
+                                                                            </span>
+                                                                        ) : null}
+
                                                                         {item.preview && (
                                                                             <button
                                                                                 type="button"
@@ -751,14 +783,28 @@ function CourseDetail() {
                                                                                 onClick={() => handlePreviewClick(item)}
                                                                                 style={{
                                                                                     fontSize: "0.74rem",
-                                                                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                                                                    background: isScorm
+                                                                                        ? "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)"
+                                                                                        : isPdf
+                                                                                            ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
+                                                                                            : "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
                                                                                     color: "#ffffff",
-                                                                                    boxShadow: "0 2px 6px rgba(13, 148, 136, 0.25)"
+                                                                                    boxShadow: isScorm
+                                                                                        ? "0 2px 6px rgba(13, 148, 136, 0.25)"
+                                                                                        : isPdf
+                                                                                            ? "0 2px 6px rgba(239, 68, 68, 0.25)"
+                                                                                            : "0 2px 6px rgba(2, 132, 199, 0.25)"
                                                                                 }}
-                                                                                title="Klik untuk menonton preview"
+                                                                                title={
+                                                                                    isScorm
+                                                                                        ? "Klik untuk melihat pratinjau modul interaktif SCORM"
+                                                                                        : isPdf
+                                                                                            ? "Klik untuk melihat dokumen materi"
+                                                                                            : "Klik untuk menonton preview video"
+                                                                                }
                                                                             >
-                                                                                <i className="fas fa-play" style={{ fontSize: "0.68rem" }}></i>
-                                                                                Preview
+                                                                                <i className={isScorm ? "fas fa-cubes" : isPdf ? "fas fa-file-pdf" : "fas fa-play"} style={{ fontSize: "0.68rem" }}></i>
+                                                                                {isScorm ? "Pratinjau Modul" : isPdf ? "Lihat Dokumen" : "Preview"}
                                                                             </button>
                                                                         )}
                                                                     </div>
@@ -1008,170 +1054,317 @@ function CourseDetail() {
                 </div>
             )}
 
-            {/* Lesson Preview Modal - Compact Design */}
-            {previewVideo && (
-                <div className="modal fade" id="lessonPreviewModal" tabIndex={-1} aria-labelledby="lessonPreviewModalLabel" aria-hidden="true">
-                    <div className="modal-dialog modal-xl modal-dialog-centered">
-                        <div className="modal-content border-0" style={{ borderRadius: "20px", overflow: "hidden" }}>
-                            <div
-                                className="modal-header border-0 text-white position-relative"
-                                style={{
-                                    background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
-                                    padding: "0.75rem 1.25rem",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: "1rem",
-                                    flexWrap: "nowrap"
-                                }}
-                            >
-                                <div className="d-flex align-items-center flex-grow-1" style={{ zIndex: 2, position: "relative" }}>
-                                    <div
-                                        className="me-2"
-                                        style={{
-                                            width: "32px",
-                                            height: "32px",
-                                            background: "rgba(255, 255, 255, 0.2)",
-                                            borderRadius: "8px",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center"
-                                        }}
-                                    >
-                                        <i className="fas fa-play text-white" style={{ fontSize: "0.9rem" }}></i>
-                                    </div>
-                                    <div className="flex-grow-1">
-                                        <h6 className="mb-0 fw-bold" style={{ fontSize: "0.95rem" }}>
-                                            {previewVideo.title}
-                                        </h6>
-                                        <small style={{ fontSize: "0.75rem", opacity: 0.9 }}>
-                                            <i className="fas fa-clock me-1"></i>
-                                            {previewVideo.content_duration || "N/A"}
-                                        </small>
-                                    </div>
-                                    <span className="badge bg-light text-success ms-2" style={{ fontSize: "0.7rem" }}>
-                                        <i className="fas fa-eye me-1"></i>
-                                        Preview
-                                    </span>
-                                </div>
+            {/* Lesson Preview Modal - Adaptive Design (SCORM / PDF / Video) */}
+            {previewVideo && (() => {
+                const isScormModal = previewVideo.file_type === "scorm" ||
+                    previewVideo.learning_module_info ||
+                    (previewVideo.title && previewVideo.title.toLowerCase().includes('scorm')) ||
+                    (course?.title && course?.title.toLowerCase().includes('scorm')) ||
+                    course?.file_type === 'scorm';
 
-                                <button
-                                    type="button"
-                                    className="btn btn-sm"
-                                    data-bs-dismiss="modal"
-                                    aria-label="Close"
+                const isPdfModal = previewVideo.file_type === "pdf" ||
+                    previewVideo.file_type === "document" ||
+                    (typeof previewVideo.file === 'string' && previewVideo.file.toLowerCase().endsWith('.pdf'));
+
+                return (
+                    <div className="modal fade" id="lessonPreviewModal" tabIndex={-1} aria-labelledby="lessonPreviewModalLabel" aria-hidden="true">
+                        <div className="modal-dialog modal-xl modal-dialog-centered">
+                            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "16px", overflow: "hidden" }}>
+                                <div
+                                    className="modal-header border-0 text-white position-relative"
                                     style={{
-                                        zIndex: 3,
-                                        position: "relative",
-                                        width: "32px",
-                                        height: "32px",
-                                        minWidth: "32px",
-                                        minHeight: "32px",
-                                        borderRadius: "50%",
-                                        background: "rgba(255, 255, 255, 0.2)",
-                                        border: "2px solid rgba(255, 255, 255, 0.3)",
+                                        background: isScormModal
+                                            ? "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)"
+                                            : isPdfModal
+                                                ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"
+                                                : "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+                                        padding: "0.75rem 1.25rem",
                                         display: "flex",
                                         alignItems: "center",
-                                        justifyContent: "center",
-                                        padding: 0,
-                                        transition: "all 0.3s ease",
-                                        flexShrink: 0
-                                    }}
-                                    onClick={(e) => {
-                                        e.currentTarget.blur();
-                                        const videos = document.querySelectorAll("#lessonPreviewModal video");
-                                        videos.forEach(video => {
-                                            video.pause();
-                                            video.currentTime = 0;
-                                        });
-                                        const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
-                                        iframes.forEach(iframe => {
-                                            iframe.src = "about:blank";
-                                        });
-                                        setPreviewVideo(null);
-                                        const modalElement = document.getElementById("lessonPreviewModal");
-                                        if (modalElement) {
-                                            const modal = window.bootstrap.Modal.getInstance(modalElement);
-                                            if (modal) {
-                                                modal.hide();
-                                            }
-                                        }
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.target.style.background = "rgba(255, 255, 255, 0.3)";
-                                        e.target.style.transform = "scale(1.1)";
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.target.style.background = "rgba(255, 255, 255, 0.2)";
-                                        e.target.style.transform = "scale(1)";
+                                        justifyContent: "space-between",
+                                        gap: "1rem",
+                                        flexWrap: "nowrap"
                                     }}
                                 >
-                                    <i className="fas fa-times text-white" style={{ fontSize: "1rem" }}></i>
-                                </button>
-                            </div>
-                            <div className="modal-body p-0 bg-dark" style={{ minHeight: "400px", maxHeight: "calc(100vh - 150px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <div style={{ width: "100%", maxWidth: "100%", position: "relative" }}>
-                                    {(() => {
-                                        const scormPlayerUrl = previewVideo.learning_module_info?.player_url
-                                            ? (previewVideo.learning_module_info.player_url.startsWith('http')
-                                                ? previewVideo.learning_module_info.player_url
-                                                : `http://127.0.0.1:8001${previewVideo.learning_module_info.player_url}`)
-                                            : null;
+                                    <div className="d-flex align-items-center flex-grow-1" style={{ zIndex: 2, position: "relative" }}>
+                                        <div
+                                            className="me-2"
+                                            style={{
+                                                width: "32px",
+                                                height: "32px",
+                                                background: "rgba(255, 255, 255, 0.2)",
+                                                borderRadius: "8px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center"
+                                            }}
+                                        >
+                                            <i className={isScormModal ? "fas fa-cubes text-white" : isPdfModal ? "fas fa-file-pdf text-white" : "fas fa-play text-white"} style={{ fontSize: "0.9rem" }}></i>
+                                        </div>
+                                        <div className="flex-grow-1">
+                                            <h6 className="mb-0 fw-bold" style={{ fontSize: "0.95rem" }}>
+                                                {previewVideo.title}
+                                            </h6>
+                                            <small style={{ fontSize: "0.75rem", opacity: 0.9 }}>
+                                                {isScormModal ? (
+                                                    <>
+                                                        <i className="fas fa-cubes me-1"></i>
+                                                        Modul Interaktif SCORM 1.2
+                                                    </>
+                                                ) : isPdfModal ? (
+                                                    <>
+                                                        <i className="fas fa-file-pdf me-1"></i>
+                                                        Dokumen Materi Pembelajaran
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-clock me-1"></i>
+                                                        {previewVideo.content_duration || "Video Pembelajaran"}
+                                                    </>
+                                                )}
+                                            </small>
+                                        </div>
+                                        <span className="badge bg-white ms-2 shadow-xs fw-semibold" style={{
+                                            fontSize: "0.7rem",
+                                            color: isScormModal ? "#0d9488" : isPdfModal ? "#dc2626" : "#0284c7"
+                                        }}>
+                                            <i className={isScormModal ? "fas fa-cubes me-1" : isPdfModal ? "fas fa-file-pdf me-1" : "fas fa-eye me-1"}></i>
+                                            {isScormModal ? "SCORM 1.2" : isPdfModal ? "Dokumen PDF" : "Preview Video"}
+                                        </span>
+                                    </div>
 
-                                        if (scormPlayerUrl) {
-                                            return (
-                                                <div style={{ width: "100%", height: "550px", backgroundColor: "#fff" }}>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"
+                                        style={{
+                                            zIndex: 3,
+                                            position: "relative",
+                                            width: "32px",
+                                            height: "32px",
+                                            minWidth: "32px",
+                                            minHeight: "32px",
+                                            borderRadius: "50%",
+                                            background: "rgba(255, 255, 255, 0.2)",
+                                            border: "2px solid rgba(255, 255, 255, 0.3)",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            padding: 0,
+                                            transition: "all 0.3s ease",
+                                            flexShrink: 0
+                                        }}
+                                        onClick={(e) => {
+                                            e.currentTarget.blur();
+                                            const videos = document.querySelectorAll("#lessonPreviewModal video");
+                                            videos.forEach(video => {
+                                                video.pause();
+                                                video.currentTime = 0;
+                                            });
+                                            const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
+                                            iframes.forEach(iframe => {
+                                                iframe.src = "about:blank";
+                                            });
+                                            setPreviewVideo(null);
+                                            const modalElement = document.getElementById("lessonPreviewModal");
+                                            if (modalElement) {
+                                                const modal = window.bootstrap.Modal.getInstance(modalElement);
+                                                if (modal) {
+                                                    modal.hide();
+                                                }
+                                            }
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.background = "rgba(255, 255, 255, 0.3)";
+                                            e.target.style.transform = "scale(1.1)";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.background = "rgba(255, 255, 255, 0.2)";
+                                            e.target.style.transform = "scale(1)";
+                                        }}
+                                    >
+                                        <i className="fas fa-times text-white" style={{ fontSize: "1rem" }}></i>
+                                    </button>
+                                </div>
+                                <div className="modal-body p-0 bg-dark" style={{ minHeight: "400px", maxHeight: "calc(100vh - 150px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <div style={{ width: "100%", maxWidth: "100%", position: "relative" }}>
+                                        {(() => {
+                                            const scormPlayerUrl = previewVideo.learning_module_info?.player_url
+                                                ? (previewVideo.learning_module_info.player_url.startsWith('http')
+                                                    ? previewVideo.learning_module_info.player_url
+                                                    : `http://127.0.0.1:8001${previewVideo.learning_module_info.player_url}`)
+                                                : null;
+
+                                            if (scormPlayerUrl) {
+                                                return (
+                                                    <div style={{ width: "100%", height: "550px", backgroundColor: "#fff" }}>
+                                                        <iframe
+                                                            key={scormPlayerUrl}
+                                                            src={scormPlayerUrl}
+                                                            style={{ width: "100%", height: "100%", border: "none" }}
+                                                            sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                                                            allowFullScreen
+                                                            title="SCORM Player Preview"
+                                                        />
+                                                    </div>
+                                                );
+                                            }
+
+                                            // If SCORM module but no direct guest URL, show dedicated SCORM showcase card
+                                            if (isScormModal) {
+                                                return (
+                                                    <div className="p-4 p-md-5 bg-white text-center w-100" style={{ minHeight: "420px" }}>
+                                                        <div
+                                                            className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-xs"
+                                                            style={{
+                                                                width: "68px",
+                                                                height: "68px",
+                                                                background: "linear-gradient(135deg, rgba(13, 148, 136, 0.15) 0%, rgba(15, 118, 110, 0.25) 100%)",
+                                                                border: "2px solid rgba(13, 148, 136, 0.3)"
+                                                            }}
+                                                        >
+                                                            <i className="fas fa-cubes text-teal" style={{ fontSize: "1.9rem", color: "#0d9488" }}></i>
+                                                        </div>
+                                                        <div className="mb-2">
+                                                            <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-3 py-1.5 rounded-pill fw-semibold d-inline-flex align-items-center gap-2" style={{ fontSize: "0.78rem" }}>
+                                                                <i className="fas fa-circle-check"></i>
+                                                                <span>Standar Paket E-Learning SCORM 1.2</span>
+                                                            </span>
+                                                        </div>
+                                                        <h5 className="fw-bold text-dark mb-2" style={{ fontSize: "1.15rem" }}>
+                                                            {previewVideo.title}
+                                                        </h5>
+                                                        <p className="text-secondary mx-auto mb-4" style={{ maxWidth: "600px", fontSize: "0.86rem", lineHeight: "1.6" }}>
+                                                            Materi ini disajikan dalam format modul e-learning interaktif (SCORM). Modul mencakup simulasi multimedia, materi pembelajaran terstruktur, dan evaluasi pemahaman yang terhubung langsung dengan pelacakan progres LMS Setjen DPD RI.
+                                                        </p>
+
+                                                        <div className="row g-2 g-md-3 justify-content-center mb-4 text-start">
+                                                            <div className="col-12 col-md-4">
+                                                                <div className="p-3 rounded-3 bg-light border h-100">
+                                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                                        <i className="fas fa-laptop-code text-teal" style={{ color: "#0d9488" }}></i>
+                                                                        <strong className="text-dark small">Interaktif & Mandiri</strong>
+                                                                    </div>
+                                                                    <div className="text-muted" style={{ fontSize: "0.74rem", lineHeight: "1.4" }}>
+                                                                        Navigasi materi fleksibel, animasi simulasi, dan kuis mandiri.
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="col-12 col-md-4">
+                                                                <div className="p-3 rounded-3 bg-light border h-100">
+                                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                                        <i className="fas fa-chart-line text-success" style={{ color: "#10b981" }}></i>
+                                                                        <strong className="text-dark small">Pelacakan Otomatis</strong>
+                                                                    </div>
+                                                                    <div className="text-muted" style={{ fontSize: "0.74rem", lineHeight: "1.4" }}>
+                                                                        Skor kuis dan progres tersimpan langsung di sistem akun Anda.
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="col-12 col-md-4">
+                                                                <div className="p-3 rounded-3 bg-light border h-100">
+                                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                                        <i className="fas fa-award text-warning" style={{ color: "#f59e0b" }}></i>
+                                                                        <strong className="text-dark small">Sertifikat Resmi</strong>
+                                                                    </div>
+                                                                    <div className="text-muted" style={{ fontSize: "0.74rem", lineHeight: "1.4" }}>
+                                                                        Menjadi syarat kelulusan e-sertifikat resmi Setjen DPD RI.
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-sm px-4 py-2 rounded-pill fw-bold text-white shadow-xs d-inline-flex align-items-center justify-content-center gap-2"
+                                                                data-bs-dismiss="modal"
+                                                                onClick={() => {
+                                                                    const enrollBtn = document.querySelector('.course-sidebar-sticky button');
+                                                                    if (enrollBtn) {
+                                                                        enrollBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                    }
+                                                                }}
+                                                                style={{
+                                                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                                                    fontSize: "0.82rem"
+                                                                }}
+                                                            >
+                                                                <i className="fas fa-user-plus"></i>
+                                                                <span>Daftar & Akses Modul Penuh</span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-sm btn-outline-secondary px-3 py-2 rounded-pill fw-medium"
+                                                                data-bs-dismiss="modal"
+                                                                style={{ fontSize: "0.82rem" }}
+                                                            >
+                                                                Tutup Pratinjau
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+
+                                            // If PDF Document
+                                            if (isPdfModal && previewVideo.file) {
+                                                return (
+                                                    <div style={{ width: "100%", height: "550px", backgroundColor: "#fff" }}>
+                                                        <iframe
+                                                            key={previewVideo.file}
+                                                            src={previewVideo.file}
+                                                            style={{ width: "100%", height: "100%", border: "none" }}
+                                                            title="PDF Document Preview"
+                                                        />
+                                                    </div>
+                                                );
+                                            }
+
+                                            const videoUrl = convertGoogleDriveUrlToPreview(previewVideo.file || previewVideo.video_url);
+                                            const isYouTubeEmbed = videoUrl && (videoUrl.includes('youtube.com/embed') || videoUrl.includes('youtube-nocookie.com/embed') || videoUrl.includes('youtu.be'));
+
+                                            return isYouTubeEmbed ? (
+                                                <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden" }}>
                                                     <iframe
-                                                        key={scormPlayerUrl}
-                                                        src={scormPlayerUrl}
-                                                        style={{ width: "100%", height: "100%", border: "none" }}
-                                                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                                                        key={videoUrl}
+                                                        src={videoUrl}
+                                                        style={{ border: "none", borderRadius: "8px" }}
+                                                        sandbox="allow-same-origin allow-scripts allow-presentation"
                                                         allowFullScreen
-                                                        title="SCORM Player Preview"
+                                                        title="Lesson Preview"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden", backgroundColor: "#000" }}>
+                                                    <video
+                                                        key={videoUrl}
+                                                        src={videoUrl}
+                                                        style={{ objectFit: "contain", backgroundColor: "#000" }}
+                                                        controls
                                                     />
                                                 </div>
                                             );
-                                        }
-
-                                        const videoUrl = convertGoogleDriveUrlToPreview(previewVideo.file || previewVideo.video_url);
-                                        const isYouTubeEmbed = videoUrl && (videoUrl.includes('youtube.com/embed') || videoUrl.includes('youtube-nocookie.com/embed') || videoUrl.includes('youtu.be'));
-
-                                        return isYouTubeEmbed ? (
-                                            <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden" }}>
-                                                <iframe
-                                                    key={videoUrl}
-                                                    src={videoUrl}
-                                                    style={{ border: "none", borderRadius: "8px" }}
-                                                    sandbox="allow-same-origin allow-scripts allow-presentation"
-                                                    allowFullScreen
-                                                    title="Lesson Preview"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden", backgroundColor: "#000" }}>
-                                                <video
-                                                    key={videoUrl}
-                                                    src={videoUrl}
-                                                    style={{ objectFit: "contain", backgroundColor: "#000" }}
-                                                    controls
-                                                />
-                                            </div>
-                                        );
-                                    })()}
+                                        })()}
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="modal-footer border-0 bg-light py-2">
-                                <div className="w-100 text-center">
-                                    <small className="text-muted">
-                                        <i className="fas fa-info-circle me-1"></i>
-                                        Ini adalah preview. Daftar sekarang untuk mengakses seluruh kursus!
-                                    </small>
+                                <div className="modal-footer border-0 bg-light py-2">
+                                    <div className="w-100 text-center">
+                                        <small className="text-muted" style={{ fontSize: "0.76rem" }}>
+                                            <i className="fas fa-info-circle me-1"></i>
+                                            {isScormModal
+                                                ? "Modul SCORM dapat diakses penuh dengan interaktivitas dan pelacakan progres setelah mendaftar kursus."
+                                                : isPdfModal
+                                                    ? "Dokumen materi dapat dibaca dan dipelajari secara lengkap setelah mendaftar kursus."
+                                                    : "Ini adalah preview video. Daftar sekarang untuk mengakses seluruh materi kursus!"}
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
 
             {/* Floating Wishlist Button - Hidden for teachers/instructors, stacked above feedback button */}
             {course && !isLoading && !isTeacher && (
@@ -1245,7 +1438,6 @@ function CourseDetail() {
                             e.currentTarget.style.transform = "scale(1) translateY(0)";
                             e.currentTarget.style.boxShadow = "0 8px 25px rgba(102, 126, 234, 0.4)";
                         }}
-                        title={isInWishlist ? "Hapus dari Wishlist" : "Tambah ke Wishlist"}
                     >
                         {isLoadingWishlist ? (
                             <i className="fas fa-spinner fa-spin text-white" style={{ fontSize: "1rem" }}></i>

@@ -527,188 +527,226 @@ function Login() {
       />
 
       <section className="login-section">
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-5 col-md-7">
-              <div className="card shadow border-0 login-card">
-                <div className="card-body login-card-body">
-                  <div className="text-center mb-4">
-                    <div className="mb-3">
-                      <div className="d-inline-flex align-items-center justify-content-center">
-                        <div className="login-logo-container">
-                          <picture>
-                            <source srcSet={logoWebP} type="image/webp" />
-                            <img
-                              src={logoPNG}
-                              alt="LMSetjen DPD RI Logo"
-                              className="login-logo"
-                              width="112"
-                              height="112"
-                              loading="eager"
-                              decoding="async"
-                            />
-                          </picture>
-                        </div>
-                      </div>
-                    </div>
-                    <h3 className="login-title">Selamat Datang Kembali</h3>
-                    <p className="login-subtitle">
-                      Masuk ke sistem pembelajaran LMSetjen DPD RI
-                    </p>
+        <div className="login-container">
+          <div className="login-card-container">
+            {/* Left Brand Panel */}
+            <div className="login-brand-panel">
+              <div className="login-brand-decor-circle circle-1"></div>
+              <div className="login-brand-decor-circle circle-2"></div>
+
+              <div className="login-brand-content">
+                <div className="login-brand-top">
+                  <div className="login-brand-badge">
+                    <i className="fas fa-shield-alt"></i> Portal Resmi
                   </div>
 
-                  {error && (
-                    <div
-                      className="alert alert-danger alert-dismissible fade show"
-                      role="alert"
-                    >
-                      <i className="fas fa-exclamation-circle me-2"></i>
-                      {error}
-                      <button
-                        type="button"
-                        className="btn-close"
-                        onClick={() => setError(null)}
-                      ></button>
+                  <div className="login-brand-header">
+                    <div className="login-brand-logo-wrap">
+                      <picture>
+                        <source srcSet={logoWebP} type="image/webp" />
+                        <img
+                          src={logoPNG}
+                          alt="LMSetjen DPD RI Logo"
+                          className="login-brand-logo"
+                          width="52"
+                          height="52"
+                          loading="eager"
+                          decoding="async"
+                        />
+                      </picture>
                     </div>
-                  )}
-
-                  <div className="sso-login-container">
-                    <h5
-                      className="text-center mb-4 sso-login-title"
-                      style={{
-                        fontSize: "0.95rem",
-                        fontWeight: "600",
-                        color: "#495057",
-                      }}
-                    >
-                      Pilih Metode Login Anda
-                    </h5>
-
-                    {/* Google Login Button */}
-                    <div className="d-grid mb-3">
-                      <button
-                        type="button"
-                        id="google-login-btn"
-                        onClick={handleGoogleLogin}
-                        disabled={isLoading}
-                        className="btn btn-lg sso-google-btn"
-                        title="Login menggunakan akun Google"
-                        style={{
-                          backgroundColor: "#FFFFFF",
-                          color: "#425A7A",
-                          border: "1px solid #E8EAED",
-                          fontWeight: "500",
-                          opacity: isLoading ? 0.6 : 1,
-                          cursor: isLoading ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {!isLoading ? (
-                          <>
-                            <svg
-                              className="me-2"
-                              style={{
-                                width: "20px",
-                                height: "20px",
-                                display: "inline-block",
-                              }}
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                fill="#4285F4"
-                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                              />
-                              <path
-                                fill="#34A853"
-                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                              />
-                              <path
-                                fill="#FBBC05"
-                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                              />
-                              <path
-                                fill="#EA4335"
-                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                              />
-                            </svg>
-                            Masuk dengan Google
-                          </>
-                        ) : (
-                          <>
-                            <span
-                              className="spinner-border spinner-border-sm me-2"
-                              role="status"
-                              aria-hidden="true"
-                            ></span>
-                            Memproses...
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Nusa DPD SSO Login Button */}
-                    <div className="mb-3">
-                      <p
-                        className="text-center text-muted"
-                        style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}
-                      >
-                        <small>
-                          <i className="fas fa-info-circle me-1"></i>Khusus
-                          Pegawai Setjen DPD RI
-                        </small>
+                    <div>
+                      <h2 className="login-brand-title">LMSetjen DPD RI</h2>
+                      <p className="login-brand-subtitle">
+                        Sistem Manajemen Pembelajaran Digital
                       </p>
-                      <div className="d-grid">
-                        <a
-                          href="https://nusa.dpd.go.id?app=LMS"
-                          className="btn btn-lg sso-nusa-btn"
-                          target="_self"
-                          title="Login menggunakan akun SSO"
-                          style={{
-                            backgroundColor: "#FFFFFF",
-                            color: "#0f766e",
-                            border: "1px solid #0f766e",
-                            fontWeight: "500",
-                          }}
-                        >
-                          <picture>
-                            <source srcSet={logoNusaWebP} type="image/webp" />
-                            <img
-                              src={logoNusa}
-                              alt="Nusa Logo"
-                              width="24"
-                              height="24"
-                              loading="lazy"
-                              decoding="async"
-                              style={{
-                                height: "1.5rem",
-                                width: "1.5rem",
-                                objectFit: "contain",
-                                marginRight: "0.5rem",
-                              }}
-                            />
-                          </picture>
-                          Login dengan SSO
-                        </a>
-                      </div>
-                    </div>
-
-                    {/* Info Text */}
-                    <div className="alert alert-info mt-4" role="alert">
-                      <i className="fas fa-info-circle me-2"></i>
-                      <small>
-                        Gunakan akun Google atau SSO untuk login ke sistem
-                        pembelajaran ini.
-                      </small>
-                    </div>
-
-                    <div className="text-center mt-3">
-                      <small className="text-muted">
-                        Butuh bantuan?{" "}
-                        <a href="#" className="login-help-link">
-                          Hubungi Support
-                        </a>
-                      </small>
                     </div>
                   </div>
+                </div>
+
+                <div className="login-features-list">
+                  <div className="login-feature-item">
+                    <div className="login-feature-icon">
+                      <i className="fas fa-graduation-cap"></i>
+                    </div>
+                    <div className="login-feature-text">
+                      <strong>Modul & Pelatihan Digital</strong>
+                      <span>Akses materi terstruktur kapan saja & di mana saja.</span>
+                    </div>
+                  </div>
+
+                  <div className="login-feature-item">
+                    <div className="login-feature-icon">
+                      <i className="fas fa-key"></i>
+                    </div>
+                    <div className="login-feature-text">
+                      <strong>Single Sign-On Nusa</strong>
+                      <span>Autentikasi terpusat & aman via portal Nusa DPD.</span>
+                    </div>
+                  </div>
+
+                  <div className="login-feature-item">
+                    <div className="login-feature-icon">
+                      <i className="fas fa-award"></i>
+                    </div>
+                    <div className="login-feature-text">
+                      <strong>Sertifikasi Resmi</strong>
+                      <span>Peroleh sertifikat digital atas capaian kompetensi.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="login-brand-footer">
+                  <div className="login-trust-pill">
+                    <i className="fas fa-lock"></i>
+                    <span>Terenkripsi & Terlindungi</span>
+                  </div>
+                  <span className="login-brand-copyright">Sekretariat Jenderal DPD RI</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Authentication Panel */}
+            <div className="login-auth-panel">
+              <div className="login-auth-header">
+                <span className="login-auth-tag">Selamat Datang</span>
+                <h1 className="login-auth-title">Masuk ke Akun Anda</h1>
+                <p className="login-auth-subtitle">
+                  Pilih metode masuk resmi untuk mengakses sistem pembelajaran
+                </p>
+              </div>
+
+              {error && (
+                <div
+                  className="alert alert-danger alert-dismissible fade show login-alert"
+                  role="alert"
+                >
+                  <i className="fas fa-exclamation-circle me-2"></i>
+                  <span>{error}</span>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setError(null)}
+                    aria-label="Close"
+                  ></button>
+                </div>
+              )}
+
+              <div className="login-methods-wrap">
+                {/* Primary Method: SSO Nusa DPD */}
+                <div className="login-method-group">
+                  <a
+                    href="https://nusa.dpd.go.id?app=LMS"
+                    className="login-method-card sso-card"
+                    title="Login menggunakan akun SSO Nusa DPD"
+                  >
+                    <div className="login-method-icon-box nusa-icon-box">
+                      <picture>
+                        <source srcSet={logoNusaWebP} type="image/webp" />
+                        <img
+                          src={logoNusa}
+                          alt="Nusa Logo"
+                          width="28"
+                          height="28"
+                          loading="eager"
+                          decoding="async"
+                          className="nusa-logo-img"
+                        />
+                      </picture>
+                    </div>
+                    <div className="login-method-details">
+                      <div className="login-method-title-row">
+                        <span className="login-method-name">Login dengan SSO Nusa DPD</span>
+                        <span className="login-badge-recommended">Pegawai DPD</span>
+                      </div>
+                      <span className="login-method-desc">
+                        Otentikasi cepat untuk Pegawai Setjen DPD RI
+                      </span>
+                    </div>
+                    <div className="login-method-arrow">
+                      <i className="fas fa-arrow-right"></i>
+                    </div>
+                  </a>
+                </div>
+
+                {/* Divider */}
+                <div className="login-card-divider">
+                  <span>atau masuk dengan</span>
+                </div>
+
+                {/* Secondary Method: Google Login */}
+                <div className="login-method-group">
+                  <button
+                    type="button"
+                    id="google-login-btn"
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                    className="login-method-card google-card"
+                    title="Login menggunakan akun Google"
+                  >
+                    <div className="login-method-icon-box google-icon-box">
+                      {!isLoading ? (
+                        <svg
+                          className="google-svg-icon"
+                          viewBox="0 0 24 24"
+                          width="24"
+                          height="24"
+                        >
+                          <path
+                            fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                          />
+                        </svg>
+                      ) : (
+                        <span
+                          className="spinner-border spinner-border-sm"
+                          role="status"
+                          aria-hidden="true"
+                          style={{ width: "1.25rem", height: "1.25rem", color: "#0f766e" }}
+                        ></span>
+                      )}
+                    </div>
+                    <div className="login-method-details">
+                      <div className="login-method-title-row">
+                        <span className="login-method-name">
+                          {isLoading ? "Menghubungkan ke Google..." : "Akun Google"}
+                        </span>
+                      </div>
+                      <span className="login-method-desc">
+                        Masuk menggunakan email Google terdaftar
+                      </span>
+                    </div>
+                    <div className="login-method-arrow">
+                      <i className="fas fa-arrow-right"></i>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Security note & Help */}
+              <div className="login-auth-footer">
+                <div className="login-security-notice">
+                  <i className="fas fa-shield-halved"></i>
+                  <span>Otentikasi aman terenkripsi institusi DPD RI</span>
+                </div>
+
+                <div className="login-help-text">
+                  <span>Butuh bantuan?</span>{" "}
+                  <a href="mailto:pusdiklat@dpd.go.id" className="login-help-link">
+                    Hubungi Administrator
+                  </a>
                 </div>
               </div>
             </div>

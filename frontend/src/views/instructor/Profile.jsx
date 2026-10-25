@@ -160,7 +160,7 @@ const getCroppedImage = (image, crop, fileName) => {
 function Profile() {
     // Contexts & Hooks
     const profileContext = useContext(ProfileContext);
-    const [profile, setProfile] = profileContext || [null, () => {}];
+    const [profile, setProfile] = profileContext || [null, () => { }];
     const { isCollapsed } = useInstructorSidebarCollapse();
     const { availableRoles, currentRole } = useRoles();
     const currentUser = UserData();
@@ -769,9 +769,8 @@ function Profile() {
                         <div className="row">
                             <Sidebar />
                             <div
-                                className={`col-lg-9 col-md-8 col-12 ${
-                                    isCollapsed ? "sidebar-collapsed-adapted" : ""
-                                }`}
+                                className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""
+                                    }`}
                                 style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "50vh" }}
                             >
                                 <div className="text-center">
@@ -801,7 +800,7 @@ function Profile() {
                         <Sidebar />
 
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
-                            
+
                             {/* ========================================================
                                 COMPACT EXECUTIVE IDENTITY HERO
                                 ======================================================== */}
@@ -826,7 +825,7 @@ function Profile() {
                                                     <i className="fas fa-user-tie"></i>
                                                 </div>
                                             )}
-                                            
+
                                             <label htmlFor="profileImage" className="avatar-edit-badge" title="Ubah Foto Profil">
                                                 <i className="fas fa-camera"></i>
                                                 <input
@@ -892,8 +891,8 @@ function Profile() {
                                             </span>
 
                                             {hasStudentRole && (
-                                                <Link 
-                                                    to="/student/profile/" 
+                                                <Link
+                                                    to="/student/profile/"
                                                     className="role-tag-pill role-student-link"
                                                     title="Terhubung dengan Peran Siswa / Peserta. Klik untuk melihat profil siswa"
                                                 >
@@ -1030,7 +1029,7 @@ function Profile() {
                                 ======================================================== */}
                             <div className="profile-tab-content-card">
                                 <form onSubmit={handleSubmitManual}>
-                                    
+
                                     {/* ----------------------------------------------------
                                         TAB 1: DATA UTAMA & AKUN
                                         ---------------------------------------------------- */}
@@ -1192,7 +1191,7 @@ function Profile() {
                                                             readOnly
                                                             disabled
                                                         />
-                                                        <span className="input-badge-verified" title="NIP resmi DPD RI">
+                                                        <span className="input-badge-verified" title="NIP resmi Setjen DPD RI">
                                                             <i className="fas fa-shield"></i> Terdaftar
                                                         </span>
                                                     </div>
@@ -1317,7 +1316,7 @@ function Profile() {
                                             </div>
 
                                             <div className="roles-dual-grid">
-                                                
+
                                                 {/* Role Card 1: Instruktur / Widyaiswara */}
                                                 <div className="role-subcard instructor-card">
                                                     <div className="role-subcard-header">

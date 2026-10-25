@@ -20,22 +20,22 @@ import useAxios from "../../utils/useAxios";
 import Toast from "../plugin/Toast";
 import UserData from "../plugin/UserData";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
-import { 
-  validateTitle, 
-  validateDescription, 
-  validateCategory, 
-  validateLevel, 
-  validateImage,
-  validateAllFields,
-  getValidationClass,
-  getSelectValidationClass 
+import {
+    validateTitle,
+    validateDescription,
+    validateCategory,
+    validateLevel,
+    validateImage,
+    validateAllFields,
+    getValidationClass,
+    getSelectValidationClass
 } from "../../utils/courseValidation";
-import { 
-  DEFAULT_COURSE_DATA, 
-  COURSE_LEVELS, 
-  COURSE_AUDIENCE_OPTIONS,
-  TOAST_MESSAGES, 
-  ERROR_FOCUS_REFS 
+import {
+    DEFAULT_COURSE_DATA,
+    COURSE_LEVELS,
+    COURSE_AUDIENCE_OPTIONS,
+    TOAST_MESSAGES,
+    ERROR_FOCUS_REFS
 } from "../../utils/courseConstants";
 import "./CourseCreate.css";
 
@@ -73,7 +73,7 @@ function CourseCreate() {
                 const parsed = JSON.parse(saved);
                 return parsed.courseFormat || "standard";
             }
-        } catch (e) {}
+        } catch (e) { }
         return "standard";
     });
 
@@ -84,7 +84,7 @@ function CourseCreate() {
                 const parsed = JSON.parse(saved);
                 return parsed.imagePreview || parsed.courseData?.image || "";
             }
-        } catch (e) {}
+        } catch (e) { }
         return "";
     });
 
@@ -96,7 +96,7 @@ function CourseCreate() {
                 const d = parsed.courseData;
                 return Boolean(d && (d.title || d.description || d.file || d.image || d.learning_module_id));
             }
-        } catch (e) {}
+        } catch (e) { }
         return false;
     });
 
@@ -107,7 +107,7 @@ function CourseCreate() {
                 const parsed = JSON.parse(saved);
                 return parsed.savedAt ? new Date(parsed.savedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : null;
             }
-        } catch (e) {}
+        } catch (e) { }
         return null;
     });
 
@@ -132,13 +132,13 @@ function CourseCreate() {
         // ✨ PHASE 4.177: Guard against duplicate category fetches in React Strict Mode
         if (hasFetchedRef.current) return;
         hasFetchedRef.current = true;
-        
+
         const fetchCategories = async () => {
             try {
                 const response = await useAxios.get("course/category/");
                 // Normalize response: handle both array and paginated responses
-                const categoryData = Array.isArray(response.data) 
-                    ? response.data 
+                const categoryData = Array.isArray(response.data)
+                    ? response.data
                     : (response.data?.results || []);
                 setCategory(categoryData);
             } catch (error) {
@@ -152,12 +152,12 @@ function CourseCreate() {
     // ✨ Auto-save to localStorage (debounced) so user never loses progress on refresh or disconnect
     useEffect(() => {
         const hasContent = Boolean(
-            courseData.title || 
-            courseData.description || 
-            courseData.image || 
-            courseData.file || 
-            courseData.learning_module_id || 
-            courseData.category || 
+            courseData.title ||
+            courseData.description ||
+            courseData.image ||
+            courseData.file ||
+            courseData.learning_module_id ||
+            courseData.category ||
             courseData.level
         );
 
@@ -208,7 +208,7 @@ function CourseCreate() {
 
         try {
             localStorage.removeItem(getDraftKey());
-        } catch (e) {}
+        } catch (e) { }
 
         setCourseData(DEFAULT_COURSE_DATA);
         setImagePreview("");
@@ -231,8 +231,8 @@ function CourseCreate() {
         setCourseFormat(newFormat);
         setCourseData(prev => ({
             ...prev,
-            course_type: newFormat === "elearning" 
-                ? (prev.course_type && prev.course_type !== "standard" ? prev.course_type : "scorm_12") 
+            course_type: newFormat === "elearning"
+                ? (prev.course_type && prev.course_type !== "standard" ? prev.course_type : "scorm_12")
                 : "standard"
         }));
     };
@@ -298,7 +298,7 @@ function CourseCreate() {
             ...prev,
             [name]: fieldErrors
         }));
-        
+
 
         // Update warnings state
         setWarnings(prev => ({
@@ -312,7 +312,7 @@ function CourseCreate() {
     const handleCourseInputChange = (event) => {
         const { name, value, type, checked } = event.target;
         const newValue = type === "checkbox" ? checked : value;
-        
+
         setCourseData(prevData => ({
             ...prevData,
             [name]: newValue,
@@ -346,9 +346,9 @@ function CourseCreate() {
         for (const field of errorFields) {
             if (fieldRefs[field]?.current) {
                 fieldRefs[field].current.focus();
-                fieldRefs[field].current.scrollIntoView({ 
-                    behavior: "smooth", 
-                    block: "center" 
+                fieldRefs[field].current.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
                 });
                 break;
             }
@@ -357,10 +357,10 @@ function CourseCreate() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Validate all fields
         const { allErrors, allWarnings, errorFields } = validateAllFields(courseData);
-        
+
         setErrors(allErrors);
         setWarnings(allWarnings);
 
@@ -372,7 +372,7 @@ function CourseCreate() {
         }
 
         setLoading(true);
-        
+
         // Prepare data to send - files are already uploaded as URLs
         const courseSubmissionData = {
             title: courseData.title,
@@ -393,17 +393,17 @@ function CourseCreate() {
                     "Content-Type": "application/json",
                 },
             });
-            
+
             const courseId = response.data.course_id;
-            
+
             // Hapus draf dari localStorage karena kursus sudah resmi tersimpan di database
             try {
                 localStorage.removeItem(getDraftKey());
-            } catch (e) {}
+            } catch (e) { }
 
             // ✨ PHASE 4.45: Set course ID to show metadata forms
             setCreatedCourseId(courseId);
-            
+
             // Show success message with draft status information
             Toast().fire({
                 icon: "success",
@@ -431,23 +431,23 @@ function CourseCreate() {
                 // Redirect to course edit page
                 navigate(`/instructor/edit-course/${courseId}/`);
             });
-            
+
             // Auto-redirect after 3 seconds even if user doesn't click
             setTimeout(() => {
                 navigate(`/instructor/edit-course/${courseId}/`);
             }, 5174);
         } catch (error) {
             console.error("Error creating course:", error);
-            
+
             // Handle validation errors from server
             if (error.response?.data) {
                 const serverResponse = error.response.data;
-                
+
                 // Check if there's a generic error message
                 if (serverResponse.error) {
                     Toast("error", serverResponse.error);
                 }
-                
+
                 // Check for field-specific errors
                 const formattedErrors = {};
                 Object.keys(serverResponse).forEach(field => {
@@ -459,7 +459,7 @@ function CourseCreate() {
                         }
                     }
                 });
-                
+
                 if (Object.keys(formattedErrors).length > 0) {
                     setErrors(formattedErrors);
                     const errorFields = Object.keys(formattedErrors);
@@ -567,33 +567,33 @@ function CourseCreate() {
                                     </div>
 
                                     {/* ✨ PHASE 4.45: Course Features, Requirements, and Learning Outcomes */}
-                                    <CourseFeaturesForm 
+                                    <CourseFeaturesForm
                                         courseId={createdCourseId}
-                                        onFeaturesUpdate={() => {}}
+                                        onFeaturesUpdate={() => { }}
                                     />
 
-                                    <CourseRequirementsForm 
+                                    <CourseRequirementsForm
                                         courseId={createdCourseId}
-                                        onRequirementsUpdate={() => {}}
+                                        onRequirementsUpdate={() => { }}
                                     />
 
-                                    <CourseLearningOutcomesForm 
+                                    <CourseLearningOutcomesForm
                                         courseId={createdCourseId}
-                                        onOutcomesUpdate={() => {}}
+                                        onOutcomesUpdate={() => { }}
                                     />
 
                                     {/* Action Buttons for Metadata Forms */}
                                     <div className="course-create-action-bar mt-3 mb-2">
                                         <div className="d-flex justify-content-end gap-2">
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 className="btn btn-sm btn-outline-secondary px-3 py-1.5"
                                                 onClick={() => setCreatedCourseId(null)}
                                             >
                                                 <i className="fas fa-edit me-1.5"></i>
                                                 Edit Informasi Dasar
                                             </button>
-                                            <Link 
+                                            <Link
                                                 to={`/instructor/edit-course/${createdCourseId}/`}
                                                 className="btn btn-sm btn-teal px-3.5 py-1.5 shadow-sm d-inline-flex align-items-center gap-1.5"
                                             >
@@ -605,315 +605,315 @@ function CourseCreate() {
                                 </div>
                             ) : (
                                 <form onSubmit={handleSubmit} className="form-body-modern">
-                                {/* Create course form (initial state) */}
+                                    {/* Create course form (initial state) */}
 
-                                {/* Banner Pemulihan Draf Otomatis */}
-                                {draftRestored && (
-                                    <div 
-                                        className="course-create-draft-banner d-flex align-items-center justify-content-between mb-3 p-2.5 px-3 rounded-3 shadow-sm"
-                                        style={{ backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderLeft: "4px solid #16a34a" }}
-                                    >
-                                        <div className="d-flex align-items-center gap-2.5">
-                                            <div 
-                                                className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
-                                                style={{ width: "30px", height: "30px", fontSize: "13px" }}
-                                            >
-                                                <i className="fas fa-history"></i>
-                                            </div>
-                                            <div>
-                                                <span className="fw-bold text-success small">Draf Kursus Dipulihkan</span>
-                                                <span className="text-muted small ms-2 d-none d-sm-inline">
-                                                    Isian Anda tetap aman {lastSavedTime ? `(Tersimpan: ${lastSavedTime})` : ""}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline-danger py-1 px-2.5 d-inline-flex align-items-center gap-1.5"
-                                            onClick={handleClearDraft}
-                                            title="Kosongkan formulir dan bersihkan berkas draf"
-                                            style={{ fontSize: "12px" }}
+                                    {/* Banner Pemulihan Draf Otomatis */}
+                                    {draftRestored && (
+                                        <div
+                                            className="course-create-draft-banner d-flex align-items-center justify-content-between mb-3 p-2.5 px-3 rounded-3 shadow-sm"
+                                            style={{ backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderLeft: "4px solid #16a34a" }}
                                         >
-                                            <i className="fas fa-trash-alt"></i>
-                                            <span>Mulai Baru</span>
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Media Files Section (2-Column Studio Grid) */}
-                                <div className="form-section mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-2.5 flex-wrap gap-2">
-                                        <div className="d-flex align-items-center gap-2">
-                                            <h5 className="section-title mb-0">
-                                                <i className="fas fa-photo-video text-teal me-2"></i>
-                                                1. Format & Media Kursus
-                                            </h5>
-                                        </div>
-                                        
-                                        {/* Toggle Format Kursus */}
-                                        <div className="btn-group btn-group-sm rounded-2 overflow-hidden shadow-xs" role="group">
-                                            <button
-                                                type="button"
-                                                className={`btn px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 ${courseFormat === "standard" ? "btn-teal" : "btn-outline-secondary"}`}
-                                                onClick={() => handleFormatChange("standard")}
-                                            >
-                                                <i className="fas fa-video"></i>
-                                                <span>Video & Materi Standar</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className={`btn px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 ${courseFormat === "elearning" ? "btn-teal" : "btn-outline-secondary"}`}
-                                                onClick={() => handleFormatChange("elearning")}
-                                            >
-                                                <i className="fas fa-cubes"></i>
-                                                <span>Modul Interaktif (SCORM/H5P)</span>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Banner Informasi jika ada Modul SCORM tersimpan di draf saat mode Video Standar aktif */}
-                                    {courseFormat === "standard" && courseData?.learning_module_id && (
-                                        <div 
-                                            className="alert alert-info p-2.5 px-3 mb-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between rounded-3 border-0 shadow-sm gap-2" 
-                                            style={{ backgroundColor: "#f0f9ff", borderLeft: "4px solid #0284c7" }}
-                                        >
-                                            <div className="d-flex align-items-start gap-2 flex-grow-1">
-                                                <i className="fas fa-info-circle text-primary mt-1" style={{ fontSize: "14px" }}></i>
+                                            <div className="d-flex align-items-center gap-2.5">
+                                                <div
+                                                    className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                                                    style={{ width: "30px", height: "30px", fontSize: "13px" }}
+                                                >
+                                                    <i className="fas fa-history"></i>
+                                                </div>
                                                 <div>
-                                                    <span className="fw-medium text-dark small">
-                                                        Draf Modul Interaktif tersimpan: <strong>{courseData.learning_module?.judul || `#${courseData.learning_module_id}`}</strong>.
+                                                    <span className="fw-bold text-success small">Draf Kursus Dipulihkan</span>
+                                                    <span className="text-muted small ms-2 d-none d-sm-inline">
+                                                        Isian Anda tetap aman {lastSavedTime ? `(Tersimpan: ${lastSavedTime})` : ""}
                                                     </span>
-                                                    <p className="text-secondary small mb-0" style={{ fontSize: "11px" }}>
-                                                        Format saat ini: Video Standar. Modul SCORM tidak akan disertakan kecuali Anda beralih kembali.
-                                                    </p>
                                                 </div>
                                             </div>
-                                            <div className="d-flex align-items-center gap-2 ms-md-auto flex-shrink-0 justify-content-end">
-                                                <button 
-                                                    type="button" 
-                                                    className="btn btn-sm btn-outline-primary py-1 px-2.5 d-inline-flex align-items-center gap-1"
-                                                    style={{ fontSize: "11px" }}
-                                                    onClick={() => handleFormatChange("elearning")}
-                                                    title="Beralih kembali ke modul interaktif"
-                                                >
-                                                    <i className="fas fa-undo-alt"></i>
-                                                    <span>Beralih ke Modul</span>
-                                                </button>
-                                                <button 
-                                                    type="button" 
-                                                    className="btn btn-sm btn-outline-danger py-1 px-2.5 d-inline-flex align-items-center gap-1"
-                                                    style={{ fontSize: "11px" }}
-                                                    onClick={handleRemoveScormDraft}
-                                                    title="Hapus modul interaktif ini dari draf"
-                                                >
-                                                    <i className="fas fa-trash-alt"></i>
-                                                    <span>Hapus Modul</span>
-                                                </button>
-                                            </div>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-danger py-1 px-2.5 d-inline-flex align-items-center gap-1.5"
+                                                onClick={handleClearDraft}
+                                                title="Kosongkan formulir dan bersihkan berkas draf"
+                                                style={{ fontSize: "12px" }}
+                                            >
+                                                <i className="fas fa-trash-alt"></i>
+                                                <span>Mulai Baru</span>
+                                            </button>
                                         </div>
                                     )}
 
-                                    {/* Responsive 2-Column Studio Grid for Media */}
-                                    <div className="row g-3">
-                                        <div className="col-lg-6 col-12">
-                                            <div className="media-box-container h-100">
-                                                <div className="media-box-header mb-2 d-flex align-items-center justify-content-between">
-                                                    <span className="media-box-title d-inline-flex align-items-center" style={{ gap: "8px" }}>
-                                                        <i className="fas fa-image text-teal fs-6"></i>
-                                                        <span>Sampul Kursus (Thumbnail)</span>
-                                                    </span>
-                                                    <span className="badge bg-teal-subtle text-teal" style={{ fontSize: "10px" }}>Wajib</span>
+                                    {/* Media Files Section (2-Column Studio Grid) */}
+                                    <div className="form-section mb-3">
+                                        <div className="d-flex align-items-center justify-content-between mb-2.5 flex-wrap gap-2">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <h5 className="section-title mb-0">
+                                                    <i className="fas fa-photo-video text-teal me-2"></i>
+                                                    1. Format & Media Kursus
+                                                </h5>
+                                            </div>
+
+                                            {/* Toggle Format Kursus */}
+                                            <div className="btn-group btn-group-sm rounded-2 overflow-hidden shadow-xs" role="group">
+                                                <button
+                                                    type="button"
+                                                    className={`btn px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1 ${courseFormat === "standard" ? "btn-teal" : "btn-outline-secondary"}`}
+                                                    onClick={() => handleFormatChange("standard")}
+                                                >
+                                                    <i className="fas fa-video"></i>
+                                                    <span>Video & Materi Standar</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`btn px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1 ${courseFormat === "elearning" ? "btn-teal" : "btn-outline-secondary"}`}
+                                                    onClick={() => handleFormatChange("elearning")}
+                                                >
+                                                    <i className="fas fa-cubes"></i>
+                                                    <span>Modul Interaktif (SCORM/H5P)</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Banner Informasi jika ada Modul SCORM tersimpan di draf saat mode Video Standar aktif */}
+                                        {courseFormat === "standard" && courseData?.learning_module_id && (
+                                            <div
+                                                className="alert alert-info p-2.5 px-3 mb-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between rounded-3 border-0 shadow-sm gap-2"
+                                                style={{ backgroundColor: "#f0f9ff", borderLeft: "4px solid #0284c7" }}
+                                            >
+                                                <div className="d-flex align-items-start gap-2 flex-grow-1">
+                                                    <i className="fas fa-info-circle text-primary mt-1" style={{ fontSize: "14px" }}></i>
+                                                    <div>
+                                                        <span className="fw-medium text-dark small">
+                                                            Draf Modul Interaktif tersimpan: <strong>{courseData.learning_module?.judul || `#${courseData.learning_module_id}`}</strong>.
+                                                        </span>
+                                                        <p className="text-secondary small mb-0" style={{ fontSize: "11px" }}>
+                                                            Format saat ini: Video Standar. Modul SCORM tidak akan disertakan kecuali Anda beralih kembali.
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <ImageUpload 
-                                                    imagePreview={imagePreview}
-                                                    setImagePreview={setImagePreview}
-                                                    courseData={courseData}
-                                                    setCourseData={setCourseData}
-                                                    errors={errors}
-                                                    warnings={warnings}
-                                                    validateField={validateField}
-                                                    imageRef={imageRef}
+                                                <div className="d-flex align-items-center gap-2 ms-md-auto flex-shrink-0 justify-content-end">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-primary py-1 px-2.5 d-inline-flex align-items-center gap-1"
+                                                        style={{ fontSize: "11px" }}
+                                                        onClick={() => handleFormatChange("elearning")}
+                                                        title="Beralih kembali ke modul interaktif"
+                                                    >
+                                                        <i className="fas fa-undo-alt"></i>
+                                                        <span>Beralih ke Modul</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-danger py-1 px-2.5 d-inline-flex align-items-center gap-1"
+                                                        style={{ fontSize: "11px" }}
+                                                        onClick={handleRemoveScormDraft}
+                                                        title="Hapus modul interaktif ini dari draf"
+                                                    >
+                                                        <i className="fas fa-trash-alt"></i>
+                                                        <span>Hapus Modul</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Responsive 2-Column Studio Grid for Media */}
+                                        <div className="row g-3">
+                                            <div className="col-lg-6 col-12">
+                                                <div className="media-box-container h-100">
+                                                    <div className="media-box-header mb-2 d-flex align-items-center justify-content-between">
+                                                        <span className="media-box-title d-inline-flex align-items-center" style={{ gap: "8px" }}>
+                                                            <i className="fas fa-image text-teal fs-6"></i>
+                                                            <span>Sampul Kursus (Thumbnail)</span>
+                                                        </span>
+                                                        <span className="badge bg-teal-subtle text-teal" style={{ fontSize: "10px" }}>Wajib</span>
+                                                    </div>
+                                                    <ImageUpload
+                                                        imagePreview={imagePreview}
+                                                        setImagePreview={setImagePreview}
+                                                        courseData={courseData}
+                                                        setCourseData={setCourseData}
+                                                        errors={errors}
+                                                        warnings={warnings}
+                                                        validateField={validateField}
+                                                        imageRef={imageRef}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="col-lg-6 col-12">
+                                                <div className="media-box-container h-100">
+                                                    <div className="media-box-header mb-2 d-flex align-items-center justify-content-between">
+                                                        <span className="media-box-title d-inline-flex align-items-center" style={{ gap: "8px" }}>
+                                                            <i className={`fas ${courseFormat === "elearning" ? "fa-cubes text-teal" : "fa-film text-teal"} fs-6`}></i>
+                                                            <span>{courseFormat === "elearning" ? "Paket Modul SCORM / H5P" : "Video Pengantar (Intro)"}</span>
+                                                        </span>
+                                                        <span className="badge bg-light text-muted border" style={{ fontSize: "10px" }}>
+                                                            {courseFormat === "elearning" ? "Wajib" : "Opsional"}
+                                                        </span>
+                                                    </div>
+                                                    {courseFormat === "elearning" ? (
+                                                        <ElearningModuleUpload
+                                                            courseData={courseData}
+                                                            setCourseData={setCourseData}
+                                                        />
+                                                    ) : (
+                                                        <VideoUpload
+                                                            courseData={courseData}
+                                                            setCourseData={setCourseData}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 2. Basic Information Section */}
+                                    <div className="form-section mb-3">
+                                        <div className="d-flex align-items-center justify-content-between mb-2.5">
+                                            <h5 className="section-title mb-0 d-inline-flex align-items-center" style={{ gap: "8px" }}>
+                                                <i className="fas fa-info-circle text-teal"></i>
+                                                <span>2. Informasi Kursus</span>
+                                            </h5>
+                                            <span className="text-muted small" style={{ fontSize: "11px" }}>
+                                                * Wajib diisi
+                                            </span>
+                                        </div>
+
+                                        <div className="row g-2.5">
+                                            <div className="col-12">
+                                                <FormField
+                                                    ref={titleRef}
+                                                    label="Judul Kursus"
+                                                    name="title"
+                                                    value={courseData.title}
+                                                    onChange={handleCourseInputChange}
+                                                    errors={errors.title || []}
+                                                    warnings={warnings.title || []}
+                                                    required
+                                                    placeholder="Contoh: Tata Kelola Kesekretariatan DPD RI Modern..."
+                                                    helpText="Buat judul yang deskriptif dan mudah dipahami oleh peserta didik."
+                                                />
+                                            </div>
+
+                                            <div className="col-md-4">
+                                                <FormField
+                                                    ref={categoryRef}
+                                                    label="Kategori Kursus"
+                                                    name="category"
+                                                    type="select"
+                                                    value={courseData.category}
+                                                    onChange={handleCourseInputChange}
+                                                    errors={errors.category || []}
+                                                    warnings={warnings.category || []}
+                                                    options={[
+                                                        { value: "", label: "Pilih kategori..." },
+                                                        ...((Array.isArray(category) ? category : [])?.map(cat => ({ value: cat.id, label: cat.title })) || [])
+                                                    ]}
+                                                    required
+                                                    helpText="Pilih bidang yang paling sesuai untuk kursus ini."
+                                                />
+                                            </div>
+
+                                            <div className="col-md-4">
+                                                <FormField
+                                                    ref={levelRef}
+                                                    label="Tingkat Kesulitan"
+                                                    name="level"
+                                                    type="select"
+                                                    value={courseData.level}
+                                                    onChange={handleCourseInputChange}
+                                                    errors={errors.level || []}
+                                                    warnings={warnings.level || []}
+                                                    options={[
+                                                        { value: "", label: "Pilih tingkat kesulitan..." },
+                                                        ...COURSE_LEVELS
+                                                    ]}
+                                                    required
+                                                    helpText="Tingkat kompetensi sasaran peserta."
+                                                />
+                                            </div>
+
+                                            <div className="col-md-4">
+                                                <FormField
+                                                    label="Target Peserta & Akses"
+                                                    name="target_audience"
+                                                    type="select"
+                                                    value={courseData.target_audience || "pegawai"}
+                                                    onChange={handleCourseInputChange}
+                                                    options={COURSE_AUDIENCE_OPTIONS}
+                                                    required
+                                                    helpText="Khusus pegawai DPD RI atau umum."
                                                 />
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <div className="col-lg-6 col-12">
-                                            <div className="media-box-container h-100">
-                                                <div className="media-box-header mb-2 d-flex align-items-center justify-content-between">
-                                                    <span className="media-box-title d-inline-flex align-items-center" style={{ gap: "8px" }}>
-                                                        <i className={`fas ${courseFormat === "elearning" ? "fa-cubes text-teal" : "fa-film text-teal"} fs-6`}></i>
-                                                        <span>{courseFormat === "elearning" ? "Paket Modul SCORM / H5P" : "Video Pengantar (Intro)"}</span>
-                                                    </span>
-                                                    <span className="badge bg-light text-muted border" style={{ fontSize: "10px" }}>
-                                                        {courseFormat === "elearning" ? "Wajib" : "Opsional"}
-                                                    </span>
+                                    {/* 3. Course Description Section */}
+                                    <div className="form-section mb-3">
+                                        <div className="d-flex align-items-center justify-content-between mb-2.5">
+                                            <h5 className="section-title mb-0 d-inline-flex align-items-center" style={{ gap: "8px" }}>
+                                                <i className="fas fa-align-left text-teal"></i>
+                                                <span>3. Deskripsi Kursus</span>
+                                            </h5>
+                                            <span className="text-muted small" style={{ fontSize: "11px" }}>
+                                                Ringkasan materi & sasaran kompetensi
+                                            </span>
+                                        </div>
+
+                                        <Suspense fallback={
+                                            <div className="text-center py-3">
+                                                <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                                    <span className="visually-hidden">Memuat editor...</span>
                                                 </div>
-                                                {courseFormat === "elearning" ? (
-                                                    <ElearningModuleUpload 
-                                                        courseData={courseData}
-                                                        setCourseData={setCourseData}
-                                                    />
-                                                ) : (
-                                                    <VideoUpload 
-                                                        courseData={courseData}
-                                                        setCourseData={setCourseData}
-                                                    />
-                                                )}
+                                                <p className="mt-1 text-muted small">Memuat editor teks kaya...</p>
+                                            </div>
+                                        }>
+                                            <RichTextEditor
+                                                ref={ckeditorRef}
+                                                label="Deskripsi Lengkap Kursus"
+                                                value={courseData.description || ""}
+                                                onChange={handleCKEditorChange}
+                                                errors={errors.description || []}
+                                                warnings={warnings.description || []}
+                                                required
+                                                placeholder="Jelaskan silabus, target pembelajaran, dan manfaat kursus ini bagi peserta didik..."
+                                                helpText="Berikan informasi komprehensif mengenai konten kursus."
+                                            />
+                                        </Suspense>
+                                    </div>
+
+                                    {/* 4. Action Buttons Section (Grounded & Compact) */}
+                                    <div className="course-create-action-bar mt-3 mb-2">
+                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                            <div className="d-flex align-items-center text-muted small" style={{ gap: "8px" }}>
+                                                <i className="fas fa-shield-alt text-teal fs-6"></i>
+                                                <span>Draf kursus otomatis tersimpan dan dapat dilanjutkan kapan saja.</span>
+                                            </div>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <Link to="/instructor/courses/" className="btn btn-sm btn-outline-secondary px-3 py-1.5 d-inline-flex align-items-center" style={{ gap: "6px" }}>
+                                                    <i className="fas fa-times"></i>
+                                                    <span>Batal</span>
+                                                </Link>
+                                                <button
+                                                    type="submit"
+                                                    className="btn btn-sm btn-teal px-3.5 py-1.5 shadow-sm d-inline-flex align-items-center"
+                                                    style={{ gap: "8px" }}
+                                                    disabled={loading}
+                                                >
+                                                    {loading ? (
+                                                        <>
+                                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                            <span>Menyimpan Kursus...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <i className="fas fa-check-circle fs-6"></i>
+                                                            <span className="fw-semibold">Buat Kursus & Lanjutkan</span>
+                                                            <i className="fas fa-arrow-right small"></i>
+                                                        </>
+                                                    )}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                {/* 2. Basic Information Section */}
-                                <div className="form-section mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-2.5">
-                                        <h5 className="section-title mb-0 d-inline-flex align-items-center" style={{ gap: "8px" }}>
-                                            <i className="fas fa-info-circle text-teal"></i>
-                                            <span>2. Informasi Kursus</span>
-                                        </h5>
-                                        <span className="text-muted small" style={{ fontSize: "11px" }}>
-                                            * Wajib diisi
-                                        </span>
-                                    </div>
-                                    
-                                    <div className="row g-2.5">
-                                        <div className="col-12">
-                                            <FormField 
-                                                ref={titleRef}
-                                                label="Judul Kursus"
-                                                name="title"
-                                                value={courseData.title}
-                                                onChange={handleCourseInputChange}
-                                                errors={errors.title || []}
-                                                warnings={warnings.title || []}
-                                                required
-                                                placeholder="Contoh: Tata Kelola Kesekretariatan DPD RI Modern..."
-                                                helpText="Buat judul yang deskriptif dan mudah dipahami oleh peserta didik."
-                                            />
-                                        </div>
-
-                                        <div className="col-md-4">
-                                            <FormField 
-                                                ref={categoryRef}
-                                                label="Kategori Kursus"
-                                                name="category"
-                                                type="select"
-                                                value={courseData.category}
-                                                onChange={handleCourseInputChange}
-                                                errors={errors.category || []}
-                                                warnings={warnings.category || []}
-                                                options={[
-                                                    { value: "", label: "Pilih kategori..." },
-                                                    ...((Array.isArray(category) ? category : [])?.map(cat => ({ value: cat.id, label: cat.title })) || [])
-                                                ]}
-                                                required
-                                                helpText="Pilih bidang yang paling sesuai untuk kursus ini."
-                                            />
-                                        </div>
-
-                                        <div className="col-md-4">
-                                            <FormField 
-                                                ref={levelRef}
-                                                label="Tingkat Kesulitan"
-                                                name="level"
-                                                type="select"
-                                                value={courseData.level}
-                                                onChange={handleCourseInputChange}
-                                                errors={errors.level || []}
-                                                warnings={warnings.level || []}
-                                                options={[
-                                                    { value: "", label: "Pilih tingkat kesulitan..." },
-                                                    ...COURSE_LEVELS
-                                                ]}
-                                                required
-                                                helpText="Tingkat kompetensi sasaran peserta."
-                                            />
-                                        </div>
-
-                                        <div className="col-md-4">
-                                            <FormField 
-                                                label="Target Peserta & Akses"
-                                                name="target_audience"
-                                                type="select"
-                                                value={courseData.target_audience || "pegawai"}
-                                                onChange={handleCourseInputChange}
-                                                options={COURSE_AUDIENCE_OPTIONS}
-                                                required
-                                                helpText="Khusus pegawai DPD RI atau umum."
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 3. Course Description Section */}
-                                <div className="form-section mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-2.5">
-                                        <h5 className="section-title mb-0 d-inline-flex align-items-center" style={{ gap: "8px" }}>
-                                            <i className="fas fa-align-left text-teal"></i>
-                                            <span>3. Deskripsi Kursus</span>
-                                        </h5>
-                                        <span className="text-muted small" style={{ fontSize: "11px" }}>
-                                            Ringkasan materi & sasaran kompetensi
-                                        </span>
-                                    </div>
-                                    
-                                    <Suspense fallback={
-                                        <div className="text-center py-3">
-                                            <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                                <span className="visually-hidden">Memuat editor...</span>
-                                            </div>
-                                            <p className="mt-1 text-muted small">Memuat editor teks kaya...</p>
-                                        </div>
-                                    }>
-                                        <RichTextEditor
-                                            ref={ckeditorRef}
-                                            label="Deskripsi Lengkap Kursus"
-                                            value={courseData.description || ""}
-                                            onChange={handleCKEditorChange}
-                                            errors={errors.description || []}
-                                            warnings={warnings.description || []}
-                                            required
-                                            placeholder="Jelaskan silabus, target pembelajaran, dan manfaat kursus ini bagi peserta didik..."
-                                            helpText="Berikan informasi komprehensif mengenai konten kursus."
-                                        />
-                                    </Suspense>
-                                </div>
-
-                                {/* 4. Action Buttons Section (Grounded & Compact) */}
-                                <div className="course-create-action-bar mt-3 mb-2">
-                                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                        <div className="d-flex align-items-center text-muted small" style={{ gap: "8px" }}>
-                                            <i className="fas fa-shield-alt text-teal fs-6"></i>
-                                            <span>Draf kursus otomatis tersimpan dan dapat dilanjutkan kapan saja.</span>
-                                        </div>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <Link to="/instructor/courses/" className="btn btn-sm btn-outline-secondary px-3 py-1.5 d-inline-flex align-items-center" style={{ gap: "6px" }}>
-                                                <i className="fas fa-times"></i>
-                                                <span>Batal</span>
-                                            </Link>
-                                            <button 
-                                                type="submit" 
-                                                className="btn btn-sm btn-teal px-3.5 py-1.5 shadow-sm d-inline-flex align-items-center"
-                                                style={{ gap: "8px" }}
-                                                disabled={loading}
-                                            >
-                                                {loading ? (
-                                                    <>
-                                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                        <span>Menyimpan Kursus...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <i className="fas fa-check-circle fs-6"></i>
-                                                        <span className="fw-semibold">Buat Kursus & Lanjutkan</span>
-                                                        <i className="fas fa-arrow-right small"></i>
-                                                    </>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
+                                </form>
                             )}
                         </div>
                     </div>

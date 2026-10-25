@@ -1,38 +1,58 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { getDurationStats } from '../../../utils/durationUtils';
-import useAxios from '../../../utils/useAxios';
+import { parseDurationToSeconds, formatDuration } from '../../../utils/durationUtils';
 
 const CourseStatistics = ({ course }) => {
-    const [analyticsData, setAnalyticsData] = useState(null);
-    const [loading, setLoading] = useState(true);
+    // Extract all lessons across sections in the curriculum or direct lectures (public data)
+    const curriculumLessons = (course?.curriculum || []).flatMap(section => section.variant_items || section.items || []);
+    const directLectures = course?.lectures || [];
+    const allLessons = curriculumLessons.length > 0 ? curriculumLessons : directLectures;
 
-    // Calculate duration statistics from course lectures
-    const durationStats = getDurationStats(course?.lectures || []);
+    // Detect if this is a SCORM package or interactive/self-paced course
+    const isScorm = course?.file_type === 'scorm' ||
+        course?.course_type === 'scorm' ||
+        (course?.title && course?.title.toLowerCase().includes('scorm')) ||
+        allLessons.some(l => l.file_type === 'scorm' || (l.title && l.title.toLowerCase().includes('scorm')));
 
-    // Fetch real analytics data
-    useEffect(() => {
-        if (course?.id) {
-            fetchCourseAnalytics();
+    // Calculate total duration in seconds from lessons with valid timestamps
+    const totalDurationSeconds = allLessons.reduce((sum, item) => {
+        const dur = item.duration_seconds || (item.content_duration ? parseDurationToSeconds(item.content_duration) : 0);
+        return sum + (dur || 0);
+    }, 0);
+
+    // Format total duration accurately (publicly accessible without login)
+    let totalDurationDisplay = "Mandiri (Fleksibel)";
+    if (totalDurationSeconds > 0) {
+        const hours = Math.floor(totalDurationSeconds / 3600);
+        const minutes = Math.floor((totalDurationSeconds % 3600) / 60);
+        if (hours > 0) {
+            totalDurationDisplay = minutes > 0 ? `${hours} Jam ${minutes} Menit` : `${hours} Jam`;
+        } else {
+            totalDurationDisplay = `${minutes} Menit`;
         }
-    }, [course?.id]);
+    } else if (course?.total_jam_pelatihan && course.total_jam_pelatihan > 0) {
+        totalDurationDisplay = `${course.total_jam_pelatihan} JP (${course.total_jam_pelatihan * 45} Menit)`;
+    } else if (isScorm) {
+        totalDurationDisplay = "Mandiri (SCORM 1.2)";
+    }
 
-    const fetchCourseAnalytics = async () => {
-        try {
-            const response = await useAxios.get(`teacher/course-analytics/${course.id}/`);
-            setAnalyticsData(response.data);
-        } catch (error) {
-            console.error('Error fetching course analytics:', error);
-            // Set default data if API fails
-            setAnalyticsData({
-                total_enrollments: course?.students?.length || 0,
-                avg_completion_rate: 0,
-                avg_rating: course?.average_rating || 0
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Format average duration per lesson
+    let avgDurationDisplay = "Fleksibel";
+    const lessonsWithDuration = allLessons.filter(item => {
+        const dur = item.duration_seconds || (item.content_duration ? parseDurationToSeconds(item.content_duration) : 0);
+        return dur > 0;
+    });
+
+    if (lessonsWithDuration.length > 0 && totalDurationSeconds > 0) {
+        const avgSec = Math.floor(totalDurationSeconds / lessonsWithDuration.length);
+        const avgMin = Math.round(avgSec / 60);
+        avgDurationDisplay = `${avgMin || 1} Menit / materi`;
+    } else if (isScorm) {
+        avgDurationDisplay = "Kecepatan Mandiri";
+    }
+
+    // Total lesson count
+    const totalLessonsCount = allLessons.length || (isScorm ? 1 : (course?.curriculum?.length || 1));
 
     // Calculate completion distribution from enrolled students
     const completionData = course?.students && course.students.length > 0
@@ -66,25 +86,14 @@ const CourseStatistics = ({ course }) => {
         .slice(-6)
         : [];
 
-    if (loading) {
-        return (
-            <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '20px' }}>
-                <div className="card-body p-3 p-md-4">
-                    <div className="text-center py-5">
-                        <i className="fas fa-spinner fa-spin text-primary mb-3" style={{ fontSize: '2rem' }}></i>
-                        <p className="text-muted">Memuat data analitik...</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    const completionRate = course?.students && course.students.length > 0
+        ? Math.round(course.students.reduce((sum, s) => sum + (s.completion_percentage || 0), 0) / course.students.length)
+        : 0;
 
-    const completionRate = analyticsData?.avg_completion_rate ||
-        (course?.students && course.students.length > 0
-            ? Math.round(course.students.reduce((sum, s) => sum + (s.completion_percentage || 0), 0) / course.students.length)
-            : 0);
-
-    const avgRating = analyticsData?.avg_rating || course?.average_rating || 0;
+    // Rating logic: only show rating if there are actual reviews/ratings
+    const ratingCount = Number(course?.rating_count || 0);
+    const avgRating = (course?.average_rating && ratingCount > 0) ? Number(course.average_rating) : 0;
+    const hasRatings = ratingCount > 0 && avgRating > 0;
 
     return (
         <div className="card border-0 shadow-xs rounded-3 mb-3 bg-white overflow-hidden">
@@ -101,8 +110,8 @@ const CourseStatistics = ({ course }) => {
                             Analitik & Statistik Kursus
                         </h5>
                     </div>
-                    <span className="badge bg-light text-secondary border py-1 px-2 rounded-pill small">
-                        Pembaruan Real-Time
+                    <span className="badge bg-light text-secondary border py-1 px-2.5 rounded-pill small">
+                        <i className="fas fa-globe me-1 text-teal"></i>Data Publik Kursus
                     </span>
                 </div>
 
@@ -146,7 +155,15 @@ const CourseStatistics = ({ course }) => {
                             </div>
                             <div className="overflow-hidden">
                                 <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Rating Rata-rata</div>
-                                <div className="h6 mb-0 fw-bold text-dark" style={{ fontSize: "0.95rem" }}>{avgRating.toFixed(1)} <span className="small text-muted font-normal" style={{ fontSize: "0.72rem" }}>/5.0</span></div>
+                                {hasRatings ? (
+                                    <div className="h6 mb-0 fw-bold text-dark" style={{ fontSize: "0.95rem" }}>
+                                        {avgRating.toFixed(1)} <span className="small text-muted font-normal" style={{ fontSize: "0.72rem" }}>/5.0</span>
+                                    </div>
+                                ) : (
+                                    <div className="h6 mb-0 fw-semibold text-muted" style={{ fontSize: "0.82rem" }}>
+                                        Belum Ada Ulasan
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -160,7 +177,7 @@ const CourseStatistics = ({ course }) => {
                             </div>
                             <div className="overflow-hidden">
                                 <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Total Durasi</div>
-                                <div className="h6 mb-0 fw-bold text-dark" style={{ fontSize: "0.95rem" }}>{durationStats.total || "135m"}</div>
+                                <div className="h6 mb-0 fw-bold text-dark" style={{ fontSize: "0.95rem" }}>{totalDurationDisplay}</div>
                             </div>
                         </div>
                     </div>
@@ -175,8 +192,8 @@ const CourseStatistics = ({ course }) => {
                                 <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: '0.86rem' }}>Distribusi Kemajuan</h6>
                                 <span className="badge bg-white text-muted border py-1 px-2" style={{ fontSize: '0.68rem' }}>Peserta</span>
                             </div>
-                            <div style={{ width: '100%', height: '140px', minWidth: '0' }}>
-                                <ResponsiveContainer width="100%" height="100%">
+                            <div style={{ width: '100%', height: '140px', minWidth: 0, minHeight: 140, position: 'relative' }}>
+                                <ResponsiveContainer width="100%" height={140} minWidth={0} minHeight={140}>
                                     <PieChart>
                                         <Pie
                                             data={completionData}
@@ -217,8 +234,8 @@ const CourseStatistics = ({ course }) => {
                                 <span className="badge bg-white text-muted border py-1 px-2" style={{ fontSize: '0.68rem' }}>Bulanan</span>
                             </div>
                             {enrollmentData.length > 0 ? (
-                                <div style={{ width: '100%', height: '160px', minWidth: '0' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div style={{ width: '100%', height: '160px', minWidth: 0, minHeight: 160, position: 'relative' }}>
+                                    <ResponsiveContainer width="100%" height={160} minWidth={0} minHeight={160}>
                                         <BarChart data={enrollmentData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                             <XAxis dataKey="month" tick={{ fontSize: 10 }} />
@@ -248,19 +265,25 @@ const CourseStatistics = ({ course }) => {
                                 <i className="fas fa-clock text-teal"></i>
                                 Analisis Konten Pelajaran
                             </h6>
-                            <div className="row g-2 text-center">
+                            <div className="row g-2 text-center mb-2">
                                 <div className="col-6">
                                     <div className="p-2 rounded-2 bg-white border">
-                                        <div className="fw-bold text-dark" style={{ fontSize: "0.92rem" }}>{durationStats.count || course?.lectures?.length || 1}</div>
-                                        <div className="text-muted" style={{ fontSize: "0.72rem" }}>Total Pelajaran</div>
+                                        <div className="fw-bold text-dark" style={{ fontSize: "0.92rem" }}>{totalLessonsCount}</div>
+                                        <div className="text-muted" style={{ fontSize: "0.72rem" }}>Total Materi</div>
                                     </div>
                                 </div>
                                 <div className="col-6">
                                     <div className="p-2 rounded-2 bg-white border">
-                                        <div className="fw-bold text-dark" style={{ fontSize: "0.92rem" }}>{durationStats.average || "135m"}</div>
+                                        <div className="fw-bold text-dark" style={{ fontSize: "0.92rem" }}>{avgDurationDisplay}</div>
                                         <div className="text-muted" style={{ fontSize: "0.72rem" }}>Rata-rata Durasi</div>
                                     </div>
                                 </div>
+                            </div>
+                            <div className="d-flex justify-content-between align-items-center py-1.5 px-2.5 rounded-2 bg-white border">
+                                <span className="text-muted" style={{ fontSize: '0.78rem' }}>Format Kursus:</span>
+                                <strong className="text-teal" style={{ fontSize: '0.78rem' }}>
+                                    {isScorm ? 'Modul SCORM 1.2 Interaktif' : 'Video Pembelajaran HD'}
+                                </strong>
                             </div>
                         </div>
                     </div>
@@ -269,16 +292,32 @@ const CourseStatistics = ({ course }) => {
                         <div className="p-3 rounded-3 bg-light border h-100">
                             <h6 className="fw-bold mb-2 text-dark d-flex align-items-center gap-2" style={{ fontSize: '0.86rem' }}>
                                 <i className="fas fa-circle-check text-success"></i>
-                                Metrik Kelulusan & Ulasan
+                                Metrik Kelulusan & Spesifikasi
                             </h6>
-                            <div className="d-flex flex-column gap-2">
-                                <div className="d-flex justify-content-between align-items-center py-2 px-3 rounded-2 bg-white border">
-                                    <span style={{ fontSize: '0.82rem' }}>Tingkat Kepuasan Peserta</span>
-                                    <strong className="text-warning" style={{ fontSize: '0.82rem' }}>{avgRating.toFixed(1)} / 5.0</strong>
+                            <div className="d-flex flex-column gap-1.5">
+                                <div className="d-flex justify-content-between align-items-center py-1.5 px-2.5 rounded-2 bg-white border">
+                                    <span className="text-muted" style={{ fontSize: '0.78rem' }}>Target Sasaran:</span>
+                                    <strong className="text-dark" style={{ fontSize: '0.78rem' }}>
+                                        {course?.target_audience === 'umum' ? 'Akses Terbuka (Publik)' : 'Pegawai Setjen DPD RI'}
+                                    </strong>
                                 </div>
-                                <div className="d-flex justify-content-between align-items-center py-2 px-3 rounded-2 bg-white border">
-                                    <span style={{ fontSize: '0.82rem' }}>Ulasan Terverifikasi</span>
-                                    <strong className="text-teal" style={{ fontSize: '0.82rem' }}>{course?.rating_count || 0} Ulasan</strong>
+                                <div className="d-flex justify-content-between align-items-center py-1.5 px-2.5 rounded-2 bg-white border">
+                                    <span className="text-muted" style={{ fontSize: '0.78rem' }}>Tingkat Kesulitan:</span>
+                                    <strong className="text-primary" style={{ fontSize: '0.78rem' }}>
+                                        {course?.level || 'Semua Tingkat'}
+                                    </strong>
+                                </div>
+                                <div className="d-flex justify-content-between align-items-center py-1.5 px-2.5 rounded-2 bg-white border">
+                                    <span className="text-muted" style={{ fontSize: '0.78rem' }}>Kepuasan Peserta:</span>
+                                    {hasRatings ? (
+                                        <strong className="text-warning" style={{ fontSize: '0.78rem' }}>
+                                            <i className="fas fa-star me-1"></i>{avgRating.toFixed(1)} / 5.0 ({ratingCount} Ulasan)
+                                        </strong>
+                                    ) : (
+                                        <span className="text-muted fst-italic" style={{ fontSize: '0.78rem' }}>
+                                            Belum ada ulasan
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
