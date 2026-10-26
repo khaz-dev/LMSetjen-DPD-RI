@@ -1,700 +1,1128 @@
 /* ================================================
-   USER GUIDE STYLES
+   COMPACT & EYE-CATCHING USER GUIDE STYLES
+   LMSetjen DPD RI Learning Platform
    ================================================ */
 
-/* Container */
-.user-guide-container {
+.user-guide-page.user-guide-compact-wrapper {
     min-height: 100vh;
-    padding-bottom: 3rem;
-    margin-top: -1rem;
+    padding-bottom: 2.5rem;
+    background-color: transparent;
 }
 
-/* Header */
-.guide-header {
-    background: var(--theme-gradient);
+/* ================================================
+   HERO HEADER (COMPACT & MODERN)
+   ================================================ */
+.user-guide-page .guide-hero {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    position: relative;
     color: white;
-    padding: 3rem 0;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 1.5rem 0 1.25rem 0;
+    box-shadow: 0 4px 20px rgba(13, 148, 136, 0.18);
+    overflow: hidden;
 }
 
-.header-content {
+.user-guide-page .guide-hero::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(45, 212, 191, 0.25) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.user-guide-page .guide-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: 10%;
+    width: 300px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.user-guide-page .hero-top-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 2rem;
     flex-wrap: wrap;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
 }
 
-.header-title-section {
+.user-guide-page .hero-branding {
     flex: 1;
-    min-width: 300px;
+    min-width: 280px;
 }
 
-.guide-main-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    display: flex;
+.user-guide-page .hero-badge {
+    display: inline-flex;
     align-items: center;
-    color: white !important;
-}
-
-.guide-main-title i {
-    color: white !important;
-}
-
-.guide-subtitle {
-    font-size: 1.15rem;
-    opacity: 0.95;
-    margin-bottom: 1rem;
+    gap: 0.45rem;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 0.22rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
     color: white;
+    margin-bottom: 0.35rem;
 }
 
-.user-guide-page .guide-meta {
-    display: flex;
-    gap: 2rem;
-    font-size: 0.95rem;
-    opacity: 0.95;
-    color: white !important;
+.user-guide-page .badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #5eead4;
+    box-shadow: 0 0 8px #5eead4;
 }
 
-.user-guide-page .meta-item {
-    display: flex;
-    align-items: center;
-    color: white !important;
+.user-guide-page .badge-version {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 0.1rem 0.45rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
 }
 
-.user-guide-page .meta-item i {
-    color: white !important;
-}
-
-.header-actions {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.language-selector {
-    padding: 0.65rem 1.2rem;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    color: var(--theme-primary) !important;
-    background-color: white !important;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-}
-
-.btn-export {
-    padding: 0.65rem 1.5rem;
-    background: white;
-    color: var(--theme-primary);
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.btn-export:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    background: #f8f9fa;
-}
-
-/* Table of Contents */
-.toc-section {
-    margin: 3rem 0;
-    padding: 2.5rem;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.toc-title {
-    font-size: 1.8rem;
+.user-guide-page .hero-title {
+    font-size: 1.65rem;
     font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 2rem;
-    text-align: center;
-}
-
-.toc-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-}
-
-.toc-item {
-    padding: 1.2rem 1.5rem;
-    background: var(--theme-gradient);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    margin: 0.2rem 0;
+    color: #ffffff !important;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    font-weight: 600;
-    font-size: 1rem;
-    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    letter-spacing: -0.3px;
 }
 
-.toc-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+.user-guide-page .hero-title i {
+    color: #5eead4 !important;
 }
 
-.toc-icon {
-    font-size: 1.5rem;
-}
-
-/* Main Content */
-.guide-content {
-    background: white;
-    border-radius: 16px;
-    padding: 3rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    margin-bottom: 3rem;
-}
-
-.guide-section {
-    margin-bottom: 4rem;
-    padding-bottom: 3rem;
-    border-bottom: 2px solid #e9ecef;
-}
-
-.guide-section:last-child {
-    border-bottom: none;
+.user-guide-page .hero-subtitle {
+    font-size: 0.92rem;
+    opacity: 0.92;
     margin-bottom: 0;
-    padding-bottom: 0;
+    color: #f0fdfa;
+    max-width: 650px;
+    line-height: 1.45;
 }
 
-/* ✨ SCOPED: UserGuide page section-title only - prevents bleed to Sidebar */
-.user-guide-page .section-title {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 1.5rem;
+.user-guide-page .hero-actions {
     display: flex;
+    gap: 0.6rem;
     align-items: center;
-    padding-bottom: 1rem;
-    border-bottom: 3px solid var(--theme-primary);
+    position: relative;
+    z-index: 1;
 }
 
-.section-intro {
-    font-size: 1.15rem;
-    color: #6c757d;
-    margin-bottom: 2rem;
-    line-height: 1.8;
-}
-
-.subsection {
-    margin-bottom: 2.5rem;
-}
-
-.subsection-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-}
-
-/* Lists */
-.step-list,
-.feature-list,
-.requirement-list {
-    padding-left: 1.5rem;
-    line-height: 2;
-}
-
-.step-list li,
-.requirement-list li {
-    margin-bottom: 0.8rem;
-    color: #495057;
-    font-size: 1.05rem;
-}
-
-.feature-list li {
-    margin-bottom: 0.7rem;
-    color: #495057;
-    list-style: none;
-    font-size: 1.05rem;
-}
-
-/* Dashboard Cards */
-.dashboard-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-}
-
-/* ✨ SCOPED: Only apply pink gradient to dashboard cards within UserGuide page */
-.user-guide-container .dashboard-cards .dashboard-card {
-    padding: 1.5rem;
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
-    color: white !important;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
-    transition: transform 0.3s ease;
-}
-
-.user-guide-container .dashboard-cards .dashboard-card:hover {
-    transform: translateY(-5px);
-}
-
-.user-guide-container .dashboard-cards .dashboard-card h4 {
-    font-size: 1.3rem;
-    margin-bottom: 0.8rem;
-    font-weight: 600;
-    color: white !important;
-}
-
-.path-code {
-    display: block;
-    background: rgba(255, 255, 255, 0.95) !important;
-    color: #2c3e50 !important;
-    padding: 0.5rem;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    margin: 0.8rem 0;
-    font-family: 'Courier New', monospace;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* ✨ SCOPED: Only apply white text to paragraph within UserGuide dashboard cards */
-.user-guide-container .dashboard-cards .dashboard-card p {
-    font-size: 0.95rem;
-    line-height: 1.6;
-    opacity: 0.95;
-    color: white !important;
-}
-
-/* Feature Grid */
-.feature-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-}
-
-.feature-card {
-    padding: 1.5rem;
-    background: #f8f9fa;
-    border-left: 4px solid var(--theme-primary);
+.user-guide-page .language-selector-compact {
     border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.feature-card:hover {
-    background: #e9ecef;
-    transform: translateX(5px);
-}
-
-.feature-card h4 {
-    color: var(--theme-primary);
-    font-size: 1.2rem;
-    margin-bottom: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 600;
+    padding: 0.42rem 2.25rem 0.42rem 0.85rem !important; /* CRITICAL: 2.25rem padding-right ensures chevron icon never overlaps text */
+    color: #0f766e !important;
+    background-color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 175px;
+    background-position: right 0.75rem center !important;
 }
 
-.feature-card p {
-    color: #6c757d;
-    line-height: 1.7;
-    font-size: 1rem;
+.user-guide-page .language-selector-compact:focus {
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.4);
+    border-color: #2dd4bf;
 }
 
-/* Requirements Box */
-.requirements-box {
-    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
-    padding: 1.5rem;
-    border-radius: 12px;
-    border-left: 5px solid #00acc1;
-    margin-top: 1rem;
-}
-
-.requirements-box h4 {
-    color: #00838f;
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
+.user-guide-page .btn-export-compact {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.42rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
     font-weight: 600;
-}
-
-/* Features Showcase */
-.features-showcase {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-}
-
-.feature-showcase-item {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-.feature-showcase-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-.showcase-icon {
-    width: 60px;
-    height: 60px;
-    background: var(--theme-gradient);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     color: white;
-    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.user-guide-page .btn-export-compact:hover {
+    background: #ffffff;
+    color: #0d9488;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Integrated Search Bar */
+.user-guide-page .hero-search-wrapper {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 1;
+}
+
+.user-guide-page .hero-search-box {
+    position: relative;
+    flex: 1;
+    min-width: 270px;
+    max-width: 520px;
+}
+
+.user-guide-page .hero-search-box .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.9rem;
+    pointer-events: none;
+    z-index: 10 !important; /* CRITICAL: Always above input so it never gets covered on focus */
+    transition: color 0.2s ease;
+}
+
+.user-guide-page .hero-search-box:focus-within .search-icon {
+    color: #0d9488 !important; /* Eye-catching highlight on active search focus */
+}
+
+.user-guide-page .hero-search-box .search-input {
+    width: 100%;
+    padding: 0.55rem 2.4rem 0.55rem 2.5rem;
+    border-radius: 50px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: #ffffff;
+    font-size: 0.88rem;
+    color: #1e293b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    outline: none;
+    position: relative;
+    z-index: 1;
+    transition: all 0.2s ease;
+}
+
+.user-guide-page .hero-search-box .search-input:focus {
+    border-color: #2dd4bf;
+    box-shadow: 0 4px 18px rgba(45, 212, 191, 0.35);
+    background-color: #ffffff !important;
+}
+
+.user-guide-page .hero-search-box .clear-search-btn {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0.25rem 0.35rem;
+    z-index: 10 !important; /* CRITICAL: Always above input so it never gets covered on focus */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: color 0.2s ease;
 }
 
-.feature-showcase-item h3 {
-    font-size: 1.4rem;
-    color: #2c3e50;
-    margin-bottom: 0.8rem;
+.user-guide-page .hero-search-box .clear-search-btn:hover {
+    color: #ef4444 !important;
+}
+
+.user-guide-page .hero-quick-meta {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.user-guide-page .quick-meta-pill {
+    font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.22rem 0.65rem;
+    border-radius: 20px;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+/* ================================================
+   FILTER PILLS STRIP (HORIZONTAL SUBNAV)
+   ================================================ */
+.user-guide-page .guide-filter-strip {
+    background: #ffffff;
+    border-bottom: 1px solid rgba(13, 148, 136, 0.12);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    position: relative;
+    z-index: 10;
+}
+
+.user-guide-page .filter-pills-scroll {
+    display: flex;
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding: 0.6rem 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.user-guide-page .filter-pills-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.user-guide-page .filter-pill-btn {
+    white-space: nowrap;
+    font-size: 0.82rem;
     font-weight: 600;
+    padding: 0.38rem 0.85rem;
+    border-radius: 30px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
 }
 
-.showcase-desc {
-    color: #6c757d;
-    margin-bottom: 1rem;
-    line-height: 1.7;
+.user-guide-page .filter-pill-btn:hover {
+    background: #f1f5f9;
+    color: #0d9488;
+    border-color: #cbd5e1;
 }
 
-.showcase-list {
-    padding-left: 1.5rem;
-    line-height: 1.9;
+.user-guide-page .filter-pill-btn.active {
+    background: #0d9488;
+    color: #ffffff;
+    border-color: #0d9488;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.3);
 }
 
-.showcase-list li {
-    color: #495057;
-    margin-bottom: 0.5rem;
-    font-size: 0.98rem;
+/* ================================================
+   MAIN CONTAINER & SIDEBAR
+   ================================================ */
+.user-guide-page .guide-main-container {
+    padding-top: 1.25rem;
+    padding-bottom: 2rem;
+    max-width: 1320px;
 }
 
-/* Troubleshooting */
-.troubleshooting-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
+/* Explicit side-by-side flex layout for sidebar (left) and content (right) */
+.user-guide-page .guide-layout-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important; /* CRITICAL: Allows sidebar column to track full scroll height of content */
+    gap: 1.25rem !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: relative;
 }
 
-.trouble-card {
-    background: white;
-    padding: 1.5rem;
+/* Sticky Sidebar Column: sticks comfortably beneath base-header navbar with airy spacing (~24px clearance) */
+.user-guide-page .guide-sidebar-col {
+    flex: 0 0 280px !important;
+    width: 280px !important;
+    max-width: 280px !important;
+    min-width: 250px !important;
+    padding: 0 !important;
+    display: block !important;
+    position: sticky !important;
+    top: 96px !important; /* Memberikan jarak proporsional dan tidak terlalu rapat di bawah base-header */
+    align-self: flex-start !important;
+    z-index: 95 !important;
+}
+
+.user-guide-page .guide-content-col {
+    flex: 1 1 auto !important;
+    min-width: 0 !important; /* CRITICAL: Prevents flex child from overflowing or breaking columns */
+    width: calc(100% - 280px - 1.25rem) !important;
+    max-width: calc(100% - 280px - 1.25rem) !important;
+    padding: 0 !important;
+}
+
+.user-guide-page .sticky-guide-sidebar {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    max-height: calc(100vh - 116px); /* Disesuaikan dengan top 96px agar tidak overflow di viewport */
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.user-guide-page .sticky-guide-sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+.user-guide-page .sidebar-toc-card {
+    background: #ffffff;
     border-radius: 12px;
-    border: 2px solid #ffc107;
-    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
+    border: 1px solid rgba(13, 148, 136, 0.15);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
 }
 
-.trouble-problem {
-    color: #f57c00;
-    font-size: 1.3rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
+.user-guide-page .sidebar-toc-header {
+    padding: 0.7rem 1rem;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.08), rgba(15, 118, 110, 0.04));
+    border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+    font-weight: 700;
+    font-size: 0.84rem;
+    color: #0f766e;
     display: flex;
     align-items: center;
 }
 
-.trouble-solutions h4 {
-    color: #00897b;
-    font-size: 1.1rem;
-    margin-bottom: 0.8rem;
-    font-weight: 600;
+.user-guide-page .sidebar-nav-list {
+    display: flex;
+    flex-direction: column;
+    padding: 0.35rem 0;
 }
 
-.trouble-solutions ul {
-    padding-left: 1.5rem;
-    line-height: 1.8;
+.user-guide-page .sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.52rem 0.9rem;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-size: 0.82rem;
+    color: #475569;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
 }
 
-.trouble-solutions li {
-    color: #495057;
-    margin-bottom: 0.5rem;
+.user-guide-page .sidebar-nav-link .nav-icon {
+    font-size: 0.85rem;
+    width: 18px;
+    text-align: center;
+    color: #64748b;
+    transition: color 0.2s ease;
 }
 
-/* FAQ */
-.faq-list {
-    margin-top: 2rem;
+.user-guide-page .sidebar-nav-link .nav-text {
+    flex: 1;
 }
 
-.faq-item {
-    background: #f8f9fa;
-    padding: 1.5rem;
+.user-guide-page .sidebar-nav-link .nav-arrow {
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.user-guide-page .sidebar-nav-link:hover {
+    background: rgba(13, 148, 136, 0.06);
+    color: #0d9488;
+}
+
+.user-guide-page .sidebar-nav-link:hover .nav-icon {
+    color: #0d9488;
+}
+
+.user-guide-page .sidebar-nav-link:hover .nav-arrow {
+    opacity: 0.7;
+    transform: translateX(2px);
+}
+
+.user-guide-page .sidebar-nav-link.active {
+    background: rgba(13, 148, 136, 0.1);
+    color: #0d9488;
+    font-weight: 700;
+    border-left: 3px solid #0d9488;
+}
+
+.user-guide-page .sidebar-nav-link.active .nav-icon {
+    color: #0d9488;
+}
+
+.user-guide-page .sidebar-nav-link.active .nav-arrow {
+    opacity: 1;
+    color: #0d9488;
+}
+
+/* Sidebar Help Card */
+.user-guide-page .sidebar-help-card {
+    background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+    border: 1px solid rgba(13, 148, 136, 0.22);
     border-radius: 12px;
-    margin-bottom: 1.5rem;
-    border-left: 4px solid var(--theme-primary);
-    transition: all 0.3s ease;
+    padding: 0.9rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
 }
 
-.faq-item:hover {
-    background: #e9ecef;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+.user-guide-page .help-icon-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #0d9488;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);
 }
 
-.faq-question {
-    color: #2c3e50;
-    font-size: 1.2rem;
-    margin-bottom: 0.8rem;
+.user-guide-page .help-content h6 {
+    font-size: 0.84rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+    color: #0f766e;
+}
+
+.user-guide-page .help-content p {
+    font-size: 0.75rem;
+    color: #334155;
+    margin-bottom: 0.45rem;
+    line-height: 1.4;
+}
+
+.user-guide-page .btn-help-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #0d9488;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.user-guide-page .btn-help-link:hover {
+    color: #0f766e;
+    text-decoration: underline;
+}
+
+/* Search Status Banner */
+.user-guide-page .search-status-banner {
+    background: #f0fdfa;
+    border: 1px solid rgba(13, 148, 136, 0.25);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.84rem;
+    color: #0f766e;
+}
+
+/* ================================================
+   CARD SECTIONS (COMPACT & REDUCED WHITESPACE)
+   ================================================ */
+.user-guide-page .guide-sections-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.user-guide-page .guide-card-section {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid rgba(13, 148, 136, 0.12);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+    padding: 1.15rem 1.35rem;
+    scroll-margin-top: 96px;
+    transition: box-shadow 0.2s ease;
+}
+
+.user-guide-page .guide-card-section:hover {
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+}
+
+.user-guide-page .section-header-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.9rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.user-guide-page .section-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-guide-page .section-icon-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    box-shadow: 0 3px 8px rgba(13, 148, 136, 0.25);
+    flex-shrink: 0;
+}
+
+.user-guide-page .section-title-compact {
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.15rem;
+    letter-spacing: -0.2px;
+}
+
+.user-guide-page .section-desc-compact {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+/* ================================================
+   SUBCARDS & STEPPERS (COMPACT 2-COLUMN)
+   ================================================ */
+.user-guide-page .subcard-compact {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.85rem 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.user-guide-page .subcard-compact:hover {
+    border-color: rgba(13, 148, 136, 0.3);
+    background: #ffffff;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+}
+
+.user-guide-page .subcard-header {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.65rem;
+}
+
+.user-guide-page .subcard-icon {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.user-guide-page .subcard-header h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0;
+}
+
+.user-guide-page .subcard-subtext {
+    font-size: 0.77rem;
+    color: #64748b;
+    margin-top: 0.1rem;
+    line-height: 1.35;
+}
+
+/* Compact Stepper */
+.user-guide-page .compact-stepper {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.48rem;
+}
+
+.user-guide-page .stepper-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+}
+
+.user-guide-page .step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #0d9488;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.user-guide-page .step-text {
+    font-size: 0.82rem;
+    color: #334155;
+    line-height: 1.4;
+}
+
+/* Compact Check List */
+.user-guide-page .compact-check-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.42rem;
+}
+
+.user-guide-page .compact-check-list li {
+    font-size: 0.82rem;
+    color: #334155;
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.35;
+}
+
+/* ================================================
+   DASHBOARD ROLE CARDS (TEAL BRANDED)
+   ================================================ */
+.user-guide-page .dashboard-role-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-top: 3px solid #0d9488;
+    border-radius: 8px;
+    padding: 0.75rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-guide-page .dashboard-role-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+}
+
+.user-guide-page .role-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.35rem;
+}
+
+.user-guide-page .role-tag {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #0f766e;
+}
+
+.user-guide-page .role-icon-mini {
+    color: #0d9488;
+    font-size: 0.9rem;
+}
+
+.user-guide-page .compact-path-code {
+    background: #f1f5f9;
+    color: #0f766e;
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.74rem;
+    font-family: 'Courier New', monospace;
     font-weight: 600;
+    margin-bottom: 0.4rem;
+    display: inline-block;
+    word-break: break-all;
+}
+
+.user-guide-page .role-desc {
+    font-size: 0.76rem;
+    color: #64748b;
+    margin-bottom: 0;
+    line-height: 1.35;
+}
+
+/* Mini Feature Cards (Taking a Course) */
+.user-guide-page .mini-feature-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.65rem 0.75rem;
+    height: 100%;
+    transition: border-color 0.2s ease;
+}
+
+.user-guide-page .mini-feature-card:hover {
+    border-color: rgba(13, 148, 136, 0.4);
+}
+
+.user-guide-page .mini-feature-title {
+    font-size: 0.82rem;
+    color: #1e293b;
+    margin-bottom: 0.2rem;
     display: flex;
     align-items: center;
 }
 
-.faq-answer {
-    color: #6c757d;
-    line-height: 1.8;
-    font-size: 1.05rem;
-    margin: 0;
+.user-guide-page .mini-feature-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0;
+    line-height: 1.35;
 }
 
-.faq-answer i {
-    color: #28a745;
+/* Highlighting Boxes */
+.user-guide-page .highlight-box-teal {
+    background: linear-gradient(135deg, #f0fdfa 0%, #e6fffa 100%);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+}
+
+.user-guide-page .highlight-box-amber {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.user-guide-page .mini-badge-row {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    color: #334155;
+    display: flex;
+    align-items: center;
+}
+
+/* ================================================
+   PLATFORM FEATURES GRID
+   ================================================ */
+.user-guide-page .feature-grid-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.user-guide-page .feature-grid-item:hover {
+    background: #ffffff;
+    border-color: #0d9488;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.1);
+    transform: translateY(-2px);
+}
+
+.user-guide-page .feature-icon-bubble {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.15), rgba(15, 118, 110, 0.25));
+    color: #0d9488;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    margin-bottom: 0.55rem;
+}
+
+.user-guide-page .feature-grid-item h4 {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.user-guide-page .feature-item-desc {
+    font-size: 0.77rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    line-height: 1.35;
+}
+
+.user-guide-page .feature-compact-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.32rem;
+}
+
+.user-guide-page .feature-compact-list li {
+    font-size: 0.76rem;
+    color: #475569;
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.3;
+}
+
+/* ================================================
+   INTERACTIVE ACCORDIONS (TROUBLESHOOTING & FAQ)
+   ================================================ */
+.user-guide-page .trouble-accordion,
+.user-guide-page .faq-accordion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.user-guide-page .trouble-accordion-item,
+.user-guide-page .faq-accordion-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.user-guide-page .trouble-accordion-item:hover,
+.user-guide-page .faq-accordion-item:hover {
+    border-color: #cbd5e1;
+}
+
+.user-guide-page .trouble-accordion-item.open,
+.user-guide-page .faq-accordion-item.open {
+    background: #ffffff;
+    border-color: rgba(13, 148, 136, 0.35);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.user-guide-page .trouble-accordion-header,
+.user-guide-page .faq-accordion-header {
+    width: 100%;
+    padding: 0.65rem 0.95rem;
+    background: transparent;
+    border: none;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.user-guide-page .trouble-accordion-header:hover,
+.user-guide-page .faq-accordion-header:hover {
+    background: rgba(13, 148, 136, 0.04);
+}
+
+.user-guide-page .trouble-accordion-header .header-left,
+.user-guide-page .faq-accordion-header .faq-q-left {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.user-guide-page .trouble-badge-icon {
+    color: #d97706;
+    font-size: 0.85rem;
+}
+
+.user-guide-page .trouble-title-text,
+.user-guide-page .faq-q-text {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.user-guide-page .faq-q-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(13, 148, 136, 0.15);
+    color: #0d9488;
+    font-weight: 700;
+    font-size: 0.68rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.user-guide-page .faq-a-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #10b981;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.68rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.6rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.user-guide-page .accordion-arrow {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+
+.user-guide-page .trouble-accordion-body,
+.user-guide-page .faq-accordion-body {
+    padding: 0.6rem 0.95rem 0.75rem 0.95rem;
+    border-top: 1px dashed #e2e8f0;
+    background: #fafafa;
+    font-size: 0.82rem;
+    color: #475569;
+}
+
+.user-guide-page .faq-accordion-body {
+    display: flex;
+    align-items: flex-start;
+}
+
+.user-guide-page .faq-a-text {
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: #334155;
+}
+
+.user-guide-page .trouble-solutions-title {
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: #0f766e;
+    margin-bottom: 0.4rem;
+}
+
+.user-guide-page .trouble-solutions-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.32rem;
+}
+
+.user-guide-page .trouble-solutions-list li {
+    display: flex;
+    align-items: flex-start;
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+
+/* ================================================
+   UTILITIES
+   ================================================ */
+.user-guide-page .text-teal {
+    color: #0d9488 !important;
+}
+
+.user-guide-page .bg-teal-subtle {
+    background-color: rgba(13, 148, 136, 0.1) !important;
+}
+
+.user-guide-page .text-amber {
+    color: #d97706 !important;
+}
+
+.user-guide-page .bg-amber-subtle {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+/* ================================================
+   RESPONSIVE DESIGN
+   ================================================ */
+@media (max-width: 991.98px) {
+    .user-guide-page .hero-title {
+        font-size: 1.45rem;
+    }
+    
+    .user-guide-page .hero-search-box {
+        max-width: 100%;
+    }
+    
+    .user-guide-page .guide-layout-row {
+        flex-direction: column !important;
+        flex-wrap: wrap !important;
+        gap: 1rem !important;
+    }
+    
+    .user-guide-page .guide-sidebar-col {
+        display: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .user-guide-page .guide-content-col {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .user-guide-page .guide-card-section {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .user-guide-page .hero-top-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-guide-page .hero-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .user-guide-page .section-header-compact {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-guide-page .section-header-right {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+    }
 }
 
 /* ================================================
    PRINT STYLES
    ================================================ */
-
 @media print {
-    /* Hide non-print elements */
     .no-print,
-    .guide-header,
-    .toc-section,
-    .btn-export,
-    .language-selector,
+    .guide-hero,
+    .guide-filter-strip,
+    .sidebar-toc-card,
+    .sidebar-help-card,
     header,
     footer,
     nav {
         display: none !important;
     }
 
-    /* Reset body and container */
     body {
-        background: white;
+        background: white !important;
     }
 
-    .user-guide-container {
-        background: white;
+    .user-guide-page.user-guide-compact-wrapper {
         padding: 0;
         margin: 0;
     }
 
-    .guide-content {
-        box-shadow: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    /* Section styling for print */
-    .guide-section {
+    .guide-card-section {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
         page-break-inside: avoid;
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 1.5rem !important;
     }
 
-    /* ✨ SCOPED: UserGuide page only */
-    .user-guide-page .section-title {
-        color: #000;
-        font-size: 1.8rem;
-        margin-top: 1.5rem;
-        page-break-after: avoid;
-    }
-
-    .subsection {
-        page-break-inside: avoid;
-    }
-
-    .subsection-title {
-        page-break-after: avoid;
-        color: #000;
-    }
-
-    /* Cards and grids */
-    .dashboard-cards,
-    .feature-grid,
-    .features-showcase,
-    .troubleshooting-grid {
-        display: block;
-    }
-
-    .dashboard-card,
-    .feature-card,
-    .feature-showcase-item,
-    .trouble-card,
-    .faq-item {
-        page-break-inside: avoid;
-        margin-bottom: 1rem;
-        box-shadow: none;
-        border: 1px solid #dee2e6;
-    }
-
-    /* Colors for print */
-    .dashboard-card {
-        background: #f8f9fa;
-        color: #000;
-    }
-
-    .showcase-icon {
-        background: #e9ecef;
-        color: #000;
-    }
-
-    /* Lists */
-    .step-list,
-    .feature-list,
-    .requirement-list,
-    .showcase-list {
-        line-height: 1.6;
-    }
-
-    /* Links */
-    a {
-        color: #000;
-        text-decoration: none;
-    }
-
-    /* Page breaks */
-    h2 {
-        page-break-after: avoid;
-    }
-
-    h3 {
-        page-break-after: avoid;
-    }
-
-    /* Table of contents for print */
-    .toc-section {
-        page-break-after: always;
-    }
-}
-
-/* ================================================
-   RESPONSIVE DESIGN
-   ================================================ */
-
-@media (max-width: 1024px) {
-    .guide-content {
-        padding: 2rem;
-    }
-
-    /* ✨ SCOPED: UserGuide page only */
-    .user-guide-page .section-title {
-        font-size: 1.9rem;
-    }
-
-    .features-showcase {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    }
-}
-
-@media (max-width: 768px) {
-    .guide-header {
-        padding: 2rem 0;
-    }
-
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .guide-main-title {
-        font-size: 2rem;
-        color: white;
-    }
-
-    .guide-subtitle {
-        font-size: 1rem;
-        color: white;
-    }
-
-    .guide-meta {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .header-actions {
-        width: 100%;
-        flex-direction: column;
-    }
-
-    .language-selector,
-    .btn-export {
-        width: 100%;
-    }
-
-    .toc-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .guide-content {
-        padding: 1.5rem;
-    }
-
-    /* ✨ SCOPED: UserGuide page only */
-    .user-guide-page .section-title {
-        font-size: 1.6rem;
-    }
-
-    .subsection-title {
-        font-size: 1.3rem;
-    }
-
-    .dashboard-cards,
-    .feature-grid,
-    .features-showcase,
-    .troubleshooting-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .toc-section {
-        padding: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .guide-main-title {
-        font-size: 1.6rem;
-        color: white;
-    }
-
-    .guide-main-title i {
-        font-size: 1.4rem;
-        color: white;
-    }
-
-    /* ✨ SCOPED: UserGuide page only */
-    .user-guide-page .section-title {
-        font-size: 1.4rem;
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .subsection-title {
-        font-size: 1.2rem;
-    }
-
-    .guide-content {
-        padding: 1rem;
-    }
-
-    .toc-section {
-        padding: 1rem;
+    .trouble-accordion-body,
+    .faq-accordion-body {
+        display: block !important;
     }
 }
