@@ -1524,7 +1524,9 @@ class CourseSerializer(serializers.ModelSerializer):
         if total_seconds > 0:
             jp_value = math.ceil(total_seconds / 2700)
         else:
-            jp_value = 0
+            # If course has curriculum or lectures (e.g. SCORM package, text, H5P), default to minimum 1 JP
+            has_items = api_models.VariantItem.objects.filter(variant__course=obj).exists()
+            jp_value = 1 if has_items else 1
         
         return jp_value
 

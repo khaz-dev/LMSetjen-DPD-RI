@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useRef, useContext, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Rating } from "react-simple-star-rating";
-import Swal from "sweetalert2";
 
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
@@ -9,11 +8,10 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { WishlistContext } from "../plugin/Context";
 import { getImageUrl } from "../../utils/courseUtils";
-import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Calculate JP
-import { DEFAULT_IMAGE_URL } from "../../utils/constants";
+import { parseDurationToSeconds } from "../../utils/durationUtils";
 import Toast from "../plugin/Toast";
-import InstructorRequestModal from "../../components/InstructorRequestModal"; // ✨ PHASE 4.78: Instructor Request System
-import apiInstance from "../../utils/axios"; // ✨ PHASE 4.78: For fetching request status
+import InstructorRequestModal from "../../components/InstructorRequestModal";
+import apiInstance from "../../utils/axios";
 
 import "./Search.css";
 
@@ -26,37 +24,112 @@ function Search() {
     const [currentPage, setCurrentPage] = useState(1);
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("all");
+    const [selectedLevel, setSelectedLevel] = useState("all");
+    const [sortBy, setSortBy] = useState("relevance");
     
-    // ✨ PHASE 4.78: Instructor Request System state
+    // Instructor Request System state
     const [showInstructorModal, setShowInstructorModal] = useState(false);
     const [existingInstructorRequest, setExistingInstructorRequest] = useState(null);
     
     const userData = UserData();
     const userId = userData?.user_id;
-    const userRole = userData?.role; // Get user role from token (current_role)
-    // ✨ PHASE 4.81: Check is_instructor boolean OR current_role is teacher
-    // When admin approves instructor, is_instructor=true but current_role may still be 'student'
-    // So we check BOTH: either JWT has is_instructor=true OR current_role='teacher'
+    const userRole = userData?.role;
     const isTeacher = userData?.is_instructor || userRole === 'teacher';
     
-    // Fix: WishlistContext provides array, not object
     const wishlistContextValue = useContext(WishlistContext);
-    const refreshWishlistCount = wishlistContextValue?.[2] || (() => {}); // Safely get function or noop
+    const refreshWishlistCount = wishlistContextValue?.[2] || (() => {});
     
-    const searchInputRef = useRef(null);
-    const [searchParams] = useSearchParams();
+    // Header height measurement & sticky hero state
+    const [headerHeight, setHeaderHeight] = useState(76);
+    const [isScrolled, setIsScrolled] = useState(false);
 
-    // Constants
-    const itemsPerPage = 8;
+    const searchInputRef = useRef(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // 12 items per page aligns evenly on 4-col (desktop), 3-col (laptop), 2-col (tablet), and 1-col (mobile) grids
+    const itemsPerPage = 12;
+
+    // Dynamically track BaseHeader height
+    useEffect(() => {
+        const updateHeaderHeight = () => {
+            const headerEl = document.querySelector('.base-header');
+            if (headerEl) {
+                setHeaderHeight(headerEl.offsetHeight);
+            }
+        };
+
+        updateHeaderHeight();
+
+        let ro = null;
+        const headerEl = document.querySelector('.base-header');
+        if (headerEl && window.ResizeObserver) {
+            ro = new ResizeObserver(() => {
+                updateHeaderHeight();
+            });
+            ro.observe(headerEl);
+        }
+
+        window.addEventListener("resize", updateHeaderHeight);
+        return () => {
+            if (ro) ro.disconnect();
+            window.removeEventListener("resize", updateHeaderHeight);
+        };
+    }, []);
+
+    // Scroll listener with RAF and magnetic snap
+    useEffect(() => {
+        let ticking = false;
+        let snapTimeout = null;
+        let isSnapping = false;
+
+        const SNAP_STUCK_Y = 75;
+        const SNAP_MIDPOINT = 38;
+
+        const performSnap = () => {
+            if (isSnapping) return;
+            const currentY = window.scrollY;
+            // Only trigger snap if user stopped scrolling in the transition zone
+            if (currentY > 6 && currentY < SNAP_STUCK_Y) {
+                isSnapping = true;
+                const targetY = currentY >= SNAP_MIDPOINT ? SNAP_STUCK_Y : 0;
+                window.scrollTo({
+                    top: targetY,
+                    behavior: 'smooth'
+                });
+                setTimeout(() => {
+                    isSnapping = false;
+                }, 300);
+            }
+        };
+
+        const handleScroll = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const scrollY = window.scrollY;
+                    setIsScrolled(scrollY >= 55);
+                    ticking = false;
+                });
+                ticking = true;
+            }
+
+            // Magnetic snap debounce: automatically snaps if user scrolls slowly and stops in-between
+            clearTimeout(snapTimeout);
+            snapTimeout = setTimeout(performSnap, 80);
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+            clearTimeout(snapTimeout);
+        };
+    }, []);
 
     // Fetch courses from API
     const fetchCourse = async () => {
         setIsLoading(true);
         try {
             const response = await useAxios.get(`course/course-list/`);
-            // Handle both paginated and non-paginated responses
             const coursesData = response.data?.results || response.data || [];
-            // Ensure coursesData is an array
             const coursesArray = Array.isArray(coursesData) ? coursesData : [];
             
             setCourses(coursesArray);
@@ -66,7 +139,6 @@ function Search() {
             const uniqueCategories = [...new Set(coursesArray.map(course => course.category?.title).filter(Boolean))];
             setCategories(uniqueCategories);
         } catch (error) {
-            // Set empty arrays on error to prevent .map() and .slice() errors
             setCourses([]);
             setAllCourses([]);
             Toast().fire({
@@ -83,18 +155,16 @@ function Search() {
         if (!userId) return;
         try {
             const response = await useAxios.get(`student/wishlist/${userId}/`);
-            // Handle paginated API response
-            // API returns { results: [...], count: N, ... } due to DRF pagination
             const wishlistData = response.data?.results || response.data || [];
             const wishlistArray = Array.isArray(wishlistData) ? wishlistData : [];
             setWishlistItems(wishlistArray);
         } catch (error) {
+            // Silently handle error
         }
     };
 
     // Check if course is in wishlist
     const isCourseInWishlist = (courseId) => {
-        // Ensure wishlistItems is an array before calling .some()
         if (!Array.isArray(wishlistItems)) {
             return false;
         }
@@ -103,7 +173,6 @@ function Search() {
 
     // Add/remove from wishlist
     const addToWishlist = async (courseId) => {
-        // Check if user is logged in
         if (!userId) {
             Toast().fire({
                 icon: "warning",
@@ -112,7 +181,6 @@ function Search() {
             return;
         }
 
-        // Prevent teachers from adding to wishlist
         if (isTeacher) {
             Toast().fire({
                 icon: "info",
@@ -128,23 +196,16 @@ function Search() {
 
             const response = await useAxios.post(`student/wishlist/${userId}/`, formdata);
             
-            // Success response
             Toast().fire({
                 icon: "success",
                 title: response.data.message || "Daftar keinginan berhasil diperbarui",
             });
             
-            // Refresh wishlist data
             await fetchWishlistItems();
             refreshWishlistCount();
-            
         } catch (error) {
-            
-            // Handle different error scenarios
             let errorMessage = "Kesalahan saat memperbarui daftar keinginan";
-            
             if (error.response) {
-                // Server responded with error
                 if (error.response.status === 404) {
                     errorMessage = "Kursus tidak ditemukan";
                 } else if (error.response.status === 401) {
@@ -155,7 +216,6 @@ function Search() {
                     errorMessage = error.response.data.detail;
                 }
             } else if (error.request) {
-                // Request made but no response
                 errorMessage = "Kesalahan jaringan. Silakan periksa koneksi Anda";
             }
             
@@ -166,64 +226,131 @@ function Search() {
         }
     };
 
-    // ✨ PHASE 4.77+: Calculate total JP (Jam Pelajaran) from course lectures
-    // 1 JP = 45 seconds, so JP = Math.ceil(totalSeconds / 2700)
-    const calculateTotalJP = (lectures) => {
-        if (!lectures || !Array.isArray(lectures)) return 0;
-        
+    // Calculate total JP (Jam Pelajaran) from course
+    // 1 JP = 45 minutes = 2700 seconds
+    const calculateTotalJP = (course) => {
+        if (!course) return 1;
+
+        // 1. If backend provides total_jam_pelatihan > 0, use it
+        if (typeof course.total_jam_pelatihan === "number" && course.total_jam_pelatihan > 0) {
+            return course.total_jam_pelatihan;
+        }
+
+        // 2. Calculate from course.lectures if available
         let totalSeconds = 0;
+        const lectures = Array.isArray(course.lectures) ? course.lectures : [];
+        
         lectures.forEach(lecture => {
-            if (lecture.content_duration) {
+            if (typeof lecture.duration_seconds === "number" && lecture.duration_seconds > 0) {
+                totalSeconds += lecture.duration_seconds;
+            } else if (lecture.content_duration) {
                 totalSeconds += parseDurationToSeconds(lecture.content_duration);
             }
         });
-        
-        // 1 JP = 45 minutes = 2700 seconds
-        return Math.ceil(totalSeconds / 2700);
-    };
 
-    // Search handler
-    const handleSearch = (e) => {
-        const query = e.target.value;
-        setSearchQuery(query);
-        filterCourses(query, selectedCategory);
-    };
+        // 3. Fallback to curriculum if lectures didn't have durations
+        if (totalSeconds === 0 && Array.isArray(course.curriculum)) {
+            course.curriculum.forEach(section => {
+                const items = section.variant_items || section.items || [];
+                items.forEach(item => {
+                    if (typeof item.duration_seconds === "number" && item.duration_seconds > 0) {
+                        totalSeconds += item.duration_seconds;
+                    } else if (item.content_duration) {
+                        totalSeconds += parseDurationToSeconds(item.content_duration);
+                    }
+                });
+            });
+        }
 
-    // Category filter handler
-    const handleCategoryChange = (category) => {
-        setSelectedCategory(category);
-        filterCourses(searchQuery, category);
-        setCurrentPage(1);
+        if (totalSeconds > 0) {
+            return Math.ceil(totalSeconds / 2700);
+        }
+
+        // 4. Default: Every published course in DPD RI has minimum 1 JP
+        return 1;
     };
 
     // Combined filter function
-    const filterCourses = (query, category) => {
-        let filtered = [...allCourses];
+    const applyFilters = (query, category, level, sort, sourceList = allCourses) => {
+        let filtered = [...sourceList];
 
-        // Filter by search query
-        if (query) {
-            const lowerQuery = query.toLowerCase();
-            filtered = filtered.filter((course) => 
-                course.title.toLowerCase().includes(lowerQuery) ||
-                course.teacher?.full_name?.toLowerCase().includes(lowerQuery)
-            );
+        // 1. Search Query Filter
+        if (query && query.trim() !== "") {
+            const lowerQuery = query.toLowerCase().trim();
+            filtered = filtered.filter((course) => {
+                const titleMatch = course.title?.toLowerCase().includes(lowerQuery);
+                const teacherMatch = course.teacher?.full_name?.toLowerCase().includes(lowerQuery);
+                const catMatch = course.category?.title?.toLowerCase().includes(lowerQuery);
+                return titleMatch || teacherMatch || catMatch;
+            });
         }
 
-        // Filter by category
+        // 2. Category Filter
         if (category && category !== "all") {
-            filtered = filtered.filter((course) => 
-                course.category?.title === category
-            );
+            filtered = filtered.filter((course) => course.category?.title === category);
+        }
+
+        // 3. Level Filter
+        if (level && level !== "all") {
+            filtered = filtered.filter((course) => {
+                const cLevel = (course.level || "").toLowerCase();
+                return cLevel === level.toLowerCase();
+            });
+        }
+
+        // 4. Sort
+        if (sort === "rating") {
+            filtered.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
+        } else if (sort === "popular") {
+            filtered.sort((a, b) => (b.students?.length || 0) - (a.students?.length || 0));
+        } else if (sort === "newest") {
+            filtered.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
         }
 
         setCourses(filtered);
         setCurrentPage(1);
     };
 
-    // Clear search
+    // Search input handler
+    const handleSearch = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+        applyFilters(query, selectedCategory, selectedLevel, sortBy);
+    };
+
+    // Category filter handler
+    const handleCategoryChange = (category) => {
+        setSelectedCategory(category);
+        applyFilters(searchQuery, category, selectedLevel, sortBy);
+    };
+
+    // Level filter handler
+    const handleLevelChange = (level) => {
+        setSelectedLevel(level);
+        applyFilters(searchQuery, selectedCategory, level, sortBy);
+    };
+
+    // Sort order handler
+    const handleSortChange = (sort) => {
+        setSortBy(sort);
+        applyFilters(searchQuery, selectedCategory, selectedLevel, sort);
+    };
+
+    // Clear search query
     const handleClearSearch = () => {
         setSearchQuery("");
+        applyFilters("", selectedCategory, selectedLevel, sortBy);
+        if (searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    };
+
+    // Reset all filters
+    const handleResetAllFilters = () => {
+        setSearchQuery("");
         setSelectedCategory("all");
+        setSelectedLevel("all");
+        setSortBy("relevance");
         setCourses(allCourses);
         setCurrentPage(1);
         if (searchInputRef.current) {
@@ -231,10 +358,8 @@ function Search() {
         }
     };
 
-    // ✨ PHASE 4.78: Handle instructor request modal
-    // ✨ PHASE 4.80: Added APPROVED status check (works even if JWT not refreshed after admin approval)
+    // Instructor request modal trigger
     const handleStartTeaching = async () => {
-        // Check if user is logged in
         if (!userId) {
             Toast().fire({
                 icon: "warning",
@@ -244,7 +369,6 @@ function Search() {
             return;
         }
 
-        // If already teacher, show message
         if (isTeacher) {
             Toast().fire({
                 icon: "info",
@@ -254,14 +378,10 @@ function Search() {
             return;
         }
 
-        // Fetch existing request status
         try {
             const response = await apiInstance.get('/instructor-request/');
             if (response.data) {
                 const requestData = Array.isArray(response.data) ? response.data[0] : response.data;
-                
-                // ✨ PHASE 4.80: Check if request is APPROVED (works even if JWT not refreshed yet)
-                // Admin may have approved the request but JWT token not updated in browser cache
                 if (requestData.status === 'APPROVED') {
                     Toast().fire({
                         icon: "info",
@@ -271,29 +391,21 @@ function Search() {
                     setExistingInstructorRequest(requestData);
                     return;
                 }
-                
                 setExistingInstructorRequest(requestData);
             }
         } catch (error) {
-            // No existing request, that's fine
             setExistingInstructorRequest(null);
         }
 
-        // Show modal
         setShowInstructorModal(true);
     };
 
-    // Handle modal close
     const handleCloseInstructorModal = () => {
         setShowInstructorModal(false);
     };
 
-    // Handle successful request submission
     const handleInstructorRequestSuccess = async (requestData) => {
-        // Refresh the request status
         setExistingInstructorRequest(requestData);
-        
-        // Close modal
         setShowInstructorModal(false);
     };
 
@@ -303,12 +415,9 @@ function Search() {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = coursesArray.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(coursesArray.length / itemsPerPage);
-    const pageNumbers = Array.from(
-        { length: totalPages },
-        (_, index) => index + 1
-    );
+    const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
 
-    // Effects
+    // Initial load
     useEffect(() => {
         const loadInitialData = async () => {
             await fetchCourse();
@@ -316,321 +425,407 @@ function Search() {
                 await fetchWishlistItems();
             }
         };
-        
         loadInitialData();
     }, [userId]);
 
+    // Handle URL search and category params
     useEffect(() => {
-        // Set initial search query and category from URL params
         const searchParam = searchParams.get('search');
         const categoryParam = searchParams.get('category');
         
-        if (searchParam) {
+        let initialQuery = searchQuery;
+        let initialCategory = selectedCategory;
+
+        if (searchParam !== null) {
+            initialQuery = searchParam;
             setSearchQuery(searchParam);
         }
         
         if (categoryParam && allCourses.length > 0) {
-            // Find category title from courses
             const matchedCourse = allCourses.find(course => 
                 course.category?.title?.toLowerCase() === categoryParam.toLowerCase() ||
                 course.category?.slug?.toLowerCase() === categoryParam.toLowerCase()
             );
             
             if (matchedCourse) {
-                const categoryTitle = matchedCourse.category.title;
-                setSelectedCategory(categoryTitle);
-                filterCourses(searchParam || "", categoryTitle);
+                initialCategory = matchedCourse.category.title;
+                setSelectedCategory(initialCategory);
             }
-        } else if (searchParam) {
-            filterCourses(searchParam, "all");
         }
-        
-        // Focus search input when component mounts
-        if (searchInputRef.current) {
-            searchInputRef.current.focus();
+
+        if (allCourses.length > 0) {
+            applyFilters(initialQuery, initialCategory, selectedLevel, sortBy, allCourses);
         }
     }, [searchParams, allCourses]);
+
+    // Check if any filter is active
+    const isFilterActive = searchQuery.trim() !== "" || selectedCategory !== "all" || selectedLevel !== "all" || sortBy !== "relevance";
 
     return (
         <>
             <BaseHeader />
 
-            <div className="modern-search-page">
-                {/* Hero Section with Search */}
-                <section className="search-hero-section">
-                    <div className="container">
-                        <div className="search-hero-content text-center">
-                            <div className="row justify-content-center">
-                                <div className="col-lg-8">
-                                    <h1 className="display-4 fw-bold mb-4">
-                                        Temukan Kursus Luar Biasa
+            <div 
+                className="search-compact-wrapper"
+                style={{ '--header-height': `${headerHeight}px` }}
+            >
+                {/* Hero Slot acts as a permanent layout placeholder */}
+                <div className="search-hero-slot">
+                    {/* Compact & Eye-Catching Hero Section */}
+                    <section className={`search-compact-hero ${isScrolled ? 'is-stuck' : ''}`}>
+                        <div className="container">
+                            <div className="search-hero-inner">
+                                {/* Top Badge & Header */}
+                                <div className="search-hero-header">
+                                    <div className="search-hero-badge">
+                                        <span className="badge-dot"></span>
+                                        <span>KATALOG PEMBELAJARAN ASN</span>
+                                    </div>
+                                    <h1 className="search-hero-title">
+                                        <i className="fas fa-graduation-cap search-hero-icon me-2"></i>
+                                        <span>Temukan Kursus Luar Biasa</span>
                                     </h1>
-                                    <p className="lead mb-4 opacity-90">
-                                        Temukan kursus sempurna untuk meningkatkan keterampilan Anda dan mencapai tujuan pembelajaran
+                                    <p className="search-hero-subtitle">
+                                        Akses modul pelatihan dan pengembangan kompetensi di lingkungan Sekretariat Jenderal DPD RI
                                     </p>
-                                    
-                                    <div className="search-input-container">
+                                </div>
+
+                                {/* Integrated Compact Search Box */}
+                                <div className="search-input-wrapper">
+                                    <div className="search-input-box">
+                                        <i className="fas fa-search search-input-icon"></i>
                                         <input
                                             ref={searchInputRef}
                                             type="text"
-                                            className="form-control form-control-search"
-                                            placeholder="Cari kursus, topik, atau instruktur..."
+                                            className="search-input-field"
+                                            placeholder="Cari judul kursus, topik pelatihan, atau nama instruktur..."
+                                            title="Cari judul kursus, topik pelatihan, atau nama instruktur..."
+                                            aria-label="Cari judul kursus, topik pelatihan, atau nama instruktur"
                                             value={searchQuery}
                                             onChange={handleSearch}
                                         />
                                         {searchQuery && (
                                             <button
                                                 type="button"
-                                                className="clear-search-btn"
+                                                className="search-clear-btn"
                                                 onClick={handleClearSearch}
                                                 title="Hapus pencarian"
-                                                aria-label="Hapus input pencarian"
+                                                aria-label="Hapus kata kunci pencarian"
                                             >
                                                 <i className="fas fa-times"></i>
                                             </button>
                                         )}
-                                        <i className="fas fa-search search-icon"></i>
+                                        {/* Floating Hover Tooltip for complete placeholder visibility */}
+                                        {!searchQuery && (
+                                            <div className="search-placeholder-tooltip" role="tooltip">
+                                                <i className="fas fa-circle-info text-teal-accent"></i>
+                                                <span>Cari judul kursus, topik pelatihan, atau nama instruktur...</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
+
+                                {/* Popular Quick Category Tags */}
+                                {categories.length > 0 && (
+                                    <div className="search-quick-tags">
+                                        <span className="quick-tags-title">
+                                            <i className="fas fa-fire me-1 text-teal"></i> Topik Populer:
+                                        </span>
+                                        <div className="quick-tags-container">
+                                            {categories.slice(0, 5).map((cat, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    className={`quick-tag-chip ${selectedCategory === cat ? 'active' : ''}`}
+                                                    onClick={() => handleCategoryChange(selectedCategory === cat ? 'all' : cat)}
+                                                >
+                                                    {cat}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
 
-                {/* Results Section */}
-                <section className="py-2">
+                {/* Main Content Area */}
+                <main className="search-main-content">
                     <div className="container">
-                        {/* Results Header */}
-                        <div className="results-header-card">
-                            <div className="row align-items-center mb-3">
-                                <div className="col-md-6">
-                                    <h3 className="mb-0 fw-bold text-dark">
-                                        {searchQuery ? `Hasil Pencarian` : `Semua Kursus`}
-                                    </h3>
-                                    <p className="text-muted mb-0">
-                                        {courses.length} kursus{courses.length !== 1 ? 's' : ''} tersedia
-                                        {searchQuery && ` cocok dengan "${searchQuery}"`}
-                                        {selectedCategory !== "all" && ` di ${selectedCategory}`}
-                                    </p>
+                        {/* Streamlined Filter & Control Bar */}
+                        <div className="search-control-card">
+                            <div className="search-control-row">
+                                {/* Left Side: Count & Active Filter Reset */}
+                                <div className="search-status-group">
+                                    <span className="search-count-pill">
+                                        <i className="fas fa-graduation-cap me-1"></i>
+                                        <strong>{courses.length}</strong> Kursus Tersedia
+                                    </span>
+
+                                    {isFilterActive && (
+                                        <button 
+                                            type="button"
+                                            className="btn-reset-filters"
+                                            onClick={handleResetAllFilters}
+                                            title="Reset semua filter pencarian"
+                                        >
+                                            <i className="fas fa-undo-alt me-1"></i>
+                                            Reset Filter
+                                        </button>
+                                    )}
                                 </div>
-                                <div className="col-md-6 text-md-end">
-                                    <div className="d-flex align-items-center justify-content-md-end gap-3">
-                                        <span className="text-muted">
-                                            Halaman {currentPage} dari {totalPages || 1}
-                                        </span>
-                                        <span className="badge bg-primary">
-                                            {courses.length} Hasil
-                                        </span>
+
+                                {/* Right Side: Level & Sort Controls */}
+                                <div className="search-actions-group">
+                                    {/* Level Selector */}
+                                    <div className="filter-select-wrapper">
+                                        <i className="fas fa-layer-group filter-select-icon"></i>
+                                        <select
+                                            className="filter-select-control"
+                                            value={selectedLevel}
+                                            onChange={(e) => handleLevelChange(e.target.value)}
+                                            aria-label="Pilih tingkat kesulitan"
+                                        >
+                                            <option value="all">Semua Level</option>
+                                            <option value="Beginner">Pemula</option>
+                                            <option value="Intermediate">Menengah</option>
+                                            <option value="Advanced">Lanjutan</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Sort Selector */}
+                                    <div className="filter-select-wrapper">
+                                        <i className="fas fa-sort-amount-down filter-select-icon"></i>
+                                        <select
+                                            className="filter-select-control"
+                                            value={sortBy}
+                                            onChange={(e) => handleSortChange(e.target.value)}
+                                            aria-label="Pilih urutan kursus"
+                                        >
+                                            <option value="relevance">Relevansi</option>
+                                            <option value="newest">Terbaru</option>
+                                            <option value="rating">Rating Tertinggi</option>
+                                            <option value="popular">Terpopuler</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Category Filter */}
-                            <div className="category-filter-section">
-                                <div className="d-flex align-items-center gap-2 flex-wrap">
-                                    <span className="filter-label">
-                                        <i className="fas fa-filter me-2"></i>
-                                        Filter berdasarkan Kategori:
-                                    </span>
-                                    <button
-                                        className={`category-filter-btn ${selectedCategory === "all" ? "active" : ""}`}
-                                        onClick={() => handleCategoryChange("all")}
-                                    >
-                                        <i className="fas fa-th-large me-1"></i>
-                                        Semua Kategori
-                                    </button>
-                                    {categories.map((category, index) => (
+                            {/* Horizontal Scrollable Category Pills */}
+                            <div className="search-category-strip">
+                                <button
+                                    type="button"
+                                    className={`category-pill-btn ${selectedCategory === "all" ? "active" : ""}`}
+                                    onClick={() => handleCategoryChange("all")}
+                                >
+                                    <i className="fas fa-th-large me-1"></i>
+                                    Semua Kategori ({allCourses.length})
+                                </button>
+                                {categories.map((category, index) => {
+                                    const count = allCourses.filter(c => c.category?.title === category).length;
+                                    return (
                                         <button
                                             key={index}
-                                            className={`category-filter-btn ${selectedCategory === category ? "active" : ""}`}
+                                            type="button"
+                                            className={`category-pill-btn ${selectedCategory === category ? "active" : ""}`}
                                             onClick={() => handleCategoryChange(category)}
                                         >
                                             {category}
+                                            {count > 0 && <span className="category-pill-count">{count}</span>}
                                         </button>
-                                    ))}
-                                </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
-                        {/* Loading State - Skeleton Cards */}
+                        {/* Course List Section */}
                         {isLoading ? (
-                            <div className="row g-4">
+                            /* Sleek Skeleton Loading */
+                            <div className="row g-3">
                                 {[...Array(8)].map((_, index) => (
-                                    <div key={index} className="col-lg-3 col-md-6">
-                                        <div 
-                                            className="card border-0 h-100 skeleton-card"
-                                        >
-                                            <div className="skeleton-placeholder skeleton-placeholder-image"></div>
-                                            <div className="card-body p-3">
-                                                <div className="skeleton-placeholder skeleton-placeholder-title"></div>
-                                                <div className="skeleton-placeholder skeleton-placeholder-line"></div>
-                                                <div className="skeleton-placeholder skeleton-placeholder-line-last"></div>
-                                                <div className="d-flex justify-content-between">
-                                                    <div className="skeleton-placeholder skeleton-placeholder-meta"></div>
-                                                    <div className="skeleton-placeholder skeleton-placeholder-meta"></div>
-                                                </div>
+                                    <div key={index} className="col-12 col-sm-6 col-lg-4 col-xl-3">
+                                        <div className="compact-skeleton-card">
+                                            <div className="skeleton-thumb"></div>
+                                            <div className="skeleton-body">
+                                                <div className="skeleton-line-title"></div>
+                                                <div className="skeleton-line-sub"></div>
+                                                <div className="skeleton-line-meta"></div>
+                                                <div className="skeleton-btn"></div>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : courses.length === 0 ? (
-                            /* ✨ FIX: Enhanced Empty State with better visibility */
-                            <div className="empty-state empty-state-enhanced">
-                                <div className="empty-state-animation">
-                                    <i className="fas fa-search empty-icon"></i>
+                            /* Compact & Helpful Empty State */
+                            <div className="search-empty-state">
+                                <div className="empty-icon-circle">
+                                    <i className="fas fa-search"></i>
                                 </div>
-                                <h4 className="mb-3 empty-state-title">Tidak Ada Kursus</h4>
-                                <p className="mb-4 empty-state-message">
+                                <h3 className="empty-state-title">Kursus Tidak Ditemukan</h3>
+                                <p className="empty-state-desc">
                                     {searchQuery 
-                                        ? <>Tidak ada kursus yang cocok dengan "<strong>{searchQuery}</strong>". Coba sesuaikan istilah pencarian Anda.</>
-                                        : "Tidak ada kursus yang tersedia saat ini."
+                                        ? <>Tidak ada hasil yang sesuai dengan kata kunci "<strong>{searchQuery}</strong>". Coba kata kunci lain atau bersihkan filter.</>
+                                        : "Belum ada kursus yang tersedia untuk kriteria filter yang dipilih."
                                     }
                                 </p>
-                                {searchQuery && (
-                                    <div className="empty-state-actions">
-                                        <button 
-                                            className="btn btn-primary empty-state-btn"
-                                            onClick={handleClearSearch}
-                                        >
-                                            <i className="fas fa-arrow-left me-2"></i>
-                                            Tampilkan Semua Kursus
-                                        </button>
-                                        <p className="empty-state-hint mt-3">
-                                            <i className="fas fa-lightbulb me-2"></i>
-                                            Coba kata kunci lain atau periksa ejaan
-                                        </p>
-                                    </div>
-                                )}
+                                <div className="empty-state-actions">
+                                    <button 
+                                        type="button"
+                                        className="btn-empty-reset"
+                                        onClick={handleResetAllFilters}
+                                    >
+                                        <i className="fas fa-redo-alt me-2"></i>
+                                        Tampilkan Semua Kursus
+                                    </button>
+                                </div>
                             </div>
                         ) : (
-                            /* Course Grid */
+                            /* Compact & Eye-Catching Course Grid */
                             <>
-                                <div className="row g-4">
-                                    {currentItems?.map((c, index) => (
-                                        <div key={c.id || index} className="col-xl-4 col-lg-4 col-md-6 col-12">
-                                            <div className="course-card-modern">
-                                                {/* Course Image */}
-                                                <div className="course-image-container">
-                                                    <img
-                                                        src={getImageUrl(c.image)}
-                                                        alt={c.title}
-                                                        className="course-image-modern"
-                                                        loading="lazy"
-                                                        decoding="async"
-                                                        onError={(e) => {
-                                                            e.target.src = "/images/placeholders/default-course.svg";
-                                                        }}
-                                                    />
-                                                    {!c.image && (
-                                                        <div className="course-image-placeholder">
-                                                            <i className="fas fa-play-circle"></i>
-                                                        </div>
-                                                    )}
-                                                    
-                                                    {/* Wishlist Button - Only show for students */}
-                                                    {!isTeacher && (
-                                                        <button 
-                                                            onClick={() => addToWishlist(c.id)} 
-                                                            className="wishlist-btn"
-                                                            title={isCourseInWishlist(c.id) ? "Hapus dari daftar keinginan" : "Tambah ke daftar keinginan"}
-                                                            disabled={!userId}
-                                                        >
-                                                            <i className={`${isCourseInWishlist(c.id) ? 'fas' : 'far'} fa-heart text-danger`} />
-                                                        </button>
-                                                    )}
-                                                </div>
+                                <div className="row g-3">
+                                    {currentItems.map((c, index) => {
+                                        const jpDuration = calculateTotalJP(c);
+                                        const ratingValue = Number(c.average_rating || 0);
 
-                                                {/* Course Content */}
-                                                <div className="course-content">
-                                                    <h4 className="course-title">
-                                                        <Link to={`/course-detail/${c.slug}/`} className="text-decoration-none text-dark">
-                                                            {c.title}
-                                                        </Link>
-                                                    </h4>
-                                                    
-                                                    <div className="course-meta-search">
-                                                        <i className="fas fa-user me-1"></i>
-                                                        <span>{c.teacher?.full_name || 'Instruktur Tidak Diketahui'}</span>
-                                                    </div>
-                                                    
-                                                    {/* Students and Rating on same line - ✨ PHASE 4.77+ */}
-                                                    <div className="d-flex align-items-center justify-content-between mb-2">
-                                                        <div className="course-meta-search">
-                                                            <i className="fas fa-users me-1"></i>
-                                                            <span>{c.students?.length || 0} Siswa</span>
-                                                        </div>
+                                        return (
+                                            <div key={c.id || index} className="col-12 col-sm-6 col-lg-4 col-xl-3">
+                                                <div className="compact-course-card">
+                                                    {/* Card Media Header */}
+                                                    <div className="card-media-wrapper">
+                                                        <img
+                                                            src={getImageUrl(c.image)}
+                                                            alt={c.title}
+                                                            className="card-media-image"
+                                                            loading="lazy"
+                                                            decoding="async"
+                                                            onError={(e) => {
+                                                                e.target.src = "/images/placeholders/default-course.svg";
+                                                            }}
+                                                        />
+                                                        {!c.image && (
+                                                            <div className="card-media-fallback">
+                                                                <i className="fas fa-book-reader"></i>
+                                                            </div>
+                                                        )}
 
-                                                        {/* Rating */}
-                                                        <div className="rating-container" style={{ margin: 0 }}>
-                                                            <Rating
-                                                                initialValue={c.average_rating || 0}
-                                                                readonly={true}
-                                                                size={16}
-                                                                fillColor="#ffc107"
-                                                                emptyColor="#e4e5e9"
-                                                            />
-                                                            <span className="rating-score">{c.average_rating || 0}</span>
-                                                            <span className="text-muted">({c.reviews?.length || 0})</span>
-                                                        </div>
-                                                    </div>
+                                                        {/* Top Left: Level Badge */}
+                                                        <span className="card-badge-level">
+                                                            {c.level || "Umum"}
+                                                        </span>
 
-                                                    <div className="course-meta-search mb-2">
-                                                        <span className="badge bg-info me-1">{c.level}</span>
-                                                        <span className="badge bg-success">{c.category?.title || 'Umum'}</span>
-                                                    </div>
+                                                        {/* Top Right: Wishlist Button */}
+                                                        {!isTeacher && (
+                                                            <button 
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    addToWishlist(c.id);
+                                                                }} 
+                                                                className="card-wishlist-action"
+                                                                title={isCourseInWishlist(c.id) ? "Hapus dari daftar keinginan" : "Tambah ke daftar keinginan"}
+                                                                disabled={!userId}
+                                                                aria-label="Wishlist kursus"
+                                                            >
+                                                                <i className={`${isCourseInWishlist(c.id) ? 'fas fa-heart text-danger' : 'far fa-heart'}`} />
+                                                            </button>
+                                                        )}
 
-                                                    {/* Total Duration in JP (Jam Pelajaran) - ✨ PHASE 4.77+ */}
-                                                    <div style={{
-                                                        padding: "0.6rem 0.8rem",
-                                                        marginBottom: "0.8rem",
-                                                        background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
-                                                        borderRadius: "6px",
-                                                        border: "1px solid rgba(102, 126, 234, 0.2)",
-                                                        textAlign: "center"
-                                                    }}>
-                                                        <small style={{ fontSize: "0.8rem", color: "#0d9488", fontWeight: "500" }}>
+                                                        {/* Bottom Left: Category Pill */}
+                                                        {c.category?.title && (
+                                                            <span className="card-badge-category">
+                                                                {c.category.title}
+                                                            </span>
+                                                        )}
+
+                                                        {/* Bottom Right: JP Badge */}
+                                                        <span className="card-badge-jp">
                                                             <i className="fas fa-clock me-1"></i>
-                                                            Total: <strong>{calculateTotalJP(c.lectures)}</strong> JP
-                                                        </small>
+                                                            {jpDuration} JP
+                                                        </span>
                                                     </div>
 
-                                                    {/* View Course Button */}
-                                                    <Link to={`/course-detail/${c.slug}/`} className="btn-course-detail">
-                                                        <span>Lihat Kursus</span>
-                                                        <i className="fas fa-arrow-right"></i>
-                                                    </Link>
+                                                    {/* Card Body */}
+                                                    <div className="card-info-body">
+                                                        {/* Title */}
+                                                        <h3 className="compact-card-title">
+                                                            <Link to={`/course-detail/${c.slug}/`}>
+                                                                {c.title}
+                                                            </Link>
+                                                        </h3>
+
+                                                        {/* Instructor Info */}
+                                                        <div className="card-instructor-meta">
+                                                            <i className="fas fa-user-circle me-1 text-teal"></i>
+                                                            <span className="instructor-name">
+                                                                {c.teacher?.full_name || 'Instruktur DPD RI'}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Stats Row (Rating & Students) */}
+                                                        <div className="card-stats-row">
+                                                            <div className="card-rating-stat">
+                                                                <i className="fas fa-star text-warning me-1"></i>
+                                                                <strong>{ratingValue > 0 ? ratingValue.toFixed(1) : 'Baru'}</strong>
+                                                                {ratingValue > 0 && (
+                                                                    <span className="rating-count">({c.reviews?.length || 0})</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="card-students-stat">
+                                                                <i className="fas fa-users me-1 text-secondary"></i>
+                                                                <span>{c.students?.length || 0} Siswa</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* View Details Action Button */}
+                                                        <Link 
+                                                            to={`/course-detail/${c.slug}/`} 
+                                                            className="btn-card-detail"
+                                                        >
+                                                            <span>Lihat Kursus</span>
+                                                            <i className="fas fa-arrow-right"></i>
+                                                        </Link>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
 
-                                {/* Pagination */}
+                                {/* Modern Compact Pagination */}
                                 {totalPages > 1 && (
-                                    <div className="pagination-modern">
+                                    <div className="search-pagination-wrapper">
                                         <button 
-                                            className={`page-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                                            type="button"
+                                            className={`page-nav-btn ${currentPage === 1 ? 'disabled' : ''}`}
                                             onClick={() => setCurrentPage(currentPage - 1)}
                                             disabled={currentPage === 1}
+                                            aria-label="Halaman sebelumnya"
                                         >
                                             <i className="fas fa-chevron-left"></i>
                                         </button>
                                         
-                                        {pageNumbers.map((number) => (
-                                            <button 
-                                                key={number} 
-                                                className={`page-btn ${currentPage === number ? 'active' : ''}`}
-                                                onClick={() => setCurrentPage(number)}
-                                            >
-                                                {number}
-                                            </button>
-                                        ))}
+                                        <div className="page-numbers-group">
+                                            {pageNumbers.map((number) => (
+                                                <button 
+                                                    key={number} 
+                                                    type="button"
+                                                    className={`page-num-btn ${currentPage === number ? 'active' : ''}`}
+                                                    onClick={() => setCurrentPage(number)}
+                                                >
+                                                    {number}
+                                                </button>
+                                            ))}
+                                        </div>
                                         
                                         <button 
-                                            className={`page-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                                            type="button"
+                                            className={`page-nav-btn ${currentPage === totalPages ? 'disabled' : ''}`}
                                             onClick={() => setCurrentPage(currentPage + 1)}
                                             disabled={currentPage === totalPages}
+                                            aria-label="Halaman selanjutnya"
                                         >
                                             <i className="fas fa-chevron-right"></i>
                                         </button>
@@ -639,42 +834,46 @@ function Search() {
                             </>
                         )}
 
-                        {/* Call to Action Section - Inside container at bottom */}
-                        <div className="cta-section">
-                            <div className="cta-content">
-                                <div className="row align-items-center">
-                                    <div className="col-lg-8">
-                                        <h2 className="h1 mb-3">Jadilah Instruktur Hari Ini</h2>
-                                        <p className="lead mb-0 opacity-90">
-                                            Bagikan pengetahuan Anda dengan jutaan siswa di seluruh dunia. 
-                                            Bergabunglah dengan komunitas instruktur ahli kami dan mulai mengajar apa yang Anda cintai.
+                        {/* Compact Call to Action Section */}
+                        <section className="search-cta-banner">
+                            <div className="cta-banner-content">
+                                <div className="cta-text-wrapper">
+                                    <div className="cta-icon-box">
+                                        <i className="fas fa-chalkboard-teacher"></i>
+                                    </div>
+                                    <div className="cta-copy">
+                                        <h2 className="cta-heading">Jadilah Pengajar & Berbagi Pengetahuan di DPD RI</h2>
+                                        <p className="cta-subheading">
+                                            Bagikan kompetensi dan keahlian Anda untuk mendukung pengembangan SDM aparatur Sekretariat Jenderal DPD RI.
                                         </p>
                                     </div>
-                                    <div className="col-lg-4 text-lg-end mt-4 mt-lg-0">
-                                        <button 
-                                            onClick={handleStartTeaching}
-                                            className="btn-cta"
-                                        >
-                                            <span>Mulai Mengajar</span>
-                                            <i className="fas fa-arrow-right"></i>
-                                        </button>
-                                    </div>
+                                </div>
+                                <div className="cta-btn-wrapper">
+                                    <button 
+                                        type="button"
+                                        onClick={handleStartTeaching}
+                                        className="btn-cta-action"
+                                    >
+                                        <span>Mulai Mengajar</span>
+                                        <i className="fas fa-arrow-right"></i>
+                                    </button>
                                 </div>
                             </div>
-                        </div>
+                        </section>
                     </div>
-                </section>
+                </main>
             </div>
-        {/* ✨ PHASE 4.78: Instructor Request Modal */}
-        <InstructorRequestModal
-            show={showInstructorModal}
-            onClose={handleCloseInstructorModal}
-            onSuccess={handleInstructorRequestSuccess}
-            user={userData}
-            existingRequest={existingInstructorRequest}
-        />
 
-        <Footer />
+            {/* Instructor Request Modal */}
+            <InstructorRequestModal
+                show={showInstructorModal}
+                onClose={handleCloseInstructorModal}
+                onSuccess={handleInstructorRequestSuccess}
+                user={userData}
+                existingRequest={existingInstructorRequest}
+            />
+
+            <Footer />
         </>
     );
 }

@@ -1,1274 +1,1273 @@
-/* ============================================
-   INSTRUCTOR PROFILE PAGE STYLES
-   ============================================ */
+/* ==========================================================================
+   COMPACT & EYE-CATCHING INSTRUCTOR PROFILE PAGE
+   Platform: LMSetjen DPD RI (LMS Sekretariat Jenderal DPD RI)
+   ========================================================================== */
 
-.instructor-profile-page {
-    background: linear-gradient(135deg, #f8f9fa 0%, #f0f3ff 100%);
-    min-height: 100vh;
+/* Page Wrapper */
+.instructor-profile-wrapper {
+    background-color: #f8fafc;
+    min-height: calc(100vh - 180px);
+    padding-top: 0; /* body already has global padding-top for fixed BaseHeader */
 }
 
-/* ============================================
-   ERROR SECTION
-   ============================================ */
-
-.instructor-profile-page.error-section {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* ============================================
-   HERO SECTION
-   ============================================ */
-
-.instructor-profile-hero {
-    background: white;
-    border-radius: 12px;
-    padding: 2.5rem;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    transition: all 0.3s ease;
-}
-
-.instructor-profile-hero:hover {
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.12);
-}
-
-/* ✨ PHASE 4.43.2: Hero Content - 3-Column Layout (Avatar | Info | Stats) */
-.instructor-profile-hero .hero-content {
-    display: flex;
-    gap: 2.5rem;
-    align-items: flex-start;
-    justify-content: space-between;
-}
-
-/* Avatar Section */
-
-.instructor-profile-hero .hero-avatar-wrapper {
+/* ==========================================================================
+   1. HERO BANNER SECTION (Compact & Vibrant DPD RI Teal Gradient)
+   ========================================================================== */
+/* Stable Hero Slot to guarantee rock-solid layout flow without height-collapse jumps */
+.instructor-hero-slot {
+    min-height: 235px;
     position: relative;
-    flex-shrink: 0;
+    width: 100%;
 }
 
-.instructor-profile-hero .hero-avatar {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid #0d9488;
-    display: block;
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-    transition: transform 0.3s ease;
+/* High-specificity selectors to prevent override by `body.student-theme section` (0,1,2) in index.css */
+body.student-theme section.instructor-hero-banner,
+body.instructor-theme section.instructor-hero-banner,
+.instructor-profile-wrapper .instructor-hero-banner,
+.instructor-hero-banner {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 60%, #115e59 100%);
+    color: #ffffff;
+    padding: 1.25rem 0 1.5rem 0;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(13, 148, 136, 0.18);
+    transition: padding 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.22s ease,
+                border-bottom 0.22s ease;
+    will-change: padding, box-shadow;
 }
 
-.instructor-profile-hero .hero-avatar:hover {
-    transform: scale(1.05);
+/* ==========================================================================
+   STICKY & COMPACT STATE (Triggered on Scroll Down)
+   Fixed positioning pinned right beneath BaseHeader with zero layout shifts
+   ========================================================================== */
+body.student-theme section.instructor-hero-banner.is-stuck,
+body.instructor-theme section.instructor-hero-banner.is-stuck,
+.instructor-profile-wrapper .instructor-hero-banner.is-stuck,
+.instructor-hero-banner.is-stuck {
+    position: fixed !important;
+    top: var(--header-height, 78px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 1020 !important;
+    padding: 0.45rem 0 !important;
+    background: rgba(13, 148, 136, 0.96) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
-.instructor-profile-hero .instructor-badge {
+/* Compact Breadcrumbs when stuck - Smooth height & opacity transition */
+.instructor-hero-banner.is-stuck .instructor-breadcrumb {
+    max-height: 0 !important;
+    opacity: 0 !important;
+    margin-bottom: 0 !important;
+    overflow: hidden !important;
+    transform: translateY(-8px) !important;
+    pointer-events: none !important;
+}
+
+/* Compact Avatar when stuck */
+.instructor-hero-banner.is-stuck .instructor-avatar-container {
+    width: 44px;
+    height: 44px;
+}
+
+.instructor-hero-banner.is-stuck .instructor-avatar-img {
+    border-width: 2px;
+}
+
+.instructor-hero-banner.is-stuck .instructor-verified-badge {
+    width: 17px;
+    height: 17px;
+    font-size: 0.55rem;
+    bottom: -1px;
+    right: -1px;
+    border-width: 1.5px;
+}
+
+/* Compact Details when stuck */
+.instructor-hero-banner.is-stuck .instructor-hero-details {
+    gap: 0.1rem;
+}
+
+.instructor-hero-banner.is-stuck .instructor-profile-title {
+    font-size: 1.15rem !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+/* Compact Subtitle when stuck - Smooth collapse transition */
+.instructor-hero-banner.is-stuck .instructor-profile-subtitle {
+    max-height: 0 !important;
+    opacity: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    transform: translateY(-4px) !important;
+    pointer-events: none !important;
+}
+
+.instructor-hero-banner.is-stuck .instructor-tag-row {
+    margin-bottom: 0.15rem !important;
+    gap: 0.35rem;
+}
+
+.instructor-hero-banner.is-stuck .instructor-role-badge,
+.instructor-hero-banner.is-stuck .instructor-location-badge {
+    padding: 0.1rem 0.45rem;
+    font-size: 0.68rem;
+}
+
+/* Collapse hero actions & social icons smoothly in stuck mode without display:none */
+.instructor-hero-banner.is-stuck .instructor-hero-actions {
+    max-height: 0 !important;
+    opacity: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    transform: translateY(-4px) !important;
+    pointer-events: none !important;
+}
+
+.instructor-hero-banner.is-stuck .btn-share-profile {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.75rem;
+}
+
+/* Compact Stat Pills when stuck */
+.instructor-hero-banner.is-stuck .stat-pill-item {
+    padding: 0.25rem 0.65rem;
+    min-width: auto;
+    gap: 0.45rem;
+    border-radius: 8px;
+}
+
+.instructor-hero-banner.is-stuck .stat-pill-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+}
+
+.instructor-hero-banner.is-stuck .stat-pill-num {
+    font-size: 0.95rem;
+}
+
+.instructor-hero-banner.is-stuck .stat-pill-lbl {
+    font-size: 0.62rem;
+}
+
+/* Ambient glow spheres */
+.instructor-hero-banner::before {
+    content: '';
     position: absolute;
-    bottom: -10px;
-    right: -10px;
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, #0d9488, #0f766e);
+    top: -50px;
+    right: -30px;
+    width: 280px;
+    height: 280px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-    border: 4px solid white;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    background: radial-gradient(circle, rgba(45, 212, 191, 0.22) 0%, transparent 70%);
+    pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
-/* Info Section */
-
-.instructor-profile-hero .hero-info {
-    flex: 1;
+.instructor-hero-banner.is-stuck::before,
+.instructor-hero-banner.is-stuck::after {
+    opacity: 0.3;
 }
 
-.instructor-profile-hero .instructor-name {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #0d9488, #0f766e);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1.2;
+.instructor-hero-banner::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: 10%;
+    width: 320px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.18) 0%, transparent 70%);
+    pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
-.instructor-profile-hero .instructor-bio {
-    font-size: 1.2rem;
-    color: #6c757d;
-    margin-bottom: 1rem;
-    font-weight: 500;
-}
-
-.instructor-profile-hero .instructor-location {
-    color: #0d9488;
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
+/* Breadcrumbs */
+.instructor-breadcrumb {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    font-size: 0.825rem;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 1.25rem;
+    position: relative;
+    z-index: 2;
+    max-height: 40px;
+    opacity: 1;
+    transform: translateY(0);
+    overflow: hidden;
+    transition: max-height 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.18s ease,
+                margin-bottom 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.instructor-profile-hero .instructor-location i {
-    font-size: 1.1rem;
+.breadcrumb-item-link {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: color 0.2s ease;
 }
 
-/* ✨ PHASE 4.43.2: Stats Section - Positioned Right Side, Outside Hero-Info */
-.instructor-profile-hero .instructor-stats {
-    display: flex;
-    gap: 2rem;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-    border-radius: 12px;
-    border-left: 4px solid #0d9488;
-    flex-shrink: 0;
+.breadcrumb-item-link:hover {
+    color: #ffffff;
+    text-decoration: underline;
 }
 
-.instructor-profile-hero .instructor-stats .stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+.breadcrumb-separator {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
 }
 
-.instructor-profile-hero .instructor-stats .stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #0d9488, #0f766e);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-    margin-bottom: 0.25rem;
-}
-
-.instructor-profile-hero .instructor-stats .stat-label {
-    font-size: 0.85rem;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+.breadcrumb-current {
+    color: #ffffff;
     font-weight: 600;
 }
 
-/* Social Links */
-
-.instructor-profile-hero .instructor-social {
+/* Hero Main Content */
+.instructor-hero-main {
+    position: relative;
+    z-index: 2;
     display: flex;
-    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
     flex-wrap: wrap;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.instructor-profile-hero .instructor-social .social-icon {
+.instructor-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex: 1;
+    min-width: 280px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Avatar Container */
+.instructor-avatar-container {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    flex-shrink: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.instructor-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3.5px solid rgba(255, 255, 255, 0.95);
+    background-color: #ffffff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.instructor-avatar-container:hover .instructor-avatar-img {
+    transform: scale(1.04);
+}
+
+.instructor-verified-badge {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 26px;
+    height: 26px;
+    background: #10b981;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Details */
+.instructor-hero-details {
+    flex: 1;
+    min-width: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.instructor-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+    flex-wrap: wrap;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.instructor-role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.65rem;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(6px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.instructor-location-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.65rem;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.instructor-profile-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 0.3rem 0;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.instructor-profile-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0 0 0.75rem 0;
+    max-width: 600px;
+    line-height: 1.4;
+    max-height: 80px;
+    opacity: 1;
+    transform: translateY(0);
+    overflow: hidden;
+    transition: max-height 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.18s ease,
+                margin-bottom 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Actions Row */
+.instructor-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    max-height: 50px;
+    opacity: 1;
+    transform: translateY(0);
+    overflow: hidden;
+    transition: max-height 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.18s ease,
+                margin 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.instructor-social-pills {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.social-pill {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.28);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-    color: #0d9488;
+    color: #ffffff;
+    font-size: 0.85rem;
     text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 1.2rem;
-    border: 2px solid #0d9488;
+    transition: all 0.2s ease;
 }
 
-.instructor-profile-hero .instructor-social .social-icon:hover {
-    background: linear-gradient(135deg, #0d9488, #0f766e);
-    color: white;
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-    border-color: transparent;
-}
-
-/* ============================================
-   SECTION STYLING
-   ============================================ */
-
-.instructor-profile-about,
-.instructor-profile-courses,
-.instructor-profile-reviews {
-    background: white;
-    border-radius: 12px;
-    padding: 2.5rem;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    transition: all 0.3s ease;
-}
-
-.instructor-profile-about:hover,
-.instructor-profile-courses:hover,
-.instructor-profile-reviews:hover {
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.12);
-}
-
-.section-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    border-bottom: 3px solid #0d9488;
-    padding-bottom: 1rem;
-}
-
-.section-icon {
-    background: linear-gradient(135deg, #0d9488, #0f766e);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 1.5rem;
-}
-
-/* ============================================
-   ABOUT SECTION (Bottom of Hero - PHASE 4.43.2)
-   ============================================ */
-
-.instructor-profile-hero .hero-about-section {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(102, 126, 234, 0.1);
-}
-
-.instructor-profile-hero .about-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.instructor-profile-hero .about-title i {
+.social-pill:hover {
+    background: #ffffff;
     color: #0d9488;
-}
-
-.about-content p {
-    color: #6c757d;
-    line-height: 1.8;
-    font-size: 1rem;
-    margin: 0;
-}
-
-/* ============================================
-   COURSES GRID
-   ============================================ */
-
-.courses-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1.5rem;
-}
-
-.course-card {
-    border-radius: 12px;
-    overflow: hidden;
-    background: linear-gradient(135deg, #f8f9fa, #f0f3ff);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.course-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15);
-    border-color: #0d9488;
-}
-
-.course-image-wrapper {
-    position: relative;
-    overflow: hidden;
-    background: #e9ecef;
-    aspect-ratio: 16 / 9;
-}
-
-.course-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.course-card:hover .course-image {
-    transform: scale(1.08);
-}
-
-.featured-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: linear-gradient(135deg, #ffc107, #ff9800);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
-}
-
-.course-content {
-    padding: 1rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-/* ✨ PHASE 8c: Scoped course-title for InstructorProfilePage layout - inherits from CourseCard.css
-   Page-specific overrides are scoped to .course-content to avoid conflicts with global .course-title
-*/
-.course-content .course-title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 0 0 0.5rem 0; /* Adjust margin for this scoped context */
-    line-height: 1.3;
-}
-
-/* ✨ PHASE 4.43.1: Course Info Row - Level and Rating on same line */
-.course-info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;  /* ✨ PHASE 4.77: Keep center alignment with flex items */
-    gap: 0.75rem;
-    margin: 0;
-    min-width: 0;  /* ✨ PHASE 4.77: Allow flex items to shrink below content size */
-    flex-wrap: wrap;  /* ✨ PHASE 4.77: Allow wrapping if needed on smaller screens */
-}
-
-.course-level {
-    margin: 0;
-    flex-shrink: 0;
-    display: flex;  /* ✨ PHASE 4.77: Better flex alignment */
-    align-items: center;  /* Ensure badge aligns vertically */
-}
-
-.level-badge {
-    display: inline-flex;  /* ✨ PHASE 4.77: Use inline-flex instead of inline-block for better flex alignment */
-    align-items: center;  /* Center content within badge */
-    justify-content: center;  /* Center horizontally */
-    padding: 0.35rem 0.75rem;  /* ✨ PHASE 4.77: Increased padding for better visibility */
-    border-radius: 18px;  /* Slightly larger radius for pill shape */
-    font-size: 0.65rem;  /* ✨ PHASE 4.77: Slightly smaller font for consistency */
-    font-weight: 700;  /* Bolder font weight */
-    text-transform: uppercase;
-    white-space: nowrap;  /* ✨ PHASE 4.77: Prevent text wrapping */
-    line-height: 1;  /* ✨ PHASE 4.77: Consistent line height */
-    letter-spacing: 0.02em;  /* Slightly more letter spacing */
-    flex-shrink: 0;  /* ✨ PHASE 4.77: Prevent badge from shrinking */
-    min-width: fit-content;  /* ✨ PHASE 4.77: Ensure minimum width for content */
-}
-
-/* ⚠️ REMOVED: Conflicting standalone selectors that were applying to any element with these classes */
-/* Use chained selectors (.level-badge.level-*) below instead */
-/* .level-beginner { ... } REMOVED */
-/* .level-intermediate { ... } REMOVED */
-/* .level-advanced { ... } REMOVED */
-
-.course-rating {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin: 0;
-    flex-shrink: 0;
-    min-width: fit-content;  /* ✨ PHASE 4.77: Ensure rating doesn't overlap */
-}
-
-.rating-stars {
-    color: #f39c12;
-    font-weight: 600;
-    font-size: 0.8rem;
-    line-height: 1;
-}
-
-.rating-count {
-    color: #6c757d;
-    font-size: 0.75rem;
-    line-height: 1;
-}
-
-.course-footer {
-    padding: 0.75rem 1rem;
-    margin-top: auto;
-    border-top: 1px solid rgba(102, 126, 234, 0.08);
-}
-
-.course-footer .btn {
-    transition: all 0.3s ease;
-    font-weight: 600;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-}
-
-.course-footer .btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* ============================================
-   REVIEWS SECTION
-   ============================================ */
+.btn-share-profile {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 20px;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(6px);
+}
 
-.rating-summary {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-    padding: 2rem;
+.btn-share-profile:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.btn-share-profile.copied {
+    background: #ffffff;
+    color: #0d9488;
+    border-color: #ffffff;
+}
+
+/* Hero Stats Pills */
+.instructor-hero-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.stat-pill-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.24);
     border-radius: 12px;
-    border: 1px solid rgba(102, 126, 234, 0.1);
+    padding: 0.6rem 1rem;
+    backdrop-filter: blur(8px);
+    min-width: 120px;
+    transition: transform 0.2s ease, background 0.2s ease;
 }
 
-.rating-main {
+.stat-pill-item:hover {
+    background: rgba(255, 255, 255, 0.22);
+    transform: translateY(-2px);
+}
+
+.stat-pill-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-pill-icon.courses-icon {
+    background: rgba(56, 189, 248, 0.25);
+    color: #38bdf8;
+}
+
+.stat-pill-icon.students-icon {
+    background: rgba(52, 211, 153, 0.25);
+    color: #34d399;
+}
+
+.stat-pill-icon.rating-icon {
+    background: rgba(251, 191, 36, 0.25);
+    color: #fbbf24;
+}
+
+.stat-pill-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-pill-num {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.1;
+}
+
+.stat-pill-lbl {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+/* ==========================================================================
+   2. MAIN CONTENT & TWO-COLUMN LAYOUT
+   ========================================================================== */
+.instructor-content-container {
+    padding-top: 1.5rem;
+    padding-bottom: 2.5rem;
+}
+
+.instructor-sidebar-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: sticky;
+    top: calc(var(--header-height, 78px) + 72px); /* Pinned cleanly below the stuck compact hero banner (header + ~58px stuck hero + 14px gap) */
+    z-index: 90;
+    align-self: flex-start;
+    transition: top 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.instructor-main-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Modern Compact Card */
+.profile-compact-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02);
+    overflow: hidden;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.profile-compact-card:hover {
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    border-color: rgba(13, 148, 136, 0.2);
+}
+
+.compact-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.header-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.12), rgba(15, 118, 110, 0.12));
+    color: #0d9488;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.compact-card-heading {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.compact-card-subheading {
+    font-size: 0.775rem;
+    color: #64748b;
+    display: block;
+    margin-top: 0.15rem;
+}
+
+.badge-count-pill {
+    padding: 0.25rem 0.65rem;
+    border-radius: 16px;
+    background: rgba(13, 148, 136, 0.1);
+    color: #0d9488;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.compact-card-body {
+    padding: 1.25rem;
+}
+
+/* ==========================================================================
+   3. SIDEBAR DETAILS
+   ========================================================================== */
+.about-text-content {
+    font-size: 0.9rem;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.bio-extra-content {
+    border-top: 1px dashed #e2e8f0;
+}
+
+/* Instructor Facts */
+.instructor-facts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    border: 1px solid #f1f5f9;
+}
+
+.fact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.fact-item i {
+    width: 20px;
+    color: #0d9488;
+    font-size: 0.95rem;
     text-align: center;
 }
 
-.rating-value {
-    font-size: 3rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #0d9488, #0f766e);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-    margin-bottom: 0.5rem;
+.fact-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
 }
 
-.rating-stars {
+.fact-label {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.fact-value {
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 0.825rem;
+}
+
+/* Expertise Tags */
+.expertise-tags-flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.expertise-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    font-size: 0.825rem;
+    transition: all 0.2s ease;
+}
+
+.expertise-chip:hover {
+    background: #e6fffa;
+    border-color: #99f6e4;
+    transform: translateY(-1px);
+}
+
+.skill-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.skill-level-pill {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.skill-level-pill.level-beginner {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.skill-level-pill.level-intermediate {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.skill-level-pill.level-advanced {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.skill-level-pill.level-expert {
+    background: #ffe4e6;
+    color: #be123c;
+}
+
+/* Reputation Score Box */
+.rating-reputation-box {
+    text-align: center;
+    padding: 0.75rem 0.5rem;
+    background: linear-gradient(135deg, rgba(254, 243, 199, 0.3) 0%, rgba(204, 251, 241, 0.3) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.rep-score {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+}
+
+.rep-stars {
     display: flex;
     justify-content: center;
     gap: 0.25rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.4rem;
 }
 
-.rating-stars i {
-    font-size: 1.5rem;
-    color: #ddd;
+.rep-stars i {
+    font-size: 1rem;
+    color: #e2e8f0;
 }
 
-.rating-stars i.filled {
-    color: #f39c12;
-    text-shadow: 0 2px 4px rgba(243, 156, 18, 0.3);
+.rep-stars i.filled {
+    color: #f59e0b;
 }
 
-.rating-stars i.empty {
-    color: #e0e0e0;
+.rep-caption {
+    font-size: 0.775rem;
+    color: #64748b;
+    font-weight: 500;
 }
 
-.rating-count {
-    color: #6c757d;
-    font-size: 0.95rem;
-}
-
-/* Reviews List */
-
-.reviews-list {
+/* ==========================================================================
+   4. COMPACT COURSE CARDS (Right Column)
+   ========================================================================== */
+.compact-course-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.review-card {
-    border-left: 4px solid #0d9488;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.03), rgba(118, 75, 162, 0.03));
+.compact-course-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(13, 148, 136, 0.12);
+    border-color: #0d9488;
+}
+
+/* Thumbnail Wrapper */
+.course-card-thumb-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #f1f5f9;
+    overflow: hidden;
+}
+
+.course-card-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.35s ease;
+}
+
+.compact-course-card:hover .course-card-thumb {
+    transform: scale(1.06);
+}
+
+/* Thumbnail Badges */
+.thumb-badges-top {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+}
+
+.badge-category-chip {
+    padding: 0.2rem 0.55rem;
+    background: rgba(15, 23, 42, 0.78);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.badge-featured-chip {
+    width: 24px;
+    height: 24px;
+    background: #f59e0b;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+.thumb-badges-bottom {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+}
+
+.badge-jp-chip {
+    padding: 0.2rem 0.55rem;
+    background: rgba(13, 148, 136, 0.9);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.badge-level-chip {
+    padding: 0.2rem 0.55rem;
+    background: rgba(15, 23, 42, 0.78);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge-level-chip.level-beginner {
+    background: rgba(16, 185, 129, 0.9);
+}
+
+.badge-level-chip.level-intermediate {
+    background: rgba(14, 165, 233, 0.9);
+}
+
+.badge-level-chip.level-advanced {
+    background: rgba(139, 92, 246, 0.9);
+}
+
+/* Card Details */
+.course-card-details {
+    padding: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.course-card-title {
+    font-size: 0.925rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 0 0 0.6rem 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 2.5rem;
+}
+
+.course-card-title a {
+    color: #1e293b;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.course-card-title a:hover {
+    color: #0d9488;
+}
+
+.course-card-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.775rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.meta-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* Button CTA */
+.btn-course-cta {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.85rem;
+    background: #f1f5f9;
+    color: #0f766e;
+    font-size: 0.825rem;
+    font-weight: 600;
     border-radius: 8px;
-    transition: all 0.3s ease;
+    text-decoration: none;
+    transition: all 0.2s ease;
 }
 
-.review-card:hover {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+.btn-course-cta i {
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
 }
 
-.review-header {
+.btn-course-cta:hover {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+
+.btn-course-cta:hover i {
+    transform: translateX(3px);
+}
+
+/* Empty Course State */
+.empty-courses-state {
+    text-align: center;
+    padding: 2.5rem 1rem;
+}
+
+.empty-icon-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 0.75rem auto;
+}
+
+.empty-state-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.35rem;
+}
+
+.empty-state-text {
+    font-size: 0.85rem;
+    color: #64748b;
+    max-width: 380px;
+    margin: 0 auto;
+}
+
+/* ==========================================================================
+   5. REVIEWS & TESTIMONIALS SECTION
+   ========================================================================== */
+.reviews-compact-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.compact-review-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.compact-review-item:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.review-item-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1rem;
+    margin-bottom: 0.65rem;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.5rem;
 }
 
-.reviewer-info {
+.review-user-block {
     display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-    flex: 1;
-    min-width: 0;
+    align-items: center;
+    gap: 0.65rem;
 }
 
-.reviewer-avatar {
-    width: 48px;
-    height: 48px;
+.review-user-avatar {
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     overflow: hidden;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 0.85rem;
     flex-shrink: 0;
-    background: #e9ecef;
-    border: 2px solid #0d9488;
 }
 
-.reviewer-avatar img {
+.review-user-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.default-avatar {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #0d9488;
-    font-size: 1.5rem;
-}
-
-.reviewer-name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 0.25rem;
+.review-user-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
     line-height: 1.2;
 }
 
-.review-course {
-    font-size: 0.85rem;
+.review-course-name {
+    font-size: 0.75rem;
     color: #0d9488;
-    margin-bottom: 0;
+    display: block;
+    margin-top: 0.1rem;
 }
 
-.review-rating {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.review-rating .rating-stars i {
-    font-size: 1.1rem;
-}
-
-.review-text {
-    color: #6c757d;
-    line-height: 1.6;
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
-}
-
-.instructor-reply {
-    background: white;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    border-left: 3px solid #28a745;
-}
-
-.reply-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #28a745;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-}
-
-.reply-text {
-    color: #6c757d;
-    margin-bottom: 0;
-    line-height: 1.6;
-    font-size: 0.95rem;
-}
-
-.review-date {
-    color: #999;
-    font-size: 0.85rem;
-}
-
-/* ============================================
-   EXPERTISE SECTION - ✨ PHASE 4.43
-   ============================================ */
-
-.instructor-profile-expertise {
-    background: white;
-    border-radius: 12px;
-    padding: 2.5rem;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    transition: all 0.3s ease;
-}
-
-.instructor-profile-expertise:hover {
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.12);
-}
-
-.expertise-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-
-.expertise-badge {
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 2px solid;
-    transition: all 0.3s ease;
+.review-meta-right {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    text-decoration: none;
-    cursor: default;
+    align-items: flex-end;
 }
 
-.expertise-badge:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
-}
-
-.expertise-skill {
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.4;
-}
-
-.expertise-level .level-badge {
-    display: inline-block;
-    padding: 0.35rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-/* Proficiency level badge variants */
-.level-badge.level-beginner {
-    background: rgba(52, 211, 153, 0.2);
-    color: #059669;
-}
-
-.level-badge.level-intermediate {
-    background: rgba(96, 165, 250, 0.2);
-    color: #0284c7;
-}
-
-.level-badge.level-advanced {
-    background: rgba(168, 85, 247, 0.2);
-    color: #0f766e;
-}
-
-.level-badge.level-expert {
-    background: rgba(236, 72, 153, 0.2);
-    color: #db2777;
-}
-
-/* ============================================
-   CTA SECTION - ✨ PHASE 4.43
-   ============================================ */
-
-.instructor-profile-cta {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-    border-radius: 12px;
-    padding: 2.5rem;
-    border: 2px dashed rgba(102, 126, 234, 0.2);
-    text-align: center;
-}
-
-.cta-buttons-wrapper {
+.review-stars-row {
     display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 1.5rem;
+    gap: 0.15rem;
 }
 
-.btn-cta {
-    padding: 1rem 2rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    display: inline-flex;
+.review-stars-row i {
+    font-size: 0.75rem;
+    color: #e2e8f0;
+}
+
+.review-stars-row i.filled {
+    color: #f59e0b;
+}
+
+.review-date-text {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+}
+
+.review-body-text {
+    font-size: 0.85rem;
+    color: #475569;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.review-instructor-reply {
+    margin-top: 0.65rem;
+    padding: 0.65rem 0.85rem;
+    background: #f0fdf4;
+    border-left: 3px solid #22c55e;
+    border-radius: 0 6px 6px 0;
+}
+
+.reply-header {
+    font-size: 0.75rem;
+    color: #15803d;
+    margin-bottom: 0.25rem;
+}
+
+.reply-body {
+    font-size: 0.825rem;
+    color: #166534;
+    margin: 0;
+    line-height: 1.45;
+}
+
+/* Empty Reviews State */
+.empty-reviews-state {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.empty-review-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #94a3b8;
+    display: flex;
     align-items: center;
     justify-content: center;
-    text-decoration: none;
-    white-space: nowrap;
-    cursor: pointer;
-    border: none;
+    font-size: 1.35rem;
+    margin: 0 auto 0.65rem auto;
 }
 
-.btn-cta-primary {
-    background: linear-gradient(135deg, #0d9488, #0f766e);
-    color: white !important;
-    border: none !important;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-cta-primary:hover {
-    color: white !important;
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
-}
-
-.btn-cta-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
-}
-
-.btn-cta-primary:hover::before {
-    left: 100%;
-}
-
-.course-count-badge {
-    background: rgba(255, 255, 255, 0.3);
-    color: white;
-    padding: 0.25rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    margin-left: 0.5rem;
-    font-weight: 700;
-}
-
-.btn-cta-secondary {
-    background: white;
-    color: #0d9488 !important;
-    border: 2px solid #0d9488 !important;
-}
-
-.btn-cta-secondary:hover {
-    color: white !important;
-    background: #0d9488;
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3);
-}
-
-/* ============================================
-   EMPTY STATE
-   ============================================ */
-
-.empty-state {
-    color: #6c757d;
-    padding: 3rem 1rem;
-}
-
-.empty-state i {
-    font-size: 3rem;
-    color: #ddd;
-    margin-bottom: 1rem;
-    display: block;
-}
-
-.empty-state h3 {
-    font-size: 1.5rem;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-}
-
-.empty-state p {
+.empty-review-title {
     font-size: 1rem;
-    color: #6c757d;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.35rem;
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+.empty-review-text {
+    font-size: 0.825rem;
+    color: #64748b;
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
 
-@media (max-width: 992px) {
-    .instructor-profile-hero .hero-content {
+/* ==========================================================================
+   6. RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+@media (max-width: 991.98px) {
+    /* Disable sticky sidebar on tablets/mobile where layout is stacked */
+    .instructor-sidebar-stack {
+        position: relative !important;
+        top: 0 !important;
+    }
+
+    .instructor-hero-main {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .instructor-hero-stats {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .stat-pill-item {
+        flex: 1;
+        min-width: 110px;
+    }
+
+    /* On compact stuck mode, keep horizontal flex row even on tablet */
+    .instructor-hero-banner.is-stuck .instructor-hero-main {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .instructor-hero-banner.is-stuck .instructor-hero-stats {
+        width: auto;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .instructor-hero-banner {
+        padding: 1.25rem 0 1.5rem 0;
+    }
+
+    .instructor-hero-left {
         flex-direction: column;
         align-items: center;
         text-align: center;
     }
 
-    .instructor-profile-hero .hero-avatar {
-        width: 160px;
-        height: 160px;
+    .instructor-hero-details {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
-    .instructor-profile-hero .instructor-name {
-        font-size: 2rem;
-    }
-
-    .instructor-profile-hero .instructor-stats {
+    .instructor-tag-row {
         justify-content: center;
-        gap: 1.5rem;
     }
 
-    .courses-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1.5rem;
+    .instructor-hero-actions {
+        justify-content: center;
     }
 
-    .instructor-profile-hero,
-    .instructor-profile-about,
-    .instructor-profile-expertise,
-    .instructor-profile-cta,
-    .instructor-profile-courses,
-    .instructor-profile-reviews {
-        padding: 1.75rem;
+    .instructor-profile-title {
+        font-size: 1.35rem;
     }
 
-    .section-title {
-        font-size: 1.5rem;
+    .instructor-hero-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
     }
 
-    .expertise-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    .stat-pill-item {
+        padding: 0.5rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 0.35rem;
+        min-width: 0;
     }
 
-    .cta-buttons-wrapper {
-        gap: 0.75rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .instructor-profile-page {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
+    .stat-pill-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 0.85rem;
     }
 
-    .instructor-profile-hero {
-        margin-bottom: 1.5rem;
-    }
-
-    .instructor-profile-hero .hero-avatar {
-        width: 140px;
-        height: 140px;
-    }
-
-    .instructor-profile-hero .instructor-name {
-        font-size: 1.5rem;
-    }
-
-    .instructor-profile-hero .instructor-bio {
+    .stat-pill-num {
         font-size: 1rem;
     }
 
-    .instructor-profile-hero .instructor-stats {
-        padding: 1rem;
-        gap: 1rem;
-    }
-
-    .instructor-profile-hero .instructor-stats .stat-value {
-        font-size: 1.5rem;
-    }
-
-    .instructor-profile-hero .instructor-stats .stat-label {
-        font-size: 0.75rem;
-    }
-
-    .instructor-profile-hero .instructor-social {
-        justify-content: center;
-        gap: 0.75rem;
-    }
-
-    .instructor-profile-hero .instructor-social .social-icon {
-        width: 44px;
-        height: 44px;
-        font-size: 1rem;
-    }
-
-    .courses-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 1rem;
-    }
-
-    .course-card {
-        flex-direction: column;
-    }
-
-    .course-content {
-        padding: 1rem;
-    }
-
-    /* ✨ PHASE 8c: Responsive override for scoped course-title in tablet view */
-    .course-content .course-title {
-        font-size: 0.9rem;
-    }
-
-    .instructor-profile-about,
-    .instructor-profile-expertise,
-    .instructor-profile-cta,
-    .instructor-profile-courses,
-    .instructor-profile-reviews {
-        padding: 1.25rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .expertise-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 1rem;
-    }
-
-    .expertise-badge {
-        padding: 1rem;
-    }
-
-    .expertise-skill {
-        font-size: 0.9rem;
-    }
-
-    .cta-buttons-wrapper {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .btn-cta {
-        width: 100%;
-    }
-
-    .section-title {
-        font-size: 1.25rem;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .rating-summary {
-        padding: 1.5rem;
-    }
-
-    .rating-value {
-        font-size: 2rem;
-    }
-
-    .review-header {
-        gap: 0.75rem;
-    }
-
-    .reviewer-info {
-        gap: 0.75rem;
-    }
-
-    .reviewer-avatar {
-        width: 40px;
-        height: 40px;
-    }
-
-    .reviewer-name {
-        font-size: 0.9rem;
-    }
-
-    .review-course {
-        font-size: 0.8rem;
-    }
-
-    .review-text {
-        font-size: 0.9rem;
-    }
-}
-
-@media (max-width: 576px) {
-    .instructor-profile-hero {
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .instructor-profile-hero .hero-avatar {
-        width: 120px;
-        height: 120px;
-    }
-
-    .instructor-profile-hero .instructor-badge {
-        width: 40px;
-        height: 40px;
-        font-size: 1.1rem;
-    }
-
-    .instructor-profile-hero .instructor-name {
-        font-size: 1.25rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .instructor-profile-hero .instructor-bio {
-        font-size: 0.95rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .instructor-profile-hero .instructor-location {
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-    }
-
-    .instructor-profile-hero .instructor-stats {
-        padding: 1rem;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .instructor-profile-hero .instructor-stats .stat-value {
-        font-size: 1.25rem;
-    }
-
-    .instructor-profile-hero .instructor-stats .stat-label {
-        font-size: 0.7rem;
-    }
-
-    .instructor-profile-hero .instructor-social .social-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 0.9rem;
-    }
-
-    .courses-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 0.75rem;
-    }
-
-    .course-image-wrapper {
-        aspect-ratio: 16 / 10;
-    }
-
-    .course-content {
-        padding: 0.75rem;
-    }
-
-    /* ✨ PHASE 8c: Responsive override for scoped course-title in mobile view */
-    .course-content .course-title {
-        font-size: 0.8rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .course-card:hover {
-        transform: translateY(-4px);
-    }
-
-    .featured-badge {
-        padding: 0.35rem 0.6rem;
-        font-size: 0.7rem;
-    }
-
-    .level-badge {
-        padding: 0.3rem 0.65rem;  /* ✨ PHASE 4.77: Responsive padding */
-        font-size: 0.6rem;  /* ✨ PHASE 4.77: Slightly smaller for tablets */
-        border-radius: 16px;
-    }
-
-    .course-rating {
-        margin-bottom: 0.5rem;
-        padding-bottom: 0.75rem;
-    }
-
-    .rating-stars {
-        font-size: 0.85rem;
-    }
-
-    .rating-count {
-        font-size: 0.75rem;
-    }
-
-    .course-footer .btn {
-        font-size: 0.85rem;
-    }
-
-    .instructor-profile-about,
-    .instructor-profile-expertise,
-    .instructor-profile-cta,
-    .instructor-profile-courses,
-    .instructor-profile-reviews {
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 8px;
-    }
-
-    .expertise-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 0.75rem;
-    }
-
-    .expertise-badge {
-        padding: 0.75rem;
-    }
-
-    .expertise-skill {
-        font-size: 0.85rem;
-    }
-
-    .expertise-level .level-badge {
+    .stat-pill-lbl {
         font-size: 0.65rem;
     }
 
-    .instructor-profile-cta {
-        padding: 1rem;
-        margin-bottom: 1rem;
+    /* Mobile Compact Stuck Mode */
+    .instructor-hero-banner.is-stuck {
+        padding: 0.35rem 0;
     }
 
-    .cta-buttons-wrapper {
-        flex-direction: column;
-        gap: 0.5rem;
+    .instructor-hero-banner.is-stuck .instructor-hero-left {
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+        gap: 0.6rem;
     }
 
-    .btn-cta {
-        width: 100%;
-        padding: 0.75rem 1.5rem;
-        font-size: 0.9rem;
-        justify-content: center;
+    .instructor-hero-banner.is-stuck .instructor-hero-details {
+        align-items: flex-start;
     }
 
-    .course-count-badge {
-        margin-left: 0.35rem;
+    .instructor-hero-banner.is-stuck .instructor-avatar-container {
+        width: 34px;
+        height: 34px;
     }
 
-    .section-title {
-        font-size: 1.1rem;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
+    .instructor-hero-banner.is-stuck .instructor-profile-title {
+        font-size: 0.95rem;
     }
 
-    .section-icon {
-        font-size: 1.2rem;
+    .instructor-hero-banner.is-stuck .instructor-tag-row {
+        display: none;
     }
 
-    .about-content p {
-        font-size: 0.9rem;
-        line-height: 1.6;
-    }
-
-    .rating-summary {
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .rating-value {
-        font-size: 1.75rem;
-    }
-
-    .rating-stars i {
-        font-size: 1.2rem;
-    }
-
-    .review-card {
-        padding: 1rem;
-        gap: 0.75rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .reviewer-avatar {
-        width: 36px;
-        height: 36px;
-    }
-
-    .reviewer-name {
-        font-size: 0.85rem;
-    }
-
-    .review-course {
-        font-size: 0.75rem;
-    }
-
-    .review-text {
-        font-size: 0.85rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .instructor-reply {
-        padding: 0.75rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .reply-label {
-        font-size: 0.75rem;
-    }
-
-    .reply-text {
-        font-size: 0.85rem;
-    }
-
-    .review-date {
-        font-size: 0.8rem;
-    }
-
-    .empty-state {
-        padding: 2rem 1rem;
-    }
-
-    .empty-state i {
-        font-size: 2.5rem;
-    }
-
-    .empty-state h3 {
-        font-size: 1.25rem;
-    }
-
-    .empty-state p {
-        font-size: 0.9rem;
+    .instructor-hero-banner.is-stuck .instructor-hero-stats {
+        display: none; /* Hide stats on very narrow mobile sticky bar to keep clean */
     }
 }
-
-/* ============================================
-   PRINT STYLES
-   ============================================ */
-
-@media print {
-    .instructor-profile-page {
-        background: white;
-    }
-
-    .instructor-profile-hero,
-    .instructor-profile-about,
-    .instructor-profile-expertise,
-    .instructor-profile-cta,
-    .instructor-profile-courses,
-    .instructor-profile-reviews {
-        page-break-inside: avoid;
-        box-shadow: none;
-        border: 1px solid #ddd;
-    }
-
-    .course-card:hover {
-        transform: none;
-    }
-
-    .social-icon:hover {
-        background: white;
-        color: #0d9488;
-    }
-}
-
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.instructor-profile-hero,
-.instructor-profile-about,
-.instructor-profile-expertise,
-.instructor-profile-cta,
-.instructor-profile-courses,
-.instructor-profile-reviews,
-.course-card {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-/* Stagger animation for course cards */
-.courses-grid .course-card:nth-child(1) { animation-delay: 0.1s; }
-.courses-grid .course-card:nth-child(2) { animation-delay: 0.15s; }
-.courses-grid .course-card:nth-child(3) { animation-delay: 0.2s; }
-.courses-grid .course-card:nth-child(4) { animation-delay: 0.25s; }
-.courses-grid .course-card:nth-child(5) { animation-delay: 0.3s; }
-.courses-grid .course-card:nth-child(6) { animation-delay: 0.35s; }

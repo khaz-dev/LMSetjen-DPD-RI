@@ -52,8 +52,8 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
                 </div>
 
                 {/* Profile Top Row: Avatar, Info, Actions & Stats */}
-                <div className="p-3 p-md-3 rounded-3 bg-light border mb-3">
-                    <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-3">
+                <div className="p-3 p-md-3 rounded-3 bg-light border mb-3 instructor-profile-top-card">
+                    <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
                         {/* Avatar & Name Info */}
                         <div className="d-flex align-items-center gap-3 min-w-0 flex-grow-1">
                             <div className="position-relative flex-shrink-0">
@@ -61,7 +61,7 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
                                     src={getImageUrl(teacher.image) || '/images/placeholders/default-instructor.svg'}
                                     alt={teacher.full_name}
                                     className="rounded-circle border shadow-xs"
-                                    style={{ width: "56px", height: "56px", objectFit: "cover" }}
+                                    style={{ width: "52px", height: "52px", objectFit: "cover" }}
                                     onError={(e) => { e.target.src = '/images/placeholders/default-instructor.svg'; }}
                                 />
                                 <div
@@ -80,9 +80,14 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
                             </div>
 
                             <div className="min-w-0 flex-grow-1">
-                                <h6 className="mb-1 fw-bold text-dark text-truncate" style={{ fontSize: "0.95rem" }}>
-                                    {teacher.full_name}
-                                </h6>
+                                <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                    <h6 className="mb-0 fw-bold text-dark text-truncate" style={{ fontSize: "0.94rem" }}>
+                                        {teacher.full_name}
+                                    </h6>
+                                    <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-0.5 px-2 rounded-pill" style={{ fontSize: "0.68rem" }}>
+                                        <i className="fas fa-check-circle me-1"></i>Instruktur Resmi
+                                    </span>
+                                </div>
                                 <p className="text-muted small mb-0 text-truncate" style={{ fontSize: "0.82rem" }}>
                                     {teacher.about || teacher.bio || "Instruktur Profesional di Lingkungan Setjen DPD RI"}
                                 </p>
@@ -90,9 +95,9 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
                         </div>
 
                         {/* Action Buttons - Always visible without overflowing */}
-                        <div className="d-flex align-items-center gap-2 flex-shrink-0 w-100 w-sm-auto justify-content-sm-end">
+                        <div className="instructor-profile-actions">
                             <button
-                                className="btn btn-sm btn-outline-teal d-flex align-items-center justify-content-center gap-1.5 rounded-2 py-1.5 px-3 fw-semibold flex-fill flex-sm-grow-0"
+                                className="btn btn-sm btn-outline-teal d-inline-flex align-items-center justify-content-center gap-1 rounded-2 py-1.5 px-3 fw-semibold text-nowrap"
                                 onClick={handleContactClick}
                                 type="button"
                                 style={{ fontSize: "0.8rem", borderColor: "#0d9488", color: "#0d9488" }}
@@ -101,13 +106,12 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
                                 <span>Kirim Pesan</span>
                             </button>
                             <button
-                                className="btn btn-sm text-white d-flex align-items-center justify-content-center gap-1.5 rounded-2 py-1.5 px-3 fw-semibold border-0 flex-fill flex-sm-grow-0"
+                                className="btn btn-sm text-white d-inline-flex align-items-center justify-content-center gap-1 rounded-2 py-1.5 px-3 fw-semibold border-0 text-nowrap shadow-xs"
                                 onClick={handleViewProfile}
                                 type="button"
                                 style={{
                                     fontSize: "0.8rem",
-                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                    boxShadow: "0 2px 6px rgba(13, 148, 136, 0.25)"
+                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)"
                                 }}
                             >
                                 <i className="fas fa-user"></i>

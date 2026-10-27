@@ -245,27 +245,27 @@ const CourseSidebar = ({
                         !course?.file.toLowerCase().endsWith('.rar') &&
                         !course?.file.toLowerCase().endsWith('.pdf')
                     ) && (
-                        <div className="position-absolute top-50 start-50 translate-middle">
-                            <button
-                                className="btn rounded-circle d-flex align-items-center justify-content-center sidebar-play-btn"
-                                data-bs-toggle="modal"
-                                data-bs-target="#coursePreviewModal"
-                                aria-label="Preview Video Kursus"
-                                title="Tonton Preview Kursus"
-                                style={{
-                                    width: '48px',
-                                    height: '48px',
-                                    background: 'rgba(255, 255, 255, 0.95)',
-                                    backdropFilter: 'blur(4px)',
-                                    boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
-                                    border: 'none',
-                                    transition: 'all 0.25s ease'
-                                }}
-                            >
-                                <i className="fas fa-play text-teal" style={{ color: '#0d9488', fontSize: '0.95rem', marginLeft: '2px' }}></i>
-                            </button>
-                        </div>
-                    )}
+                            <div className="position-absolute top-50 start-50 translate-middle">
+                                <button
+                                    className="btn rounded-circle d-flex align-items-center justify-content-center sidebar-play-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#coursePreviewModal"
+                                    aria-label="Preview Video Kursus"
+                                    title="Tonton Preview Kursus"
+                                    style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        background: 'rgba(255, 255, 255, 0.95)',
+                                        backdropFilter: 'blur(4px)',
+                                        boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+                                        border: 'none',
+                                        transition: 'all 0.25s ease'
+                                    }}
+                                >
+                                    <i className="fas fa-play text-teal" style={{ color: '#0d9488', fontSize: '0.95rem', marginLeft: '2px' }}></i>
+                                </button>
+                            </div>
+                        )}
 
                     {/* Badge GRATIS */}
                     <div

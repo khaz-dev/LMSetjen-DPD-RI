@@ -123,9 +123,9 @@
 /* Sticky Course Sidebar */
 .course-sidebar-sticky {
     position: sticky;
-    top: 85px;
+    top: calc(var(--header-height, 76px) + var(--course-hero-stuck-height, 0px) + 16px);
     z-index: 10;
-    transition: top 0.3s ease;
+    transition: top 0.25s ease;
 }
 
 @media (max-width: 991px) {
@@ -138,20 +138,20 @@
 /* Modern Segmented Tab Bar - Sticky beneath base-header like course-sidebar-sticky */
 .course-tab-bar {
     position: sticky;
-    top: 85px;
+    top: calc(var(--header-height, 76px) + var(--course-hero-stuck-height, 0px) + 12px);
     z-index: 95;
-    padding-top: 6px;
+    padding-top: 4px;
     padding-bottom: 6px;
     background: rgba(248, 250, 252, 0.95);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    transition: top 0.3s ease;
+    transition: top 0.25s ease;
 }
 
 @media (max-width: 768px) {
     .course-tab-bar {
-        top: 72px;
-        padding-top: 4px;
+        top: calc(var(--header-height, 72px) + var(--course-hero-stuck-height, 0px) + 10px);
+        padding-top: 3px;
         padding-bottom: 4px;
     }
 }

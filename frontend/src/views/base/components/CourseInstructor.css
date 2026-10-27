@@ -343,3 +343,34 @@
         font-size: 0.85rem;
     }
 }
+
+/* ========================================
+   Responsive Profile Header & Action Buttons
+   ======================================== */
+.instructor-profile-top-card {
+    overflow: hidden;
+}
+
+.instructor-profile-actions {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.instructor-profile-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+@media (min-width: 768px) {
+    .instructor-profile-actions {
+        width: auto !important;
+        flex-shrink: 0;
+    }
+
+    .instructor-profile-actions .btn {
+        flex: 0 0 auto;
+        min-width: auto;
+    }
+}
