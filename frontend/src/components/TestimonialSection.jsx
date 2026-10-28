@@ -130,7 +130,7 @@ function TestimonialSection() {
         </div>
 
         {/* ✨ PHASE 4.9: Footer moved INSIDE snap-section for smooth scrolling without snap-back */}
-        <div style={{ marginTop: '5rem', paddingBottom: '2rem' }}>
+        <div style={{ marginTop: '1.5rem' }}>
           <BaseFooter />
         </div>
       </section>
@@ -330,7 +330,7 @@ function TestimonialSection() {
       </div>
 
       {/* ✨ PHASE 4.9: Footer moved INSIDE snap-section for smooth scrolling without snap-back */}
-      <div style={{ marginTop: '5rem'}}>
+      <div style={{ marginTop: '1.5rem' }}>
         <BaseFooter />
       </div>
     </section>
