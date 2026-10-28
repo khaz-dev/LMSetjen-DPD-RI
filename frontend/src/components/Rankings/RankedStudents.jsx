@@ -135,16 +135,16 @@ const RankedStudents = ({ maxResults = 5 }) => {
     <div className="ranked-students-widget card h-100 shadow-sm">
       {/* Header */}
       <div className="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">
-          <i className="fas fa-trophy me-2"></i>
-          Siswa Terbaik
+        <h5 className="mb-0 d-flex align-items-center gap-2">
+          <i className="fas fa-graduation-cap"></i>
+          <span>Siswa Terbaik</span>
         </h5>
-        <span className="badge bg-light text-dark">Top {maxResults}</span>
+        <span className="badge bg-white text-primary fw-bold">Top {students.length > 0 ? students.length : maxResults}</span>
       </div>
 
       {/* Filter Buttons */}
-      <div className="ranking-filters p-3 border-bottom">
-        <div className="btn-group d-flex gap-2" role="group">
+      <div className="ranking-filters p-2 px-3 border-bottom">
+        <div className="btn-group d-flex gap-1" role="group">
           {['lifetime', 'yearly', 'monthly'].map((p) => (
             <button
               key={p}
@@ -165,19 +165,19 @@ const RankedStudents = ({ maxResults = 5 }) => {
 
       {/* Loading State */}
       {loading && (
-        <div className="card-body text-center py-4">
-          <div className="spinner-border text-primary" role="status">
+        <div className="card-body text-center py-3">
+          <div className="spinner-border spinner-border-sm text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-2 text-muted">Memuat data...</p>
+          <p className="mt-1 text-muted small mb-0">Memuat peringkat...</p>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && students.length === 0 && (
-        <div className="card-body text-center py-4">
-          <i className="fas fa-inbox text-muted mb-2" style={{ fontSize: '2rem' }}></i>
-          <p className="text-muted mb-0">
+        <div className="card-body text-center py-3 empty-state-compact">
+          <i className="fas fa-inbox text-muted mb-1" style={{ fontSize: '1.4rem' }}></i>
+          <p className="text-muted mb-0 small">
             {period === 'monthly'
               ? 'Belum ada data untuk bulan ini'
               : period === 'yearly'
@@ -193,43 +193,49 @@ const RankedStudents = ({ maxResults = 5 }) => {
           {students.map((student, index) => (
             <div
               key={student.id}
-              className={`ranking-item d-flex align-items-center p-3 top-${student.rank_position} ${
+              className={`ranking-item d-flex align-items-center top-${student.rank_position} ${
                 index < students.length - 1 ? 'border-bottom' : ''
               }`}
             >
-              {/* Avatar Container with Blended Badge */}
-              <div className="rank-badge">
-                {!brokenImages[student.id] ? (
-                  <img
-                    src={student.image || '/images/placeholders/default-avatar.svg'}
-                    alt={student.full_name}
-                    className="ranking-avatar rounded-circle"
-                    loading="lazy"
-                    decoding="async"
-                    width="60"
-                    height="60"
-                    onError={() => handleImageError(student.id)}
-                  />
-                ) : (
-                  <div className="ranking-avatar rounded-circle avatar-placeholder student-accent">
+              {/* Rank Badge & Avatar */}
+              <div className="rank-badge-avatar-group d-flex align-items-center">
+                <div className={`badge-rank-pill rank-${student.rank_position}`}>
+                  {student.rank_position === 1 ? (
+                    <i className="fas fa-crown text-warning" title="Peringkat 1"></i>
+                  ) : (
+                    student.rank
+                  )}
+                </div>
+                <div className="rank-avatar-box">
+                  {!brokenImages[student.id] ? (
                     <img
-                      src="/images/placeholders/default-avatar.svg"
+                      src={student.image || '/images/placeholders/default-avatar.svg'}
                       alt={student.full_name}
-                      className="placeholder-image"
+                      className="ranking-avatar rounded-circle"
                       loading="lazy"
                       decoding="async"
-                      width="60"
-                      height="60"
+                      width="42"
+                      height="42"
+                      onError={() => handleImageError(student.id)}
                     />
-                  </div>
-                )}
-                <span className={`badge badge-rank rank-${student.rank_position}`}>
-                  {student.rank}
-                </span>
+                  ) : (
+                    <div className="ranking-avatar rounded-circle avatar-placeholder student-accent">
+                      <img
+                        src="/images/placeholders/default-avatar.svg"
+                        alt={student.full_name}
+                        className="placeholder-image"
+                        loading="lazy"
+                        decoding="async"
+                        width="42"
+                        height="42"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Student Info */}
-              <div className="ranking-info flex-grow-1 min-w-0">
+              <div className="ranking-info flex-grow-1 min-w-0 ms-2">
                 <h6 className="mb-0 text-truncate" title={student.full_name}>
                   {student.full_name}
                 </h6>
@@ -247,27 +253,22 @@ const RankedStudents = ({ maxResults = 5 }) => {
               >
                 <div className="points-value d-flex align-items-center justify-content-end gap-1">
                   <span>{getPoints(student)}</span>
-                  <i className="fas fa-circle-info text-primary ms-1" style={{ fontSize: '0.85rem' }}></i>
+                  <i className="fas fa-circle-info text-primary ms-1" style={{ fontSize: '0.8rem' }}></i>
                 </div>
-                <small className="points-label text-muted d-block" style={{ fontSize: '0.72rem' }}>
+                <small className="points-label text-muted d-block">
                   poin • <span className="text-primary fw-bold">rincian</span>
                 </small>
               </div>
             </div>
           ))}
-          
-          {/* Empty Slots to reach maxResults */}
-          {Array.from({ length: Math.max(0, maxResults - students.length) }).map((_, index) => (
-            <div key={`empty-${index}`} className="ranking-item empty-slot"></div>
-          ))}
         </div>
       )}
 
       {/* Footer */}
-      <div className="card-footer bg-light p-3 text-center">
-        <small className="text-muted d-block">
+      <div className="card-footer bg-light py-2 px-3 text-center">
+        <small className="text-muted d-block" style={{ fontSize: '0.74rem' }}>
           <i className="fas fa-info-circle me-1"></i>
-          Poin diperoleh dari penyelesaian kursus, kelulusan kuis & ulasan rating
+          Poin diakumulasikan dari penyelesaian kursus, kelulusan kuis, forum & keaktifan belajar
         </small>
       </div>
 

@@ -40,7 +40,7 @@ function Search() {
     const refreshWishlistCount = wishlistContextValue?.[2] || (() => {});
     
     // Header height measurement & sticky hero state
-    const [headerHeight, setHeaderHeight] = useState(76);
+    const [headerHeight, setHeaderHeight] = useState(60);
     const [isScrolled, setIsScrolled] = useState(false);
 
     const searchInputRef = useRef(null);

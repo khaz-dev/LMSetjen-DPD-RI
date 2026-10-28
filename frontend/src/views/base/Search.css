@@ -21,6 +21,16 @@
     margin-bottom: 1.25rem;
 }
 
+/* Container alignment with Main Navigation header-container (1400px width, 1.25rem padding) */
+.search-compact-hero .container,
+.search-main-content .container,
+.search-compact-wrapper .container {
+    width: 100% !important;
+    max-width: 1400px !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+}
+
 .search-compact-hero {
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     position: relative;
@@ -39,7 +49,7 @@
 /* Stuck Mode: Fixed under BaseHeader navbar with High-End Glassmorphism */
 .search-compact-hero.is-stuck {
     position: fixed !important;
-    top: var(--header-height, 76px) !important;
+    top: var(--header-height, 60px) !important;
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
@@ -72,9 +82,10 @@
     z-index: 10;
 }
 
-/* Inner Layout in stuck mode: horizontally spread title and search box */
+/* Inner Layout in stuck mode: horizontally spread title and search box across full container */
 .search-compact-hero.is-stuck .search-hero-inner {
-    max-width: 1280px;
+    width: 100% !important;
+    max-width: 100% !important;
     display: flex;
     align-items: center;
     justify-content: space-between;

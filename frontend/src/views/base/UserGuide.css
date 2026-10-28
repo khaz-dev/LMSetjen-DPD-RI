@@ -9,9 +9,23 @@
     background-color: transparent;
 }
 
+/* Wide Balanced Container Layout (Matching BaseHeader & Footer: 1400px) */
+.user-guide-page .container {
+    width: 100% !important;
+    max-width: 1400px !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+}
+
 /* ================================================
-   HERO HEADER (COMPACT & MODERN)
+   HERO HEADER & STICKY SLOT (COMPACT & MODERN)
    ================================================ */
+.guide-hero-slot {
+    min-height: auto;
+    position: relative;
+    width: 100%;
+}
+
 .user-guide-page .guide-hero {
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     position: relative;
@@ -19,6 +33,163 @@
     padding: 1.5rem 0 1.25rem 0;
     box-shadow: 0 4px 20px rgba(13, 148, 136, 0.18);
     overflow: hidden;
+    width: 100%;
+    margin: 0 !important;
+    transition: background 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                padding 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Stuck Mode: Fixed under BaseHeader navbar with High-End Glassmorphism */
+.user-guide-page .guide-hero.is-stuck {
+    position: fixed !important;
+    top: var(--header-height, 60px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 56px !important;
+    z-index: 1020 !important;
+    padding: 0.55rem 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    background: linear-gradient(135deg, rgba(6, 60, 55, 0.95) 0%, rgba(13, 148, 136, 0.93) 50%, rgba(15, 118, 110, 0.96) 100%) !important;
+    backdrop-filter: blur(18px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(190%) !important;
+    box-shadow: 0 10px 30px -5px rgba(6, 60, 55, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .container {
+    width: 100% !important;
+}
+
+/* Stuck Inner Layout: Spread Title (left), Search Box (center/left of actions), Actions (right) */
+.user-guide-page .guide-hero.is-stuck .guide-hero-inner {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1.25rem !important;
+    width: 100% !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .hero-top-row {
+    display: contents !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .hero-branding {
+    order: 1 !important;
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .hero-title {
+    font-size: 1.05rem !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* Luminous Bottom Edge Glow in stuck mode */
+.user-guide-page .guide-hero.is-stuck::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    height: 2px;
+    border-radius: 0;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(45, 212, 191, 0.25) 10%, 
+        #2dd4bf 50%, 
+        rgba(45, 212, 191, 0.25) 90%, 
+        transparent 100%
+    );
+    box-shadow: 0 0 12px #2dd4bf;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.user-guide-page .guide-hero.is-stuck::after {
+    display: none;
+}
+
+/* Collapse non-essential elements completely in stuck mode */
+.user-guide-page .guide-hero.is-stuck .hero-badge,
+.user-guide-page .guide-hero.is-stuck .hero-subtitle,
+.user-guide-page .guide-hero.is-stuck .hero-quick-meta {
+    display: none !important;
+    max-height: 0 !important;
+    opacity: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
+/* Search Box moved directly to the left of hero-actions in stuck mode */
+.user-guide-page .guide-hero.is-stuck .hero-search-wrapper {
+    order: 2 !important;
+    margin: 0 !important;
+    flex: 1 1 340px !important;
+    max-width: 480px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .hero-search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .hero-search-box .search-input {
+    padding: 0.35rem 2rem 0.35rem 2.2rem !important;
+    font-size: 0.82rem !important;
+    height: 34px !important;
+    background: #ffffff !important;
+    border-radius: 50px !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .hero-search-box .search-icon {
+    font-size: 0.82rem !important;
+    left: 0.85rem !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .hero-search-box .clear-search-btn {
+    right: 0.75rem !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .hero-actions {
+    order: 3 !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .language-selector-compact {
+    padding: 0.28rem 1.8rem 0.28rem 0.65rem !important;
+    font-size: 0.78rem !important;
+    height: 34px !important;
+    min-width: 140px !important;
+}
+
+.user-guide-page .guide-hero.is-stuck .btn-export-compact {
+    padding: 0.28rem 0.7rem !important;
+    font-size: 0.78rem !important;
+    height: 34px !important;
 }
 
 .user-guide-page .guide-hero::before {
@@ -273,6 +444,42 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     position: relative;
     z-index: 10;
+    margin: 0 !important;
+    transition: all 0.25s ease;
+}
+
+/* Stuck Mode for Filter Strip: Seamlessly locked right under guide-hero with ZERO GAP */
+.user-guide-page .guide-filter-strip.is-stuck {
+    position: fixed !important;
+    top: calc(var(--header-height, 60px) + 56px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 58px !important;
+    z-index: 1019 !important;
+    display: flex !important;
+    align-items: center !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(14px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) !important;
+    border-top: none !important;
+    border-bottom: 1px solid rgba(13, 148, 136, 0.16) !important;
+    margin: 0 !important;
+    padding: 0.55rem 0 !important;
+}
+
+.user-guide-page .guide-filter-strip.is-stuck .container {
+    width: 100% !important;
+}
+
+.user-guide-page .guide-filter-strip.is-stuck .filter-pills-scroll {
+    padding: 0.45rem 0 !important;
+}
+
+.user-guide-page .guide-filter-strip.is-stuck .filter-pill-btn {
+    padding: 0.35rem 0.85rem !important;
+    font-size: 0.82rem !important;
 }
 
 .user-guide-page .filter-pills-scroll {
@@ -322,7 +529,7 @@
 .user-guide-page .guide-main-container {
     padding-top: 1.25rem;
     padding-bottom: 2rem;
-    max-width: 1320px;
+    max-width: 1400px !important;
 }
 
 /* Explicit side-by-side flex layout for sidebar (left) and content (right) */
@@ -338,7 +545,7 @@
     position: relative;
 }
 
-/* Sticky Sidebar Column: sticks comfortably beneath base-header navbar with airy spacing (~24px clearance) */
+/* Sticky Sidebar Column: sticks comfortably with gap below stuck guide-filter-strip (56px hero + 58px filter + 16px gap = 130px) */
 .user-guide-page .guide-sidebar-col {
     flex: 0 0 280px !important;
     width: 280px !important;
@@ -347,7 +554,7 @@
     padding: 0 !important;
     display: block !important;
     position: sticky !important;
-    top: 96px !important; /* Memberikan jarak proporsional dan tidak terlalu rapat di bawah base-header */
+    top: calc(var(--header-height, 60px) + 130px) !important;
     align-self: flex-start !important;
     z-index: 95 !important;
 }
@@ -365,7 +572,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
-    max-height: calc(100vh - 116px); /* Disesuaikan dengan top 96px agar tidak overflow di viewport */
+    max-height: calc(100vh - var(--header-height, 60px) - 146px);
     overflow-y: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -1044,6 +1251,10 @@
     .user-guide-page .hero-search-box {
         max-width: 100%;
     }
+
+    .user-guide-page .guide-hero.is-stuck .hero-search-wrapper {
+        max-width: 280px !important;
+    }
     
     .user-guide-page .guide-layout-row {
         flex-direction: column !important;
@@ -1067,7 +1278,30 @@
     }
 }
 
+@media (max-width: 767.98px) {
+    .user-guide-page .guide-hero.is-stuck .btn-export-compact span {
+        display: none !important;
+    }
+    .user-guide-page .guide-hero.is-stuck .language-selector-compact {
+        min-width: 120px !important;
+    }
+}
+
 @media (max-width: 575.98px) {
+    .user-guide-page .guide-hero.is-stuck .hero-branding {
+        display: none !important;
+    }
+
+    .user-guide-page .guide-hero.is-stuck .hero-search-wrapper {
+        flex: 1 1 auto !important;
+        max-width: 100% !important;
+    }
+
+    .user-guide-page .guide-hero.is-stuck .hero-actions {
+        width: auto !important;
+        flex: 0 0 auto !important;
+    }
+
     .user-guide-page .hero-top-row {
         flex-direction: column;
         align-items: flex-start;

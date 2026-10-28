@@ -556,87 +556,118 @@ function BaseHeader() {
     return (
         <header role="banner">
             <nav className="base-header navbar navbar-expand-lg" role="navigation" aria-label="Main navigation">
-                <div className="container">
+                <div className="container header-container">
                     {/* Brand */}
                     <Link 
                         className="navbar-brand" 
                         to="/"
                         onMouseEnter={handleBrandHover}
-                >
-                    <picture>
-                        <source srcSet={logoWebP} type="image/webp" />
-                        <img 
-                            src={logoPNG} 
-                            alt="LMSetjen DPD RI Logo" 
-                            className="brand-logo"
-                            width="56"
-                            height="56"
-                            loading="eager"
-                        />
-                    </picture>
-                    <div className="brand-text d-none d-sm-inline">
-                        <span className={`typing-text ${typingComplete || animationSkipped ? 'animation-complete' : ''}`}>
-                            LMSetjen DPD RI
-                        </span>
-                        <div className="brand-underline" />
-                    </div>
-                </Link>
+                    >
+                        <picture>
+                            <source srcSet={logoWebP} type="image/webp" />
+                            <img 
+                                src={logoPNG} 
+                                alt="LMSetjen DPD RI Logo" 
+                                className="brand-logo"
+                                width="40"
+                                height="40"
+                                loading="eager"
+                            />
+                        </picture>
+                        <div className="brand-text d-none d-sm-inline">
+                            <span className={`typing-text ${typingComplete || animationSkipped ? 'animation-complete' : ''}`}>
+                                LMSetjen DPD RI
+                            </span>
+                            <div className="brand-underline" />
+                        </div>
+                    </Link>
 
-                {/* Mobile toggle */}
-                <button
-                    className="navbar-toggler"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent"
-                >
-                    <span className="navbar-toggler-icon" />
-                </button>
+                    {/* Mobile toggle */}
+                    <button
+                        className="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarSupportedContent"
+                        aria-controls="navbarSupportedContent"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation"
+                    >
+                        <span className="navbar-toggler-icon" />
+                    </button>
 
-                <div className="collapse navbar-collapse" id="navbarSupportedContent">
-                    <div className="navbar-content">
-                        {/* User Guide Link */}
-                        <Link to="/user-guide/" className="nav-link-guide">
-                            <i className="fas fa-book-reader me-2"></i>
-                            <span className="d-none d-md-inline">Panduan Pengguna</span>
-                            <span className="d-inline d-md-none">Panduan</span>
-                        </Link>
-
-                        {/* Search */}
-                        {!isSearchPage && (
-                            <div className="search-container-wrapper" onClick={(e) => {
-                                // Close modal only when clicking outside search area, not on it
-                                if (e.target.closest('.search-container')) return;
-                                if (e.target.closest('.search-modal')) return;
-                                setShowSearchModal(false);
-                                setShowSearchHistory(false);  // ✨ PHASE 3: Close history
-                                setShowTrendingSearches(false);  // ✨ PHASE 3: Close trending
-                            }}>
-                                <div className="search-container">
-                                    <input
-                                        className="search-input"
-                                        type="search"
-                                        placeholder="Cari Pembelajaran..."
-                                        value={searchQuery}
-                                        onChange={(e) => {
-                                            setSearchQuery(e.target.value);
-                                            // Close history/trending when user types
-                                            setShowSearchHistory(false);
-                                            setShowTrendingSearches(false);
-                                        }}
-                                        onKeyDown={handleKeyPress}  // ✨ Changed from onKeyPress to onKeyDown for arrow keys
-                                        onFocus={handleSearchInputFocus}  // ✨ PHASE 3 FIX: Call proper handler to show history or results
-                                        aria-label="Search courses"  // ✨ NEW: Accessibility attribute
-                                        aria-autocomplete="list"
-                                        aria-controls="search-results"
-                                    />
-                                    <button 
-                                        onClick={handleSearchSubmit} 
-                                        className="search-button"
-                                        aria-label="Cari"
+                    <div className="collapse navbar-collapse" id="navbarSupportedContent">
+                        <div className="navbar-content">
+                            {/* Primary Navigation Links — left of search */}
+                            <ul className="navbar-nav header-nav-links">
+                                <li className="nav-item">
+                                    <Link 
+                                        to="/search/" 
+                                        className={`header-nav-link ${location.pathname.startsWith('/search') ? 'active' : ''}`}
+                                        title="Jelajah Pembelajaran"
                                     >
-                                        <i className="fas fa-search me-1"></i>Cari
-                                    </button>
-                                </div>
+                                        <i className="fas fa-compass header-nav-icon"></i>
+                                        <span>Jelajah</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link 
+                                        to="/rankings/" 
+                                        className={`header-nav-link ${location.pathname.startsWith('/rankings') ? 'active' : ''}`}
+                                        title="Peringkat Pembelajar"
+                                    >
+                                        <i className="fas fa-trophy header-nav-icon"></i>
+                                        <span>Peringkat</span>
+                                    </Link>
+                                </li>
+                                <li className="nav-item">
+                                    <Link 
+                                        to="/user-guide/" 
+                                        className={`header-nav-link ${location.pathname.startsWith('/user-guide') ? 'active' : ''}`}
+                                        title="Panduan Pengguna Platform"
+                                    >
+                                        <i className="fas fa-book-reader header-nav-icon"></i>
+                                        <span>Panduan</span>
+                                    </Link>
+                                </li>
+                            </ul>
+
+                            {/* Search */}
+                            {!isSearchPage && (
+                                <div className="search-container-wrapper" onClick={(e) => {
+                                    // Close modal only when clicking outside search area, not on it
+                                    if (e.target.closest('.search-container')) return;
+                                    if (e.target.closest('.search-modal')) return;
+                                    setShowSearchModal(false);
+                                    setShowSearchHistory(false);  // ✨ PHASE 3: Close history
+                                    setShowTrendingSearches(false);  // ✨ PHASE 3: Close trending
+                                }}>
+                                    <div className="search-container">
+                                        <i className="fas fa-search search-input-icon" aria-hidden="true"></i>
+                                        <input
+                                            className="search-input"
+                                            type="search"
+                                            placeholder="Cari Pembelajaran..."
+                                            value={searchQuery}
+                                            onChange={(e) => {
+                                                setSearchQuery(e.target.value);
+                                                // Close history/trending when user types
+                                                setShowSearchHistory(false);
+                                                setShowTrendingSearches(false);
+                                            }}
+                                            onKeyDown={handleKeyPress}
+                                            onFocus={handleSearchInputFocus}
+                                            aria-label="Search courses"
+                                            aria-autocomplete="list"
+                                            aria-controls="search-results"
+                                        />
+                                        <button 
+                                            onClick={handleSearchSubmit} 
+                                            className="search-button"
+                                            aria-label="Cari"
+                                        >
+                                            Cari
+                                        </button>
+                                    </div>
 
                                 {/* Search Modal */}
                                 {showSearchModal && (
@@ -773,8 +804,8 @@ function BaseHeader() {
                                     <div className="search-modal search-trending-modal" role="listbox">
                                         <div className="search-modal-header">
                                             <span className="search-modal-title">
-                                                <i className="fas fa-fire me-2"></i>
-                                                Pencarian Trending
+                                                <i className="fas fa-fire"></i>
+                                                Trending
                                             </span>
                                             <button 
                                                 className="search-modal-close"
@@ -784,7 +815,7 @@ function BaseHeader() {
                                                 ✕
                                             </button>
                                         </div>
-                                        <div className="search-modal-content">
+                                        <div className="search-trending-content-pills">
                                             {trendingSearches.map((item, index) => (
                                                 <div 
                                                     key={`trending-${index}`}
@@ -794,7 +825,7 @@ function BaseHeader() {
                                                     role="option"
                                                     aria-selected={index === selectedResultIndex}
                                                 >
-                                                    <i className="fas fa-fire me-2"></i>
+                                                    <i className="fas fa-fire"></i>
                                                     <span>{item}</span>
                                                 </div>
                                             ))}
@@ -869,6 +900,8 @@ function BaseHeader() {
                     </div>
                 </div>
             </div>
+            {/* Decorative bottom accent glow bar */}
+            <div className="header-bottom-accent" aria-hidden="true" />
         </nav>
     </header>
     );

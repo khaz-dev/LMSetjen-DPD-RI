@@ -1,12 +1,14 @@
 import React, { memo } from "react";
 import { Link } from "react-router-dom";
 import { APP_VERSION } from "../../utils/version";
+import logoSetjenWebP from "../../assets/logo/logo-setjen-dpd.webp";
+import logoSetjenPNG from "../../assets/logo/logo-setjen-dpd.png";
 import "./Footer.css";
 
 function Footer() {
   const currentYear = new Date().getFullYear();
 
-  // Content configuration - text only
+  // Content configuration
   const content = {
     brand: {
       name: "LMSetjen DPD RI",
@@ -25,37 +27,66 @@ function Footer() {
   };
 
   return (
-    <footer className="footer-wrapper">
-      <div className="container">
+    <footer className="footer-wrapper" role="contentinfo">
+      {/* Decorative top accent glow bar */}
+      <div className="footer-top-accent" aria-hidden="true" />
+
+      <div className="footer-container">
         <div className="footer-content-row">
-          {/* Brand Section */}
+          {/* Brand & Identity Section */}
           <div className="footer-brand-section">
-            <Link to="/" className="footer-brand-name">{content.brand.name}</Link>{" "}
+            <Link to="/" className="footer-brand-link" title="Beranda LMSetjen DPD RI">
+              <picture className="footer-brand-emblem-picture">
+                <source srcSet={logoSetjenWebP} type="image/webp" />
+                <img
+                  src={logoSetjenPNG}
+                  alt="Logo Setjen DPD RI"
+                  className="footer-brand-emblem"
+                  width="20"
+                  height="20"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
+              <span className="footer-brand-name">{content.brand.name}</span>
+            </Link>
+            <span className="footer-brand-divider" aria-hidden="true">·</span>
             <small className="footer-brand-copyright">{content.brand.copyright}</small>
-            <small className="footer-brand-version ms-2 text-muted">{content.brand.version}</small>
+            <span className="footer-brand-version" title="Versi Aplikasi">
+              {content.brand.version}
+            </span>
           </div>
 
-          {/* Quick Links Section */}
-          <div className="footer-links-section">
+          {/* Quick Links Section with subtle dot separators */}
+          <nav className="footer-links-section" aria-label="Navigasi Bawah">
             {content.links.map((link, index) => (
-              <a
-                key={index}
-                href={link.url}
-                className="footer-quick-link"
-              >
-                {link.name}
-              </a>
+              <React.Fragment key={link.url}>
+                {index > 0 && (
+                  <span className="footer-link-dot" aria-hidden="true">·</span>
+                )}
+                <Link
+                  to={link.url}
+                  className="footer-quick-link"
+                >
+                  {link.name}
+                </Link>
+              </React.Fragment>
             ))}
-          </div>
+          </nav>
 
-          {/* Contact Section */}
+          {/* Contact & Support Section */}
           <div className="footer-contact-section">
-            <i className="fas fa-envelope footer-contact-icon"></i>
             <a
               href={`mailto:${content.contact.email}`}
-              className="footer-contact-email"
+              className="footer-contact-pill"
+              title="Kirim email ke BPSDM OKK Setjen DPD RI"
             >
-              {content.contact.email}
+              <span className="footer-contact-icon-wrapper">
+                <i className="fas fa-envelope footer-contact-icon" aria-hidden="true"></i>
+              </span>
+              <span className="footer-contact-email">
+                {content.contact.email}
+              </span>
             </a>
           </div>
         </div>
@@ -65,3 +96,4 @@ function Footer() {
 }
 
 export default memo(Footer);
+

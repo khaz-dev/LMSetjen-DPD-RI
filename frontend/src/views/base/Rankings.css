@@ -4,11 +4,114 @@
   min-height: calc(100vh - 120px);
 }
 
+/* Wide Balanced Container Layout (Matching BaseHeader & Footer: 1400px) */
+.rankings-page-wrapper .container {
+  width: 100% !important;
+  max-width: 1400px !important;
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+}
+
+/* Hero Slot anchor: guarantees space in document flow so fixing hero causes 0 layout shift */
+.rankings-hero-slot {
+  min-height: 200px;
+  position: relative;
+  width: 100%;
+}
+
 /* Compact & Eye-Catching Hero Section */
 .rankings-hero-section {
   background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  transition: background 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rankings-hero-inner {
+  text-align: center;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Stuck Mode: Fixed under BaseHeader navbar with High-End Glassmorphism */
+.rankings-hero-section.is-stuck {
+  position: fixed !important;
+  top: var(--header-height, 60px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 1020 !important;
+  padding: 0.55rem 0 !important;
+  background: linear-gradient(135deg, rgba(6, 60, 55, 0.95) 0%, rgba(13, 148, 136, 0.93) 50%, rgba(15, 118, 110, 0.96) 100%) !important;
+  backdrop-filter: blur(18px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(190%) !important;
+  box-shadow: 0 10px 30px -5px rgba(6, 60, 55, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Luminous Bottom Edge Glow */
+.rankings-hero-section.is-stuck::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(45, 212, 191, 0.25) 10%, 
+      #2dd4bf 50%, 
+      rgba(45, 212, 191, 0.25) 90%, 
+      transparent 100%
+  );
+  box-shadow: 0 0 12px #2dd4bf;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Inner Layout in stuck mode */
+.rankings-hero-section.is-stuck .rankings-hero-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+}
+
+.rankings-hero-section.is-stuck .badge-rankings-pill,
+.rankings-hero-section.is-stuck .rankings-hero-subtitle {
+  max-height: 0 !important;
+  opacity: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  transform: translateY(-6px) !important;
+  pointer-events: none !important;
+}
+
+.rankings-hero-section.is-stuck .rankings-hero-title {
+  font-size: 1.05rem !important;
+  margin-bottom: 0 !important;
+  white-space: nowrap;
+}
+
+.rankings-hero-section.is-stuck .rankings-tab-switch {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rankings-hero-section.is-stuck .rankings-tab-switch .btn {
+  padding: 0.25rem 0.75rem !important;
+  font-size: 0.78rem !important;
+}
+
+@media (max-width: 768px) {
+  .rankings-hero-section.is-stuck .rankings-hero-inner {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
 }
 
 .rankings-hero-section::before {
@@ -78,7 +181,13 @@
 
 /* Column cards */
 .rankings-column-card {
-  transition: transform 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.rankings-column-card:hover {
+  transform: translateY(-2px);
 }
 
 /* Compact Gamification Rule Cards */

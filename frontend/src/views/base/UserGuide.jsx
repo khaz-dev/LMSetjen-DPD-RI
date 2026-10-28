@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
 import { userGuideContent } from './userGuideData';
+import useStickyHero from '../../hooks/useStickyHero';
 import './UserGuide.css';
 
 function UserGuide() {
@@ -12,6 +13,22 @@ function UserGuide() {
     const [openTrouble, setOpenTrouble] = useState({ 0: true, 1: true });
     const [openFaq, setOpenFaq] = useState({ 0: true });
     const [activeSection, setActiveSection] = useState('getting-started');
+    const { isScrolled, headerHeight } = useStickyHero(55);
+
+    // Track coordinator slot height to prevent any layout shift during sticky transition
+    const slotRef = useRef(null);
+    const [slotHeight, setSlotHeight] = useState(215);
+
+    useEffect(() => {
+        const updateSlotHeight = () => {
+            if (slotRef.current && !isScrolled) {
+                setSlotHeight(slotRef.current.offsetHeight);
+            }
+        };
+        updateSlotHeight();
+        window.addEventListener('resize', updateSlotHeight);
+        return () => window.removeEventListener('resize', updateSlotHeight);
+    }, [isScrolled, language]);
 
     const handlePrint = () => {
         window.print();
@@ -21,7 +38,8 @@ function UserGuide() {
         setActiveSection(sectionId);
         const element = document.getElementById(sectionId);
         if (element) {
-            const headerOffset = 96;
+            // Offset for: BaseHeader (headerHeight) + stuck hero (56px) + stuck filter strip (58px) + margin clearance (16px)
+            const headerOffset = (headerHeight || 60) + 56 + 58 + 16;
             const elementPosition = element.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
             window.scrollTo({
@@ -35,7 +53,7 @@ function UserGuide() {
     useEffect(() => {
         const handleScroll = () => {
             const sections = ['getting-started', 'for-students', 'for-instructors', 'features', 'troubleshooting', 'faq'];
-            const scrollPos = window.scrollY + 150;
+            const scrollPos = window.scrollY + (headerHeight || 60) + 56 + 58 + 30;
 
             for (let i = sections.length - 1; i >= 0; i--) {
                 const el = document.getElementById(sections[i]);
@@ -48,7 +66,7 @@ function UserGuide() {
 
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [headerHeight]);
 
     const t = userGuideContent[language] || userGuideContent.id;
 
@@ -125,102 +143,112 @@ function UserGuide() {
             <BaseHeader />
 
             <div className="user-guide-page user-guide-compact-wrapper">
-                {/* Compact Hero Header */}
-                <div className="guide-hero no-print">
-                    <div className="container">
-                        <div className="guide-hero-inner">
-                            <div className="hero-top-row">
-                                <div className="hero-branding">
-                                    <div className="hero-badge">
-                                        <i className="fas fa-shield-alt text-teal me-1"></i>
-                                        <span>LMSetjen DPD RI • Dokumentasi Resmi</span>
-                                        <span className="badge-dot"></span>
-                                        <span className="badge-version">{t.version}</span>
+                {/* Hero & Subnav Filter Coordinator Slot prevents layout shift and eliminates gap */}
+                <div 
+                    ref={slotRef}
+                    className="guide-hero-slot"
+                    style={{ 
+                        '--header-height': `${headerHeight}px`,
+                        minHeight: isScrolled ? `${slotHeight}px` : 'auto'
+                    }}
+                >
+                    {/* Compact Hero Header with Sticky Scroll Behavior */}
+                    <div className={`guide-hero no-print ${isScrolled ? 'is-stuck' : ''}`}>
+                        <div className="container">
+                            <div className="guide-hero-inner">
+                                <div className="hero-top-row">
+                                    <div className="hero-branding">
+                                        <div className="hero-badge">
+                                            <i className="fas fa-shield-alt text-teal me-1"></i>
+                                            <span>LMSetjen DPD RI • Dokumentasi Resmi</span>
+                                            <span className="badge-dot"></span>
+                                            <span className="badge-version">{t.version}</span>
+                                        </div>
+                                        <h1 className="hero-title">
+                                            <i className="fas fa-book-reader me-2"></i>
+                                            {t.pageTitle}
+                                        </h1>
+                                        <p className="hero-subtitle">{t.pageSubtitle}</p>
                                     </div>
-                                    <h1 className="hero-title">
-                                        <i className="fas fa-book-reader me-2"></i>
-                                        {t.pageTitle}
-                                    </h1>
-                                    <p className="hero-subtitle">{t.pageSubtitle}</p>
-                                </div>
 
-                                <div className="hero-actions">
-                                    <div className="language-selector-wrap">
-                                        <select
-                                            className="form-select form-select-sm language-selector-compact"
-                                            value={language}
-                                            onChange={(e) => setLanguage(e.target.value)}
-                                            aria-label={t.language}
-                                        >
-                                            <option value="id">🇮🇩 Bahasa Indonesia</option>
-                                            <option value="en">🇬🇧 English</option>
-                                        </select>
-                                    </div>
-                                    <button onClick={handlePrint} className="btn-export-compact" title={t.exportPdf}>
-                                        <i className="fas fa-print me-1"></i>
-                                        <span>{t.exportPdf}</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Integrated Compact Search Bar */}
-                            <div className="hero-search-wrapper">
-                                <div className="hero-search-box">
-                                    <i className="fas fa-search search-icon"></i>
-                                    <input
-                                        type="text"
-                                        className="search-input"
-                                        placeholder={language === 'en' ? 'Search topics, features, steps, or questions...' : 'Cari topik panduan, fitur, langkah, atau pertanyaan...'}
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                    {searchQuery && (
-                                        <button
-                                            type="button"
-                                            className="clear-search-btn"
-                                            onClick={() => setSearchQuery('')}
-                                            title="Clear search"
-                                        >
-                                            <i className="fas fa-times"></i>
+                                    <div className="hero-actions">
+                                        <div className="language-selector-wrap">
+                                            <select
+                                                className="form-select form-select-sm language-selector-compact"
+                                                value={language}
+                                                onChange={(e) => setLanguage(e.target.value)}
+                                                aria-label={t.language}
+                                            >
+                                                <option value="id">🇮🇩 Bahasa Indonesia</option>
+                                                <option value="en">🇬🇧 English</option>
+                                            </select>
+                                        </div>
+                                        <button onClick={handlePrint} className="btn-export-compact" title={t.exportPdf}>
+                                            <i className="fas fa-print me-1"></i>
+                                            <span>{t.exportPdf}</span>
                                         </button>
-                                    )}
+                                    </div>
                                 </div>
-                                <div className="hero-quick-meta">
-                                    <span className="quick-meta-pill">
-                                        <i className="fas fa-book-open me-1"></i> 6 Topik Panduan
-                                    </span>
-                                    <span className="quick-meta-pill">
-                                        <i className="fas fa-user-check me-1"></i> Peserta & Pemateri
-                                    </span>
-                                    <span className="quick-meta-pill">
-                                        <i className="fas fa-calendar-check me-1"></i> {t.lastUpdated}: 20 Okt 2025
-                                    </span>
+
+                                {/* Integrated Compact Search Bar */}
+                                <div className="hero-search-wrapper">
+                                    <div className="hero-search-box">
+                                        <i className="fas fa-search search-icon"></i>
+                                        <input
+                                            type="text"
+                                            className="search-input"
+                                            placeholder={language === 'en' ? 'Search topics, features, steps, or questions...' : 'Cari topik panduan, fitur, langkah, atau pertanyaan...'}
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                type="button"
+                                                className="clear-search-btn"
+                                                onClick={() => setSearchQuery('')}
+                                                title="Clear search"
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="hero-quick-meta">
+                                        <span className="quick-meta-pill">
+                                            <i className="fas fa-book-open me-1"></i> 6 Topik Panduan
+                                        </span>
+                                        <span className="quick-meta-pill">
+                                            <i className="fas fa-user-check me-1"></i> Peserta & Pemateri
+                                        </span>
+                                        <span className="quick-meta-pill">
+                                            <i className="fas fa-calendar-check me-1"></i> {t.lastUpdated}: 20 Okt 2025
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Sticky Subnav Filter Bar (Compact Tabs) */}
-                <div className="guide-filter-strip no-print">
-                    <div className="container">
-                        <div className="filter-pills-scroll">
-                            {tabList.map(tab => (
-                                <button
-                                    key={tab.id}
-                                    type="button"
-                                    className={`filter-pill-btn ${activeTab === tab.id ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setActiveTab(tab.id);
-                                        if (tab.id !== 'all') {
-                                            scrollToSection(tab.id);
-                                        }
-                                    }}
-                                >
-                                    <i className={`fas ${tab.icon} me-1`}></i>
-                                    <span>{tab.title}</span>
-                                </button>
-                            ))}
+                    {/* Sticky Subnav Filter Bar (Compact Tabs) locked directly under guide-hero without gap */}
+                    <div className={`guide-filter-strip no-print ${isScrolled ? 'is-stuck' : ''}`}>
+                        <div className="container">
+                            <div className="filter-pills-scroll">
+                                {tabList.map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        className={`filter-pill-btn ${activeTab === tab.id ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setActiveTab(tab.id);
+                                            if (tab.id !== 'all') {
+                                                scrollToSection(tab.id);
+                                            }
+                                        }}
+                                    >
+                                        <i className={`fas ${tab.icon} me-1`}></i>
+                                        <span>{tab.title}</span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

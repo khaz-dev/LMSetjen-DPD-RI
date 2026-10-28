@@ -4,6 +4,7 @@ import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
 import RankedStudents from '../../components/Rankings/RankedStudents';
 import RankedInstructors from '../../components/Rankings/RankedInstructors';
+import useStickyHero from '../../hooks/useStickyHero';
 import './Rankings.css';
 
 /**
@@ -12,27 +13,34 @@ import './Rankings.css';
   */
 function Rankings() {
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'instructors' | 'students'
+  const { isScrolled, headerHeight } = useStickyHero(55);
 
   return (
     <>
       <BaseHeader />
       <div className="rankings-page-wrapper">
         
-        {/* Hero Header - Compact & Eye-Catching */}
-        <section className="rankings-hero-section py-3 py-md-4">
-          <div className="container">
-            <div className="row align-items-center">
-              <div className="col-lg-8 mx-auto text-center">
-                <div className="badge-rankings-pill mb-2">
-                  <i className="fas fa-trophy me-2 text-warning"></i>
-                  Papan Peringkat LMSetjen DPD RI
+        {/* Sticky Hero Slot prevents CLS layout shift */}
+        <div 
+          className="rankings-hero-slot"
+          style={{ '--header-height': `${headerHeight}px` }}
+        >
+          {/* Hero Header - Compact & Eye-Catching with Sticky Scroll Behavior */}
+          <section className={`rankings-hero-section py-3 py-md-4 ${isScrolled ? 'is-stuck' : ''}`}>
+            <div className="container">
+              <div className="rankings-hero-inner">
+                <div className="rankings-hero-branding">
+                  <div className="badge-rankings-pill mb-2">
+                    <i className="fas fa-trophy me-2 text-warning"></i>
+                    Papan Peringkat LMSetjen DPD RI
+                  </div>
+                  <h1 className="h2 fw-bold text-white mb-2 rankings-hero-title">
+                    Peringkat Instruktur & Siswa Terbaik
+                  </h1>
+                  <p className="text-white text-opacity-75 mb-3 small mx-auto rankings-hero-subtitle" style={{ maxWidth: '620px' }}>
+                    Apresiasi atas dedikasi pengajaran instruktur dan konsistensi pembelajaran pegawai di lingkungan Sekretariat Jenderal DPD RI.
+                  </p>
                 </div>
-                <h1 className="h2 fw-bold text-white mb-2">
-                  Peringkat Instruktur & Siswa Terbaik
-                </h1>
-                <p className="text-white text-opacity-75 mb-3 small mx-auto" style={{ maxWidth: '620px' }}>
-                  Apresiasi atas dedikasi pengajaran instruktur dan konsistensi pembelajaran pegawai di lingkungan Sekretariat Jenderal DPD RI.
-                </p>
 
                 {/* Filter Tabs - Crisp & Readable */}
                 <div className="rankings-tab-switch d-inline-flex p-1 rounded-pill">
@@ -57,8 +65,10 @@ function Rankings() {
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
+
+        {/* Content Section - Compact Spacing */}
 
         {/* Content Section - Compact Spacing */}
         <section className="py-3 py-md-4 rankings-content-section">

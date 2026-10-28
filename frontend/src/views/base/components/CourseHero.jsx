@@ -13,7 +13,7 @@ const CourseHero = ({ course }) => {
     const formattedDate = course.date ? dayjs(course.date).format("DD MMMM YYYY") : null;
 
     const [isScrolled, setIsScrolled] = useState(false);
-    const [headerHeight, setHeaderHeight] = useState(76);
+    const [headerHeight, setHeaderHeight] = useState(60);
     const [naturalHeroHeight, setNaturalHeroHeight] = useState(0);
 
     const heroSectionRef = useRef(null);

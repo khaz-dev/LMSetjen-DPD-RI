@@ -474,7 +474,7 @@
   overflow-x: hidden !important;
   position: -webkit-sticky !important;
   position: sticky !important;
-  top: calc(var(--navbar-height, 70px) + 18px) !important;  /* ~88px: Clean breathing gap below base-header */
+  top: calc(var(--navbar-height, 60px) + 18px) !important;  /* ~78px: Clean breathing gap below base-header */
   z-index: 99 !important;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
   max-height: calc(100vh - 108px) !important;

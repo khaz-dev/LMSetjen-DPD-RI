@@ -732,7 +732,7 @@
 @media (max-width: 768px) {
     .modern-certificates-page {
         padding: calc(var(--page-top-spacing) * 0.5) 0;
-        padding-top: calc(var(--navbar-height) + (var(--page-top-spacing) * 0.5)) !important; /* ✨ PHASE 42: Responsive spacing uses variable */
+        padding-top: calc(var(--page-top-spacing) * 0.5) !important; /* ✨ PHASE 42: Responsive spacing uses variable */
         margin-bottom: 4rem;
     }
 
@@ -822,7 +822,7 @@
 @media (max-width: 576px) {
     .modern-certificates-page {
         padding: calc(var(--page-top-spacing) * 0.33) 0;
-        padding-top: calc(var(--navbar-height) + (var(--page-top-spacing) * 0.33)) !important; /* ✨ PHASE 42: Responsive spacing uses variable */
+        padding-top: calc(var(--page-top-spacing) * 0.33) !important; /* ✨ PHASE 42: Responsive spacing uses variable */
     }
 
     .page-header-card {

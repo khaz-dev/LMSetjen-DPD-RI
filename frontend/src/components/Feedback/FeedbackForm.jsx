@@ -35,8 +35,20 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
     const [pendingFeedbackData, setPendingFeedbackData] = useState(null);
 
     const feedbackTypes = [
-        { value: 'bug', label: '🐛 Laporkan Bug', description: 'Laporkan masalah yang tidak berfungsi sebagaimana mestinya' },
-        { value: 'feature', label: '✨ Ajukan Fitur Baru', description: 'Sarankan fitur baru atau perbaikan' },
+        { 
+            value: 'bug', 
+            label: 'Laporkan Kendala / Bug', 
+            icon: 'bi-bug-fill', 
+            badge: 'Kendala Sistem',
+            description: 'Laporkan fitur yang error atau tidak berfungsi sebagaimana mestinya' 
+        },
+        { 
+            value: 'feature', 
+            label: 'Ajukan Usulan Fitur Baru', 
+            icon: 'bi-stars', 
+            badge: 'Ide Peningkatan',
+            description: 'Sarankan ide perbaikan atau modul baru yang Anda butuhkan' 
+        },
     ];
 
     /**
@@ -86,7 +98,7 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
         }
 
         if (formData.related_url && !isValidUrl(formData.related_url)) {
-            newErrors.related_url = 'Harap masukkan URL yang valid';
+            newErrors.related_url = 'Harap masukkan URL yang valid (contoh: https://...)';
         }
 
         setErrors(newErrors);
@@ -109,7 +121,7 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
             Toast().fire({
                 icon: 'error',
                 title: 'Kesalahan Validasi',
-                text: 'Harap perbaiki kesalahan di atas',
+                text: 'Harap periksa kembali bidang formulir yang ditandai merah',
             });
             return;
         }
@@ -177,24 +189,40 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
                         type="button"
                         className="feedback-form-close"
                         onClick={onClose}
-                        aria-label="Close"
+                        aria-label="Tutup Formulir"
                     >
-                        ×
+                        <i className="bi bi-x-lg" aria-hidden="true"></i>
                     </button>
                 )}
 
-                {/* Header */}
+                {/* Header with DPD RI Identity */}
                 <div className="feedback-form-header">
-                    <h2>Bantu Kami Berkembang</h2>
-                    <p>Masukan Anda membantu kami membangun pengalaman belajar yang lebih baik</p>
+                    <div className="feedback-header-badge">
+                        <span className="badge-dot-pulsing" aria-hidden="true"></span>
+                        <span>Aspirasi & Masukan LMSetjen DPD RI</span>
+                    </div>
+                    <div className="feedback-header-title-row">
+                        <div className="feedback-header-icon" aria-hidden="true">
+                            <i className="bi bi-chat-heart-fill"></i>
+                        </div>
+                        <div>
+                            <h2 className="feedback-title">Bantu Kami Berkembang</h2>
+                            <p className="feedback-subtitle">
+                                Masukan Anda sangat berharga untuk membangun platform pembelajaran aparatur yang lebih andal, modern, dan nyaman.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Feedback Type Selection */}
+                {/* Feedback Type Selection (Compact segmented cards) */}
                 <div className="feedback-form-group">
-                    <label>Apa yang ingin Anda lakukan?</label>
+                    <label className="feedback-group-label">Kategori Masukan *</label>
                     <div className="feedback-type-options">
                         {feedbackTypes.map(type => (
-                            <label key={type.value} className="feedback-type-option">
+                            <label 
+                                key={type.value} 
+                                className={`feedback-type-option ${formData.feedback_type === type.value ? 'is-selected' : ''}`}
+                            >
                                 <input
                                     type="radio"
                                     name="feedback_type"
@@ -202,9 +230,13 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
                                     checked={formData.feedback_type === type.value}
                                     onChange={handleChange}
                                 />
-                                <div>
-                                    <strong>{type.label}</strong>
-                                    <p>{type.description}</p>
+                                <div className="type-option-content">
+                                    <div className="type-option-head">
+                                        <i className={`bi ${type.icon} type-icon`} aria-hidden="true"></i>
+                                        <strong className="type-title">{type.label}</strong>
+                                        <span className="type-badge">{type.badge}</span>
+                                    </div>
+                                    <p className="type-desc">{type.description}</p>
                                 </div>
                             </label>
                         ))}
@@ -213,10 +245,12 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
 
                 {/* Title */}
                 <div className="feedback-form-group">
-                    <label htmlFor="title">
-                        <strong>Ringkasan *</strong>
+                    <div className="label-with-counter">
+                        <label htmlFor="title" className="feedback-group-label mb-0">
+                            <strong>Ringkasan Masukan *</strong>
+                        </label>
                         <span className="character-count">({formData.title.length}/100)</span>
-                    </label>
+                    </div>
                     <input
                         type="text"
                         id="title"
@@ -224,22 +258,24 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
                         maxLength="100"
                         placeholder={
                             formData.feedback_type === 'bug'
-                                ? 'Cth: Pemutar video macet saat pemutaran'
-                                : 'Cth: Tambahkan mode gelap ke dasbor'
+                                ? 'Contoh: Pemutar video materi macet saat modul 2 dibuka...'
+                                : 'Contoh: Usulan penambahan fitur unduh transkrip materi...'
                         }
                         value={formData.title}
                         onChange={handleChange}
-                        className={errors.title ? 'error' : ''}
+                        className={`feedback-input ${errors.title ? 'error' : ''}`}
                     />
                     {errors.title && <span className="error-message">{errors.title}</span>}
                 </div>
 
                 {/* Description */}
                 <div className="feedback-form-group">
-                    <label htmlFor="description">
-                        <strong>Detail *</strong>
+                    <div className="label-with-counter">
+                        <label htmlFor="description" className="feedback-group-label mb-0">
+                            <strong>Detail Penjelasan *</strong>
+                        </label>
                         <span className="character-count">({formData.description.length}/2000)</span>
-                    </label>
+                    </div>
                     <textarea
                         id="description"
                         name="description"
@@ -247,97 +283,100 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
                         rows="3"
                         placeholder={
                             formData.feedback_type === 'bug'
-                                ? 'Jelaskan apa yang terjadi, apa yang Anda harapkan, dan pesan kesalahan apa pun yang Anda lihat...'
-                                : 'Jelaskan fitur yang ingin Anda lihat dan bagaimana hal itu akan membantu Anda...'
+                                ? 'Jelaskan langkah terjadinya kendala, perilaku yang diharapkan, dan pesan galat/error yang muncul di layar...'
+                                : 'Jelaskan manfaat fitur baru yang Anda usulkan dan bagaimana fitur tersebut membantu proses belajar Anda...'
                         }
                         value={formData.description}
                         onChange={handleChange}
-                        className={errors.description ? 'error' : ''}
+                        className={`feedback-textarea ${errors.description ? 'error' : ''}`}
                     />
                     {errors.description && <span className="error-message">{errors.description}</span>}
                 </div>
 
-                {/* Affected Area */}
+                {/* Affected Area & Related Course (2 Columns) */}
                 <div className="feedback-form-row">
                     <div className="feedback-form-group">
-                        <label htmlFor="affected_area">
-                            <strong>Area yang Terkena Dampak</strong>
+                        <label htmlFor="affected_area" className="feedback-group-label">
+                            <strong>Area yang Terdampak</strong>
                         </label>
                         <select
                             id="affected_area"
                             name="affected_area"
                             value={formData.affected_area}
                             onChange={handleChange}
+                            className="feedback-select"
                         >
-                            <option value="">-- Pilih area --</option>
+                            <option value="">-- Pilih area modul / sistem --</option>
                             {affectedAreas.map(area => (
                                 <option key={area.value + '-' + area.label} value={area.value}>{area.label}</option>
                             ))}
                         </select>
                     </div>
 
-                    {/* Related Course */}
                     <div className="feedback-form-group">
-                        <label htmlFor="related_course">
-                            <strong>Kursus Terkait (Opsional)</strong>
+                        <label htmlFor="related_course" className="feedback-group-label">
+                            <strong>ID / Judul Kursus (Opsional)</strong>
                         </label>
                         <input
                             type="text"
                             id="related_course"
                             name="related_course"
-                            placeholder="ID Kursus atau judul"
+                            placeholder="Contoh: Tata Naskah Dinas, ID: 12"
                             value={formData.related_course}
                             onChange={handleChange}
+                            className="feedback-input"
                         />
                     </div>
                 </div>
 
-                {/* URL and Attachments */}
+                {/* URL and Attachments (2 Columns) */}
                 <div className="feedback-form-row">
                     <div className="feedback-form-group">
-                        <label htmlFor="related_url">
-                            <strong>URL (Opsional)</strong>
+                        <label htmlFor="related_url" className="feedback-group-label">
+                            <strong>Tautan Halaman / URL (Opsional)</strong>
                         </label>
                         <input
                             type="url"
                             id="related_url"
                             name="related_url"
-                            placeholder="https://contoh.com/kursus/..."
+                            placeholder="https://lms.dpd.go.id/course/..."
                             value={formData.related_url}
                             onChange={handleChange}
-                            className={errors.related_url ? 'error' : ''}
+                            className={`feedback-input ${errors.related_url ? 'error' : ''}`}
                         />
                         {errors.related_url && <span className="error-message">{errors.related_url}</span>}
                     </div>
 
                     <div className="feedback-form-group">
-                        <label htmlFor="attachments">
-                            <strong>URL Tangkapan Layar (Opsional)</strong>
+                        <label htmlFor="attachments" className="feedback-group-label">
+                            <strong>Tautan Tangkapan Layar (Opsional)</strong>
                         </label>
                         <input
                             type="url"
                             id="attachments"
                             name="attachments"
-                            placeholder="URL ke tangkapan layar atau dokumen"
+                            placeholder="Tautan Google Drive / Screenshot"
                             value={formData.attachments}
                             onChange={handleChange}
+                            className="feedback-input"
                         />
                     </div>
                 </div>
 
-                {/* Email Info (for reference) */}
+                {/* Info Callout */}
                 <div className="feedback-form-info">
-                    <p>
-                        <strong>💡 Saran:</strong> Tim kami akan meninjau masukan Anda dan mungkin menghubungi Anda melalui alamat email terdaftar jika kami memerlukan klarifikasi.
-                    </p>
+                  <i className="bi bi-shield-check info-icon" aria-hidden="true"></i>
+                  <p className="mb-0">
+                    Masukan Anda langsung diteruskan ke Tim Teknis <strong>BPSDM Biro OKK Setjen DPD RI</strong> untuk ditindaklanjuti.
+                  </p>
                 </div>
 
-                {/* Submit Button */}
+                {/* Submit & Cancel Actions */}
                 <div className="feedback-form-actions">
                     {onClose && (
                         <button
                             type="button"
-                            className="btn btn-secondary"
+                            className="btn btn-feedback-secondary"
                             onClick={onClose}
                             disabled={isSubmitting}
                         >
@@ -346,16 +385,19 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
                     )}
                     <button
                         type="submit"
-                        className="btn btn-primary"
+                        className="btn btn-feedback-primary"
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? (
                             <>
-                                <span className="spinner-border spinner-border-sm me-2"></span>
-                                Mengirim...
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Memproses...
                             </>
                         ) : (
-                            '✓ Kirim Masukan'
+                            <>
+                                <i className="bi bi-send-fill me-2" aria-hidden="true"></i>
+                                Kirim Masukan
+                            </>
                         )}
                     </button>
                 </div>

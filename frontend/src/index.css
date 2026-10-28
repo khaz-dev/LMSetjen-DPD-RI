@@ -189,7 +189,7 @@ body::-webkit-scrollbar-thumb:hover {
   /* ✨ PHASE 42: Student Page Spacing Variables - CHANGE THESE TO CONTROL ALL STUDENT PAGES */
   /* WARNING: These variables control the gap between navbar and content across ALL student pages */
   /* Modifying these will automatically update spacing on: Dashboard, Courses, Profile, Wishlist, Certificates, Testimonials */
-  --navbar-height: 70px;
+  --navbar-height: 60px;
   --page-top-spacing: 1.5rem; /* Padding-top: navbar height + this value */
   --page-bottom-spacing: 3rem; /* Padding-bottom for all student pages */
   --header-card-gap: 1.5rem; /* Gap between header card and page content */

@@ -27,7 +27,7 @@
    ========================================================================== */
 .course-hero-compact.is-stuck {
     position: fixed !important;
-    top: var(--header-height, 76px) !important;
+    top: var(--header-height, 60px) !important;
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;

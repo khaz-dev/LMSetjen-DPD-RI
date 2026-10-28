@@ -1,4 +1,15 @@
-/* CourseDetail Component Styles */
+/* ==========================================================================
+   Wide Balanced Container Layout (Matching BaseHeader & Footer: 1400px)
+   ========================================================================== */
+.course-detail .container,
+.course-hero-slot .container,
+.course-hero-compact .container,
+.course-detail-loading .container {
+    width: 100% !important;
+    max-width: 1400px !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+}
 
 /* ======================
    CUSTOM UTILITY CLASSES
@@ -123,7 +134,7 @@
 /* Sticky Course Sidebar */
 .course-sidebar-sticky {
     position: sticky;
-    top: calc(var(--header-height, 76px) + var(--course-hero-stuck-height, 0px) + 16px);
+    top: calc(var(--header-height, 60px) + var(--course-hero-stuck-height, 0px) + 16px);
     z-index: 10;
     transition: top 0.25s ease;
 }
@@ -138,7 +149,7 @@
 /* Modern Segmented Tab Bar - Sticky beneath base-header like course-sidebar-sticky */
 .course-tab-bar {
     position: sticky;
-    top: calc(var(--header-height, 76px) + var(--course-hero-stuck-height, 0px) + 12px);
+    top: calc(var(--header-height, 60px) + var(--course-hero-stuck-height, 0px) + 12px);
     z-index: 95;
     padding-top: 4px;
     padding-bottom: 6px;

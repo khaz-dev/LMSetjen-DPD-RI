@@ -119,7 +119,7 @@
 .instructor-review-page .instructor-sidebar {
     position: -webkit-sticky !important;
     position: sticky !important;
-    top: calc(var(--navbar-height, 70px) + 18px) !important;
+    top: calc(var(--navbar-height, 60px) + 18px) !important;
     z-index: 99 !important;
     align-self: flex-start !important;
 }

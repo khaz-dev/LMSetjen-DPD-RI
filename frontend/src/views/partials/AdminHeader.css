@@ -908,7 +908,7 @@
     /* This prevents student/instructor dashboard pages from being affected */
     .admin-header + section,
     .admin-header +div {
-        padding-top: 70px !important;
+        padding-top: var(--navbar-height, 60px) !important;
     }
     
     .brand-title {
