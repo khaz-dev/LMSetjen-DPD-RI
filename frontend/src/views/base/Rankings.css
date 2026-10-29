@@ -1,7 +1,46 @@
 /* Rankings Page Styling */
+/* Ensure proper background layer stacking for Rankings page */
+html:has(.rankings-page-wrapper),
+body:has(.rankings-page-wrapper) {
+  background-color: #f1f5f9 !important;
+}
+
+body:has(.rankings-page-wrapper)::before,
+body:has(.rankings-page-wrapper)::after {
+  display: none !important;
+}
+
+#root:has(.rankings-page-wrapper) {
+  background-color: #f1f5f9 !important;
+  position: relative;
+}
+
 .rankings-page-wrapper {
-  background-color: #f8fafc;
+  background: transparent !important;
   min-height: calc(100vh - 120px);
+  position: relative;
+}
+
+/* Dedicated fixed background layer: keeps the iconic building silhouette visible subtly (samar / siluet) */
+.rankings-page-wrapper::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-image: url('../../assets/background.jpg');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  opacity: 0.35;
+  filter: contrast(118%) brightness(1.04);
+  pointer-events: none;
+  will-change: opacity;
 }
 
 /* Wide Balanced Container Layout (Matching BaseHeader & Footer: 1400px) */
@@ -16,12 +55,15 @@
 .rankings-hero-slot {
   min-height: 200px;
   position: relative;
+  z-index: 2;
   width: 100%;
 }
 
 /* Compact & Eye-Catching Hero Section */
 .rankings-hero-section {
-  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.94) 0%, rgba(15, 118, 110, 0.96) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -179,6 +221,40 @@
   opacity: 1 !important;
 }
 
+/* Content Section with Frosted Veil Overlay matching About Section */
+.rankings-content-section {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  overflow: hidden;
+  min-height: calc(100vh - 350px);
+}
+
+/* Geometric grid & luminous radial glow overlay matching About Section */
+.rankings-background-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 82% 25%, rgba(13, 148, 136, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 18% 75%, rgba(245, 158, 11, 0.10) 0%, transparent 42%),
+    radial-gradient(circle at 50% 90%, rgba(13, 148, 136, 0.08) 0%, transparent 55%),
+    linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+}
+
+.rankings-content-section .container {
+  position: relative;
+  z-index: 2;
+}
+
 /* Column cards */
 .rankings-column-card {
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -192,15 +268,18 @@
 
 /* Compact Gamification Rule Cards */
 .point-rule-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
   border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06), 0 0 25px rgba(13, 148, 136, 0.06) !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .point-rule-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 42px rgba(15, 23, 42, 0.10), 0 0 30px rgba(13, 148, 136, 0.10) !important;
 }
 
 .rule-icon-box {

@@ -15,6 +15,15 @@ function UserGuide() {
     const [activeSection, setActiveSection] = useState('getting-started');
     const { isScrolled, headerHeight } = useStickyHero(55);
 
+    // Ensure body background is properly tinted for silhouette layer
+    useEffect(() => {
+        const originalBg = document.body.style.backgroundColor;
+        document.body.style.backgroundColor = "#f1f5f9";
+        return () => {
+            document.body.style.backgroundColor = originalBg;
+        };
+    }, []);
+
     // Track coordinator slot height to prevent any layout shift during sticky transition
     const slotRef = useRef(null);
     const [slotHeight, setSlotHeight] = useState(215);
@@ -253,8 +262,10 @@ function UserGuide() {
                     </div>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="container guide-main-container">
+                {/* Main Content Area with Frosted Veil Overlay */}
+                <div className="guide-content-section">
+                    <div className="guide-background-pattern" aria-hidden="true"></div>
+                    <div className="container guide-main-container">
                     <div className="guide-layout-row">
                         {/* Desktop Sticky Left Sidebar (Navigation TOC) */}
                         <aside className="guide-sidebar-col no-print">
@@ -878,6 +889,7 @@ function UserGuide() {
                             </div>
                         </main>
                     </div>
+                </div>
                 </div>
             </div>
 

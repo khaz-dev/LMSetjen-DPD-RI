@@ -21,6 +21,15 @@ function Tentang() {
     { id: "kontak-layanan", title: "6. Saluran Bantuan BPSDM", icon: "bi-headset", tag: "Dukungan" }
   ], []);
 
+  // Ensure body background is properly tinted for silhouette layer
+  useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = "#f1f5f9";
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
+  }, []);
+
   // Smooth scroll with sticky navbar + stuck hero clearance
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
@@ -154,8 +163,11 @@ function Tentang() {
         </header>
       </div>
 
-      {/* MAIN TWO-COLUMN COMPACT LAYOUT */}
+      {/* MAIN TWO-COLUMN COMPACT LAYOUT WITH FROSTED VEIL */}
       <main className="tentang-main-container">
+        {/* Geometric Grid & Luminous Glow Pattern matching About section */}
+        <div className="tentang-background-pattern" aria-hidden="true"></div>
+
         <div className="container">
           <div className="row g-4 align-items-start">
 

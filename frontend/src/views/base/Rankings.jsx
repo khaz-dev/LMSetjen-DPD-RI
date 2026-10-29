@@ -15,6 +15,15 @@ function Rankings() {
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'instructors' | 'students'
   const { isScrolled, headerHeight } = useStickyHero(55);
 
+  // Ensure body background is properly tinted for silhouette layer
+  React.useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = "#f1f5f9";
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
+  }, []);
+
   return (
     <>
       <BaseHeader />
@@ -68,10 +77,11 @@ function Rankings() {
           </section>
         </div>
 
-        {/* Content Section - Compact Spacing */}
-
-        {/* Content Section - Compact Spacing */}
+        {/* Content Section - Compact Spacing with Frosted Veil */}
         <section className="py-3 py-md-4 rankings-content-section">
+          {/* Background Geometric Grid & Luminous Glow Pattern matching About section */}
+          <div className="rankings-background-pattern" aria-hidden="true"></div>
+
           <div className="container">
             
             {activeTab === 'all' && (

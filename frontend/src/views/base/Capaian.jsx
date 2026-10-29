@@ -96,6 +96,15 @@ function Capaian() {
     { value: "95%", label: "Indeks Kepuasan Pengguna", sub: "Survei evaluasi berkala", icon: "bi-star-fill", color: "amber" }
   ], []);
 
+  // Ensure body background is properly tinted for silhouette layer
+  useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = "#f1f5f9";
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
+  }, []);
+
   // Smooth scroll with sticky navbar + stuck hero clearance
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
@@ -229,8 +238,11 @@ function Capaian() {
         </header>
       </div>
 
-      {/* MAIN TWO-COLUMN COMPACT LAYOUT */}
+      {/* MAIN TWO-COLUMN COMPACT LAYOUT WITH FROSTED VEIL */}
       <main className="capaian-main-container">
+        {/* Geometric Grid & Luminous Glow Pattern matching About section */}
+        <div className="capaian-background-pattern" aria-hidden="true"></div>
+
         <div className="container">
           <div className="row g-4 align-items-start">
 

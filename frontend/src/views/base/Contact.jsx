@@ -14,6 +14,15 @@ function Contact() {
   const [inquiryNotes, setInquiryNotes] = useState("");
   const { isScrolled, headerHeight } = useStickyHero(55);
 
+  // Ensure body background is properly tinted for silhouette layer
+  React.useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = "#f1f5f9";
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
+  }, []);
+
   // FAQ List
   const faqs = useMemo(() => [
     {
@@ -143,8 +152,11 @@ function Contact() {
         </header>
       </div>
 
-      {/* MAIN TWO-COLUMN COMPACT LAYOUT */}
+      {/* MAIN TWO-COLUMN COMPACT LAYOUT WITH FROSTED VEIL */}
       <main className="contact-main-container">
+        {/* Geometric Grid & Luminous Glow Pattern matching About section */}
+        <div className="contact-background-pattern" aria-hidden="true"></div>
+
         <div className="container">
           <div className="row g-4 align-items-start">
 

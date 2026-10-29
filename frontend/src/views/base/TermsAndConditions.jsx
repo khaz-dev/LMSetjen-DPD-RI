@@ -28,6 +28,15 @@ function TermsAndConditions() {
     { id: "kontak-dukungan", title: "11. Kontak & Dukungan", icon: "bi-envelope-at-fill", tag: "Bantuan" },
   ], []);
 
+  // Ensure body background is properly tinted for silhouette layer
+  useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = "#f1f5f9";
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
+  }, []);
+
   // Smooth scroll to section
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
@@ -167,8 +176,11 @@ function TermsAndConditions() {
         </header>
       </div>
 
-      {/* MAIN TWO-COLUMN COMPACT LAYOUT */}
+      {/* MAIN TWO-COLUMN COMPACT LAYOUT WITH FROSTED VEIL */}
       <main className="terms-main-container">
+        {/* Geometric Grid & Luminous Glow Pattern matching About section */}
+        <div className="terms-background-pattern" aria-hidden="true"></div>
+
         <div className="container">
           <div className="row g-4 align-items-start">
 

@@ -26,6 +26,15 @@ function PrivacyPolicy() {
     { id: "perubahan-kebijakan", title: "9. Perubahan Ketentuan", icon: "bi-arrow-repeat", tag: "Pembaruan" },
   ], []);
 
+  // Ensure body background is properly tinted for silhouette layer
+  useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = "#f1f5f9";
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+    };
+  }, []);
+
   // Smooth scroll to selected section with navbar offset
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
@@ -165,8 +174,11 @@ function PrivacyPolicy() {
         </header>
       </div>
 
-      {/* MAIN TWO-COLUMN COMPACT LAYOUT */}
+      {/* MAIN TWO-COLUMN COMPACT LAYOUT WITH FROSTED VEIL */}
       <main className="privacy-main-container">
+        {/* Geometric Grid & Luminous Glow Pattern matching About section */}
+        <div className="privacy-background-pattern" aria-hidden="true"></div>
+
         <div className="container">
           <div className="row g-4 align-items-start">
             

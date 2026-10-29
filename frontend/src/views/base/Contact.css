@@ -3,11 +3,50 @@
    Platform LMSetjen DPD RI - Learning Management System
    ========================================================================== */
 
+/* Ensure proper background layer stacking for Contact page */
+html:has(.contact-page-wrapper),
+body:has(.contact-page-wrapper) {
+  background-color: #f1f5f9 !important;
+}
+
+body:has(.contact-page-wrapper)::before,
+body:has(.contact-page-wrapper)::after {
+  display: none !important;
+}
+
+#root:has(.contact-page-wrapper) {
+  background-color: #f1f5f9 !important;
+  position: relative;
+}
+
 .contact-page-wrapper {
   min-height: 100vh;
-  background-color: #f8fafc;
+  background: transparent !important;
   color: #1e293b;
   font-family: inherit;
+  position: relative;
+}
+
+/* Dedicated fixed background layer: keeps the iconic building silhouette visible subtly (samar / siluet) */
+.contact-page-wrapper::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-image: url('../../assets/background.jpg');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  opacity: 0.35;
+  filter: contrast(118%) brightness(1.04);
+  pointer-events: none;
+  will-change: opacity;
 }
 
 /* Wide Balanced Container Layout (Matching BaseHeader & Footer: 1400px) */
@@ -373,6 +412,40 @@
 .contact-main-container {
   padding: 1.75rem 0 2.5rem 0;
   width: 100%;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  overflow: hidden;
+}
+
+/* Geometric grid & luminous radial glow overlay matching About Section */
+.contact-background-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 82% 25%, rgba(13, 148, 136, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 18% 75%, rgba(245, 158, 11, 0.10) 0%, transparent 42%),
+    radial-gradient(circle at 50% 90%, rgba(13, 148, 136, 0.08) 0%, transparent 55%),
+    linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    36px 36px,
+    36px 36px;
+}
+
+.contact-main-container .container {
+  position: relative;
+  z-index: 2;
 }
 
 .contact-main-container .row {
@@ -426,10 +499,12 @@
    3. LEFT COLUMN: CONTACT INFO CARD & CHANNELS
    -------------------------------------------------------------------------- */
 .contact-info-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06), 0 0 25px rgba(13, 148, 136, 0.06);
   padding: 1.25rem 1.4rem;
   display: flex;
   flex-direction: column;
@@ -688,10 +763,12 @@
    -------------------------------------------------------------------------- */
 .contact-form-card,
 .contact-faq-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06), 0 0 25px rgba(13, 148, 136, 0.06);
   padding: 1.25rem 1.4rem;
 }
 

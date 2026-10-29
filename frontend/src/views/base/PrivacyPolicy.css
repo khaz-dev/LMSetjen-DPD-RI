@@ -3,11 +3,50 @@
    Platform LMSetjen DPD RI - Learning Management System
    ========================================================================== */
 
+/* Ensure proper background layer stacking for Privacy Policy page */
+html:has(.privacy-policy-wrapper),
+body:has(.privacy-policy-wrapper) {
+  background-color: #f1f5f9 !important;
+}
+
+body:has(.privacy-policy-wrapper)::before,
+body:has(.privacy-policy-wrapper)::after {
+  display: none !important;
+}
+
+#root:has(.privacy-policy-wrapper) {
+  background-color: #f1f5f9 !important;
+  position: relative;
+}
+
 .privacy-policy-wrapper {
   min-height: 100vh;
-  background-color: #f8fafc;
+  background: transparent !important;
   color: #1e293b;
   font-family: inherit;
+  position: relative;
+}
+
+/* Dedicated fixed background layer: keeps the iconic building silhouette visible subtly (samar / siluet) */
+.privacy-policy-wrapper::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-image: url('../../assets/background.jpg');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  opacity: 0.35;
+  filter: contrast(118%) brightness(1.04);
+  pointer-events: none;
+  will-change: opacity;
 }
 
 /* Wide Balanced Container Layout (Matching BaseHeader & Footer: 1400px) */
@@ -365,6 +404,40 @@
 .privacy-main-container {
   padding: 1.75rem 0 2.5rem 0;
   width: 100%;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  overflow: hidden;
+}
+
+/* Geometric grid & luminous radial glow overlay matching About Section */
+.privacy-background-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 82% 25%, rgba(13, 148, 136, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 18% 75%, rgba(245, 158, 11, 0.10) 0%, transparent 42%),
+    radial-gradient(circle at 50% 90%, rgba(13, 148, 136, 0.08) 0%, transparent 55%),
+    linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    36px 36px,
+    36px 36px;
+}
+
+.privacy-main-container .container {
+  position: relative;
+  z-index: 2;
 }
 
 .privacy-main-container .row {
@@ -454,17 +527,19 @@
 /* Search Card with Tooltip */
 .privacy-search-card {
   position: relative;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(226, 232, 240, 0.95);
   padding: 0.5rem 0.65rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .privacy-search-card:hover {
   border-color: #0d9488;
-  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.12);
+  box-shadow: 0 6px 24px rgba(13, 148, 136, 0.12);
 }
 
 /* Search Card Tooltip */
@@ -564,10 +639,12 @@
 
 /* Table of Contents */
 .privacy-toc-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06), 0 0 25px rgba(13, 148, 136, 0.06);
   padding: 0.75rem 0.65rem;
 }
 
@@ -846,10 +923,12 @@
 }
 
 .policy-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06), 0 0 25px rgba(13, 148, 136, 0.06);
   padding: 1.25rem 1.45rem;
   transition: all 0.25s ease;
   scroll-margin-top: 85px;
@@ -857,7 +936,7 @@
 
 .policy-card:hover {
   border-color: #cbd5e1;
-  box-shadow: 0 6px 18px -4px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.09), 0 0 30px rgba(13, 148, 136, 0.09);
 }
 
 .policy-card.search-dim {
