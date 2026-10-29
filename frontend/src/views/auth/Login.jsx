@@ -548,8 +548,11 @@ function Login() {
 
       <main className="login-main-content">
         <section className="login-section">
-        <div className="login-container">
-          <div className="login-card-container">
+          {/* Background Geometric Grid & Luminous Glow Pattern matching About section */}
+          <div className="login-background-pattern" aria-hidden="true"></div>
+
+          <div className="login-container">
+            <div className="login-card-container">
             {/* Left Brand Panel */}
             <div className="login-brand-panel">
               <div className="login-brand-decor-circle circle-1"></div>
