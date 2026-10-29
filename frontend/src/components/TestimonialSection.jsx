@@ -1,7 +1,7 @@
-import React, { useState, useEffect, memo } from 'react';
-import apiInstance from '../utils/axios';
-import Toast from '../views/plugin/Toast';
-import BaseFooter from '../views/partials/BaseFooter';
+import React, { useState, useEffect, memo } from "react";
+import apiInstance from "../utils/axios";
+import Toast from "../views/plugin/Toast";
+import BaseFooter from "../views/partials/BaseFooter";
 
 /**
  * Testimonial Section Component
@@ -21,13 +21,13 @@ function TestimonialSection() {
       setLoading(true);
       // ✨ PHASE 4.11: Fetch BOTH student and instructor testimonials for homepage
       const [studentRes, instructorRes] = await Promise.all([
-        apiInstance.get('statistics/testimonials/?role=student'),
-        apiInstance.get('statistics/testimonials/?role=instructor'),
+        apiInstance.get("statistics/testimonials/?role=student"),
+        apiInstance.get("statistics/testimonials/?role=instructor"),
       ]);
       
       // Combine results from both roles
-      const studentTestimonials = (studentRes.data?.results || []).map(t => ({ ...t, role: 'student' }));
-      const instructorTestimonials = (instructorRes.data?.results || []).map(t => ({ ...t, role: 'instructor' }));
+      const studentTestimonials = (studentRes.data?.results || []).map(t => ({ ...t, role: "student" }));
+      const instructorTestimonials = (instructorRes.data?.results || []).map(t => ({ ...t, role: "instructor" }));
       
       // Combine and sort by date (newest first)
       const allTestimonials = [...studentTestimonials, ...instructorTestimonials]
@@ -36,10 +36,10 @@ function TestimonialSection() {
       
       setTestimonials(allTestimonials);
     } catch (error) {
-      console.error('Error fetching testimonials:', error);
+      console.error("Error fetching testimonials:", error);
       Toast().fire({
-        icon: 'error',
-        title: 'Gagal memuat testimoni',
+        icon: "error",
+        title: "Gagal memuat testimoni",
         timer: 2000,
       });
       setTestimonials([]);
@@ -50,16 +50,16 @@ function TestimonialSection() {
 
   // Get avatar initial from full name
   const getAvatarInitial = (fullName) => {
-    if (!fullName) return '?';
-    return fullName.split(' ')[0].charAt(0).toUpperCase();
+    if (!fullName) return "?";
+    return fullName.split(" ")[0].charAt(0).toUpperCase();
   };
 
   // Get random gradient color
   const getGradientColor = (index) => {
     const gradients = [
-      'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-      'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-      'linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)',
+      "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+      "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
+      "linear-gradient(135deg, #dc3545 0%, #e83e8c 100%)",
     ];
     return gradients[index % gradients.length];
   };
@@ -67,57 +67,59 @@ function TestimonialSection() {
   // Render loading skeleton
   if (loading) {
     return (
-      <section className="py-5 snap-section" style={{ background: 'rgba(255,255,255,0.2)', display: 'flex', flexDirection: 'column', minHeight: 'auto', paddingBottom: '0' }}>
-        <div className="container" style={{ flex: '1' }}>
+      <section className="testimonials-section snap-section">
+        <div className="testimonials-background-pattern" aria-hidden="true"></div>
+        <div className="container position-relative testimonials-container">
           <div className="text-center mb-5">
             <div 
               className="badge mb-3"
               style={{
-                background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-                color: 'white',
-                padding: '0.5rem 1rem',
-                borderRadius: '50px',
-                fontSize: '0.9rem'
+                background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                color: "white",
+                padding: "0.35rem 0.85rem",
+                borderRadius: "50px",
+                fontSize: "0.82rem",
+                fontWeight: "600"
               }}
             >
               <i className="fas fa-quote-left me-2"></i>
               Testimoni
             </div>
             
-            <h2 className="display-6 fw-bold mb-3" style={{ color: '#2c3e50', fontSize: '2.2rem' }}>
-              Apa Kata Mereka?
+            <h2 className="display-6 fw-bold mb-1" style={{ color: "#2c3e50", fontSize: "clamp(1.5rem, 2.5vw, 2rem)" }}>
+              Apa Kata <span className="about-title-accent">Mereka?</span>
             </h2>
             
-            <p className="lead text-muted mb-0" style={{ fontSize: '1.1rem' }}>
+            <p className="text-muted mb-0" style={{ fontSize: "0.9rem" }}>
               Pengalaman nyata dari para peserta yang telah merasakan manfaat LMSetjen DPD RI
             </p>
           </div>
 
-          <div className="row g-3">
+          <div className="row g-3 testimonials-row">
             {[1, 2, 3].map((i) => (
               <div key={i} className="col-lg-4">
                 <div 
                   className="card border-0 h-100"
                   style={{
-                    borderRadius: '20px',
-                    background: 'white',
-                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid #e9ecef'
+                    borderRadius: "20px",
+                    background: "white",
+                    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
+                    border: "1px solid #e9ecef"
                   }}
                 >
-                  <div className="card-body text-center p-4">
+                  <div className="card-body text-center p-3">
                     <div 
                       className="mx-auto mb-3"
                       style={{
-                        width: '70px',
-                        height: '70px',
-                        borderRadius: '50%',
-                        background: '#e9ecef',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#6c757d',
-                        fontSize: '24px'
+                        width: "70px",
+                        height: "70px",
+                        borderRadius: "50%",
+                        background: "#e9ecef",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#6c757d",
+                        fontSize: "24px"
                       }}
                     >
                       <i className="fas fa-spinner fa-spin"></i>
@@ -130,7 +132,7 @@ function TestimonialSection() {
         </div>
 
         {/* ✨ PHASE 4.9: Footer moved INSIDE snap-section for smooth scrolling without snap-back */}
-        <div style={{ marginTop: '1.5rem' }}>
+        <div className="w-100 footer-wrapper" style={{ width: "100%", alignSelf: "stretch", padding: 0, margin: 0 }}>
           <BaseFooter />
         </div>
       </section>
@@ -139,65 +141,66 @@ function TestimonialSection() {
 
   // Render testimonials
   return (
-    <section className="py-5 snap-section" style={{ background: 'rgba(255,255,255,0.2)', display: 'flex', flexDirection: 'column', minHeight: 'auto', paddingBottom: '0' }}>
-      <div className="container" style={{ flex: '1' }}>
-        <div className="text-center mb-5">
+    <section className="testimonials-section snap-section">
+      <div className="testimonials-background-pattern" aria-hidden="true"></div>
+      <div className="container position-relative testimonials-container">
+        <div className="text-center mb-3">
           <div 
-            className="badge mb-3"
+            className="badge mb-2"
             style={{
-              background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-              color: 'white',
-              padding: '0.5rem 1rem',
-              borderRadius: '50px',
-              fontSize: '0.9rem'
+              background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+              color: "white",
+              padding: "0.5rem 1rem",
+              borderRadius: "50px",
+              fontSize: "0.9rem"
             }}
           >
             <i className="fas fa-quote-left me-2"></i>
             Testimoni
           </div>
           
-          <h2 className="display-6 fw-bold mb-3" style={{ color: '#2c3e50', fontSize: '2.2rem' }}>
-            Apa Kata Mereka?
+          <h2 className="display-6 fw-bold mb-1" style={{ color: "#2c3e50", fontSize: "clamp(1.5rem, 2.5vw, 2rem)" }}>
+            Apa Kata <span className="about-title-accent">Mereka?</span>
           </h2>
           
-          <p className="lead text-muted mb-0" style={{ fontSize: '1.1rem' }}>
+          <p className="text-muted mb-0" style={{ fontSize: "0.9rem" }}>
             Pengalaman nyata dari para peserta yang telah merasakan manfaat LMSetjen DPD RI
           </p>
         </div>
 
         <div 
-          className={`row g-3 ${testimonials.length < 3 ? 'justify-content-center' : ''}`}
-          style={testimonials.length < 3 ? { display: 'flex', justifyContent: 'center', flexWrap: 'wrap' } : {}}
+          className={`row g-3 testimonials-row ${testimonials.length < 3 ? "justify-content-center" : ""}`}
+          style={testimonials.length < 3 ? { display: "flex", justifyContent: "center", flexWrap: "wrap" } : {}}
         >
           {testimonials.map((testimonial, index) => (
             <div 
               key={testimonial.id} 
               className="col-lg-4"
-              style={testimonials.length < 3 ? { maxWidth: '400px' } : {}}
+              style={testimonials.length < 3 ? { maxWidth: "400px" } : {}}
             >
               <div 
                 className="card border-0 h-100"
                 style={{
-                  borderRadius: '20px',
-                  background: 'white',
-                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid #e9ecef'
+                  borderRadius: "20px",
+                  background: "white",
+                  boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
+                  border: "1px solid #e9ecef"
                 }}
               >
-                <div className="card-body text-center p-4">
+                <div className="card-body text-center p-3">
                   {/* Avatar with gradient ring */}
                   <div 
-                    className="preview-avatar-wrap mx-auto mb-3"
+                    className="preview-avatar-wrap mx-auto mb-2"
                     style={{
-                      width: '68px',
-                      height: '68px',
-                      borderRadius: '50%',
-                      padding: '2.5px',
-                      background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 4px 14px rgba(13, 148, 136, 0.22)'
+                      width: "50px",
+                      height: "50px",
+                      borderRadius: "50%",
+                      padding: "2.5px",
+                      background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 4px 14px rgba(13, 148, 136, 0.22)"
                     }}
                   >
                     {testimonial.image ? (
@@ -206,32 +209,32 @@ function TestimonialSection() {
                         alt={testimonial.full_name}
                         loading="lazy"
                         decoding="async"
-                        width="60"
-                        height="60"
+                        width="44"
+                        height="44"
                         style={{
-                          width: '100%',
-                          height: '100%',
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          background: '#f1f5f9'
+                          width: "100%",
+                          height: "100%",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          background: "#f1f5f9"
                         }}
                         onError={(e) => {
-                          e.target.style.display = 'none';
+                          e.target.style.display = "none";
                         }}
                       />
                     ) : (
                       <div 
                         style={{
-                          width: '100%',
-                          height: '100%',
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-                          color: '#ffffff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: '700',
-                          fontSize: '1.4rem'
+                          width: "100%",
+                          height: "100%",
+                          borderRadius: "50%",
+                          background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                          color: "#ffffff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "700",
+                          fontSize: "1.1rem"
                         }}
                       >
                         {getAvatarInitial(testimonial.full_name)}
@@ -240,45 +243,45 @@ function TestimonialSection() {
                   </div>
                   
                   {/* Quote with opening & closing marks */}
-                  <div className="preview-quote-box mb-3" style={{ position: 'relative', padding: '0 0.8rem', minHeight: '80px' }}>
-                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem', lineHeight: '1', color: 'rgba(13, 148, 136, 0.35)', fontWeight: 'bold', userSelect: 'none' }}>“</span>
-                    <p className="preview-quote-text fst-italic mb-0" style={{ color: '#475569', fontSize: '0.92rem', lineHeight: '1.65' }}>
+                  <div className="preview-quote-box mb-2" style={{ position: "relative", padding: "0 0.8rem", minHeight: "52px" }}>
+                    <span style={{ fontFamily: "Georgia, serif", fontSize: "1.6rem", lineHeight: "1", color: "rgba(13, 148, 136, 0.35)", fontWeight: "bold", userSelect: "none" }}>“</span>
+                    <p className="preview-quote-text fst-italic mb-0" style={{ color: "#475569", fontSize: "0.85rem", lineHeight: "1.5" }}>
                       {testimonial.review}
                     </p>
-                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem', lineHeight: '1', color: 'rgba(13, 148, 136, 0.35)', fontWeight: 'bold', userSelect: 'none' }}>”</span>
+                    <span style={{ fontFamily: "Georgia, serif", fontSize: "1.6rem", lineHeight: "1", color: "rgba(13, 148, 136, 0.35)", fontWeight: "bold", userSelect: "none" }}>”</span>
                   </div>
                   
                   {/* Rating Stars with score */}
-                  <div className="preview-rating-row mb-3 d-flex align-items-center justify-content-center">
+                  <div className="preview-rating-row mb-2 d-flex align-items-center justify-content-center">
                     {[...Array(5)].map((_, i) => (
                       <i 
                         key={i}
-                        className={`fas fa-star ${i < testimonial.rating ? 'text-warning' : 'text-secondary'}`}
-                        style={{ fontSize: '0.92rem', margin: '0 1.5px', color: i < testimonial.rating ? '#f59e0b' : '#e2e8f0' }}
+                        className={`fas fa-star ${i < testimonial.rating ? "text-warning" : "text-secondary"}`}
+                        style={{ fontSize: "0.92rem", margin: "0 1.5px", color: i < testimonial.rating ? "#f59e0b" : "#e2e8f0" }}
                       ></i>
                     ))}
-                    <span className="preview-rating-number ms-2 fw-bold text-warning" style={{ fontSize: '0.95rem' }}>
+                    <span className="preview-rating-number ms-2 fw-bold text-warning" style={{ fontSize: "0.95rem" }}>
                       {testimonial.rating}.0
                     </span>
                   </div>
                   
                   {/* Role Badge - ✨ PHASE 4.11 */}
-                  <div className="mb-3">
+                  <div className="mb-2">
                     <span 
                       className="badge"
                       style={{
-                        background: testimonial.role === 'instructor' 
-                          ? 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)'
-                          : 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-                        color: 'white',
-                        padding: '0.35rem 0.75rem',
-                        fontSize: '0.8rem',
-                        borderRadius: '20px',
-                        marginRight: '0.5rem'
+                        background: testimonial.role === "instructor" 
+                          ? "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)"
+                          : "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                        color: "white",
+                        padding: "0.35rem 0.75rem",
+                        fontSize: "0.8rem",
+                        borderRadius: "20px",
+                        marginRight: "0.5rem"
                       }}
                     >
-                      <i className={`fas ${testimonial.role === 'instructor' ? 'fa-chalkboard-user' : 'fa-graduation-cap'} me-1`}></i>
-                      {testimonial.role === 'instructor' ? 'Sebagai Instruktur' : 'Sebagai Siswa'}
+                      <i className={`fas ${testimonial.role === "instructor" ? "fa-chalkboard-user" : "fa-graduation-cap"} me-1`}></i>
+                      {testimonial.role === "instructor" ? "Sebagai Instruktur" : "Sebagai Siswa"}
                     </span>
                     
                     {/* ✨ PHASE 4.12.2: Public User Indicator - if NIP is missing, user is from public */}
@@ -286,11 +289,11 @@ function TestimonialSection() {
                       <span 
                         className="badge"
                         style={{
-                          background: 'linear-gradient(135deg, #17a2b8 0%, #20c997 100%)',
-                          color: 'white',
-                          padding: '0.35rem 0.75rem',
-                          fontSize: '0.8rem',
-                          borderRadius: '20px'
+                          background: "linear-gradient(135deg, #17a2b8 0%, #20c997 100%)",
+                          color: "white",
+                          padding: "0.35rem 0.75rem",
+                          fontSize: "0.8rem",
+                          borderRadius: "20px"
                         }}
                         title="Pengguna dari luar Setjen DPD RI (tidak terdaftar di data Pegawai AWS)"
                       >
@@ -301,22 +304,22 @@ function TestimonialSection() {
                   </div>
                   
                   {/* User Info */}
-                  <h3 className="fw-bold mb-1" style={{ color: '#343a40', fontSize: '1rem' }}>
+                  <h3 className="fw-bold mb-1" style={{ color: "#343a40", fontSize: "1rem" }}>
                     {testimonial.full_name}
                   </h3>
-                  <small className="text-muted" style={{ fontSize: '0.85rem' }}>
+                  <small className="text-muted" style={{ fontSize: "0.85rem" }}>
                     {testimonial.position && testimonial.golongan
                       ? `${testimonial.position} (${testimonial.golongan})`
-                      : testimonial.position || testimonial.golongan || 'Karyawan Setjen DPD RI'}
+                      : testimonial.position || testimonial.golongan || "Karyawan Setjen DPD RI"}
                   </small>
                   
                   {/* ✨ PHASE 4.12.1: Display Unit Organisasi and Posisi if available */}
                   {/* ✨ PHASE 4.12.2: Also display NIP for government employees */}
                   {(testimonial.unit_organisasi || testimonial.position || (!testimonial.is_public_user && testimonial.nip)) && (
-                    <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#6c757d', lineHeight: '1.4' }}>
+                    <div style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "#6c757d", lineHeight: "1.4" }}>
                       {testimonial.unit_organisasi && (
                         <div>
-                          <i className="fas fa-building me-1" style={{ color: '#0d9488' }}></i>
+                          <i className="fas fa-building me-1" style={{ color: "#0d9488" }}></i>
                           <span>{testimonial.unit_organisasi}</span>
                         </div>
                       )}
@@ -330,7 +333,7 @@ function TestimonialSection() {
       </div>
 
       {/* ✨ PHASE 4.9: Footer moved INSIDE snap-section for smooth scrolling without snap-back */}
-      <div style={{ marginTop: '1.5rem' }}>
+      <div className="w-100 footer-wrapper" style={{ width: "100%", alignSelf: "stretch", padding: 0, margin: 0 }}>
         <BaseFooter />
       </div>
     </section>

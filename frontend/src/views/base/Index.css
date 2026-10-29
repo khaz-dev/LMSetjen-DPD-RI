@@ -3,15 +3,16 @@
    Isolated with .landing-page-container scope to prevent conflicts
    ========================================== */
 
-/* Smooth scrolling for the entire document */
+/* Base canvas with smooth scrolling */
 html {
     scroll-behavior: smooth;
+    background-color: #f1f5f9;
 }
 
-/* Remove body padding on landing page */
 body:has(.landing-page-container) {
     padding-top: 0 !important;
     margin-top: 0 !important;
+    background-color: #f1f5f9 !important;
 }
 
 /* === FIXED HEADER FOR LANDING PAGE === */
@@ -47,15 +48,13 @@ body:has(.landing-page-container) {
 /* Optimized for professional, buttery-smooth scrolling */
 .landing-page-container {
     scroll-snap-type: y mandatory !important;
-    /* Mandatory for precise snapping */
+    /* Smooth proximity snapping */
     overflow-y: scroll !important;
     height: 100vh !important;
     height: 100dvh !important;
     scroll-behavior: smooth !important;
     scroll-padding-top: 0px !important;
-    /* No padding to ensure perfect snap alignment */
     scroll-padding-bottom: 0px !important;
-    /* Clean bottom snap */
     padding: 0 !important;
     margin: 0 !important;
     position: relative;
@@ -67,53 +66,114 @@ body:has(.landing-page-container) {
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
     background: transparent !important;
+    /* Transparent container to reveal background silhouette */
     overflow-x: hidden !important;
 }
 
-.landing-page-container .snap-section,
-.landing-page-container .cta-section,
-.landing-page-container .about-section,
-.landing-page-container .statistics-section {
-    background: rgba(255, 255, 255, 0.7);
-    /* or adjust alpha as needed */
+/* Dedicated fixed background layer: keeps the iconic building silhouette visible subtly (samar / siluet) */
+.landing-page-container::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background-image: url('../../assets/background.jpg');
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    opacity: 0.35;
+    filter: contrast(118%) brightness(1.04);
+    pointer-events: none;
+    will-change: opacity;
 }
 
-/* Snap Sections - Ultra smooth and natural snapping both directions */
+/* Dedicated translucent glassmorphism section backgrounds - strictly 100vh 100% full snap */
 .landing-page-container .snap-section {
+    position: relative !important;
+    z-index: 1 !important;
     scroll-snap-align: start !important;
-    /* Start alignment for consistent behavior */
     scroll-snap-stop: always !important;
-    /* Ensure sections don't skip */
+    height: 100vh !important;
+    height: 100dvh !important;
     min-height: 100vh !important;
-    /* Full viewport height */
-    max-height: none !important;
+    min-height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: flex-start !important;
-    /* Start instead of center for predictable snap */
+    justify-content: center !important;
+    align-items: center !important;
     padding: 0 !important;
-    /* Remove padding to avoid offset */
     box-sizing: border-box !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     margin: 0 !important;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    /* Smooth cubic bezier transition */
 }
 
-/* Add internal padding to content instead of section padding */
+.landing-page-container .about-section {
+    background: rgba(255, 255, 255, 0.68) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+}
+
+.landing-page-container .statistics-section {
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.68) 0%, rgba(240, 253, 250, 0.58) 50%, rgba(248, 250, 252, 0.68) 100%) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+}
+
+.landing-page-container .categories-section {
+    background: rgba(255, 255, 255, 0.68) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+}
+
+.landing-page-container .courses-section {
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.68) 0%, rgba(240, 253, 250, 0.58) 60%, rgba(248, 250, 252, 0.68) 100%) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+}
+
+.landing-page-container .cta-section {
+    padding: 3.5rem 0 !important;
+    min-height: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, rgba(4, 47, 44, 0.72) 0%, rgba(6, 78, 71, 0.68) 25%, rgba(13, 148, 136, 0.64) 75%, rgba(15, 118, 110, 0.70) 100%) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: #ffffff !important;
+}
+
+.landing-page-container .testimonials-section,
+.landing-page-container .snap-section:last-of-type {
+    background: rgba(248, 250, 252, 0.68) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Add internal padding to content instead of section padding - aligned with .header-container (1400px) */
 .landing-page-container .snap-section>.container,
 .landing-page-container .snap-section>.position-relative {
-    padding-top: 100px !important;
-    /* Space for header + content spacing */
-    padding-bottom: 50px !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
     flex: 1 !important;
-    /* Allow container to grow and fill space */
     display: flex !important;
-    /* Enable flexbox */
     flex-direction: column !important;
-    /* Stack content vertically */
     justify-content: center !important;
-    /* Center content vertically */
+    max-width: 1400px !important;
+    width: 100% !important;
 }
 
 /* First section (Hero) - Account for fixed header */
@@ -123,22 +183,58 @@ body:has(.landing-page-container) {
     align-items: stretch !important;
 }
 
-/* Hero container gets the padding */
+/* Hero container - precisely aligned with .header-container (1400px max-width) */
 .landing-page-container .hero-container {
-    padding-top: 100px !important;
-    /* Header + spacing */
-    padding-bottom: 50px !important;
+    position: relative;
+    z-index: 2;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 75px !important;
+    padding-bottom: 35px !important;
 }
 
-/* CTA Section */
-.landing-page-container .cta-section {
-    padding: 4rem 0 !important;
-    min-height: 100vh !important;
-    position: relative !important;
-    z-index: 1 !important;
+/* Row in Hero Section - Seamless left and right boundary alignment with .header-container */
+.landing-page-container .hero-container>.row,
+.landing-page-container .hero-container .row.align-items-center {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Align inner columns with .header-container (1.25rem padding) */
+.landing-page-container .hero-text-col {
+    padding-left: 1.25rem !important;
+    padding-right: 1rem !important;
+}
+
+.landing-page-container .hero-visual-col {
+    padding-left: 1rem !important;
+    padding-right: 1.25rem !important;
     display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+}
+
+@media (max-width: 991.98px) {
+
+    .landing-page-container .hero-text-col,
+    .landing-page-container .hero-visual-col {
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+
+    .landing-page-container .hero-visual-col {
+        justify-content: center !important;
+    }
 }
 
 /* Ensure CTA section content is clickable */
@@ -176,31 +272,71 @@ body:has(.landing-page-container) {
     z-index: 3 !important;
 }
 
-/* Last section (Testimonials) - Footer now INSIDE for smooth scrolling without snap-back */
-.landing-page-container .snap-section:last-of-type {
-    min-height: auto !important;
-    /* Allow flexible height - footer is inside */
-    max-height: none !important;
+/* Last section (Testimonials) - Full viewport height with full-width edge-to-edge footer */
+.landing-page-container .snap-section:last-of-type,
+.landing-page-container .testimonials-section {
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
     scroll-snap-align: start !important;
-    /* Enable snapping to last section */
-    scroll-snap-stop: auto !important;
-    /* Allow user to scroll smoothly */
-    justify-content: flex-start !important;
-    padding-top: 5rem !important;
-    padding-bottom: 0 !important;
-    /* ✨ PHASE 4.9: Footer inside, no bottom padding */
-    margin-bottom: 0 !important;
-    overflow: visible !important;
+    scroll-snap-stop: always !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
 }
 
-/* ✨ PHASE 4.9: Footer styling when inside snap-section */
+.landing-page-container .testimonials-section .footer-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.landing-page-container .testimonials-section .base-footer,
 .landing-page-container .snap-section:last-of-type footer {
-    margin-top: auto !important;
-    /* Push footer to bottom */
-    margin-bottom: 0rem !important;
-    padding-bottom: 0rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    align-self: stretch !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 1.15rem !important;
+    padding-bottom: 0.35rem !important;
+}
+
+.landing-page-container .base-footer .container,
+.landing-page-container .base-footer .container-fluid,
+.landing-page-container .base-footer .footer-container {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    box-sizing: border-box !important;
+}
+
+.landing-page-container .base-footer-main,
+.landing-page-container .footer-bottom-bar {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.landing-page-container .base-footer-main {
+    padding-bottom: 0.35rem !important;
+    gap: 0.75rem 1.5rem !important;
 }
 
 /* Fix for any absolutely positioned elements that may overflow */
@@ -210,7 +346,6 @@ body:has(.landing-page-container) {
 }
 
 /* === SECTION NAVIGATION INDICATOR === */
-/* Fixed navigation dots - Scoped and cursor pointer added */
 .section-navigation {
     position: fixed !important;
     right: 2rem !important;
@@ -227,7 +362,6 @@ body:has(.landing-page-container) {
     display: flex;
     align-items: center;
     cursor: pointer !important;
-    /* Added cursor pointer for better UX */
     transition: all 0.3s ease;
 }
 
@@ -236,26 +370,19 @@ body:has(.landing-page-container) {
     height: 12px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.9);
-    /* More opaque white */
     border: 2px solid rgba(255, 255, 255, 1);
-    /* Solid white border */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    /* Stronger shadow for contrast */
     transition: all 0.3s ease;
     position: relative;
     backdrop-filter: blur(4px);
-    /* Subtle blur effect */
     cursor: pointer !important;
-    /* Added cursor pointer */
 }
 
 .section-nav-item.active .section-nav-dot {
     background: var(--theme-gradient) !important;
     border-color: white;
-    /* White border for better contrast */
     transform: scale(1.3);
     box-shadow: 0 0 20px rgba(102, 126, 234, 0.8), 0 4px 15px rgba(0, 0, 0, 0.4);
-    /* Stronger glow */
 }
 
 .section-nav-label {
@@ -357,41 +484,32 @@ body:has(.landing-page-container) {
     .landing-page-container {
         scroll-snap-type: none !important;
         height: auto !important;
-        /* Changed to auto for mobile */
         min-height: 100vh !important;
         margin-top: 60px !important;
-        /* Smaller header on mobile */
         overflow-y: auto !important;
-        /* Ensure scrolling works */
     }
 
     .landing-page-container .snap-section {
         min-height: auto !important;
-        /* Auto height on mobile */
         max-height: none !important;
-        /* Allow scrolling */
         padding: 3rem 0 !important;
         scroll-snap-align: none !important;
-        /* Disable snap on mobile */
         overflow: visible !important;
-        /* Show all content */
     }
 
     .section-navigation {
         display: none !important;
-        /* Hide navigation on mobile */
     }
 
     footer.footer-hidden {
         transform: translateY(0) !important;
-        /* Always show footer on mobile */
         opacity: 1 !important;
         pointer-events: auto !important;
     }
 
     .landing-page-container .hero-section {
         min-height: auto !important;
-        padding: 80px 0 !important;
+        padding: 80px 0 40px 0 !important;
     }
 
     .landing-page-container .hero-btn-primary,
@@ -400,7 +518,6 @@ body:has(.landing-page-container) {
         font-size: 0.9rem !important;
     }
 
-    /* Mobile: CTA Section Stacking */
     .landing-page-container .cta-section .row {
         gap: 1.5rem !important;
     }
@@ -531,21 +648,30 @@ body:has(.landing-page-container) {
     }
 }
 
-/* === HERO SECTION STYLES === */
-/* Scoped to landing page for isolation */
+/* === HERO SECTION STYLES - COMPACT & EYE-CATCHING === */
 .landing-page-container .hero-section {
-    background: linear-gradient(135deg, rgba(13, 148, 136, 0.85) 0%, rgba(15, 118, 110, 0.85) 100%);
+    background: linear-gradient(135deg, rgba(4, 47, 44, 0.72) 0%, rgba(6, 78, 71, 0.68) 25%, rgba(13, 148, 136, 0.64) 75%, rgba(15, 118, 110, 0.70) 100%) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(4px);
+    height: 100vh !important;
+    height: 100dvh !important;
     min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    /* Start for proper snap alignment */
+    justify-content: center !important;
     position: relative !important;
-    overflow: visible !important;
+    z-index: 1 !important;
+    overflow: hidden !important;
     padding: 0 !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
 }
 
+/* Geometric grid & luminous radial glows */
 .landing-page-container .hero-background-pattern {
     position: absolute;
     top: 0;
@@ -554,256 +680,1627 @@ body:has(.landing-page-container) {
     height: 100%;
     z-index: 1;
     pointer-events: none;
+    background-image:
+        radial-gradient(circle at 18% 25%, rgba(45, 212, 191, 0.28) 0%, transparent 45%),
+        radial-gradient(circle at 82% 70%, rgba(251, 191, 36, 0.2) 0%, transparent 42%),
+        radial-gradient(circle at 50% 90%, rgba(13, 148, 136, 0.25) 0%, transparent 55%),
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
 }
 
-.landing-page-container .hero-container {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    flex: 1;
-    display: flex;
+/* Institutional Pill Badge */
+.hero-badge-pill {
+    display: inline-flex;
     align-items: center;
-    padding-top: 100px !important;
-    /* Header height + spacing */
-    padding-bottom: 50px !important;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.82rem;
+    color: #ffffff;
+    letter-spacing: 0.01em;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.landing-page-container .hero-badge {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 50px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.landing-page-container .hero-title {
-    background: linear-gradient(45deg, #ffffff, #f8f9fa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.hero-title-accent {
-    color: #ffeb3b !important;
-    /* Bright yellow */
-}
-
-.landing-page-container .hero-description {
-    line-height: 1.6;
-    font-size: 1.1rem;
-}
-
-.landing-page-container .hero-btn-primary {
-    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-    border: none;
-    padding: 15px 35px;
-    border-radius: 50px;
-    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
-    transition: all 0.3s ease;
-}
-
-.landing-page-container .hero-btn-secondary {
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    padding: 13px 35px;
-    border-radius: 50px;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-}
-
-.landing-page-container .hero-stats-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.landing-page-container .hero-stats-icon {
-    background: linear-gradient(45deg, #ffd700, #ffed4e);
-    width: 50px;
-    height: 50px;
+.hero-badge-dot {
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #333;
-    font-size: 1.2rem;
+    background: #2dd4bf;
+    box-shadow: 0 0 10px #2dd4bf;
+    margin-right: 0.5rem;
+    animation: heroPulseDot 2s infinite;
 }
 
-/* Hero Title Highlight - Landing page specific */
-.landing-page-container .hero-title-highlight {
-    color: #ffd700;
+@keyframes heroPulseDot {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.3);
+    }
 }
 
-/* Hero Main Title - Landing page specific */
-.landing-page-container .hero-main-title {
-    background: linear-gradient(45deg, #ffffff, #f8f9fa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* Override for accent span - Make it solid yellow */
-.landing-page-container .hero-main-title .hero-title-accent {
-    background: none !important;
-    -webkit-text-fill-color: #ffeb3b !important;
-    color: #ffeb3b !important;
-}
-
-/* Hero Button Primary (White) - Landing page specific */
-.landing-page-container .hero-btn-primary {
-    background: white;
-    color: #5641d4;
-    border-radius: 15px;
-    font-weight: 600;
-    border: none;
-    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
-}
-
-.landing-page-container .hero-btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 35px rgba(255, 255, 255, 0.35);
-}
-
-/* CTA Register Button Hover Effect */
-.cta-register-btn:hover {
-    transform: translateY(-3px) !important;
-    box-shadow: 0 12px 35px rgba(255, 255, 255, 0.35) !important;
-}
-
-/* Hero Button Secondary (Outline) - Landing page specific */
-.landing-page-container .hero-btn-secondary-outline {
-    border-radius: 15px;
-    font-weight: 600;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-    color: white !important;
-}
-
-.landing-page-container .hero-btn-secondary-outline:hover {
-    border-color: white;
-    background: rgba(255, 255, 255, 0.2);
-    color: white !important;
-}
-
-.landing-page-container .hero-btn-secondary-outline:hover i {
-    color: white !important;
-}
-
-/* Hero Right Image - Landing page specific */
-.landing-page-container .hero-right-image {
-    border-radius: 20px;
-    max-height: 500px;
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-    display: block;
-}
-
-/* Floating Stats Card - Landing page specific */
-.landing-page-container .floating-stats-card {
-    top: 10%;
-    right: -5%;
-    background: white;
-    border-radius: 20px;
-    padding: 1rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e9ecef;
-    animation: floatLanding 3s ease-in-out infinite;
-}
-
-/* Floating Card Icon - Landing page specific */
-.landing-page-container .floating-card-icon {
-    width: 50px;
-    height: 50px;
-    background: var(--theme-gradient) !important;
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-/* Card Heading Text - Landing page specific */
-.landing-page-container .card-heading-text {
-    color: #2c3e50;
-}
-
-/* Floating Stats Card Bottom - Landing page specific */
-.landing-page-container .floating-stats-card-bottom {
-    bottom: 20%;
-    left: -10%;
-    background: white;
-    border-radius: 20px;
-    padding: 1rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e9ecef;
-    animation: floatLanding 3s ease-in-out infinite reverse;
-}
-
-/* Floating Card Icon Green - Landing page specific */
-.landing-page-container .floating-card-icon-green {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-/* Scroll Indicator - Landing page specific */
-.landing-page-container .hero-scroll-indicator {
-    bottom: 1.5rem;
-    left: 0;
-    z-index: 2;
-    padding: 15px 0;
-    overflow: visible;
-}
-
-/* About Section */
-.about-section {
-    background: white;
-}
-
-/* About Badge */
-.about-badge {
-    background: var(--theme-gradient) !important;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
+.hero-badge-icon {
     font-size: 0.9rem;
 }
 
-/* About Section Heading */
-.about-section-heading {
-    color: #2c3e50;
+.hero-badge-sep {
+    margin: 0 0.45rem;
+    opacity: 0.5;
 }
 
-/* Feature Icon Red */
-.feature-icon-red {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
-    border-radius: 15px;
+.hero-badge-sub {
+    color: #fef08a;
+    font-weight: 600;
+}
+
+/* Hero Main Title */
+.landing-page-container .hero-main-title {
+    font-size: clamp(2rem, 3.5vw, 2.85rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.02em;
+    color: #ffffff !important;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
+    margin-bottom: 0.4rem !important;
+}
+
+.landing-page-container .hero-title-accent {
+    color: #fbbf24 !important;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.45);
+}
+
+/* Subtitle */
+.landing-page-container .hero-subtitle {
+    font-size: clamp(0.95rem, 1.3vw, 1.15rem);
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.94);
+    line-height: 1.35;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Lead description */
+.landing-page-container .hero-description {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 530px;
+    margin-bottom: 1rem !important;
+}
+
+/* Action buttons */
+.hero-action-buttons {
+    margin-bottom: 1.25rem !important;
+}
+
+.hero-btn-primary-compact {
+    background: #ffffff !important;
+    color: #0f766e !important;
+    font-weight: 700 !important;
+    font-size: 0.88rem !important;
+    padding: 0.55rem 1.25rem !important;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15), 0 0 12px rgba(255, 255, 255, 0.3) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.hero-btn-primary-compact:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22), 0 0 18px rgba(255, 255, 255, 0.45) !important;
+    background: #f0fdfa !important;
+    color: #0d9488 !important;
+}
+
+.hero-btn-primary-compact:hover .hero-btn-arrow {
+    transform: translateX(3px);
+}
+
+.hero-btn-arrow {
+    transition: transform 0.2s ease;
+}
+
+.hero-btn-secondary-compact {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    padding: 0.55rem 1.15rem !important;
+    border-radius: 12px !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    transition: all 0.25s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.hero-btn-secondary-compact:hover {
+    background: rgba(255, 255, 255, 0.22) !important;
+    border-color: #ffffff !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Integrated Live Stats Glass Ribbon */
+.hero-stats-ribbon {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 14px;
+    padding: 0.5rem 0.85rem;
+    max-width: 530px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.hero-stat-cell {
+    flex: 1;
+    text-align: center;
+    padding: 0 0.35rem;
+}
+
+.hero-stat-value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.hero-stat-label {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.82);
+    font-weight: 500;
+    line-height: 1.2;
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+.hero-stat-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+}
+
+.hero-stat-shimmer {
+    width: 48px;
+    height: 22px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 25%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0.2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    margin: 0 auto;
+}
+
+/* Right Column - Showcase Card */
+.hero-visual-col {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.hero-showcase-card {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 20px;
+    padding: 0.65rem;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25), 0 0 35px rgba(13, 148, 136, 0.25);
+}
+
+.hero-showcase-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.5rem 0.5rem 0.5rem;
+}
+
+.hero-showcase-tag {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+}
+
+.hero-showcase-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 500;
+}
+
+.hero-status-pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    margin-right: 0.4rem;
+    animation: heroPulseDot 2s infinite;
+}
+
+.hero-showcase-inst {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+}
+
+.hero-image-wrapper {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.hero-showcase-img {
+    width: 100%;
+    max-height: 340px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.hero-showcase-card:hover .hero-showcase-img {
+    transform: scale(1.02);
+}
+
+.hero-image-gradient-veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 65%, rgba(6, 60, 55, 0.45) 100%);
+    pointer-events: none;
+}
+
+/* In-bounds Floating Badges */
+.hero-float-chip {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 0.45rem 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.16);
+    z-index: 3;
+    transition: transform 0.3s ease;
+}
+
+.hero-float-chip:hover {
+    transform: translateY(-2px);
+}
+
+.hero-float-top-right {
+    top: 42px;
+    right: 18px;
+    animation: floatLanding 4s ease-in-out infinite;
+}
+
+.hero-float-bottom-left {
+    bottom: 18px;
+    left: 18px;
+    animation: floatLanding 4s ease-in-out infinite 2s;
+}
+
+.hero-chip-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    margin-right: 0.55rem;
+    font-size: 0.85rem;
+    flex-shrink: 0;
 }
 
-/* About Image Container */
-.about-image-container {
-    border-radius: 25px;
-    overflow: hidden;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 1rem;
+.bg-teal-gradient {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
 }
+
+.bg-amber-gradient {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.hero-chip-heading {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.hero-chip-sub {
+    font-size: 0.68rem;
+    color: #64748b;
+    line-height: 1.2;
+}
+
+/* Compact Scroll Cue */
+.hero-scroll-cue {
+    position: absolute;
+    bottom: 0.65rem;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 3;
+}
+
+.hero-scroll-cue-btn {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: rgba(255, 255, 255, 0.88);
+    border-radius: 999px;
+    padding: 0.25rem 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.hero-scroll-cue-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.hero-scroll-chevron {
+    font-size: 0.7rem;
+    animation: bounceLanding 2s infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    .landing-page-container .hero-section {
+        min-height: auto !important;
+        padding: 80px 0 40px 0 !important;
+    }
+
+    .landing-page-container .hero-container {
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+    }
+
+    .hero-showcase-card {
+        margin-top: 1rem;
+        max-width: 100%;
+    }
+
+    .hero-stats-ribbon {
+        max-width: 100%;
+    }
+}
+
+/* ==========================================
+   ABOUT SECTION - FULL-PAGE IMMERSIVE (MATCHING HERO SECTION)
+   Aligned with .header-container (1400px), 100vh full-screen snap
+   ========================================== */
+.landing-page-container .about-section {
+    position: relative !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7) !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    z-index: 1 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .about-section {
+        min-height: auto !important;
+        height: auto !important;
+        padding: 70px 0 40px 0 !important;
+    }
+}
+
+/* Geometric grid & luminous radial glow overlay for About Section */
+.landing-page-container .about-background-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 82% 25%, rgba(13, 148, 136, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 18% 75%, rgba(245, 158, 11, 0.10) 0%, transparent 42%),
+        radial-gradient(circle at 50% 90%, rgba(13, 148, 136, 0.08) 0%, transparent 55%),
+        linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+}
+
+/* About container - precisely aligned with .header-container (1400px max-width) */
+.landing-page-container .about-container {
+    position: relative;
+    z-index: 2;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 70px !important;
+    padding-bottom: 35px !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .about-container {
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+    }
+}
+
+/* Row in About Section - Seamless left and right boundary alignment with .header-container */
+.landing-page-container .about-container>.row,
+.landing-page-container .about-container .row.align-items-center,
+.landing-page-container .about-row {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Column alignment matching .header-container padding (1.25rem = 20px) */
+.landing-page-container .about-text-col {
+    padding-left: 1.25rem !important;
+    padding-right: 1.5rem !important;
+}
+
+.landing-page-container .about-visual-col {
+    padding-left: 1.5rem !important;
+    padding-right: 1.25rem !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+}
+
+@media (max-width: 991.98px) {
+
+    .landing-page-container .about-text-col,
+    .landing-page-container .about-visual-col {
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+
+    .landing-page-container .about-visual-col {
+        justify-content: center !important;
+        margin-top: 1.25rem !important;
+    }
+}
+
+/* Institutional Pill Badge for About Section */
+/* Institutional Pill Badge for Statistics Section - High contrast readable styling */
+.landing-page-container .about-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+    color: #ffffff !important;
+    padding: 0.35rem 0.85rem !important;
+    border-radius: 50px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em !important;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.25) !important;
+}
+
+.landing-page-container .about-badge i {
+    color: #ffffff !important;
+}
+
+.about-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(13, 148, 136, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.82rem;
+    color: #0d9488;
+    letter-spacing: 0.01em;
+    font-weight: 600;
+}
+
+.about-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #0d9488;
+    box-shadow: 0 0 10px #0d9488;
+    margin-right: 0.5rem;
+    animation: heroPulseDot 2s infinite;
+}
+
+.about-badge-sep {
+    margin: 0 0.45rem;
+    opacity: 0.5;
+}
+
+.about-badge-sub {
+    color: #0f766e;
+    font-weight: 600;
+}
+
+/* About Typography */
+.about-main-title {
+    font-size: clamp(1.7rem, 2.9vw, 2.3rem);
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.about-title-accent {
+    color: #0d9488;
+    background: linear-gradient(135deg, #0d9488 0%, #065f46 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.about-subtitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #475569;
+    line-height: 1.35;
+}
+
+.about-description {
+    font-size: 0.92rem;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.text-teal {
+    color: #0d9488 !important;
+}
+
+/* Compact Feature Glass Cards */
+.about-features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+}
+
+@media (max-width: 576px) {
+    .about-features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.about-feature-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    border-radius: 14px;
+    padding: 0.75rem 0.9rem;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.about-feature-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(13, 148, 136, 0.4);
+    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.12);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.about-feature-icon-box {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+
+.about-feature-icon-box.teal {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
+}
+
+.about-feature-icon-box.gold {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25);
+}
+
+.about-feature-heading {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2px;
+    line-height: 1.25;
+}
+
+.about-feature-sub {
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.2;
+}
+
+/* About Action Buttons */
+.about-btn-primary-compact {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.86rem !important;
+    padding: 0.5rem 1.1rem !important;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.25) !important;
+    transition: all 0.25s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+}
+
+.about-btn-primary-compact:hover {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 18px rgba(13, 148, 136, 0.35) !important;
+}
+
+.about-btn-arrow {
+    transition: transform 0.2s ease;
+}
+
+.about-btn-primary-compact:hover .about-btn-arrow {
+    transform: translateY(2px);
+}
+
+.about-btn-secondary-compact {
+    background: rgba(255, 255, 255, 0.85) !important;
+    color: #0f766e !important;
+    font-weight: 600 !important;
+    font-size: 0.86rem !important;
+    padding: 0.5rem 1.1rem !important;
+    border-radius: 12px !important;
+    border: 1.5px solid rgba(13, 148, 136, 0.25) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    transition: all 0.25s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+}
+
+.about-btn-secondary-compact:hover {
+    background: #ffffff !important;
+    color: #0d9488 !important;
+    border-color: #0d9488 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Institutional Focus Pillars Ribbon */
+.about-pillars-ribbon {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    border-radius: 10px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #334155;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.about-pillar-item {
+    display: inline-flex;
+    align-items: center;
+}
+
+.about-pillar-sep {
+    opacity: 0.4;
+    color: #94a3b8;
+}
+
+/* About Showcase Card (Right Visual Column) */
+.about-showcase-card {
+    position: relative;
+    width: 100%;
+    max-width: 550px;
+    background: rgba(255, 255, 255, 0.84);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 20px;
+    padding: 0.65rem;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08), 0 0 25px rgba(13, 148, 136, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-showcase-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 42px rgba(15, 23, 42, 0.12), 0 0 30px rgba(13, 148, 136, 0.14);
+}
+
+.about-showcase-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.5rem 0.5rem 0.5rem;
+}
+
+.about-showcase-tag {
+    background: rgba(13, 148, 136, 0.12);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #0d9488;
+    letter-spacing: 0.02em;
+}
+
+.about-showcase-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    color: #475569;
+    font-weight: 600;
+}
+
+.about-image-wrapper {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    background: #f8fafc;
+}
+
+.about-showcase-img {
+    width: 100%;
+    height: auto;
+    max-height: 330px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.about-showcase-card:hover .about-showcase-img {
+    transform: scale(1.02);
+}
+
+.about-image-gradient-veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 70%, rgba(15, 23, 42, 0.3) 100%);
+    pointer-events: none;
+}
+
+/* In-bounds Floating Badges on About Showcase Card */
+.about-float-chip {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 12px;
+    padding: 0.45rem 0.75rem;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+    z-index: 3;
+}
+
+.about-float-top-right {
+    top: 0.85rem;
+    right: 0.85rem;
+}
+
+.about-float-bottom-left {
+    bottom: 0.85rem;
+    left: 0.85rem;
+}
+
+.about-chip-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.about-chip-heading {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.about-chip-sub {
+    font-size: 0.68rem;
+    color: #64748b;
+    line-height: 1.2;
+}
+
+/* Compact Scroll Cue Indicator for About Section */
+.about-scroll-cue {
+    position: absolute;
+    bottom: 0.65rem;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 3;
+}
+
+.about-scroll-cue-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #0f766e;
+    border-radius: 999px;
+    padding: 0.25rem 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
+}
+
+.about-scroll-cue-btn:hover {
+    background: #ffffff;
+    color: #0d9488;
+    border-color: #0d9488;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.2);
+}
+
+.about-scroll-chevron {
+    font-size: 0.7rem;
+    animation: bounceLanding 2s infinite;
+}
+
+/* ==========================================
+   FULL-PAGE REDESIGN: ALL SECTIONS
+   1. STATISTIK (statistics-section)
+   2. KATEGORI (categories-section)
+   3. KURSUS (courses-section)
+   4. PERINGKAT & PRESTASI (cta-section)
+   5. TESTIMONI (testimonials-section)
+   Compact, Translucent Frosted Glass, Aligned with 1400px Header
+   ========================================== */
+
+/* ------------------------------------------
+   1. STATISTIK SECTION (statistics-section)
+   ------------------------------------------ */
+.landing-page-container .statistics-section {
+    position: relative !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7) !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 1 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .statistics-section {
+        min-height: auto !important;
+        height: auto !important;
+        padding: 60px 0 35px 0 !important;
+    }
+}
+
+.landing-page-container .stats-background-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(13, 148, 136, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 80% 70%, rgba(245, 158, 11, 0.10) 0%, transparent 40%),
+        linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+}
+
+.landing-page-container .stats-container {
+    position: relative;
+    z-index: 2;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 60px !important;
+    padding-bottom: 40px !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .stats-container {
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+    }
+}
+
+.landing-page-container .stats-container>.row,
+.landing-page-container .stats-row {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Translucent Glassmorphic Cards for Statistics */
+.landing-page-container .statistics-section .card {
+    background: rgba(255, 255, 255, 0.68) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.08) !important;
+    transition: all 0.25s ease !important;
+}
+
+.landing-page-container .statistics-section .card:hover {
+    transform: translateY(-4px) !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    box-shadow: 0 10px 24px rgba(13, 148, 136, 0.16) !important;
+    border-color: rgba(13, 148, 136, 0.3) !important;
+}
+
+/* Compact Scroll Cue Indicator for Statistics Section */
+.stats-scroll-cue {
+    position: absolute;
+    bottom: 0.65rem;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 3;
+}
+
+.stats-scroll-cue-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #0f766e;
+    border-radius: 999px;
+    padding: 0.25rem 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
+}
+
+.stats-scroll-cue-btn:hover {
+    background: #ffffff;
+    color: #0d9488;
+    border-color: #0d9488;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.2);
+}
+
+.stats-scroll-chevron {
+    font-size: 0.7rem;
+    animation: bounceLanding 2s infinite;
+}
+
+/* ------------------------------------------
+   2. KATEGORI SECTION (categories-section)
+   ------------------------------------------ */
+.landing-page-container .categories-section {
+    position: relative !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7) !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 1 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .categories-section {
+        min-height: auto !important;
+        height: auto !important;
+        padding: 60px 0 35px 0 !important;
+    }
+}
+
+.landing-page-container .categories-background-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 80% 25%, rgba(13, 148, 136, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 15% 75%, rgba(245, 158, 11, 0.08) 0%, transparent 40%),
+        linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+}
+
+.landing-page-container .categories-container {
+    position: relative;
+    z-index: 2;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 60px !important;
+    padding-bottom: 40px !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .categories-container {
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+    }
+}
+
+.landing-page-container .categories-container>.row,
+.landing-page-container .categories-row {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Translucent Glassmorphic Cards for Categories */
+.landing-page-container .categories-section .card {
+    background: rgba(255, 255, 255, 0.68) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.08) !important;
+    transition: all 0.25s ease !important;
+}
+
+.landing-page-container .categories-section .card:hover {
+    transform: translateY(-4px) !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    box-shadow: 0 10px 24px rgba(13, 148, 136, 0.16) !important;
+    border-color: rgba(13, 148, 136, 0.3) !important;
+}
+
+/* Compact Scroll Cue Indicator for Categories Section */
+.categories-scroll-cue {
+    position: absolute;
+    bottom: 0.65rem;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 3;
+}
+
+.categories-scroll-cue-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #0f766e;
+    border-radius: 999px;
+    padding: 0.25rem 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
+}
+
+.categories-scroll-cue-btn:hover {
+    background: #ffffff;
+    color: #0d9488;
+    border-color: #0d9488;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.2);
+}
+
+.categories-scroll-chevron {
+    font-size: 0.7rem;
+    animation: bounceLanding 2s infinite;
+}
+
+/* ------------------------------------------
+   3. KURSUS SECTION (courses-section)
+   ------------------------------------------ */
+.landing-page-container .courses-section {
+    position: relative !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7) !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 1 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .courses-section {
+        min-height: auto !important;
+        height: auto !important;
+        padding: 60px 0 35px 0 !important;
+    }
+}
+
+.landing-page-container .courses-background-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 25% 25%, rgba(13, 148, 136, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 75% 75%, rgba(245, 158, 11, 0.10) 0%, transparent 40%),
+        linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+}
+
+.landing-page-container .courses-container {
+    position: relative;
+    z-index: 2;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 60px !important;
+    padding-bottom: 40px !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .courses-container {
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+    }
+}
+
+.landing-page-container .courses-container>.row,
+.landing-page-container .courses-row {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Translucent Glassmorphic Cards for Courses */
+.landing-page-container .courses-section .card,
+.landing-page-container .course-card {
+    background: rgba(255, 255, 255, 0.72) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.08) !important;
+    transition: all 0.25s ease !important;
+}
+
+.landing-page-container .courses-section .card:hover,
+.landing-page-container .course-card:hover {
+    transform: translateY(-4px) !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    box-shadow: 0 10px 24px rgba(13, 148, 136, 0.18) !important;
+    border-color: rgba(13, 148, 136, 0.3) !important;
+}
+
+/* Compact Scroll Cue Indicator for Courses Section */
+.courses-scroll-cue {
+    position: absolute;
+    bottom: 0.65rem;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 3;
+}
+
+.courses-scroll-cue-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #0f766e;
+    border-radius: 999px;
+    padding: 0.25rem 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
+}
+
+.courses-scroll-cue-btn:hover {
+    background: #ffffff;
+    color: #0d9488;
+    border-color: #0d9488;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.2);
+}
+
+.courses-scroll-chevron {
+    font-size: 0.7rem;
+    animation: bounceLanding 2s infinite;
+}
+
+/* ------------------------------------------
+   4. PERINGKAT & PRESTASI SECTION (cta-section)
+   ------------------------------------------ */
+.landing-page-container .cta-section {
+    position: relative !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    background: linear-gradient(135deg, rgba(4, 47, 44, 0.72) 0%, rgba(6, 78, 71, 0.68) 40%, rgba(13, 148, 136, 0.64) 100%) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 1 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
+    color: #ffffff !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .cta-section {
+        min-height: auto !important;
+        height: auto !important;
+        padding: 60px 0 35px 0 !important;
+    }
+}
+
+.landing-page-container .cta-background-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 15% 25%, rgba(45, 212, 191, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(245, 158, 11, 0.14) 0%, transparent 42%),
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+}
+
+.landing-page-container .cta-container {
+    position: relative;
+    z-index: 2;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 60px !important;
+    padding-bottom: 40px !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .cta-container {
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+    }
+}
+
+.landing-page-container .cta-container>.row,
+.landing-page-container .cta-row {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Translucent Glassmorphic Styling for Ranked Widgets in CTA Section */
+.landing-page-container .cta-section .ranked-students-widget,
+.landing-page-container .cta-section .ranked-instructors-widget {
+    background: rgba(255, 255, 255, 0.88) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Compact Scroll Cue Indicator for CTA Section */
+.cta-scroll-cue {
+    position: absolute;
+    bottom: 0.65rem;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 3;
+}
+
+.cta-scroll-cue-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #ffffff;
+    border-radius: 999px;
+    padding: 0.25rem 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cta-scroll-cue-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    border-color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.cta-scroll-chevron {
+    font-size: 0.7rem;
+    animation: bounceLanding 2s infinite;
+}
+
+/* ------------------------------------------
+   5. TESTIMONI SECTION (testimonials-section)
+   ------------------------------------------ */
+.landing-page-container .testimonials-section {
+    position: relative !important;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.68) 0%, rgba(240, 253, 250, 0.58) 60%, rgba(241, 245, 249, 0.72) 100%) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    z-index: 1 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .testimonials-section {
+        min-height: auto !important;
+        height: auto !important;
+        padding: 60px 0 0 0 !important;
+    }
+}
+
+.landing-page-container .testimonials-background-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(13, 148, 136, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 80% 60%, rgba(245, 158, 11, 0.08) 0%, transparent 40%),
+        linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+}
+
+.landing-page-container .testimonials-container {
+    position: relative;
+    z-index: 2;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 50px !important;
+    padding-bottom: 10px !important;
+}
+
+@media (max-width: 991.98px) {
+    .landing-page-container .testimonials-container {
+        padding-top: 20px !important;
+        padding-bottom: 10px !important;
+    }
+}
+
+.landing-page-container .testimonials-container>.row,
+.landing-page-container .testimonials-row {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Translucent Glassmorphic Cards for Testimonials */
+.landing-page-container .testimonials-section .card {
+    background: rgba(255, 255, 255, 0.70) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.08) !important;
+    transition: all 0.25s ease !important;
+}
+
+.landing-page-container .testimonials-section .card:hover {
+    transform: translateY(-4px) !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    box-shadow: 0 10px 24px rgba(13, 148, 136, 0.18) !important;
+    border-color: rgba(13, 148, 136, 0.3) !important;
+}
+
 
 /* Hero Main Title */
 .hero-main-title {

@@ -283,7 +283,7 @@ function Index() {
     }, []);
 
     // Scroll to section with enhanced smooth behavior
-    const scrollToSection = (index) => {
+    const scrollToSection = useCallback((index) => {
         const sections = document.querySelectorAll(".snap-section");
         if (sections[index]) {
             // Show label when user clicks to scroll
@@ -292,7 +292,7 @@ function Index() {
             // Hide label after 3 seconds
             setTimeout(() => {
                 setShowSectionLabel(false);
-            }, 5174);
+            }, 3000);
 
             sections[index].scrollIntoView({
                 behavior: "smooth",
@@ -300,7 +300,97 @@ function Index() {
                 inline: "nearest"
             });
         }
-    };
+    }, []);
+
+    // Full 100% Snap Wheel & Keyboard Controller (prevents getting stuck in the middle)
+    useEffect(() => {
+        const container = document.querySelector(".landing-page-container");
+        if (!container) return;
+
+        let isSnapping = false;
+        let snapTimer = null;
+
+        const onWheel = (e) => {
+            // Only on desktop/tablet viewports (> 991px)
+            if (window.innerWidth <= 991) return;
+
+            // Ignore subtle movements (deltaY between -18 and 18)
+            if (Math.abs(e.deltaY) < 18) return;
+
+            e.preventDefault();
+
+            if (isSnapping) return;
+
+            const sections = document.querySelectorAll(".snap-section");
+            if (!sections || sections.length === 0) return;
+
+            const currentScroll = container.scrollTop;
+
+            // Determine closest section
+            let closestIdx = 0;
+            let minDiff = Infinity;
+            sections.forEach((sec, idx) => {
+                const diff = Math.abs(sec.offsetTop - currentScroll);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIdx = idx;
+                }
+            });
+
+            let targetIdx = closestIdx;
+            if (e.deltaY > 0) {
+                targetIdx = Math.min(closestIdx + 1, sections.length - 1);
+            } else {
+                targetIdx = Math.max(closestIdx - 1, 0);
+            }
+
+            isSnapping = true;
+            scrollToSection(targetIdx);
+
+            clearTimeout(snapTimer);
+            snapTimer = setTimeout(() => {
+                isSnapping = false;
+            }, 650);
+        };
+
+        const onKeyDown = (e) => {
+            if (window.innerWidth <= 991) return;
+            if (["ArrowDown", "PageDown", " "].includes(e.key)) {
+                if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+                e.preventDefault();
+                const sections = document.querySelectorAll(".snap-section");
+                const currentScroll = container.scrollTop;
+                let closestIdx = 0;
+                let minDiff = Infinity;
+                sections.forEach((sec, idx) => {
+                    const diff = Math.abs(sec.offsetTop - currentScroll);
+                    if (diff < minDiff) { minDiff = diff; closestIdx = idx; }
+                });
+                scrollToSection(Math.min(closestIdx + 1, sections.length - 1));
+            } else if (["ArrowUp", "PageUp"].includes(e.key)) {
+                if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+                e.preventDefault();
+                const sections = document.querySelectorAll(".snap-section");
+                const currentScroll = container.scrollTop;
+                let closestIdx = 0;
+                let minDiff = Infinity;
+                sections.forEach((sec, idx) => {
+                    const diff = Math.abs(sec.offsetTop - currentScroll);
+                    if (diff < minDiff) { minDiff = diff; closestIdx = idx; }
+                });
+                scrollToSection(Math.max(closestIdx - 1, 0));
+            }
+        };
+
+        container.addEventListener("wheel", onWheel, { passive: false });
+        window.addEventListener("keydown", onKeyDown);
+
+        return () => {
+            container.removeEventListener("wheel", onWheel);
+            window.removeEventListener("keydown", onKeyDown);
+            clearTimeout(snapTimer);
+        };
+    }, [scrollToSection]);
 
     return (
         <>
@@ -339,220 +429,168 @@ function Index() {
                 <div className="landing-page-container">
                     {/* Hero Section */}
                     <section className="hero-section snap-section">
-                        {/* Background Pattern */}
-                        <div className="position-absolute w-100 h-100 hero-background-pattern"></div>
+                        {/* Background Geometric Grid & Radial Glow Pattern */}
+                        <div className="hero-background-pattern" aria-hidden="true"></div>
 
                         <div className="container position-relative hero-container">
-                            <div className="row align-items-center">
-                                {/* Hero Content */}
-                                <div className="col-lg-6 mb-5 mb-lg-0">
+                            <div className="row align-items-center g-4">
+                                {/* Hero Left Content */}
+                                <div className="col-lg-6 hero-text-col">
                                     <div className="hero-content text-white">
-                                        {/* Badge */}
-                                        <div className="d-inline-flex align-items-center mb-4 px-3 py-2 hero-badge">
-                                            <i className="fas fa-university me-2"></i>
-                                            <span className="fw-medium">Platform Pembelajaran Setjen DPD RI</span>
+                                        {/* Institutional Pill Badge */}
+                                        <div className="hero-badge-pill mb-2">
+                                            <span className="hero-badge-dot"></span>
+                                            <i className="fas fa-university me-2 hero-badge-icon"></i>
+                                            <span className="fw-semibold">Sekretariat Jenderal DPD RI</span>
+                                            <span className="hero-badge-sep">•</span>
+                                            <span className="hero-badge-sub">E-Learning BPSDM OKK</span>
                                         </div>
 
                                         {/* Main Headline */}
-                                        <h1
-                                            className="display-4 fw-bold mb-4 hero-main-title"
-                                        >
+                                        <h1 className="hero-main-title mb-2">
                                             LMS<span className="hero-title-accent">etjen</span> DPD RI
                                         </h1>
 
-                                        <h2 className="h3 mb-4 opacity-90">
-                                            Tingkatkan Kompetensi Melalui Pembelajaran Digital
+                                        {/* Tagline */}
+                                        <h2 className="hero-subtitle mb-2">
+                                            Pusat Pembelajaran Digital &amp; Akselerasi Kompetensi ASN Parlemen
                                         </h2>
 
-                                        {/* Description */}
-                                        <p
-                                            className="lead mb-5 opacity-85 hero-description"
-                                        >
-                                            Platform pembelajaran online untuk pengembangan kapasitas dan kompetensi
-                                            pegawai Sekretariat Jenderal DPD RI. Akses ribuan materi pembelajaran
-                                            berkualitas dari instruktur berpengalaman.
+                                        {/* Concise Description */}
+                                        <p className="hero-description mb-3">
+                                            Tingkatkan kapasitas dan kapabilitas profesional aparatur sipil negara melalui kurikulum terstruktur, materi interaktif, dan sertifikasi resmi terpadu.
                                         </p>
 
-                                        {/* CTA Buttons */}
-                                        <div className="d-flex flex-wrap gap-3 mb-5">
+                                        {/* CTA Action Buttons */}
+                                        <div className="d-flex flex-wrap gap-2 mb-3 align-items-center hero-action-buttons">
                                             <button
-                                                className="btn btn-lg btn-outline-light px-4 py-3 hero-btn-secondary-outline"
+                                                className="btn hero-btn-primary-compact"
                                                 onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
                                             >
-                                                <i className="fas fa-search me-2"></i>
-                                                Jelajahi Kursus
+                                                <i className="fas fa-graduation-cap me-2"></i>
+                                                <span>Jelajahi Kursus</span>
+                                                <i className="fas fa-arrow-right ms-2 hero-btn-arrow"></i>
+                                            </button>
+                                            <button
+                                                className="btn hero-btn-secondary-compact"
+                                                onClick={() => document.querySelector(".about-section")?.scrollIntoView({ behavior: "smooth" })}
+                                            >
+                                                <i className="fas fa-landmark me-2"></i>
+                                                <span>Tentang Setjen DPD RI</span>
                                             </button>
                                         </div>
 
-                                        {/* Stats Preview - Compact for single line */}
-                                        <div className="row g-2">
-                                            <div className="col-4">
-                                                <div className="text-center">
-                                                    {isStatsLoading ? (
-                                                        <>
-                                                            <div
-                                                                style={{
-                                                                    width: "50px",
-                                                                    height: "32px",
-                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                                    backgroundSize: "200% 100%",
-                                                                    animation: "shimmer 1.5s infinite",
-                                                                    borderRadius: "4px",
-                                                                    margin: "0 auto 0.5rem"
-                                                                }}
-                                                            ></div>
-                                                            <div
-                                                                style={{
-                                                                    width: "40px",
-                                                                    height: "12px",
-                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                                    backgroundSize: "200% 100%",
-                                                                    animation: "shimmer 1.5s infinite",
-                                                                    borderRadius: "4px",
-                                                                    margin: "0 auto"
-                                                                }}
-                                                            ></div>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.total_courses}+</h3>
-                                                            <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Kursus</small>
-                                                        </>
-                                                    )}
-                                                </div>
+                                        {/* Integrated Live Stats Glass Ribbon (Compact 4-column) */}
+                                        <div className="hero-stats-ribbon">
+                                            <div className="hero-stat-cell">
+                                                {isStatsLoading ? (
+                                                    <div className="hero-stat-shimmer"></div>
+                                                ) : (
+                                                    <>
+                                                        <div className="hero-stat-value">{stats.total_courses}+</div>
+                                                        <div className="hero-stat-label">
+                                                            <i className="fas fa-book-open me-1 text-warning"></i> Kursus
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
-                                            <div className="col-4">
-                                                <div className="text-center">
-                                                    {isStatsLoading ? (
-                                                        <>
-                                                            <div
-                                                                style={{
-                                                                    width: "50px",
-                                                                    height: "32px",
-                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                                    backgroundSize: "200% 100%",
-                                                                    animation: "shimmer 1.5s infinite",
-                                                                    borderRadius: "4px",
-                                                                    margin: "0 auto 0.5rem"
-                                                                }}
-                                                            ></div>
-                                                            <div
-                                                                style={{
-                                                                    width: "40px",
-                                                                    height: "12px",
-                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                                    backgroundSize: "200% 100%",
-                                                                    animation: "shimmer 1.5s infinite",
-                                                                    borderRadius: "4px",
-                                                                    margin: "0 auto"
-                                                                }}
-                                                            ></div>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.total_students}+</h3>
-                                                            <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Peserta</small>
-                                                        </>
-                                                    )}
-                                                </div>
+                                            <div className="hero-stat-divider"></div>
+                                            <div className="hero-stat-cell">
+                                                {isStatsLoading ? (
+                                                    <div className="hero-stat-shimmer"></div>
+                                                ) : (
+                                                    <>
+                                                        <div className="hero-stat-value">{stats.total_students}+</div>
+                                                        <div className="hero-stat-label">
+                                                            <i className="fas fa-users me-1 text-info"></i> Peserta
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
-                                            <div className="col-4">
-                                                <div className="text-center">
-                                                    {isStatsLoading ? (
-                                                        <>
-                                                            <div
-                                                                style={{
-                                                                    width: "50px",
-                                                                    height: "32px",
-                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                                    backgroundSize: "200% 100%",
-                                                                    animation: "shimmer 1.5s infinite",
-                                                                    borderRadius: "4px",
-                                                                    margin: "0 auto 0.5rem"
-                                                                }}
-                                                            ></div>
-                                                            <div
-                                                                style={{
-                                                                    width: "40px",
-                                                                    height: "12px",
-                                                                    background: "linear-gradient(90deg, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.3) 75%)",
-                                                                    backgroundSize: "200% 100%",
-                                                                    animation: "shimmer 1.5s infinite",
-                                                                    borderRadius: "4px",
-                                                                    margin: "0 auto"
-                                                                }}
-                                                            ></div>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <h3 className="fw-bold mb-0" style={{ fontSize: "1.5rem" }}>{stats.completion_rate}%</h3>
-                                                            <small className="opacity-75" style={{ fontSize: "0.75rem" }}>Tingkat Selesai</small>
-                                                        </>
-                                                    )}
-                                                </div>
+                                            <div className="hero-stat-divider"></div>
+                                            <div className="hero-stat-cell">
+                                                {isStatsLoading ? (
+                                                    <div className="hero-stat-shimmer"></div>
+                                                ) : (
+                                                    <>
+                                                        <div className="hero-stat-value">{stats.completion_rate}%</div>
+                                                        <div className="hero-stat-label">
+                                                            <i className="fas fa-check-circle me-1 text-success"></i> Kelulusan
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className="hero-stat-divider"></div>
+                                            <div className="hero-stat-cell">
+                                                {isStatsLoading ? (
+                                                    <div className="hero-stat-shimmer"></div>
+                                                ) : (
+                                                    <>
+                                                        <div className="hero-stat-value d-flex align-items-center justify-content-center">
+                                                            <span>{stats.platform_rating}</span>
+                                                            <i className="fas fa-star ms-1 text-warning" style={{ fontSize: "0.8rem" }}></i>
+                                                        </div>
+                                                        <div className="hero-stat-label">Rating</div>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Hero Image */}
-                                <div className="col-lg-6">
-                                    <div className="position-relative">
-                                        <div
-                                            className="hero-image-wrapper"
-                                            style={{
-                                                background: "rgba(255, 255, 255, 0.1)",
-                                                borderRadius: "30px",
-                                                padding: "0.5rem",
-                                                backdropFilter: "blur(10px)",
-                                                border: "1px solid rgba(255, 255, 255, 0.2)"
-                                            }}
-                                        >
+                                {/* Hero Right Visual Showcase */}
+                                <div className="col-lg-6 hero-visual-col">
+                                    <div className="hero-showcase-card">
+                                        {/* Card Top Pill */}
+                                        <div className="hero-showcase-header">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <span className="hero-showcase-tag">
+                                                    <i className="fas fa-shield-alt text-warning me-1"></i> BPSDM OKK
+                                                </span>
+                                                <span className="hero-showcase-status">
+                                                    <span className="hero-status-pulse"></span> Sistem Terverifikasi
+                                                </span>
+                                            </div>
+                                            <span className="hero-showcase-inst">Setjen DPD RI &bull; 2026</span>
+                                        </div>
+
+                                        {/* Precision Image Container */}
+                                        <div className="hero-image-wrapper">
                                             <picture>
                                                 <source srcSet={heroImageWebP} type="image/webp" />
                                                 <img
                                                     src={heroImageJpg}
                                                     alt="LMSetjen DPD RI - Platform Pembelajaran Digital Pegawai"
-                                                    className="img-fluid hero-right-image"
+                                                    className="img-fluid hero-showcase-img"
                                                     loading="eager"
+                                                    /* eslint-disable-next-line react/no-unknown-property */
                                                     fetchpriority="high"
                                                     decoding="async"
                                                     width="1024"
                                                     height="764"
                                                 />
                                             </picture>
+                                            <div className="hero-image-gradient-veil" aria-hidden="true"></div>
                                         </div>
 
-                                        {/* Floating Elements */}
-                                        <div
-                                            className="position-absolute floating-stats-card"
-                                        >
-                                            <div className="d-flex align-items-center">
-                                                <div
-                                                    className="me-3 floating-card-icon"
-                                                >
-                                                    <i className="fas fa-certificate"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 className="mb-0 fw-bold card-heading-text">Sertifikat</h4>
-                                                    <small className="text-muted">Resmi & Diakui</small>
-                                                </div>
+                                        {/* Floating Elements Within Bounds */}
+                                        <div className="hero-float-chip hero-float-top-right">
+                                            <div className="hero-chip-icon-box bg-teal-gradient">
+                                                <i className="fas fa-certificate text-white"></i>
+                                            </div>
+                                            <div className="hero-chip-text">
+                                                <div className="hero-chip-heading">Sertifikat Resmi</div>
+                                                <small className="hero-chip-sub">Diakui Instansi</small>
                                             </div>
                                         </div>
 
-                                        <div
-                                            className="position-absolute floating-stats-card-bottom"
-                                        >
-                                            <div className="d-flex align-items-center">
-                                                <div
-                                                    className="me-3 floating-card-icon-green"
-                                                >
-                                                    <i className="fas fa-chart-line"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 className="mb-0 fw-bold card-heading-text">Progress</h4>
-                                                    <small className="text-muted">Real-time Tracking</small>
-                                                </div>
+                                        <div className="hero-float-chip hero-float-bottom-left">
+                                            <div className="hero-chip-icon-box bg-amber-gradient">
+                                                <i className="fas fa-chart-line text-white"></i>
+                                            </div>
+                                            <div className="hero-chip-text">
+                                                <div className="hero-chip-heading">Progress ASN</div>
+                                                <small className="hero-chip-sub">Real-time Tracking</small>
                                             </div>
                                         </div>
                                     </div>
@@ -560,156 +598,229 @@ function Index() {
                             </div>
                         </div>
 
-                        {/* Scroll Indicator */}
-                        <div
-                            className="position-absolute w-100 text-center text-white hero-scroll-indicator"
-                        >
-                            <div className="animate-bounce">
-                                <i className="fas fa-chevron-down"></i>
-                                <div className="mt-2">
-                                    <small>Scroll untuk melihat lebih banyak</small>
-                                </div>
-                            </div>
+                        {/* Compact Scroll Cue Indicator */}
+                        <div className="hero-scroll-cue">
+                            <button
+                                type="button"
+                                className="hero-scroll-cue-btn"
+                                onClick={() => scrollToSection(1)}
+                                aria-label="Scroll ke bagian Tentang Setjen DPD RI"
+                            >
+                                <span className="hero-scroll-cue-text">Eksplorasi Platform</span>
+                                <i className="fas fa-chevron-down hero-scroll-chevron"></i>
+                            </button>
                         </div>
                     </section>
 
                     {/* About DPD RI Section */}
-                    <section className="py-5 about-section snap-section" style={{ background: "rgba(255,255,255,0.70)" }}>
-                        <div className="container">
-                            <div className="row align-items-center">
-                                <div className="col-lg-6 mb-5 mb-lg-0">
-                                    <div className="pe-lg-4">
-                                        <div
-                                            className="badge mb-3 about-badge"
-                                        >
-                                            <i className="fas fa-building me-2"></i>
-                                            Tentang Setjen DPD RI
+                    <section className="about-section snap-section">
+                        {/* Background Geometric Grid & Luminous Glow Pattern */}
+                        <div className="about-background-pattern" aria-hidden="true"></div>
+
+                        <div className="container position-relative about-container">
+                            <div className="row align-items-center g-4 about-row">
+                                {/* About Left Text Column */}
+                                <div className="col-lg-6 about-text-col">
+                                    <div className="about-content">
+                                        {/* Institutional Pill Badge */}
+                                        <div className="about-badge-pill mb-2">
+                                            <span className="about-badge-dot"></span>
+                                            <i className="fas fa-landmark me-2"></i>
+                                            <span>Profil Lembaga</span>
+                                            <span className="about-badge-sep">•</span>
+                                            <span className="about-badge-sub">Setjen DPD RI</span>
                                         </div>
 
-                                        <h2 className="display-6 fw-bold mb-4 about-section-heading">
-                                            Sekretariat Jenderal<br />Dewan Perwakilan Daerah<br />Republik Indonesia
+                                        {/* Main Headline */}
+                                        <h2 className="about-main-title mb-2">
+                                            Sekretariat Jenderal <span className="about-title-accent">DPD RI</span>
                                         </h2>
 
+                                        {/* Subtitle / Tagline */}
+                                        <h3 className="about-subtitle mb-2">
+                                            Dukungan Keahlian, Administratif &amp; Operasional Parlemen Berintegritas
+                                        </h3>
 
-                                        <p className="lead text-muted mb-4">
-                                            Setjen DPD RI adalah perangkat pendukung yang menyediakan dukungan administratif,
-                                            teknis, dan keahlian untuk memastikan kelancaran kerja DPD RI
-                                            dalam menjalankan fungsi legislasi dan pengawasannya.
+                                        {/* Concise Description */}
+                                        <p className="about-description mb-3">
+                                            Perangkat pendukung sistem parlemen yang menyelenggarakan dukungan teknis, administratif, dan keahlian untuk menunjang kelancaran fungsi legislasi, pengawasan, dan penganggaran DPD RI di seluruh wilayah nusantara.
                                         </p>
 
-                                        <div className="row g-3 mb-4">
-                                            <div className="col-sm-6">
-                                                <div className="d-flex align-items-center">
-                                                    <div
-                                                        className="me-3 floating-card-icon-green"
-                                                    >
-                                                        <i className="fas fa-users"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h5 className="fw-bold mb-1">Pengembangan SDM</h5>
-                                                        <small className="text-muted">Peningkatan kompetensi pegawai</small>
-                                                    </div>
+                                        {/* Feature Highlights Grid */}
+                                        <div className="about-features-grid mb-3">
+                                            <div className="about-feature-card">
+                                                <div className="about-feature-icon-box teal">
+                                                    <i className="fas fa-users-cog"></i>
+                                                </div>
+                                                <div>
+                                                    <div className="about-feature-heading">Pengembangan SDM</div>
+                                                    <div className="about-feature-sub">Peningkatan kompetensi aparatur parlemen</div>
                                                 </div>
                                             </div>
 
-                                            <div className="col-sm-6">
-                                                <div className="d-flex align-items-center">
-                                                    <div
-                                                        className="me-3 feature-icon-red"
-                                                    >
-                                                        <i className="fas fa-graduation-cap"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h5 className="fw-bold mb-1">Pembelajaran Digital</h5>
-                                                        <small className="text-muted">Transformasi digital pendidikan</small>
-                                                    </div>
+                                            <div className="about-feature-card">
+                                                <div className="about-feature-icon-box gold">
+                                                    <i className="fas fa-laptop-code"></i>
+                                                </div>
+                                                <div>
+                                                    <div className="about-feature-heading">Pembelajaran Digital</div>
+                                                    <div className="about-feature-sub">Transformasi e-learning terpadu &amp; adaptif</div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <p className="text-muted">
-                                            Platform LMSetjen DPD RI hadir sebagai solusi pembelajaran digital untuk mendukung
-                                            pengembangan kapasitas dan kompetensi pegawai dalam melaksanakan tugas dan fungsinya
-                                            secara optimal.
-                                        </p>
+                                        {/* Quick Action Discovery Buttons */}
+                                        <div className="about-action-buttons d-flex flex-wrap gap-2 mb-3 align-items-center">
+                                            <button
+                                                type="button"
+                                                className="btn about-btn-primary-compact"
+                                                onClick={() => scrollToSection(2)}
+                                            >
+                                                <i className="fas fa-chart-line me-2"></i>
+                                                <span>Capaian Platform</span>
+                                                <i className="fas fa-arrow-down ms-2 about-btn-arrow"></i>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn about-btn-secondary-compact"
+                                                onClick={() => scrollToSection(3)}
+                                            >
+                                                <i className="fas fa-th-large me-2"></i>
+                                                <span>Kategori Kursus</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Institutional Focus Pillars Ribbon */}
+                                        <div className="about-pillars-ribbon">
+                                            <div className="about-pillar-item">
+                                                <i className="fas fa-scroll text-teal me-1"></i> Legislasi
+                                            </div>
+                                            <span className="about-pillar-sep">&bull;</span>
+                                            <div className="about-pillar-item">
+                                                <i className="fas fa-shield-alt text-warning me-1"></i> Pengawasan
+                                            </div>
+                                            <span className="about-pillar-sep">&bull;</span>
+                                            <div className="about-pillar-item">
+                                                <i className="fas fa-coins text-success me-1"></i> Anggaran
+                                            </div>
+                                            <span className="about-pillar-sep">&bull;</span>
+                                            <div className="about-pillar-item">
+                                                <i className="fas fa-map-location-dot text-info me-1"></i> 38 Provinsi
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="col-lg-6">
-                                    <div className="position-relative">
-                                        <div
-                                            className="image-container about-image-container"
-                                        >
+                                {/* About Right Visual Showcase */}
+                                <div className="col-lg-6 about-visual-col">
+                                    <div className="about-showcase-card">
+                                        {/* Showcase Header */}
+                                        <div className="about-showcase-header">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <span className="about-showcase-tag">
+                                                    <i className="fas fa-map-marked-alt me-1"></i> Wilayah Kerja
+                                                </span>
+                                                <span className="about-showcase-status">
+                                                    <span className="hero-status-pulse"></span> Sabang &ndash; Merauke
+                                                </span>
+                                            </div>
+                                            <span className="hero-showcase-inst">Kantor Daerah DPD RI</span>
+                                        </div>
+
+                                        {/* Image Container with In-bounds Floating Badges */}
+                                        <div className="about-image-wrapper">
                                             <picture>
                                                 <source srcSet={regionMapWebP} type="image/webp" />
                                                 <img
                                                     src={regionMapJpg}
                                                     alt="Peta Wilayah Kerja Sekretariat Jenderal DPD RI"
-                                                    className="img-fluid"
+                                                    className="img-fluid about-showcase-img"
                                                     loading="lazy"
                                                     decoding="async"
                                                     width="1600"
                                                     height="587"
-                                                    style={{
-                                                        borderRadius: "15px",
-                                                        objectFit: "cover",
-                                                        width: "100%",
-                                                        height: "100%"
-                                                    }}
                                                     onError={(e) => {
                                                         e.target.src = regionMapJpg;
                                                     }}
                                                 />
                                             </picture>
-                                        </div>
+                                            <div className="about-image-gradient-veil" aria-hidden="true"></div>
 
-                                        {/* Floating Stats */}
-                                        <div
-                                            className="position-absolute"
-                                            style={{
-                                                bottom: "15%",
-                                                right: "-10%",
-                                                background: "white",
-                                                borderRadius: "20px",
-                                                padding: "1rem",
-                                                boxShadow: "0 15px 35px rgba(0, 0, 0, 0.1)",
-                                                border: "1px solid #e9ecef"
-                                            }}
-                                        >
-                                            <div className="text-center">
-                                                <h3 className="fw-bold mb-1 stats-number-blue">38</h3>
-                                                <p className="mb-0 text-muted">Provinsi</p>
-                                                <small className="text-muted">Terwakili</small>
+                                            {/* Floating Badge Chip - Top Right */}
+                                            <div className="about-float-chip about-float-top-right">
+                                                <div className="about-chip-icon-box bg-teal-gradient text-white">
+                                                    <i className="fas fa-landmark"></i>
+                                                </div>
+                                                <div>
+                                                    <div className="about-chip-heading">38 Provinsi</div>
+                                                    <div className="about-chip-sub">Representasi Parlemen</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Floating Badge Chip - Bottom Left */}
+                                            <div className="about-float-chip about-float-bottom-left">
+                                                <div className="about-chip-icon-box bg-amber-gradient text-white">
+                                                    <i className="fas fa-award"></i>
+                                                </div>
+                                                <div>
+                                                    <div className="about-chip-heading">BPSDM OKK</div>
+                                                    <div className="about-chip-sub">Standar Kompetensi ASN</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        {/* Compact Scroll Cue Indicator */}
+                        <div className="about-scroll-cue">
+                            <button
+                                type="button"
+                                className="about-scroll-cue-btn"
+                                onClick={() => scrollToSection(2)}
+                                aria-label="Scroll ke bagian Statistik Platform"
+                            >
+                                <span className="about-scroll-cue-text">Capaian &amp; Statistik</span>
+                                <i className="fas fa-chevron-down about-scroll-chevron"></i>
+                            </button>
+                        </div>
                     </section>
 
                     {/* Statistics Section */}
-                    <section className="py-5 statistics-section snap-section" style={{ background: "rgba(255,255,255,0.2)" }}>
-                        <div className="container">
-                            <div className="text-center mb-5">
+                    <section className="statistics-section snap-section">
+                        {/* Background Geometric Grid & Radial Glow Pattern */}
+                        <div className="stats-background-pattern" aria-hidden="true"></div>
+
+                        <div className="container position-relative stats-container">
+                            <div className="text-center mb-3">
                                 <div
-                                    className="badge mb-3 about-badge"
+                                    className="badge mb-2 about-badge"
+                                    style={{
+                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                        color: "#ffffff",
+                                        padding: "0.35rem 0.85rem",
+                                        borderRadius: "50px",
+                                        fontSize: "0.82rem",
+                                        fontWeight: "600",
+                                        boxShadow: "0 2px 8px rgba(13, 148, 136, 0.25)"
+                                    }}
                                 >
                                     <i className="fas fa-chart-bar me-2"></i>
                                     Statistik Platform
                                 </div>
 
-                                <h2 className="display-6 fw-bold mb-3 about-section-heading">
-                                    Pencapaian LMSetjen DPD RI
+                                <h2 className="display-6 fw-bold mb-1 about-section-heading" style={{ fontSize: "clamp(1.5rem, 2.5vw, 2rem)" }}>
+                                    Pencapaian LMSetjen <span className="about-title-accent">DPD RI</span>
                                 </h2>
 
-                                <p className="lead text-muted">
+                                <p className="text-muted mb-0" style={{ fontSize: "0.9rem" }}>
                                     Data terkini mengenai perkembangan dan capaian platform pembelajaran Setjen DPD RI
                                 </p>
                             </div>
 
-                            {/* Changed to 2x4 layout (2 rows, 4 cards - compact design) */}
-                            <div className="row g-3 justify-content-center">
+                            {/* 2x4 layout (2 rows, 4 cards - compact design) */}
+                            <div className="row g-3 justify-content-center stats-row">
                                 {/* Row 1 - All 4 stats */}
                                 <div className="col-lg-3 col-md-6">
                                     {isStatsLoading ? (
@@ -1323,37 +1434,54 @@ function Index() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Compact Scroll Cue Indicator */}
+                        <div className="stats-scroll-cue">
+                            <button
+                                type="button"
+                                className="stats-scroll-cue-btn"
+                                onClick={() => scrollToSection(3)}
+                                aria-label="Scroll ke bagian Kategori Kursus"
+                            >
+                                <span className="stats-scroll-cue-text">Kategori Kursus</span>
+                                <i className="fas fa-chevron-down stats-scroll-chevron"></i>
+                            </button>
+                        </div>
                     </section>
 
                     {/* Course Categories Section */}
-                    <section className="py-5 snap-section" style={{ background: "rgba(255,255,255,0.70)" }}>
-                        <div className="container">
-                            <div className="text-center mb-4">
+                    <section className="categories-section snap-section">
+                        {/* Background Geometric Grid & Radial Glow Pattern */}
+                        <div className="categories-background-pattern" aria-hidden="true"></div>
+
+                        <div className="container position-relative categories-container">
+                            <div className="text-center mb-3">
                                 <div
-                                    className="badge mb-3"
+                                    className="badge mb-2"
                                     style={{
                                         background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                         color: "white",
-                                        padding: "0.5rem 1rem",
+                                        padding: "0.35rem 0.85rem",
                                         borderRadius: "50px",
-                                        fontSize: "0.9rem"
+                                        fontSize: "0.82rem",
+                                        fontWeight: "600"
                                     }}
                                 >
                                     <i className="fas fa-th-large me-2"></i>
                                     Kategori Kursus
                                 </div>
 
-                                <h2 className="display-6 fw-bold mb-3" style={{ color: "#2c3e50" }}>
-                                    Jelajahi Berdasarkan Kategori
+                                <h2 className="display-6 fw-bold mb-1" style={{ color: "#2c3e50", fontSize: "clamp(1.5rem, 2.5vw, 2rem)" }}>
+                                    Jelajahi Berdasarkan <span className="about-title-accent">Kategori</span>
                                 </h2>
 
-                                <p className="lead text-muted">
+                                <p className="text-muted mb-0" style={{ fontSize: "0.9rem" }}>
                                     Temukan kursus yang sesuai dengan minat dan kebutuhan pengembangan karir Anda
                                 </p>
                             </div>
 
-                            {/* Changed to 2x4 layout (2 rows, 4 cards each - compact) */}
-                            <div className="row g-3 justify-content-center">
+                            {/* 2x4 layout (2 rows, 4 cards each - compact) */}
+                            <div className="row g-3 justify-content-center categories-row">
                                 {isLoading ? (
                                     // Loading skeleton - 8 cards with placeholder content
                                     [...Array(8)].map((_, index) => (
@@ -1494,54 +1622,74 @@ function Index() {
                             </div>
 
                             {categories.length > 6 && (
-                                <div className="text-center mt-5">
+                                <div className="text-center mt-3">
                                     <Link
                                         to="/search/"
-                                        className="btn btn-lg px-4"
+                                        className="btn btn-sm px-4 py-2"
                                         style={{
                                             background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                             color: "white",
                                             border: "none",
-                                            borderRadius: "15px",
-                                            fontWeight: "600"
+                                            borderRadius: "12px",
+                                            fontWeight: "600",
+                                            fontSize: "0.85rem",
+                                            boxShadow: "0 4px 12px rgba(13, 148, 136, 0.25)"
                                         }}
                                     >
+                                        <i className="fas fa-grid-2 me-2"></i>
                                         Lihat Semua Kategori
                                     </Link>
                                 </div>
                             )}
                         </div>
+
+                        {/* Compact Scroll Cue Indicator */}
+                        <div className="categories-scroll-cue">
+                            <button
+                                type="button"
+                                className="categories-scroll-cue-btn"
+                                onClick={() => scrollToSection(4)}
+                                aria-label="Scroll ke bagian Kursus Populer"
+                            >
+                                <span className="categories-scroll-cue-text">Kursus Terfavorit</span>
+                                <i className="fas fa-chevron-down categories-scroll-chevron"></i>
+                            </button>
+                        </div>
                     </section>
 
                     {/* Featured Courses Section */}
-                    <section id="courses-section" className="py-5 snap-section" style={{ background: "rgba(255,255,255,0.2)" }}>
-                        <div className="container">
-                            <div className="text-center mb-5">
+                    <section id="courses-section" className="courses-section snap-section">
+                        {/* Background Geometric Grid & Radial Glow Pattern */}
+                        <div className="courses-background-pattern" aria-hidden="true"></div>
+
+                        <div className="container position-relative courses-container">
+                            <div className="text-center mb-3">
                                 <div
-                                    className="badge mb-3"
+                                    className="badge mb-2"
                                     style={{
                                         background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                         color: "white",
-                                        padding: "0.5rem 1rem",
+                                        padding: "0.35rem 0.85rem",
                                         borderRadius: "50px",
-                                        fontSize: "0.9rem"
+                                        fontSize: "0.82rem",
+                                        fontWeight: "600"
                                     }}
                                 >
                                     <i className="fas fa-star me-2"></i>
                                     Kursus Populer
                                 </div>
 
-                                <h2 className="display-6 fw-bold mb-3" style={{ color: "#2c3e50" }}>
-                                    Kursus Terfavorit
+                                <h2 className="display-6 fw-bold mb-1" style={{ color: "#2c3e50", fontSize: "clamp(1.5rem, 2.5vw, 2rem)" }}>
+                                    Kursus <span className="about-title-accent">Terfavorit</span>
                                 </h2>
 
-                                <p className="lead text-muted">
+                                <p className="text-muted mb-0" style={{ fontSize: "0.9rem" }}>
                                     Kursus paling diminati dan memiliki rating tertinggi dari peserta
                                 </p>
                             </div>
 
-                            {/* Changed to 3x1 layout (1 row, 3 cards - compact) */}
-                            <div className="row g-3 justify-content-center">
+                            {/* 3x1 layout (1 row, 3 cards - compact) */}
+                            <div className="row g-3 justify-content-center courses-row">
                                 {isLoading ? (
                                     // Loading skeleton - 3 course cards with placeholder content
                                     [...Array(3)].map((_, index) => (
@@ -1786,7 +1934,7 @@ function Index() {
                                                     {/* Instructor */}
                                                     <div className="mb-2 d-flex align-items-center">
                                                         <img
-                                                            src={getImageUrl(course.teacher?.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(course.teacher?.full_name || 'Instruktur')}&background=0d9488&color=ffffff&bold=true&size=28`}
+                                                            src={getImageUrl(course.teacher?.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(course.teacher?.full_name || "Instruktur")}&background=0d9488&color=ffffff&bold=true&size=28`}
                                                             alt={course.teacher?.full_name || "Instruktur"}
                                                             loading="lazy"
                                                             decoding="async"
@@ -1903,31 +2051,48 @@ function Index() {
                             </div>
 
                             {courses.length > 6 && (
-                                <div className="text-center mt-5">
+                                <div className="text-center mt-3">
                                     <Link
                                         to="/search/"
-                                        className="btn btn-lg px-4"
+                                        className="btn btn-sm px-4 py-2"
                                         style={{
                                             background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
                                             color: "white",
                                             border: "none",
-                                            borderRadius: "15px",
-                                            fontWeight: "600"
+                                            borderRadius: "12px",
+                                            fontWeight: "600",
+                                            fontSize: "0.85rem",
+                                            boxShadow: "0 4px 12px rgba(13, 148, 136, 0.25)"
                                         }}
                                     >
+                                        <i className="fas fa-graduation-cap me-2"></i>
                                         Lihat Semua Kursus
                                     </Link>
                                 </div>
                             )}
                         </div>
+
+                        {/* Compact Scroll Cue Indicator */}
+                        <div className="courses-scroll-cue">
+                            <button
+                                type="button"
+                                className="courses-scroll-cue-btn"
+                                onClick={() => scrollToSection(5)}
+                                aria-label="Scroll ke bagian Peringkat Peserta"
+                            >
+                                <span className="courses-scroll-cue-text">Peringkat &amp; Capaian</span>
+                                <i className="fas fa-chevron-down courses-scroll-chevron"></i>
+                            </button>
+                        </div>
                     </section>
 
                     {/* CTA Section with Rankings - ✨ PHASE 10.1 */}
-                    <section className="py-5 snap-section cta-section" style={{
-                        background: "linear-gradient(135deg, rgba(13, 148, 136, 0.85) 0%, rgba(15, 118, 110, 0.85) 100%)",
-                    }}>
-                        <div className="container">
-                            <div className="row align-items-stretch gap-3 gap-lg-0">
+                    <section className="cta-section snap-section">
+                        {/* Background Geometric Grid & Radial Glow Pattern */}
+                        <div className="cta-background-pattern" aria-hidden="true"></div>
+
+                        <div className="container position-relative cta-container">
+                            <div className="row align-items-stretch gap-3 gap-lg-0 cta-row">
 
                                 {/* Left Column: Ranked Instructors */}
                                 <div className="col-lg-4">
@@ -1941,24 +2106,42 @@ function Index() {
 
                                 {/* Center Column: CTA Content */}
                                 <div className="col-lg-4 d-flex flex-column justify-content-center">
-                                    <h2 className="display-6 fw-bold mb-3" style={{ color: "white" }}>
+                                    <div
+                                        className="badge mb-2 d-inline-flex align-items-center align-self-start"
+                                        style={{
+                                            background: "rgba(255, 255, 255, 0.18)",
+                                            backdropFilter: "blur(8px)",
+                                            border: "1px solid rgba(255, 255, 255, 0.3)",
+                                            color: "white",
+                                            padding: "0.35rem 0.85rem",
+                                            borderRadius: "50px",
+                                            fontSize: "0.82rem",
+                                            fontWeight: "600"
+                                        }}
+                                    >
+                                        <i className="fas fa-trophy text-warning me-2"></i>
+                                        Peringkat &amp; Prestasi
+                                    </div>
+
+                                    <h2 className="display-6 fw-bold mb-2" style={{ color: "white", fontSize: "clamp(1.4rem, 2.2vw, 1.85rem)", lineHeight: 1.25 }}>
                                         Siap Memulai Perjalanan Pembelajaran Anda?
                                     </h2>
-                                    <p className="lead mb-4" style={{ color: "white" }}>
+                                    <p className="mb-3" style={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "0.88rem", lineHeight: 1.5 }}>
                                         Bergabunglah dengan ribuan pegawai Setjen DPD RI yang telah meningkatkan kompetensi mereka
-                                        melalui platform LMSetjen DPD RI. Daftar sekarang dan akses seluruh kursus secara gratis!
+                                        melalui platform LMSetjen DPD RI. Akses seluruh kursus secara gratis!
                                     </p>
-                                    <div className="d-flex flex-wrap gap-3 align-items-center">
+                                    <div className="d-flex flex-wrap gap-2 align-items-center">
                                         <button
                                             onClick={() => document.getElementById("courses-section")?.scrollIntoView({ behavior: "smooth" })}
-                                            className="btn btn-lg px-4 py-3 cta-register-btn"
+                                            className="btn px-3 py-2 cta-register-btn"
                                             style={{
                                                 background: "white",
                                                 color: "#0d9488",
                                                 border: "none",
-                                                borderRadius: "15px",
+                                                borderRadius: "12px",
                                                 fontWeight: "700",
-                                                boxShadow: "0 8px 25px rgba(255, 255, 255, 0.2)",
+                                                fontSize: "0.88rem",
+                                                boxShadow: "0 6px 16px rgba(0, 0, 0, 0.12)",
                                                 cursor: "pointer",
                                                 pointerEvents: "auto",
                                                 position: "relative",
@@ -1973,29 +2156,40 @@ function Index() {
                                         </button>
                                         <Link
                                             to="/rankings/"
-                                            className="btn btn-lg px-4 py-3"
+                                            className="btn px-3 py-2"
                                             style={{
                                                 background: "rgba(255, 255, 255, 0.18)",
-                                                backdropFilter: "blur(8px)",
                                                 color: "white",
-                                                border: "1.5px solid rgba(255, 255, 255, 0.5)",
-                                                borderRadius: "15px",
-                                                fontWeight: "700",
-                                                boxShadow: "0 8px 25px rgba(0, 0, 0, 0.1)",
-                                                cursor: "pointer",
+                                                border: "1px solid rgba(255, 255, 255, 0.4)",
+                                                borderRadius: "12px",
+                                                fontWeight: "600",
+                                                fontSize: "0.88rem",
+                                                backdropFilter: "blur(10px)",
                                                 textDecoration: "none",
-                                                display: "inline-flex",
-                                                alignItems: "center",
+                                                display: "inline-block",
                                                 transition: "all 0.3s ease"
                                             }}
                                         >
                                             <i className="fas fa-trophy me-2 text-warning"></i>
-                                            Lihat Semua Peringkat
+                                            Semua Peringkat
                                         </Link>
                                     </div>
                                 </div>
 
                             </div>
+                        </div>
+
+                        {/* Compact Scroll Cue Indicator */}
+                        <div className="cta-scroll-cue">
+                            <button
+                                type="button"
+                                className="cta-scroll-cue-btn"
+                                onClick={() => scrollToSection(6)}
+                                aria-label="Scroll ke bagian Testimoni Peserta"
+                            >
+                                <span className="cta-scroll-cue-text">Ulasan &amp; Testimoni</span>
+                                <i className="fas fa-chevron-down cta-scroll-chevron"></i>
+                            </button>
                         </div>
                     </section>
 

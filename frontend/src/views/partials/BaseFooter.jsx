@@ -43,23 +43,11 @@ function BaseFooter() {
       {/* Decorative Top Accent Glow Bar */}
       <div className="footer-top-accent" aria-hidden="true" />
 
-      <div className="container">
+      <div className="container footer-container">
         <div className="base-footer-main">
           {/* 1. Brand & Collaboration Pillar */}
           <div className="base-footer-brand-col">
             <Link to="/" className="footer-brand-link" title="Beranda LMSetjen DPD RI">
-              <picture className="footer-brand-emblem-picture">
-                <source srcSet={logoSetjenWebP} type="image/webp" />
-                <img
-                  src={logoSetjenPNG}
-                  alt="Logo Setjen DPD RI"
-                  className="footer-brand-emblem"
-                  width="22"
-                  height="22"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </picture>
               <span className="footer-brand-title">{config.brand.name}</span>
               <span className="footer-brand-version" title="Versi Aplikasi">
                 v{config.brand.version}

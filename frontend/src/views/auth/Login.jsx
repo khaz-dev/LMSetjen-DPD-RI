@@ -32,6 +32,23 @@ function Login() {
     sessionStorage.removeItem("logging_out");
   }, []);
 
+  // Lock body/html scroll on login page to ensure strict single-viewport fit
+  useEffect(() => {
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalBodyHeight = document.body.style.height;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.height = "100vh";
+
+    return () => {
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+      document.body.style.height = originalBodyHeight;
+    };
+  }, []);
+
   useEffect(() => {
     if (isLoggedIn()) {
       Toast().fire({
@@ -513,7 +530,7 @@ function Login() {
   };
 
   return (
-    <>
+    <div className="login-page-wrapper">
       <BaseHeader />
 
       {/* Role Selection Modal */}
@@ -526,7 +543,8 @@ function Login() {
         onCancel={handleRoleModalCancel}
       />
 
-      <section className="login-section">
+      <main className="login-main-content">
+        <section className="login-section">
         <div className="login-container">
           <div className="login-card-container">
             {/* Left Brand Panel */}
@@ -752,10 +770,11 @@ function Login() {
             </div>
           </div>
         </div>
-      </section>
+        </section>
+      </main>
 
       <Footer />
-    </>
+    </div>
   );
 }
 

@@ -36,18 +36,6 @@ function Footer() {
           {/* Brand & Identity Section */}
           <div className="footer-brand-section">
             <Link to="/" className="footer-brand-link" title="Beranda LMSetjen DPD RI">
-              <picture className="footer-brand-emblem-picture">
-                <source srcSet={logoSetjenWebP} type="image/webp" />
-                <img
-                  src={logoSetjenPNG}
-                  alt="Logo Setjen DPD RI"
-                  className="footer-brand-emblem"
-                  width="20"
-                  height="20"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </picture>
               <span className="footer-brand-name">{content.brand.name}</span>
             </Link>
             <span className="footer-brand-divider" aria-hidden="true">·</span>
