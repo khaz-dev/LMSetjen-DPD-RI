@@ -3,11 +3,50 @@
    Platform: LMSetjen DPD RI (LMS Sekretariat Jenderal DPD RI)
    ========================================================================== */
 
+/* Ensure proper background layer stacking for Search page */
+html:has(.search-compact-wrapper),
+body:has(.search-compact-wrapper) {
+    background-color: #f1f5f9 !important;
+}
+
+body:has(.search-compact-wrapper)::before,
+body:has(.search-compact-wrapper)::after {
+    display: none !important;
+}
+
+#root:has(.search-compact-wrapper) {
+    background-color: #f1f5f9 !important;
+    position: relative;
+}
+
 /* Page Wrapper */
 .search-compact-wrapper {
     min-height: calc(100vh - 180px);
-    background: transparent;
-    padding-bottom: 3.5rem;
+    background: transparent !important;
+    padding-bottom: 0;
+    position: relative;
+}
+
+/* Dedicated fixed background layer: keeps the iconic building silhouette visible subtly (samar / siluet) */
+.search-compact-wrapper::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background-image: url('../../assets/background.jpg');
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    opacity: 0.35;
+    filter: contrast(118%) brightness(1.04);
+    pointer-events: none;
+    will-change: opacity;
 }
 
 /* ==========================================================================
@@ -17,8 +56,9 @@
 .search-hero-slot {
     min-height: 274px;
     position: relative;
+    z-index: 2;
     width: 100%;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0;
 }
 
 /* Container alignment with Main Navigation header-container (1400px width, 1.25rem padding) */
@@ -32,7 +72,9 @@
 }
 
 .search-compact-hero {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.94) 0%, rgba(15, 118, 110, 0.96) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     position: relative;
     color: #ffffff;
     padding: 1.75rem 0 1.5rem 0;
@@ -518,16 +560,53 @@ input.search-input-field::placeholder {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Main Content Area with frosted veil overlay matching About section */
+.search-main-content {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    padding: 1.75rem 0 3.5rem 0;
+    overflow: hidden;
+    min-height: calc(100vh - 450px);
+}
+
+/* Geometric grid & luminous radial glow overlay matching About Section */
+.search-background-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 82% 25%, rgba(13, 148, 136, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 18% 75%, rgba(245, 158, 11, 0.10) 0%, transparent 42%),
+        radial-gradient(circle at 50% 90%, rgba(13, 148, 136, 0.08) 0%, transparent 55%),
+        linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+}
+
+.search-main-content .container {
+    position: relative;
+    z-index: 2;
+}
+
 /* ==========================================================================
    2. STREAMLINED CONTROL & FILTER BAR
    ========================================================================== */
 .search-control-card {
-    background: #ffffff;
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 16px;
     padding: 0.85rem 1.15rem;
     margin-bottom: 1.25rem;
-    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06), 0 0 25px rgba(13, 148, 136, 0.06);
 }
 
 .search-control-row {
@@ -651,7 +730,9 @@ input.search-input-field::placeholder {
 }
 
 .category-pill-btn {
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid #e2e8f0;
     border-radius: 20px;
     padding: 0.35rem 0.85rem;
@@ -697,14 +778,16 @@ input.search-input-field::placeholder {
    3. COMPACT & EYE-CATCHING COURSE CARDS
    ========================================================================== */
 .compact-course-card {
-    background: #ffffff;
-    border: 1px solid rgba(226, 232, 240, 0.85);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.95);
     border-radius: 14px;
     overflow: hidden;
     height: 100%;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
@@ -724,7 +807,8 @@ input.search-input-field::placeholder {
 
 .compact-course-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 24px rgba(13, 148, 136, 0.14), 0 3px 8px rgba(0, 0, 0, 0.04);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 16px 32px rgba(13, 148, 136, 0.16), 0 4px 12px rgba(0, 0, 0, 0.06);
     border-color: #99f6e4;
 }
 
@@ -970,8 +1054,10 @@ input.search-input-field::placeholder {
    4. SKELETON LOADING (COMPACT)
    ========================================================================== */
 .compact-skeleton-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.95);
     border-radius: 14px;
     overflow: hidden;
     height: 100%;
@@ -1035,12 +1121,14 @@ input.search-input-field::placeholder {
 .search-empty-state {
     text-align: center;
     padding: 2.5rem 1.5rem;
-    background: #ffffff;
-    border: 1px dashed #cbd5e1;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px dashed rgba(13, 148, 136, 0.35);
     border-radius: 16px;
     max-width: 520px;
     margin: 2rem auto;
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .empty-icon-circle {
@@ -1109,7 +1197,9 @@ input.search-input-field::placeholder {
 }
 
 .page-nav-btn {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     width: 36px;
@@ -1141,7 +1231,9 @@ input.search-input-field::placeholder {
 }
 
 .page-num-btn {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     min-width: 36px;
@@ -1174,15 +1266,18 @@ input.search-input-field::placeholder {
    7. COMPACT DPD RI INSTRUCTOR CTA BANNER
    ========================================================================== */
 .search-cta-banner {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(4, 47, 44, 0.88) 0%, rgba(6, 78, 71, 0.86) 25%, rgba(13, 148, 136, 0.84) 75%, rgba(15, 118, 110, 0.88) 100%) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
     padding: 1.5rem 1.75rem;
     margin-top: 3rem;
     margin-bottom: 4.5rem; /* Memberikan jarak proporsional dan elegan terhadap footer-wrapper */
     color: #ffffff;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.25);
+    box-shadow: 0 10px 30px rgba(13, 148, 136, 0.22);
 }
 
 .search-cta-banner::before {

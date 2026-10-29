@@ -46,6 +46,15 @@ function Search() {
     const searchInputRef = useRef(null);
     const [searchParams, setSearchParams] = useSearchParams();
 
+    // Ensure body background is properly tinted for silhouette layer
+    useEffect(() => {
+        const originalBg = document.body.style.backgroundColor;
+        document.body.style.backgroundColor = "#f1f5f9";
+        return () => {
+            document.body.style.backgroundColor = originalBg;
+        };
+    }, []);
+
     // 12 items per page aligns evenly on 4-col (desktop), 3-col (laptop), 2-col (tablet), and 1-col (mobile) grids
     const itemsPerPage = 12;
 
@@ -552,6 +561,9 @@ function Search() {
 
                 {/* Main Content Area */}
                 <main className="search-main-content">
+                    {/* Background Geometric Grid & Luminous Glow Pattern matching About section */}
+                    <div className="search-background-pattern" aria-hidden="true"></div>
+
                     <div className="container">
                         {/* Streamlined Filter & Control Bar */}
                         <div className="search-control-card">
