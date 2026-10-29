@@ -13,6 +13,22 @@ body:has(.login-page-wrapper) {
   max-height: 100dvh !important;
   margin: 0 !important;
   padding: 0 !important;
+  background-color: #f1f5f9 !important;
+}
+
+/* Disable generic body::before & ::after on login page to avoid conflicts */
+body:has(.login-page-wrapper)::before,
+body:has(.login-page-wrapper)::after {
+  display: none !important;
+}
+
+#root:has(.login-page-wrapper) {
+  background-color: #f1f5f9 !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  position: relative;
 }
 
 /* Full-height viewport locked wrapper with zero scroll */
@@ -26,7 +42,29 @@ body:has(.login-page-wrapper) {
   flex-direction: column !important;
   justify-content: space-between !important;
   position: relative !important;
-  background: transparent;
+  background: transparent !important;
+}
+
+/* Dedicated fixed background layer: keeps the iconic building silhouette visible subtly (samar / siluet) */
+.login-page-wrapper::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-image: url('../../assets/background.jpg');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  opacity: 0.38;
+  filter: contrast(118%) brightness(1.04);
+  pointer-events: none;
+  will-change: opacity;
 }
 
 /* Main Content Area filling remaining space between header and footer */
@@ -41,6 +79,9 @@ body:has(.login-page-wrapper) {
   padding-top: 60px;
   /* Offset for fixed BaseHeader */
   overflow: hidden;
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
 }
 
 .login-section {
@@ -52,7 +93,7 @@ body:has(.login-page-wrapper) {
   justify-content: center;
   padding: 0.5rem 1rem;
   position: relative;
-  background: radial-gradient(circle at 50% 25%, rgba(15, 118, 110, 0.07) 0%, rgba(240, 253, 250, 0.45) 60%, transparent 100%);
+  background: transparent !important;
   user-select: none;
   overflow: hidden;
 }
@@ -65,6 +106,9 @@ body:has(.login-page-wrapper) {
   position: relative !important;
   bottom: auto !important;
   z-index: 30 !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
 }
 
 .login-container {
@@ -73,13 +117,16 @@ body:has(.login-page-wrapper) {
   margin: 0 auto;
 }
 
-/* Main Two-Panel Card */
+/* Main Two-Panel Card with modern translucent frosted glass */
 .login-card-container {
   display: grid;
   grid-template-columns: 1fr 1.15fr;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 20px;
-  box-shadow: 0 18px 40px -10px rgba(15, 118, 110, 0.2), 0 0 0 1px rgba(15, 118, 110, 0.08);
+  box-shadow: 0 18px 40px -10px rgba(15, 118, 110, 0.18), 0 0 0 1px rgba(15, 118, 110, 0.08);
   overflow: hidden;
   min-height: auto;
   max-height: calc(100vh - 130px);
@@ -88,7 +135,7 @@ body:has(.login-page-wrapper) {
 }
 
 .login-card-container:hover {
-  box-shadow: 0 24px 50px -10px rgba(15, 118, 110, 0.25), 0 0 0 1px rgba(15, 118, 110, 0.12);
+  box-shadow: 0 24px 50px -10px rgba(15, 118, 110, 0.22), 0 0 0 1px rgba(15, 118, 110, 0.12);
 }
 
 /* ==========================================================================
@@ -96,7 +143,9 @@ body:has(.login-page-wrapper) {
    ========================================================================== */
 .login-brand-panel {
   position: relative;
-  background: linear-gradient(145deg, #0f766e 0%, #115e59 55%, #042f2e 100%);
+  background: linear-gradient(145deg, rgba(15, 118, 110, 0.92) 0%, rgba(17, 94, 89, 0.94) 55%, rgba(4, 47, 44, 0.96) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: #ffffff;
   padding: 1.6rem 1.75rem;
   display: flex;
@@ -295,7 +344,9 @@ body:has(.login-page-wrapper) {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .login-auth-header {
@@ -362,20 +413,22 @@ body:has(.login-page-wrapper) {
   transition: all 0.22s ease;
   outline: none;
   border: 1.5px solid transparent;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.85);
   text-align: left;
   user-select: none;
 }
 
 /* Method 1: Nusa SSO */
 .login-method-card.sso-card {
-  background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%);
+  background: linear-gradient(180deg, rgba(240, 253, 250, 0.85) 0%, rgba(255, 255, 255, 0.85) 100%);
   border-color: #99f6e4;
   box-shadow: 0 3px 10px rgba(15, 118, 110, 0.08);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .login-method-card.sso-card:hover {
-  background: linear-gradient(180deg, #ccfbf1 0%, #f0fdfa 100%);
+  background: linear-gradient(180deg, rgba(204, 251, 241, 0.95) 0%, rgba(240, 253, 250, 0.95) 100%);
   border-color: #0f766e;
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(15, 118, 110, 0.15);
@@ -387,13 +440,15 @@ body:has(.login-page-wrapper) {
 
 /* Method 2: Google */
 .login-method-card.google-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.85);
   border-color: #e2e8f0;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .login-method-card.google-card:hover:not(:disabled) {
-  background: #f8fafc;
+  background: rgba(248, 250, 252, 0.95);
   border-color: #cbd5e1;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);

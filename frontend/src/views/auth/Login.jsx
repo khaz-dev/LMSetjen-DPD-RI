@@ -37,15 +37,18 @@ function Login() {
     const originalHtmlOverflow = document.documentElement.style.overflow;
     const originalBodyOverflow = document.body.style.overflow;
     const originalBodyHeight = document.body.style.height;
+    const originalBodyBg = document.body.style.backgroundColor;
 
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
     document.body.style.height = "100vh";
+    document.body.style.backgroundColor = "#f1f5f9";
 
     return () => {
       document.documentElement.style.overflow = originalHtmlOverflow;
       document.body.style.overflow = originalBodyOverflow;
       document.body.style.height = originalBodyHeight;
+      document.body.style.backgroundColor = originalBodyBg;
     };
   }, []);
 
