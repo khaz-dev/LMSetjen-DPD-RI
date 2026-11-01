@@ -1057,12 +1057,13 @@ class Question_Answer(models.Model):
     variant_item = models.ForeignKey(VariantItem, on_delete=models.SET_NULL, null=True, blank=True, related_name="questions")
     is_solved = models.BooleanField(default=False)
     video_timestamp = models.IntegerField(null=True, blank=True, help_text="Timestamp in seconds for video playback")
+    is_pinned = models.BooleanField(default=False, help_text="Pinned discussion to appear at the top")
 
     def __str__(self):
         return f"{self.user.username} - {self.course.title}"
     
     class Meta:
-        ordering = ['-date']
+        ordering = ['-is_pinned', '-date']
 
     def messages(self):
         return Question_Answer_Message.objects.filter(question=self)

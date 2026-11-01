@@ -1412,6 +1412,60 @@ class QuestionAnswerToggleSolutionAPIView(generics.CreateAPIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class QuestionAnswerTogglePinAPIView(generics.CreateAPIView):
+    """
+    Q&A Toggle Pin API - Pin or unpin a discussion to keep it at the top
+    POST /api/v1/student/question-answer-toggle-pin/<qa_id>/
+    Body: {user_id}
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def create(self, request, qa_id=None):
+        try:
+            user_id = request.data.get('user_id')
+            if not all([user_id, qa_id]):
+                return Response(
+                    {"error": "Missing required fields: user_id, qa_id"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user = User.objects.get(id=user_id)
+            question = api_models.Question_Answer.objects.get(qa_id=qa_id)
+
+            # Check permissions: instructor of the course or staff/admin
+            is_instructor = bool(
+                question.course and question.course.teacher and 
+                (question.course.teacher.user_id == user.id or question.course.teacher.user == user)
+            )
+            is_staff = bool(user.is_staff or user.is_superuser)
+
+            if not (is_instructor or is_staff):
+                return Response(
+                    {"error": "Hanya instruktur kursus atau staf/pengelola yang berhak menyematkan diskusi."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Toggle pin
+            question.is_pinned = not question.is_pinned
+            question.save(update_fields=['is_pinned'])
+
+            serializer = api_serializer.Question_AnswerSerializer(question)
+            action_text = "disematkan ke posisi teratas" if question.is_pinned else "batal disematkan"
+            return Response({
+                "message": f"Diskusi berhasil {action_text}",
+                "is_pinned": question.is_pinned,
+                "question": serializer.data
+            }, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"error": "Pengguna tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.Question_Answer.DoesNotExist:
+            return Response({"error": "Diskusi tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 
 # ✨ PHASE 7.16: Q&A Report endpoint

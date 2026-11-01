@@ -27,337 +27,13 @@ import {
     QAMarkdownRenderer,
     QAVideoTimestampBadge,
 } from "../../components/CourseDetail/QAMarkdownTools";
+import DiscussionTab from "../../components/CourseDetail/DiscussionTab";
+import CreateQuestionModal from "../../components/CourseDetail/CreateQuestionModal";
+import QAReportModal from "../../components/CourseDetail/QAReportModal";
+import FloatingNoteCardsContainer from "../../components/CourseDetail/FloatingNoteCards";
+import NotesTab from "../../components/CourseDetail/NotesTab";
+import NoteModal from "../../components/CourseDetail/NoteModal";
 
-// ✨ PHASE 11.164: Extracted floating note card component - fixes React hooks violation
-const FloatingNoteCard = React.memo(({ item, idx, openNotes, setOpenNotes, param, enrollmentId, fetchCourseDetail }) => {
-    const noteColor = item.note.color || '#f39c12';
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-    const [position, setPosition] = useState(item.position);
-
-    const handleMouseDown = (e) => {
-        if (e.target.closest('.note-detail-close-btn') || e.target.closest('.note-detail-edit-toggle')) {
-            return;
-        }
-        setIsDragging(true);
-        setDragOffset({
-            x: e.clientX - position.x,
-            y: e.clientY - position.y
-        });
-    };
-
-    useEffect(() => {
-        if (!isDragging) return;
-
-        const handleMouseMove = (e) => {
-            setPosition({
-                x: e.clientX - dragOffset.x,
-                y: e.clientY - dragOffset.y
-            });
-        };
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
-        };
-
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging, dragOffset]);
-
-    const handleEditToggle = (e) => {
-        e.stopPropagation();
-        const newOpenNotes = [...openNotes];
-        newOpenNotes[idx].isEditing = !newOpenNotes[idx].isEditing;
-
-        if (!newOpenNotes[idx].isEditing && item.note.id) {
-            // Save the note
-            const formdata = new FormData();
-            formdata.append("title", newOpenNotes[idx].editData.title);
-            formdata.append("note", newOpenNotes[idx].editData.note);
-            formdata.append("color", newOpenNotes[idx].editData.color);
-            if (newOpenNotes[idx].editData.variant_id) {
-                formdata.append("variant_id", newOpenNotes[idx].editData.variant_id);
-            }
-            if (newOpenNotes[idx].editData.variant_item_id) {
-                formdata.append("variant_item_id", newOpenNotes[idx].editData.variant_item_id);
-            }
-            useAxios.put(`student/course-note-detail/${UserData()?.user_id}/${enrollmentId}/${item.note.id}/`, formdata).then(() => {
-                fetchCourseDetail();
-                Toast().fire({ icon: "success", title: "Catatan berhasil diperbarui" });
-            }).catch(() => {
-                Toast().fire({ icon: "error", title: "Gagal memperbarui catatan" });
-            });
-        }
-        setOpenNotes(newOpenNotes);
-    };
-
-    const handleClose = (e) => {
-        e.stopPropagation();
-        setOpenNotes(openNotes.filter((_, i) => i !== idx));
-    };
-
-    const handleTitleChange = (e) => {
-        const newOpenNotes = [...openNotes];
-        newOpenNotes[idx].editData.title = e.target.value;
-        setOpenNotes(newOpenNotes);
-    };
-
-    const handleNoteChange = (e) => {
-        const newOpenNotes = [...openNotes];
-        newOpenNotes[idx].editData.note = e.target.value;
-        setOpenNotes(newOpenNotes);
-    };
-
-    // ✨ Resize state
-    const [size, setSize] = useState({ width: 380, height: 400 });
-    const [isResizing, setIsResizing] = useState(false);
-    const [resizeStart, setResizeStart] = useState({ x: 0, y: 0 });
-
-    const handleResizeStart = (e) => {
-        e.preventDefault();
-        setIsResizing(true);
-        setResizeStart({ x: e.clientX, y: e.clientY });
-    };
-
-    useEffect(() => {
-        if (!isResizing) return;
-
-        const handleMouseMove = (e) => {
-            setSize(prev => ({
-                width: Math.max(300, prev.width + e.clientX - resizeStart.x),
-                height: Math.max(250, prev.height + e.clientY - resizeStart.y)
-            }));
-            setResizeStart({ x: e.clientX, y: e.clientY });
-        };
-
-        const handleMouseUp = () => {
-            setIsResizing(false);
-        };
-
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isResizing, resizeStart]);
-
-    return (
-        <div
-            key={item.note.id}
-            style={{
-                position: 'fixed',
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-                width: `${size.width}px`,
-                height: `${size.height}px`,
-                backgroundColor: '#ffffff',
-                border: `2px solid ${noteColor}`,
-                borderRadius: '12px',
-                boxShadow: `0 10px 40px rgba(0, 0, 0, 0.2)`,
-                zIndex: 1040 + idx,
-                pointerEvents: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden'
-            }}
-        >
-            {/* Header - Draggable */}
-            <div
-                onMouseDown={handleMouseDown}
-                style={{
-                    background: `linear-gradient(135deg, ${noteColor} 0%, ${noteColor}dd 100%)`,
-                    color: 'white',
-                    padding: '1rem 1.5rem',
-                    cursor: isDragging ? 'grabbing' : 'grab',
-                    userSelect: 'none',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderRadius: '10px 10px 0 0'
-                }}
-            >
-                <div style={{ flex: 1 }}>
-                    {item.isEditing ? (
-                        <input
-                            type="text"
-                            value={item.editData.title}
-                            onChange={handleTitleChange}
-                            onClick={(e) => e.stopPropagation()}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            style={{
-                                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                                border: '1px solid rgba(255, 255, 255, 0.4)',
-                                color: 'white',
-                                padding: '0.5rem 0.75rem',
-                                borderRadius: '4px',
-                                width: '100%',
-                                fontWeight: '600',
-                                fontSize: '1rem'
-                            }}
-                            placeholder="Judul Catatan"
-                        />
-                    ) : (
-                        <>
-                            <i className="fas fa-sticky-note me-2"></i>
-                            {item.note.title}
-                        </>
-                    )}
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem' }}>
-                    <button
-                        className="note-detail-edit-toggle"
-                        onClick={handleEditToggle}
-                        style={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                            border: 'none',
-                            color: 'white',
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.9rem'
-                        }}
-                        title={item.isEditing ? "Save" : "Edit"}
-                    >
-                        <i className={item.isEditing ? "fas fa-save" : "fas fa-edit"}></i>
-                    </button>
-                    <button
-                        className="note-detail-close-btn"
-                        onClick={handleClose}
-                        style={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                            border: 'none',
-                            color: 'white',
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}
-                        title="Close"
-                    >
-                        <i className="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-
-            {/* Body - Scrollable */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', backgroundColor: '#f8f9fa' }}>
-                {/* Date and lesson context */}
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <small style={{ color: '#666' }}>
-                        <i className="fas fa-calendar-alt me-2"></i>
-                        {moment(item.note.date || item.note.created_at).format("dddd, MMMM DD, YYYY [at] HH:mm")}
-                    </small>
-                </div>
-
-                {/* Lesson context badge */}
-                {item.note.variant && (
-                    <div style={{
-                        backgroundColor: '#e8f4f8',
-                        padding: '1rem',
-                        borderRadius: '8px',
-                        marginBottom: '1.5rem',
-                        borderLeft: `4px solid ${noteColor}`
-                    }}>
-                        <small style={{ color: '#2c3e50', fontWeight: 600 }}>
-                            <i className="fas fa-layer-group me-2" style={{ color: noteColor }}></i>
-                            <strong>{item.note.variant.title}</strong>
-                            {item.note.variant_item && (
-                                <>
-                                    {' > '}
-                                    <strong>{item.note.variant_item.title}</strong>
-                                </>
-                            )}
-                        </small>
-                    </div>
-                )}
-
-                {/* Note content - inline editable */}
-                {item.isEditing ? (
-                    <textarea
-                        value={item.editData.note}
-                        onChange={handleNoteChange}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            width: '100%',
-                            height: '150px',
-                            padding: '1rem',
-                            border: `1px solid ${noteColor}`,
-                            borderRadius: '8px',
-                            fontFamily: 'inherit',
-                            fontSize: '1rem',
-                            resize: 'none'
-                        }}
-                    />
-                ) : (
-                    <div style={{
-                        backgroundColor: '#ffffff',
-                        padding: '1.5rem',
-                        borderRadius: '8px',
-                        lineHeight: '1.8',
-                        whiteSpace: 'pre-wrap',
-                        wordWrap: 'break-word',
-                        fontSize: '1rem',
-                        color: '#333',
-                        border: `1px solid ${noteColor}33`,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-                    }}>
-                        {item.note.note}
-                    </div>
-                )}
-            </div>
-
-            {/* ✨ PHASE 11.165: Resize Handle - bottom right corner (FIXED: moved outside scrollable body to main container) */}
-            <div
-                onMouseDown={handleResizeStart}
-                style={{
-                    position: 'absolute',
-                    bottom: '0px',
-                    right: '0px',
-                    width: '20px',
-                    height: '20px',
-                    cursor: 'nwse-resize',
-                    backgroundColor: 'rgba(0,0,0,0.1)',
-                    borderRadius: '0 0 8px 0',
-                    transition: 'background-color 0.2s',
-                    zIndex: 1050
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(0,0,0,0.2)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(0,0,0,0.1)'}
-                title="Drag to resize"
-            />
-        </div>
-    );
-});
-
-FloatingNoteCard.displayName = 'FloatingNoteCard';
-
-// ✨ PHASE 11.164: Container for multiple floating note cards
-const FloatingNoteCardsContainer = React.memo(({ openNotes, setOpenNotes, param, fetchCourseDetail }) => {
-    return (
-        <div style={{ position: 'fixed', pointerEvents: 'none', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1040 }}>
-            {openNotes.map((item, idx) => (
-                <FloatingNoteCard
-                    key={item.note.id}
-                    item={item}
-                    idx={idx}
-                    openNotes={openNotes}
-                    setOpenNotes={setOpenNotes}
-                    param={param}
-                    enrollmentId={param.enrollment_id}
-                    fetchCourseDetail={fetchCourseDetail}
-                />
-            ))}
-        </div>
-    );
-});
-
-FloatingNoteCardsContainer.displayName = 'FloatingNoteCardsContainer';
 
 function CourseDetail() {
     // Course data and progress
@@ -686,20 +362,22 @@ function CourseDetail() {
             );
         }
 
-        // 5. Sorting
+        // 5. Sorting (✨ Pilar 5: Pinned questions prioritized at the top!)
         const sort = discussionFilters.sort || (activeTab === 'popular' ? 'most_liked' : 'newest');
-        if (sort === 'most_liked') {
-            filtered.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
-        } else if (sort === 'most_replies') {
-            filtered.sort((a, b) => {
+        filtered.sort((a, b) => {
+            if (a.is_pinned && !b.is_pinned) return -1;
+            if (!a.is_pinned && b.is_pinned) return 1;
+
+            if (sort === 'most_liked') {
+                return (b.likes_count || 0) - (a.likes_count || 0);
+            } else if (sort === 'most_replies') {
                 const countA = a.replies_count ?? Math.max(0, (a.messages?.length || 0) - 1);
                 const countB = b.replies_count ?? Math.max(0, (b.messages?.length || 0) - 1);
                 return countB - countA;
-            });
-        } else {
-            // Newest by date
-            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-        }
+            } else {
+                return new Date(b.date) - new Date(a.date);
+            }
+        });
 
         setFilteredQuestions(filtered);
 
@@ -1765,8 +1443,8 @@ function CourseDetail() {
             if (!handle) return;
             handle.style.position = 'fixed';
             // Position at bottom-right corner of modal (offset by 15px for diamond shape)
-            handle.style.top = `${pos.y + size.height - 15}px`;
-            handle.style.left = `${pos.x + size.width - 15}px`;
+            handle.style.top = `${pos.y + size.height - 20}px`;
+            handle.style.left = `${pos.x + size.width - 20}px`;
             handle.style.zIndex = '1051';
         };
 
@@ -1904,8 +1582,8 @@ function CourseDetail() {
             if (!handle) return;
             handle.style.position = 'fixed';
             // Position at bottom-right corner of modal (offset by 15px for diamond shape)
-            handle.style.top = `${pos.y + size.height - 15}px`;
-            handle.style.left = `${pos.x + size.width - 15}px`;
+            handle.style.top = `${pos.y + size.height - 20}px`;
+            handle.style.left = `${pos.x + size.width - 20}px`;
             handle.style.zIndex = '1051';
         };
 
@@ -3713,6 +3391,64 @@ function CourseDetail() {
         }
     };
 
+    // ✨ Pilar 5: Check if current user is Course Instructor or Staff/Admin
+    const isCourseInstructorOrStaff = useMemo(() => {
+        const user = UserData();
+        if (!user) return false;
+        const isTeacher = course?.course?.teacher && (
+            course.course.teacher.user_id === user.user_id ||
+            course.course.teacher.id === user.teacher_id
+        );
+        const isStaff = Boolean(user.is_staff || user.is_superuser);
+        return Boolean(isTeacher || isStaff);
+    }, [course]);
+
+    // ✨ Pilar 5: Sematkan / Batalkan Sematan Diskusi (Toggle Pin)
+    const handleTogglePin = useCallback(async (qaId) => {
+        const user = UserData();
+        if (!user) {
+            Toast().fire({ icon: 'warning', title: 'Silakan login terlebih dahulu' });
+            return;
+        }
+        try {
+            const res = await useAxios.post(`student/question-answer-toggle-pin/${qaId}/`, {
+                user_id: user.user_id
+            });
+
+            Toast().fire({
+                icon: 'success',
+                title: res.data.message || 'Status sematan berhasil diperbarui',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            const updatedIsPinned = res.data.is_pinned;
+
+            // Sync with local questions state
+            setQuestions(prev => prev.map(q => {
+                if (q.qa_id === qaId) {
+                    return { ...q, is_pinned: updatedIsPinned };
+                }
+                return q;
+            }));
+
+            // Sync with selectedConversation if open
+            setSelectedConversation(prev => {
+                if (prev && prev.qa_id === qaId) {
+                    return { ...prev, is_pinned: updatedIsPinned };
+                }
+                return prev;
+            });
+
+            fetchCourseDetail();
+        } catch (err) {
+            Toast().fire({
+                icon: 'error',
+                title: err.response?.data?.error || 'Gagal mengubah status sematan'
+            });
+        }
+    }, [fetchCourseDetail]);
+
     useEffect(() => {
         if (lastElementRef.current) {
             lastElementRef.current.scrollIntoView({ behavior: "smooth" });
@@ -5170,1019 +4906,61 @@ function CourseDetail() {
 
                                 {/* Tab Content */}
                                 <div className="tab-content tab-content-modern" id="courseTabContent">
-                                    {/* Notes Tab - Active by default in bottom area */}
-                                    <div className="tab-pane fade show active" id="notes" role="tabpanel">
-                                        <div className="d-flex justify-content-between align-items-center mb-3">
-                                            <h4 className="mb-0">
-                                                <i className="fas fa-sticky-note text-amber me-2"></i>Catatan Saya
-                                            </h4>
-                                            <button
-                                                className="add-btn-modern"
-                                                onClick={() => handleNoteShow(null)}
-                                            >
-                                                <i className="fas fa-plus"></i>
-                                                Tambah Catatan
-                                            </button>
-                                        </div>
+                                    {/* Notes Tab (Modularized in NotesTab.jsx) */}
 
-                                        {/* ✨ PHASE 11.160: Search and filter controls for notes - same pattern as discussions */}
-                                        <div className="mb-3 course-filters-row">
-                                            {/* ✨ PHASE 11.161: Search Input - 25% */}
-                                            <div className="filter-col-search">
-                                                <label className="compact-filter-label">
-                                                    <i className="fas fa-search me-1 text-teal-accent"></i>
-                                                    Cari Catatan
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control compact-filter-input"
-                                                    placeholder="Cari berdasarkan judul atau isi..."
-                                                    value={noteFilters.search}
-                                                    onChange={(e) => setNoteFilters({ ...noteFilters, search: e.target.value })}
-                                                />
-                                            </div>
+                                    <NotesTab
 
-                                            {/* Bagian Filter Dropdown - 20% */}
-                                            <div className="filter-col-select">
-                                                <label className="compact-filter-label">
-                                                    <i className="fas fa-layer-group me-1 text-teal-accent"></i>
-                                                    Bagian
-                                                </label>
-                                                <select
-                                                    className="form-select compact-filter-select"
-                                                    value={noteFilters.bagian || ''}
-                                                    onChange={(e) => setNoteFilters({ ...noteFilters, bagian: e.target.value || null, pelajaran: null })}
-                                                >
-                                                    <option value="">Semua Bagian</option>
-                                                    {course?.curriculum?.map((variant) => (
-                                                        <option key={variant.variant_id} value={variant.variant_id}>
-                                                            {variant.title}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                        course={course}
 
-                                            {/* Pelajaran Filter Dropdown - 20% */}
-                                            <div className="filter-col-select">
-                                                <label className="compact-filter-label">
-                                                    <i className="fas fa-book me-1 text-danger"></i>
-                                                    Pelajaran
-                                                </label>
-                                                <select
-                                                    className="form-select compact-filter-select"
-                                                    value={noteFilters.pelajaran || ''}
-                                                    onChange={(e) => setNoteFilters({ ...noteFilters, pelajaran: e.target.value || null })}
-                                                    disabled={!noteFilters.bagian}
-                                                >
-                                                    <option value="">Semua Pelajaran</option>
-                                                    {noteFilters.bagian && course?.curriculum?.find(v => v.variant_id === noteFilters.bagian)?.variant_items?.map((item) => (
-                                                        <option key={item.variant_item_id} value={item.variant_item_id}>
-                                                            {item.title}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                        handleNoteShow={handleNoteShow}
 
-                                            {/* ✨ PHASE 11.160 FIX: Color Filter Dropdown - 25% */}
-                                            <div className="filter-col-color">
-                                                <label className="compact-filter-label">
-                                                    <i className="fas fa-palette me-1 text-amber"></i>
-                                                    Warna
-                                                </label>
-                                                <select
-                                                    className="form-select compact-filter-select"
-                                                    value={noteFilters.color || ''}
-                                                    onChange={(e) => setNoteFilters({ ...noteFilters, color: e.target.value || null })}
-                                                >
-                                                    <option value="">Semua Warna</option>
-                                                    <option value="#f39c12">🟠 Orange</option>
-                                                    <option value="#e74c3c">🔴 Red</option>
-                                                    <option value="#0f766e">🔵 Blue</option>
-                                                    <option value="#2ecc71">🟢 Green</option>
-                                                    <option value="#0d9488">🟣 Teal (Primary)</option>
-                                                    <option value="#f1c40f">🟡 Yellow</option>
-                                                    <option value="#e67e22">🟠 Dark Orange</option>
-                                                    <option value="#95a5a6">⚪ Gray</option>
-                                                    <option value="#1abc9c">🔷 Teal</option>
-                                                    <option value="#34495e">🔹 Dark Blue</option>
-                                                    <option value="#e91e63">💗 Pink</option>
-                                                    <option value="#115e59">🟣 Teal Dark</option>
-                                                </select>
-                                            </div>
+                                        noteFilters={noteFilters}
 
-                                            {/* Clear Filters Button - Fixed to include color */}
-                                            {(noteFilters.search || noteFilters.bagian || noteFilters.pelajaran || noteFilters.color) && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setNoteFilters({ search: '', bagian: null, pelajaran: null, color: null })}
-                                                    className="compact-clear-filter-btn"
-                                                    title="Reset Filter Catatan"
-                                                >
-                                                    <i className="fas fa-times me-1"></i>Reset
-                                                </button>
-                                            )}
-                                        </div>
+                                        setNoteFilters={setNoteFilters}
 
-                                        {/* ✨ PHASE 11.167: 2-Column Grid Layout for Notes (Responsive) */}
-                                        <div className="note-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', gridAutoRows: 'max-content' }}>
-                                            {filteredNotes?.length > 0 ? (
-                                                filteredNotes.map((n, index) => {
-                                                    const noteColor = n.color || "#f39c12";
-                                                    const colorVariations = getColorVariations(noteColor);
+                                        filteredNotes={filteredNotes}
 
-                                                    return (
-                                                        <div
-                                                            key={n.id || index}
-                                                            className="note-card"
-                                                            onClick={() => {
-                                                                // ✨ PHASE 11.163: Add note to openNotes array instead of replacing
-                                                                // Check if note already open
-                                                                const isAlreadyOpen = openNotes.some(item => item.note.id === n.id);
-                                                                if (!isAlreadyOpen) {
-                                                                    setOpenNotes([...openNotes, {
-                                                                        note: n,
-                                                                        position: { x: openNotes.length * 30, y: 60 + openNotes.length * 30 },
-                                                                        isEditing: false,
-                                                                        editData: n
-                                                                    }]);
-                                                                }
-                                                            }}
-                                                            style={{
-                                                                "--note-color": noteColor,
-                                                                "--note-color-light": colorVariations.light,
-                                                                "--note-color-hover": colorVariations.hover,
-                                                                borderColor: colorVariations.light,
-                                                                cursor: 'pointer',
-                                                                transition: 'all 0.3s ease'
-                                                            }}
-                                                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
-                                                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                                                        >
-                                                            <div className="note-header">
-                                                                <div className="note-header-content">
-                                                                    <div
-                                                                        className="note-icon-wrapper"
-                                                                        style={{
-                                                                            background: `linear-gradient(135deg, ${noteColor} 0%, ${noteColor}dd 100%)`,
-                                                                            boxShadow: `0 4px 12px ${colorVariations.shadow}`
-                                                                        }}
-                                                                    >
-                                                                        <i className="fas fa-sticky-note"></i>
-                                                                    </div>
-                                                                    <div className="note-content-info">
-                                                                        <h5 className="note-title">{n.title}</h5>
-                                                                        {/* ✨ PHASE 11.161: Show bagian and pelajaran context */}
-                                                                        {(n.variant || n.variant_item) && (
-                                                                            <div className="note-context">
-                                                                                <i className="fas fa-layer-group"></i>
-                                                                                {n.variant && <span>{n.variant.title}</span>}
-                                                                                {n.variant && n.variant_item && <span style={{ opacity: 0.6 }}>›</span>}
-                                                                                {n.variant_item && <span>{n.variant_item.title}</span>}
-                                                                            </div>
-                                                                        )}
-                                                                        <div className="note-date">
-                                                                            <i
-                                                                                className="fas fa-calendar-alt"
-                                                                                style={{ color: noteColor }}
-                                                                            ></i>
-                                                                            {moment(n.date).format("MMM DD, YYYY")}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="note-actions">
-                                                                    <button
-                                                                        className="btn-note-action edit"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleNoteShow(n);
-                                                                        }}
-                                                                        title="Edit catatan"
-                                                                    >
-                                                                        <i className="fas fa-edit"></i>
-                                                                    </button>
-                                                                    <button
-                                                                        className="btn-note-action delete"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleDeleteNote(n.id);
-                                                                        }}
-                                                                        title="Hapus catatan"
-                                                                    >
-                                                                        <i className="fas fa-trash"></i>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                            <p
-                                                                className="note-content-text"
-                                                                style={{
-                                                                    background: `linear-gradient(135deg, ${colorVariations.hover} 0%, ${colorVariations.light} 100%)`,
-                                                                    borderColor: colorVariations.light
-                                                                }}
-                                                            >
-                                                                {n.note}
-                                                            </p>
-                                                        </div>
-                                                    );
-                                                })
-                                            ) : (
-                                                <div className="empty-state">
-                                                    <i className="fas fa-sticky-note empty-icon"></i>
-                                                    <h5>Belum ada catatan</h5>
-                                                    <p>Mulai membuat catatan untuk mengingat poin penting</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                        openNotes={openNotes}
 
-                                    {/* Discussions Tab */}
-                                    <div className="tab-pane fade" id="discussions" role="tabpanel">
-                                        {/* ✨ PHASE 7.10: Header - shows "Diskusi Kursus" when viewing list, question title when viewing detail */}
-                                        <div className="d-flex justify-content-between align-items-center mb-3">
-                                            {!openedQuestionId && (
-                                                <>
-                                                    <h4 className="mb-0">
-                                                        <i className="fas fa-comments text-teal-accent me-2"></i>Diskusi Kursus
-                                                    </h4>
-                                                    <button
-                                                        className="add-btn-modern"
-                                                        onClick={handleQuestionShow}
-                                                    >
-                                                        <i className="fas fa-plus"></i>
-                                                        Ajukan Pertanyaan
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
+                                        setOpenNotes={setOpenNotes}
 
-                                        {/* ✨ PHASE 7.10 & Pilar 1: Inline forum view - show when a question is opened */}
-                                        {openedQuestionId && selectedConversation ? (
-                                            <div className="forum-thread-container">
-                                                {/* Professional Forum Header with Status Badge */}
-                                                <div className="forum-thread-header">
-                                                    <div className="forum-thread-title-area">
-                                                        <div className="d-flex align-items-center gap-2 flex-wrap">
-                                                            <button
-                                                                className="forum-back-btn"
-                                                                onClick={handleConversationClose}
-                                                            >
-                                                                <i className="fas fa-arrow-left me-1"></i>
-                                                                Kembali
-                                                            </button>
-                                                            <h2 className="forum-thread-title mb-0 flex-grow-1">
-                                                                {selectedConversation.title || 'Tidak Ada Judul'}
-                                                            </h2>
-                                                            {selectedConversation.is_solved || selectedConversation.messages?.some(m => m.is_solution) ? (
-                                                                <span className="qa-status-pill solved">
-                                                                    <i className="fas fa-check-circle me-1"></i>Terjawab
-                                                                </span>
-                                                            ) : (
-                                                                <span className="qa-status-pill waiting">
-                                                                    <i className="fas fa-clock me-1"></i>Menunggu Solusi
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    {/* ✨ PHASE 7.15: Breadcrumb and Meta in one line */}
-                                                    <div className="forum-header-footer">
-                                                        <div className="forum-breadcrumb">
-                                                            {selectedConversation.variant && (
-                                                                <>
-                                                                    <i className="fas fa-folder me-1" style={{ color: '#016b87' }}></i>
-                                                                    <span>{selectedConversation.variant.title}</span>
-                                                                    {selectedConversation.variant_item && <span className="mx-2">/</span>}
-                                                                </>
-                                                            )}
-                                                            {selectedConversation.variant_item && (
-                                                                <>
-                                                                    <i className="fas fa-file me-1" style={{ color: '#662d91' }}></i>
-                                                                    <span>{selectedConversation.variant_item.title}</span>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                        <div className="forum-thread-meta d-flex align-items-center gap-2">
-                                                            {selectedConversation.video_timestamp !== null && selectedConversation.video_timestamp !== undefined && (
-                                                                <QAVideoTimestampBadge
-                                                                    timestamp={selectedConversation.video_timestamp}
-                                                                    onClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
-                                                                    label="Menit"
-                                                                    size="md"
-                                                                />
-                                                            )}
-                                                            <span className="forum-meta-badge">
-                                                                <i className="fas fa-comments"></i>
-                                                                {Math.max(0, (selectedConversation.messages?.length || 1) - 1)} Balasan
-                                                            </span>
-                                                            <span className="forum-meta-badge">
-                                                                <i className="fas fa-clock"></i>
-                                                                {moment(selectedConversation.date).fromNow()}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                        getColorVariations={getColorVariations}
 
-                                                {/* Original Question Card - Professional Style */}
-                                                <div className="forum-post-card forum-original-post">
-                                                    {/* Post Header */}
-                                                    <div className="forum-post-header">
-                                                        <div className="forum-user-info">
-                                                            <div className="forum-user-avatar-wrapper">
-                                                                {selectedConversation.profile?.image ? (
-                                                                    <img
-                                                                        src={selectedConversation.profile.image.startsWith("http")
-                                                                            ? selectedConversation.profile.image
-                                                                            : selectedConversation.profile.image.startsWith("/images/")
-                                                                                ? selectedConversation.profile.image
-                                                                                : getMediaUrl(selectedConversation.profile.image)}
-                                                                        alt={selectedConversation.profile?.full_name || "User"}
-                                                                        className="forum-user-avatar"
-                                                                        onError={(e) => {
-                                                                            e.target.onerror = null;
-                                                                            e.target.src = "/images/placeholders/default-avatar.svg";
-                                                                        }}
-                                                                    />
-                                                                ) : (
-                                                                    <div className="forum-user-avatar-placeholder">
-                                                                        {selectedConversation.profile?.full_name ? (
-                                                                            selectedConversation.profile.full_name
-                                                                                .split(' ')
-                                                                                .filter(Boolean)
-                                                                                .map(n => n[0])
-                                                                                .slice(0, 2)
-                                                                                .join('')
-                                                                                .toUpperCase()
-                                                                        ) : (
-                                                                            <i className="fas fa-user"></i>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <div className="forum-user-details">
-                                                                <div className="forum-user-name">
-                                                                    {selectedConversation.profile?.full_name || 'Pengguna Anonim'}
-                                                                    <span className="forum-user-badge-asker">Penanya</span>
-                                                                    {/* ✨ PHASE 7.23: Show "Anda" badge if user created this question */}
-                                                                    {(selectedConversation?.user_id === UserData()?.user_id) ||
-                                                                        (selectedConversation?.profile?.user_id === UserData()?.user_id) ? (
-                                                                        <span className="forum-user-badge-current">Anda</span>
-                                                                    ) : null}
-                                                                    {/* ✨ PHASE 7.22: Fix teacher path - nested at course.course?.teacher, not course.teacher */}
-                                                                    {course?.course?.teacher && (
-                                                                        (selectedConversation?.user_id === course.course.teacher.user_id) ||
-                                                                        (selectedConversation?.profile?.user_id === course.course.teacher.user_id)
-                                                                    ) && (
-                                                                            <span className="forum-user-badge-instructor" title="Instruktur Kursus">
-                                                                                <i className="fas fa-chalkboard-user"></i>
-                                                                                Instruktur
-                                                                            </span>
-                                                                        )}
-                                                                    {/* ✨ PHASE 7.16: Show "Reported" badge if current user has reported this question */}
-                                                                    {isQAItemReported(selectedConversation.qa_id) && (
-                                                                        <span className="forum-user-badge-reported">
-                                                                            <i className="fas fa-flag me-1"></i>
-                                                                            Sudah Dilaporkan
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <div className="forum-user-timestamp">
-                                                                    <i className="fas fa-clock-o me-1"></i>
-                                                                    {moment(selectedConversation.date).format("DD MMM YYYY [pada] HH:mm")}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                        handleDeleteNote={handleDeleteNote}
 
-                                                    {/* Post Content */}
-                                                    <div className="forum-post-content">
-                                                        <QAMarkdownRenderer
-                                                            content={selectedConversation.message || (selectedConversation.messages?.[0]?.message) || 'Tidak ada pesan'}
-                                                            onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
-                                                        />
-                                                    </div>
-
-                                                    {/* Post Footer with Like and Report Button */}
-                                                    <div className="forum-post-footer">
-                                                        <div className="forum-post-actions">
-                                                            <button
-                                                                className="forum-like-btn"
-                                                                title={userLikedQuestions.has(selectedConversation.qa_id) ? "Batalkan suka" : "Sukai pertanyaan ini"}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleLikeQuestion(selectedConversation);
-                                                                }}
-                                                                style={userLikedQuestions.has(selectedConversation.qa_id) ? { color: '#ff4757' } : {}}
-                                                            >
-                                                                <i className={userLikedQuestions.has(selectedConversation.qa_id) ? "fas fa-heart" : "far fa-heart"}></i>
-                                                                <span className="like-count">{selectedConversation.likes_count || 0}</span>
-                                                            </button>
-                                                            {(() => {
-                                                                const reportStatus = getQAReportStatus(selectedConversation.qa_id, 'question');
-                                                                return (
-                                                                    <button
-                                                                        className="forum-report-btn"
-                                                                        title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
-                                                                        onClick={() => handleOpenQAReportModal(selectedConversation, 'question')}
-                                                                        style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
-                                                                    >
-                                                                        <i className="fas fa-flag"></i>
-                                                                        {reportStatus && (
-                                                                            <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
-                                                                        )}
-                                                                    </button>
-                                                                );
-                                                            })()}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* ✨ Pilar 1: Pinned Verified Solution Box (if verified answer exists) */}
-                                                {(selectedConversation.is_solved || selectedConversation.messages?.some(m => m.is_solution)) && (
-                                                    <div className="pinned-solution-box my-2">
-                                                        <div className="d-flex align-items-center justify-content-between mb-1">
-                                                            <span className="solution-badge-pill">
-                                                                <i className="fas fa-award me-1"></i>Solusi Terverifikasi
-                                                            </span>
-                                                            <small className="text-muted" style={{ fontSize: '0.72rem' }}>
-                                                                Telah diverifikasi sebagai jawaban terbaik
-                                                            </small>
-                                                        </div>
-                                                        {(() => {
-                                                            const solMsg = selectedConversation.messages?.find(m => m.is_solution);
-                                                            if (!solMsg) return null;
-                                                            return (
-                                                                <div className="pinned-solution-body">
-                                                                    <div className="d-flex align-items-center gap-2 mb-1">
-                                                                        <strong className="text-slate-800" style={{ fontSize: '0.82rem' }}>
-                                                                            {solMsg.profile?.full_name || 'Pengguna'}
-                                                                        </strong>
-                                                                        <span className="text-muted" style={{ fontSize: '0.72rem' }}>
-                                                                            {moment(solMsg.date).fromNow()}
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="mb-0 text-dark" style={{ fontSize: '0.84rem', lineHeight: '1.45' }}>
-                                                                        <QAMarkdownRenderer
-                                                                            content={solMsg.message}
-                                                                            onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })()}
-                                                    </div>
-                                                )}
-
-                                                {/* Replies Section */}
-                                                {selectedConversation.messages && selectedConversation.messages.length > 1 && (
-                                                    <div className="forum-replies-section">
-                                                        <div className="forum-replies-list">
-                                                            {selectedConversation.messages.slice(1).map((msg, index) => {  /* Skip first message (original question) */
-                                                                const currentUser = UserData();
-                                                                const isCurrentUser = msg.profile?.user_id === currentUser?.user_id ||
-                                                                    (msg.user_id && msg.user_id === currentUser?.user_id);
-                                                                const isInstructor = course?.course?.teacher && (
-                                                                    msg.user_id === course.course.teacher.user_id ||
-                                                                    msg.profile?.user_id === course.course.teacher.user_id
-                                                                );
-
-                                                                // Permission to mark/unmark solution
-                                                                const isQuestionAsker = (selectedConversation?.user_id === currentUser?.user_id) ||
-                                                                    (selectedConversation?.profile?.user_id === currentUser?.user_id);
-                                                                const isTeacherUser = course?.course?.teacher && (
-                                                                    currentUser?.user_id === course.course.teacher.user_id ||
-                                                                    currentUser?.user_id === course.course.teacher?.user?.id
-                                                                );
-                                                                const isAdmin = currentUser?.is_staff || currentUser?.is_superuser;
-                                                                const canManageSolution = isQuestionAsker || isTeacherUser || isAdmin;
-                                                                const isSolution = Boolean(msg.is_solution);
-
-                                                                return (
-                                                                    <div 
-                                                                        key={msg.id || `message-${index}`} 
-                                                                        className={`forum-post-card forum-reply-post ${isSolution ? 'forum-solution-post' : ''}`}
-                                                                    >
-                                                                        {/* Solution Banner */}
-                                                                        {isSolution && (
-                                                                            <div className="solution-banner-header">
-                                                                                <span className="solution-badge-pill">
-                                                                                    <i className="fas fa-check-circle me-1"></i>Solusi Terverifikasi
-                                                                                </span>
-                                                                                <span className="solution-banner-text">
-                                                                                    Jawaban ini telah ditandai sebagai solusi paling tepat.
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
-
-                                                                        {/* Reply Header */}
-                                                                        <div className="forum-post-header">
-                                                                            <div className="forum-user-info">
-                                                                                <div className="forum-user-avatar-wrapper">
-                                                                                    {msg.profile?.image ? (
-                                                                                        <img
-                                                                                            src={msg.profile.image.startsWith("http")
-                                                                                                ? msg.profile.image
-                                                                                                : msg.profile.image.startsWith("/images/")
-                                                                                                    ? msg.profile.image
-                                                                                                    : getMediaUrl(msg.profile.image)}
-                                                                                            alt={`${msg.profile?.full_name || "User"} avatar`}
-                                                                                            className="forum-user-avatar"
-                                                                                            onError={(e) => {
-                                                                                                e.target.onerror = null;
-                                                                                                e.target.src = "/images/placeholders/default-avatar.svg";
-                                                                                            }}
-                                                                                        />
-                                                                                    ) : (
-                                                                                        <div className="forum-user-avatar-placeholder">
-                                                                                            {msg.profile?.full_name ? (
-                                                                                                msg.profile.full_name
-                                                                                                    .split(' ')
-                                                                                                    .filter(Boolean)
-                                                                                                    .map(n => n[0])
-                                                                                                    .slice(0, 2)
-                                                                                                    .join('')
-                                                                                                    .toUpperCase()
-                                                                                            ) : (
-                                                                                                <i className="fas fa-user"></i>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    )}
-                                                                                </div>
-                                                                                <div className="forum-user-details">
-                                                                                    <div className="forum-user-name">
-                                                                                        {msg.profile?.full_name || 'Pengguna Anonim'}
-                                                                                        {isSolution && (
-                                                                                            <span className="forum-user-badge-solution" title="Solusi Terverifikasi">
-                                                                                                <i className="fas fa-check-circle me-1"></i>Solusi Terpilih
-                                                                                            </span>
-                                                                                        )}
-                                                                                        {isInstructor && (
-                                                                                            <span className="forum-user-badge-instructor" title="Instruktur Kursus">
-                                                                                                <i className="fas fa-chalkboard-user"></i>
-                                                                                                Instruktur
-                                                                                            </span>
-                                                                                        )}
-                                                                                        {isCurrentUser && <span className="forum-user-badge-current">Anda</span>}
-                                                                                        {isQAItemReported(msg.qa_id) && (
-                                                                                            <span className="forum-user-badge-reported">
-                                                                                                <i className="fas fa-flag me-1"></i>
-                                                                                                Sudah Dilaporkan
-                                                                                            </span>
-                                                                                        )}
-                                                                                    </div>
-                                                                                    <div className="forum-user-timestamp">
-                                                                                        <i className="fas fa-clock-o me-1"></i>
-                                                                                        {moment(msg.date).format("DD MMM YYYY [pada] HH:mm")}
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        {/* Reply Content */}
-                                                                        <div className="forum-post-content">
-                                                                            <QAMarkdownRenderer
-                                                                                content={msg.message}
-                                                                                onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
-                                                                            />
-                                                                        </div>
-
-                                                                        {/* Post Footer with Solution Toggle, Like and Report Button */}
-                                                                        <div className="forum-post-footer">
-                                                                            <div className="forum-post-actions d-flex align-items-center justify-content-between w-100">
-                                                                                <div className="d-flex align-items-center gap-2">
-                                                                                    <button
-                                                                                        className="forum-like-btn"
-                                                                                        title={userLikedMessages.has(msg.id) ? "Batalkan suka" : "Sukai jawaban ini"}
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            handleLikeMessage(msg);
-                                                                                        }}
-                                                                                        style={userLikedMessages.has(msg.id) ? { color: '#ff4757' } : {}}
-                                                                                    >
-                                                                                        <i className={userLikedMessages.has(msg.id) ? "fas fa-heart" : "far fa-heart"}></i>
-                                                                                        <span className="like-count">{msg.likes_count || 0}</span>
-                                                                                    </button>
-                                                                                    {(() => {
-                                                                                        const reportStatus = getQAReportStatus(msg.qa_id, 'message');
-                                                                                        return (
-                                                                                            <button
-                                                                                                className="forum-report-btn"
-                                                                                                title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan jawaban ini"}
-                                                                                                onClick={() => handleOpenQAMessageReportModal(msg)}
-                                                                                                style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
-                                                                                            >
-                                                                                                <i className="fas fa-flag"></i>
-                                                                                                {reportStatus && (
-                                                                                                    <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
-                                                                                                )}
-                                                                                            </button>
-                                                                                        );
-                                                                                    })()}
-                                                                                </div>
-
-                                                                                {/* ✨ Pilar 1: Toggle Solution Button */}
-                                                                                {canManageSolution && (
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        className={`forum-solution-btn ${isSolution ? 'active' : ''}`}
-                                                                                        title={isSolution ? "Batalkan status solusi" : "Tandai balasan ini sebagai Solusi Terverifikasi"}
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            handleToggleSolution(msg);
-                                                                                        }}
-                                                                                    >
-                                                                                        <i className={`fas ${isSolution ? 'fa-check-double' : 'fa-check'} me-1`}></i>
-                                                                                        <span>{isSolution ? 'Solusi Terpilih (Batalkan)' : 'Tandai Solusi'}</span>
-                                                                                    </button>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            })}
-
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* No Replies State */}
-                                                {(!selectedConversation.messages || selectedConversation.messages.length === 0) && (
-                                                    <div className="forum-no-replies">
-                                                        <div className="forum-empty-state">
-                                                            <i className="fas fa-comment-dots"></i>
-                                                            <h4>Belum ada balasan</h4>
-                                                            <p>Jadilah yang pertama memberikan balasan untuk pertanyaan ini!</p>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Reply Form Section */}
-                                                <div className="forum-reply-section">
-                                                    <h3 className="forum-reply-section-title">
-                                                        <i className="fas fa-edit me-2"></i>Berikan Balasan Anda
-                                                    </h3>
-                                                    <form onSubmit={sendNewMessage} className="forum-reply-form">
-                                                        <div className="forum-form-group">
-                                                            {/* ✨ Pilar 4: Formatting Toolbar */}
-                                                            <QAFormattingToolbar
-                                                                textareaRef={replyTextareaRef}
-                                                                value={createMessage.message}
-                                                                onChange={(newVal) => setCreateMessage(prev => ({ ...prev, message: newVal }))}
-                                                                isPreview={replyPreviewMode}
-                                                                onTogglePreview={setReplyPreviewMode}
-                                                                getCurrentVideoTime={getCurrentVideoTime}
-                                                                showTimestampBtn={true}
-                                                            />
-                                                            {replyPreviewMode ? (
-                                                                <div className="forum-reply-preview-container">
-                                                                    <QAMarkdownRenderer
-                                                                        content={createMessage.message}
-                                                                        onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation?.variant_item?.variant_item_id, sec)}
-                                                                        emptyPlaceholder="Tuliskan balasan Anda di mode Tulis untuk melihat pratinjau di sini."
-                                                                    />
-                                                                </div>
-                                                            ) : (
-                                                                <textarea
-                                                                    ref={replyTextareaRef}
-                                                                    name="message"
-                                                                    className="forum-reply-textarea"
-                                                                    placeholder="Tulis balasan Anda di sini... Mendukung Markdown (tebal, miring, kode, kutipan) dan cap waktu video seperti [02:15]."
-                                                                    rows="3"
-                                                                    onChange={handleMessageChange}
-                                                                    value={createMessage.message}
-                                                                    required
-                                                                />
-                                                            )}
-                                                        </div>
-                                                        <div className="forum-form-actions">
-                                                            <p className="forum-form-hint">
-                                                                <i className="fas fa-info-circle me-1"></i>Format Markdown & cap waktu video (contoh: <code>02:15</code>) didukung penuh.
-                                                            </p>
-                                                            <div className="forum-action-buttons">
-                                                                <button
-                                                                    type="submit"
-                                                                    className="forum-btn-primary"
-                                                                    disabled={!createMessage.message?.trim()}
-                                                                >
-                                                                    <i className="fas fa-paper-plane me-2"></i>Kirim Balasan
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                {/* ✨ Pilar 2: Quick Filter Tabs */}
-                                                <div className="qa-quick-filter-tabs mb-2">
-                                                    <button
-                                                        type="button"
-                                                        className={`qa-filter-tab-btn ${(!discussionFilters.tab || discussionFilters.tab === 'all') ? 'active' : ''}`}
-                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'all' }))}
-                                                    >
-                                                        <i className="fas fa-layer-group me-1"></i>Semua Diskusi
-                                                        <span className="qa-tab-count">{qaStats.total}</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className={`qa-filter-tab-btn ${discussionFilters.tab === 'unsolved' ? 'active' : ''}`}
-                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'unsolved' }))}
-                                                    >
-                                                        <i className="fas fa-clock me-1"></i>Belum Terjawab
-                                                        <span className="qa-tab-count">{qaStats.unsolved}</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className={`qa-filter-tab-btn ${discussionFilters.tab === 'solved' ? 'active' : ''}`}
-                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'solved' }))}
-                                                    >
-                                                        <i className="fas fa-check-circle me-1"></i>Terjawab
-                                                        <span className="qa-tab-count">{qaStats.solved}</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className={`qa-filter-tab-btn ${discussionFilters.tab === 'instructor' ? 'active' : ''}`}
-                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'instructor' }))}
-                                                    >
-                                                        <i className="fas fa-chalkboard-user me-1"></i>Dijawab Instruktur
-                                                        <span className="qa-tab-count">{qaStats.instructor}</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className={`qa-filter-tab-btn ${discussionFilters.tab === 'my_questions' ? 'active' : ''}`}
-                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'my_questions' }))}
-                                                    >
-                                                        <i className="fas fa-user me-1"></i>Pertanyaan Saya
-                                                        <span className="qa-tab-count">{qaStats.myQuestions}</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className={`qa-filter-tab-btn ${discussionFilters.tab === 'popular' ? 'active' : ''}`}
-                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'popular' }))}
-                                                    >
-                                                        <i className="fas fa-fire me-1 text-danger"></i>Populer
-                                                    </button>
-                                                </div>
-
-                                                {/* ✨ Secondary Filter Controls - Search, Bagian, Pelajaran, Sorting */}
-                                                <div className="mb-3 course-filters-row">
-                                                    {/* Search Input */}
-                                                    <div className="filter-col-search" style={{ flex: '1 1 35%' }}>
-                                                        <label className="compact-filter-label">
-                                                            <i className="fas fa-search me-1 text-teal-accent"></i>
-                                                            Cari Pertanyaan
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control compact-filter-input"
-                                                            placeholder="Cari judul, topik, atau kata kunci..."
-                                                            value={discussionFilters.search}
-                                                            onChange={(e) => setDiscussionFilters({ ...discussionFilters, search: e.target.value })}
-                                                        />
-                                                    </div>
-
-                                                    {/* Bagian Filter Dropdown */}
-                                                    <div className="filter-col-select" style={{ flex: '1 1 20%' }}>
-                                                        <label className="compact-filter-label">
-                                                            <i className="fas fa-layer-group me-1 text-teal-accent"></i>
-                                                            Bagian
-                                                        </label>
-                                                        <select
-                                                            className="form-select compact-filter-select"
-                                                            value={discussionFilters.bagian || ''}
-                                                            onChange={(e) => setDiscussionFilters({ ...discussionFilters, bagian: e.target.value || null, pelajaran: null })}
-                                                        >
-                                                            <option value="">Semua Bagian</option>
-                                                            {course?.curriculum?.map((variant) => (
-                                                                <option key={variant.variant_id} value={variant.variant_id}>
-                                                                    {variant.title}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Pelajaran Filter Dropdown */}
-                                                    <div className="filter-col-select" style={{ flex: '1 1 20%' }}>
-                                                        <label className="compact-filter-label">
-                                                            <i className="fas fa-book me-1 text-danger"></i>
-                                                            Pelajaran
-                                                        </label>
-                                                        <select
-                                                            className="form-select compact-filter-select"
-                                                            value={discussionFilters.pelajaran || ''}
-                                                            onChange={(e) => setDiscussionFilters({ ...discussionFilters, pelajaran: e.target.value || null })}
-                                                            disabled={!discussionFilters.bagian}
-                                                        >
-                                                            <option value="">Semua Pelajaran</option>
-                                                            {discussionFilters.bagian && course?.curriculum?.find(v => v.variant_id === discussionFilters.bagian)?.variant_items?.map((item) => (
-                                                                <option key={item.variant_item_id} value={item.variant_item_id}>
-                                                                    {item.title}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Urutkan / Sort Dropdown */}
-                                                    <div className="filter-col-select" style={{ flex: '1 1 18%' }}>
-                                                        <label className="compact-filter-label">
-                                                            <i className="fas fa-sort-amount-down me-1 text-amber"></i>
-                                                            Urutkan
-                                                        </label>
-                                                        <select
-                                                            className="form-select compact-filter-select"
-                                                            value={discussionFilters.sort || 'newest'}
-                                                            onChange={(e) => setDiscussionFilters({ ...discussionFilters, sort: e.target.value })}
-                                                        >
-                                                            <option value="newest">Terbaru</option>
-                                                            <option value="most_replies">Paling Banyak Balasan</option>
-                                                            <option value="most_liked">Paling Banyak Disukai</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Clear Filters Button */}
-                                                    {(discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran || (discussionFilters.tab && discussionFilters.tab !== 'all') || (discussionFilters.sort && discussionFilters.sort !== 'newest')) && (
-                                                        <button
-                                                            onClick={() => setDiscussionFilters({ search: '', bagian: null, pelajaran: null, tab: 'all', sort: 'newest' })}
-                                                            className="compact-clear-filter-btn"
-                                                            title="Reset Semua Filter"
-                                                        >
-                                                            <i className="fas fa-times me-1"></i>Reset
-                                                        </button>
-                                                    )}
-                                                </div>
-
-                                                {/* ✨ Pilar 2: Redesigned Compact & Eye-Catching Question Cards List */}
-                                                {filteredQuestions?.length > 0 ? (
-                                                    filteredQuestions.map((q, index) => {
-                                                        const isSolved = Boolean(q.is_solved || q.messages?.some(m => m.is_solution));
-                                                        const hasInstructorReply = Boolean(
-                                                            q.has_instructor_reply ||
-                                                            (course?.course?.teacher?.user_id && q.messages?.slice(1).some(m => m.user_id === course.course.teacher.user_id || m.profile?.user_id === course.course.teacher.user_id))
-                                                        );
-
-                                                        return (
-                                                            <div
-                                                                key={q.qa_id || index}
-                                                                className={`question-card ${isSolved ? 'card-solved' : 'card-waiting'}`}
-                                                                onClick={() => handleConversationShow(q)}
-                                                            >
-                                                                {/* Top Row: Status Pills & Curriculum Context */}
-                                                                <div className="qa-card-header d-flex justify-content-between align-items-center mb-1">
-                                                                    <div className="d-flex align-items-center gap-1 flex-wrap">
-                                                                        {isSolved ? (
-                                                                            <span className="qa-status-pill solved">
-                                                                                <i className="fas fa-check-circle me-1"></i>Terjawab
-                                                                            </span>
-                                                                        ) : (
-                                                                            <span className="qa-status-pill waiting">
-                                                                                <i className="fas fa-clock me-1"></i>Menunggu Solusi
-                                                                            </span>
-                                                                        )}
-
-                                                                        {hasInstructorReply && (
-                                                                            <span className="qa-status-pill instructor">
-                                                                                <i className="fas fa-chalkboard-user me-1"></i>Respon Instruktur
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-
-                                                                    {(q.variant || q.variant_item || (q.video_timestamp !== null && q.video_timestamp !== undefined)) && (
-                                                                        <div className="question-card-badges d-flex align-items-center gap-1">
-                                                                            {q.variant && (
-                                                                                <span className="question-badge-variant">
-                                                                                    <i className="fas fa-layer-group me-1"></i>{q.variant.title}
-                                                                                </span>
-                                                                            )}
-                                                                            {q.variant_item && (
-                                                                                <span className="question-badge-lesson">
-                                                                                    <i className="fas fa-book me-1"></i>{q.variant_item.title}
-                                                                                </span>
-                                                                            )}
-                                                                            {q.video_timestamp !== null && q.video_timestamp !== undefined && (
-                                                                                <QAVideoTimestampBadge
-                                                                                    timestamp={q.video_timestamp}
-                                                                                    onClick={(sec) => handleJumpToVideoTimestamp(q.variant_item?.variant_item_id, sec)}
-                                                                                    size="sm"
-                                                                                />
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-
-                                                                {/* Content Row: Avatar + Title & Snippet */}
-                                                                <div className="d-flex align-items-start gap-2 mb-2">
-                                                                    <div className="avatar-compact-wrapper flex-shrink-0">
-                                                                        {q.profile?.image ? (
-                                                                            <img
-                                                                                src={q.profile.image.startsWith("http")
-                                                                                    ? q.profile.image
-                                                                                    : q.profile.image.startsWith("/images/")
-                                                                                        ? q.profile.image
-                                                                                        : getMediaUrl(q.profile.image)}
-                                                                                alt={q.profile?.full_name || "User"}
-                                                                                className="avatar-compact"
-                                                                                onError={(e) => {
-                                                                                    e.target.onerror = null;
-                                                                                    e.target.src = "/images/placeholders/default-avatar.svg";
-                                                                                }}
-                                                                            />
-                                                                        ) : (
-                                                                            <div className="avatar-compact-placeholder">
-                                                                                {q.profile?.full_name ? (
-                                                                                    q.profile.full_name
-                                                                                        .split(' ')
-                                                                                        .filter(Boolean)
-                                                                                        .map(n => n[0])
-                                                                                        .slice(0, 2)
-                                                                                        .join('')
-                                                                                        .toUpperCase()
-                                                                                ) : (
-                                                                                    <i className="fas fa-user"></i>
-                                                                                )}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="flex-grow-1 overflow-hidden">
-                                                                        <h5 className="question-title-compact text-truncate mb-1">
-                                                                            {q.title || 'Tidak Ada Judul'}
-                                                                        </h5>
-                                                                        {(q.message || (q.messages && q.messages[0]?.message)) && (
-                                                                            <p className="question-snippet-compact mb-0">
-                                                                                {(q.message || q.messages?.[0]?.message || '').substring(0, 160)}
-                                                                                {(q.message || q.messages?.[0]?.message || '').length > 160 ? '...' : ''}
-                                                                            </p>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* Footer Row: User + Relative Date & Actions */}
-                                                                <div className="qa-card-footer d-flex justify-content-between align-items-center pt-1">
-                                                                    <div className="d-flex align-items-center gap-2 text-muted" style={{ fontSize: '0.74rem' }}>
-                                                                        <span className="fw-semibold text-slate-700">
-                                                                            {q.profile?.full_name || 'Anonim'}
-                                                                        </span>
-                                                                        <span>•</span>
-                                                                        <span>
-                                                                            <i className="fas fa-clock me-1 text-amber"></i>{moment(q.date).fromNow()}
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="d-flex align-items-center gap-2">
-                                                                        <span className="qa-stat-pill">
-                                                                            <i className="fas fa-comments me-1 text-teal"></i>
-                                                                            {q.replies_count ?? Math.max(0, (q.messages?.length || 0) - 1)} Balasan
-                                                                        </span>
-                                                                        <button
-                                                                            type="button"
-                                                                            className={`forum-like-btn ${userLikedQuestions.has(q.qa_id) ? 'liked' : ''}`}
-                                                                            title={userLikedQuestions.has(q.qa_id) ? "Batalkan suka" : "Sukai pertanyaan ini"}
-                                                                            onClick={(e) => { e.stopPropagation(); handleLikeQuestion(q); }}
-                                                                            style={userLikedQuestions.has(q.qa_id) ? { color: '#ff4757' } : {}}
-                                                                        >
-                                                                            <i className={`${userLikedQuestions.has(q.qa_id) ? 'fas fa-heart text-danger' : 'far fa-heart'} me-1`}></i>
-                                                                            <span className="like-count">{q.likes_count || 0}</span>
-                                                                        </button>
-                                                                        {(() => {
-                                                                            const reportStatus = getQAReportStatus(q.qa_id, 'question');
-                                                                            return (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    className="forum-report-btn"
-                                                                                    title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
-                                                                                    onClick={(e) => { e.stopPropagation(); handleOpenQAReportModal(q, 'question'); }}
-                                                                                    style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
-                                                                                >
-                                                                                    <i className="fas fa-flag"></i>
-                                                                                    {reportStatus && (
-                                                                                        <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
-                                                                                    )}
-                                                                                </button>
-                                                                            );
-                                                                        })()}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })
-                                                ) : (
-                                                    <div className="empty-state">
-                                                        <i className="fas fa-comments empty-icon"></i>
-                                                        <h5>Belum ada diskusi ditemukan</h5>
-                                                        <p>
-                                                            {discussionFilters.tab !== 'all' || discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran
-                                                                ? 'Tidak ada pertanyaan yang sesuai dengan filter yang dipilih.'
-                                                                : 'Jadilah yang pertama mengajukan pertanyaan atau memulai diskusi!'}
-                                                        </p>
-                                                        {(discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran || (discussionFilters.tab && discussionFilters.tab !== 'all')) && (
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-sm btn-outline-teal mt-2"
-                                                                onClick={() => setDiscussionFilters({ search: '', bagian: null, pelajaran: null, tab: 'all', sort: 'newest' })}
-                                                            >
-                                                                <i className="fas fa-undo me-1"></i>Reset Filter
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
+                                    />
+{/* Discussions Tab (Modularized in DiscussionTab.jsx) */}
+                                    <DiscussionTab
+                                        course={course}
+                                        openedQuestionId={openedQuestionId}
+                                        selectedConversation={selectedConversation}
+                                        handleConversationClose={handleConversationClose}
+                                        handleConversationShow={handleConversationShow}
+                                        handleQuestionShow={handleQuestionShow}
+                                        qaStats={qaStats}
+                                        discussionFilters={discussionFilters}
+                                        setDiscussionFilters={setDiscussionFilters}
+                                        filteredQuestions={filteredQuestions}
+                                        handleToggleSolution={handleToggleSolution}
+                                        handleTogglePin={handleTogglePin}
+                                        handleLikeQuestion={handleLikeQuestion}
+                                        handleLikeMessage={handleLikeMessage}
+                                        userLikedQuestions={userLikedQuestions}
+                                        userLikedMessages={userLikedMessages}
+                                        isQAItemReported={isQAItemReported}
+                                        getQAReportStatus={getQAReportStatus}
+                                        handleOpenQAReportModal={handleOpenQAReportModal}
+                                        createMessage={createMessage}
+                                        setCreateMessage={setCreateMessage}
+                                        handleMessageChange={handleMessageChange}
+                                        sendNewMessage={sendNewMessage}
+                                        replyTextareaRef={replyTextareaRef}
+                                        replyPreviewMode={replyPreviewMode}
+                                        setReplyPreviewMode={setReplyPreviewMode}
+                                        getCurrentVideoTime={getCurrentVideoTime}
+                                        handleJumpToVideoTimestamp={handleJumpToVideoTimestamp}
+                                        isCourseInstructorOrStaff={isCourseInstructorOrStaff}
+                                    />
 
                                     {/* Quiz Tab */}
                                     <div className="tab-pane fade" id="quiz" role="tabpanel">
@@ -6244,297 +5022,52 @@ function CourseDetail() {
                 </div>
             </section>
 
-            {/* Add Note Modal */}
-            <Modal
+            {/* Add Note Modal (Modularized in NoteModal.jsx) */}
+
+
+            <NoteModal
+
+
                 show={noteShow}
+
+
                 onHide={handleNoteClose}
-                size="lg"
-                backdrop={false}
-                keyboard={true}
-                className="add-note-modal"
-            >
-                <form onSubmit={(e) => {
-                    if (selectedNote) {
-                        handleSubmitEditNote(e, selectedNote.id);
-                    } else {
-                        handleSubmitCreateNote(e);
-                    }
-                }}>
-                    {/* Modal Header */}
-                    <div
-                        className="modal-header-note modal-header-dynamic note-modal-header-draggable"
-                        style={{
-                            background: `linear-gradient(135deg, ${selectedNoteColor} 0%, ${selectedNoteColor}dd 100%)`,
-                            cursor: 'grab'
-                        }}
-                    >
-                        <div className="modal-header-content">
-                            <div className="modal-header-info">
-                                <div
-                                    className="modal-icon-wrapper note-icon-wrapper-dynamic"
-                                    style={{
-                                        background: "rgba(255, 255, 255, 0.2)",
-                                        border: "2px solid rgba(255, 255, 255, 0.3)"
-                                    }}
-                                >
-                                    <i className="fas fa-sticky-note"></i>
-                                </div>
-                                <div className="modal-title-section">
-                                    <h4 className="modal-title-modern">
-                                        {selectedNote ? "Edit Catatan Kursus" : "Tambah Catatan Kursus"}
-                                    </h4>
-                                    <p className="modal-subtitle">
-                                        {selectedNote ? "Perbarui catatan Anda dengan wawasan baru" : "Tangkap wawasan penting dan poin utama dari kursus ini"}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            className="btn-close-modern"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleNoteClose();
-                            }}
-                        >
-                            <i className="fas fa-times"></i>
-                        </button>
-                    </div>
 
-                    {/* Modal Body */}
-                    <div className="modal-body-modern">
-                        <div className="note-form">
-                            {/* Note Title */}
-                            <div className="form-group-modern">
-                                <label className="form-label-modern">
-                                    <i className="fas fa-heading form-label-icon-note"></i>
-                                    Judul Catatan
-                                    <span className="required-indicator">*</span>
-                                </label>
-                                <div className="input-wrapper-modern">
-                                    <input
-                                        type="text"
-                                        name="title"
-                                        className="form-input-modern form-input-note"
-                                        placeholder="Berikan judul yang deskriptif untuk catatan Anda..."
-                                        value={createNote.title}
-                                        onChange={handleNoteChange}
-                                        required
-                                    />
-                                </div>
-                            </div>
 
-                            {/* ✨ PHASE 11.160: Bagian/Section Context (Optional) */}
-                            <div className="form-group-modern">
-                                <label className="form-label-modern">
-                                    <i className="fas fa-layer-group form-label-icon-note"></i>
-                                    Bagian/Pelajaran (Opsional)
-                                </label>
-                                <div className="input-wrapper-modern">
-                                    <select
-                                        className="form-input-modern"
-                                        value={currentNoteVariantContext?.variant_item_id || ''}
-                                        onChange={(e) => {
-                                            const selected = e.target.value;
-                                            if (selected) {
-                                                // Find the variant_item from curriculum
-                                                let foundVariantItem = null;
-                                                course?.curriculum?.forEach(variant => {
-                                                    (variant.variant_items || variant.items || []).forEach(item => {
-                                                        if (item.variant_item_id === selected) {
-                                                            // ✨ PHASE 11.161 FIX: Ensure we're using variant_id, not id
-                                                            foundVariantItem = {
-                                                                variant_item_id: item.variant_item_id,
-                                                                title: item.title,
-                                                                variant_id: variant.variant_id || variant.id,  // Use variant_id first, fallback to id
-                                                                variant_title: variant.title
-                                                            };
-                                                        }
-                                                    });
-                                                });
-                                                setCurrentNoteVariantContext(foundVariantItem);
-                                            } else {
-                                                setCurrentNoteVariantContext(null);
-                                            }
-                                        }}
-                                        style={{
-                                            backgroundColor: '#ffffff',
-                                            borderRadius: '8px',
-                                            padding: '0.75rem 1rem'
-                                        }}
-                                    >
-                                        <option value="">-- Pilih Bagian/Pelajaran (Opsional) --</option>
-                                        {course?.curriculum?.map((variant) => (
-                                            <optgroup key={variant.variant_id} label={variant.title}>
-                                                {(variant.variant_items || variant.items || []).map((item) => (
-                                                    <option key={item.variant_item_id} value={item.variant_item_id}>
-                                                        {item.title}
-                                                    </option>
-                                                ))}
-                                            </optgroup>
-                                        ))}
-                                    </select>
-                                </div>
-                                {currentNoteVariantContext && (
-                                    <small style={{ color: '#666', marginTop: '0.5rem', display: 'block' }}>
-                                        <i className="fas fa-check-circle" style={{ color: '#27ae60', marginRight: '0.3rem' }}></i>
-                                        Catatan akan terhubung dengan: <strong>{currentNoteVariantContext.variant_title}</strong> &gt; <strong>{currentNoteVariantContext.title}</strong>
-                                    </small>
-                                )}
-                            </div>
+                selectedNote={selectedNote}
 
-                            {/* Note Content */}
-                            <div className="form-group-modern">
-                                <label className="form-label-modern">
-                                    <i className="fas fa-edit form-label-icon-note"></i>
-                                    Konten Catatan
-                                    <span className="required-indicator">*</span>
-                                </label>
-                                <div className="textarea-wrapper-modern">
-                                    <textarea
-                                        name="note"
-                                        className="form-textarea-modern form-textarea-note"
-                                        rows="5"
-                                        placeholder="Tulis isi catatan Anda di sini. Sertakan konsep kunci, wawasan, atau poin penting dari kursus..."
-                                        value={createNote.note}
-                                        onChange={handleNoteChange}
-                                        required
-                                    />
-                                    <div className="character-counter">
-                                        {(createNote.note || "").length}/2000 karakter
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Color Picker */}
-                            <div className="form-group-modern">
-                                <label className="color-picker-label">
-                                    <i className="fas fa-palette form-label-icon-note"></i>
-                                    Pilih Warna Catatan
-                                </label>
+                selectedNoteColor={selectedNoteColor}
 
-                                {/* Color Preview */}
-                                <div className="color-preview-section">
-                                    <div className="color-preview-label">
-                                        Pratinjau Warna Terpilih:
-                                    </div>
-                                    <div
-                                        className="color-preview-demo"
-                                        style={{
-                                            background: `linear-gradient(135deg, ${selectedNoteColor} 0%, ${selectedNoteColor}dd 100%)`,
-                                            padding: "1rem",
-                                            borderRadius: "12px",
-                                            color: "white",
-                                            textAlign: "center",
-                                            fontWeight: "600",
-                                            boxShadow: `0 4px 15px ${getColorVariations(selectedNoteColor).shadow}`
-                                        }}
-                                    >
-                                        <i className="fas fa-sticky-note me-2"></i>
-                                        Inilah cara catatan Anda akan terlihat
-                                    </div>
-                                </div>
 
-                                <div className="color-picker-grid">
-                                    {[
-                                        { color: "#f39c12", name: "Orange" },
-                                        { color: "#e74c3c", name: "Red" },
-                                        { color: "#0f766e", name: "Blue" },
-                                        { color: "#2ecc71", name: "Green" },
-                                        { color: "#0d9488", name: "Teal" },
-                                        { color: "#f1c40f", name: "Yellow" },
-                                        { color: "#e67e22", name: "Dark Orange" },
-                                        { color: "#95a5a6", name: "Gray" },
-                                        { color: "#1abc9c", name: "Teal Light" },
-                                        { color: "#34495e", name: "Dark Blue" },
-                                        { color: "#e91e63", name: "Pink" },
-                                        { color: "#115e59", name: "Teal Dark" }
-                                    ].map((colorOption) => (
-                                        <div
-                                            key={colorOption.color}
-                                            className={`color-option ${selectedNoteColor === colorOption.color ? "selected" : ""}`}
-                                            style={{ backgroundColor: colorOption.color }}
-                                            onClick={() => {
-                                                handleColorChange(colorOption.color);
-                                                // Trigger handleNoteChange to update the color in createNote state
-                                                handleNoteChange({
-                                                    target: {
-                                                        name: "color",
-                                                        value: colorOption.color
-                                                    }
-                                                });
-                                            }}
-                                            title={colorOption.name}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
+                createNote={createNote}
 
-                            {/* Tips Section */}
-                            <div className="tips-section">
-                                <div className="tips-header">
-                                    <i className="fas fa-lightbulb tips-icon"></i>
-                                    <span>Tips untuk pembuatan catatan yang efektif</span>
-                                </div>
-                                <ul className="tips-list">
-                                    <li><i className="fas fa-check"></i>Sertakan cap waktu spesifik untuk referensi video</li>
-                                    <li><i className="fas fa-check"></i>Ringkas konsep kunci dengan kata-kata Anda sendiri</li>
-                                    <li><i className="fas fa-check"></i>Catat aplikasi praktis dan contoh</li>
-                                    <li><i className="fas fa-check"></i>Tambahkan wawasan pribadi dan refleksi</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Modal Footer */}
-                    <div className="modal-footer-modern">
-                        <div className="footer-actions">
-                            <button
-                                type="button"
-                                className="btn-cancel-modern"
-                                onClick={handleNoteClose}
-                            >
-                                <i className="fas fa-times"></i>
-                                <span>Cancel</span>
-                            </button>
-                            <button
-                                type="submit"
-                                className="btn-submit-note"
-                                disabled={!createNote.title?.trim() || !createNote.note?.trim()}
-                                style={{
-                                    background: `linear-gradient(135deg, ${selectedNoteColor} 0%, ${selectedNoteColor}dd 100%)`,
-                                    boxShadow: `0 4px 15px ${getColorVariations(selectedNoteColor).shadow}`,
-                                    transition: "all 0.3s ease"
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!e.target.disabled) {
-                                        const variations = getColorVariations(selectedNoteColor);
-                                        e.target.style.boxShadow = `0 8px 25px ${variations.shadow}`;
-                                        e.target.style.transform = "translateY(-2px)";
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!e.target.disabled) {
-                                        const variations = getColorVariations(selectedNoteColor);
-                                        e.target.style.boxShadow = `0 4px 15px ${variations.shadow}`;
-                                        e.target.style.transform = "translateY(0)";
-                                    }
-                                }}
-                            // onClick={
-                            //   (selectedNote ? (e) => handleSubmitEditNote(e, selectedNote.id) : handleSubmitCreateNote)
-                            // } // Call appropriate handler
-                            >
-                                <i className="fas fa-save"></i>
-                                {selectedNote ? "Update Note" : "Save Note"}
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                handleNoteChange={handleNoteChange}
 
-                {/* ✨ PHASE 11.160 FIX: Resize handle for note modal - same as question modal */}
-                <div className="modal-resize-handle" title="Drag to resize modal"></div>
-            </Modal>
+
+                handleColorChange={handleColorChange}
+
+
+                currentNoteVariantContext={currentNoteVariantContext}
+
+
+                setCurrentNoteVariantContext={setCurrentNoteVariantContext}
+
+
+                course={course}
+
+
+                getColorVariations={getColorVariations}
+
+
+                handleSubmitCreateNote={handleSubmitCreateNote}
+
+
+                handleSubmitEditNote={handleSubmitEditNote}
+
+
+            />
 
             {/* ✨ PHASE 11.164 REFACTOR: Multiple floating note cards with extracted component - fixes React hooks violation */}
             <FloatingNoteCardsContainer
@@ -6544,866 +5077,45 @@ function CourseDetail() {
                 fetchCourseDetail={fetchCourseDetail}
             />
 
-            {/* ✨ PHASE 7.12: Create Question Modal - Draggable & Resizable with transparent backdrop */}
-            <Modal
+            {/* Create Question Modal (Modularized in CreateQuestionModal.jsx) */}
+            <CreateQuestionModal
                 show={addQuestionShow}
                 onHide={handleQuestionClose}
-                size="lg"
-                backdrop={false}
-                keyboard={true}
-                className="create-question-modal"
-            >
-                {/* Modal Header */}
-                <form onSubmit={handleSaveQuestion}>
-                    <div className="modal-header-modern">
-                        <div className="modal-header-content">
-                            <div className="modal-header-info">
-                                <div className="modal-icon-wrapper">
-                                    <i className="fas fa-question-circle"></i>
-                                </div>
-                                <div className="modal-title-section">
-                                    <h4 className="modal-title-modern">Ajukan Pertanyaan</h4>
-                                    <p className="modal-subtitle">
-                                        Bagikan pertanyaan Anda dengan komunitas kursus dan dapatkan jawaban ahli
-                                        <br />
-                                        <span style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem', display: 'inline-block' }}>
-                                            <i className="fas fa-arrows-alt me-1"></i>
-                                            Drag dialog by header to move it
-                                        </span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            className="btn-close-modern"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleQuestionClose();
-                            }}
-                        >
-                            <i className="fas fa-times"></i>
-                        </button>
-                    </div>
-
-                    {/* Modal Body */}
-                    <div className="modal-body-modern">
-                        <div className="question-form">
-                            {/* Question Title */}
-                            <div className="form-group-modern">
-                                <label className="form-label-modern">
-                                    <i className="fas fa-heading form-label-icon"></i>
-                                    Judul Pertanyaan
-                                    <span className="required-indicator">*</span>
-                                </label>
-                                <div className="input-wrapper-modern">
-                                    <input
-                                        type="text"
-                                        name="title"
-                                        className="form-input-modern"
-                                        placeholder="Tulis judul yang jelas dan deskriptif untuk pertanyaan Anda..."
-                                        value={createMessage.title}
-                                        onChange={handleMessageChange}
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            {/* ✨ PHASE 7.9: Context selector - choose which lesson this question is about */}
-                            <div className="form-group-modern">
-                                <label className="form-label-modern">
-                                    <i className="fas fa-layer-group form-label-icon"></i>
-                                    Bagian/Pelajaran (Opsional)
-                                </label>
-                                <div className="input-wrapper-modern">
-                                    <select
-                                        className="form-input-modern"
-                                        value={currentVariantContext?.variant_item_id || ''}
-                                        onChange={(e) => {
-                                            const selected = e.target.value;
-                                            if (selected) {
-                                                // Find the variant_item from curriculum
-                                                let foundVariantItem = null;
-                                                course?.curriculum?.forEach(variant => {
-                                                    (variant.variant_items || variant.items || []).forEach(item => {
-                                                        if (item.variant_item_id === selected) {
-                                                            foundVariantItem = {
-                                                                variant_item_id: item.variant_item_id,
-                                                                title: item.title,
-                                                                variant_id: variant.variant_id,
-                                                                variant_title: variant.title
-                                                            };
-                                                        }
-                                                    });
-                                                });
-                                                setCurrentVariantContext(foundVariantItem);
-                                            } else {
-                                                setCurrentVariantContext(null);
-                                            }
-                                        }}
-                                        style={{ padding: '0.75rem', borderRadius: '6px', border: '1px solid #ddd' }}
-                                    >
-                                        <option value="">-- Pilih Bagian/Pelajaran (opsional) --</option>
-                                        {course?.curriculum?.map((variant) => (
-                                            <optgroup key={variant.variant_id} label={variant.title}>
-                                                {(variant.variant_items || variant.items || []).map((item) => (
-                                                    <option key={item.variant_item_id} value={item.variant_item_id}>
-                                                        {item.title}
-                                                    </option>
-                                                ))}
-                                            </optgroup>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* ✨ Pilar 3: Video Timestamp Attachment */}
-                            <div className="form-group-modern qa-timestamp-attach-group">
-                                <div className="d-flex align-items-center justify-content-between mb-1">
-                                    <label className="form-label-modern mb-0">
-                                        <i className="fas fa-stopwatch form-label-icon"></i>
-                                        Tautkan ke Menit Video (Opsional)
-                                    </label>
-                                    {attachedTimestamp !== null && (
-                                        <button
-                                            type="button"
-                                            className="btn-clear-timestamp-action"
-                                            onClick={() => setAttachedTimestamp(null)}
-                                            title="Hapus tautan video"
-                                        >
-                                            <i className="fas fa-times me-1"></i>Hapus Tautan
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="qa-timestamp-attach-card">
-                                    {attachedTimestamp !== null ? (
-                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                            <div className="d-flex align-items-center gap-2">
-                                                <span className="qa-attached-badge">
-                                                    <i className="fas fa-play-circle me-1"></i>
-                                                    {formatTimestamp(attachedTimestamp)}
-                                                </span>
-                                                <span className="text-muted" style={{ fontSize: '0.82rem' }}>
-                                                    Pertanyaan ditautkan ke durasi <strong>{formatTimestamp(attachedTimestamp)}</strong>.
-                                                </span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-outline-secondary"
-                                                style={{ fontSize: '0.78rem', padding: '0.2rem 0.6rem' }}
-                                                onClick={() => {
-                                                    const cur = Math.floor(getCurrentVideoTime());
-                                                    setAttachedTimestamp(cur);
-                                                }}
-                                            >
-                                                <i className="fas fa-sync-alt me-1"></i>Waktu Pemutar Sekarang ({formatTimestamp(Math.floor(getCurrentVideoTime()))})
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                            <span className="text-muted" style={{ fontSize: '0.82rem' }}>
-                                                <i className="fas fa-info-circle me-1"></i>
-                                                Tautkan menit video agar instruktur atau rekan langsung membuka bagian yang Anda tanyakan.
-                                            </span>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-outline-teal"
-                                                style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }}
-                                                onClick={() => {
-                                                    const cur = Math.floor(getCurrentVideoTime());
-                                                    setAttachedTimestamp(cur);
-                                                }}
-                                            >
-                                                <i className="fas fa-clock me-1"></i>
-                                                Sematkan Waktu Pemutar ({formatTimestamp(Math.floor(getCurrentVideoTime()))})
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Question Message */}
-                            <div className="form-group-modern">
-                                <label className="form-label-modern mb-1">
-                                    <i className="fas fa-edit form-label-icon"></i>
-                                    Detail Pertanyaan
-                                    <span className="required-indicator">*</span>
-                                </label>
-
-                                {/* ✨ Pilar 4: Formatting Toolbar & Pratinjau */}
-                                <QAFormattingToolbar
-                                    textareaRef={questionTextareaRef}
-                                    value={createMessage.message}
-                                    onChange={(newVal) => setCreateMessage(prev => ({ ...prev, message: newVal }))}
-                                    isPreview={questionPreviewMode}
-                                    onTogglePreview={setQuestionPreviewMode}
-                                    getCurrentVideoTime={getCurrentVideoTime}
-                                    showTimestampBtn={true}
-                                    compact={true}
-                                />
-
-                                <div className="textarea-wrapper-modern mt-1">
-                                    {questionPreviewMode ? (
-                                        <div className="modal-question-preview-box">
-                                            <QAMarkdownRenderer
-                                                content={createMessage.message}
-                                                onTimestampClick={(sec) => handleJumpToVideoTimestamp(currentVariantContext?.variant_item_id, sec)}
-                                                emptyPlaceholder="Tuliskan detail pertanyaan Anda di mode Tulis untuk melihat pratinjau di sini."
-                                            />
-                                        </div>
-                                    ) : (
-                                        <textarea
-                                            ref={questionTextareaRef}
-                                            name="message"
-                                            className="form-textarea-modern"
-                                            rows="4"
-                                            placeholder="Berikan informasi detail tentang pertanyaan Anda. Mendukung Markdown (tebal, miring, kode) dan cap waktu video seperti [02:15]..."
-                                            value={createMessage.message}
-                                            onChange={handleMessageChange}
-                                            required
-                                        />
-                                    )}
-                                    <div className="character-counter">
-                                        {createMessage.message?.length || 0}/2000 karakter
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Tips Section */}
-                            <div className="tips-section">
-                                <div className="tips-header">
-                                    <i className="fas fa-lightbulb tips-icon"></i>
-                                    <span>Tips untuk mendapatkan jawaban yang lebih baik</span>
-                                </div>
-                                <ul className="tips-list">
-                                    <li><i className="fas fa-check"></i>Jadilah spesifik dan jelas dalam pertanyaan Anda</li>
-                                    <li><i className="fas fa-check"></i>Sertakan konteks dan contoh yang relevan</li>
-                                    <li><i className="fas fa-check"></i>Rujuk konten kursus spesifik atau cap waktu</li>
-                                    <li><i className="fas fa-check"></i>Cari pertanyaan yang ada sebelum memposting</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Modal Footer */}
-                    <div className="modal-footer-modern">
-                        <div className="footer-actions">
-                            <button
-                                type="button"
-                                className="btn-cancel-modern"
-                                onClick={handleQuestionClose}
-                            >
-                                <i className="fas fa-times"></i>
-                                <span>Batal</span>
-                            </button>
-                            <button
-                                type="submit"
-                                className="btn-submit-modern"
-                                disabled={!createMessage.title?.trim() || !createMessage.message?.trim()}
-                            >
-                                <i className="fas fa-paper-plane"></i>
-                                Ajukan Pertanyaan
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                {/* ✨ PHASE 7.12: Resize handle - bottom-right corner diamond for resizing */}
-                <div className="modal-resize-handle" title="Drag to resize modal"></div>
-            </Modal>
+                onSubmit={handleSaveQuestion}
+                createMessage={createMessage}
+                setCreateMessage={setCreateMessage}
+                handleMessageChange={handleMessageChange}
+                currentVariantContext={currentVariantContext}
+                setCurrentVariantContext={setCurrentVariantContext}
+                course={course}
+                attachedTimestamp={attachedTimestamp}
+                setAttachedTimestamp={setAttachedTimestamp}
+                getCurrentVideoTime={getCurrentVideoTime}
+                questionTextareaRef={questionTextareaRef}
+                questionPreviewMode={questionPreviewMode}
+                setQuestionPreviewMode={setQuestionPreviewMode}
+                handleJumpToVideoTimestamp={handleJumpToVideoTimestamp}
+            />
 
             {/* ✨ PHASE 7.10: Conversation Modal - HIDDEN (now using inline forum view in Diskusi tab) */}
             {/* Modal removed and replaced with inline forum container */}
 
-            {/* ✨ PHASE 4.225+: Quiz Modal - HIDDEN (quiz now displayed inline) */}
-            <Modal
-                show={false}
-                onHide={isQuizActive ? null : handleQuizClose}
-                size="lg"
-                centered
-                backdrop={isQuizActive ? "static" : true}
-                keyboard={isQuizActive ? false : true}
-            >
-                {/* Debug section - remove in production */}
-                {process.env.NODE_ENV === "development" && (
-                    <div className="quiz-debug-info">
-                        Quiz Debug: Active={isQuizActive ? "Yes" : "No"} |
-                        Questions={selectedQuiz?.questions?.length || 0} |
-                        CurrentQ={currentQuestionIndex} |
-                        ShowResult={showQuizResult ? "Yes" : "No"}
-                    </div>
-                )}
-
-                <div className="quiz-modal-header">
-                    <div className="quiz-modal-title">
-                        <i className="fas fa-brain me-3"></i>
-                        {selectedQuiz?.title}
-                    </div>
-                    {!isQuizActive && (
-                        <button type="button" className="quiz-modal-close" onClick={handleQuizClose}>
-                            <i className="fas fa-times"></i>
-                        </button>
-                    )}
-                    {isQuizActive && (
-                        <div className="quiz-modal-close disabled" title="Cannot close during active quiz">
-                            <i className="fas fa-lock"></i>
-                        </div>
-                    )}
-                </div>
-
-                {!isQuizActive && !showQuizResult && selectedQuiz && (
-                    <div className="quiz-start-screen">
-                        <div className="quiz-intro">
-                            <div className="quiz-intro-icon">
-                                <i className="fas fa-brain"></i>
-                            </div>
-                            <h4>{selectedQuiz.title}</h4>
-                            <p className="quiz-intro-description">
-                                {selectedQuiz.description || "Uji pemahaman Anda tentang materi kursus"}
-                            </p>
-
-                            <div className="quiz-info-cards">
-                                <div className="quiz-info-card">
-                                    <i className="fas fa-question-circle"></i>
-                                    <span className="info-number">{selectedQuiz.total_questions}</span>
-                                    <span className="info-label">Pertanyaan</span>
-                                </div>
-                                <div className="quiz-info-card">
-                                    <i className="fas fa-clock"></i>
-                                    <span className="info-number">{selectedQuiz.total_questions}</span>
-                                    <span className="info-label">Menit</span>
-                                </div>
-                                <div className="quiz-info-card">
-                                    <i className="fas fa-trophy"></i>
-                                    <span className="info-number">80%</span>
-                                    <span className="info-label">Skor Lulus</span>
-                                </div>
-                                <div className="quiz-info-card">
-                                    <i className="fas fa-redo"></i>
-                                    <span className={`info-number ${selectedQuiz.today_attempts >= 3 ? "text-danger" : "text-warning"}`}>
-                                        {selectedQuiz.today_attempts || 0}/3
-                                    </span>
-                                    <span className="info-label">Percobaan Hari Ini</span>
-                                </div>
-                            </div>
-
-                            {/* Attempt Status Warning */}
-                            {selectedQuiz.today_attempts > 0 && (
-                                <div className={`quiz-attempt-warning ${selectedQuiz.can_attempt ? "warning" : "danger"}`}>
-                                    <i className={`fas ${selectedQuiz.can_attempt ? "fa-exclamation-triangle" : "fa-ban"} me-2`}></i>
-                                    {selectedQuiz.can_attempt
-                                        ? `Anda telah menggunakan ${selectedQuiz.today_attempts} dari 3 percobaan harian. ${3 - selectedQuiz.today_attempts} percobaan${3 - selectedQuiz.today_attempts !== 1 ? "" : ""} tersisa.`
-                                        : "Anda telah mencapai batas harian 3 percobaan. Silakan coba lagi besok."
-                                    }
-                                </div>
-                            )}
-
-                            <div className="quiz-rules">
-                                <h6>Aturan Kuis:</h6>
-                                <ul>
-                                    <li>Anda memiliki 1 menit per pertanyaan</li>
-                                    <li>Anda perlu 80% untuk lulus kuis ini</li>
-                                    <li>Anda dapat mencoba kuis ini maksimal 3 kali per hari</li>
-                                    <li>Setelah dimulai, Anda tidak dapat menjeda kuis</li>
-                                </ul>
-                            </div>
-
-                            <div className="quiz-start-actions">
-                                <button className="btn btn-secondary" onClick={handleQuizClose}>
-                                    <i className="fas fa-arrow-left me-2"></i>
-                                    Kembali ke Kursus
-                                </button>
-                                {selectedQuiz.can_attempt ? (
-                                    <button className="btn btn-primary" onClick={startQuiz}>
-                                        <i className="fas fa-play me-2"></i>
-                                        Mulai Kuis
-                                    </button>
-                                ) : (
-                                    <button className="btn btn-secondary" disabled>
-                                        <i className="fas fa-ban me-2"></i>
-                                        Batas Harian Tercapai
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {isQuizActive && selectedQuiz && (
-                    <div className="quiz-active-screen">
-                        <div className="quiz-question-progress-bar">
-                            <div
-                                className="quiz-question-progress-fill"
-                                style={{ width: `${((currentQuestionIndex + 1) / (selectedQuiz.questions?.length || 1)) * 100}%` }}
-                            ></div>
-                        </div>
-                        <div className="quiz-question-header">
-
-                            <div className="quiz-progress-info">
-                                <div className="question-counter">
-                                    Pertanyaan {currentQuestionIndex + 1} dari {selectedQuiz.questions?.length || 0}
-                                </div>
-                                <div className="quiz-timer">
-                                    <i className="fas fa-clock me-2"></i>
-                                    {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, "0")}
-                                </div>
-                            </div>
-                        </div>
-
-                        {selectedQuiz.questions && selectedQuiz.questions[currentQuestionIndex] && (
-                            <div className="quiz-question-section">
-                                <div className="question-text">
-                                    {selectedQuiz.questions[currentQuestionIndex].question_text}
-                                </div>
-
-                                <div className="quiz-choices">
-                                    {selectedQuiz.questions[currentQuestionIndex].choices?.map((choice) => (
-                                        <div key={choice.choice_id} className="quiz-choice">
-                                            <label className="quiz-choice-label">
-                                                <input
-                                                    type="radio"
-                                                    name={`question_${selectedQuiz.questions[currentQuestionIndex].question_id}`}
-                                                    value={choice.choice_id}
-                                                    checked={quizAnswers[selectedQuiz.questions[currentQuestionIndex].question_id] == choice.choice_id}
-                                                    onChange={(e) => {
-                                                        // Update quiz answers
-                                                        const newAnswers = {
-                                                            ...quizAnswers,
-                                                            [selectedQuiz.questions[currentQuestionIndex].question_id]: choice.choice_id
-                                                        };
-                                                        setQuizAnswers(newAnswers);
-
-                                                        // Update ref for timer access
-                                                        currentQuizStateRef.current.answers = newAnswers;
-
-                                                        // Save progress immediately when answer changes
-                                                        if (isQuizActive && selectedQuiz) {
-                                                            saveQuizProgress(selectedQuiz, newAnswers, currentQuestionIndex, timeRemaining, quizStartTime);
-                                                        }
-                                                    }}
-                                                />
-                                                <span className="quiz-choice-text">{choice.choice_text}</span>
-                                                <span className="quiz-choice-indicator"></span>
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="quiz-navigation">
-                                    <button
-                                        className="btn btn-outline-primary"
-                                        onClick={() => {
-                                            const newIndex = Math.max(0, currentQuestionIndex - 1);
-                                            setCurrentQuestionIndex(newIndex);
-
-                                            // Update ref
-                                            currentQuizStateRef.current.questionIndex = newIndex;
-
-                                            // Save progress when navigating
-                                            if (isQuizActive && selectedQuiz) {
-                                                saveQuizProgress(selectedQuiz, quizAnswers, newIndex, timeRemaining, quizStartTime);
-                                            }
-                                        }}
-                                        disabled={currentQuestionIndex === 0}
-                                    >
-                                        <i className="fas fa-arrow-left me-2"></i>
-                                        Sebelumnya
-                                    </button>
-
-                                    {currentQuestionIndex < (selectedQuiz.questions?.length || 0) - 1 ? (
-                                        <button
-                                            className="btn btn-primary"
-                                            onClick={() => {
-                                                const newIndex = currentQuestionIndex + 1;
-                                                setCurrentQuestionIndex(newIndex);
-
-                                                // Update ref
-                                                currentQuizStateRef.current.questionIndex = newIndex;
-
-                                                // Save progress when navigating
-                                                if (isQuizActive && selectedQuiz) {
-                                                    saveQuizProgress(selectedQuiz, quizAnswers, newIndex, timeRemaining, quizStartTime);
-                                                }
-                                            }}
-                                        >
-                                            Berikutnya
-                                            <i className="fas fa-arrow-right ms-2"></i>
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="btn btn-success"
-                                            onClick={submitQuiz}
-                                        >
-                                            <i className="fas fa-check me-2"></i>
-                                            Kirim Kuis
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {showQuizResult && quizResult && (
-                    <div className="quiz-result-screen">
-                        <div className="quiz-result-header">
-                            <div className={`quiz-result-icon ${quizResult.passed ? "success" : "failure"}`}>
-                                <i className={`fas ${quizResult.passed ? "fa-trophy" : "fa-times-circle"}`}></i>
-                            </div>
-                            <h4 className={`quiz-result-title ${quizResult.passed ? "text-success" : "text-danger"}`}>
-                                {quizResult.passed ? "Selamat!" : "Kuis Gagal"}
-                            </h4>
-                            <p className="quiz-result-message">
-                                {quizResult.passed
-                                    ? "Anda telah berhasil lulus kuis!"
-                                    : "Anda membutuhkan 80% atau lebih untuk lulus. Coba lagi!"}
-                            </p>
-                        </div>
-
-                        <div className="quiz-result-stats">
-                            <div className="result-stat">
-                                <span className="student-stat-label">Skor Anda</span>
-                                <span className={`stat-value ${quizResult.passed ? "text-success" : "text-danger"}`}>
-                                    {Math.round(quizResult.score)}%
-                                </span>
-                            </div>
-                            <div className="result-stat">
-                                <span className="student-stat-label">Jawaban Benar</span>
-                                <span className="stat-value">
-                                    {quizResult.correct_answers}/{quizResult.total_questions}
-                                </span>
-                            </div>
-                            <div className="result-stat">
-                                <span className="student-stat-label">Waktu yang Digunakan</span>
-                                <span className="stat-value">
-                                    {(() => {
-                                        const timeTaken = quizResult.time_taken || 0;
-                                        const minutes = Math.floor(timeTaken / 60);
-                                        const seconds = timeTaken % 60;
-                                        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-                                    })()}
-                                </span>
-                            </div>
-                            <div className="result-stat">
-                                <span className="student-stat-label">Percobaan Hari Ini</span>
-                                <span className={`stat-value ${quizResult.attempts_left === 0 ? "text-danger" : "text-warning"}`}>
-                                    {quizResult.today_attempts || 0}/{quizResult.max_daily_attempts || 3}
-                                </span>
-                            </div>
-                            {(quizResult.attempts_left !== undefined && quizResult.attempts_left > 0) && (
-                                <div className="result-stat">
-                                    <span className="student-stat-label">Percobaan Tersisa</span>
-                                    <span className="stat-value text-info">
-                                        {quizResult.attempts_left}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Attempt Status Alert */}
-                        {!quizResult.passed && (
-                            <div className={`attempt-status-alert ${quizResult.can_attempt ? "alert-warning" : "alert-danger"}`}>
-                                <i className={`fas ${quizResult.can_attempt ? "fa-exclamation-triangle" : "fa-ban"} me-2`}></i>
-                                {quizResult.can_attempt
-                                    ? `Anda memiliki ${quizResult.attempts_left} percobaan${quizResult.attempts_left !== 1 ? "" : ""} tersisa hari ini. Anda perlu 80% untuk lulus.`
-                                    : "Batas harian tercapai! Anda dapat mencoba lagi besok. (3 percobaan per hari)"
-                                }
-                            </div>
-                        )}
-
-                        <div className="quiz-result-actions">
-                            <button className="btn btn-secondary" onClick={handleQuizClose}>
-                                <i className="fas fa-arrow-left me-2"></i>
-                                Kembali ke Kursus
-                            </button>
-                            {!quizResult.passed && quizResult.can_attempt && (
-                                <button className="btn btn-primary" onClick={startQuiz}>
-                                    <i className="fas fa-redo me-2"></i>
-                                    Coba Lagi ({quizResult.attempts_left} tersisa)
-                                </button>
-                            )}
-                            {!quizResult.passed && !quizResult.can_attempt && (
-                                <button className="btn btn-secondary" disabled>
-                                    <i className="fas fa-ban me-2"></i>
-                                    Batas Harian Tercapai
-                                </button>
-                            )}
-                            {quizResult.passed && (
-                                <button className="btn btn-success" onClick={handleQuizClose}>
-                                    <i className="fas fa-check me-2"></i>
-                                    Kuis Lulus!
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </Modal>
-
-            {/* ✨ PHASE 7.16: Q&A Report Modal - Modeled after ReviewAbuse report system */}
-            {/* ✨ PHASE 7.16+: Enhanced Q&A Report Modal - Shows feedback if report exists, form if not */}
-            {showQAReportModal && (
-                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content abuse-report-modal">
-                            <div className="modal-header abuse-modal-header">
-                                <h5 className="modal-title">
-                                    {currentReportData ? (
-                                        <>
-                                            <i className="fas fa-file-check me-2"></i>
-                                            Status Laporan {reportingQAType === 'message' ? 'Balasan' : 'Pertanyaan'}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i className="fas fa-exclamation-triangle me-2"></i>
-                                            Laporkan {reportingQAType === 'message' ? 'Balasan' : 'Pertanyaan'}
-                                        </>
-                                    )}
-                                </h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={handleCloseQAReportModal}
-                                    disabled={reportingQA}
-                                ></button>
-                            </div>
-                            <div className="modal-body">
-                                {/* ✨ PHASE 7.16+: Show existing report feedback if available, unless editing */}
-                                {currentReportData && !editingReportId ? (
-                                    <>
-                                        {/* Report Status Section */}
-                                        <div className="mb-0">
-                                            <div className="d-flex align-items-center gap-2 mb-0">
-                                                <span className="fw-semibold">Status Laporan:</span>
-                                                {currentReportData.status === 'pending' && (
-                                                    <span className="badge bg-warning">
-                                                        <i className="fas fa-hourglass-half me-1"></i>
-                                                        Menunggu Tinjauan
-                                                    </span>
-                                                )}
-                                                {currentReportData.status === 'reviewed' && (
-                                                    <span className="badge bg-info">
-                                                        <i className="fas fa-eye me-1"></i>
-                                                        Sudah Ditinjau
-                                                    </span>
-                                                )}
-                                                {currentReportData.status === 'action_taken' && (
-                                                    <span className="badge bg-success">
-                                                        <i className="fas fa-check-circle me-1"></i>
-                                                        Tindakan Diambil
-                                                    </span>
-                                                )}
-                                                {currentReportData.status === 'dismissed' && (
-                                                    <span className="badge bg-secondary">
-                                                        <i className="fas fa-times-circle me-1"></i>
-                                                        Ditolak
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            <div>
-                                                {/* Report Details */}
-                                                <div className="card bg-light mb-3">
-                                                    <div className="card-body">
-                                                        {/* Horizontal Layout for Reason */}
-                                                        <div className="d-flex justify-content-between align-items-start mb-3">
-                                                            <label className="form-label fw-semibold text-muted mb-0">Alasan yang Dilaporkan:</label>
-                                                            <p className="mb-0 text-end">
-                                                                {currentReportData.reason === 'spam' && '🚫 Spam'}
-                                                                {currentReportData.reason === 'inappropriate' && '⚠️ Konten Tidak Pantas'}
-                                                                {currentReportData.reason === 'offensive' && '😠 Konten Menyinggung'}
-                                                                {currentReportData.reason === 'misinformation' && '❌ Informasi Salah'}
-                                                                {currentReportData.reason === 'other' && '❓ Lainnya'}
-                                                            </p>
-                                                        </div>
-
-                                                        {currentReportData.description && (
-                                                            <div className="d-flex justify-content-between align-items-start mb-3">
-                                                                <label className="form-label fw-semibold text-muted mb-0">Deskripsi Laporan:</label>
-                                                                <p className="mb-0 text-break text-end ps-2">{currentReportData.description}</p>
-                                                            </div>
-                                                        )}
-
-                                                        <div className="d-flex justify-content-between align-items-start">
-                                                            <label className="form-label fw-semibold text-muted mb-0">Tanggal Lapor:</label>
-                                                            <p className="mb-0 text-end">{currentReportData.reported_at ? new Date(currentReportData.reported_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Admin Feedback Section */}
-                                                {currentReportData.reviewed_at && (
-                                                    <div className="card border-success mb-0">
-                                                        <div className="card-body border-success">
-                                                            <h6 className="card-title text-success mb-3">
-                                                                <i className="fas fa-shield-alt me-2"></i>
-                                                                Umpan Balik Admin
-                                                            </h6>
-
-                                                            {/* Horizontal Layout for Review Timestamp */}
-                                                            <div className="d-flex justify-content-between align-items-start mb-3">
-                                                                <label className="form-label fw-semibold text-muted mb-0">Ditinjau Pada:</label>
-                                                                <p className="mb-0 text-end">{new Date(currentReportData.reviewed_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                                                            </div>
-
-                                                            {/* Horizontal Layout for Reviewer */}
-                                                            {currentReportData.reviewed_by__first_name || currentReportData.reviewed_by__username ? (
-                                                                <div className="d-flex justify-content-between align-items-start mb-3">
-                                                                    <label className="form-label fw-semibold text-muted mb-0">Ditinjau Oleh:</label>
-                                                                    <p className="mb-0 text-end">{currentReportData.reviewed_by__first_name || currentReportData.reviewed_by__username || 'Admin'}</p>
-                                                                </div>
-                                                            ) : null}
-
-                                                            {/* Admin Notes Section */}
-                                                            {currentReportData.review_notes && (
-                                                                <div className="mb-0">
-                                                                    <label className="form-label fw-semibold text-muted mb-2">Catatan Admin:</label>
-                                                                    <div className="alert alert-info mb-0">
-                                                                        <p className="mb-0 text-break">{currentReportData.review_notes}</p>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Pending Status Message */}
-                                            {currentReportData.status === 'pending' && !currentReportData.reviewed_at && (
-                                                <div className="alert alert-warning mb-2">
-                                                    <i className="fas fa-info-circle me-2"></i>
-                                                    Laporan ini sedang dalam proses tinjauan. Tim Admin kami akan memberikan umpan balik dalam waktu singkat.
-                                                </div>
-                                            )}
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        {/* ✨ PHASE 7.16+: Form untuk laporan baru atau edit laporan yang ada */}
-                                        {editingReportId && (
-                                            <div className="alert alert-info mb-3">
-                                                <i className="fas fa-pencil-alt me-2"></i>
-                                                Anda sedang mengedit laporan Anda. Laporan akan dikirim ke Admin untuk tinjauan ulang.
-                                            </div>
-                                        )}
-                                        {!editingReportId && (
-                                            <p className="abuse-modal-text">
-                                                Bantu kami menjaga kualitas komunitas dengan melaporkan konten yang tidak sesuai.
-                                            </p>
-                                        )}
-
-                                        <div className="mb-3">
-                                            <label className="form-label fw-semibold">Alasan Laporan <span className="text-danger">*</span></label>
-                                            <select
-                                                className="form-select form-select-modern"
-                                                value={qaReportReason}
-                                                onChange={(e) => setQaReportReason(e.target.value)}
-                                                disabled={reportingQA}
-                                            >
-                                                <option value="">-- Pilih Alasan --</option>
-                                                <option value="spam">Spam</option>
-                                                <option value="inappropriate">Konten Tidak Pantas</option>
-                                                <option value="offensive">Konten Menyinggung</option>
-                                                <option value="misinformation">Informasi Salah</option>
-                                                <option value="other">Lainnya</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label fw-semibold">Penjelasan Tambahan (Opsional)</label>
-                                            <textarea
-                                                className="form-control"
-                                                rows="3"
-                                                placeholder="Berikan rincian untuk membantu Admin memahami masalah ini..."
-                                                value={qaReportDescription}
-                                                onChange={(e) => setQaReportDescription(e.target.value)}
-                                                disabled={reportingQA}
-                                            ></textarea>
-                                            <small className="text-muted">Maksimal 500 karakter</small>
-                                        </div>
-
-                                        <div className="alert alert-info">
-                                            <i className="fas fa-info-circle me-2"></i>
-                                            {editingReportId
-                                                ? 'Perubahan laporan Anda akan ditinjau ulang oleh Admin.'
-                                                : 'Tim Admin kami akan meninjau laporan ini dan mengambil tindakan yang sesuai.'
-                                            }
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                            <div className="modal-footer abuse-modal-footer">
-                                {/* ✨ PHASE 7.16+: Close/Cancel button - only when NOT editing and report is not pending and NOT closed */}
-                                {!editingReportId && (!currentReportData || (currentReportData?.status !== 'pending' && !closedReports.has(currentReportData?.id))) && (
-                                    <button
-                                        type="button"
-                                        className="btn btn-outline-secondary"
-                                        onClick={handleCloseQAReportModal}
-                                        disabled={reportingQA}
-                                    >
-                                        {currentReportData ? 'Selesai' : 'Batal'}
-                                    </button>
-                                )}
-
-                                {/* ✨ PHASE 7.16+: Edit Laporan button - only when viewing existing report (NOT editing) and status is reviewed and NOT closed */}
-                                {currentReportData && !editingReportId && currentReportData?.status !== 'pending' && !closedReports.has(currentReportData?.id) && (
-                                    <button
-                                        type="button"
-                                        className="btn btn-warning"
-                                        onClick={handleEditQAReport}
-                                        disabled={reportingQA}
-                                    >
-                                        <i className="fas fa-edit me-2"></i>
-                                        Edit Laporan
-                                    </button>
-                                )}
-
-                                {/* ✨ PHASE 7.16+: Submit button - for new reports OR when editing existing reports */}
-                                {(!currentReportData || editingReportId) && (
-                                    <button
-                                        type="button"
-                                        className="btn btn-danger"
-                                        onClick={handleSubmitQAReport}
-                                        disabled={reportingQA || !qaReportReason.trim()}
-                                    >
-                                        {reportingQA ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                {editingReportId ? 'Mengirim ulang...' : 'Mengirim...'}
-                                            </>
-                                        ) : (
-                                            <>
-                                                <i className={`fas ${editingReportId ? 'fa-redo' : 'fa-paper-plane'} me-2`}></i>
-                                                {editingReportId ? 'Laporkan Ulang' : 'Laporkan'}
-                                            </>
-                                        )}
-                                    </button>
-                                )}
-
-                                {/* ✨ PHASE 7.16+: Pending message - show info when report is waiting for admin review */}
-                                {currentReportData && !editingReportId && currentReportData?.status === 'pending' && (
-                                    <div className="flex-grow-1">
-                                        <p className="text-center text-muted mb-0 small">
-                                            <i className="fas fa-clock me-2"></i>
-                                            Laporan sedang ditinjau oleh Admin
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* ✨ PHASE 7.16+: Case closed message - show when user has closed the case */}
-                                {currentReportData && !editingReportId && currentReportData?.status !== 'pending' && closedReports.has(currentReportData?.id) && (
-                                    <div className="flex-grow-1">
-                                        <p className="text-center text-success mb-0 small fw-semibold">
-                                            <i className="fas fa-check-circle me-2"></i>
-                                            Kasus Ditutup - Laporan Selesai
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Q&A Report Modal (Modularized in QAReportModal.jsx) */}
+            <QAReportModal
+                show={showQAReportModal}
+                onClose={handleCloseQAReportModal}
+                reportingQA={reportingQA}
+                reportingQAType={reportingQAType}
+                currentReportData={currentReportData}
+                editingReportId={editingReportId}
+                closedReports={closedReports}
+                qaReportReason={qaReportReason}
+                setQaReportReason={setQaReportReason}
+                qaReportDescription={qaReportDescription}
+                setQaReportDescription={setQaReportDescription}
+                handleSubmitQAReport={handleSubmitQAReport}
+                handleEditQAReport={handleEditQAReport}
+            />
 
             {/* Video Resume Dialog */}
             <Footer />

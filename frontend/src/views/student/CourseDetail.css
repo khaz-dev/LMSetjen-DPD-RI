@@ -1963,7 +1963,7 @@ body.modern-course-active {
 }
 
 /* ✨ PHASE 7.26: Modal header - draggable sticky note header */
-.modal-header-note {
+.add-note-modal:not(.compact-executive-modal) .modal-header-note {
     /* ✨ PHASE 7.33: Removed hardcoded background to allow dynamic color change from inline style */
     color: white !important;
     padding: 1rem 1.5rem !important;
@@ -2011,7 +2011,7 @@ body.modern-course-active {
 }
 
 /* ✨ PHASE 7.26: Modal body - horizontally scrollable content */
-.add-note-modal .modal-body-modern {
+.add-note-modal:not(.compact-executive-modal) .modal-body-modern {
     position: absolute !important;
     /* Positioned relative to modal-dialog */
     top: 100px !important;
@@ -2234,7 +2234,7 @@ body.modern-course-active {
 }
 
 /* ✨ PHASE 7.26: Modal footer with resize handle */
-.add-note-modal .modal-footer-modern {
+.add-note-modal:not(.compact-executive-modal) .modal-footer-modern {
     position: absolute !important;
     /* Stick to bottom */
     bottom: 0 !important;
@@ -2262,7 +2262,7 @@ body.modern-course-active {
 }
 
 /* ✨ PHASE 7.26: Button styling for note modal footer */
-.add-note-modal .btn-cancel-modern {
+.add-note-modal:not(.compact-executive-modal) .btn-cancel-modern {
     background: #e0e0e0 !important;
     color: #333 !important;
     border: none !important;
@@ -2281,7 +2281,7 @@ body.modern-course-active {
     transform: translateY(-1px) !important;
 }
 
-.add-note-modal .btn-submit-note {
+.add-note-modal:not(.compact-executive-modal) .btn-submit-note {
     color: white !important;
     border: none !important;
     padding: 0.6rem 1.2rem !important;
@@ -2518,7 +2518,7 @@ body.modern-course-active {
 
 /* ✨ PHASE 7.11+: Draggable/Resizable Modal Header */
 /* ✨ PHASE 7.12: Modal header - draggable by default */
-.create-question-modal .modal-header-modern {
+.create-question-modal:not(.compact-executive-modal) .modal-header-modern {
     position: absolute !important;
     /* Stick to top of modal-dialog */
     top: 0 !important;
@@ -2575,7 +2575,7 @@ body.modern-course-active {
 
 /* ✨ PHASE 7.6: Modal body scrolls as a whole, content grows freely - CLEANED */
 /* ✨ PHASE 7.13: Single column grid since sidebar not rendered in question modal */
-.create-question-modal .modal-body-modern {
+.create-question-modal:not(.compact-executive-modal) .modal-body-modern {
     position: absolute !important;
     top: 70px !important;
     bottom: 60px !important;
@@ -2657,7 +2657,7 @@ body.modern-course-active {
 
 /* ✨ PHASE 7.1: Footer positioned absolutely at bottom of modal-dialog */
 /* ✨ PHASE 7.2: Footer positioned absolutely at bottom, always visible */
-.create-question-modal .modal-footer-modern {
+.create-question-modal:not(.compact-executive-modal) .modal-footer-modern {
     position: absolute !important;
     /* Stick to bottom of modal-dialog */
     bottom: 0 !important;
@@ -3512,7 +3512,7 @@ body.modern-course-active {
     }
 
     .modal-header-modern,
-    .modal-header-note {
+    .add-note-modal:not(.compact-executive-modal) .modal-header-note {
         padding: 1rem 1.5rem;
     }
 
@@ -10866,4 +10866,661 @@ body.modern-course-active {
     background: #0d9488 !important;
     color: #ffffff !important;
     border-color: #0d9488 !important;
+}
+
+
+/* ==========================================================================
+   ✨ PILAR 5: LENCANA PERAN DPD RI & PINNED IMPORTANT DISCUSSIONS
+   ========================================================================== */
+
+/* Official DPD RI Role Badges Group */
+.dpd-role-badges-group {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    vertical-align: middle !important;
+}
+
+.dpd-badge-role {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 0.12rem 0.45rem !important;
+    border-radius: 4px !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+}
+
+/* Icon-Only Micro Badge for DPD RI Roles */
+.dpd-badge-role.dpd-badge-icon-only {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    user-select: none !important;
+}
+
+.dpd-badge-role.dpd-badge-icon-only i {
+    margin: 0 !important;
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+}
+
+.dpd-badge-role.dpd-badge-icon-only:hover,
+.dpd-badge-role.dpd-badge-icon-only:focus-visible {
+    transform: translateY(-2px) scale(1.08) !important;
+}
+
+.dpd-badge-role.dpd-badge-icon-only:focus-visible {
+    outline: 2px solid #0d9488 !important;
+    outline-offset: 1px !important;
+}
+
+/* 1. Lencana Instruktur Kursus */
+.dpd-badge-instructor {
+    background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.25) !important;
+}
+
+/* 2. Lencana Staf / Admin Setjen DPD RI */
+.dpd-badge-admin {
+    background: linear-gradient(135deg, #042f2e 0%, #134e4a 100%) !important;
+    border: 1px solid #f59e0b !important;
+    color: #fbbf24 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dpd-badge-admin.dpd-badge-icon-only:hover {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35) !important;
+    border-color: #fbbf24 !important;
+}
+
+/* 3. Lencana Penanya */
+.dpd-badge-asker {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+/* 4. Lencana Anda */
+.dpd-badge-current {
+    background: #e0f2fe !important;
+    color: #0284c7 !important;
+    border: 1px solid #bae6fd !important;
+}
+
+/* 5. Lencana Jabatan */
+.dpd-badge-position {
+    background: #f8fafc !important;
+    color: #334155 !important;
+    border: 1px solid #cbd5e1 !important;
+    font-weight: 600 !important;
+}
+
+.dpd-badge-position.dpd-badge-icon-only:hover {
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3) !important;
+    border-color: #64748b !important;
+    color: #0f172a !important;
+}
+
+/* 6. Lencana Unit Kerja */
+.dpd-badge-org {
+    background: rgba(13, 148, 136, 0.08) !important;
+    color: #0f766e !important;
+    border: 1px solid rgba(13, 148, 136, 0.28) !important;
+    font-weight: 600 !important;
+}
+
+.dpd-badge-org.dpd-badge-icon-only:hover {
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35) !important;
+    border-color: #0d9488 !important;
+    color: #0d9488 !important;
+}
+
+/* ✨ Polished Executive DPD RI Role Tooltip */
+.dpd-role-tooltip {
+    z-index: 9999 !important;
+}
+
+.dpd-role-tooltip .tooltip-inner {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.74rem !important;
+    text-align: left !important;
+    max-width: 290px !important;
+    line-height: 1.35 !important;
+}
+
+.dpd-role-tooltip .tooltip-arrow::before {
+    border-top-color: #0f172a !important;
+    border-bottom-color: #0f172a !important;
+}
+
+.dpd-tooltip-label {
+    font-size: 0.62rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 2px !important;
+}
+
+.dpd-tooltip-label.label-instructor {
+    color: #34d399 !important; /* Emerald */
+}
+
+.dpd-tooltip-label.label-admin {
+    color: #fbbf24 !important; /* Amber / Gold */
+}
+
+.dpd-tooltip-label.label-pos {
+    color: #38bdf8 !important; /* Sky Blue */
+}
+
+.dpd-tooltip-label.label-org {
+    color: #2dd4bf !important; /* Teal */
+}
+
+.dpd-tooltip-value {
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    word-break: break-word !important;
+}
+
+/* Pinned Discussion Pill in Question Cards */
+.qa-status-pill.pinned {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
+    font-weight: 700 !important;
+}
+
+/* Pinned Card Highlighting */
+.card-pinned {
+    border-left: 3.5px solid #f59e0b !important;
+    background: linear-gradient(to right, rgba(254, 243, 199, 0.18) 0%, #ffffff 100%) !important;
+}
+
+/* Pinned Thread Banner in Discussion Detail */
+.pinned-thread-banner {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+    border: 1.5px solid #fcd34d !important;
+    border-radius: 8px !important;
+    padding: 0.65rem 0.95rem !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.1) !important;
+}
+
+.pinned-banner-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    background: #f59e0b !important;
+    color: #ffffff !important;
+    border-radius: 50% !important;
+    font-size: 0.8rem !important;
+}
+
+.btn-outline-amber {
+    color: #b45309 !important;
+    border: 1px solid #f59e0b !important;
+    background: transparent !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease !important;
+}
+
+.btn-outline-amber:hover {
+    background: #f59e0b !important;
+    color: #ffffff !important;
+}
+
+/* Forum Header Pin Action Button */
+.forum-pin-action-btn {
+    border: 1px solid #fcd34d !important;
+    background: #fffbeb !important;
+    color: #b45309 !important;
+    font-size: 0.76rem !important;
+    font-weight: 600 !important;
+    padding: 0.22rem 0.65rem !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.forum-pin-action-btn:hover {
+    background: #fef3c7 !important;
+    color: #78350f !important;
+    border-color: #f59e0b !important;
+}
+
+/* Quick Pin Action in Question Card */
+.card-quick-pin-btn {
+    border: none !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    font-size: 0.82rem !important;
+    padding: 0.2rem 0.35rem !important;
+    border-radius: 4px !important;
+    transition: all 0.15s ease !important;
+}
+
+.card-quick-pin-btn:hover {
+    color: #f59e0b !important;
+    background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.card-quick-pin-btn.pinned {
+    color: #f59e0b !important;
+}
+
+/* ==========================================================================
+   ✨ REDESIGNED COMPACT EXECUTIVE MODALS (Tambah Catatan & Ajukan Pertanyaan)
+   Sleek, eye-catching, zero-waste whitespace, 100% draggable & resizable.
+   ========================================================================== */
+
+.compact-executive-modal.modal .modal-dialog,
+.compact-executive-modal .modal-dialog {
+    margin: 0 !important;
+    max-width: none !important;
+    position: fixed !important;
+}
+
+.compact-executive-modal .modal-content {
+    border: 1px solid rgba(13, 148, 136, 0.25) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 16px 48px -8px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    position: relative !important;
+    height: 100% !important;
+    width: 100% !important;
+}
+
+.compact-executive-modal .compact-modal-form {
+    height: 100% !important;
+    width: 100% !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Compact Header (46px height) - Guaranteed override for both modals */
+.compact-executive-modal .modal-header-modern,
+.compact-executive-modal .modal-header-note,
+.compact-executive-modal .compact-modal-header {
+    height: 46px !important;
+    min-height: 46px !important;
+    max-height: 46px !important;
+    padding: 0 1rem !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 20 !important;
+    border-radius: 13px 13px 0 0 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+    user-select: none !important;
+    border: none !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.compact-executive-modal .compact-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.6rem !important;
+    min-width: 0 !important;
+}
+
+.compact-executive-modal .compact-header-icon-box {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    border-radius: 6px !important;
+    background: rgba(255, 255, 255, 0.22) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.8rem !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+    flex-shrink: 0 !important;
+}
+
+.compact-executive-modal .compact-modal-title {
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+}
+
+.compact-executive-modal .compact-header-drag-badge {
+    font-size: 0.62rem !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+    border: 1px solid rgba(255, 255, 255, 0.28) !important;
+    padding: 0.12rem 0.5rem !important;
+    border-radius: 12px !important;
+    letter-spacing: 0.2px !important;
+    white-space: nowrap !important;
+}
+
+/* Executive Close Button: 26px x 26px, circular, perfectly proportional */
+.compact-executive-modal .btn-close-modern,
+.compact-executive-modal .compact-btn-close {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.76rem !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    position: static !important;
+}
+
+.compact-executive-modal .btn-close-modern:hover,
+.compact-executive-modal .compact-btn-close:hover {
+    background: rgba(255, 255, 255, 0.35) !important;
+    transform: scale(1.08) !important;
+    color: #ffffff !important;
+}
+
+.compact-executive-modal .compact-btn-close i,
+.compact-executive-modal .btn-close-modern i {
+    font-size: 0.74rem !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #ffffff !important;
+}
+
+/* Compact Modal Body (Top: 46px, Bottom: 46px) */
+.compact-executive-modal .modal-body-modern,
+.compact-executive-modal .compact-modal-body {
+    position: absolute !important;
+    top: 46px !important;
+    bottom: 46px !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    background: #f8fafc !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+    z-index: 10 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.35rem !important;
+}
+
+/* Form Labels & Controls */
+.compact-form-label {
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+    margin-bottom: 0.25rem !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.compact-modal-input,
+.compact-modal-select {
+    padding: 0.42rem 0.75rem !important;
+    font-size: 0.84rem !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 7px !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.compact-modal-input:focus,
+.compact-modal-select:focus,
+.compact-modal-textarea:focus {
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15) !important;
+    outline: none !important;
+}
+
+.compact-modal-textarea {
+    font-size: 0.84rem !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 7px !important;
+    padding: 0.55rem 0.75rem !important;
+    line-height: 1.5 !important;
+    color: #1e293b !important;
+    resize: vertical !important;
+    min-height: 110px !important;
+    background: #ffffff !important;
+}
+
+.compact-char-counter {
+    font-size: 0.7rem !important;
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
+}
+
+/* Compact Color Palette Bar (NoteModal) */
+.compact-color-bar {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.compact-meta-label {
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+}
+
+.compact-color-swatch {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 50% !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22) !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #ffffff !important;
+    font-size: 0.6rem !important;
+    padding: 0 !important;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease !important;
+}
+
+.compact-color-swatch:hover {
+    transform: scale(1.2) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.compact-color-swatch.active {
+    transform: scale(1.15) !important;
+    box-shadow: 0 0 0 2px #0f172a, 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Compact Video Timestamp Bar (CreateQuestionModal) */
+.compact-timestamp-bar {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.compact-timestamp-pill {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    padding: 0.15rem 0.5rem !important;
+    border-radius: 6px !important;
+}
+
+.compact-bar-btn {
+    font-size: 0.74rem !important;
+    font-weight: 600 !important;
+    padding: 0.2rem 0.6rem !important;
+    border-radius: 6px !important;
+}
+
+/* Compact Tip Banner (1-line) */
+.compact-modal-tip-banner {
+    background: rgba(245, 158, 11, 0.08) !important;
+    border: 1px solid rgba(245, 158, 11, 0.22) !important;
+    border-radius: 7px !important;
+    padding: 0.45rem 0.75rem !important;
+}
+
+/* Compact Markdown Preview Box */
+.compact-preview-box {
+    min-height: 120px !important;
+    max-height: 250px !important;
+    padding: 0.65rem 0.85rem !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 7px !important;
+    font-size: 0.85rem !important;
+    overflow-y: auto !important;
+}
+
+/* Compact Footer (46px) - Guaranteed override for both modals */
+.compact-executive-modal .modal-footer-modern,
+.compact-executive-modal .compact-modal-footer {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    max-height: 46px !important;
+    padding: 0 1rem !important;
+    background: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-radius: 0 0 13px 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    z-index: 20 !important;
+    box-sizing: border-box !important;
+}
+
+/* Compact Buttons in Footer: Height 30px, proportional, balanced font and padding */
+.compact-executive-modal .compact-btn-cancel,
+.compact-executive-modal .btn-cancel-modern {
+    height: 30px !important;
+    min-height: 30px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    padding: 0 0.85rem !important;
+    line-height: 1 !important;
+    border-radius: 6px !important;
+    color: #475569 !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    transition: all 0.15s ease !important;
+    letter-spacing: 0.2px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.compact-executive-modal .compact-btn-cancel:hover,
+.compact-executive-modal .btn-cancel-modern:hover {
+    background: #e2e8f0 !important;
+    color: #1e293b !important;
+    border-color: #94a3b8 !important;
+}
+
+.compact-executive-modal .compact-btn-submit,
+.compact-executive-modal .btn-submit-note {
+    height: 30px !important;
+    min-height: 30px !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    padding: 0 1rem !important;
+    line-height: 1 !important;
+    border-radius: 6px !important;
+    border: none !important;
+    color: #ffffff !important;
+    transition: all 0.15s ease !important;
+    letter-spacing: 0.2px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+}
+
+.compact-executive-modal .compact-btn-submit:hover:not(:disabled),
+.compact-executive-modal .btn-submit-note:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
+    filter: brightness(1.06) !important;
+}
+
+.compact-executive-modal .compact-btn-submit:disabled,
+.compact-executive-modal .btn-submit-note:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+/* Resize Handle Styling inside compact modals (Flush at bottom-right corner) */
+.compact-executive-modal .modal-resize-handle {
+    position: fixed !important;
+    width: 20px !important;
+    height: 20px !important;
+    background: linear-gradient(135deg, #0d9488 0%, #042f2e 100%) !important;
+    opacity: 0.88 !important;
+    border: none !important;
+    clip-path: polygon(100% 0, 100% 100%, 0 100%) !important;
+    cursor: se-resize !important;
+    z-index: 1055 !important;
+    border-radius: 0 0 13px 0 !important;
+    transition: opacity 0.2s ease, transform 0.2s ease !important;
+}
+
+.compact-executive-modal .modal-resize-handle:hover {
+    opacity: 1 !important;
+    transform: scale(1.1) !important;
+    filter: brightness(1.15) !important;
 }

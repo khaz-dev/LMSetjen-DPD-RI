@@ -2800,6 +2800,7 @@ class Question_Answer_MessageSerializer(serializers.ModelSerializer):
                     'position_name': profile.position.name if profile and profile.position else None,
                     'organization_unit_name': profile.organization_unit.name if profile and profile.organization_unit else None,
                     'country': profile.country if profile else None,
+                    'is_staff': bool(obj.user.is_staff or obj.user.is_superuser) if obj.user else False,
                 }
         except:
             pass
@@ -2810,6 +2811,7 @@ class Question_Answer_MessageSerializer(serializers.ModelSerializer):
             'position_name': None,
             'organization_unit_name': None,
             'country': None,
+            'is_staff': bool(obj.user.is_staff or obj.user.is_superuser) if obj.user else False,
         }
     
     def get_likes_count(self, obj):
@@ -2861,7 +2863,7 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
             'id', 'qa_id', 'course', 'title', 'user', 'user_id',
             'profile', 'variant', 'variant_item',
             'date', 'messages', 'replies_count', 'likes_count', 'user_liked',
-            'is_solved', 'has_instructor_reply', 'video_timestamp'
+            'is_solved', 'has_instructor_reply', 'video_timestamp', 'is_pinned'
         ]
         read_only_fields = ['id', 'qa_id', 'date', 'messages', 'replies_count', 'has_instructor_reply']
     
@@ -2877,6 +2879,7 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
                     'position_name': profile.position.name if profile and profile.position else None,
                     'organization_unit_name': profile.organization_unit.name if profile and profile.organization_unit else None,
                     'country': profile.country if profile else None,
+                    'is_staff': bool(obj.user.is_staff or obj.user.is_superuser) if obj.user else False,
                 }
         except:
             pass
@@ -2887,6 +2890,7 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
             'position_name': None,
             'organization_unit_name': None,
             'country': None,
+            'is_staff': bool(obj.user.is_staff or obj.user.is_superuser) if obj.user else False,
         }
     
     def get_variant(self, obj):
